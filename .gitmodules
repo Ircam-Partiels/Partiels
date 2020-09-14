@@ -1,3 +1,6 @@
 [submodule "JUCE"]
 	path = JUCE
 	url = https://github.com/WeAreROLI/JUCE.git
+[submodule "ILF"]
+	path = ILF
+	url = git@forge-2.ircam.fr:IrcamLab/ILF.git
