@@ -2,6 +2,7 @@
 
 #include "../Misc/AnlMisc.h"
 #include "AnlApplicationModel.h"
+#include "AnlApplicationController.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -65,6 +66,11 @@ namespace Application
         {
             juce::ignoreUnused(source);
         }
+        
+        Controller& getController()
+        {
+            return mController;
+        }
 
         static Instance& get()
         {
@@ -74,6 +80,7 @@ namespace Application
     private:
         
         Model mModel;
+        Controller mController {mModel};
     };
 }
 

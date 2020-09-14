@@ -12,6 +12,10 @@
               file="Source/Application/AnlApplicationInstance.cpp"/>
         <FILE id="naIuVp" name="AnlApplicationInstance.h" compile="0" resource="0"
               file="Source/Application/AnlApplicationInstance.h"/>
+        <FILE id="mIjM4E" name="AnlApplicationController.cpp" compile="1" resource="0"
+              file="Source/Application/AnlApplicationController.cpp"/>
+        <FILE id="u4fFJU" name="AnlApplicationController.h" compile="0" resource="0"
+              file="Source/Application/AnlApplicationController.h"/>
         <FILE id="Jwr8zw" name="AnlApplicationModel.cpp" compile="1" resource="0"
               file="Source/Application/AnlApplicationModel.cpp"/>
         <FILE id="gPDblo" name="AnlApplicationModel.h" compile="0" resource="0"
