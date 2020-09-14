@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
+#include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -69,6 +70,10 @@ namespace Application
         {
             return *static_cast<Instance*>(JUCEApplication::getInstance());
         }
+
+    private:
+        
+        Model mModel;
     };
 }
 

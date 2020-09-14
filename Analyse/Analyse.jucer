@@ -12,6 +12,10 @@
               file="Source/Application/AnlApplicationInstance.cpp"/>
         <FILE id="naIuVp" name="AnlApplicationInstance.h" compile="0" resource="0"
               file="Source/Application/AnlApplicationInstance.h"/>
+        <FILE id="Jwr8zw" name="AnlApplicationModel.cpp" compile="1" resource="0"
+              file="Source/Application/AnlApplicationModel.cpp"/>
+        <FILE id="gPDblo" name="AnlApplicationModel.h" compile="0" resource="0"
+              file="Source/Application/AnlApplicationModel.h"/>
       </GROUP>
       <FILE id="Fz9snZ" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
