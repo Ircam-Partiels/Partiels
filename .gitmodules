@@ -4,3 +4,6 @@
 [submodule "ILF"]
 	path = ILF
 	url = git@forge-2.ircam.fr:IrcamLab/ILF.git
+[submodule "SVP"]
+	path = SVP
+	url = git@forge-2.ircam.fr:IrcamLab/SuperVP_Mirror.git
