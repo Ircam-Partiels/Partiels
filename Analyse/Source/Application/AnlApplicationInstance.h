@@ -71,6 +71,11 @@ namespace Application
         {
             return mController;
         }
+        
+        juce::ApplicationCommandManager& getCommandManager()
+        {
+            return mCommandManager;
+        }
 
         static Instance& get()
         {
@@ -81,6 +86,7 @@ namespace Application
         
         Model mModel;
         Controller mController {mModel};
+        juce::ApplicationCommandManager mCommandManager;
     };
 }
 
