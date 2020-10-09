@@ -21,29 +21,39 @@ juce_add_gui_app(Analyse
 juce_generate_juce_header(Analyse)
 
 set_target_properties(Analyse PROPERTIES CXX_STANDARD 17)
+set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
-file(GLOB GlobalSources
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/main.cpp
+file(GLOB_RECURSE GlobalSources
+    ${SOURCES_DIRECTORY}/main.cpp
     ${CMAKE_CACHEFILE_DIR}/Analyse_artefacts/JuceLibraryCode/JuceHeader.h)
 
+file(GLOB MiscSources
+    ${SOURCES_DIRECTORY}/Misc/AnlMisc.h)
+
 file(GLOB ApplicationSources
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationModel.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationModel.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationController.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationController.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationInterface.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationInterface.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationLookAndFeel.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationLookAndFeel.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationHeader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationHeader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationInstance.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationInstance.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationWindow.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Application/AnlApplicationWindow.h)
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationController.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationController.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationHeader.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationHeader.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.h)
+
+file(GLOB DocumentSources
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h)
 
 source_group("Global" FILES ${GlobalSources})
+source_group("Misc" FILES ${MiscSources})
 source_group("Application" FILES ${ApplicationSources})
+source_group("Document" FILES ${DocumentSources})
 
 create_module_group(Analyse "Modules\\ilf_core" "${CMAKE_CURRENT_SOURCE_DIR}/ILF/ilf_core")
 create_module_group(Analyse "Modules\\ilf_audio_sequencer" "${CMAKE_CURRENT_SOURCE_DIR}/ILF/ilf_audio_sequencer")
@@ -52,7 +62,7 @@ create_module_group(Analyse "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR
 create_module_group(Analyse "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
 create_module_group(Analyse "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
 
-target_sources(Analyse PRIVATE ${GlobalSources} ${ApplicationSources})
+target_sources(Analyse PRIVATE ${GlobalSources} ${ApplicationSources} ${DocumentSources} ${MiscSources})
 
 target_compile_definitions(Analyse PRIVATE
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
