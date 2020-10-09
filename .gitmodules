@@ -7,3 +7,6 @@
 [submodule "SVP"]
 	path = SVP
 	url = git@forge-2.ircam.fr:IrcamLab/SuperVP_Mirror.git
+[submodule "vamp-plugin-sdk"]
+	path = vamp-plugin-sdk
+	url = git@forge-2.ircam.fr:IrcamLab/vamp-plugin-sdk.git
