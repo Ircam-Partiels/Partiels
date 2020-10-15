@@ -24,7 +24,6 @@ namespace Application
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
         
-        juce::OpenGLContext mOpenGLContext;
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Window)

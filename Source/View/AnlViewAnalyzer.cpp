@@ -187,9 +187,9 @@ private:
             juce::MessageManager::callAsync([ptr = std::move(instance)]() mutable
             {
                 deletePluginContainer(std::move(ptr));
-                ilfStrongAssert(ptr == nullptr);
+                anlStrongAssert(ptr == nullptr);
             });
-            ilfStrongAssert(instance == nullptr);
+            anlStrongAssert(instance == nullptr);
         }
     }
     

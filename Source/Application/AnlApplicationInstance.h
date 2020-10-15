@@ -93,7 +93,6 @@ namespace Application
             mWindow.reset();
             mInterface.reset();
             juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-            ilf::FontManager::freeDefaultTypeFaces();
         }
         
         void systemRequestedQuit() override

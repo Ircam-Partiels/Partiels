@@ -7,11 +7,6 @@ ANALYSE_FILE_BEGIN
 Application::Window::Window(juce::Component& content)
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
-    mOpenGLContext.setMultisamplingEnabled(true);
-    mOpenGLContext.setComponentPaintingEnabled(true);
-    mOpenGLContext.setImageCacheSize(2^24 * sizeof(float));
-    mOpenGLContext.attachTo(*this);
-    
     if(!restoreWindowStateFromString(Instance::get().getController().getWindowState()))
     {
         centreWithSize(1024, 768);
@@ -28,14 +23,13 @@ Application::Window::Window(juce::Component& content)
     addKeyListener(Instance::get().getCommandManager().getKeyMappings());
     
 #if !JUCE_MAC
-    setMenuBar(&AudioSculpt4Application::getMenuBarModel());
+    //setMenuBar(&AudioSculpt4Application::getMenuBarModel());
 #endif
 }
 
 Application::Window::~Window()
 {
     removeKeyListener(Instance::get().getCommandManager().getKeyMappings());
-    mOpenGLContext.detach();
 }
 
 void Application::Window::closeButtonPressed()
