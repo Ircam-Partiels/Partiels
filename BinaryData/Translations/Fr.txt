@@ -1,0 +1,7 @@
+language: French
+countries: fr be mc ch lu
+
+"Plugin cannot be loaded!" = "Le plugin ne peut être chargé!"
+"The plugin PLGNKEY cannot be loaded because the plugin manager is not available." = "Le plugin PLGNKEY ne peut chargé car le gestionnaire de plugins n\'est pas disponible."
+"The plugin PLGNKEY cannot be loaded because the plugin key is invalid." = "Le plugin PLGNKEY ne peut chargé car le clef du plugin n\'est pas valide."
+"The plugin PLGNKEY cannot be loaded because the plugin container cannot be allocated." = "Le plugin PLGNKEY ne peut chargé car le containeur de plugin ne peut être alloué."

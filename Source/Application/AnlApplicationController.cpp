@@ -94,7 +94,7 @@ void Application::Controller::addListener(Listener* listener, juce::Notification
     mListeners.add(listener);
     if(listener && notification != juce::dontSendNotification)
     {
-        ilfStrongAssert(notification != juce::sendNotificationAsync);
+        anlStrongAssert(notification != juce::sendNotificationAsync);
         listener->applicationAttributeChanged(this, Listener::AttributeType::recentlyOpenedFilesList, Model::toString(mModel.recentlyOpenedFilesList));
         listener->applicationAttributeChanged(this, Listener::AttributeType::currentOpenedFilesList, Model::toString(mModel.currentOpenedFilesList));
         listener->applicationAttributeChanged(this, Listener::AttributeType::currentDocumentFile, {mModel.currentDocumentFile.getFullPathName()});
@@ -109,7 +109,7 @@ void Application::Controller::removeListener(Listener* listener)
 
 void Application::Controller::notifyListeners(Listener::AttributeType type, juce::var const& value, juce::NotificationType const notification)
 {
-    ilfStrongAssert(notification != juce::NotificationType::sendNotificationAsync);
+    anlStrongAssert(notification != juce::NotificationType::sendNotificationAsync);
     if(notification != juce::NotificationType::dontSendNotification)
     {
         mListeners.call(&Listener::applicationAttributeChanged, this, type, value);

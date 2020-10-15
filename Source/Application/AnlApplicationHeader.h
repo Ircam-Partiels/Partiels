@@ -24,8 +24,8 @@ namespace Application
         void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
         void applicationCommandListChanged() override;
         
-        ilf::AudioTransportControls mAudioTransportControls;
-        ilf::HMSmsField mHMSmsTimeField;
+//        ilf::AudioTransportControls mAudioTransportControls;
+//        ilf::HMSmsField mHMSmsTimeField;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Header)
     };

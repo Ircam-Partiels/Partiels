@@ -4,16 +4,16 @@ ANALYSE_FILE_BEGIN
 
 Application::Model Application::Model::fromXml(juce::XmlElement const& xml)
 {
-    ilfWeakAssert(xml.hasTagName("Anl::Application::Model"));
+    anlWeakAssert(xml.hasTagName("Anl::Application::Model"));
     if(!xml.hasTagName("Anl::Application::Model"))
     {
         return {};
     }
     
-    ilfWeakAssert(xml.hasAttribute("windowState"));
-    ilfWeakAssert(xml.hasAttribute("recentlyOpenedFilesList"));
-    ilfWeakAssert(xml.hasAttribute("currentOpenedFilesList"));
-    ilfWeakAssert(xml.hasAttribute("currentDocumentFile"));
+    anlWeakAssert(xml.hasAttribute("windowState"));
+    anlWeakAssert(xml.hasAttribute("recentlyOpenedFilesList"));
+    anlWeakAssert(xml.hasAttribute("currentOpenedFilesList"));
+    anlWeakAssert(xml.hasAttribute("currentDocumentFile"));
     
     Model model;
     model.windowState = xml.getStringAttribute("windowState", model.windowState);

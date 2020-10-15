@@ -1,11 +1,15 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
 #include "AnlApplicationModel.h"
 #include "AnlApplicationController.h"
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationWindow.h"
 #include "AnlApplicationLookAndFeel.h"
+
+#include "../Plugin/AnlPluginScanner.h"
+
+#include "../Model/AnlModelAnalyzer.h"
+#include "../View/AnlViewAnalyzer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -40,12 +44,48 @@ namespace Application
         {
             juce::ignoreUnused(commandLine);
             juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
+            
+            juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
+            
             mInterface = std::make_unique<Interface>();
-            ilfWeakAssert(mInterface != nullptr);
+            anlWeakAssert(mInterface != nullptr);
             if(mInterface != nullptr)
             {
                 mWindow = std::make_unique<Window>(*mInterface.get());
             }
+            
+            mPluginScanner.scan();
+            
+            juce::AudioFormatManager audioFormatManager;
+            audioFormatManager.registerBasicFormats();
+            auto audioFormat = audioFormatManager.findFormatForFileExtension(".wav");
+            auto audioFormatReader = std::unique_ptr<juce::MemoryMappedAudioFormatReader>(audioFormat->createMemoryMappedReader({"/Users/guillot/Dropbox/Cours/Sounds/Snail48k.wav"}));
+            if(audioFormatReader != nullptr)
+            {
+                audioFormatReader->mapEntireFile();
+            }
+            auto copy = mAnalyzerAccessor.getModel();
+            copy.key = juce::String("jimi");
+            mAnalyzerAccessor.fromModel(copy, juce::NotificationType::sendNotification);
+            if(audioFormatReader != nullptr)
+            {
+                mAnalyzerView.perform(*(audioFormatReader.get()));
+            }
+            
+            copy.key = juce::String("vamp-example-plugins:spectralcentroid");
+            mAnalyzerAccessor.fromModel(copy, juce::NotificationType::sendNotification);
+            if(audioFormatReader != nullptr)
+            {
+                mAnalyzerView.perform(*(audioFormatReader.get()));
+            }
+            
+            copy.key = juce::String("vamp-example-plugins:percussiononsets");
+            mAnalyzerAccessor.fromModel(copy, juce::NotificationType::sendNotification);
+            if(audioFormatReader != nullptr)
+            {
+                mAnalyzerView.perform(*(audioFormatReader.get()));                
+            }
+            
         }
         
         void shutdown() override
@@ -106,6 +146,11 @@ namespace Application
         LookAndFeel mLookAndFeel;
         std::unique_ptr<Interface> mInterface;
         std::unique_ptr<Window> mWindow;
+        Plugin::Scanner mPluginScanner;
+        
+        Analyzer::Model mAnalyzerModel;
+        Analyzer::Accessor mAnalyzerAccessor {mAnalyzerModel};
+        Analyzer::View mAnalyzerView {mAnalyzerAccessor};
     };
 }
 

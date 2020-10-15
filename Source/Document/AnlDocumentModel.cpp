@@ -4,7 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::Model Document::Model::fromXml(juce::XmlElement const& xml)
 {
-    ilfWeakAssert(xml.hasTagName("Anl::Document::Model"));
+    anlWeakAssert(xml.hasTagName("Anl::Document::Model"));
     if(!xml.hasTagName("Anl::Document::Model"))
     {
         return {};
