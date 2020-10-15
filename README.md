@@ -17,3 +17,4 @@ cmake ..
 - Debug
 - remove magic enum
 - remove ILF?
+- CI/CD

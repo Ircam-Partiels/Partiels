@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.12)
 project(Analyse VERSION 0.0.1 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
-add_subdirectory(ILF)
 include(vamp.cmake)
 
 juce_add_gui_app(Analyse
@@ -73,12 +72,43 @@ source_group("Model" FILES ${ModelSources})
 source_group("ViewSources" FILES ${ViewSources})
 source_group("Plugin" FILES ${PluginSources})
 
-create_module_group(Analyse "Modules\\ilf_core" "${CMAKE_CURRENT_SOURCE_DIR}/ILF/ilf_core")
-create_module_group(Analyse "Modules\\ilf_audio_sequencer" "${CMAKE_CURRENT_SOURCE_DIR}/ILF/ilf_audio_sequencer")
+function(create_module_group TARGET GROUP_PATH MODULE_PATH)
+
+if(APPLE)
+    file(GLOB MAIN_CPP_SOURCES ${MODULE_PATH}/*.cpp)
+    set_source_files_properties(${MAIN_CPP_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
+    source_group(${GROUP_PATH} FILES ${MAIN_CPP_SOURCES})
+    target_sources(${TARGET} PRIVATE ${MAIN_CPP_SOURCES})
+
+    file(GLOB MAIN_OTHER_SOURCES ${MODULE_PATH}/*.h ${MODULE_PATH}/*.mm)
+    source_group(${GROUP_PATH} FILES ${MAIN_OTHER_SOURCES})
+else()
+    file(GLOB MAIN_OTHER_SOURCES ${MODULE_PATH}/*.h ${MODULE_PATH}/*.cpp)
+    source_group(${GROUP_PATH} FILES ${MAIN_OTHER_SOURCES})
+endif()
+
+    file(GLOB_RECURSE SUB_SOURCES ${MODULE_PATH}/**/*.cpp ${MODULE_PATH}/**/*.h)
+    set_source_files_properties(${SUB_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
+
+    foreach(SOURCE ${SUB_SOURCES})
+        file(RELATIVE_PATH FILE_PATH_REL "${MODULE_PATH}" "${SOURCE}")
+        get_filename_component(DIR_PATH_REL ${FILE_PATH_REL} DIRECTORY)
+
+        string(REPLACE "/" "\\\\" SUBGROUP ${DIR_PATH_REL})
+        source_group(${GROUP_PATH}\\${SUBGROUP} FILES ${SOURCE})
+    endforeach()
+
+    target_sources(${TARGET} PRIVATE ${SUB_SOURCES})
+endfunction()
+
 create_module_group(Analyse "Modules\\juce_core" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_core")
 create_module_group(Analyse "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_graphics")
 create_module_group(Analyse "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
 create_module_group(Analyse "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
+create_module_group(Analyse "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
+create_module_group(Analyse "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
+create_module_group(Analyse "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
+create_module_group(Analyse "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 
 target_sources(Analyse PRIVATE ${GlobalSources} ${ApplicationSources} ${DocumentSources} ${ModelSources} ${ViewSources} ${ToolsSources} ${PluginSources})
 
@@ -100,8 +130,7 @@ target_link_libraries(Analyse PRIVATE
     vamp
     AnalyseData
     juce::juce_gui_extra
-    juce::juce_opengl
-    ilf::ilf_core
+    juce::juce_audio_formats
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
