@@ -31,6 +31,7 @@ void Application::Header::resized()
 
 void Application::Header::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
 {
+    
 //    auto updateButton = [](juce::Button& button)
 //    {
 //        button.setState(juce::Button::buttonDown);

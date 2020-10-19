@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 Application::Window::Window(juce::Component& content)
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
-    if(!restoreWindowStateFromString(Instance::get().getController().getWindowState()))
+    if(!restoreWindowStateFromString(Instance::get().getAccessor().getModel().windowState))
     {
         centreWithSize(1024, 768);
     }
@@ -20,7 +20,7 @@ Application::Window::Window(juce::Component& content)
     setVisible(true);
     setResizable(true, false);
     setUsingNativeTitleBar(true);
-    addKeyListener(Instance::get().getCommandManager().getKeyMappings());
+    addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     
 #if !JUCE_MAC
     //setMenuBar(&AudioSculpt4Application::getMenuBarModel());
@@ -29,12 +29,12 @@ Application::Window::Window(juce::Component& content)
 
 Application::Window::~Window()
 {
-    removeKeyListener(Instance::get().getCommandManager().getKeyMappings());
+    removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
 }
 
 void Application::Window::closeButtonPressed()
 {
-    JUCEApplication::getInstance()->systemRequestedQuit();
+    juce::JUCEApplication::getInstance()->systemRequestedQuit();
 }
 
 void Application::Window::resized()
@@ -51,7 +51,9 @@ void Application::Window::moved()
 
 void Application::Window::handleAsyncUpdate()
 {
-    Instance::get().getController().setWindowState(getBounds().toString(), juce::NotificationType::sendNotificationSync);
+    auto model = Instance::get().getAccessor().getModel();
+    model.windowState = getBounds().toString();
+    Instance::get().getAccessor().fromModel(model, juce::NotificationType::sendNotificationSync);
 }
 
 ANALYSE_FILE_END

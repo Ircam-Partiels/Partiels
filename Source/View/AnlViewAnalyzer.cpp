@@ -205,6 +205,7 @@ Analyzer::View::View(Accessor& accessor)
 
 Analyzer::View::~View()
 {
+    JUCE_COMPILER_WARNING("remove that");
 }
 
 void Analyzer::View::perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize)
@@ -235,7 +236,7 @@ void Analyzer::View::perform(juce::AudioFormatReader& audioFormatReader, size_t 
     auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
     
-    juce::AudioBuffer<float> buffer(numChannels, blockSize);
+    juce::AudioBuffer<float> buffer(numChannels, static_cast<int>(blockSize));
     mImpl->initialize(audioFormatReader.sampleRate, static_cast<size_t>(numChannels), blockSize, blockSize);
     for(juce::int64 timeStamp = 0; timeStamp < lengthInSamples; timeStamp += blockSize)
     {

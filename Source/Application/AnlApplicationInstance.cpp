@@ -2,4 +2,101 @@
 
 ANALYSE_FILE_BEGIN
 
+juce::String const Application::Instance::getApplicationName()
+{
+    return ProjectInfo::projectName;
+}
+
+juce::String const Application::Instance::getApplicationVersion()
+{
+    return ProjectInfo::versionString;
+}
+
+bool Application::Instance::moreThanOneInstanceAllowed()
+{
+    return true;
+}
+
+void Application::Instance::initialise(juce::String const& commandLine)
+{
+    juce::ignoreUnused(commandLine);
+    juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
+    
+    juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
+    
+    
+    mAudioFormatManager.registerBasicFormats();
+    
+    mInterface = std::make_unique<Interface>();
+    anlWeakAssert(mInterface != nullptr);
+    if(mInterface == nullptr)
+    {
+        JUCE_COMPILER_WARNING("manage that");
+        return;
+    }
+    
+    mWindow = std::make_unique<Window>(*mInterface.get());
+    if(mWindow == nullptr)
+    {
+        JUCE_COMPILER_WARNING("do save");
+        return;
+    }
+}
+
+void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
+{
+    juce::ignoreUnused(commandLine);
+}
+
+void Application::Instance::systemRequestedQuit()
+{
+    AnlDebug("Application", "Try Shutdown...");
+    if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
+    {
+        AnlDebug("Application", "Quit Delayed");
+        juce::Timer::callAfterDelay(500, [this]()
+                                    {
+            systemRequestedQuit();
+        });
+    }
+    else
+    {
+        AnlDebug("Application", "Quit");
+        quit();
+    }
+}
+
+void Application::Instance::shutdown()
+{
+    mWindow.reset();
+    mInterface.reset();
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    AnlDebug("Application", "Shutdown");
+}
+
+Application::Instance& Application::Instance::get()
+{
+    return *static_cast<Instance*>(JUCEApplication::getInstance());
+}
+
+Application::Accessor& Application::Instance::getAccessor()
+{
+    return mAccessor;
+}
+
+PluginList::Accessor& Application::Instance::getPluginListAccessor()
+{
+    return mPluginListAccessor;
+}
+
+juce::ApplicationCommandManager& Application::Instance::getApplicationCommandManager()
+{
+    return mApplicationCommandManager;
+}
+
+juce::AudioFormatManager& Application::Instance::getAudioFormatManager()
+{
+    return mAudioFormatManager;
+}
+
 ANALYSE_FILE_END

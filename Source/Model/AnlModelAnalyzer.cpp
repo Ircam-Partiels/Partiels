@@ -48,7 +48,7 @@ std::unique_ptr<juce::XmlElement> Analyzer::Model::toXml() const
     xml->setAttribute("projectFile", projectFile.getFullPathName());
     for(auto const& parameter : parameters)
     {
-        auto child = std::make_unique<juce::XmlElement>("As::Analyzer::Model::Parameter");
+        auto child = std::make_unique<juce::XmlElement>("Parameter");
         anlWeakAssert(child != nullptr);
         if(child != nullptr)
         {

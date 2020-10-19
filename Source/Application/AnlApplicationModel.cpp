@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Model Application::Model::fromXml(juce::XmlElement const& xml)
+Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
 {
     anlWeakAssert(xml.hasTagName("Anl::Application::Model"));
     if(!xml.hasTagName("Anl::Application::Model"))
@@ -15,20 +15,24 @@ Application::Model Application::Model::fromXml(juce::XmlElement const& xml)
     anlWeakAssert(xml.hasAttribute("currentOpenedFilesList"));
     anlWeakAssert(xml.hasAttribute("currentDocumentFile"));
     
-    Model model;
-    model.windowState = xml.getStringAttribute("windowState", model.windowState);
-    model.recentlyOpenedFilesList = fromString(xml.getStringAttribute("recentlyOpenedFilesList"));
-    sanitize(model.recentlyOpenedFilesList);
-    model.currentOpenedFilesList = fromString(xml.getStringAttribute("currentOpenedFilesList"));
-    sanitize(model.currentOpenedFilesList);
-    model.currentDocumentFile = juce::File(xml.getStringAttribute("currentDocumentFile", model.currentDocumentFile.getFullPathName()));
+    defaultModel.windowState = xml.getStringAttribute("windowState", defaultModel.windowState);
+    defaultModel.recentlyOpenedFilesList = fromString(xml.getStringAttribute("recentlyOpenedFilesList"));
+    sanitize(defaultModel.recentlyOpenedFilesList);
+    defaultModel.currentOpenedFilesList = fromString(xml.getStringAttribute("currentOpenedFilesList"));
+    sanitize(defaultModel.currentOpenedFilesList);
+    defaultModel.currentDocumentFile = juce::File(xml.getStringAttribute("currentDocumentFile", defaultModel.currentDocumentFile.getFullPathName()));
     
-    return model;
+    return defaultModel;
+}
+
+std::set<Application::Model::Attribute> Application::Model::getAttributeTypes()
+{
+    return {Attribute::windowState, Attribute::recentlyOpenedFilesList, Attribute::currentOpenedFilesList, Attribute::currentDocumentFile};
 }
 
 std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
 {
-    auto xml = std::make_unique<juce::XmlElement>("As::Application::Model");
+    auto xml = std::make_unique<juce::XmlElement>("Anl::Application::Model");
     if(xml == nullptr)
     {
         return nullptr;
@@ -40,6 +44,17 @@ std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
     xml->setAttribute("currentDocumentFile", currentDocumentFile.getFullPathName());
     
     return xml;
+}
+
+void Application::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
+{
+    using Attribute = Model::Attribute;
+    std::set<Attribute> attributes;
+    MODEL_ACCESSOR_COMPARE_AND_SET(windowState, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(recentlyOpenedFilesList, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(currentOpenedFilesList, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes)
+    notifyListener(attributes, {}, notification);
 }
 
 std::vector<juce::File> Application::Model::fromString(juce::String const& filesAsString)
@@ -66,13 +81,15 @@ juce::String Application::Model::toString(std::vector<juce::File> const& files)
     return filePaths.joinIntoString("\n");
 }
 
-void Application::Model::sanitize(std::vector<juce::File>& files)
+std::vector<juce::File> Application::Model::sanitize(std::vector<juce::File> const& files)
 {
-    files.erase(std::unique(files.begin(), files.end()), files.end());
-    files.erase(std::remove_if(files.begin(), files.end(), [](auto const& file)
+    std::vector<juce::File> copy = files;
+    copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
+    copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
     {
         return !file.existsAsFile();
-    }), files.end());
+    }), copy.end());
+    return copy;
 }
 
 ANALYSE_FILE_END

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tools/AnlMisc.h"
+#include "../Tools/AnlModelAccessor.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,19 +8,36 @@ namespace Application
 {
     struct Model
     {
+        enum class Attribute
+        {
+            windowState,
+            recentlyOpenedFilesList,
+            currentOpenedFilesList,
+            currentDocumentFile
+        };
+        
         juce::String windowState;
         std::vector<juce::File> recentlyOpenedFilesList;
         std::vector<juce::File> currentOpenedFilesList;
         juce::File currentDocumentFile;
         
-        static Model fromXml(juce::XmlElement const& xml);
         std::unique_ptr<juce::XmlElement> toXml() const;
+        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
+        static std::set<Attribute> getAttributeTypes();
         
         static std::vector<juce::File> fromString(juce::String const& filesAsString);
         static juce::String toString(std::vector<juce::File> const& files);
-        static void sanitize(std::vector<juce::File>& files);
+        static std::vector<juce::File> sanitize(std::vector<juce::File> const& files);
         
         JUCE_LEAK_DETECTOR(Model)
+    };
+    
+    class Accessor : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
+    {
+    public:
+        using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
+        ~Accessor() override = default;
+        void fromModel(Model const& model, juce::NotificationType const notification) override;
     };
 }
 
