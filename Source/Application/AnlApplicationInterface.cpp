@@ -9,6 +9,7 @@ Application::Interface::Interface()
 : mPluginListTable(Instance::get().getPluginListAccessor())
 {
     addAndMakeVisible(mHeader);
+    addAndMakeVisible(mDocumentFileInfoPanel);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
     
     mPluginListTable.onPluginSelected = [&](juce::String key)
@@ -18,7 +19,7 @@ Application::Interface::Interface()
         mAnalyzerAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
         if(mAudioFormatReader != nullptr)
         {
-            mAnalyzerView.perform(*(mAudioFormatReader.get()));
+            mAnalyzerProcessor.perform(*(mAudioFormatReader.get()));
         }
     };
 }
@@ -26,6 +27,7 @@ Application::Interface::Interface()
 void Application::Interface::resized()
 {
     mHeader.setBounds(getLocalBounds().removeFromTop(60));
+    mDocumentFileInfoPanel.setBounds(getLocalBounds().removeFromTop(102));
 }
 
 juce::ApplicationCommandTarget* Application::Interface::getNextCommandTarget()
@@ -74,10 +76,17 @@ bool Application::Interface::perform(juce::ApplicationCommandTarget::InvocationI
             juce::FileChooser fc(juce::translate("Open Document"), {}, audioFormatManager.getWildcardForAllFormats());
             if(!fc.browseForFileToOpen())
             {
+                auto copy = mDocumentAccessor.getModel();
+                copy.file = juce::File{};
+                mDocumentAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
                 return true;
             }
                 
             auto const file = fc.getResult();
+            
+            auto copy = mDocumentAccessor.getModel();
+            copy.file = file;
+            mDocumentAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
             auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
             if(audioFormat == nullptr)
             {

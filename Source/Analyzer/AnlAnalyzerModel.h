@@ -11,6 +11,8 @@ namespace Analyzer
     //! its results.
     struct Model
     {
+        JUCE_COMPILER_WARNING("remove unecessary members");
+        
         enum class Attribute
         {
             key,
@@ -25,6 +27,11 @@ namespace Analyzer
         juce::String programName; //!< The name of the program
         juce::File resultFile; //!< The file containing the saved results
         juce::File projectFile; //!< The path of the project
+        
+        bool operator==(Model const& rhd) const
+        {
+            return key == rhd.key && parameters == rhd.parameters && programName == rhd.programName && resultFile == rhd.resultFile && projectFile == rhd.projectFile;
+        }
         
         std::unique_ptr<juce::XmlElement> toXml() const;
         static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});

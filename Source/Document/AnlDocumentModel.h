@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Model/AnlModelAnalyzer.h"
+#include "../Analyzer/AnlAnalyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,16 +10,28 @@ namespace Document
     //! @brief The document is a container for a set of analysis
     struct Model
     {
-        juce::String version; //!< The version of the data model
-        juce::File file; //!< The audio file associated with the document
-        juce::File project; //!< The project file associated with the document
-        std::bitset<64> channels; //!< The visibility states of the channels
-        std::vector<Analyzer::Model> tracks; //!< The visibility states of the channels
+        enum class Attribute
+        {
+            file,
+            analyzers
+        };
         
-        static Model fromXml(juce::XmlElement const& xml);
+        juce::File file; //!< The audio file associated with the document
+        std::vector<Analyzer::Model> analyzers; //!< The analyzers of the documents
+        
         std::unique_ptr<juce::XmlElement> toXml() const;
+        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
+        static std::set<Attribute> getAttributeTypes();
         
         JUCE_LEAK_DETECTOR(Model)
+    };
+    
+    class Accessor : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
+    {
+    public:
+        using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
+        ~Accessor() override = default;
+        void fromModel(Model const& model, juce::NotificationType const notification) override;
     };
 }
 

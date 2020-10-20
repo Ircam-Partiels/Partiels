@@ -38,4 +38,5 @@ ANALYSE_FILE_END
 #include <atomic>
 #include <memory>
 #include <thread>
+#include <functional>
 

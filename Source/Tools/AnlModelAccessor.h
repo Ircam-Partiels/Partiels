@@ -80,5 +80,4 @@ namespace Tools
 #define MODEL_ACCESSOR_COMPARE_AND_SET(attr, changed) \
 if(mModel.attr != model.attr) { changed.insert(Attribute::attr); mModel.attr = model.attr; }
 
-
 ANALYSE_FILE_END

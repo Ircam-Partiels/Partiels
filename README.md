@@ -18,3 +18,4 @@ cmake ..
 - remove magic enum
 - remove ILF?
 - CI/CD
+- https://github.com/taglib/taglib

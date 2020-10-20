@@ -1,9 +1,10 @@
 #pragma once
 
 #include "AnlApplicationHeader.h"
-#include "../Model/AnlModelAnalyzer.h"
-#include "../View/AnlViewAnalyzer.h"
+#include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Plugin/AnlPluginListTable.h"
+#include "../Document/AnlDocumentModel.h"
+#include "../Document/AnlDocumentFileInfoPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -31,9 +32,13 @@ namespace Application
         
         Header mHeader;
         
+        Document::Model mDocumentModel;
+        Document::Accessor mDocumentAccessor {mDocumentModel};
+        Document::FileInfoPanel mDocumentFileInfoPanel {mDocumentAccessor};
+        
         Analyzer::Model mAnalyzerModel;
         Analyzer::Accessor mAnalyzerAccessor {mAnalyzerModel};
-        Analyzer::View mAnalyzerView {mAnalyzerAccessor};
+        Analyzer::Processor mAnalyzerProcessor {mAnalyzerAccessor};
         
         PluginList::Table mPluginListTable;
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;

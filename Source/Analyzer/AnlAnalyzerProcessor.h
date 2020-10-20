@@ -1,21 +1,19 @@
 #pragma once
 
-#include "../Model/AnlModelAnalyzer.h"
-
-#include <vamp-hostsdk/Plugin.h>
+#include "AnlAnalyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    class View
+    class Processor
     {
     public:
         using Accessor = Accessor;
         using Attribute = Model::Attribute;
         
-        View(Accessor& accessor);
-        ~View();
+        Processor(Accessor& accessor);
+        ~Processor();
         
         void perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize = 512);
 

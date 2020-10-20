@@ -1,11 +1,11 @@
-#include "AnlViewAnalyzer.h"
+#include "AnlAnalyzerProcessor.h"
 
 #include <vamp-hostsdk/PluginLoader.h>
 #include <vamp-hostsdk/PluginHostAdapter.h>
 
 ANALYSE_FILE_BEGIN
 
-class Analyzer::View::Impl
+class Analyzer::Processor::Impl
 : public Accessor::Listener
 {
 public:
@@ -197,18 +197,18 @@ private:
     std::shared_ptr<PluginContainer> mPluginContainer {nullptr};
 };
 
-Analyzer::View::View(Accessor& accessor)
+Analyzer::Processor::Processor(Accessor& accessor)
 : mImpl(std::make_unique<Impl>(accessor))
 {
     anlStrongAssert(mImpl != nullptr);
 }
 
-Analyzer::View::~View()
+Analyzer::Processor::~Processor()
 {
     JUCE_COMPILER_WARNING("remove that");
 }
 
-void Analyzer::View::perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize)
+void Analyzer::Processor::perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize)
 {
     anlStrongAssert(mImpl != nullptr);
     if(mImpl == nullptr)

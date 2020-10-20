@@ -1,4 +1,4 @@
-#include "AnlModelAnalyzer.h"
+#include "AnlAnalyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 
