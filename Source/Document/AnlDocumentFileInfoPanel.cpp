@@ -14,6 +14,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
 : mAccessor(accessor)
 {
     using Attribute = Model::Attribute;
+    using Position = Tools::PropertyPanelBase::Positioning;
     mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
     {
         juce::ignoreUnused(acsr);
@@ -21,7 +22,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
         {
             case Attribute::file:
             {
-                mPropertyLayout3.setPanels({});
+                mPropertyLayout3.setPanels({}, Position::left);
                 auto const file = mAccessor.getModel().file;
                 mPanelFileName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setText(file.getParentDirectory().getFullPathName(), juce::NotificationType::dontSendNotification);
@@ -38,16 +39,14 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
                     return;
                 }
                 mPanelSampleRate.entry.setText(juce::String(audioFormatReader->sampleRate, 1) + "Hz", juce::NotificationType::dontSendNotification);
-                mPanelBitPerSample.entry.setText(juce::String(audioFormatReader->bitsPerSample), juce::NotificationType::dontSendNotification);
+                mPanelBitPerSample.entry.setText(juce::String(audioFormatReader->bitsPerSample) + " (" + (audioFormatReader->usesFloatingPointData ? "float" : "int") + ")", juce::NotificationType::dontSendNotification);
                 mPanelLengthInSamples.entry.setText(juce::String(audioFormatReader->lengthInSamples) + " samples", juce::NotificationType::dontSendNotification);
                 mPanelDurationInSeconds.entry.setText(juce::String(static_cast<double>(audioFormatReader->lengthInSamples) / audioFormatReader->sampleRate, 3).trimCharactersAtEnd("0").trimCharactersAtEnd(".") + "s", juce::NotificationType::dontSendNotification);
                 mPanelNumChannels.entry.setText(juce::String(audioFormatReader->numChannels), juce::NotificationType::dontSendNotification);
                 
-                using PanelInfo = Tools::PropertyLayout::PanelInfo;
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<PanelInfo> panels;
-                auto constexpr titleWidth = 200;
+                std::vector<Tools::PropertyLayout::PanelRef> panels;
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
@@ -57,11 +56,11 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
                     {
                         property->entry.setText(value, juce::NotificationType::dontSendNotification);
                         property->entry.setJustificationType(juce::Justification::right);
-                        panels.push_back({*property.get(), titleWidth});
+                        panels.push_back(*property.get());
                         mMetaDataPanels.push_back(std::move(property));
                     }
                 }
-                mPropertyLayout3.setPanels(panels);
+                mPropertyLayout3.setPanels(panels, Position::left);
                 resized();
             }
                 break;
@@ -70,10 +69,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
         }
     };
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
-    auto constexpr titleWidth = 92;
-    
-    mPropertyLayout1.setPanels({{mPanelFileName, titleWidth}, {mPanelFilePath, titleWidth}, {mPanelFileFormat, titleWidth}, {mPanelSampleRate, titleWidth}});
-    mPropertyLayout2.setPanels({ {mPanelBitPerSample, titleWidth}, {mPanelLengthInSamples, titleWidth}, {mPanelDurationInSeconds, titleWidth}, {mPanelNumChannels, titleWidth}});
+    mPropertyLayout1.setPanels({mPanelFileName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
+    mPropertyLayout2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
     
     addAndMakeVisible(mPropertyLayout1);
     addAndMakeVisible(mPropertyLayout2);
@@ -99,17 +96,14 @@ void Document::FileInfoPanel::resized()
     mPropertyLayout1.setVisible(numVisibleLayout >= 1);
     if(numVisibleLayout == 3)
     {
-        mPropertyLayout3.organizePanels(Tools::PropertyLayout::Orientation::vertical, layoutWidth);
         mPropertyLayout3.setBounds(bounds.removeFromRight(layoutWidth));
     }
     if(numVisibleLayout >= 2)
     {
-        mPropertyLayout2.organizePanels(Tools::PropertyLayout::Orientation::vertical, layoutWidth);
         mPropertyLayout2.setBounds(bounds.removeFromRight(layoutWidth));
     }
     if(numVisibleLayout >= 1)
     {
-        mPropertyLayout1.organizePanels(Tools::PropertyLayout::Orientation::vertical, bounds.getWidth());
         mPropertyLayout1.setBounds(bounds);
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlPropertyPanel.h"
+#include "AnlColouredPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -11,18 +12,8 @@ namespace Tools
     {
     public:
         
-        enum ColourIds : int
-        {
-            separatorColourId = 0x2000000
-        };
-        
-        enum Orientation : bool
-        {
-            vertical = false,
-            horizontal = true
-        };
-        
-        using PanelInfo = std::tuple<std::reference_wrapper<PropertyPanelBase>, int>;
+        using PanelRef = std::reference_wrapper<PropertyPanelBase>;
+        using Positioning = PropertyPanelBase::Positioning;
         
         PropertyLayout();
         ~PropertyLayout() override = default;
@@ -30,33 +21,16 @@ namespace Tools
         // juce::Component
         void resized() override;
         
-        void setPanels(std::vector<PanelInfo> const& panels);
-        void organizePanels(Orientation orientation, int size);
+        void setPanels(std::vector<PanelRef> const& panels, Positioning position);
         
     private:
-        class Separator
-        : public juce::Component
-        {
-        public:
-            Separator() = default;
-            ~Separator() override = default;
-            
-            // juce::Component
-            void paint(juce::Graphics& g) override;
-        };
         
-        struct Container
-        {
-            PanelInfo panelInfos;
-            Separator separator;
-            
-            Container(PanelInfo const& p);
-            ~Container() = default;
-        };
+        using Container = std::tuple<PanelRef, ColouredPanel>;
         
         juce::Component mContent;
         juce::Viewport mViewport;
         std::vector<std::unique_ptr<Container>> mContainers;
+        Positioning mPositioning = Positioning::left;
     };
 }
 

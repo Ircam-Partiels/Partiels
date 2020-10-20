@@ -6,38 +6,30 @@ ANALYSE_FILE_BEGIN
 
 namespace Tools
 {
-    class PropertyLayout;
-    
+    //! @brief The base class of a property panel that display a title label with an associated component
     class PropertyPanelBase
     : public juce::Component
     , public juce::SettableTooltipClient
     {
     public:
-        juce::Label title;
         
-        PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& text, juce::String const& tooltip)
-        : content(std::move(c))
+        enum Positioning
         {
-            title.setText(text + ":", juce::NotificationType::dontSendNotification);
-            title.setJustificationType(juce::Justification::centredLeft);
-            title.setTooltip(tooltip);
-            title.setMinimumHorizontalScale(1.f);
-            title.setInterceptsMouseClicks(false, false);
-            auto const& borderSize = title.getBorderSize();
-            title.setBorderSize({borderSize.getTop(), borderSize.getLeft(), borderSize.getBottom(), 0});
-            
-            addAndMakeVisible(title);
-            addAndMakeVisible(content.get());
-            
-            setTooltip(tooltip);
-            setSize(200, 24);
-        }
+            left = false, //!< The label postion is at the left of component
+            top = true //!< The label postion is on top of the component
+        };
         
+        juce::Label title;
+        Positioning positioning;
+        
+        PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& text, juce::String const& tooltip = {}, Positioning p = Positioning::left);
         ~PropertyPanelBase() override = default;
+        
+        // juce::Component
+        void resized() override;
         
     protected:
         std::unique_ptr<juce::Component> content;
-        friend class PropertyLayout;
     };
     
     template <class EntryClass> class PropertyPanel
@@ -48,7 +40,7 @@ namespace Tools
         
         EntryClass& entry;
         
-        PropertyPanel(juce::String const& text, juce::String const& tooltip)
+        PropertyPanel(juce::String const& text, juce::String const& tooltip = {})
         : PropertyPanelBase(std::make_unique<EntryClass>(), text, tooltip)
         , entry(*static_cast<EntryClass*>(content.get()))
         {

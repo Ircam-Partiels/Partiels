@@ -31,6 +31,9 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlMisc.h
     ${SOURCES_DIRECTORY}/Tools/AnlListenerList.h
     ${SOURCES_DIRECTORY}/Tools/AnlModelAccessor.h
+    ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.cpp
+    ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.h
+    ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.h)
