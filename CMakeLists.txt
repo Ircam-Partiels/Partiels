@@ -30,6 +30,7 @@ file(GLOB_RECURSE GlobalSources
 file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlMisc.h
     ${SOURCES_DIRECTORY}/Tools/AnlListenerList.h
+    ${SOURCES_DIRECTORY}/Tools/AnlAtomicManager.h
     ${SOURCES_DIRECTORY}/Tools/AnlModelAccessor.h
     ${SOURCES_DIRECTORY}/Tools/AnlStringParser.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlStringParser.h

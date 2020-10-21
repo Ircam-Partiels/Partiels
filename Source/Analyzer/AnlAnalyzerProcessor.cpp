@@ -1,4 +1,5 @@
 #include "AnlAnalyzerProcessor.h"
+#include "../Tools/AnlAtomicManager.h"
 
 #include <vamp-hostsdk/PluginLoader.h>
 #include <vamp-hostsdk/PluginHostAdapter.h>
@@ -21,7 +22,7 @@ public:
                     auto const pluginKey = acsr.getModel().key;
                     if(pluginKey.isEmpty())
                     {
-                        setPluginContainer({nullptr});
+                        mPluginManager.setInstance({nullptr});
                         return;
                     }
                 }
@@ -51,7 +52,7 @@ public:
     ~Impl()
     {
         mAccessor.removeListener(*this);
-        deletePluginContainer({nullptr});
+        mPluginManager.setInstance({nullptr});
     }
     
     bool initialize(double sampleRate, size_t numChannels, size_t stepSize, size_t blockSize)
@@ -85,7 +86,7 @@ public:
             return false;
         }
         
-        setPluginContainer(pluginContainer);
+        mPluginManager.setInstance(pluginContainer);
         if(pluginContainer != nullptr)
         {
             return pluginContainer->initialize(sampleRate, numChannels, stepSize, blockSize);
@@ -95,7 +96,7 @@ public:
     
     Vamp::Plugin::FeatureSet process(juce::AudioBuffer<float> const& inputBuffer, long const timeStamp)
     {
-        auto pluginContainer = getPluginContainer();
+        auto pluginContainer = mPluginManager.getInstance();
         if(pluginContainer != nullptr)
         {
             return pluginContainer->process(inputBuffer, timeStamp);
@@ -105,7 +106,7 @@ public:
     
     Vamp::Plugin::FeatureSet getRemainingFeatures()
     {
-        auto pluginContainer = getPluginContainer();
+        auto pluginContainer = mPluginManager.getInstance();
         if(pluginContainer != nullptr)
         {
             return pluginContainer->getRemainingFeatures();
@@ -166,35 +167,8 @@ private:
         unsigned int mSampleRate {0};
     };
     
-    std::shared_ptr<PluginContainer> getPluginContainer()
-    {
-        return std::atomic_load(&mPluginContainer);
-    }
-    
-    void setPluginContainer(std::shared_ptr<PluginContainer> instance)
-    {
-        anlStrongAssert(instance == nullptr || instance != getPluginContainer());
-        if(instance != getPluginContainer())
-        {
-            deletePluginContainer(std::atomic_exchange(&mPluginContainer, instance));
-        }
-    }
-    
-    static void deletePluginContainer(std::shared_ptr<PluginContainer> instance)
-    {
-        if(instance != nullptr && instance.use_count() > 1)
-        {
-            juce::MessageManager::callAsync([ptr = std::move(instance)]() mutable
-            {
-                deletePluginContainer(std::move(ptr));
-                anlStrongAssert(ptr == nullptr);
-            });
-            anlStrongAssert(instance == nullptr);
-        }
-    }
-    
     Accessor& mAccessor;
-    std::shared_ptr<PluginContainer> mPluginContainer {nullptr};
+    Tools::AtomicManager<PluginContainer> mPluginManager;
 };
 
 Analyzer::Processor::Processor(Accessor& accessor)
