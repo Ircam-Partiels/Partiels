@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
+    //! @todo Implement tag system
     class FileInfoPanel
     : public juce::Component
     {

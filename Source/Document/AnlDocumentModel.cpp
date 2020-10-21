@@ -10,7 +10,11 @@ Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defa
         return {};
     }
     
-    defaultModel.file = juce::File(xml.getStringAttribute("file", defaultModel.file.getFullPathName()));
+    anlWeakAssert(xml.hasAttribute("file"));
+    anlWeakAssert(xml.hasAttribute("loop"));
+    
+    defaultModel.file = Tools::StringParser::fromXml(xml, "file", defaultModel.file);
+    defaultModel.loop = Tools::StringParser::fromXml(xml, "loop", defaultModel.loop);
     auto it = defaultModel.analyzers.begin();
     for(auto child = xml.getFirstChildElement(); child != nullptr; child = child->getNextElement())
     {
@@ -36,7 +40,7 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
         return nullptr;
     }
     
-    xml->setAttribute("file", file.getFullPathName());
+    xml->setAttribute("file", Tools::StringParser::toString(file));
     for(auto const& analyzer : analyzers)
     {
         auto child = analyzer.toXml();
@@ -46,12 +50,13 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
             xml->addChildElement(child.release());
         }
     }
+    xml->setAttribute("loop", Tools::StringParser::toString(loop));
     return xml;
 }
 
 std::set<Document::Model::Attribute> Document::Model::getAttributeTypes()
 {
-    return {Attribute::file, Attribute::analyzers};
+    return {Attribute::file, Attribute::analyzers, Attribute::loop};
 }
 
 void Document::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
@@ -60,6 +65,7 @@ void Document::Accessor::fromModel(Model const& model, juce::NotificationType co
     std::set<Attribute> attributes;
     MODEL_ACCESSOR_COMPARE_AND_SET(file, attributes)
     MODEL_ACCESSOR_COMPARE_AND_SET(analyzers, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(loop, attributes)
     notifyListener(attributes, {}, notification);
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlListenerList.h"
+#include "AnlStringParser.h"
 
 ANALYSE_FILE_BEGIN
 

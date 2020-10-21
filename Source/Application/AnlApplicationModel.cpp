@@ -16,11 +16,9 @@ Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Mode
     anlWeakAssert(xml.hasAttribute("currentDocumentFile"));
     
     defaultModel.windowState = xml.getStringAttribute("windowState", defaultModel.windowState);
-    defaultModel.recentlyOpenedFilesList = fromString(xml.getStringAttribute("recentlyOpenedFilesList"));
-    sanitize(defaultModel.recentlyOpenedFilesList);
-    defaultModel.currentOpenedFilesList = fromString(xml.getStringAttribute("currentOpenedFilesList"));
-    sanitize(defaultModel.currentOpenedFilesList);
-    defaultModel.currentDocumentFile = juce::File(xml.getStringAttribute("currentDocumentFile", defaultModel.currentDocumentFile.getFullPathName()));
+    defaultModel.recentlyOpenedFilesList = Tools::StringParser::fromXml(xml, "recentlyOpenedFilesList", sanitize(defaultModel.recentlyOpenedFilesList));
+    defaultModel.currentOpenedFilesList = Tools::StringParser::fromXml(xml, "currentOpenedFilesList", sanitize(defaultModel.currentOpenedFilesList));
+    defaultModel.currentDocumentFile = Tools::StringParser::fromXml(xml, "currentDocumentFile", defaultModel.currentDocumentFile);
     
     return defaultModel;
 }
@@ -39,9 +37,9 @@ std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
     }
     
     xml->setAttribute("windowState", windowState);
-    xml->setAttribute("recentlyOpenedFilesList", toString(recentlyOpenedFilesList));
-    xml->setAttribute("currentOpenedFilesList", toString(currentOpenedFilesList));
-    xml->setAttribute("currentDocumentFile", currentDocumentFile.getFullPathName());
+    xml->setAttribute("recentlyOpenedFilesList", Tools::StringParser::toString(recentlyOpenedFilesList));
+    xml->setAttribute("currentOpenedFilesList", Tools::StringParser::toString(currentOpenedFilesList));
+    xml->setAttribute("currentDocumentFile", Tools::StringParser::toString(currentDocumentFile));
     
     return xml;
 }
@@ -55,30 +53,6 @@ void Application::Accessor::fromModel(Model const& model, juce::NotificationType
     MODEL_ACCESSOR_COMPARE_AND_SET(currentOpenedFilesList, attributes)
     MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes)
     notifyListener(attributes, {}, notification);
-}
-
-std::vector<juce::File> Application::Model::fromString(juce::String const& filesAsString)
-{
-    juce::StringArray filePaths;
-    filePaths.addLines(filesAsString);
-    std::vector<juce::File> files;
-    files.reserve(static_cast<size_t>(filePaths.size()));
-    for(auto const& filePath : filePaths)
-    {
-        files.push_back({filePath});
-    }
-    return files;
-}
-
-juce::String Application::Model::toString(std::vector<juce::File> const& files)
-{
-    juce::StringArray filePaths;
-    filePaths.ensureStorageAllocated(static_cast<int>(files.size()));
-    for(auto const& file : files)
-    {
-        filePaths.add(file.getFullPathName());
-    }
-    return filePaths.joinIntoString("\n");
 }
 
 std::vector<juce::File> Application::Model::sanitize(std::vector<juce::File> const& files)

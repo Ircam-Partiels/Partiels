@@ -13,11 +13,13 @@ namespace Document
         enum class Attribute
         {
             file,
-            analyzers
+            analyzers,
+            loop
         };
         
         juce::File file; //!< The audio file associated with the document
-        std::vector<Analyzer::Model> analyzers; //!< The analyzers of the documents
+        std::vector<Analyzer::Model> analyzers; //!< The analyzers of the document
+        juce::Range<double> loop; //!< The loop range of the dovument
         
         std::unique_ptr<juce::XmlElement> toXml() const;
         static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});

@@ -31,6 +31,7 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlMisc.h
     ${SOURCES_DIRECTORY}/Tools/AnlListenerList.h
     ${SOURCES_DIRECTORY}/Tools/AnlModelAccessor.h
+    ${SOURCES_DIRECTORY}/Tools/AnlStringParser.h
     ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.h
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.cpp
@@ -59,7 +60,9 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h)
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentReader.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentReader.h)
 
 file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
