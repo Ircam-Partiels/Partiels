@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Analyzer/AnlAnalyzerModel.h"
+#include "AnlDocumentModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +10,22 @@ namespace Document
     class Reader
     : public juce::PositionableAudioSource
     {
+        Reader(Accessor& accessor);
+        ~Reader() override;
 
+        // juce::PositionableAudioSource
+        void setNextReadPosition(juce::int64 newPosition) override;
+        juce::int64 getNextReadPosition() const override;
+        juce::int64 getTotalLength() const override;
+        bool isLooping() const override;
+        void setLooping(bool shouldLoop)  override;
+        
+    private:
+        Accessor& mAccessor;
+        Accessor::Listener mListener;
+        std::atomic<juce::Range<double>> mLoop;
+        std::shared_ptr<juce::AudioFormatReader> mAudioFormatReader {nullptr};
+        
         JUCE_LEAK_DETECTOR(Reader)
     };
 }

@@ -8,6 +8,7 @@ ANALYSE_FILE_BEGIN
 namespace Document
 {
     //! @todo Implement tag system
+    //! @todo Add popup window that diisplays the full text when the mouse is over after a few ms
     class FileInfoPanel
     : public juce::Component
     {
