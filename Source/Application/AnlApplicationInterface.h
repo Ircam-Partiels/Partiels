@@ -6,6 +6,8 @@
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 
+#include "../Document/AnlDocumentReader.h"
+
 ANALYSE_FILE_BEGIN
 
 namespace Application
@@ -34,7 +36,10 @@ namespace Application
         
         Document::Model mDocumentModel;
         Document::Accessor mDocumentAccessor {mDocumentModel};
-        Document::FileInfoPanel mDocumentFileInfoPanel {mDocumentAccessor};
+        Document::FileInfoPanel mDocumentFileInfoPanel;
+        
+        Document::Reader mDocumentReader;
+        JUCE_COMPILER_WARNING("don't put that here!")
         
         Analyzer::Model mAnalyzerModel;
         Analyzer::Accessor mAnalyzerAccessor {mAnalyzerModel};

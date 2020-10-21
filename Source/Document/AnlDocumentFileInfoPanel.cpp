@@ -1,5 +1,4 @@
 #include "AnlDocumentFileInfoPanel.h"
-#include "../Application/AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,24 +9,23 @@ Document::FileInfoPanel::Property::Property(juce::String const& text, juce::Stri
     entry.setMinimumHorizontalScale(1.0f);
 }
 
-Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
-: mAccessor(accessor)
+Document::FileInfoPanel::FileInfoPanel(juce::AudioFormatManager& audioFormatManager, Accessor& accessor)
+: mAudioFormatManager(audioFormatManager)
+, mAccessor(accessor)
 {
     using Attribute = Model::Attribute;
     using Position = Tools::PropertyPanelBase::Positioning;
     mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
     {
-        juce::ignoreUnused(acsr);
         switch (attribute)
         {
             case Attribute::file:
             {
                 mPropertyLayout3.setPanels({}, Position::left);
-                auto const file = mAccessor.getModel().file;
+                auto const file = acsr.getModel().file;
                 mPanelFileName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setText(file.getParentDirectory().getFullPathName(), juce::NotificationType::dontSendNotification);
-                auto& audioFormatManager = Application::Instance::get().getAudioFormatManager();
-                auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
+                auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
                 if(audioFormat == nullptr)
                 {
                     return;
@@ -65,6 +63,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor)
             }
                 break;
             case Attribute::analyzers:
+                break;
+            case Attribute::loop:
                 break;
         }
     };

@@ -6,7 +6,9 @@
 ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
-: mPluginListTable(Instance::get().getPluginListAccessor())
+: mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), mDocumentAccessor)
+, mDocumentReader(Instance::get().getAudioFormatManager(), mDocumentAccessor)
+, mPluginListTable(Instance::get().getPluginListAccessor())
 {
     addAndMakeVisible(mHeader);
     addAndMakeVisible(mDocumentFileInfoPanel);

@@ -11,7 +11,7 @@ namespace Analyzer
     //! its results.
     struct Model
     {
-        JUCE_COMPILER_WARNING("remove unecessary members");
+        JUCE_COMPILER_WARNING("remove unecessary members")
         
         enum class Attribute
         {
