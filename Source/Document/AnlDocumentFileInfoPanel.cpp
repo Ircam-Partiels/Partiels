@@ -28,12 +28,14 @@ Document::FileInfoPanel::FileInfoPanel(juce::AudioFormatManager& audioFormatMana
                 auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
                 if(audioFormat == nullptr)
                 {
+                    resized();
                     return;
                 }
                 mPanelFileFormat.entry.setText(audioFormat->getFormatName(), juce::NotificationType::dontSendNotification);
                 auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
                 if(audioFormatReader == nullptr)
                 {
+                    resized();
                     return;
                 }
                 mPanelSampleRate.entry.setText(juce::String(audioFormatReader->sampleRate, 1) + "Hz", juce::NotificationType::dontSendNotification);
@@ -89,7 +91,7 @@ void Document::FileInfoPanel::resized()
     auto bounds = getBounds();
     auto const width = bounds.getWidth();
     auto const numVisibleLayout = std::min(width / minimumWidth, mMetaDataPanels.empty() ? 2 : 3);
-    auto const layoutWidth = width / numVisibleLayout;
+    auto const layoutWidth = numVisibleLayout > 0 ? width / numVisibleLayout : 0;
     
     mPropertyLayout3.setVisible(numVisibleLayout == 3);
     mPropertyLayout2.setVisible(numVisibleLayout >= 2);

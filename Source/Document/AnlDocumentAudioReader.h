@@ -47,13 +47,12 @@ namespace Document
             juce::int64 getTotalLength() const override;
             bool isLooping() const override;
             void setLooping(bool shouldLoop)  override;
-            
+//            void setLoop(juce::Range<double> const loopRange);
         private:
             std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
             juce::AudioFormatReaderSource mAudioFormatReaderSource {mAudioFormatReader.get(), false};
             juce::AudioTransportSource mAudioTransportSource;
-            juce::ResamplingAudioSource mResamplingAudioSource {&mAudioFormatReaderSource, false, static_cast<int>(mAudioFormatReader->numChannels)};
-            std::atomic<juce::int64> mPosition {0};
+            std::atomic<bool> mIsLooping;
         };
         
         juce::AudioFormatManager& mAudioFormatManager;

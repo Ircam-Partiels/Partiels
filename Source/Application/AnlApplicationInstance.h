@@ -32,24 +32,25 @@ namespace Application
         
         Accessor& getAccessor();
         PluginList::Accessor& getPluginListAccessor();
+        Document::Accessor& getDocumentAccessor();
+        
         juce::ApplicationCommandManager& getApplicationCommandManager();
         juce::AudioFormatManager& getAudioFormatManager();
         juce::AudioDeviceManager& getAudioDeviceManager();
-        
-        Interface* getInsterface() { return mInterface.get(); }
+
     private:
-        
-        void saveProperties();
         
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;
         
         Model mModel;
-        Accessor mAccessor {mModel};
-        
+        Document::Model mDocumentModel;
         PluginList::Model mPluginListModel;
+        
+        Accessor mAccessor {mModel};
         PluginList::Accessor mPluginListAccessor {mPluginListModel};
+        Document::Accessor mDocumentAccessor {mDocumentModel};
         
         Properties mProperties;
         AudioReader mAudioReader;

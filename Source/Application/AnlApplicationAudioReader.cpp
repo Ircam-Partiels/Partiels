@@ -1,10 +1,11 @@
-
 #include "AnlApplicationAudioReader.h"
 #include "AnlApplicationInstance.h"
+
 
 ANALYSE_FILE_BEGIN
 
 Application::AudioReader::AudioReader()
+: mDocumentAudioReader(Instance::get().getAudioFormatManager(), Instance::get().getDocumentAccessor())
 {
     mAudioSourcePlayer.setSource(this);
     Instance::get().getAudioDeviceManager().addAudioCallback(&mAudioSourcePlayer);
@@ -19,29 +20,17 @@ Application::AudioReader::~AudioReader()
 
 void Application::AudioReader::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    auto* interface = Instance::get().getInsterface();
-    if(interface != nullptr)
-    {
-        interface->getDocumentAudioReader().prepareToPlay(samplesPerBlockExpected, sampleRate);
-    }
+    mDocumentAudioReader.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void Application::AudioReader::releaseResources()
 {
-    auto* interface = Instance::get().getInsterface();
-    if(interface != nullptr)
-    {
-        interface->getDocumentAudioReader().releaseResources();
-    }
+    mDocumentAudioReader.releaseResources();
 }
 
 void Application::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill)
 {
-    auto* interface = Instance::get().getInsterface();
-    if(interface != nullptr)
-    {
-        interface->getDocumentAudioReader().getNextAudioBlock(bufferToFill);
-    }
+    mDocumentAudioReader.getNextAudioBlock(bufferToFill);
 }
 
 ANALYSE_FILE_END

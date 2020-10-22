@@ -89,6 +89,11 @@ PluginList::Accessor& Application::Instance::getPluginListAccessor()
     return mPluginListAccessor;
 }
 
+Document::Accessor& Application::Instance::getDocumentAccessor()
+{
+    return mDocumentAccessor;
+}
+
 juce::ApplicationCommandManager& Application::Instance::getApplicationCommandManager()
 {
     return mApplicationCommandManager;

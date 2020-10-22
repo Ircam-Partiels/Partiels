@@ -1,4 +1,3 @@
-
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationCommandIDs.h"
@@ -6,8 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
-: mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), mDocumentAccessor)
-, mDocumentAudioReader(Instance::get().getAudioFormatManager(), mDocumentAccessor)
+: mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), Instance::get().getDocumentAccessor())
 , mPluginListTable(Instance::get().getPluginListAccessor())
 {
     addAndMakeVisible(mHeader);
@@ -72,23 +70,23 @@ bool Application::Interface::perform(juce::ApplicationCommandTarget::InvocationI
         case CommandIDs::Open:
         {
             using AlertIconType = juce::AlertWindow::AlertIconType;
-            
+            auto& acsr = Instance::get().getDocumentAccessor();
             auto& audioFormatManager = Instance::get().getAudioFormatManager();
             JUCE_COMPILER_WARNING("Translation required for : Open Document");
             juce::FileChooser fc(juce::translate("Open Document"), {}, audioFormatManager.getWildcardForAllFormats());
             if(!fc.browseForFileToOpen())
             {
-                auto copy = mDocumentAccessor.getModel();
+                auto copy = acsr.getModel();
                 copy.file = juce::File{};
-                mDocumentAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+                acsr.fromModel(copy, juce::NotificationType::sendNotificationSync);
                 return true;
             }
                 
             auto const file = fc.getResult();
             
-            auto copy = mDocumentAccessor.getModel();
+            auto copy = acsr.getModel();
             copy.file = file;
-            mDocumentAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+            acsr.fromModel(copy, juce::NotificationType::sendNotificationSync);
             auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
             if(audioFormat == nullptr)
             {

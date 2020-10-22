@@ -129,11 +129,8 @@ void Application::Properties::loadFromFile(PropertyType type)
         case PropertyType::AudioSetup:
         {
             auto xml = juce::parseXML(getFile("audiosetup.settings"));
-            if(xml != nullptr)
-            {
-                auto& manager = Instance::get().getAudioDeviceManager();
-                manager.initialise(sMaxIONumber, sMaxIONumber, xml.get(), true);
-            }
+            auto& manager = Instance::get().getAudioDeviceManager();
+            manager.initialise(sMaxIONumber, sMaxIONumber, xml.get(), true);
         }
             break;
     }

@@ -5,47 +5,40 @@ ANALYSE_FILE_BEGIN
 Document::AudioReader::Source::Source(std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAudioFormatReader(std::move(audioFormatReader))
 {
-    anlStrongAssert(audioFormatReader != nullptr);
+    anlStrongAssert(mAudioFormatReader != nullptr);
 }
 
 void Document::AudioReader::Source::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    anlStrongAssert(sampleRate > 0.0);
-    auto const resamplingRatio = mAudioFormatReader->sampleRate / (sampleRate > 0.0 ? sampleRate : 44100.0);
-    mResamplingAudioSource.setResamplingRatio(resamplingRatio);
-    mResamplingAudioSource.prepareToPlay(samplesPerBlockExpected, (sampleRate > 0.0 ? sampleRate : 44100.0));
+    mAudioTransportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    mAudioTransportSource.setSource(&mAudioFormatReaderSource, false, nullptr, mAudioFormatReader->sampleRate);
+    mAudioFormatReaderSource.setLooping(true);
+    mAudioTransportSource.start();
 }
 
 void Document::AudioReader::Source::releaseResources()
 {
-    mResamplingAudioSource.releaseResources();
+    mAudioTransportSource.releaseResources();
 }
 
 void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill)
 {
-    mResamplingAudioSource.getNextAudioBlock(bufferToFill);
+    mAudioTransportSource.getNextAudioBlock(bufferToFill);
 }
 
 void Document::AudioReader::Source::setNextReadPosition(juce::int64 newPosition)
 {
-    auto const resamplingRatio = mResamplingAudioSource.getResamplingRatio();
-    anlStrongAssert(resamplingRatio > 0.0);
-    mAudioFormatReaderSource.setNextReadPosition(0);
-    mPosition = static_cast<juce::int64>(static_cast<double>(newPosition) / (resamplingRatio > 0.0 ? resamplingRatio : 1.0));
+    mAudioTransportSource.setNextReadPosition(newPosition);
 }
 
 juce::int64 Document::AudioReader::Source::getNextReadPosition() const
 {
-    auto const resamplingRatio = mResamplingAudioSource.getResamplingRatio();
-    anlStrongAssert(resamplingRatio > 0.0);
-    return static_cast<juce::int64>(static_cast<double>(mPosition) * (resamplingRatio > 0.0 ? resamplingRatio : 1.0));
+    return mAudioTransportSource.getNextReadPosition();
 }
 
 juce::int64 Document::AudioReader::Source::getTotalLength() const
 {
-    auto const resamplingRatio = mResamplingAudioSource.getResamplingRatio();
-    anlStrongAssert(resamplingRatio > 0.0);
-    return static_cast<juce::int64>(static_cast<double>(mAudioFormatReaderSource.getTotalLength()) * (resamplingRatio > 0.0 ? resamplingRatio : 1.0));
+    return mAudioTransportSource.getTotalLength();
 }
 
 bool Document::AudioReader::Source::isLooping() const { return false; }

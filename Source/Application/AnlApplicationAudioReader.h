@@ -1,5 +1,6 @@
 #pragma once
-#include "../Tools/AnlMisc.h"
+
+#include "../Document/AnlDocumentAudioReader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -22,6 +23,7 @@ namespace Application
         void releaseResources() override;
         void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
         
+        Document::AudioReader mDocumentAudioReader;
         juce::AudioTransportSource mAudioTransportSource;
         juce::AudioSourcePlayer mAudioSourcePlayer;
         
