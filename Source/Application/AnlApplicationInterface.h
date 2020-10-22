@@ -6,7 +6,7 @@
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 
-#include "../Document/AnlDocumentReader.h"
+#include "../Document/AnlDocumentAudioReader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -30,6 +30,7 @@ namespace Application
         void getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result) override;
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
         
+        Document::AudioReader& getDocumentAudioReader() { return mDocumentAudioReader; }
     private:
         
         Header mHeader;
@@ -38,7 +39,7 @@ namespace Application
         Document::Accessor mDocumentAccessor {mDocumentModel};
         Document::FileInfoPanel mDocumentFileInfoPanel;
         
-        Document::Reader mDocumentReader;
+        Document::AudioReader mDocumentAudioReader;
         JUCE_COMPILER_WARNING("don't put that here!")
         
         Analyzer::Model mAnalyzerModel;

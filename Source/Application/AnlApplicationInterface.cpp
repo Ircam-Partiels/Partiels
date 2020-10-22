@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
 : mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), mDocumentAccessor)
-, mDocumentReader(Instance::get().getAudioFormatManager(), mDocumentAccessor)
+, mDocumentAudioReader(Instance::get().getAudioFormatManager(), mDocumentAccessor)
 , mPluginListTable(Instance::get().getPluginListAccessor())
 {
     addAndMakeVisible(mHeader);

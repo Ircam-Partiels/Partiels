@@ -5,6 +5,7 @@
 #include "AnlApplicationWindow.h"
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationProperties.h"
+#include "AnlApplicationAudioReader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -33,13 +34,16 @@ namespace Application
         PluginList::Accessor& getPluginListAccessor();
         juce::ApplicationCommandManager& getApplicationCommandManager();
         juce::AudioFormatManager& getAudioFormatManager();
+        juce::AudioDeviceManager& getAudioDeviceManager();
         
+        Interface* getInsterface() { return mInterface.get(); }
     private:
         
         void saveProperties();
         
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
+        juce::AudioDeviceManager mAudioDeviceManager;
         
         Model mModel;
         Accessor mAccessor {mModel};
@@ -48,6 +52,7 @@ namespace Application
         PluginList::Accessor mPluginListAccessor {mPluginListModel};
         
         Properties mProperties;
+        AudioReader mAudioReader;
         LookAndFeel mLookAndFeel;
         
         std::unique_ptr<Interface> mInterface;

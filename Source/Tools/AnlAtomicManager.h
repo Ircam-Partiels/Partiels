@@ -10,7 +10,17 @@ namespace Tools
     {
     public:
         
+        ~AtomicManager()
+        {
+            setInstance({});
+        }
+        
         std::shared_ptr<T> getInstance()
+        {
+            return std::atomic_load(&mInstance);
+        }
+        
+        std::shared_ptr<T> const getInstance() const
         {
             return std::atomic_load(&mInstance);
         }

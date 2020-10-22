@@ -99,4 +99,9 @@ juce::AudioFormatManager& Application::Instance::getAudioFormatManager()
     return mAudioFormatManager;
 }
 
+juce::AudioDeviceManager& Application::Instance::getAudioDeviceManager()
+{
+    return mAudioDeviceManager;
+}
+
 ANALYSE_FILE_END

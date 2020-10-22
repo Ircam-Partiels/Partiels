@@ -25,17 +25,31 @@ Application::Properties::Properties()
     
     loadFromFile(PropertyType::Application);
     loadFromFile(PropertyType::PluginList);
+    loadFromFile(PropertyType::AudioSetup);
     
     Instance::get().getAccessor().addListener(mApplicationListener, juce::NotificationType::dontSendNotification);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, juce::NotificationType::dontSendNotification);
+    Instance::get().getAudioDeviceManager().addChangeListener(this);
+    
     saveToFile(PropertyType::Application);
     saveToFile(PropertyType::PluginList);
+    saveToFile(PropertyType::AudioSetup);
 }
 
 Application::Properties::~Properties()
 {
-    Instance::get().getAccessor().removeListener(mApplicationListener);
+    Instance::get().getAudioDeviceManager().removeChangeListener(this);
     Instance::get().getPluginListAccessor().removeListener(mPluginListListener);
+    Instance::get().getAccessor().removeListener(mApplicationListener);
+}
+
+void Application::Properties::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    anlStrongAssert(source == &Instance::get().getAudioDeviceManager());
+    if(source == &Instance::get().getAudioDeviceManager())
+    {
+        saveToFile(PropertyType::AudioSetup);
+    }
 }
 
 juce::File Application::Properties::getFile(juce::StringRef const& fileName)
@@ -75,6 +89,15 @@ void Application::Properties::saveToFile(PropertyType type)
             writeTo(Instance::get().getPluginListAccessor().getModel().toXml(), "pluginlist.settings");
         }
             break;
+        case PropertyType::AudioSetup:
+        {
+            auto xml = Instance::get().getAudioDeviceManager().createStateXml();
+            if(xml != nullptr)
+            {
+                writeTo(std::move(xml), "audiosetup.settings");
+            }
+        }
+            break;
     }
 }
 
@@ -100,6 +123,16 @@ void Application::Properties::loadFromFile(PropertyType type)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
                 acsr.fromXml(*xml, acsr.getModel(), juce::NotificationType::sendNotification);
+            }
+        }
+            break;
+        case PropertyType::AudioSetup:
+        {
+            auto xml = juce::parseXML(getFile("audiosetup.settings"));
+            if(xml != nullptr)
+            {
+                auto& manager = Instance::get().getAudioDeviceManager();
+                manager.initialise(sMaxIONumber, sMaxIONumber, xml.get(), true);
             }
         }
             break;

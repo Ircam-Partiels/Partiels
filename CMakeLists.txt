@@ -46,6 +46,8 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
@@ -61,10 +63,10 @@ file(GLOB ApplicationSources
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentReader.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentReader.h)
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h)
 
 file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
@@ -147,6 +149,7 @@ target_link_libraries(Analyse PRIVATE
     AnalyseData
     juce::juce_gui_extra
     juce::juce_audio_formats
+    juce::juce_audio_devices
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)

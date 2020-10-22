@@ -52,7 +52,6 @@ public:
     ~Impl()
     {
         mAccessor.removeListener(*this);
-        mPluginManager.setInstance({nullptr});
     }
     
     bool initialize(double sampleRate, size_t numChannels, size_t stepSize, size_t blockSize)

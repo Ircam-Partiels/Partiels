@@ -8,18 +8,25 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class Properties
+    : private juce::ChangeListener
     {
     public:
         
+        static const int sMaxIONumber = 64;
+        
         Properties();
-        ~Properties();
+        ~Properties() override;
         
     private:
+        
+        // juce::ChangeListener
+        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         
         enum class PropertyType
         {
             Application = 0,
-            PluginList = 1
+            PluginList = 1,
+            AudioSetup = 2
         };
         
         static juce::File getFile(juce::StringRef const& fileName);
