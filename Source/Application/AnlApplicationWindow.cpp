@@ -1,4 +1,3 @@
-
 #include "AnlApplicationWindow.h"
 #include "AnlApplicationInstance.h"
 

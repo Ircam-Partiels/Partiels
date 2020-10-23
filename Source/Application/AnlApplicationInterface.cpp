@@ -5,10 +5,11 @@
 ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
-: mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), Instance::get().getDocumentAccessor())
+: mDocumentTransport(Instance::get().getDocumentAccessor())
+, mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), Instance::get().getDocumentAccessor())
 , mPluginListTable(Instance::get().getPluginListAccessor())
 {
-    addAndMakeVisible(mHeader);
+    addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentFileInfoPanel);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
     
@@ -26,8 +27,10 @@ Application::Interface::Interface()
 
 void Application::Interface::resized()
 {
-    mHeader.setBounds(getLocalBounds().removeFromTop(60));
-    mDocumentFileInfoPanel.setBounds(getLocalBounds().removeFromTop(102));
+    auto bounds = getLocalBounds();
+    auto header = bounds.removeFromTop(102);
+    mDocumentTransport.setBounds(header.removeFromLeft(240));
+    mDocumentFileInfoPanel.setBounds(header);
 }
 
 juce::ApplicationCommandTarget* Application::Interface::getNextCommandTarget()

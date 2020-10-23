@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Analyzer/AnlAnalyzerModel.h"
+#include "../Tools/AnlSignalBroadcaster.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -17,6 +18,13 @@ namespace Document
             loop
         };
         
+        enum class Signal
+        {
+            movePlayhead,
+            togglePlayback,
+            toggleLooping
+        };
+        
         juce::File file; //!< The audio file associated with the document
         std::vector<Analyzer::Model> analyzers; //!< The analyzers of the document
         juce::Range<double> loop; //!< The loop range of the dovument
@@ -28,7 +36,9 @@ namespace Document
         JUCE_LEAK_DETECTOR(Model)
     };
     
-    class Accessor : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
+    class Accessor
+    : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
+    , public Tools::SignalBroadcaster<Accessor, Model::Signal>
     {
     public:
         using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;

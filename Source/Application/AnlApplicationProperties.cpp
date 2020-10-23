@@ -1,4 +1,3 @@
-
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationInstance.h"
 

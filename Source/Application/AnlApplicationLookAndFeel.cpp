@@ -1,4 +1,3 @@
-
 #include "AnlApplicationLookAndFeel.h"
 #include "../Tools/AnlPropertyLayout.h"
 

@@ -88,7 +88,7 @@ void Document::FileInfoPanel::resized()
 {
     auto constexpr minimumWidth = 140;
     
-    auto bounds = getBounds();
+    auto bounds = getLocalBounds();
     auto const width = bounds.getWidth();
     auto const numVisibleLayout = std::min(width / minimumWidth, mMetaDataPanels.empty() ? 2 : 3);
     auto const layoutWidth = numVisibleLayout > 0 ? width / numVisibleLayout : 0;

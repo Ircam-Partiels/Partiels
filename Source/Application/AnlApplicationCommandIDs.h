@@ -10,8 +10,10 @@ namespace Application
     {
         enum : int
         {
-            Open = 0x2001,
-            New = 0x2002
+            Open = 0x200100,
+            New = 0x200101,
+            Save = 0x200102,
+            SaveAs = 0x200103
         };
     }
 }

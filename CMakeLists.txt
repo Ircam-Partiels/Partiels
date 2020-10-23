@@ -32,6 +32,7 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlListenerList.h
     ${SOURCES_DIRECTORY}/Tools/AnlAtomicManager.h
     ${SOURCES_DIRECTORY}/Tools/AnlModelAccessor.h
+    ${SOURCES_DIRECTORY}/Tools/AnlSignalBroadcaster.h
     ${SOURCES_DIRECTORY}/Tools/AnlStringParser.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlStringParser.h
     ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.cpp
@@ -65,6 +66,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h)
 

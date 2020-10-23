@@ -10,8 +10,12 @@ namespace Document
     //! @brief The audio reader of a document
     class AudioReader
     : public juce::PositionableAudioSource
+    , public juce::AsyncUpdater
     {
     public:
+        using Attribute = Model::Attribute;
+        using Signal = Model::Signal;
+        
         AudioReader(juce::AudioFormatManager& audioFormatManager, Accessor& accessor);
         ~AudioReader() override;
 
@@ -28,6 +32,9 @@ namespace Document
         void setLooping(bool shouldLoop)  override;
         
     private:
+        
+        // juce::AsyncUpdater
+        void handleAsyncUpdate() override;
         
         class Source
         : public juce::PositionableAudioSource
@@ -47,22 +54,24 @@ namespace Document
             juce::int64 getTotalLength() const override;
             bool isLooping() const override;
             void setLooping(bool shouldLoop)  override;
-//            void setLoop(juce::Range<double> const loopRange);
+
         private:
             std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
-            juce::AudioFormatReaderSource mAudioFormatReaderSource {mAudioFormatReader.get(), false};
-            juce::AudioTransportSource mAudioTransportSource;
-            std::atomic<bool> mIsLooping;
+            juce::AudioFormatReaderSource mAudioFormatReaderSource;
+            juce::ResamplingAudioSource mResamplingAudioSource;
         };
         
         juce::AudioFormatManager& mAudioFormatManager;
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        Accessor::Receiver mReceiver;
         double mSampleRate = 44100.0;
         int mSamplesPerBlockExpected = 512;
         
         Tools::AtomicManager<Source> mSourceManager;
-        std::atomic<juce::Range<double>> mLoop;
+        std::atomic<bool> mIsPlaying {false};
+        std::atomic<juce::int64> mReadPosition {0};
+        std::atomic<juce::Range<juce::int64>> mLoop;
         
         JUCE_LEAK_DETECTOR(AudioReader)
     };

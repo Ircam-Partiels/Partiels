@@ -1,4 +1,3 @@
-
 #include "AnlApplicationHeader.h"
 #include "AnlApplicationInstance.h"
 

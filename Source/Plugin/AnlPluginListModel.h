@@ -53,7 +53,8 @@ namespace PluginList
         JUCE_LEAK_DETECTOR(Model)
     };
     
-    class Accessor : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
+    class Accessor
+    : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
     {
     public:
         using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
