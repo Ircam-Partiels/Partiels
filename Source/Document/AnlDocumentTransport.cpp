@@ -11,17 +11,18 @@ Document::Transport::Transport(Accessor& accessor)
         {
             case Signal::movePlayhead:
             {
-                
             }
                 break;
             case Signal::togglePlayback:
             {
+                mPlayback.setButtonText(value ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
                 mPlayback.setToggleState(value, juce::NotificationType::dontSendNotification);
             }
                 break;
-            case Signal::toggleLooping:
+            case Signal::playheadPosition:
             {
-                mLoopButton.setToggleState(value, juce::NotificationType::dontSendNotification);
+                auto const samples = static_cast<juce::int64>(value);
+                mPlayPositionInSamples.setText(juce::String(samples) + " samples", juce::NotificationType::dontSendNotification);
             }
                 break;
         }
@@ -44,13 +45,20 @@ Document::Transport::Transport(Accessor& accessor)
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
     {
-        mAccessor.sendSignal(Signal::toggleLooping, {mLoopButton.getToggleState()}, juce::NotificationType::sendNotificationSync);
+        auto copy = mAccessor.getModel();
+        copy.isLooping = mLoopButton.getToggleState();
+        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
     };
     
     addAndMakeVisible(mBackwardButton);
     addAndMakeVisible(mPlayback);
     addAndMakeVisible(mForwardButton);
     addAndMakeVisible(mLoopButton);
+    
+    mPlayPositionInSamples.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(mPlayPositionInSamples);
+    mPlayPositionInHMSms.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(mPlayPositionInHMSms);
 }
 
 Document::Transport::~Transport()
@@ -61,11 +69,16 @@ Document::Transport::~Transport()
 void Document::Transport::resized()
 {
     auto bounds = getLocalBounds();
-    auto const width = bounds.getWidth() / 4;
-    mBackwardButton.setBounds(bounds.removeFromLeft(width));
-    mPlayback.setBounds(bounds.removeFromLeft(width));
-    mForwardButton.setBounds(bounds.removeFromLeft(width));
-    mLoopButton.setBounds(bounds);
+    
+    auto topBounds = bounds.removeFromTop(bounds.getHeight() / 3);
+    auto const buttonWidth = topBounds.getWidth() / 4;
+    mBackwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
+    mPlayback.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
+    mForwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
+    mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
+    
+    mPlayPositionInSamples.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
+    mPlayPositionInHMSms.setBounds(bounds);
 }
 
 ANALYSE_FILE_END

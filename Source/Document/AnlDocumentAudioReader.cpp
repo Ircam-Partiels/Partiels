@@ -32,24 +32,18 @@ void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelIn
 
 void Document::AudioReader::Source::setNextReadPosition(juce::int64 newPosition)
 {
-    auto const ratio = mResamplingAudioSource.getResamplingRatio();
-    anlStrongAssert(ratio > 0.0);
-    mAudioFormatReaderSource.setNextReadPosition(static_cast<juce::int64>(static_cast<double>(newPosition) * (ratio > 0.0 ? ratio : 1.0)));
+    mAudioFormatReaderSource.setNextReadPosition(newPosition);
     mResamplingAudioSource.flushBuffers();
 }
 
 juce::int64 Document::AudioReader::Source::getNextReadPosition() const
 {
-    auto const ratio = mResamplingAudioSource.getResamplingRatio();
-    anlStrongAssert(ratio > 0.0);
-    return static_cast<juce::int64>(static_cast<double>(mAudioFormatReaderSource.getNextReadPosition()) / (ratio > 0.0 ? ratio : 1.0));
+    return mAudioFormatReaderSource.getNextReadPosition();
 }
 
 juce::int64 Document::AudioReader::Source::getTotalLength() const
 {
-    auto const ratio = mResamplingAudioSource.getResamplingRatio();
-    anlStrongAssert(ratio > 0.0);
-    return static_cast<juce::int64>(static_cast<double>(mAudioFormatReaderSource.getTotalLength()) / (ratio > 0.0 ? ratio : 1.0));
+    return mAudioFormatReaderSource.getTotalLength();
 }
 
 bool Document::AudioReader::Source::isLooping() const
@@ -97,7 +91,10 @@ Document::AudioReader::AudioReader(juce::AudioFormatManager& audioFormatManager,
                 break;
             case Attribute::analyzers:
                 break;
-            case Attribute::loop:
+            case Attribute::isLooping:
+            {
+                mIsLooping.store(acsr.getModel().isLooping);
+            }
                 break;
         }
     };
@@ -106,24 +103,43 @@ Document::AudioReader::AudioReader(juce::AudioFormatManager& audioFormatManager,
     
     mReceiver.onSignal = [&](Accessor& acsr, Signal signal, juce::var value)
     {
+        juce::ignoreUnused(acsr);
+        auto getLastPosition = [&]() -> juce::int64
+        {
+            auto instance = mSourceManager.getInstance();
+            if(instance != nullptr)
+            {
+                return instance->getTotalLength();
+            }
+            return 0;
+        };
+        
         switch (signal)
         {
             case Signal::movePlayhead:
             {
-                mReadPosition.store(static_cast<bool>(value) ? getTotalLength() : 0);
+                mReadPosition.store(static_cast<bool>(value) ? getLastPosition() : 0);
             }
                 break;
             case Signal::togglePlayback:
             {
-                mIsPlaying.store(static_cast<bool>(value));
+                if(static_cast<bool>(value))
+                {
+                    auto expected = getLastPosition();
+                    mReadPosition.compare_exchange_strong(expected, 0);
+                    mIsPlaying.store(true);
+                    startTimer(50);
+                }
+                else
+                {
+                    stopTimer();
+                    mIsPlaying.store(false);
+                }
             }
                 break;
-            case Signal::toggleLooping:
+            case Signal::playheadPosition:
             {
-                auto const rate = mSampleRate;
-                auto const loopStart = static_cast<juce::int64>(std::floor(acsr.getModel().loop.getStart() * rate));
-                auto const loopEnd = static_cast<juce::int64>(std::floor(acsr.getModel().loop.getEnd() * rate));
-                mLoop.store(static_cast<bool>(value) ? juce::Range<juce::int64>{loopStart, loopEnd} : juce::Range<juce::int64>{0, 0});
+                mReadPosition = static_cast<juce::int64>(value);
             }
                 break;
         }
@@ -165,17 +181,23 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
         if(instance != nullptr)
         {
             auto expectedPosition = instance->getNextReadPosition();
-            auto const nextReadPosition = expectedPosition + static_cast<juce::int64>(bufferToFill.numSamples);
+            instance->getNextAudioBlock(bufferToFill);
+            
+            auto const endPosition = instance->getTotalLength();
+            if(mIsLooping && instance->getNextReadPosition() >= endPosition)
+            {
+                instance->setNextReadPosition(0);
+            }
+            
+            auto const nextReadPosition = instance->getNextReadPosition();
             if(!mReadPosition.compare_exchange_strong(expectedPosition, nextReadPosition))
             {
                 instance->setNextReadPosition(mReadPosition.load());
-                mReadPosition += static_cast<juce::int64>(bufferToFill.numSamples);
             }
-            
-            instance->getNextAudioBlock(bufferToFill);
-            
-            if(mReadPosition >= instance->getTotalLength())
+
+            if(mReadPosition >= endPosition)
             {
+                mReadPosition = endPosition;
                 mIsPlaying.store(false);
                 triggerAsyncUpdate();
             }
@@ -187,57 +209,14 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
     }
 }
 
-void Document::AudioReader::setNextReadPosition(juce::int64 newPosition)
-{
-    auto instance = mSourceManager.getInstance();
-    if(instance != nullptr)
-    {
-        instance->setNextReadPosition(newPosition);
-    }
-}
-
-juce::int64 Document::AudioReader::getNextReadPosition() const
-{
-    auto instance = mSourceManager.getInstance();
-    if(instance != nullptr)
-    {
-        return instance->getNextReadPosition();
-    }
-    return 0;
-}
-
-juce::int64 Document::AudioReader::getTotalLength() const
-{
-    auto instance = mSourceManager.getInstance();
-    if(instance != nullptr)
-    {
-        return instance->getTotalLength();
-    }
-    return 0;
-}
-
-bool Document::AudioReader::isLooping() const
-{
-    auto instance = mSourceManager.getInstance();
-    if(instance != nullptr)
-    {
-        return instance->isLooping();
-    }
-    return false;
-}
-
-void Document::AudioReader::setLooping(bool shouldLoop)
-{
-    auto instance = mSourceManager.getInstance();
-    if(instance != nullptr)
-    {
-        return instance->setLooping(shouldLoop);
-    }
-}
-
 void Document::AudioReader::handleAsyncUpdate()
 {
     mAccessor.sendSignal(Signal::togglePlayback, {false}, juce::NotificationType::sendNotificationSync);
+}
+
+void Document::AudioReader::timerCallback()
+{
+    mAccessor.sendSignal(Signal::playheadPosition, {mReadPosition.load()}, juce::NotificationType::sendNotificationSync);
 }
 
 ANALYSE_FILE_END

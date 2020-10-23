@@ -9,8 +9,9 @@ namespace Document
 {
     //! @brief The audio reader of a document
     class AudioReader
-    : public juce::PositionableAudioSource
-    , public juce::AsyncUpdater
+    : public juce::AudioSource
+    , private juce::AsyncUpdater
+    , private juce::Timer
     {
     public:
         using Attribute = Model::Attribute;
@@ -24,17 +25,13 @@ namespace Document
         void releaseResources() override;
         void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
         
-        // juce::PositionableAudioSource
-        void setNextReadPosition(juce::int64 newPosition) override;
-        juce::int64 getNextReadPosition() const override;
-        juce::int64 getTotalLength() const override;
-        bool isLooping() const override;
-        void setLooping(bool shouldLoop)  override;
-        
     private:
         
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
+        
+        // juce::Timer
+        void timerCallback() override;
         
         class Source
         : public juce::PositionableAudioSource
@@ -70,8 +67,8 @@ namespace Document
         
         Tools::AtomicManager<Source> mSourceManager;
         std::atomic<bool> mIsPlaying {false};
+        std::atomic<bool> mIsLooping {false};
         std::atomic<juce::int64> mReadPosition {0};
-        std::atomic<juce::Range<juce::int64>> mLoop;
         
         JUCE_LEAK_DETECTOR(AudioReader)
     };

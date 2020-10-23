@@ -10,7 +10,9 @@ Application::Interface::Interface()
 , mPluginListTable(Instance::get().getPluginListAccessor())
 {
     addAndMakeVisible(mDocumentTransport);
+    addAndMakeVisible(mDocumentTransportSeparator);
     addAndMakeVisible(mDocumentFileInfoPanel);
+    addAndMakeVisible(mHeaderSeparator);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
     
     mPluginListTable.onPluginSelected = [&](juce::String key)
@@ -27,10 +29,13 @@ Application::Interface::Interface()
 
 void Application::Interface::resized()
 {
+    auto constexpr separatorSize = 2;
     auto bounds = getLocalBounds();
     auto header = bounds.removeFromTop(102);
     mDocumentTransport.setBounds(header.removeFromLeft(240));
+    mDocumentTransportSeparator.setBounds(header.removeFromLeft(separatorSize));
     mDocumentFileInfoPanel.setBounds(header);
+    mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
 }
 
 juce::ApplicationCommandTarget* Application::Interface::getNextCommandTarget()

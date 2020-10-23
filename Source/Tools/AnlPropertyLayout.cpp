@@ -52,6 +52,7 @@ void Tools::PropertyLayout::setPanels(std::vector<PanelRef> const& panels, Posit
     }
     auto const isLeft = mPositioning == Positioning::left;
     mViewport.setScrollBarsShown(isLeft, !isLeft, isLeft, !isLeft);
+    resized();
 }
 
 ANALYSE_FILE_END

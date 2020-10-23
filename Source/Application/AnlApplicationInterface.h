@@ -31,7 +31,9 @@ namespace Application
     private:
         
         Document::Transport mDocumentTransport;
+        Tools::ColouredPanel mDocumentTransportSeparator;
         Document::FileInfoPanel mDocumentFileInfoPanel;
+        Tools::ColouredPanel mHeaderSeparator;
         
         Analyzer::Model mAnalyzerModel;
         Analyzer::Accessor mAnalyzerAccessor {mAnalyzerModel};

@@ -129,6 +129,7 @@ create_module_group(Analyse "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DI
 create_module_group(Analyse "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
 create_module_group(Analyse "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
 create_module_group(Analyse "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
+create_module_group(Analyse "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
 target_sources(Analyse PRIVATE ${GlobalSources} ${ApplicationSources} ${DocumentSources} ${AnalyzerSources} ${ToolsSources} ${PluginSources})
 

@@ -66,7 +66,7 @@ Document::FileInfoPanel::FileInfoPanel(juce::AudioFormatManager& audioFormatMana
                 break;
             case Attribute::analyzers:
                 break;
-            case Attribute::loop:
+            case Attribute::isLooping:
                 break;
         }
     };

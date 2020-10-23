@@ -21,10 +21,13 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Receiver mReceiver;
         
-        juce::TextButton mBackwardButton {"Backward"};
-        juce::TextButton mPlayback {"Play/Stop"};
-        juce::TextButton mForwardButton {"Forward"};
-        juce::TextButton mLoopButton {"Loop"};
+        juce::TextButton mBackwardButton {juce::CharPointer_UTF8("«")};
+        juce::TextButton mPlayback {juce::CharPointer_UTF8("›")};
+        juce::TextButton mForwardButton {juce::CharPointer_UTF8("»")};
+        juce::TextButton mLoopButton {juce::CharPointer_UTF8("∞")};
+        
+        juce::Label mPlayPositionInSamples {"", "0samples"};
+        juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
         
         JUCE_LEAK_DETECTOR(Transport)
     };

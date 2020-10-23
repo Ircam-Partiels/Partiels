@@ -11,10 +11,10 @@ Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defa
     }
     
     anlWeakAssert(xml.hasAttribute("file"));
-    anlWeakAssert(xml.hasAttribute("loop"));
+    anlWeakAssert(xml.hasAttribute("isLooping"));
     
     defaultModel.file = Tools::StringParser::fromXml(xml, "file", defaultModel.file);
-    defaultModel.loop = Tools::StringParser::fromXml(xml, "loop", defaultModel.loop);
+    defaultModel.isLooping = xml.getBoolAttribute("isLooping", defaultModel.isLooping);
     auto it = defaultModel.analyzers.begin();
     for(auto child = xml.getFirstChildElement(); child != nullptr; child = child->getNextElement())
     {
@@ -50,13 +50,13 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
             xml->addChildElement(child.release());
         }
     }
-    xml->setAttribute("loop", Tools::StringParser::toString(loop));
+    xml->setAttribute("isLooping", isLooping);
     return xml;
 }
 
 std::set<Document::Model::Attribute> Document::Model::getAttributeTypes()
 {
-    return {Attribute::file, Attribute::analyzers, Attribute::loop};
+    return {Attribute::file, Attribute::analyzers, Attribute::isLooping};
 }
 
 void Document::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
@@ -65,7 +65,7 @@ void Document::Accessor::fromModel(Model const& model, juce::NotificationType co
     std::set<Attribute> attributes;
     MODEL_ACCESSOR_COMPARE_AND_SET(file, attributes)
     MODEL_ACCESSOR_COMPARE_AND_SET(analyzers, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(loop, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(isLooping, attributes)
     notifyListener(attributes, {}, notification);
 }
 
