@@ -13,7 +13,7 @@ namespace Document
     : public juce::Component
     {
     public:
-        FileInfoPanel(juce::AudioFormatManager& audioFormatManager, Accessor& accessor);
+        FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~FileInfoPanel() override;
         
         void resized() override;
@@ -27,8 +27,8 @@ namespace Document
             ~Property() override = default;
         };
         
-        juce::AudioFormatManager& mAudioFormatManager;
         Accessor& mAccessor;
+        juce::AudioFormatManager& mAudioFormatManager;
         Accessor::Listener mListener;
         
         Property mPanelFileName {juce::translate("Name"), juce::translate("The name of the audio file")};

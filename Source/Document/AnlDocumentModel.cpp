@@ -2,6 +2,26 @@
 
 ANALYSE_FILE_BEGIN
 
+Document::Model::Model(Model const& other)
+: file(other.file)
+, isLooping(other.isLooping)
+{
+    analyzers.resize(other.analyzers.size());
+    std::transform(other.analyzers.cbegin(), other.analyzers.cend(), analyzers.begin(), [](auto const& analyzer)
+    {
+        anlStrongAssert(analyzer != nullptr);
+        return analyzer != nullptr ? std::make_unique<Analyzer::Model>(*analyzer.get()) : std::make_unique<Analyzer::Model>();
+    });
+}
+
+Document::Model::Model(Model&& other)
+: file(std::move(other.file))
+, analyzers(std::move(other.analyzers))
+, isLooping(std::move(other.isLooping))
+{
+    
+}
+
 Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
 {
     anlWeakAssert(xml.hasTagName("Anl::Document::Model"));
@@ -15,19 +35,19 @@ Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defa
     
     defaultModel.file = Tools::StringParser::fromXml(xml, "file", defaultModel.file);
     defaultModel.isLooping = xml.getBoolAttribute("isLooping", defaultModel.isLooping);
-    auto it = defaultModel.analyzers.begin();
-    for(auto child = xml.getFirstChildElement(); child != nullptr; child = child->getNextElement())
+    auto const childs = Tools::XmlUtils::getChilds(xml, "Analyzer");
+    auto& analyzers = defaultModel.analyzers;
+    analyzers.resize(childs.size());
+    for(size_t i = 0; i < analyzers.size(); ++i)
     {
-        using submodel_t = decltype(defaultModel.analyzers)::value_type;
-        if(it != defaultModel.analyzers.end())
+        if(analyzers[i] == nullptr)
         {
-            *it = submodel_t::fromXml(*child, *it);
+            analyzers[i] = std::make_unique<Analyzer::Model>(Analyzer::Model::fromXml(childs[i]));
         }
         else
         {
-            it = defaultModel.analyzers.insert(it, submodel_t::fromXml(*child));
+            *(analyzers[i].get()) = Analyzer::Model::fromXml(childs[i]);
         }
-        ++it;
     }
     return defaultModel;
 }
@@ -41,16 +61,8 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
     }
     
     xml->setAttribute("file", Tools::StringParser::toString(file));
-    for(auto const& analyzer : analyzers)
-    {
-        auto child = analyzer.toXml();
-        anlWeakAssert(child != nullptr);
-        if(child != nullptr)
-        {
-            xml->addChildElement(child.release());
-        }
-    }
     xml->setAttribute("isLooping", isLooping);
+    Tools::XmlUtils::addChilds(*xml, analyzers, "Analyzer");
     return xml;
 }
 
@@ -63,10 +75,15 @@ void Document::Accessor::fromModel(Model const& model, juce::NotificationType co
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    MODEL_ACCESSOR_COMPARE_AND_SET(file, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(analyzers, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(isLooping, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(file, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(isLooping, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET_VECTOR(analyzers, attributes, mAnalyzerAccessors);
     notifyListener(attributes, {}, notification);
+}
+
+Analyzer::Accessor& Document::Accessor::getAnalyzerAccessor(size_t index)
+{
+    return *mAnalyzerAccessors[index].get();
 }
 
 ANALYSE_FILE_END

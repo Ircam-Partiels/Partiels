@@ -17,7 +17,7 @@ namespace Document
         using Attribute = Model::Attribute;
         using Signal = Model::Signal;
         
-        AudioReader(juce::AudioFormatManager& audioFormatManager, Accessor& accessor);
+        AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~AudioReader() override;
 
         // juce::AudioSource
@@ -56,10 +56,11 @@ namespace Document
             std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
             juce::AudioFormatReaderSource mAudioFormatReaderSource;
             juce::ResamplingAudioSource mResamplingAudioSource;
+            std::atomic<juce::int64> mReadPosition {0};
         };
         
-        juce::AudioFormatManager& mAudioFormatManager;
         Accessor& mAccessor;
+        juce::AudioFormatManager& mAudioFormatManager;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
         double mSampleRate = 44100.0;

@@ -14,28 +14,30 @@ PluginList::Model PluginList::Model::fromXml(juce::XmlElement const& xml, Model 
     anlWeakAssert(xml.hasAttribute("sortColumn"));
     anlWeakAssert(xml.hasAttribute("sortIsFowards"));
     
-    for(auto* child = xml.getFirstChildElement(); child != nullptr; child = child->getNextElement())
+    auto const childs = Tools::XmlUtils::getChilds(xml, "Description");
+    for(auto const& child : childs)
     {
-        anlWeakAssert(child->hasAttribute("key"));
-        anlWeakAssert(child->hasAttribute("name"));
-        anlWeakAssert(child->hasAttribute("maker"));
-        anlWeakAssert(child->hasAttribute("api"));
-        anlWeakAssert(child->hasAttribute("details"));
-        auto const key = child->getStringAttribute("key");
+        anlWeakAssert(child.get().hasAttribute("key"));
+        anlWeakAssert(child.get().hasAttribute("name"));
+        anlWeakAssert(child.get().hasAttribute("maker"));
+        anlWeakAssert(child.get().hasAttribute("api"));
+        anlWeakAssert(child.get().hasAttribute("details"));
+        auto const key = child.get().getStringAttribute("key");
         if(key.isNotEmpty())
         {
             auto& description = defaultModel.descriptions[key];
-            description.name = child->getStringAttribute("name", description.name);
-            description.maker = child->getStringAttribute("maker", description.maker);
-            description.api = static_cast<unsigned int>(child->getIntAttribute("api", static_cast<int>(description.api)));
-            description.details = child->getStringAttribute("details", description.details);
+            description.name = child.get().getStringAttribute("name", description.name);
+            description.maker = child.get().getStringAttribute("maker", description.maker);
+            description.api = static_cast<unsigned int>(child.get().getIntAttribute("api", static_cast<int>(description.api)));
+            description.details = child.get().getStringAttribute("details", description.details);
             
-            for(auto* subchild = child->getFirstChildElement(); subchild != nullptr; subchild = subchild->getNextElement())
+            auto const subchilds = Tools::XmlUtils::getChilds(child.get(), "Category");
+            for(auto const& subchild : subchilds)
             {
-                anlWeakAssert(child->hasAttribute("category"));
-                if(child->hasAttribute("category"))
+                anlWeakAssert(subchild.get().hasAttribute("category"));
+                if(subchild.get().hasAttribute("category"))
                 {
-                    description.categories.insert(child->getStringAttribute("category"));
+                    description.categories.insert(subchild.get().getStringAttribute("category"));
                 }
             }
         }
@@ -93,9 +95,9 @@ void PluginList::Accessor::fromModel(Model const& model, juce::NotificationType 
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    MODEL_ACCESSOR_COMPARE_AND_SET(descriptions, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(sortColumn, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(sortIsFowards, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(descriptions, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(sortColumn, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(sortIsFowards, attributes);
     notifyListener(attributes, {}, notification);
 }
 

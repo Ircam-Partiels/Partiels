@@ -19,15 +19,16 @@ Analyzer::Model Analyzer::Model::fromXml(juce::XmlElement const& xml, Model defa
     defaultModel.programName = xml.getStringAttribute("programName", defaultModel.programName);
     defaultModel.resultFile = xml.getStringAttribute("file", defaultModel.resultFile.getFullPathName());
     defaultModel.projectFile = xml.getStringAttribute("project", defaultModel.projectFile.getFullPathName());
-    for(auto* child = xml.getFirstChildElement(); child != nullptr; child = child->getNextElement())
+    auto const childs = Tools::XmlUtils::getChilds(xml, "Parameter");
+    for(auto const& child : childs)
     {
-        anlWeakAssert(child->hasAttribute("name"));
-        anlWeakAssert(child->hasAttribute("value"));
-        auto const key = child->getStringAttribute("name");
+        anlWeakAssert(child.get().hasAttribute("name"));
+        anlWeakAssert(child.get().hasAttribute("value"));
+        auto const key = child.get().getStringAttribute("name");
         if(key.isNotEmpty())
         {
             auto& parameter = defaultModel.parameters[key];
-            parameter = child->getDoubleAttribute("value", parameter);
+            parameter = child.get().getDoubleAttribute("value", parameter);
         }
     }
     
@@ -69,11 +70,11 @@ void Analyzer::Accessor::fromModel(Model const& model, juce::NotificationType co
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    MODEL_ACCESSOR_COMPARE_AND_SET(key, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(parameters, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(programName, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(resultFile, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(projectFile, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(key, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(parameters, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(programName, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(resultFile, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(projectFile, attributes);
     notifyListener(attributes, {}, notification);
 }
 

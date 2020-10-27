@@ -55,4 +55,18 @@ template <> juce::String Tools::StringParser::toString<std::vector<juce::File>>(
     return filePaths.joinIntoString("\n");
 }
 
+std::vector<std::reference_wrapper<juce::XmlElement>> Tools::XmlUtils::getChilds(juce::XmlElement const& xml, juce::StringRef const& tag)
+{
+    std::vector<std::reference_wrapper<juce::XmlElement>> childs;
+    childs.reserve(static_cast<size_t>(xml.getNumChildElements()));
+    for(auto* child = xml.getFirstChildElement(); child != nullptr; child = child->getNextElement())
+    {
+        if(child != nullptr && (tag.isEmpty() || tag == child->getTagName()))
+        {
+            childs.push_back(*child);
+        }
+    }
+    return childs;
+}
+
 ANALYSE_FILE_END

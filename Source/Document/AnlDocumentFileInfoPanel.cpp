@@ -9,9 +9,9 @@ Document::FileInfoPanel::Property::Property(juce::String const& text, juce::Stri
     entry.setMinimumHorizontalScale(1.0f);
 }
 
-Document::FileInfoPanel::FileInfoPanel(juce::AudioFormatManager& audioFormatManager, Accessor& accessor)
-: mAudioFormatManager(audioFormatManager)
-, mAccessor(accessor)
+Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
+: mAccessor(accessor)
+, mAudioFormatManager(audioFormatManager)
 {
     using Attribute = Model::Attribute;
     using Position = Tools::PropertyPanelBase::Positioning;

@@ -69,7 +69,64 @@ namespace Tools
         }
         
         Model& mModel;
+        
+    protected:
 
+        template<typename T> static void compareAndSet(std::set<Attribute>& attrs, Attribute attr, T& currentValue, T const& newValue)
+        {
+            if(currentValue != newValue)
+            {
+                attrs.insert(attr);
+                currentValue = newValue;
+            }
+        }
+        
+        template<typename A, typename T> static void compareAndSet(std::set<Attribute>& attrs, Attribute attr, std::vector<std::unique_ptr<A>>& accessors, std::vector<std::unique_ptr<T>>& currentValues, std::vector<std::unique_ptr<T>> const& newValues, juce::NotificationType const notification)
+        {
+            // Updates the values and sanitize the accessors and the models
+            for(size_t i = 0; i < std::min(accessors.size(), newValues.size()); ++i)
+            {
+                anlStrongAssert(currentValues[i] != nullptr);
+                if(currentValues[i] == nullptr)
+                {
+                    currentValues[i] = std::make_unique<T>();
+                }
+                anlStrongAssert(accessors[i] != nullptr);
+                if(accessors[i] == nullptr && currentValues[i] != nullptr)
+                {
+                    accessors[i] = std::make_unique<A>(*(currentValues[i]).get());
+                }
+                else if(accessors[i] != nullptr && currentValues[i] == nullptr)
+                {
+                    accessors[i] = nullptr;
+                }
+                anlStrongAssert(newValues[i] != nullptr);
+                if(newValues[i] != nullptr && accessors[i] != nullptr)
+                {
+                    accessors[i]->fromModel(*(newValues[i].get()), notification);
+                }
+            }
+            
+            // Creates and removes the accessors and the models
+            if(currentValues.size() != newValues.size())
+            {
+                attrs.insert(attr);
+                for(auto i = currentValues.size(); i < newValues.size(); ++i)
+                {
+                    anlStrongAssert(newValues[i] != nullptr);
+                    currentValues.push_back(newValues[i] != nullptr ? std::make_unique<T>(*(newValues[i].get())) : std::make_unique<T>());
+                }
+        
+                for(auto i = accessors.size(); i < currentValues.size(); ++i)
+                {
+                    anlStrongAssert(currentValues[i] != nullptr);
+                    accessors.push_back(currentValues[i] != nullptr ? std::make_unique<A>(*(currentValues[i].get())) : std::unique_ptr<A>());
+                }
+                accessors.resize(newValues.size());
+                currentValues.resize(newValues.size());
+            }
+        }
+        
     private:
         
         ListenerList<Listener> mListeners;
@@ -79,6 +136,9 @@ namespace Tools
 }
 
 #define MODEL_ACCESSOR_COMPARE_AND_SET(attr, changed) \
-if(mModel.attr != model.attr) { changed.insert(Attribute::attr); mModel.attr = model.attr; }
+compareAndSet(changed, Attribute::attr, mModel.attr, model.attr)
+
+#define MODEL_ACCESSOR_COMPARE_AND_SET_VECTOR(attr, changed, accessors) \
+compareAndSet(changed, Attribute::attr, accessors, mModel.attr, model.attr, notification)
 
 ANALYSE_FILE_END

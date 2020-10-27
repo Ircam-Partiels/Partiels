@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../Analyzer/AnlAnalyzerProcessor.h"
-#include "../Plugin/AnlPluginListTable.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
+#include "../Document/AnlDocumentAnalyzerPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,14 +34,8 @@ namespace Application
         Tools::ColouredPanel mDocumentTransportSeparator;
         Document::FileInfoPanel mDocumentFileInfoPanel;
         Tools::ColouredPanel mHeaderSeparator;
-        
-        Analyzer::Model mAnalyzerModel;
-        Analyzer::Accessor mAnalyzerAccessor {mAnalyzerModel};
-        Analyzer::Processor mAnalyzerProcessor {mAnalyzerAccessor};
-        JUCE_COMPILER_WARNING("remove from here");
-        
-        PluginList::Table mPluginListTable;
-        std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
+        Document::AnalyzerPanel mDocumentAnalyzerPanel;
+  
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)
     };
 }

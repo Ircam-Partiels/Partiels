@@ -6,25 +6,15 @@ ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
-, mDocumentFileInfoPanel(Instance::get().getAudioFormatManager(), Instance::get().getDocumentAccessor())
-, mPluginListTable(Instance::get().getPluginListAccessor())
+, mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
+, mDocumentAnalyzerPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor())
 {
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);
     addAndMakeVisible(mDocumentFileInfoPanel);
     addAndMakeVisible(mHeaderSeparator);
+    addAndMakeVisible(mDocumentAnalyzerPanel);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
-    
-    mPluginListTable.onPluginSelected = [&](juce::String key)
-    {
-        auto copy = mAnalyzerAccessor.getModel();
-        copy.key = key;
-        mAnalyzerAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
-        if(mAudioFormatReader != nullptr)
-        {
-            mAnalyzerProcessor.perform(*(mAudioFormatReader.get()));
-        }
-    };
 }
 
 void Application::Interface::resized()
@@ -36,6 +26,7 @@ void Application::Interface::resized()
     mDocumentTransportSeparator.setBounds(header.removeFromLeft(separatorSize));
     mDocumentFileInfoPanel.setBounds(header);
     mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
+    mDocumentAnalyzerPanel.setBounds(bounds);
 }
 
 juce::ApplicationCommandTarget* Application::Interface::getNextCommandTarget()
@@ -95,24 +86,10 @@ bool Application::Interface::perform(juce::ApplicationCommandTarget::InvocationI
             auto copy = acsr.getModel();
             copy.file = file;
             acsr.fromModel(copy, juce::NotificationType::sendNotificationSync);
-            auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
-            if(audioFormat == nullptr)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Can't load the audio!"), juce::translate("the file extension format ADFMMT is not supported.").replace("ADFMMT", file.getFileExtension()));
-                return true;
-            }
-            
-            mAudioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
-            if(mAudioFormatReader == nullptr)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Can't load the audio!"), juce::translate("the file audio forrmat reader cannot be allocated.").replace("ADFMMT", file.getFileExtension()));
-                return true;
-            }
             return true;
         }
         case CommandIDs::New:
         {
-            juce::DialogWindow::showModalDialog("Plugin List", &mPluginListTable, this, findColour(juce::ResizableWindow::backgroundColourId, true), true);
             return true;
         }
         default:

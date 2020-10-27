@@ -66,6 +66,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentAnalyzerPanel.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentAnalyzerPanel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp

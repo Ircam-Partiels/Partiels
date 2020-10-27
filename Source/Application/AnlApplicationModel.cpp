@@ -48,10 +48,10 @@ void Application::Accessor::fromModel(Model const& model, juce::NotificationType
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    MODEL_ACCESSOR_COMPARE_AND_SET(windowState, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(recentlyOpenedFilesList, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(currentOpenedFilesList, attributes)
-    MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes)
+    MODEL_ACCESSOR_COMPARE_AND_SET(windowState, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(recentlyOpenedFilesList, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(currentOpenedFilesList, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes);
     notifyListener(attributes, {}, notification);
 }
 

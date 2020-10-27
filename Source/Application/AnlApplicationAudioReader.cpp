@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::AudioReader::AudioReader()
-: mDocumentAudioReader(Instance::get().getAudioFormatManager(), Instance::get().getDocumentAccessor())
+: mDocumentAudioReader(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
 {
     mAudioSourcePlayer.setSource(this);
     Instance::get().getAudioDeviceManager().addAudioCallback(&mAudioSourcePlayer);

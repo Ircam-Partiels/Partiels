@@ -25,8 +25,14 @@ namespace Document
             playheadPosition
         };
         
+        Model() = default;
+        Model(Model const& other);
+        Model(Model&& other);
+        
+        ~Model() = default;
+        
         juce::File file; //!< The audio file associated with the document
-        std::vector<Analyzer::Model> analyzers; //!< The analyzers of the document
+        std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document
         bool isLooping; //!< If the loop is active
         
         std::unique_ptr<juce::XmlElement> toXml() const;
@@ -44,6 +50,10 @@ namespace Document
         using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
         ~Accessor() override = default;
         void fromModel(Model const& model, juce::NotificationType const notification) override;
+        
+        Analyzer::Accessor& getAnalyzerAccessor(size_t index);
+    private:
+        std::vector<std::unique_ptr<Analyzer::Accessor>> mAnalyzerAccessors;
     };
 }
 

@@ -13,11 +13,12 @@ Document::AudioReader::Source::Source(std::unique_ptr<juce::AudioFormatReader> a
 void Document::AudioReader::Source::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     anlStrongAssert(sampleRate > 0.0);
-    if(mAudioFormatReader->sampleRate > 0.0)
-    {
-        mResamplingAudioSource.setResamplingRatio(mAudioFormatReader->sampleRate / (sampleRate > 0.0 ? sampleRate : 44100.0));
-        mResamplingAudioSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
-    }
+    anlStrongAssert(mAudioFormatReader->sampleRate > 0.0);
+    auto const currentSampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
+    auto const sourceSampleRate = mAudioFormatReader->sampleRate > 0.0 ? mAudioFormatReader->sampleRate : currentSampleRate;
+    
+    mResamplingAudioSource.setResamplingRatio(sourceSampleRate / currentSampleRate);
+    mResamplingAudioSource.prepareToPlay(samplesPerBlockExpected, currentSampleRate);
 }
 
 void Document::AudioReader::Source::releaseResources()
@@ -27,11 +28,24 @@ void Document::AudioReader::Source::releaseResources()
 
 void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill)
 {
+    auto lastPosition = getNextReadPosition();
+    if(mReadPosition != lastPosition)
+    {
+        lastPosition = mReadPosition;
+        mAudioFormatReaderSource.setNextReadPosition(lastPosition);
+        mResamplingAudioSource.flushBuffers();
+    }
     mResamplingAudioSource.getNextAudioBlock(bufferToFill);
+    if(!mReadPosition.compare_exchange_weak(lastPosition, getNextReadPosition()))
+    {
+        mAudioFormatReaderSource.setNextReadPosition(mReadPosition.load());
+        mResamplingAudioSource.flushBuffers();
+    }
 }
 
 void Document::AudioReader::Source::setNextReadPosition(juce::int64 newPosition)
 {
+    mReadPosition = newPosition;
     mAudioFormatReaderSource.setNextReadPosition(newPosition);
     mResamplingAudioSource.flushBuffers();
 }
@@ -58,9 +72,9 @@ void Document::AudioReader::Source::setLooping(bool shouldLoop)
     juce::ignoreUnused(shouldLoop);
 }
 
-Document::AudioReader::AudioReader(juce::AudioFormatManager& audioFormatManager, Accessor& accessor)
-: mAudioFormatManager(audioFormatManager)
-, mAccessor(accessor)
+Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
+: mAccessor(accessor)
+, mAudioFormatManager(audioFormatManager)
 {
     mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
     {
@@ -180,19 +194,14 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
         auto instance = mSourceManager.getInstance();
         if(instance != nullptr)
         {
-            auto expectedPosition = instance->getNextReadPosition();
             instance->getNextAudioBlock(bufferToFill);
+            mReadPosition = instance->getNextReadPosition();
             
             auto const endPosition = instance->getTotalLength();
-            if(mIsLooping && instance->getNextReadPosition() >= endPosition)
+            if(mIsLooping && mReadPosition >= endPosition)
             {
                 instance->setNextReadPosition(0);
-            }
-            
-            auto const nextReadPosition = instance->getNextReadPosition();
-            if(!mReadPosition.compare_exchange_strong(expectedPosition, nextReadPosition))
-            {
-                instance->setNextReadPosition(mReadPosition.load());
+                mReadPosition = 0;
             }
 
             if(mReadPosition >= endPosition)
