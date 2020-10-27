@@ -14,7 +14,28 @@ Application::Interface::Interface()
     addAndMakeVisible(mDocumentFileInfoPanel);
     addAndMakeVisible(mHeaderSeparator);
     addAndMakeVisible(mDocumentAnalyzerPanel);
+    
+    mDocumentListener.onChanged = [&](Document::Accessor& acsr, Document::Model::Attribute attribute)
+    {
+        if(attribute == Document::Model::Attribute::file)
+        {
+            auto const file = acsr.getModel().file;
+            auto const& audioFormatManager = Instance::get().getAudioFormatManager();
+            auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
+                
+            mDocumentTransport.setEnabled(isDocumentEnable);
+            mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
+            mDocumentAnalyzerPanel.setEnabled(isDocumentEnable);
+        }
+    };
+    
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, juce::NotificationType::sendNotificationSync);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
+}
+
+Application::Interface::~Interface()
+{
+    Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
 }
 
 void Application::Interface::resized()

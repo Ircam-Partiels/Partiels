@@ -17,7 +17,7 @@ namespace Application
     public:
         
         Interface();
-        ~Interface() override = default;
+        ~Interface() override;
         
         // juce::Component
         void resized() override;
@@ -35,6 +35,7 @@ namespace Application
         Document::FileInfoPanel mDocumentFileInfoPanel;
         Tools::ColouredPanel mHeaderSeparator;
         Document::AnalyzerPanel mDocumentAnalyzerPanel;
+        Document::Accessor::Listener mDocumentListener;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)
     };

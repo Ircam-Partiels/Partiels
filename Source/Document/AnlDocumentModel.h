@@ -51,6 +51,8 @@ namespace Document
         ~Accessor() override = default;
         void fromModel(Model const& model, juce::NotificationType const notification) override;
         
+        JUCE_COMPILER_WARNING("aki?")
+        // std::vector<std::reference_wrapper<Analyzer::Accessor>> getAnalyzerAccessors();
         Analyzer::Accessor& getAnalyzerAccessor(size_t index);
     private:
         std::vector<std::unique_ptr<Analyzer::Accessor>> mAnalyzerAccessors;

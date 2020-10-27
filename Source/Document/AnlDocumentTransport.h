@@ -22,7 +22,7 @@ namespace Document
         Accessor::Receiver mReceiver;
         
         juce::TextButton mBackwardButton {juce::CharPointer_UTF8("«")};
-        juce::TextButton mPlayback {juce::CharPointer_UTF8("›")};
+        juce::TextButton mPlaybackButton {juce::CharPointer_UTF8("›")};
         juce::TextButton mForwardButton {juce::CharPointer_UTF8("»")};
         juce::TextButton mLoopButton {juce::CharPointer_UTF8("∞")};
         

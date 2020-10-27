@@ -32,26 +32,31 @@ Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor&
             case Attribute::analyzers:
             {
                 auto const& ref = mAccessor.getModel();
-                mSections.resize(ref.analyzers.size());
-                std::transform(ref.analyzers.cbegin(), ref.analyzers.cend(), mSections.begin(), [&](auto const& analyzer)
+                for(size_t i = mSections.size(); i < ref.analyzers.size(); ++i)
                 {
-                    anlWeakAssert(analyzer != nullptr);
-                    auto section = std::make_unique<Section>();
+                    auto& anlAcsr = mAccessor.getAnalyzerAccessor(i);
+                    auto section = std::make_unique<Section>(anlAcsr);
                     anlWeakAssert(section != nullptr);
-                    if(section != nullptr && analyzer != nullptr)
+                    if(section != nullptr)
                     {
-                        section->name.setText(PluginList::Scanner::getPluginDescriptions()[analyzer->key].name, juce::NotificationType::dontSendNotification);
-                        addAndMakeVisible(section->close);
-                        addAndMakeVisible(section->name);
+                        addAndMakeVisible(section->thumbnail);
                         addAndMakeVisible(section->results);
+                        mSections.push_back(std::move(section));
                     }
-                    //        mAnalyzerAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
-                    //        if(mAudioFormatReader != nullptr)
-                    //        {
-                    //            mAnalyzerProcessor.perform(*(mAudioFormatReader.get()));
-                    //        }m
-                    return section;
-                });
+                }
+                mSections.resize(ref.analyzers.size());
+                for(size_t i = 0; i < mSections.size(); ++i)
+                {
+                    if(mSections[i] != nullptr)
+                    {
+                        mSections[i]->thumbnail.onRemove = [this, i]()
+                        {
+                            auto copy = mAccessor.getModel();
+                            copy.analyzers.erase(copy.analyzers.begin() + static_cast<long>(i));
+                            mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+                        };
+                    }
+                }
                 resized();
             }
                 break;
@@ -67,15 +72,14 @@ Document::AnalyzerPanel::~AnalyzerPanel()
 
 void Document::AnalyzerPanel::resized()
 {
-    auto constexpr size = 24;
+    auto constexpr size = 48;
     auto bounds = getLocalBounds();
     for(auto& section : mSections)
     {
         if(section != nullptr)
         {
             auto lbounds = bounds.removeFromTop(size);
-            section->close.setBounds(lbounds.removeFromLeft(30));
-            section->name.setBounds(lbounds.removeFromLeft(200));
+            section->thumbnail.setBounds(lbounds.removeFromLeft(200));
             section->results.setBounds(lbounds);
         }
     }
@@ -83,6 +87,10 @@ void Document::AnalyzerPanel::resized()
 
 void Document::AnalyzerPanel::mouseDoubleClick(juce::MouseEvent const& event)
 {
+    if(!isEnabled())
+    {
+        return;
+    }
     juce::ignoreUnused(event);
     juce::DialogWindow::LaunchOptions launchOption;
     launchOption.dialogTitle = juce::translate("New Analyzer...");

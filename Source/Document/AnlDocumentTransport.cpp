@@ -15,8 +15,8 @@ Document::Transport::Transport(Accessor& accessor)
                 break;
             case Signal::togglePlayback:
             {
-                mPlayback.setButtonText(value ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
-                mPlayback.setToggleState(value, juce::NotificationType::dontSendNotification);
+                mPlaybackButton.setButtonText(value ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
+                mPlaybackButton.setToggleState(value, juce::NotificationType::dontSendNotification);
             }
                 break;
             case Signal::playheadPosition:
@@ -33,10 +33,10 @@ Document::Transport::Transport(Accessor& accessor)
     {
         mAccessor.sendSignal(Signal::movePlayhead, {false}, juce::NotificationType::sendNotificationSync);
     };
-    mPlayback.setClickingTogglesState(true);
-    mPlayback.onClick = [&]()
+    mPlaybackButton.setClickingTogglesState(true);
+    mPlaybackButton.onClick = [&]()
     {
-        mAccessor.sendSignal(Signal::togglePlayback, {mPlayback.getToggleState()}, juce::NotificationType::sendNotificationSync);
+        mAccessor.sendSignal(Signal::togglePlayback, {mPlaybackButton.getToggleState()}, juce::NotificationType::sendNotificationSync);
     };
     mForwardButton.onClick = [&]()
     {
@@ -51,7 +51,7 @@ Document::Transport::Transport(Accessor& accessor)
     };
     
     addAndMakeVisible(mBackwardButton);
-    addAndMakeVisible(mPlayback);
+    addAndMakeVisible(mPlaybackButton);
     addAndMakeVisible(mForwardButton);
     addAndMakeVisible(mLoopButton);
     
@@ -73,7 +73,7 @@ void Document::Transport::resized()
     auto topBounds = bounds.removeFromTop(bounds.getHeight() / 3);
     auto const buttonWidth = topBounds.getWidth() / 4;
     mBackwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
-    mPlayback.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
+    mPlaybackButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mForwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     

@@ -2,6 +2,7 @@
 
 #include "AnlDocumentModel.h"
 #include "../Plugin/AnlPluginListTable.h"
+#include "../Analyzer/AnlAnalyzerThumbnail.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -26,8 +27,12 @@ namespace Document
         PluginList::Table mPluginListTable;
         struct Section
         {
-            juce::TextButton close {juce::CharPointer_UTF8("×")};
-            juce::Label name;
+            Section(Analyzer::Accessor& acsr)
+            : thumbnail(acsr)
+            {
+                
+            }
+            Analyzer::Thumbnail thumbnail;
             juce::Label results;
         };
         

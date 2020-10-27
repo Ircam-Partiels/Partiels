@@ -122,8 +122,6 @@ namespace Tools
                     anlStrongAssert(currentValues[i] != nullptr);
                     accessors.push_back(currentValues[i] != nullptr ? std::make_unique<A>(*(currentValues[i].get())) : std::unique_ptr<A>());
                 }
-                accessors.resize(newValues.size());
-                currentValues.resize(newValues.size());
             }
         }
         

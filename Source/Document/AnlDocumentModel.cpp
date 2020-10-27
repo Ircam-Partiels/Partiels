@@ -77,8 +77,11 @@ void Document::Accessor::fromModel(Model const& model, juce::NotificationType co
     std::set<Attribute> attributes;
     MODEL_ACCESSOR_COMPARE_AND_SET(file, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(isLooping, attributes);
+    JUCE_COMPILER_WARNING("to fix")
     MODEL_ACCESSOR_COMPARE_AND_SET_VECTOR(analyzers, attributes, mAnalyzerAccessors);
     notifyListener(attributes, {}, notification);
+    mAnalyzerAccessors.resize(model.analyzers.size());
+    mModel.analyzers.resize(model.analyzers.size());
 }
 
 Analyzer::Accessor& Document::Accessor::getAnalyzerAccessor(size_t index)
