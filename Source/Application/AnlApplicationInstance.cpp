@@ -24,18 +24,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
     
     juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
     
-    
     mAudioFormatManager.registerBasicFormats();
-    
-    mInterface = std::make_unique<Interface>();
-    anlWeakAssert(mInterface != nullptr);
-    if(mInterface == nullptr)
-    {
-        JUCE_COMPILER_WARNING("manage that");
-        return;
-    }
-    
-    mWindow = std::make_unique<Window>(*mInterface.get());
+    mWindow = std::make_unique<Window>();
     if(mWindow == nullptr)
     {
         JUCE_COMPILER_WARNING("do save");
@@ -55,7 +45,7 @@ void Application::Instance::systemRequestedQuit()
     {
         AnlDebug("Application", "Quit Delayed");
         juce::Timer::callAfterDelay(500, [this]()
-                                    {
+        {
             systemRequestedQuit();
         });
     }
@@ -69,7 +59,6 @@ void Application::Instance::systemRequestedQuit()
 void Application::Instance::shutdown()
 {
     mWindow.reset();
-    mInterface.reset();
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     AnlDebug("Application", "Shutdown");
 }

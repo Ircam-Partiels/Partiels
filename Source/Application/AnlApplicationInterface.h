@@ -13,7 +13,7 @@ namespace Application
 {
     class Interface
     : public juce::Component
-    , private CommandTarget
+    , public CommandTarget
     {
     public:
         

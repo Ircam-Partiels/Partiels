@@ -58,7 +58,7 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
     }
 }
 
-Application::Window::Window(juce::Component& content)
+Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
     if(!restoreWindowStateFromString(Instance::get().getAccessor().getModel().windowState))
@@ -69,7 +69,7 @@ Application::Window::Window(juce::Component& content)
     mBoundsConstrainer.setMinimumOnscreenAmounts(0xffffff, 50, 50, 50);
     setConstrainer(&mBoundsConstrainer);
     
-    setContentNonOwned(&content, false);
+    setContentNonOwned(&mInterface, false);
     
     setVisible(true);
     setResizable(true, false);
@@ -86,6 +86,9 @@ Application::Window::Window(juce::Component& content)
 
 Application::Window::~Window()
 {
+#if JUCE_MAC && (!defined(JUCE_IOS))
+    juce::MenuBarModel::setMacMainMenu(nullptr);
+#endif
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
 }
 

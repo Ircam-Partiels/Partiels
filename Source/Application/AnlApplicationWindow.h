@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tools/AnlMisc.h"
+#include "AnlApplicationInterface.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -11,7 +11,7 @@ namespace Application
     , private juce::AsyncUpdater
     {
     public:
-        Window(juce::Component& content);
+        Window();
         ~Window() override;
         
         // juce::DocumentWindow
@@ -38,6 +38,7 @@ namespace Application
         
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         MainMenuModel mMainMenuModel;
+        Interface mInterface;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Window)
     };

@@ -58,7 +58,6 @@ namespace Application
         AudioReader mAudioReader;
         LookAndFeel mLookAndFeel;
         
-        std::unique_ptr<Interface> mInterface;
         std::unique_ptr<Window> mWindow;
     };
 }
