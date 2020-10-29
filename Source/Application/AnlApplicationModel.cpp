@@ -52,7 +52,7 @@ void Application::Accessor::fromModel(Model const& model, juce::NotificationType
     MODEL_ACCESSOR_COMPARE_AND_SET(recentlyOpenedFilesList, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(currentOpenedFilesList, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes);
-    notifyListener(attributes, {}, notification);
+    notifyListener(attributes, notification);
 }
 
 std::vector<juce::File> Application::Model::sanitize(std::vector<juce::File> const& files)

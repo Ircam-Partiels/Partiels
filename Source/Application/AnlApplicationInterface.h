@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnlApplicationCommandTarget.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
@@ -12,7 +13,7 @@ namespace Application
 {
     class Interface
     : public juce::Component
-    , public juce::ApplicationCommandTarget
+    , private CommandTarget
     {
     public:
         
@@ -21,21 +22,19 @@ namespace Application
         
         // juce::Component
         void resized() override;
-        
-        // juce::ApplicationCommandTarget
-        juce::ApplicationCommandTarget* getNextCommandTarget() override;
-        void getAllCommands(juce::Array<juce::CommandID>& commands) override;
-        void getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result) override;
-        bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
         
+        Document::Accessor::Listener mDocumentListener;
+        
+        // Header
         Document::Transport mDocumentTransport;
         Tools::ColouredPanel mDocumentTransportSeparator;
         Document::FileInfoPanel mDocumentFileInfoPanel;
         Tools::ColouredPanel mHeaderSeparator;
+        
+        // Main
         Document::AnalyzerPanel mDocumentAnalyzerPanel;
-        Document::Accessor::Listener mDocumentListener;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)
     };

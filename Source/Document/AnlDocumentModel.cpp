@@ -75,13 +75,18 @@ void Document::Accessor::fromModel(Model const& model, juce::NotificationType co
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    MODEL_ACCESSOR_COMPARE_AND_SET(file, attributes);
-    MODEL_ACCESSOR_COMPARE_AND_SET(isLooping, attributes);
-    JUCE_COMPILER_WARNING("to fix")
-    MODEL_ACCESSOR_COMPARE_AND_SET_VECTOR(analyzers, attributes, mAnalyzerAccessors);
-    notifyListener(attributes, {}, notification);
-    mAnalyzerAccessors.resize(model.analyzers.size());
-    mModel.analyzers.resize(model.analyzers.size());
+    compareAndSet(attributes, Attribute::isLooping, mModel.isLooping, model.isLooping);
+    compareAndSet(attributes, Attribute::file, mModel.file, model.file);
+    auto data = compareAndSet(attributes, Attribute::analyzers, mAnalyzerAccessors, mModel.analyzers, model.analyzers, notification);
+    notifyListener(attributes, notification);
+    JUCE_COMPILER_WARNING("zaza")
+//    if(notification == juce::NotificationType::sendNotificationAsync)
+//    {
+//        juce::MessageManager::callAsync([ptr = std::make_shared<decltype(data)::element_type>(data)>(data.release())]
+//        {
+//            juce::ignoreUnused(ptr);
+//        });
+//    }
 }
 
 Analyzer::Accessor& Document::Accessor::getAnalyzerAccessor(size_t index)

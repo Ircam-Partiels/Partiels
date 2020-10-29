@@ -2,6 +2,16 @@
 
 ANALYSE_FILE_BEGIN
 
+template <> unsigned long Tools::StringParser::fromString(juce::String const& string)
+{
+    return std::stoul(string.toStdString());
+}
+
+template <> juce::String Tools::StringParser::toString(unsigned long const& value)
+{
+    return juce::String(std::to_string(value));
+}
+
 template <> juce::File Tools::StringParser::fromString<juce::File>(juce::String const& string)
 {
     return juce::File(string);

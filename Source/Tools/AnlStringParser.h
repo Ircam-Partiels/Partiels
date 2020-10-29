@@ -19,11 +19,13 @@ namespace Tools
             return juce::String(value);
         }
         
-        template <typename T> static T fromXml(juce::XmlElement const& xml, juce::StringRef const& name, T const& defaultValue = {})
+        template <typename T> static T fromXml(juce::XmlElement const& xml, juce::StringRef const& name, T const& defaultValue)
         {
             return fromString<T>(xml.getStringAttribute(name, toString<T>(defaultValue)));
         }
         
+        template <> unsigned long fromString(juce::String const& string);
+        template <> juce::String toString(unsigned long const& value);
         template <> juce::File fromString(juce::String const& string);
         template <> juce::String toString(juce::File const& value);
         template <> juce::Range<double> fromString(juce::String const& string);

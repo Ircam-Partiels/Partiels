@@ -29,7 +29,7 @@ namespace Document
         juce::Label mPlayPositionInSamples {"", "0samples"};
         juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
         
-        JUCE_LEAK_DETECTOR(Transport)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Transport)
     };
 }
 

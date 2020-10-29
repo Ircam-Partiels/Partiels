@@ -29,6 +29,8 @@ namespace Application
         void shutdown() override;
         
         static Instance& get();
+        static juce::String getFileExtension();
+        static juce::String getFileWildCard();
         
         Accessor& getAccessor();
         PluginList::Accessor& getPluginListAccessor();

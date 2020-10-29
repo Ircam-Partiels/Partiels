@@ -79,6 +79,16 @@ Application::Instance& Application::Instance::get()
     return *static_cast<Instance*>(JUCEApplication::getInstance());
 }
 
+juce::String Application::Instance::getFileExtension()
+{
+    return "brioche";
+}
+
+juce::String Application::Instance::getFileWildCard()
+{
+    return "*.brioche";
+}
+
 Application::Accessor& Application::Instance::getAccessor()
 {
     return mAccessor;

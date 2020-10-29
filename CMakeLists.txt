@@ -49,11 +49,12 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.h
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandIDs.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationHeader.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationHeader.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.cpp
@@ -76,6 +77,8 @@ file(GLOB DocumentSources
 file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp

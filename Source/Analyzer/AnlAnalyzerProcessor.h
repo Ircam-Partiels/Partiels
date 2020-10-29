@@ -9,7 +9,6 @@ namespace Analyzer
     class Processor
     {
     public:
-        using Accessor = Accessor;
         using Attribute = Model::Attribute;
         
         Processor(Accessor& accessor);
@@ -22,7 +21,7 @@ namespace Analyzer
         class Impl;
         std::unique_ptr<Impl> mImpl;
         
-        JUCE_LEAK_DETECTOR(Model)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };
 }
 

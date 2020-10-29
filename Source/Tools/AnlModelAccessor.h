@@ -42,7 +42,17 @@ namespace Tools
         {
             if(mListeners.add(listener))
             {
-                notifyListener(Model::getAttributeTypes(), {&listener}, notification);
+                for(auto const attr : Model::getAttributeTypes())
+                {
+                    mListeners.notify([this, attr, ptr = &listener](Listener& ltnr)
+                    {
+                        anlWeakAssert(ltnr.onChanged != nullptr);
+                        if(&ltnr == ptr && ltnr.onChanged != nullptr)
+                        {
+                            ltnr.onChanged(*static_cast<Owner*>(this), attr);
+                        }
+                    }, notification);
+                }
             }
         }
         
@@ -53,14 +63,14 @@ namespace Tools
         
     protected:
         
-        void notifyListener(std::set<Attribute> const& attrs, std::set<Listener*> const& listeners, juce::NotificationType const notification)
+        void notifyListener(std::set<Attribute> const& attrs, juce::NotificationType const notification, std::function<void(void)> fn = nullptr)
         {
             for(auto const attr : attrs)
             {
                 mListeners.notify([=](Listener& listener)
                 {
                     anlWeakAssert(listener.onChanged != nullptr);
-                    if((listeners.empty() || listeners.count(&listener) > 0) && listener.onChanged != nullptr)
+                    if(listener.onChanged != nullptr)
                     {
                         listener.onChanged(*static_cast<Owner*>(this), attr);
                     }
@@ -74,15 +84,28 @@ namespace Tools
 
         template<typename T> static void compareAndSet(std::set<Attribute>& attrs, Attribute attr, T& currentValue, T const& newValue)
         {
-            if(currentValue != newValue)
+            if constexpr(std::is_floating_point<T>::value)
             {
-                attrs.insert(attr);
-                currentValue = newValue;
+                if(std::abs(currentValue - newValue) > std::numeric_limits<T>::epsilon())
+                {
+                    attrs.insert(attr);
+                    currentValue = newValue;
+                }
+            }
+            else
+            {
+                if(currentValue != newValue)
+                {
+                    attrs.insert(attr);
+                    currentValue = newValue;
+                }
             }
         }
         
-        template<typename A, typename T> static void compareAndSet(std::set<Attribute>& attrs, Attribute attr, std::vector<std::unique_ptr<A>>& accessors, std::vector<std::unique_ptr<T>>& currentValues, std::vector<std::unique_ptr<T>> const& newValues, juce::NotificationType const notification)
+        template<typename A, typename T> static auto compareAndSet(std::set<Attribute>& attrs, Attribute attr, std::vector<std::unique_ptr<A>>& accessors, std::vector<std::unique_ptr<T>>& currentValues, std::vector<std::unique_ptr<T>> const& newValues, juce::NotificationType const notification)
+        -> std::unique_ptr<std::pair<std::vector<std::unique_ptr<T>>, std::vector<std::unique_ptr<A>>>>
         {
+            auto backup = std::make_unique<std::pair<std::vector<std::unique_ptr<T>>, std::vector<std::unique_ptr<A>>>>();
             // Updates the values and sanitize the accessors and the models
             for(size_t i = 0; i < std::min(accessors.size(), newValues.size()); ++i)
             {
@@ -122,7 +145,20 @@ namespace Tools
                     anlStrongAssert(currentValues[i] != nullptr);
                     accessors.push_back(currentValues[i] != nullptr ? std::make_unique<A>(*(currentValues[i].get())) : std::unique_ptr<A>());
                 }
+                
+                while(currentValues.size() > newValues.size())
+                {
+                    backup->first.push_back(std::move(currentValues.back()));
+                    currentValues.pop_back();
+                }
+                
+                while(accessors.size() > currentValues.size())
+                {
+                    backup->second.push_back(std::move(accessors.back()));
+                    accessors.pop_back();
+                }
             }
+            return backup;
         }
         
     private:
@@ -135,8 +171,5 @@ namespace Tools
 
 #define MODEL_ACCESSOR_COMPARE_AND_SET(attr, changed) \
 compareAndSet(changed, Attribute::attr, mModel.attr, model.attr)
-
-#define MODEL_ACCESSOR_COMPARE_AND_SET_VECTOR(attr, changed, accessors) \
-compareAndSet(changed, Attribute::attr, accessors, mModel.attr, model.attr, notification)
 
 ANALYSE_FILE_END

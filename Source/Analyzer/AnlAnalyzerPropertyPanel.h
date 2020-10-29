@@ -11,7 +11,6 @@ namespace Analyzer
     {
     public:
         using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
         
         Thumbnail(Accessor& accessor);
         ~Thumbnail() override;
@@ -24,11 +23,9 @@ namespace Analyzer
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
-        
         juce::Label mNameLabel;
         juce::TextButton mRemoveButton {juce::CharPointer_UTF8("×")};
-        juce::TextButton mPropertiesButton {juce::CharPointer_UTF8("φ")};
+        juce::TextButton mPropertiesButton {juce::CharPointer_UTF8("Ρ")};
         juce::TextButton mRelaunchButton {juce::CharPointer_UTF8("μ")};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Thumbnail)

@@ -71,7 +71,7 @@ namespace Document
         std::atomic<bool> mIsLooping {false};
         std::atomic<juce::int64> mReadPosition {0};
         
-        JUCE_LEAK_DETECTOR(AudioReader)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioReader)
     };
 }
 

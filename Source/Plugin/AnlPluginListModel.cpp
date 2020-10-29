@@ -98,7 +98,7 @@ void PluginList::Accessor::fromModel(Model const& model, juce::NotificationType 
     MODEL_ACCESSOR_COMPARE_AND_SET(descriptions, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(sortColumn, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(sortIsFowards, attributes);
-    notifyListener(attributes, {}, notification);
+    notifyListener(attributes, notification);
 }
 
 ANALYSE_FILE_END

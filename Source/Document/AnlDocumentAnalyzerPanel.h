@@ -3,6 +3,7 @@
 #include "AnlDocumentModel.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
+#include "../Analyzer/AnlAnalyzerPluginInstance.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -28,10 +29,12 @@ namespace Document
         struct Section
         {
             Section(Analyzer::Accessor& acsr)
-            : thumbnail(acsr)
+            : instance(acsr)
+            , thumbnail(acsr)
             {
                 
             }
+            Analyzer::PluginInstance instance;
             Analyzer::Thumbnail thumbnail;
             juce::Label results;
         };
@@ -45,7 +48,7 @@ namespace Document
 //        Analyzer::Processor mAnalyzerProcessor {mAnalyzerAccessor};
 //        JUCE_COMPILER_WARNING("remove from here");
         
-        JUCE_LEAK_DETECTOR(AnalyzerPanel)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AnalyzerPanel)
     };
 }
 

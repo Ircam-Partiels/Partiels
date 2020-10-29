@@ -42,4 +42,3 @@ ANALYSE_FILE_END
 #include <memory>
 #include <thread>
 #include <functional>
-

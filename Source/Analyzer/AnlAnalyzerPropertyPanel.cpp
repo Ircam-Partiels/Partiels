@@ -22,34 +22,16 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     
     mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
     {
-        if(attribute == Attribute::name)
+        if(attribute == Attribute::key)
         {
-            mNameLabel.setText(acsr.getModel().name, juce::NotificationType::dontSendNotification);
+            mNameLabel.setText(acsr.getModel().key, juce::NotificationType::dontSendNotification);
         }
     };
-    
-    mReceiver.onSignal = [&](Accessor& acsr, Signal signal, juce::var value)
-    {
-        if(signal == Signal::pluginInstanceChanged)
-        {
-            auto instance = acsr.getInstance();
-            if(instance != nullptr && mAccessor.getModel().name.isEmpty())
-            {
-                auto copy = mAccessor.getModel();
-                copy.name = instance->getName();
-                mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
-            }
-        }
-    };
-    
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
-    mAccessor.addReceiver(mReceiver);
-    mReceiver.onSignal(mAccessor, Signal::pluginInstanceChanged, {});
 }
 
 Analyzer::Thumbnail::~Thumbnail()
 {
-    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 

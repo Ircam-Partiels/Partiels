@@ -47,7 +47,7 @@ namespace Document
         Tools::PropertyLayout mPropertyLayout2;
         Tools::PropertyLayout mPropertyLayout3;
         
-        JUCE_LEAK_DETECTOR(FileInfoPanel)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileInfoPanel)
     };
 }
 

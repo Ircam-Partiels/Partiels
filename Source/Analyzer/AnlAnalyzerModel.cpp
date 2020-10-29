@@ -11,11 +11,19 @@ Analyzer::Model Analyzer::Model::fromXml(juce::XmlElement const& xml, Model defa
     }
     
     anlWeakAssert(xml.hasAttribute("key"));
+    anlWeakAssert(xml.hasAttribute("name"));
+    anlWeakAssert(xml.hasAttribute("sampleRate"));
+    anlWeakAssert(xml.hasAttribute("numChannels"));
+    
     anlWeakAssert(xml.hasAttribute("programName"));
     anlWeakAssert(xml.hasAttribute("resultFile"));
     anlWeakAssert(xml.hasAttribute("projectFile"));
     
     defaultModel.key = xml.getStringAttribute("key", defaultModel.key);
+    defaultModel.name = xml.getStringAttribute("name", defaultModel.name);
+    defaultModel.sampleRate = xml.getDoubleAttribute("sampleRate", defaultModel.sampleRate);
+    defaultModel.numChannels = Tools::StringParser::fromXml(xml, "numChannels", defaultModel.numChannels);
+    
     defaultModel.programName = xml.getStringAttribute("programName", defaultModel.programName);
     defaultModel.resultFile = xml.getStringAttribute("file", defaultModel.resultFile.getFullPathName());
     defaultModel.projectFile = xml.getStringAttribute("project", defaultModel.projectFile.getFullPathName());
@@ -44,6 +52,10 @@ std::unique_ptr<juce::XmlElement> Analyzer::Model::toXml() const
     }
     
     xml->setAttribute("key", key);
+    xml->setAttribute("name", name);
+    xml->setAttribute("sampleRate", sampleRate);
+    xml->setAttribute("numChannels", Tools::StringParser::toString(numChannels));
+    
     xml->setAttribute("programName", programName);
     xml->setAttribute("resultFile", resultFile.getFullPathName());
     xml->setAttribute("projectFile", projectFile.getFullPathName());
@@ -63,7 +75,7 @@ std::unique_ptr<juce::XmlElement> Analyzer::Model::toXml() const
 
 std::set<Analyzer::Model::Attribute> Analyzer::Model::getAttributeTypes()
 {
-    return {Attribute::key, Attribute::parameters, Attribute::programName, Attribute::resultFile, Attribute::projectFile};
+    return {Attribute::key, Attribute::name, Attribute::sampleRate, Attribute::numChannels, Attribute::parameters, Attribute::programName, Attribute::resultFile, Attribute::projectFile};
 }
 
 void Analyzer::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
@@ -71,11 +83,16 @@ void Analyzer::Accessor::fromModel(Model const& model, juce::NotificationType co
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
     MODEL_ACCESSOR_COMPARE_AND_SET(key, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(name, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(sampleRate, attributes);
+    MODEL_ACCESSOR_COMPARE_AND_SET(numChannels, attributes);
+    
+    
     MODEL_ACCESSOR_COMPARE_AND_SET(parameters, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(programName, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(resultFile, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(projectFile, attributes);
-    notifyListener(attributes, {}, notification);
+    notifyListener(attributes, notification);
 }
 
 ANALYSE_FILE_END
