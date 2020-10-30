@@ -20,6 +20,7 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 void Application::Instance::initialise(juce::String const& commandLine)
 {
     juce::ignoreUnused(commandLine);
+    juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
     juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
     
     juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
@@ -31,6 +32,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         JUCE_COMPILER_WARNING("do save");
         return;
     }
+    openFile(mModel.currentDocumentFile);
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -41,7 +43,12 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 void Application::Instance::systemRequestedQuit()
 {
     AnlDebug("Application", "Try Shutdown...");
-    if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
+    if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
+    {
+        return;
+    }
+    
+    if(juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
     {
         AnlDebug("Application", "Quit Delayed");
         juce::Timer::callAfterDelay(500, [this]()
@@ -70,12 +77,28 @@ Application::Instance& Application::Instance::get()
 
 juce::String Application::Instance::getFileExtension()
 {
-    return "brioche";
+    return ".brioche";
 }
 
 juce::String Application::Instance::getFileWildCard()
 {
-    return "*.brioche";
+    return "*" + getFileExtension();
+}
+
+void Application::Instance::openFile(juce::File const& file)
+{
+    auto const fileExtension = file.getFileExtension();
+    if(getFileExtension() == fileExtension)
+    {
+        mDocumentFileBased.loadFrom(file, true);
+    }
+    else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
+    {
+        Document::Model model;
+        model.file = file;
+        mDocumentFileBased.setFile({});
+        Instance::get().getDocumentAccessor().fromModel(model, juce::NotificationType::sendNotificationSync);
+    }
 }
 
 Application::Accessor& Application::Instance::getAccessor()
@@ -91,6 +114,11 @@ PluginList::Accessor& Application::Instance::getPluginListAccessor()
 Document::Accessor& Application::Instance::getDocumentAccessor()
 {
     return mDocumentAccessor;
+}
+
+Document::FileBased& Application::Instance::getDocumentFileBased()
+{
+    return mDocumentFileBased;
 }
 
 juce::ApplicationCommandManager& Application::Instance::getApplicationCommandManager()

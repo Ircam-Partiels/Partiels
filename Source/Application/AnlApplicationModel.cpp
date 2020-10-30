@@ -12,12 +12,10 @@ Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Mode
     
     anlWeakAssert(xml.hasAttribute("windowState"));
     anlWeakAssert(xml.hasAttribute("recentlyOpenedFilesList"));
-    anlWeakAssert(xml.hasAttribute("currentOpenedFilesList"));
     anlWeakAssert(xml.hasAttribute("currentDocumentFile"));
     
     defaultModel.windowState = xml.getStringAttribute("windowState", defaultModel.windowState);
     defaultModel.recentlyOpenedFilesList = Tools::StringParser::fromXml(xml, "recentlyOpenedFilesList", sanitize(defaultModel.recentlyOpenedFilesList));
-    defaultModel.currentOpenedFilesList = Tools::StringParser::fromXml(xml, "currentOpenedFilesList", sanitize(defaultModel.currentOpenedFilesList));
     defaultModel.currentDocumentFile = Tools::StringParser::fromXml(xml, "currentDocumentFile", defaultModel.currentDocumentFile);
     
     return defaultModel;
@@ -25,7 +23,7 @@ Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Mode
 
 std::set<Application::Model::Attribute> Application::Model::getAttributeTypes()
 {
-    return {Attribute::windowState, Attribute::recentlyOpenedFilesList, Attribute::currentOpenedFilesList, Attribute::currentDocumentFile};
+    return {Attribute::windowState, Attribute::recentlyOpenedFilesList, Attribute::currentDocumentFile};
 }
 
 std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
@@ -38,7 +36,6 @@ std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
     
     xml->setAttribute("windowState", windowState);
     xml->setAttribute("recentlyOpenedFilesList", Tools::StringParser::toString(recentlyOpenedFilesList));
-    xml->setAttribute("currentOpenedFilesList", Tools::StringParser::toString(currentOpenedFilesList));
     xml->setAttribute("currentDocumentFile", Tools::StringParser::toString(currentDocumentFile));
     
     return xml;
@@ -50,8 +47,8 @@ void Application::Accessor::fromModel(Model const& model, juce::NotificationType
     std::set<Attribute> attributes;
     MODEL_ACCESSOR_COMPARE_AND_SET(windowState, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(recentlyOpenedFilesList, attributes);
-    MODEL_ACCESSOR_COMPARE_AND_SET(currentOpenedFilesList, attributes);
     MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes);
+    mModel.recentlyOpenedFilesList = Model::sanitize(mModel.recentlyOpenedFilesList);
     notifyListener(attributes, notification);
 }
 

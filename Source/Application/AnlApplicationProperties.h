@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
+    //! @brief The class manage to save and restore the application properties from files.
     class Properties
     : private juce::ChangeListener
     {

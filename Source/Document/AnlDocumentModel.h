@@ -30,6 +30,8 @@ namespace Document
         Model(Model&& other);
         
         ~Model() = default;
+        bool operator==(Model const& other) const;
+        bool operator!=(Model const& other) const;
         
         juce::File file; //!< The audio file associated with the document
         std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document

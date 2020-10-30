@@ -15,7 +15,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
 {
     using Attribute = Model::Attribute;
     using Position = Tools::PropertyPanelBase::Positioning;
-    mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
         switch (attribute)
         {

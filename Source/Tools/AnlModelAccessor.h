@@ -35,7 +35,7 @@ namespace Tools
             Listener() = default;
             virtual ~Listener() = default;
             
-            std::function<void(Owner& controller, Attribute A)> onChanged = nullptr;
+            std::function<void(Owner const& controller, Attribute A)> onChanged = nullptr;
         };
         
         virtual void addListener(Listener& listener, juce::NotificationType const notification)

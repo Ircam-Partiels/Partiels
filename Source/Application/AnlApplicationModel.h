@@ -12,13 +12,11 @@ namespace Application
         {
             windowState,
             recentlyOpenedFilesList,
-            currentOpenedFilesList,
             currentDocumentFile
         };
         
         juce::String windowState;
         std::vector<juce::File> recentlyOpenedFilesList;
-        std::vector<juce::File> currentOpenedFilesList;
         juce::File currentDocumentFile;
         
         std::unique_ptr<juce::XmlElement> toXml() const;

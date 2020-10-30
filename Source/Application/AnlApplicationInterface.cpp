@@ -14,7 +14,7 @@ Application::Interface::Interface()
     addAndMakeVisible(mHeaderSeparator);
     addAndMakeVisible(mDocumentAnalyzerPanel);
     
-    mDocumentListener.onChanged = [&](Document::Accessor& acsr, Document::Model::Attribute attribute)
+    mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::Model::Attribute attribute)
     {
         if(attribute == Document::Model::Attribute::file)
         {
@@ -29,7 +29,6 @@ Application::Interface::Interface()
     };
     
     Instance::get().getDocumentAccessor().addListener(mDocumentListener, juce::NotificationType::sendNotificationSync);
-    Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
 }
 
 Application::Interface::~Interface()

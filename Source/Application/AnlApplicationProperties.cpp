@@ -5,13 +5,13 @@ ANALYSE_FILE_BEGIN
 
 Application::Properties::Properties()
 {
-    mApplicationListener.onChanged = [this](Accessor& acsr, Model::Attribute attribute)
+    mApplicationListener.onChanged = [this](Accessor const& acsr, Model::Attribute attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         saveToFile(PropertyType::Application);
     };
     
-    mPluginListListener.onChanged = [this](PluginList::Accessor& acsr, PluginList::Model::Attribute attribute)
+    mPluginListListener.onChanged = [this](PluginList::Accessor const& acsr, PluginList::Model::Attribute attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         saveToFile(PropertyType::PluginList);

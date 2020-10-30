@@ -20,7 +20,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     
-    mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
         if(attribute == Attribute::name)
         {

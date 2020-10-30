@@ -9,7 +9,7 @@ PluginList::Table::Table(Accessor& accessor)
 , mClearButton(juce::translate("Clear"))
 , mScanButton(juce::translate("Scan"))
 {
-    mListener.onChanged = [this](Accessor& acsr, Attribute attribute)
+    mListener.onChanged = [this](Accessor const& acsr, Attribute attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         updateContent();

@@ -25,13 +25,13 @@ juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevel
         auto const& recentFiles = Instance::get().getAccessor().getModel().recentlyOpenedFilesList;
         for(auto const& file : recentFiles)
         {
-            recentFilesMenu.addItem(recentFileIndex++, file.getFileNameWithoutExtension());
+            auto const isActive = Instance::get().getDocumentFileBased().getFile() != file;
+            recentFilesMenu.addItem(recentFileIndex++, file.getFileNameWithoutExtension(), isActive);
         }
         menu.addSubMenu("Open Recent", recentFilesMenu);
         menu.addCommandItem(&commandManager, CommandIDs::Save);
         menu.addCommandItem(&commandManager, CommandIDs::Duplicate);
         menu.addCommandItem(&commandManager, CommandIDs::Consolidate);
-        menu.addCommandItem(&commandManager, CommandIDs::Close);
     }
     else if(menuName == "Help")
     {
@@ -50,11 +50,11 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
     using CommandIDs = CommandTarget::CommandIDs;
     
     auto const& recentFiles = Instance::get().getAccessor().getModel().recentlyOpenedFilesList;
-    auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent) - 1);
+    auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
     anlStrongAssert(fileIndex < recentFiles.size());
     if(fileIndex < recentFiles.size())
     {
-        JUCE_COMPILER_WARNING("todo")
+        Instance::get().openFile(recentFiles[fileIndex]);
     }
 }
 

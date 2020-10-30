@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
         if(attribute == Attribute::key)
         {

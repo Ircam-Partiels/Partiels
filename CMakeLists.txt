@@ -55,8 +55,6 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.h
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationHeader.cpp
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationHeader.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.cpp
@@ -65,6 +63,8 @@ file(GLOB ApplicationSources
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAnalyzerPanel.cpp

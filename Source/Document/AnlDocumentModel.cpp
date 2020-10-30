@@ -22,6 +22,21 @@ Document::Model::Model(Model&& other)
     
 }
 
+bool Document::Model::operator==(Model const& other) const
+{
+    return file == other.file
+    && isLooping == other.isLooping
+    && std::equal(analyzers.cbegin(), analyzers.cend(), other.analyzers.cbegin(), [](auto const& lhs, auto const& rhs)
+    {
+        return lhs != nullptr && rhs != nullptr && *(lhs.get()) == *(rhs.get());
+    });
+}
+
+bool Document::Model::operator!=(Model const& other) const
+{
+    return (*this == other) == false;
+}
+
 Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
 {
     anlWeakAssert(xml.hasTagName("Anl::Document::Model"));

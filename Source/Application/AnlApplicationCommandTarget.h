@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../Tools/AnlMisc.h"
+#include "AnlApplicationModel.h"
+#include "../Document/AnlDocumentFileBased.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,8 +9,10 @@ namespace Application
 {
     class CommandTarget
     : public juce::ApplicationCommandTarget
+    , private juce::ChangeListener
     {
     public:
+        using Attribute = Model::Attribute;
         
         enum CommandIDs : int
         {
@@ -18,12 +21,11 @@ namespace Application
             Save = 0x200102,
             Duplicate = 0x200103,
             Consolidate = 0x200104,
-            Close = 0x200105,
-            OpenRecent
+            OpenRecent = 0x200105
         };
         
         CommandTarget();
-        ~CommandTarget() override = default;
+        ~CommandTarget() override;
         
         // juce::ApplicationCommandTarget
         juce::ApplicationCommandTarget* getNextCommandTarget() override;
@@ -32,6 +34,11 @@ namespace Application
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
+        
+        // juce::ChangeListener
+        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+        
+        Accessor::Listener mListener;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CommandTarget)
     };

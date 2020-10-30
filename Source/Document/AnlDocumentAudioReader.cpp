@@ -76,7 +76,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
-    mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
         switch (attribute)
         {

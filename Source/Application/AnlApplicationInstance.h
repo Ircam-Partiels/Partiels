@@ -32,9 +32,12 @@ namespace Application
         static juce::String getFileExtension();
         static juce::String getFileWildCard();
         
+        void openFile(juce::File const& file);
+        
         Accessor& getAccessor();
         PluginList::Accessor& getPluginListAccessor();
         Document::Accessor& getDocumentAccessor();
+        Document::FileBased& getDocumentFileBased();
         
         juce::ApplicationCommandManager& getApplicationCommandManager();
         juce::AudioFormatManager& getAudioFormatManager();
@@ -57,6 +60,7 @@ namespace Application
         Properties mProperties;
         AudioReader mAudioReader;
         LookAndFeel mLookAndFeel;
+        Document::FileBased mDocumentFileBased {mDocumentAccessor, getFileExtension(), getFileWildCard(), "Open a document", "Save the document"};
         
         std::unique_ptr<Window> mWindow;
     };

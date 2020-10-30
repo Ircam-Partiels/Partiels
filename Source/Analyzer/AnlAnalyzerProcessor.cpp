@@ -13,7 +13,7 @@ public:
     Impl(Accessor& accessor)
     : mAccessor(accessor)
     {
-        onChanged = [&](Accessor& acsr, Attribute attr)
+        onChanged = [&](Accessor const& acsr, Attribute attr)
         {
             switch (attr)
             {

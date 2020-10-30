@@ -25,7 +25,7 @@ Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor&
         }
     };
     
-    mListener.onChanged = [&](Accessor& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
         switch (attribute)
         {
