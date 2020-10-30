@@ -42,6 +42,14 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.h)
 
+file(GLOB ZoomSources
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateModel.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateModel.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateRuler.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateRuler.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.h)
+
 file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
@@ -94,6 +102,7 @@ file(GLOB PluginSources
 
 source_group("Global" FILES ${GlobalSources})
 source_group("Tools" FILES ${ToolsSources})
+source_group("Zoom" FILES ${ZoomSources})
 source_group("Application" FILES ${ApplicationSources})
 source_group("Document" FILES ${DocumentSources})
 source_group("Analyzer" FILES ${AnalyzerSources})
@@ -138,7 +147,7 @@ create_module_group(Analyse "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURC
 create_module_group(Analyse "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Analyse "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-target_sources(Analyse PRIVATE ${GlobalSources} ${ApplicationSources} ${DocumentSources} ${AnalyzerSources} ${ToolsSources} ${PluginSources})
+target_sources(Analyse PRIVATE ${ToolsSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources} ${GlobalSources})
 
 target_compile_definitions(Analyse PRIVATE
     DONT_SET_USING_JUCE_NAMESPACE=1

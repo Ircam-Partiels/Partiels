@@ -14,8 +14,19 @@ Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Mode
     anlWeakAssert(xml.hasAttribute("recentlyOpenedFilesList"));
     anlWeakAssert(xml.hasAttribute("currentDocumentFile"));
     
+    auto santizeList = [&](std::vector<juce::File> const& files)
+    {
+        std::vector<juce::File> copy = files;
+        copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
+        copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
+        {
+            return !file.existsAsFile();
+        }), copy.end());
+        return copy;
+    };
+    
     defaultModel.windowState = xml.getStringAttribute("windowState", defaultModel.windowState);
-    defaultModel.recentlyOpenedFilesList = Tools::StringParser::fromXml(xml, "recentlyOpenedFilesList", sanitize(defaultModel.recentlyOpenedFilesList));
+    defaultModel.recentlyOpenedFilesList = Tools::StringParser::fromXml(xml, "recentlyOpenedFilesList", santizeList(defaultModel.recentlyOpenedFilesList));
     defaultModel.currentDocumentFile = Tools::StringParser::fromXml(xml, "currentDocumentFile", defaultModel.currentDocumentFile);
     
     return defaultModel;
@@ -45,22 +56,22 @@ void Application::Accessor::fromModel(Model const& model, juce::NotificationType
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    MODEL_ACCESSOR_COMPARE_AND_SET(windowState, attributes);
-    MODEL_ACCESSOR_COMPARE_AND_SET(recentlyOpenedFilesList, attributes);
-    MODEL_ACCESSOR_COMPARE_AND_SET(currentDocumentFile, attributes);
-    mModel.recentlyOpenedFilesList = Model::sanitize(mModel.recentlyOpenedFilesList);
-    notifyListener(attributes, notification);
-}
-
-std::vector<juce::File> Application::Model::sanitize(std::vector<juce::File> const& files)
-{
-    std::vector<juce::File> copy = files;
-    copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
-    copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
+    
+    auto santizeList = [&](std::vector<juce::File> const& files)
     {
-        return !file.existsAsFile();
-    }), copy.end());
-    return copy;
+        std::vector<juce::File> copy = files;
+        copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
+        copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
+        {
+            return !file.existsAsFile();
+        }), copy.end());
+        return copy;
+    };
+    
+    compareAndSet(attributes, Attribute::windowState, mModel.windowState, model.windowState);
+    compareAndSet(attributes, Attribute::recentlyOpenedFilesList, mModel.recentlyOpenedFilesList, santizeList(model.recentlyOpenedFilesList));
+    compareAndSet(attributes, Attribute::currentDocumentFile, mModel.currentDocumentFile, model.currentDocumentFile);
+    notifyListener(attributes, notification);
 }
 
 ANALYSE_FILE_END

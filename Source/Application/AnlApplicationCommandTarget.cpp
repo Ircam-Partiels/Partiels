@@ -162,8 +162,9 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     copy.currentDocumentFile = fileBased.getFile();
     if(fileBased.getFile().existsAsFile())
     {
-        copy.recentlyOpenedFilesList.insert(copy.recentlyOpenedFilesList.begin(), fileBased.getFile());
-        copy.recentlyOpenedFilesList = Model::sanitize(copy.recentlyOpenedFilesList);
+        auto& list = copy.recentlyOpenedFilesList;
+        list.erase(std::unique(list.begin(), list.end()), list.end());
+        list.insert(list.begin(), fileBased.getFile());
     }
     Instance::get().getAccessor().fromModel(copy, juce::NotificationType::sendNotificationSync);
 }

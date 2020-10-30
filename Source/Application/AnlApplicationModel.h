@@ -23,8 +23,6 @@ namespace Application
         static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
         static std::set<Attribute> getAttributeTypes();
         
-        static std::vector<juce::File> sanitize(std::vector<juce::File> const& files);
-        
         JUCE_LEAK_DETECTOR(Model)
     };
     

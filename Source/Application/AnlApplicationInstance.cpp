@@ -19,6 +19,7 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 
 void Application::Instance::initialise(juce::String const& commandLine)
 {
+    AnlDebug("Application", "Begin...");
     juce::ignoreUnused(commandLine);
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
     juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
@@ -29,10 +30,11 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mWindow = std::make_unique<Window>();
     if(mWindow == nullptr)
     {
-        JUCE_COMPILER_WARNING("do save");
+        AnlDebug("Application", "Failed.");
         return;
     }
     openFile(mModel.currentDocumentFile);
+    AnlDebug("Application", "Ready.");
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -42,7 +44,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 
 void Application::Instance::systemRequestedQuit()
 {
-    AnlDebug("Application", "Try Shutdown...");
+    AnlDebug("Application", "Begin...");
     if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
     {
         return;
@@ -50,7 +52,7 @@ void Application::Instance::systemRequestedQuit()
     
     if(juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
     {
-        AnlDebug("Application", "Quit Delayed");
+        AnlDebug("Application", "Delayed...");
         juce::Timer::callAfterDelay(500, [this]()
         {
             systemRequestedQuit();
@@ -58,7 +60,7 @@ void Application::Instance::systemRequestedQuit()
     }
     else
     {
-        AnlDebug("Application", "Quit");
+        AnlDebug("Application", "Ready");
         quit();
     }
 }
@@ -67,7 +69,7 @@ void Application::Instance::shutdown()
 {
     mWindow.reset();
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-    AnlDebug("Application", "Shutdown");
+    AnlDebug("Application", "Done");
 }
 
 Application::Instance& Application::Instance::get()
@@ -91,13 +93,23 @@ void Application::Instance::openFile(juce::File const& file)
     if(getFileExtension() == fileExtension)
     {
         mDocumentFileBased.loadFrom(file, true);
+        auto copy = mAccessor.getModel();
+        copy.currentDocumentFile = file;
+        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
         Document::Model model;
         model.file = file;
         mDocumentFileBased.setFile({});
-        Instance::get().getDocumentAccessor().fromModel(model, juce::NotificationType::sendNotificationSync);
+        mDocumentAccessor.fromModel(model, juce::NotificationType::sendNotificationSync);
+        auto copy = mAccessor.getModel();
+        copy.currentDocumentFile = juce::File{};
+        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+    }
+    else
+    {
+        anlWeakAssert(false && "file format is not supported");
     }
 }
 

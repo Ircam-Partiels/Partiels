@@ -63,7 +63,7 @@ namespace Tools
         
     protected:
         
-        void notifyListener(std::set<Attribute> const& attrs, juce::NotificationType const notification, std::function<void(void)> fn = nullptr)
+        void notifyListener(std::set<Attribute> const& attrs, juce::NotificationType const notification)
         {
             for(auto const attr : attrs)
             {
@@ -87,6 +87,15 @@ namespace Tools
             if constexpr(std::is_floating_point<T>::value)
             {
                 if(std::abs(currentValue - newValue) > std::numeric_limits<T>::epsilon())
+                {
+                    attrs.insert(attr);
+                    currentValue = newValue;
+                }
+            }
+            else if constexpr(std::is_same<T, juce::Range<double>>::value)
+            {
+                if(std::abs(currentValue.getStart() -  newValue.getStart()) > std::numeric_limits<double>::epsilon() ||
+                   std::abs(currentValue.getEnd() -  newValue.getEnd()) > std::numeric_limits<double>::epsilon())
                 {
                     attrs.insert(attr);
                     currentValue = newValue;
