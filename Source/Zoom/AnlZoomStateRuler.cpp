@@ -17,7 +17,7 @@ Zoom::State::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t pr
         repaint();
     };
     
-    mReceiver.onSignal = [&](Accessor& acsr, Signal signal, juce::var value)
+    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
     {
         juce::ignoreUnused(acsr);
         switch (signal)
@@ -215,8 +215,7 @@ void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
         case NavigationMode::zoom:
         {
             auto const zoomDistance = static_cast<double>(isVertical ? event.getDistanceFromDragStartX() : event.getDistanceFromDragStartY());
-            auto const zoomIncrement = std::pow(1.005, std::abs(zoomDistance));
-            auto const zoomFactor = zoomIncrement < 0.0 ? zoomIncrement : 1.0 / zoomIncrement;
+            auto const zoomFactor = zoomDistance < 0.0 ? std::pow(1.005, std::abs(zoomDistance)) : 1.0 / std::pow(1.005, std::abs(zoomDistance));
             auto const rangeStart = mAnchor - (mAnchor - mInitialValueRange.getStart()) * zoomFactor;
             auto const rangeEnd = mAnchor + (mInitialValueRange.getEnd() - mAnchor) * zoomFactor;
 
@@ -274,12 +273,6 @@ void Zoom::State::Ruler::mouseDoubleClick(juce::MouseEvent const& event)
     {
         onDoubleClick();
     }
-    else
-    {
-        auto copy = mAccessor.getModel();
-        copy.visibleRange = copy.globalRange;
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
-    }
 }
 
 juce::Range<double> Zoom::State::Ruler::calculateSelectedValueRange(juce::MouseEvent const& event)
@@ -297,23 +290,23 @@ juce::Range<double> Zoom::State::Ruler::calculateSelectedValueRange(juce::MouseE
 void Zoom::State::Ruler::paint(juce::Graphics &g)
 {
     g.fillAll(findColour(backgroundColourId));
-    auto const visibleRange = mAccessor.getModel().visibleRange;
-    
-    if(visibleRange.isEmpty())
+    auto fromZoomRange = [this](juce::Range<double> const& range) -> juce::Range<double>
     {
-        return;
-    }
+        return {mFromZoomRange(range.getStart()), mFromZoomRange(range.getEnd())};
+    };
     
-    juce::Range<double> const useableRange { mFromZoomRange(visibleRange.getStart()), mFromZoomRange(visibleRange.getEnd()) };
-    auto const useableRangeLength = useableRange.getLength();
-    
+    auto const visibleRange = mAccessor.getModel().visibleRange;
+    auto const useableRange = fromZoomRange(visibleRange);
     if(useableRange.isEmpty())
     {
         return;
     }
     
+    auto const useableRangeLength = useableRange.getLength();
+    auto const height = getHeight();
+    auto const width = getWidth();
     auto const isVerticallyOriented = mOrientation == Orientation::vertical;
-    auto const size = isVerticallyOriented ? getHeight() - 1 : getWidth() - 1;
+    auto const size = isVerticallyOriented ? height - 1 : width - 1;
     auto const textPadding = isVerticallyOriented ? 0 : 4;
     
     // The minimum interval depends on the font height
@@ -350,7 +343,7 @@ void Zoom::State::Ruler::paint(juce::Graphics &g)
     auto const secondaryTickLength = static_cast<float>(std::round(maxTickLength * 0.25));
     
     g.setFont(font);
-    auto const primaryTickEpsilon = visibleRange.getLength() / std::max(static_cast<double>(isVerticallyOriented ? getHeight() - 2 : getWidth() - 2), 1.0);
+    auto const primaryTickEpsilon = visibleRange.getLength() / std::max(static_cast<double>(isVerticallyOriented ? height - 2 : width - 2), 1.0);
     for(size_t tickIndex = 0; tickIndex <= discreteNumTick; ++tickIndex)
     {
         auto const currentValue = firstValue + static_cast<double>(tickIndex) * discreteIntervalValue;
@@ -366,7 +359,7 @@ void Zoom::State::Ruler::paint(juce::Graphics &g)
         }
         else
         {
-            g.drawLine(position, 0, position, tickLengh);
+            g.drawVerticalLine(static_cast<int>(std::floor(position)) + 1, height - tickLengh, height);
         }
 
         if(isPrimaryTick && position < size + 1.f)
@@ -374,58 +367,52 @@ void Zoom::State::Ruler::paint(juce::Graphics &g)
             g.setColour(findColour(textColourId));
             
             auto const displayValue = mToZoomRange(currentValue);
-            juce::String const valueText = (mGetValueAsString != nullptr) ? mGetValueAsString(displayValue) : juce::String(displayValue);
+            auto const valueText = (mGetValueAsString != nullptr) ? mGetValueAsString(displayValue) : juce::String(displayValue);
             
             if(isVerticallyOriented)
             {
-                if(font.getStringWidth(valueText) < getWidth() - 1)
+                if(font.getStringWidth(valueText) < width - 1)
                 {
                     g.drawSingleLineText(valueText, 1, static_cast<int>(std::ceil(position - static_cast<float>(font.getDescent()))), juce::Justification::left);
                 }
             }
             else
             {
-                g.drawSingleLineText(valueText, static_cast<int>(position + textPadding), 10, juce::Justification::left);
+                g.drawSingleLineText(valueText, static_cast<int>(position + textPadding), height - 1, juce::Justification::left);
             }
         }
     }
     
-    juce::Range<double> const useableVisibleRange { mFromZoomRange(visibleRange.getStart()), mFromZoomRange(visibleRange.getEnd())};
-    
     if(mZooming)
     {
-        auto const anchorPos = static_cast<int>((mAnchor - useableVisibleRange.getStart()) / useableVisibleRange.getLength() * size);
-        
         g.setColour(findColour(anchorColourId, true));
-        
+        auto const anchor = (mAnchor - useableRange.getStart()) / useableRange.getLength();
         if(isVerticallyOriented)
         {
-            g.drawHorizontalLine(size - anchorPos, 0, getWidth());
+            auto const anchorPosition = static_cast<int>(static_cast<float>(height) - (1.0f - anchor));
+            g.drawHorizontalLine(anchorPosition, 0.0f, static_cast<float>(width));
         }
         else
         {
-            g.drawVerticalLine(anchorPos, 0, getHeight());
+            auto const anchorPosition = static_cast<int>(anchor * static_cast<float>(width));
+            g.drawVerticalLine(anchorPosition, 0.0f, static_cast<float>(height));
         }
     }
-    
-    if(mNavigationMode == NavigationMode::select && !mSelectedValueRange.isEmpty())
+    else if(!mSelectedValueRange.isEmpty())
     {
-        // Convert value / zoom range to pixel space
-        juce::Range<double> const usableValueRange { mFromZoomRange(mSelectedValueRange.getStart()), mFromZoomRange(mSelectedValueRange.getEnd())};
-        
-        auto const pixelStart = static_cast<int>((usableValueRange.getStart() - useableVisibleRange.getStart()) /  useableVisibleRange.getLength() * size);
-        auto const pixelEnd = static_cast<int>((usableValueRange.getEnd() - useableVisibleRange.getStart()) /  useableVisibleRange.getLength() * size);
-        
-        juce::Rectangle<int> selectionRect;
-        if(isVerticallyOriented)
+        auto getSelectionRectangle = [&]() -> juce::Rectangle<float>
         {
-            selectionRect = { 0, size - pixelEnd, getWidth(), pixelEnd - pixelStart };
-        }
-        else
-        {
-            selectionRect = { pixelStart, 0, pixelEnd - pixelStart, getHeight() };
-        }
+            auto const usableValueRange = fromZoomRange(mSelectedValueRange);
+            auto const start = static_cast<float>((usableValueRange.getStart() - useableRange.getStart()) /  useableRange.getLength());
+            auto const end = static_cast<float>((usableValueRange.getEnd() - useableRange.getStart()) /  useableRange.getLength());
+            if(isVerticallyOriented)
+            {
+                return {0.0f, (1.0f - end) * static_cast<float>(height), static_cast<float>(width), (end - start) * static_cast<float>(height)};
+            }
+            return {start * static_cast<float>(width), 0.0f, (end - start) * static_cast<float>(width), static_cast<float>(height)};
+        };
         
+        auto const selectionRect = getSelectionRectangle();
         g.setColour(findColour(selectionColourId).withMultipliedAlpha(0.1f));
         g.fillRect(selectionRect);
         g.setColour(findColour(selectionColourId));

@@ -3,10 +3,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::Model::Model(juce::Range<double> gr, juce::Range<double> vr, double length)
-: globalRange(gr)
-, visibleRange(vr)
-, minimumLength(length)
+Zoom::State::Model::Model(juce::Range<double> vr)
+: visibleRange(vr)
 {
 }
 
@@ -18,15 +16,9 @@ Zoom::State::Model Zoom::State::Model::fromXml(juce::XmlElement const& xml, Mode
         return {};
     }
     
-    anlWeakAssert(xml.hasAttribute("globalRange::start"));
-    anlWeakAssert(xml.hasAttribute("globalRange::end"));
-    anlWeakAssert(xml.hasAttribute("visibleRange::start"));
-    anlWeakAssert(xml.hasAttribute("visibleRange::end"));
-    anlWeakAssert(xml.hasAttribute("minimumLength"));
+    anlWeakAssert(xml.hasAttribute("visibleRange"));
     
-    defaultModel.globalRange = Tools::StringParser::fromXml(xml, "globalRange", defaultModel.globalRange);
     defaultModel.visibleRange = Tools::StringParser::fromXml(xml, "visibleRange", defaultModel.visibleRange);
-    defaultModel.minimumLength = xml.getDoubleAttribute("minimumLength", defaultModel.minimumLength);
     
     return defaultModel;
 }
@@ -39,15 +31,13 @@ std::unique_ptr<juce::XmlElement> Zoom::State::Model::toXml() const
         return nullptr;
     }
     
-    xml->setAttribute("globalRange", Tools::StringParser::toString(globalRange));
     xml->setAttribute("visibleRange", Tools::StringParser::toString(visibleRange));
-    xml->setAttribute("minimumLength", minimumLength);
     return xml;
 }
 
 std::set<Zoom::State::Model::Attribute> Zoom::State::Model::getAttributeTypes()
 {
-    return {Attribute::globalRange, Attribute::visibleRange, Attribute::minimumLength};
+    return {Attribute::visibleRange};
 }
 
 bool Zoom::State::Model::operator!=(Model const& other) const
@@ -58,12 +48,18 @@ bool Zoom::State::Model::operator!=(Model const& other) const
         return std::abs(lhs.getStart() - rhs.getStart()) < epsilon && std::abs(lhs.getEnd() - rhs.getEnd()) < epsilon;
     };
     
-    return !equals(globalRange, other.globalRange) || !equals(visibleRange, other.visibleRange) || std::abs(minimumLength - other.minimumLength) > std::numeric_limits<double>::epsilon();
+    return !equals(visibleRange, other.visibleRange);
 }
 
 bool Zoom::State::Model::operator==(Model const& other) const
 {
     return !(*this != other);
+}
+
+Zoom::State::Accessor::Accessor(Model& model, juce::Range<double> const& globalRange, double minimumLength)
+: Tools::ModelAccessor<Accessor, Model, Model::Attribute>(model)
+{
+    setContraints(globalRange, minimumLength, juce::NotificationType::dontSendNotification);
 }
 
 void Zoom::State::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
@@ -72,12 +68,26 @@ void Zoom::State::Accessor::fromModel(Model const& model, juce::NotificationType
     std::set<Attribute> attributes;
     auto sanitizeRange = [&](juce::Range<double> const& input)
     {
-        return input.withEnd(std::max(input.getStart() + mModel.minimumLength, input.getEnd()));
+        if(mGlobalRange.isEmpty())
+        {
+            return input.withEnd(std::max(input.getStart() + mMinimumLength, input.getEnd()));
+        }
+        return mGlobalRange.constrainRange(input.withEnd(std::max(input.getStart() + mMinimumLength, input.getEnd())));
     };
-    compareAndSet(attributes, Attribute::minimumLength, mModel.minimumLength, std::max(model.minimumLength, 0.0));
-    compareAndSet(attributes, Attribute::globalRange, mModel.globalRange, sanitizeRange(model.globalRange));
-    compareAndSet(attributes, Attribute::visibleRange, mModel.visibleRange, model.globalRange.constrainRange(sanitizeRange(model.visibleRange)));
+    compareAndSet(attributes, Attribute::visibleRange, mModel.visibleRange, sanitizeRange(model.visibleRange));
     notifyListener(attributes, notification);
+}
+
+void Zoom::State::Accessor::setContraints(juce::Range<double> const& globalRange, double minimumLength, juce::NotificationType const notification)
+{
+    mGlobalRange = globalRange;
+    mMinimumLength = std::min(std::max(minimumLength, 0.0), mGlobalRange.getLength());
+    fromModel(mModel, notification);
+}
+
+std::tuple<juce::Range<double>, double> Zoom::State::Accessor::getContraints() const
+{
+    return std::make_tuple(mGlobalRange, mMinimumLength);
 }
 
 ANALYSE_FILE_END

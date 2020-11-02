@@ -10,6 +10,7 @@ namespace Document
     : public juce::Component
     {
     public:
+        using Attribute = Model::Attribute;
         using Signal = Model::Signal;
         
         Transport(Accessor& accessor);
@@ -19,6 +20,7 @@ namespace Document
     private:
         
         Accessor& mAccessor;
+        Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
         
         juce::TextButton mBackwardButton {juce::CharPointer_UTF8("«")};
@@ -28,6 +30,7 @@ namespace Document
         
         juce::Label mPlayPositionInSamples {"", "0samples"};
         juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
+        juce::Slider mVolumeSlider {juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Transport)
     };

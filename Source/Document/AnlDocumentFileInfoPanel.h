@@ -11,13 +11,19 @@ namespace Document
     //! @todo Add popup window that diisplays the full text when the mouse is over after a few ms
     class FileInfoPanel
     : public juce::Component
+    , private juce::ChangeListener
     {
     public:
-        FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
+        FileInfoPanel(Accessor& accessor, juce::FileBasedDocument& fileBasedDocument, juce::AudioFormatManager& audioFormatManager);
         ~FileInfoPanel() override;
         
+        // juce::Component
         void resized() override;
+        
     private:
+        
+        // juce::ChangeListener
+        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         
         class Property
         : public Tools::PropertyPanel<juce::Label>
@@ -29,10 +35,11 @@ namespace Document
         
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
+        juce::FileBasedDocument& mFileBasedDocument;
         Accessor::Listener mListener;
         
-        Property mPanelFileName {juce::translate("Name"), juce::translate("The name of the audio file")};
-        Property mPanelFilePath {juce::translate("Path"), juce::translate("The path of the audio file")};
+        Property mPanelFileName {juce::translate("Project"), juce::translate("The name of the project")};
+        Property mPanelFilePath {juce::translate("File"), juce::translate("The path of the audio file")};
         Property mPanelFileFormat {juce::translate("Format"), juce::translate("The format of the audio file")};
         Property mPanelSampleRate {juce::translate("Sample Rate"), juce::translate("The sample rate of the audio file")};
         
@@ -44,7 +51,9 @@ namespace Document
         std::vector<std::unique_ptr<Property>> mMetaDataPanels;
         
         Tools::PropertyLayout mPropertyLayout1;
+        Tools::ColouredPanel mSeparator1;
         Tools::PropertyLayout mPropertyLayout2;
+        Tools::ColouredPanel mSeparator2;
         Tools::PropertyLayout mPropertyLayout3;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileInfoPanel)

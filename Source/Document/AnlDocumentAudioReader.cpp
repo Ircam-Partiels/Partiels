@@ -19,6 +19,8 @@ void Document::AudioReader::Source::prepareToPlay(int samplesPerBlockExpected, d
     
     mResamplingAudioSource.setResamplingRatio(sourceSampleRate / currentSampleRate);
     mResamplingAudioSource.prepareToPlay(samplesPerBlockExpected, currentSampleRate);
+    mVolume.reset(currentSampleRate, static_cast<double>(samplesPerBlockExpected) / currentSampleRate);
+    mVolume.setCurrentAndTargetValue(mVolumeTargetValue.load());
 }
 
 void Document::AudioReader::Source::releaseResources()
@@ -28,6 +30,7 @@ void Document::AudioReader::Source::releaseResources()
 
 void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill)
 {
+    mVolume.setTargetValue(mVolumeTargetValue.load());
     auto lastPosition = getNextReadPosition();
     if(mReadPosition != lastPosition)
     {
@@ -36,6 +39,10 @@ void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelIn
         mResamplingAudioSource.flushBuffers();
     }
     mResamplingAudioSource.getNextAudioBlock(bufferToFill);
+    for(auto i = 0; i < bufferToFill.numSamples; i++)
+    {
+        bufferToFill.buffer->applyGain(bufferToFill.startSample + i, 1, mVolume.getNextValue());
+    }
     if(!mReadPosition.compare_exchange_weak(lastPosition, getNextReadPosition()))
     {
         mAudioFormatReaderSource.setNextReadPosition(mReadPosition.load());
@@ -72,6 +79,11 @@ void Document::AudioReader::Source::setLooping(bool shouldLoop)
     juce::ignoreUnused(shouldLoop);
 }
 
+void Document::AudioReader::Source::setGain(float gain)
+{
+    mVolumeTargetValue = gain;
+}
+
 Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
@@ -98,6 +110,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 auto source = std::make_shared<Source>(std::move(audioFormatReader));
                 if(source != nullptr)
                 {
+                    source->setGain(static_cast<float>(acsr.getModel().gain));
                     source->prepareToPlay(mSamplesPerBlockExpected, mSampleRate);
                 }
                 mSourceManager.setInstance(source);
@@ -110,12 +123,21 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 mIsLooping.store(acsr.getModel().isLooping);
             }
                 break;
+            case Attribute::gain:
+            {
+                auto instance = mSourceManager.getInstance();
+                if(instance != nullptr)
+                {
+                    instance->setGain(static_cast<float>(acsr.getModel().gain));
+                }
+            }
+                break;
         }
     };
     
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
     
-    mReceiver.onSignal = [&](Accessor& acsr, Signal signal, juce::var value)
+    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
     {
         juce::ignoreUnused(acsr);
         auto getLastPosition = [&]() -> juce::int64
@@ -174,6 +196,7 @@ void Document::AudioReader::prepareToPlay(int samplesPerBlockExpected, double sa
     auto instance = mSourceManager.getInstance();
     if(instance != nullptr)
     {
+        instance->setGain(static_cast<float>(mAccessor.getModel().gain));
         instance->prepareToPlay(samplesPerBlockExpected, sampleRate);
     }
 }

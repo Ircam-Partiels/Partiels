@@ -19,7 +19,7 @@ namespace Tools
             Receiver() = default;
             virtual ~Receiver() = default;
             
-            std::function<void(Owner& controller, Signal signal, juce::var value)> onSignal = nullptr;
+            std::function<void(Owner const& controller, Signal signal, juce::var value)> onSignal = nullptr;
         };
         
         void addReceiver(Receiver& listener)

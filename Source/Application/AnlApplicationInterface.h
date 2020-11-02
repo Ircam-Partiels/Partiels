@@ -6,6 +6,7 @@
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentAnalyzerPanel.h"
+#include "../Zoom/AnlZoomStateTimeRuler.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,7 +35,14 @@ namespace Application
         Tools::ColouredPanel mHeaderSeparator;
         
         // Main
+        Zoom::State::TimeRuler mZoomStateTimeRuler;
+        Tools::ColouredPanel mMainSeparator;
         Document::AnalyzerPanel mDocumentAnalyzerPanel;
+        
+        //Bottom
+        Tools::ColouredPanel mBottomSeparator;
+        Zoom::State::Accessor::Listener mZoomStateTimeListener;
+        juce::Slider mTimeSlider {juce::Slider::TwoValueHorizontal, juce::Slider::NoTextBox};
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)
     };

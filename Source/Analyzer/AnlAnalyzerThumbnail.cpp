@@ -28,7 +28,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     
-    mReceiver.onSignal = [&](Accessor& acsr, Signal signal, juce::var value)
+    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
     {
         if(signal == Signal::pluginInstanceChanged)
         {

@@ -9,8 +9,9 @@ Document::FileInfoPanel::Property::Property(juce::String const& text, juce::Stri
     entry.setMinimumHorizontalScale(1.0f);
 }
 
-Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
+Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocument& fileBasedDocument, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
+, mFileBasedDocument(fileBasedDocument)
 , mAudioFormatManager(audioFormatManager)
 {
     using Attribute = Model::Attribute;
@@ -23,8 +24,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
             {
                 mPropertyLayout3.setPanels({}, Position::left);
                 auto const file = acsr.getModel().file;
-                mPanelFileName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
-                mPanelFilePath.entry.setText(file.getParentDirectory().getFullPathName(), juce::NotificationType::dontSendNotification);
+                mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
                 if(audioFormat == nullptr)
                 {
@@ -70,44 +70,64 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 break;
         }
     };
+    
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
     mPropertyLayout1.setPanels({mPanelFileName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
     mPropertyLayout2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
     
     addAndMakeVisible(mPropertyLayout1);
+    addAndMakeVisible(mSeparator1);
     addAndMakeVisible(mPropertyLayout2);
+    addAndMakeVisible(mSeparator2);
     addAndMakeVisible(mPropertyLayout3);
+    mFileBasedDocument.addChangeListener(this);
 }
 
 Document::FileInfoPanel::~FileInfoPanel()
 {
+    mFileBasedDocument.removeChangeListener(this);
     mAccessor.removeListener(mListener);
 }
 
 void Document::FileInfoPanel::resized()
 {
-    auto constexpr minimumWidth = 140;
+    auto constexpr minimumWidth = 138;
+    auto constexpr separatorWidth = 2;
     
     auto bounds = getLocalBounds();
     auto const width = bounds.getWidth();
-    auto const numVisibleLayout = std::min(width / minimumWidth, mMetaDataPanels.empty() ? 2 : 3);
+    auto const numVisibleLayout = std::min(width / (minimumWidth + separatorWidth), mMetaDataPanels.empty() ? 2 : 3);
     auto const layoutWidth = numVisibleLayout > 0 ? width / numVisibleLayout : 0;
     
     mPropertyLayout3.setVisible(numVisibleLayout == 3);
+    mSeparator2.setVisible(mPropertyLayout3.isVisible());
     mPropertyLayout2.setVisible(numVisibleLayout >= 2);
+    mSeparator1.setVisible(mPropertyLayout2.isVisible());
     mPropertyLayout1.setVisible(numVisibleLayout >= 1);
     if(numVisibleLayout == 3)
     {
-        mPropertyLayout3.setBounds(bounds.removeFromRight(layoutWidth));
+        mPropertyLayout3.setBounds(bounds.removeFromRight(layoutWidth - separatorWidth));
+        mSeparator2.setBounds(bounds.removeFromRight(separatorWidth));
     }
     if(numVisibleLayout >= 2)
     {
         mPropertyLayout2.setBounds(bounds.removeFromRight(layoutWidth));
+        mSeparator1.setBounds(bounds.removeFromRight(separatorWidth));
     }
     if(numVisibleLayout >= 1)
     {
         mPropertyLayout1.setBounds(bounds);
     }
+}
+
+void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    anlStrongAssert(source == &mFileBasedDocument);
+    auto const file = mFileBasedDocument.getFile();
+    auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved";
+    auto const extension = file.existsAsFile() && mFileBasedDocument.hasChangedSinceSaved() ? "*" : "";
+    mPanelFileName.entry.setText(name + extension, juce::NotificationType::dontSendNotification);
+    mPanelFileName.entry.setTooltip(file.existsAsFile() ? file.getFullPathName() : "");
 }
 
 ANALYSE_FILE_END

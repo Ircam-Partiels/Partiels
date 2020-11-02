@@ -51,12 +51,16 @@ namespace Document
             juce::int64 getTotalLength() const override;
             bool isLooping() const override;
             void setLooping(bool shouldLoop)  override;
+            
+            void setGain(float gain);
 
         private:
             std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
             juce::AudioFormatReaderSource mAudioFormatReaderSource;
             juce::ResamplingAudioSource mResamplingAudioSource;
             std::atomic<juce::int64> mReadPosition {0};
+            juce::LinearSmoothedValue<float> mVolume;
+            std::atomic<float> mVolumeTargetValue;
         };
         
         Accessor& mAccessor;

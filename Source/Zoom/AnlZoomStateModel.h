@@ -17,9 +17,7 @@ namespace Zoom
         {
             enum class Attribute
             {
-                globalRange,
-                visibleRange,
-                minimumLength
+                visibleRange
             };
             
             enum class Signal
@@ -29,11 +27,9 @@ namespace Zoom
                 moveAnchorPerform
             };
             
-            Model(juce::Range<double> gr = {0.0, 0.0}, juce::Range<double> vr = {0.0, 0.0}, double length = 0.0);
+            Model(juce::Range<double> vr = {0.0, 0.0});
             
-            juce::Range<double> globalRange;
             juce::Range<double> visibleRange;
-            double minimumLength;
             
             std::unique_ptr<juce::XmlElement> toXml() const;
             static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
@@ -51,8 +47,15 @@ namespace Zoom
         {
         public:
             using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
+            Accessor(Model& model, juce::Range<double> const& globalRange, double minimumLength);
             ~Accessor() override = default;
             void fromModel(Model const& model, juce::NotificationType const notification) override;
+            
+            void setContraints(juce::Range<double> const& globalRange, double minimumLength, juce::NotificationType const notification);
+            std::tuple<juce::Range<double>, double> getContraints() const;
+        private:
+            juce::Range<double> mGlobalRange;
+            double mMinimumLength;
         };
     }
 }

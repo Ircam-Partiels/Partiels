@@ -5,8 +5,25 @@ ANALYSE_FILE_BEGIN
 Document::Transport::Transport(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mReceiver.onSignal = [&](Accessor& acsr, Signal signal, juce::var value)
+    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
+        switch (attribute)
+        {
+            case Attribute::gain:
+            {
+                auto const decibel = juce::Decibels::gainToDecibels(acsr.getModel().gain, -90.0);
+                mVolumeSlider.setValue(decibel, juce::NotificationType::dontSendNotification);
+            }
+                break;
+                
+            default:
+                break;
+        }
+    };
+    
+    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
+    {
+        juce::ignoreUnused(acsr);
         switch (signal)
         {
             case Signal::movePlayhead:
@@ -50,6 +67,15 @@ Document::Transport::Transport(Accessor& accessor)
         mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
     };
     
+    mVolumeSlider.setRange(-90.0, 12.0);
+    mVolumeSlider.setDoubleClickReturnValue(true, 0.0);
+    mVolumeSlider.onValueChange = [&]()
+    {
+        auto copy = mAccessor.getModel();
+        copy.gain = std::min(juce::Decibels::decibelsToGain(mVolumeSlider.getValue(), -90.0), 12.0);
+        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+    };
+    
     addAndMakeVisible(mBackwardButton);
     addAndMakeVisible(mPlaybackButton);
     addAndMakeVisible(mForwardButton);
@@ -59,6 +85,8 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mPlayPositionInSamples);
     mPlayPositionInHMSms.setJustificationType(juce::Justification::centredRight);
     addAndMakeVisible(mPlayPositionInHMSms);
+    
+    addAndMakeVisible(mVolumeSlider);
 }
 
 Document::Transport::~Transport()
@@ -77,8 +105,9 @@ void Document::Transport::resized()
     mForwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     
-    mPlayPositionInSamples.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
-    mPlayPositionInHMSms.setBounds(bounds);
+    mPlayPositionInSamples.setBounds(bounds.removeFromTop(bounds.getHeight() / 3));
+    mPlayPositionInHMSms.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
+    mVolumeSlider.setBounds(bounds);
 }
 
 ANALYSE_FILE_END
