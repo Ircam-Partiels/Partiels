@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "../Tools/AnlColouredPanel.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
 #include "../Analyzer/AnlAnalyzerPluginInstance.h"
@@ -36,10 +37,12 @@ namespace Document
             }
             Analyzer::PluginInstance instance;
             Analyzer::Thumbnail thumbnail;
+            Tools::ColouredPanel separator;
             juce::Label results;
         };
         
         std::vector<std::unique_ptr<Section>> mSections;
+        Tools::ColouredPanel mSeparator;
         juce::DialogWindow* dialogWindow;
         
         

@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 
 juce::StringArray Application::Window::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Help"};
+    return {"File", "Transport", "Help"};
 }
 
 juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -33,6 +33,14 @@ juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevel
         menu.addCommandItem(&commandManager, CommandIDs::Duplicate);
         menu.addCommandItem(&commandManager, CommandIDs::Consolidate);
     }
+    else if(menuName == "Transport")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::TogglePlayback);
+        menu.addCommandItem(&commandManager, CommandIDs::ToggleLooping);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::MovePlayHeadToBeginning);
+        menu.addCommandItem(&commandManager, CommandIDs::MovePlayHeadToEnd);
+    }
     else if(menuName == "Help")
     {
         
@@ -51,7 +59,7 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
     
     auto const& recentFiles = Instance::get().getAccessor().getModel().recentlyOpenedFilesList;
     auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
-    anlStrongAssert(fileIndex < recentFiles.size());
+    anlWeakAssert(fileIndex < recentFiles.size());
     if(fileIndex < recentFiles.size())
     {
         Instance::get().openFile(recentFiles[fileIndex]);

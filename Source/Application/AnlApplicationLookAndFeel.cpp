@@ -18,5 +18,10 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::State::TimeRuler::backgroundColourId, juce::Colours::transparentBlack);
 }
 
+bool Application::LookAndFeel::areScrollbarButtonsVisible()
+{
+    return false;
+}
+
 ANALYSE_FILE_END
 

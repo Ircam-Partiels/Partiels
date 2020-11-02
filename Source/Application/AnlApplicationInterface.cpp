@@ -8,6 +8,7 @@ Application::Interface::Interface()
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor())
 , mDocumentAnalyzerPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor())
+, mTimeSlider(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor(), Zoom::State::Slider::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);
@@ -19,8 +20,9 @@ Application::Interface::Interface()
     addAndMakeVisible(mDocumentAnalyzerPanel);
     
     addAndMakeVisible(mBottomSeparator);
+    addAndMakeVisible(mToolTipDisplay);
+    addAndMakeVisible(mTooTipSeparator);
     addAndMakeVisible(mTimeSlider);
-    mTimeSlider.setRange(0.0, 1.0);
     
     mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::Model::Attribute attribute)
     {
@@ -36,29 +38,7 @@ Application::Interface::Interface()
         }
     };
     
-    mTimeSlider.onValueChange = [&]()
-    {
-        auto& zoomStateTimeAccessor = Instance::get().getDocumentAccessor().getZoomStateTimeAccessor();
-        auto const globalRange = std::get<0>(zoomStateTimeAccessor.getContraints());
-        auto const newRangeStart = mTimeSlider.getMinValue() * globalRange.getLength() + globalRange.getStart();
-        auto const newRangeEnd = mTimeSlider.getMaxValue() * globalRange.getLength() + globalRange.getStart();
-        zoomStateTimeAccessor.fromModel({{newRangeStart, newRangeEnd}}, juce::NotificationType::sendNotificationSync);
-    };
-    
-    mZoomStateTimeListener.onChanged = [&](Zoom::State::Accessor const& acsr, Zoom::State::Model::Attribute attribute)
-    {
-        if(attribute == Zoom::State::Model::Attribute::visibleRange)
-        {
-            auto const globalRange = std::get<0>(acsr.getContraints());
-            auto const visibleRange = acsr.getModel().visibleRange;
-            auto const scaledRangeStart = (visibleRange.getStart() - globalRange.getStart()) / globalRange.getLength();
-            auto const scaledRangeEnd = (visibleRange.getEnd() - globalRange.getStart()) / globalRange.getLength();
-            mTimeSlider.setMinAndMaxValues(scaledRangeStart, scaledRangeEnd, juce::NotificationType::dontSendNotification);
-        }
-    };
-    
     auto& documentAccessor = Instance::get().getDocumentAccessor();
-    documentAccessor.getZoomStateTimeAccessor().addListener(mZoomStateTimeListener, juce::NotificationType::sendNotificationSync);
     documentAccessor.addListener(mDocumentListener, juce::NotificationType::sendNotificationSync);
 }
 
@@ -66,23 +46,32 @@ Application::Interface::~Interface()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     documentAccessor.removeListener(mDocumentListener);
-    documentAccessor.getZoomStateTimeAccessor().removeListener(mZoomStateTimeListener);
 }
 
 void Application::Interface::resized()
 {
     auto constexpr separatorSize = 2;
     auto bounds = getLocalBounds();
-    auto header = bounds.removeFromTop(102);
-    mDocumentTransport.setBounds(header.removeFromLeft(240));
-    mDocumentTransportSeparator.setBounds(header.removeFromLeft(separatorSize));
-    mDocumentFileInfoPanel.setBounds(header);
-    mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
     
+    {
+        auto header = bounds.removeFromTop(102);
+        mDocumentTransport.setBounds(header.removeFromLeft(240));
+        mDocumentTransportSeparator.setBounds(header.removeFromLeft(separatorSize));
+        mDocumentFileInfoPanel.setBounds(header);
+    }
+    
+    mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
     mZoomStateTimeRuler.setBounds(bounds.removeFromTop(24));
     mMainSeparator.setBounds(bounds.removeFromTop(separatorSize));
     
-    mTimeSlider.setBounds(bounds.removeFromBottom(16));
+    {
+        auto footer = bounds.removeFromBottom(24);
+        footer.removeFromRight(24);
+        mToolTipDisplay.setBounds(footer.removeFromLeft(240));
+        mTooTipSeparator.setBounds(footer.removeFromLeft(separatorSize));
+        mTimeSlider.setBounds(footer);
+    }
+    
     mBottomSeparator.setBounds(bounds.removeFromBottom(separatorSize));
     mDocumentAnalyzerPanel.setBounds(bounds);
 }

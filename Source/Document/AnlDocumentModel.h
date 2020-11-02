@@ -15,16 +15,17 @@ namespace Document
         enum class Attribute
         {
             file,
-            analyzers,
             isLooping,
-            gain
+            gain,
+            isPlaybackStarted,
+            playheadPosition,
+            analyzers
         };
         
         enum class Signal
         {
             movePlayhead,
-            togglePlayback,
-            playheadPosition
+            audioInstanceChanged
         };
         
         Model() {}
@@ -35,12 +36,13 @@ namespace Document
         bool operator==(Model const& other) const;
         bool operator!=(Model const& other) const;
         
-        juce::File file; //!< The audio file associated with the document
-        std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document
-        bool isLooping; //!< If the loop is active
-        double gain = 1.0; //! The gain of the playback between 0 and 1
-        
-        Zoom::State::Model zoomStateTime {{0.0, 60.0}};
+        juce::File file; //!< The audio file associated with the document (saved/compared)
+        bool isLooping = false; //!< If the loop is active (saved/compared)
+        double gain = 1.0; //! The gain of the playback between 0 and 1 (saved/compared)
+        bool isPlaybackStarted = false; //! If the playback is started (unsaved/not compared)
+        double playheadPosition = 0.0; // The position of the playhead (unsaved/not compared)
+        Zoom::State::Model zoomStateTime {{0.0, 60.0}};  // The zoom state of the time (saved/not compared)
+        std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document (saved/compared)
         
         std::unique_ptr<juce::XmlElement> toXml() const;
         static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});

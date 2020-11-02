@@ -41,6 +41,7 @@ Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor&
                     {
                         addAndMakeVisible(section->thumbnail);
                         addAndMakeVisible(section->results);
+                        addAndMakeVisible(section->separator);
                         mSections.push_back(std::move(section));
                     }
                 }
@@ -63,6 +64,7 @@ Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor&
         }
     };
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    addAndMakeVisible(mSeparator);
 }
 
 Document::AnalyzerPanel::~AnalyzerPanel()
@@ -72,13 +74,15 @@ Document::AnalyzerPanel::~AnalyzerPanel()
 
 void Document::AnalyzerPanel::resized()
 {
-    auto constexpr size = 48;
+    mSeparator.setBounds(200, 0, 2, getHeight());
+    auto constexpr size = 50;
     auto bounds = getLocalBounds();
     for(auto& section : mSections)
     {
         if(section != nullptr)
         {
             auto lbounds = bounds.removeFromTop(size);
+            section->separator.setBounds(lbounds.removeFromBottom(2));
             section->thumbnail.setBounds(lbounds.removeFromLeft(200));
             section->results.setBounds(lbounds);
         }

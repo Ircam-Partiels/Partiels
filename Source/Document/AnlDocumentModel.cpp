@@ -17,9 +17,9 @@ Document::Model::Model(Model const& other)
 
 Document::Model::Model(Model&& other)
 : file(std::move(other.file))
-, analyzers(std::move(other.analyzers))
 , isLooping(std::move(other.isLooping))
 , zoomStateTime(std::move(other.zoomStateTime))
+, analyzers(std::move(other.analyzers))
 {
     
 }
@@ -28,7 +28,6 @@ bool Document::Model::operator==(Model const& other) const
 {
     return file == other.file &&
     isLooping == other.isLooping &&
-    zoomStateTime == other.zoomStateTime &&
     std::equal(analyzers.cbegin(), analyzers.cend(), other.analyzers.cbegin(), [](auto const& lhs, auto const& rhs)
     {
         return lhs != nullptr && rhs != nullptr && *(lhs.get()) == *(rhs.get());
@@ -103,27 +102,24 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
 
 std::set<Document::Model::Attribute> Document::Model::getAttributeTypes()
 {
-    return {Attribute::file, Attribute::analyzers, Attribute::isLooping, Attribute::gain};
+    return {Attribute::file, Attribute::isLooping, Attribute::gain, Attribute::isPlaybackStarted, Attribute::playheadPosition, Attribute::analyzers};
 }
 
 void Document::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
-    compareAndSet(attributes, Attribute::isLooping, mModel.isLooping, model.isLooping);
     compareAndSet(attributes, Attribute::file, mModel.file, model.file);
+    compareAndSet(attributes, Attribute::isLooping, mModel.isLooping, model.isLooping);
     compareAndSet(attributes, Attribute::gain, mModel.gain, model.gain);
+    
+    compareAndSet(attributes, Attribute::isPlaybackStarted, mModel.isPlaybackStarted, model.isPlaybackStarted);
+    compareAndSet(attributes, Attribute::playheadPosition, mModel.playheadPosition, model.playheadPosition);
+    
     auto data = compareAndSet(attributes, Attribute::analyzers, mAnalyzerAccessors, mModel.analyzers, model.analyzers, notification);
     notifyListener(attributes, notification);
-    //mZoomStateTimeAccessor.fromModel(model.zoomStateTime, notification);
-    JUCE_COMPILER_WARNING("fix asynchronous support")
-//    if(notification == juce::NotificationType::sendNotificationAsync)
-//    {
-//        juce::MessageManager::callAsync([ptr = std::make_shared<decltype(data)::element_type>(data)>(data.release())]
-//        {
-//            juce::ignoreUnused(ptr);
-//        });
-//    }
+    mZoomStateTimeAccessor.fromModel(model.zoomStateTime, notification);
+    JUCE_COMPILER_WARNING("fix asynchronous support of data deletion")
 }
 
 Analyzer::Accessor& Document::Accessor::getAnalyzerAccessor(size_t index)

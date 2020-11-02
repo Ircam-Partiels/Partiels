@@ -21,7 +21,13 @@ namespace Application
             Save = 0x200102,
             Duplicate = 0x200103,
             Consolidate = 0x200104,
-            OpenRecent = 0x200105
+            
+            TogglePlayback = 0x200105,
+            ToggleLooping = 0x200106,
+            MovePlayHeadToBeginning = 0x200107,
+            MovePlayHeadToEnd = 0x200108,
+            
+            OpenRecent = 0x200200 // Always at the end
         };
         
         CommandTarget();

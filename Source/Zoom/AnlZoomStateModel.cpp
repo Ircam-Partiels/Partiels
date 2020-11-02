@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Zoom::State::Model::Model(juce::Range<double> vr)
-: visibleRange(vr)
+: range(vr)
 {
 }
 
@@ -16,9 +16,9 @@ Zoom::State::Model Zoom::State::Model::fromXml(juce::XmlElement const& xml, Mode
         return {};
     }
     
-    anlWeakAssert(xml.hasAttribute("visibleRange"));
+    anlWeakAssert(xml.hasAttribute("range"));
     
-    defaultModel.visibleRange = Tools::StringParser::fromXml(xml, "visibleRange", defaultModel.visibleRange);
+    defaultModel.range = Tools::StringParser::fromXml(xml, "range", defaultModel.range);
     
     return defaultModel;
 }
@@ -31,13 +31,13 @@ std::unique_ptr<juce::XmlElement> Zoom::State::Model::toXml() const
         return nullptr;
     }
     
-    xml->setAttribute("visibleRange", Tools::StringParser::toString(visibleRange));
+    xml->setAttribute("range", Tools::StringParser::toString(range));
     return xml;
 }
 
 std::set<Zoom::State::Model::Attribute> Zoom::State::Model::getAttributeTypes()
 {
-    return {Attribute::visibleRange};
+    return {Attribute::range};
 }
 
 bool Zoom::State::Model::operator!=(Model const& other) const
@@ -48,7 +48,7 @@ bool Zoom::State::Model::operator!=(Model const& other) const
         return std::abs(lhs.getStart() - rhs.getStart()) < epsilon && std::abs(lhs.getEnd() - rhs.getEnd()) < epsilon;
     };
     
-    return !equals(visibleRange, other.visibleRange);
+    return !equals(range, other.range);
 }
 
 bool Zoom::State::Model::operator==(Model const& other) const
@@ -74,7 +74,7 @@ void Zoom::State::Accessor::fromModel(Model const& model, juce::NotificationType
         }
         return mGlobalRange.constrainRange(input.withEnd(std::max(input.getStart() + mMinimumLength, input.getEnd())));
     };
-    compareAndSet(attributes, Attribute::visibleRange, mModel.visibleRange, sanitizeRange(model.visibleRange));
+    compareAndSet(attributes, Attribute::range, mModel.range, sanitizeRange(model.range));
     notifyListener(attributes, notification);
 }
 

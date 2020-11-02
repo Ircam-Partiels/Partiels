@@ -90,6 +90,16 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
 {
     mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
+        auto getLastPosition = [&]() -> juce::int64
+        {
+            auto instance = mSourceManager.getInstance();
+            if(instance != nullptr)
+            {
+                return instance->getTotalLength();
+            }
+            return 0;
+        };
+        
         switch (attribute)
         {
             case Attribute::file:
@@ -116,8 +126,6 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 mSourceManager.setInstance(source);
             }
                 break;
-            case Attribute::analyzers:
-                break;
             case Attribute::isLooping:
             {
                 mIsLooping.store(acsr.getModel().isLooping);
@@ -132,10 +140,31 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 }
             }
                 break;
+            case Attribute::isPlaybackStarted:
+            {
+                if(static_cast<bool>(acsr.getModel().isPlaybackStarted))
+                {
+                    auto expected = getLastPosition();
+                    mReadPosition.compare_exchange_strong(expected, 0);
+                    mIsPlaying.store(true);
+                    startTimer(50);
+                }
+                else
+                {
+                    stopTimer();
+                    mIsPlaying.store(false);
+                }
+            }
+                break;
+            case Attribute::playheadPosition:
+            {
+                //mReadPosition = acsr.getModel().playheadPosition;
+            }
+                break;
+            case Attribute::analyzers:
+                break;
         }
     };
-    
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
     
     mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
     {
@@ -157,30 +186,10 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 mReadPosition.store(static_cast<bool>(value) ? getLastPosition() : 0);
             }
                 break;
-            case Signal::togglePlayback:
-            {
-                if(static_cast<bool>(value))
-                {
-                    auto expected = getLastPosition();
-                    mReadPosition.compare_exchange_strong(expected, 0);
-                    mIsPlaying.store(true);
-                    startTimer(50);
-                }
-                else
-                {
-                    stopTimer();
-                    mIsPlaying.store(false);
-                }
-            }
-                break;
-            case Signal::playheadPosition:
-            {
-                mReadPosition = static_cast<juce::int64>(value);
-            }
-                break;
         }
     };
     mAccessor.addReceiver(mReceiver);
+    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
 }
 
 Document::AudioReader::~AudioReader()
@@ -243,12 +252,16 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
 
 void Document::AudioReader::handleAsyncUpdate()
 {
-    mAccessor.sendSignal(Signal::togglePlayback, {false}, juce::NotificationType::sendNotificationSync);
+    auto copy = mAccessor.getModel();
+    copy.isPlaybackStarted = false;
+    mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
 }
 
 void Document::AudioReader::timerCallback()
 {
-    mAccessor.sendSignal(Signal::playheadPosition, {mReadPosition.load()}, juce::NotificationType::sendNotificationSync);
+    auto copy = mAccessor.getModel();
+    copy.playheadPosition = mReadPosition.load();
+    mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
 }
 
 ANALYSE_FILE_END

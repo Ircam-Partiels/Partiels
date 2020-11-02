@@ -12,13 +12,12 @@ namespace Zoom
         : public juce::Component
         {
         public:
-            
             enum ColourIds
             {
                 backgroundColourId = 0x2002000
             };
             
-            TimeRuler(Accessor& accessor);
+            JUCE_DEPRECATED(TimeRuler(Accessor& accessor));
             ~TimeRuler() override = default;
             
             // juce::Component

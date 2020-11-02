@@ -17,7 +17,7 @@ namespace Zoom
         {
             enum class Attribute
             {
-                visibleRange
+                range
             };
             
             enum class Signal
@@ -29,7 +29,7 @@ namespace Zoom
             
             Model(juce::Range<double> vr = {0.0, 0.0});
             
-            juce::Range<double> visibleRange;
+            juce::Range<double> range;
             
             std::unique_ptr<juce::XmlElement> toXml() const;
             static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});

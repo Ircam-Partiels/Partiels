@@ -15,6 +15,19 @@ Document::Transport::Transport(Accessor& accessor)
                 mVolumeSlider.setValue(decibel, juce::NotificationType::dontSendNotification);
             }
                 break;
+            case Attribute::isPlaybackStarted:
+            {
+                auto const state = mAccessor.getModel().isPlaybackStarted;
+                mPlaybackButton.setButtonText(state ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
+                mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+            }
+                break;
+            case Attribute::playheadPosition:
+            {
+                auto const samples = mAccessor.getModel().playheadPosition;
+                mPlayPositionInSamples.setText(juce::String(samples) + " samples", juce::NotificationType::dontSendNotification);
+            }
+                break;
                 
             default:
                 break;
@@ -30,18 +43,6 @@ Document::Transport::Transport(Accessor& accessor)
             {
             }
                 break;
-            case Signal::togglePlayback:
-            {
-                mPlaybackButton.setButtonText(value ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
-                mPlaybackButton.setToggleState(value, juce::NotificationType::dontSendNotification);
-            }
-                break;
-            case Signal::playheadPosition:
-            {
-                auto const samples = static_cast<juce::int64>(value);
-                mPlayPositionInSamples.setText(juce::String(samples) + " samples", juce::NotificationType::dontSendNotification);
-            }
-                break;
         }
     };
     mAccessor.addReceiver(mReceiver);
@@ -53,7 +54,9 @@ Document::Transport::Transport(Accessor& accessor)
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
-        mAccessor.sendSignal(Signal::togglePlayback, {mPlaybackButton.getToggleState()}, juce::NotificationType::sendNotificationSync);
+        auto copy = mAccessor.getModel();
+        copy.isPlaybackStarted = mPlaybackButton.getToggleState();
+        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
     };
     mForwardButton.onClick = [&]()
     {

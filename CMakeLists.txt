@@ -40,13 +40,17 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.h)
+    ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.h
+    ${SOURCES_DIRECTORY}/Tools/AnlToolTip.cpp
+    ${SOURCES_DIRECTORY}/Tools/AnlToolTip.h)
 
 file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateModel.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateModel.h
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateRuler.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateRuler.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateSlider.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateSlider.h
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.h)
 

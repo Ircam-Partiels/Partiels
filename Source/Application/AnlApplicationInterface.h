@@ -1,12 +1,14 @@
 #pragma once
 
 #include "AnlApplicationCommandTarget.h"
+#include "../Tools/AnlToolTip.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentAnalyzerPanel.h"
 #include "../Zoom/AnlZoomStateTimeRuler.h"
+#include "../Zoom/AnlZoomStateSlider.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -39,10 +41,11 @@ namespace Application
         Tools::ColouredPanel mMainSeparator;
         Document::AnalyzerPanel mDocumentAnalyzerPanel;
         
-        //Bottom
+        //Footer
         Tools::ColouredPanel mBottomSeparator;
-        Zoom::State::Accessor::Listener mZoomStateTimeListener;
-        juce::Slider mTimeSlider {juce::Slider::TwoValueHorizontal, juce::Slider::NoTextBox};
+        Zoom::State::Slider mTimeSlider;
+        Tools::ColouredPanel mTooTipSeparator;
+        ToolTipDisplay mToolTipDisplay;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)
     };
