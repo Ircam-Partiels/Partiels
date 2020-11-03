@@ -54,6 +54,38 @@ file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.h)
 
+file(GLOB PluginSources
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.cpp
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.h
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.cpp
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.h
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.cpp
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
+
+file(GLOB AnalyzerSources
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h)
+
+file(GLOB DocumentSources
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentControlPanel.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentControlPanel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h)
+
 file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
@@ -71,38 +103,6 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.h)
-
-file(GLOB DocumentSources
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentAnalyzerPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentAnalyzerPanel.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h)
-
-file(GLOB AnalyzerSources
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h)
-
-file(GLOB PluginSources
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.cpp
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.h
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.cpp
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.h
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.cpp
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
 
 source_group("Global" FILES ${GlobalSources})
 source_group("Tools" FILES ${ToolsSources})

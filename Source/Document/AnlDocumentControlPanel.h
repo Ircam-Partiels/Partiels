@@ -10,15 +10,15 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    class AnalyzerPanel
+    class ControlPanel
     : public juce::Component
     {
     public:
         using Attribute = Model::Attribute;
         using Signal = Model::Signal;
         
-        AnalyzerPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor);
-        ~AnalyzerPanel() override;
+        ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor);
+        ~ControlPanel() override;
         
         void resized() override;
         void mouseDoubleClick(juce::MouseEvent const& event) override;
@@ -38,20 +38,12 @@ namespace Document
             Analyzer::PluginInstance instance;
             Analyzer::Thumbnail thumbnail;
             Tools::ColouredPanel separator;
-            juce::Label results;
         };
         
         std::vector<std::unique_ptr<Section>> mSections;
-        Tools::ColouredPanel mSeparator;
         juce::DialogWindow* dialogWindow;
         
-        
-//        Analyzer::Model mAnalyzerModel;
-//        Analyzer::Accessor mAnalyzerAccessor {mAnalyzerModel};
-//        Analyzer::Processor mAnalyzerProcessor {mAnalyzerAccessor};
-//        JUCE_COMPILER_WARNING("remove from here");
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AnalyzerPanel)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ControlPanel)
     };
 }
 

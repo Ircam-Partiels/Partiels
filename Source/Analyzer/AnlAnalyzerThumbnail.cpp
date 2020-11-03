@@ -6,7 +6,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
     mNameLabel.setEditable(true);
-    mNameLabel.setJustificationType(juce::Justification::centredLeft);
+    mNameLabel.setJustificationType(juce::Justification::topLeft);
     addAndMakeVisible(mNameLabel);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mPropertiesButton);

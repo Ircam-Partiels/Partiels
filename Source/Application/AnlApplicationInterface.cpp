@@ -7,7 +7,7 @@ Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor())
-, mDocumentAnalyzerPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor())
+, mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor())
 , mTimeScrollBar(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor(), Zoom::State::ScrollBar::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
@@ -16,8 +16,9 @@ Application::Interface::Interface()
     addAndMakeVisible(mHeaderSeparator);
     
     addAndMakeVisible(mZoomStateTimeRuler);
-    addAndMakeVisible(mMainSeparator);
-    addAndMakeVisible(mDocumentAnalyzerPanel);
+    addAndMakeVisible(mZoomStateTimeRulerSeparator);
+    addAndMakeVisible(mDocumentControlPanel);
+    addAndMakeVisible(mDocumentControlPanelSeparator);
     
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mToolTipDisplay);
@@ -34,7 +35,7 @@ Application::Interface::Interface()
                 
             mDocumentTransport.setEnabled(isDocumentEnable);
             mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
-            mDocumentAnalyzerPanel.setEnabled(isDocumentEnable);
+            mDocumentControlPanel.setEnabled(isDocumentEnable);
         }
     };
     
@@ -58,22 +59,29 @@ void Application::Interface::resized()
         mDocumentTransport.setBounds(header.removeFromLeft(240));
         mDocumentTransportSeparator.setBounds(header.removeFromLeft(separatorSize));
         mDocumentFileInfoPanel.setBounds(header);
+        mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
     }
     
-    mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
-    mZoomStateTimeRuler.setBounds(bounds.removeFromTop(24));
-    mMainSeparator.setBounds(bounds.removeFromTop(separatorSize));
     
     {
         auto footer = bounds.removeFromBottom(36);
         mToolTipDisplay.setBounds(footer.removeFromBottom(24));
         mTooTipSeparator.setBounds(footer.removeFromBottom(separatorSize));
         footer.removeFromRight(8);
+        footer.removeFromLeft(240);
         mTimeScrollBar.setBounds(footer);
+        mBottomSeparator.setBounds(bounds.removeFromBottom(separatorSize));
     }
     
-    mBottomSeparator.setBounds(bounds.removeFromBottom(separatorSize));
-    mDocumentAnalyzerPanel.setBounds(bounds);
+    {
+        auto top = bounds.removeFromTop(24 + separatorSize);
+        top.removeFromLeft(240);
+        mZoomStateTimeRuler.setBounds(top.removeFromTop(24));
+        mZoomStateTimeRulerSeparator.setBounds(top);
+        
+        mDocumentControlPanel.setBounds(bounds.removeFromLeft(240));
+        mDocumentControlPanelSeparator.setBounds(bounds.removeFromLeft(2));
+    }
 }
 
 ANALYSE_FILE_END

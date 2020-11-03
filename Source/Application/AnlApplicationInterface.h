@@ -6,7 +6,7 @@
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
-#include "../Document/AnlDocumentAnalyzerPanel.h"
+#include "../Document/AnlDocumentControlPanel.h"
 #include "../Zoom/AnlZoomStateTimeRuler.h"
 #include "../Zoom/AnlZoomStateScrollBar.h"
 
@@ -38,8 +38,9 @@ namespace Application
         
         // Main
         Zoom::State::TimeRuler mZoomStateTimeRuler;
-        Tools::ColouredPanel mMainSeparator;
-        Document::AnalyzerPanel mDocumentAnalyzerPanel;
+        Tools::ColouredPanel mZoomStateTimeRulerSeparator;
+        Document::ControlPanel mDocumentControlPanel;
+        Tools::ColouredPanel mDocumentControlPanelSeparator;
         
         //Footer
         Tools::ColouredPanel mBottomSeparator;

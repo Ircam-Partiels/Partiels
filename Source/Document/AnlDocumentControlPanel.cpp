@@ -1,9 +1,9 @@
-#include "AnlDocumentAnalyzerPanel.h"
+#include "AnlDocumentControlPanel.h"
 #include "../Plugin/AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 
-Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor)
+Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor)
 : mAccessor(accessor)
 , mPluginListTable(pluginListAccessor)
 {
@@ -40,7 +40,6 @@ Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor&
                     if(section != nullptr)
                     {
                         addAndMakeVisible(section->thumbnail);
-                        addAndMakeVisible(section->results);
                         addAndMakeVisible(section->separator);
                         mSections.push_back(std::move(section));
                     }
@@ -64,18 +63,16 @@ Document::AnalyzerPanel::AnalyzerPanel(Accessor& accessor, PluginList::Accessor&
         }
     };
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
-    addAndMakeVisible(mSeparator);
 }
 
-Document::AnalyzerPanel::~AnalyzerPanel()
+Document::ControlPanel::~ControlPanel()
 {
     mAccessor.removeListener(mListener);
 }
 
-void Document::AnalyzerPanel::resized()
+void Document::ControlPanel::resized()
 {
-    mSeparator.setBounds(200, 0, 2, getHeight());
-    auto constexpr size = 50;
+    auto constexpr size = 100;
     auto bounds = getLocalBounds();
     for(auto& section : mSections)
     {
@@ -83,13 +80,12 @@ void Document::AnalyzerPanel::resized()
         {
             auto lbounds = bounds.removeFromTop(size);
             section->separator.setBounds(lbounds.removeFromBottom(2));
-            section->thumbnail.setBounds(lbounds.removeFromLeft(200));
-            section->results.setBounds(lbounds);
+            section->thumbnail.setBounds(lbounds);
         }
     }
 }
 
-void Document::AnalyzerPanel::mouseDoubleClick(juce::MouseEvent const& event)
+void Document::ControlPanel::mouseDoubleClick(juce::MouseEvent const& event)
 {
     if(!isEnabled())
     {
