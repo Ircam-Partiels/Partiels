@@ -8,8 +8,9 @@ namespace Zoom
 {
     namespace State
     {
-        class Slider
+        class ScrollBar
         : public juce::Component
+        , private juce::ScrollBar::Listener
         {
         public:
             using Attribute = Model::Attribute;
@@ -21,17 +22,20 @@ namespace Zoom
                 horizontal
             };
             
-            Slider(Accessor& accessor, Orientation orientation);
-            ~Slider() override;
+            ScrollBar(Accessor& accessor, Orientation orientation);
+            ~ScrollBar() override;
         
             // juce::Component
             void resized() override;
+            
         private:
+            
+            // juce::ScrollBar::Listener
+            void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
             
             Accessor& mAccessor;
             Accessor::Listener mListener;
-            juce::Slider mSlider;
-            JUCE_COMPILER_WARNING("change with scroll bar")
+            juce::ScrollBar mScrollBar;
             juce::Slider mIncDec;
         };
     }

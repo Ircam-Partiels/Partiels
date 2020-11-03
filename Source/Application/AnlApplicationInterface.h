@@ -1,14 +1,14 @@
 #pragma once
 
 #include "AnlApplicationCommandTarget.h"
-#include "../Tools/AnlToolTip.h"
+#include "../Tools/AnlTooltip.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentAnalyzerPanel.h"
 #include "../Zoom/AnlZoomStateTimeRuler.h"
-#include "../Zoom/AnlZoomStateSlider.h"
+#include "../Zoom/AnlZoomStateScrollBar.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -43,9 +43,9 @@ namespace Application
         
         //Footer
         Tools::ColouredPanel mBottomSeparator;
-        Zoom::State::Slider mTimeSlider;
+        Zoom::State::ScrollBar mTimeScrollBar;
         Tools::ColouredPanel mTooTipSeparator;
-        ToolTipDisplay mToolTipDisplay;
+        Tooltip::Display mToolTipDisplay;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)
     };

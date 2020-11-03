@@ -1,8 +1,8 @@
-#include "AnlToolTip.h"
+#include "AnlTooltip.h"
 
 ANALYSE_FILE_BEGIN
 
-ToolTipServer::ToolTipServer()
+Tooltip::Server::Server()
 {
     if(juce::Desktop::getInstance().getMainMouseSource().canHover())
     {
@@ -10,15 +10,15 @@ ToolTipServer::ToolTipServer()
     }
 }
 
-void ToolTipServer::timerCallback()
+void Tooltip::Server::timerCallback()
 {
     auto getTipFor = [](juce::Component* component) -> juce::String
     {
-        if(juce::Process::isForegroundProcess() && !juce::ModifierKeys::getCurrentModifiers().isAnyMouseButtonDown())
+        if(juce::Process::isForegroundProcess())
         {
-            if(auto* toolTipClient = dynamic_cast<juce::TooltipClient*>(component))
+            if(auto* client = dynamic_cast<Client*>(component))
             {
-                return toolTipClient->getTooltip();
+                return client->getTooltip();
             }
         }
         return {};
@@ -29,23 +29,23 @@ void ToolTipServer::timerCallback()
     if(newTip != mTip)
     {
         mTip = newTip;
-        if(onToolTipChanged != nullptr)
+        if(onChanged != nullptr)
         {
-            onToolTipChanged(mTip);
+            onChanged(mTip);
         }
     }
 }
 
-ToolTipDisplay::ToolTipDisplay()
+Tooltip::Display::Display()
 {
     addAndMakeVisible(mLabel);
-    mServer.onToolTipChanged = [&](juce::String const& tip)
+    mServer.onChanged = [&](juce::String const& tip)
     {
         mLabel.setText(tip, juce::NotificationType::dontSendNotification);
     };
 }
 
-void ToolTipDisplay::resized()
+void Tooltip::Display::resized()
 {
     mLabel.setBounds(getLocalBounds());
 }

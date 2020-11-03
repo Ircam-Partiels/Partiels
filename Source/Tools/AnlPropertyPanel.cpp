@@ -15,6 +15,10 @@ Tools::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c, 
     
     addAndMakeVisible(title);
     addAndMakeVisible(content.get());
+    if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(content.get()))
+    {
+        tooltipClient->setTooltip(tooltip);
+    }
     
     setTooltip(tooltip);
     setSize(200, 24);

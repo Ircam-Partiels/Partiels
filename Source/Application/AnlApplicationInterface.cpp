@@ -8,7 +8,7 @@ Application::Interface::Interface()
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor())
 , mDocumentAnalyzerPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor())
-, mTimeSlider(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor(), Zoom::State::Slider::Orientation::horizontal)
+, mTimeScrollBar(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor(), Zoom::State::ScrollBar::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);
@@ -22,7 +22,7 @@ Application::Interface::Interface()
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mToolTipDisplay);
     addAndMakeVisible(mTooTipSeparator);
-    addAndMakeVisible(mTimeSlider);
+    addAndMakeVisible(mTimeScrollBar);
     
     mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::Model::Attribute attribute)
     {
@@ -65,11 +65,11 @@ void Application::Interface::resized()
     mMainSeparator.setBounds(bounds.removeFromTop(separatorSize));
     
     {
-        auto footer = bounds.removeFromBottom(24);
-        footer.removeFromRight(24);
-        mToolTipDisplay.setBounds(footer.removeFromLeft(240));
-        mTooTipSeparator.setBounds(footer.removeFromLeft(separatorSize));
-        mTimeSlider.setBounds(footer);
+        auto footer = bounds.removeFromBottom(36);
+        mToolTipDisplay.setBounds(footer.removeFromBottom(24));
+        mTooTipSeparator.setBounds(footer.removeFromBottom(separatorSize));
+        footer.removeFromRight(8);
+        mTimeScrollBar.setBounds(footer);
     }
     
     mBottomSeparator.setBounds(bounds.removeFromBottom(separatorSize));

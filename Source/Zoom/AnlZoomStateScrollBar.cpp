@@ -1,27 +1,16 @@
-#include "AnlZoomStateSlider.h"
+#include "AnlZoomStateScrollBar.h"
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::Slider::Slider(Accessor& accessor, Orientation orientation)
+Zoom::State::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
 : mAccessor(accessor)
+, mScrollBar(orientation == Orientation::vertical)
 {
-    using SliderStyle = juce::Slider::SliderStyle;
-    using TextEntryBoxPosition = juce::Slider::TextEntryBoxPosition;
-    
-    mSlider.setSliderStyle(orientation == Orientation::horizontal ? SliderStyle::TwoValueHorizontal : SliderStyle::TwoValueVertical);
-    mSlider.setTextBoxStyle(TextEntryBoxPosition::NoTextBox, false, 0, 0);
-    mSlider.setScrollWheelEnabled(true);
-    mSlider.setIncDecButtonsMode(juce::Slider::IncDecButtonMode::incDecButtonsDraggable_AutoDirection);
-    addAndMakeVisible(mSlider);
-    
-    mIncDec.setSliderStyle(SliderStyle::IncDecButtons);
-    mIncDec.setTextBoxStyle(TextEntryBoxPosition::NoTextBox, false, 0, 0);
+    mScrollBar.setAutoHide(false);
+    addAndMakeVisible(mScrollBar);
+    mIncDec.setSliderStyle(juce::Slider::SliderStyle::IncDecButtons);
+    mIncDec.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
     addAndMakeVisible(mIncDec);
-    
-    mSlider.onValueChange = [&]()
-    {
-        mAccessor.fromModel({{mSlider.getMinValue(), mSlider.getMaxValue()}}, juce::NotificationType::sendNotificationSync);
-    };
     
     mIncDec.onValueChange = [&]()
     {
@@ -35,27 +24,29 @@ Zoom::State::Slider::Slider(Accessor& accessor, Orientation orientation)
         if(attribute == Zoom::State::Model::Attribute::range)
         {
             auto const globalRange = std::get<0>(acsr.getContraints());
-            mSlider.setRange(globalRange, 0.0);
+            mScrollBar.setRangeLimits(globalRange, juce::NotificationType::dontSendNotification);
             mIncDec.setRange(globalRange.movedToStartAt(0.0), globalRange.getLength() / 127.0);
             auto const range = acsr.getModel().range;
-            mSlider.setMinAndMaxValues(range.getStart(), range.getEnd(), juce::NotificationType::dontSendNotification);
+            mScrollBar.setCurrentRange(range, juce::NotificationType::dontSendNotification);
             mIncDec.setValue(range.getLength());
         }
     };
     
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mScrollBar.addListener(this);
 }
 
-Zoom::State::Slider::~Slider()
+Zoom::State::ScrollBar::~ScrollBar()
 {
+    mScrollBar.removeListener(this);
     mAccessor.removeListener(mListener);
 }
 
-void Zoom::State::Slider::resized()
+void Zoom::State::ScrollBar::resized()
 {
     auto const globalRange = std::get<0>(mAccessor.getContraints());
     auto bounds = getLocalBounds();
-    if(mSlider.isVertical())
+    if(mScrollBar.isVertical())
     {
         mIncDec.setBounds(bounds.removeFromBottom(bounds.getWidth() * 2));
         mIncDec.setRange(globalRange.movedToStartAt(0.0), globalRange.getLength() / static_cast<double>(bounds.getHeight()));
@@ -65,7 +56,14 @@ void Zoom::State::Slider::resized()
         mIncDec.setBounds(bounds.removeFromRight(bounds.getHeight() * 2));
         mIncDec.setRange(globalRange.movedToStartAt(0.0), globalRange.getLength() / static_cast<double>(bounds.getWidth()));
     }
-    mSlider.setBounds(bounds);
+    mScrollBar.setBounds(bounds);
+}
+
+void Zoom::State::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart)
+{
+    juce::ignoreUnused(scrollBarThatHasMoved, newRangeStart);
+    anlStrongAssert(scrollBarThatHasMoved == &mScrollBar);
+    mAccessor.fromModel({mScrollBar.getCurrentRange()}, juce::NotificationType::sendNotificationSync);
 }
 
 ANALYSE_FILE_END
