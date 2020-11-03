@@ -11,8 +11,8 @@ Document::FileInfoPanel::Property::Property(juce::String const& text, juce::Stri
 
 Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocument& fileBasedDocument, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
-, mFileBasedDocument(fileBasedDocument)
 , mAudioFormatManager(audioFormatManager)
+, mFileBasedDocument(fileBasedDocument)
 {
     using Attribute = Model::Attribute;
     using Position = Tools::PropertyPanelBase::Positioning;

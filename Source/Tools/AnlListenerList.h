@@ -56,7 +56,7 @@ namespace Tools
                 mQueue.pop();
                 queueLock.unlock();
                 
-                notify(method, juce::NotificationType::sendNotificationAsync);
+                notify(method, juce::NotificationType::sendNotificationSync);
                 
                 queueLock.lock();
             }

@@ -30,13 +30,13 @@ namespace Document
         struct Section
         {
             Section(Analyzer::Accessor& acsr)
-            : instance(acsr)
-            , thumbnail(acsr)
+            : thumbnail(acsr)
+            , instance(acsr)
             {
                 
             }
-            Analyzer::PluginInstance instance;
             Analyzer::Thumbnail thumbnail;
+            Analyzer::PluginInstance instance;
             Tools::ColouredPanel separator;
         };
         

@@ -1,34 +1,43 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
+#include "../Tools/AnlPropertyLayout.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    class Thumbnail
+    class PropertyPanel
     : public juce::Component
     {
     public:
         using Attribute = Model::Attribute;
+        using Signal = Model::Signal;
         
-        Thumbnail(Accessor& accessor);
-        ~Thumbnail() override;
+        PropertyPanel(Accessor& accessor);
+        ~PropertyPanel() override;
         
         // juce::Component
         void resized() override;
         
-        std::function<void(void)> onRemove = nullptr;
-        
     private:
+        
+        class Property
+        : public Tools::PropertyPanel<juce::Label>
+        {
+        public:
+            Property(juce::String const& text, juce::String const& tooltip);
+            ~Property() override = default;
+        };
+        
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        juce::Label mNameLabel;
-        juce::TextButton mRemoveButton {juce::CharPointer_UTF8("×")};
-        juce::TextButton mPropertiesButton {juce::CharPointer_UTF8("Ρ")};
-        juce::TextButton mRelaunchButton {juce::CharPointer_UTF8("μ")};
+        Accessor::Receiver mReceiver;
         
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Thumbnail)
+        std::vector<std::unique_ptr<Property>> mProperties;
+        Tools::PropertyLayout mPropertyLayout;
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PropertyPanel)
     };
 }
 

@@ -44,9 +44,16 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
             }
             mAccessor.setInstance(pluginInstance);
             mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, juce::NotificationType::sendNotificationSync);
+            
+            if(mAccessor.getModel().name.isEmpty())
+            {
+                auto copy = mAccessor.getModel();
+                copy.name = pluginInstance->getName();
+                mAccessor.fromModel(copy, juce::NotificationType::sendNotificationAsync);
+            }
         }
-        
     };
+    
     mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
 }
 

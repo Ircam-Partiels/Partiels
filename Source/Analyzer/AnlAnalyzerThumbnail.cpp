@@ -20,6 +20,21 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     
+    mPropertiesButton.onClick = [&]()
+    {
+        juce::DialogWindow::LaunchOptions launchOption;
+        launchOption.dialogTitle = juce::translate("Analyzer Properties");
+        launchOption.content.setNonOwned(&mPropertyPanel);
+        launchOption.componentToCentreAround = this;
+        launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
+        launchOption.escapeKeyTriggersCloseButton = true;
+        launchOption.useNativeTitleBar = false;
+        launchOption.resizable = false;
+        launchOption.useBottomRightCornerResizer = false;
+        auto dialogWindow = launchOption.launchAsync();
+        dialogWindow->runModalLoop();
+    };
+    
     mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
     {
         if(attribute == Attribute::name)
@@ -35,9 +50,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             auto instance = acsr.getInstance();
             if(instance != nullptr && mAccessor.getModel().name.isEmpty())
             {
-                auto copy = mAccessor.getModel();
-                copy.name = instance->getName();
-                mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+
             }
         }
     };

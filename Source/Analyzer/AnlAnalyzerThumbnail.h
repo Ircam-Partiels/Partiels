@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlAnalyzerModel.h"
+#include "AnlAnalyzerPropertyPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -25,6 +25,7 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
+        PropertyPanel mPropertyPanel {mAccessor};
         
         juce::Label mNameLabel;
         juce::TextButton mRemoveButton {juce::CharPointer_UTF8("×")};
