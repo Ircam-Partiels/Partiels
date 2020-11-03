@@ -37,7 +37,7 @@ namespace Tools
     class XmlUtils
     {
     public:
-        static std::vector<std::reference_wrapper<juce::XmlElement>> getChilds(juce::XmlElement const& xml, juce::StringRef const& tag);
+        static std::vector<std::reference_wrapper<juce::XmlElement>> getChilds(juce::XmlElement const& xml, juce::StringRef const& tag, juce::StringRef const& newTag = {});
         
         template<typename T> static void addChilds(juce::XmlElement& xml, std::vector<std::unique_ptr<T>> const& vector, juce::StringRef const& tag)
         {

@@ -65,7 +65,7 @@ template <> juce::String Tools::StringParser::toString<std::vector<juce::File>>(
     return filePaths.joinIntoString("\n");
 }
 
-std::vector<std::reference_wrapper<juce::XmlElement>> Tools::XmlUtils::getChilds(juce::XmlElement const& xml, juce::StringRef const& tag)
+std::vector<std::reference_wrapper<juce::XmlElement>> Tools::XmlUtils::getChilds(juce::XmlElement const& xml, juce::StringRef const& tag, juce::StringRef const& newTag)
 {
     std::vector<std::reference_wrapper<juce::XmlElement>> childs;
     childs.reserve(static_cast<size_t>(xml.getNumChildElements()));
@@ -73,6 +73,10 @@ std::vector<std::reference_wrapper<juce::XmlElement>> Tools::XmlUtils::getChilds
     {
         if(child != nullptr && (tag.isEmpty() || tag == child->getTagName()))
         {
+            if(newTag.isNotEmpty())
+            {
+                child->setTagName(newTag);                
+            }
             childs.push_back(*child);
         }
     }

@@ -54,7 +54,7 @@ Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defa
     defaultModel.file = Tools::StringParser::fromXml(xml, "file", defaultModel.file);
     defaultModel.isLooping = xml.getBoolAttribute("isLooping", defaultModel.isLooping);
     defaultModel.gain = xml.getDoubleAttribute("gain", defaultModel.gain);
-    auto const childs = Tools::XmlUtils::getChilds(xml, "Analyzer");
+    auto const childs = Tools::XmlUtils::getChilds(xml, "Analyzer", "Anl::Analyzer::Model");
     auto& analyzers = defaultModel.analyzers;
     analyzers.resize(childs.size());
     for(size_t i = 0; i < analyzers.size(); ++i)

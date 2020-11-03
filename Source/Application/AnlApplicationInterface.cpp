@@ -75,9 +75,9 @@ void Application::Interface::resized()
     
     {
         auto top = bounds.removeFromTop(24 + separatorSize);
+        mZoomStateTimeRulerSeparator.setBounds(top.removeFromBottom(separatorSize));
         top.removeFromLeft(240);
-        mZoomStateTimeRuler.setBounds(top.removeFromTop(24));
-        mZoomStateTimeRulerSeparator.setBounds(top);
+        mZoomStateTimeRuler.setBounds(top);
         
         mDocumentControlPanel.setBounds(bounds.removeFromLeft(240));
         mDocumentControlPanelSeparator.setBounds(bounds.removeFromLeft(2));
