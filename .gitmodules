@@ -4,3 +4,6 @@
 [submodule "vamp-plugin-sdk"]
 	path = vamp-plugin-sdk
 	url = git@forge-2.ircam.fr:IrcamLab/vamp-plugin-sdk.git
+[submodule "magic_enum"]
+	path = magic_enum
+	url = https://github.com/Neargye/magic_enum.git

@@ -42,7 +42,7 @@ namespace Tools
         {
             if(mListeners.add(listener))
             {
-                for(auto const attr : Model::getAttributeTypes())
+                for(auto const attr : magic_enum::enum_values<Attribute>())
                 {
                     mListeners.notify([this, attr, ptr = &listener](Listener& ltnr)
                     {

@@ -35,11 +35,6 @@ std::unique_ptr<juce::XmlElement> Zoom::State::Model::toXml() const
     return xml;
 }
 
-std::set<Zoom::State::Model::Attribute> Zoom::State::Model::getAttributeTypes()
-{
-    return {Attribute::range};
-}
-
 bool Zoom::State::Model::operator!=(Model const& other) const
 {
     auto equals = [](juce::Range<double> const& lhs, juce::Range<double> const& rhs)

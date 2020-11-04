@@ -73,11 +73,6 @@ std::unique_ptr<juce::XmlElement> Analyzer::Model::toXml() const
     return xml;
 }
 
-std::set<Analyzer::Model::Attribute> Analyzer::Model::getAttributeTypes()
-{
-    return {Attribute::key, Attribute::name, Attribute::sampleRate, Attribute::numChannels, Attribute::parameters, Attribute::programName, Attribute::resultFile, Attribute::projectFile};
-}
-
 void Analyzer::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
 {
     using Attribute = Model::Attribute;

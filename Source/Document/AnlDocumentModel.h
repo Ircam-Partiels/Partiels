@@ -45,8 +45,7 @@ namespace Document
         std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document (saved/compared)
         
         std::unique_ptr<juce::XmlElement> toXml() const;
-        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
-        static std::set<Attribute> getAttributeTypes();
+        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});;
         
         JUCE_LEAK_DETECTOR(Model)
     };

@@ -32,11 +32,6 @@ Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Mode
     return defaultModel;
 }
 
-std::set<Application::Model::Attribute> Application::Model::getAttributeTypes()
-{
-    return {Attribute::windowState, Attribute::recentlyOpenedFilesList, Attribute::currentDocumentFile};
-}
-
 std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
 {
     auto xml = std::make_unique<juce::XmlElement>("Anl::Application::Model");

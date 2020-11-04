@@ -86,11 +86,6 @@ std::unique_ptr<juce::XmlElement> PluginList::Model::toXml() const
     return xml;
 }
 
-std::set<PluginList::Model::Attribute> PluginList::Model::getAttributeTypes()
-{
-    return {Attribute::descriptions, Attribute::sortColumn, Attribute::sortIsFowards};
-}
-
 void PluginList::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
 {
     using Attribute = Model::Attribute;

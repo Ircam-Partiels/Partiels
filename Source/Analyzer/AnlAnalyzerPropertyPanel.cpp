@@ -81,7 +81,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                                     return "Nuttall";
                                     break;
                                 case WindowType::BlackmanHarrisWindow:
-                                    return "BlackmanHarris";
+                                    return "Blackman-Harris";
                                     break;
                             }
                         };

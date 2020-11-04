@@ -48,7 +48,6 @@ namespace PluginList
         Model() {} // This is to avoid a clang error with default
         std::unique_ptr<juce::XmlElement> toXml() const;
         static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
-        static std::set<Attribute> getAttributeTypes();
         
         JUCE_LEAK_DETECTOR(Model)
     };

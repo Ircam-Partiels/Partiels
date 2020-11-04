@@ -35,6 +35,8 @@ ANALYSE_FILE_END
 #define AnlError(domain, message)
 #endif
 
+#include "../../magic_enum/include/magic_enum.hpp"
+
 #include <mutex>
 #include <set>
 #include <utility>
@@ -42,3 +44,4 @@ ANALYSE_FILE_END
 #include <memory>
 #include <thread>
 #include <functional>
+#include <type_traits>

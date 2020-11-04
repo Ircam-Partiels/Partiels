@@ -100,11 +100,6 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
     return xml;
 }
 
-std::set<Document::Model::Attribute> Document::Model::getAttributeTypes()
-{
-    return {Attribute::file, Attribute::isLooping, Attribute::gain, Attribute::isPlaybackStarted, Attribute::playheadPosition, Attribute::analyzers};
-}
-
 void Document::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
 {
     using Attribute = Model::Attribute;

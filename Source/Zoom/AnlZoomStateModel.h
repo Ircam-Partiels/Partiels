@@ -33,7 +33,6 @@ namespace Zoom
             
             std::unique_ptr<juce::XmlElement> toXml() const;
             static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
-            static std::set<Attribute> getAttributeTypes();
             
             bool operator!=(Model const& other) const;
             bool operator==(Model const& other) const;

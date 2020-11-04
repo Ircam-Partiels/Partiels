@@ -6,7 +6,7 @@ add_subdirectory(JUCE)
 include(vamp.cmake)
 
 juce_add_gui_app(Analyse
-    PRODUCT_NAME                        "Analyse"
+    PRODUCT_NAME                        "Brioche"
     VERSION                             "0.0.1"
     BUNDLE_ID                           com.ircam.analyse
     COMPANY_COPYRIGHT                   "Copyright 2020 Ircam. All rights reserved"
