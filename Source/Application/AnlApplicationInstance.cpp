@@ -1,5 +1,7 @@
 #include "AnlApplicationInstance.h"
 
+#include "../Tools/AnlModel.h"
+
 ANALYSE_FILE_BEGIN
 
 juce::String const Application::Instance::getApplicationName()
@@ -19,6 +21,26 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 
 void Application::Instance::initialise(juce::String const& commandLine)
 {
+    enum typess { v1, v2, v3, v4 };
+    
+    using data_t = std::tuple
+    <Anl::Model::TypedData<int, true, decltype(magic_enum::enum_name<typess::v1>())>
+    ,Anl::Model::TypedData<int, false, decltype("v2"_tstr)>
+    ,Anl::Model::TypedData<float, true, decltype("v3"_tstr)>
+    ,Anl::Model::TypedData<std::vector<int>, false, decltype("v4"_tstr)>
+    >;
+    
+    Anl::Model::Accessor<data_t> accessor(data_t{{1}, {2}, {3.0f}, {{}}});
+    
+    auto xml = accessor.toXml("john");
+    std::cout << xml->toString() << "\n";
+    auto model = Anl::Model::Accessor<data_t>::fromXml(*xml.get(), "john", data_t(accessor));
+    std::get<0>(model).value += 2;
+    std::get<2>(model).value -= 2.2f;
+    Anl::Model::Accessor<data_t> accessor2(std::move(model));
+    xml = accessor2.toXml("jim");
+    std::cout << xml->toString() << "\n";
+    
     AnlDebug("Application", "Begin...");
     juce::ignoreUnused(commandLine);
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();

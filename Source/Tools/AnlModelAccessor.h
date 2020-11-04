@@ -2,6 +2,7 @@
 
 #include "AnlListenerList.h"
 #include "AnlStringParser.h"
+#include "../../magic_enum/include/magic_enum.hpp"
 
 ANALYSE_FILE_BEGIN
 
