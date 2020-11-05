@@ -21,25 +21,33 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 
 void Application::Instance::initialise(juce::String const& commandLine)
 {
-    enum typess { v1, v2, v3, v4 };
-    
-    using data_t = std::tuple
-    <Anl::Model::TypedData<int, true, decltype(magic_enum::enum_name<typess::v1>())>
-    ,Anl::Model::TypedData<int, false, decltype("v2"_tstr)>
-    ,Anl::Model::TypedData<float, true, decltype("v3"_tstr)>
-    ,Anl::Model::TypedData<std::vector<int>, false, decltype("v4"_tstr)>
+    enum attrs : size_t { v1, v2, v3, v4 };
+    using AttrFlag = Anl::Model::AttrFlag;
+    using ModelContainer = Anl::Model::Container
+    <Anl::Model::AttrType<attrs::v1, int, AttrFlag::all>
+    ,Anl::Model::AttrType<attrs::v2, int, AttrFlag::ignored>
+    ,Anl::Model::AttrType<attrs::v3, float, AttrFlag::all>
+    ,Anl::Model::AttrType<attrs::v4, std::vector<int>, AttrFlag::ignored>
     >;
     
-    Anl::Model::Accessor<data_t> accessor(data_t{{1}, {2}, {3.0f}, {{}}});
+    using ModelAcsr = Anl::Model::Accessor<ModelContainer>;
+    ModelAcsr acsr1(ModelContainer{{1}, {2}, {3.0f}, {{}}});
+    ModelAcsr acsr2;
     
-    auto xml = accessor.toXml("john");
-    std::cout << xml->toString() << "\n";
-    auto model = Anl::Model::Accessor<data_t>::fromXml(*xml.get(), "john", data_t(accessor));
-    std::get<0>(model).value += 2;
-    std::get<2>(model).value -= 2.2f;
-    Anl::Model::Accessor<data_t> accessor2(std::move(model));
-    xml = accessor2.toXml("jim");
-    std::cout << xml->toString() << "\n";
+    auto xml = acsr1.toXml("state1");
+    std::cout << "acsr1: "<< xml->toString() << "\n";
+    acsr1.setValue<attrs::v1>(acsr1.getValue<attrs::v2>() + 2);
+    acsr1.setValue<attrs::v3>(acsr1.getValue<attrs::v3>() - 2.2f);
+    xml = acsr1.toXml("state2");
+    std::cout << "acsr1: "<< xml->toString() << "\n";
+    acsr2.fromXml(*xml.get(), "state2");
+    xml = acsr2.toXml("state3");
+    std::cout << "acsr2: "<< xml->toString() << "\n";
+    acsr2.setValue<attrs::v1>(acsr2.getValue<attrs::v1>() + 2);
+    acsr2.setValue<attrs::v3>(acsr2.getValue<attrs::v3>() - 2.2f);
+//    acsr1.fromModel(acsr2.getModel());
+//    xml = acsr1.toXml("state4");
+//    std::cout << "acsr1: "<< xml->toString() << "\n";
     
     AnlDebug("Application", "Begin...");
     juce::ignoreUnused(commandLine);
