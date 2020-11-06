@@ -33,6 +33,7 @@ namespace Zoom
         ,Model::Attr<AttrType::minimumLength, double, AttrFlag::notifying>
         >;
         
+        JUCE_COMPILER_WARNING("Implement XML parser methods")
         class Accessor
         : public Model::Accessor<Accessor, Container>
         , public Broadcaster<Accessor, SignalType>
@@ -53,6 +54,9 @@ namespace Zoom
             void setValue<AttrType::globalRange, range_type>(range_type const& value, NotificationType notification);
             template <>
             void setValue<AttrType::minimumLength, double>(double const& value, NotificationType notification);
+            
+        private:
+            static range_type sanitize(range_type const& visible, range_type const& global, double minLength);
         };
     }
 }

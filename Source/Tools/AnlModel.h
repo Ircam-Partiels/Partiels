@@ -39,6 +39,7 @@ namespace Model
     
     //! @brief The accessor a data model
     //! @todo Implement a comparaison method
+    JUCE_COMPILER_WARNING("Implement a comparaison method")
     template<class parent_t, class container_t> class Accessor
     {
     public:
@@ -64,22 +65,22 @@ namespace Model
         }
         
         //! @brief Gets the value of an attribute
-        template <enum_type attribute>
+        template <enum_type type>
         auto const& getValue() const noexcept
         {
-            return std::get<static_cast<size_t>(attribute)>(mData).value;
+            return std::get<static_cast<size_t>(type)>(mData).value;
         }
         
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        template <enum_type attribute, typename value_v>
+        template <enum_type type, typename value_v>
         void setValue(value_v const& value, NotificationType notification)
         {
-            using attr_type = typename std::tuple_element<static_cast<size_t>(attribute), container_type>::type;
-            auto& lvalue = std::get<static_cast<size_t>(attribute)>(mData).value;
+            using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
             if(lvalue != value)
             {
-                std::get<static_cast<size_t>(attribute)>(mData).value = value;
+                std::get<static_cast<size_t>(type)>(mData).value = value;
                 if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
                 {
                     mListeners.notify([=](Listener& listener)
@@ -87,7 +88,7 @@ namespace Model
                         anlWeakAssert(listener.onChanged != nullptr);
                         if(listener.onChanged != nullptr)
                         {
-                            listener.onChanged(*static_cast<parent_t const*>(this), attribute);
+                            listener.onChanged(*static_cast<parent_t const*>(this), type);
                         }
                     }, notification);
                 }
@@ -107,12 +108,13 @@ namespace Model
             
             detail::for_each(mData, [&](auto const& d)
             {
-                using attr_type = typename std::remove_reference<decltype(d)>::type;
+                using element_type = typename std::remove_reference<decltype(d)>::type;
                 using namespace magic_enum::bitwise_operators;
-                if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
-                    xml->setAttribute(enumname.c_str(), d.value);
+                    auto constexpr attr_type = element_type::type;
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                    xml->setAttribute(enumname.c_str(), toString<attr_type>(d.value));
                 }
             });
             return xml;
@@ -131,18 +133,34 @@ namespace Model
             
             detail::for_each(mData, [&](auto& d)
             {
-                using attr_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
-                    using value_type = typename attr_type::value_type;
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
+                    using value_type = typename std::remove_reference<decltype(d)>::type;
+                    auto constexpr attr_type = element_type::type;
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
                     anlWeakAssert(xml.hasAttribute(enumname));
-                    value_type newValue;
-                    std::stringstream ss(xml.getStringAttribute(enumname, juce::String(d.value)).toRawUTF8());
-                    ss >> newValue;
-                    setValue<attr_type::type>(newValue, notification);
+                    setValue<attr_type>(fromString<attr_type>(xml.getStringAttribute(enumname, toString<attr_type>(d.value))), notification);
                 }
             });
+        }
+        
+        template <enum_type type, typename value_v>
+        static juce::String toString(value_v const& value)
+        {
+            std::ostringstream stream;
+            stream << value;
+            return juce::String(stream.str());
+        }
+        
+        template <enum_type type>
+        static auto fromString(juce::String const& str)
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            typename element_type::value_type value;
+            std::stringstream stream(str.toRawUTF8());
+            stream >> value;
+            return value;
         }
         
         //! @brief Copy the content from another model
@@ -150,11 +168,12 @@ namespace Model
         {
             detail::for_each(mData, [&](auto& d)
             {
-                using attr_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
-                    auto const& value = std::get<static_cast<size_t>(attr_type::type)>(model).value;
-                    setValue<attr_type::type>(value, notification);
+                    auto constexpr attr_type = element_type::type;
+                    auto const& value = std::get<static_cast<size_t>(attr_type)>(model).value;
+                    setValue<attr_type>(value, notification);
                 }
             });
         }
@@ -165,7 +184,7 @@ namespace Model
             Listener() = default;
             virtual ~Listener() = default;
             
-            std::function<void(parent_t const&, enum_type attribute)> onChanged = nullptr;
+            std::function<void(parent_t const&, enum_type type)> onChanged = nullptr;
         };
         
         void addListener(Listener& listener, NotificationType const notification)
@@ -174,16 +193,16 @@ namespace Model
             {
                 detail::for_each(mData, [&](auto& d)
                 {
-                    using attr_type = typename std::remove_reference<decltype(d)>::type;
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
-                    if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
+                    using element_type = typename std::remove_reference<decltype(d)>::type;
+                    if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([this, ptr = &listener](Listener& ltnr)
                         {
                             anlWeakAssert(ltnr.onChanged != nullptr);
                             if(&ltnr == ptr && ltnr.onChanged != nullptr)
                             {
-                                ltnr.onChanged(*static_cast<parent_t const*>(this), attr_type::type);
+                                auto constexpr attr_type = element_type::type;
+                                ltnr.onChanged(*static_cast<parent_t const*>(this), attr_type);
                             }
                         }, notification);
                     }

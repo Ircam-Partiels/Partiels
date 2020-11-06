@@ -7,7 +7,7 @@ class ModelUnitTest
 {
 public:
     
-    ModelUnitTest() : juce::UnitTest("Model Util Test", "Model") {}
+    ModelUnitTest() : juce::UnitTest("Model", "Model") {}
     
     ~ModelUnitTest() override = default;
     
@@ -44,7 +44,7 @@ public:
         // Declare the data model listener
         using ModelLtnr = ModelAcsr::Listener;
         
-        beginTest("Test attribute flags");
+        beginTest("attribute flags");
         {
             expect(magic_enum::enum_integer(AttrFlag::ignored) == 0);
             expect(magic_enum::enum_integer(AttrFlag::notifying) == 1);
@@ -53,7 +53,7 @@ public:
             expect(magic_enum::enum_integer(AttrFlag::all) == 7);
         }
         
-        beginTest("Test accessor default constructor");
+        beginTest("accessor default constructor");
         {
             ModelAcsr acsr;
             expectEquals(acsr.getValue<AttrType::attr0>(), 0);
@@ -63,7 +63,7 @@ public:
             expectEquals(acsr.getValue<AttrType::attr4>(), std::string{});
         }
         
-        beginTest("Test accessor constructor with model");
+        beginTest("accessor constructor with model");
         {
             ModelAcsr acsr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
             expectEquals(acsr.getValue<AttrType::attr0>(), 1);
@@ -73,7 +73,7 @@ public:
             expectEquals(acsr.getValue<AttrType::attr4>(), std::string{"Jules"});
         }
         
-        beginTest("Test accessor setting attribute");
+        beginTest("accessor setting attribute");
         {
             ModelAcsr acsr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
             acsr.setValue<AttrType::attr0>(1, NotificationType::synchronous);
@@ -88,7 +88,7 @@ public:
             expectEquals(acsr.getValue<AttrType::attr4>(), std::string{"Jim"});
         }
         
-        beginTest("Test accessor from model");
+        beginTest("accessor from model");
         {
             ModelAcsr acsr1;
             ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
@@ -100,7 +100,7 @@ public:
             expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
         }
         
-        beginTest("Test accessor from/to xml");
+        beginTest("accessor from/to xml");
         {
             ModelAcsr acsr1;
             ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
@@ -117,7 +117,7 @@ public:
             expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
         }
         
-        beginTest("Test accessor listener");
+        beginTest("accessor listener");
         {
             std::array<bool, magic_enum::enum_count<AttrType>()> notifications;
             
