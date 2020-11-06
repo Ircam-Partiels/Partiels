@@ -15,7 +15,7 @@ Application::CommandTarget::CommandTarget()
     };
     
     Instance::get().getDocumentFileBased().addChangeListener(this);
-    Instance::get().getAccessor().addListener(mListener, juce::NotificationType::dontSendNotification);
+    Instance::get().getAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
 }
 
@@ -167,7 +167,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             fileBased.setFile({});
-            Instance::get().getDocumentAccessor().fromModel({}, juce::NotificationType::sendNotificationSync);
+            Instance::get().getDocumentAccessor().fromModel({}, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::Save:
@@ -191,28 +191,28 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto copy = Instance::get().getDocumentAccessor().getModel();
             copy.isPlaybackStarted = !copy.isPlaybackStarted;
-            Instance::get().getDocumentAccessor().fromModel(copy, juce::NotificationType::sendNotificationSync);
+            Instance::get().getDocumentAccessor().fromModel(copy, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::ToggleLooping:
         {
             auto copy = Instance::get().getDocumentAccessor().getModel();
             copy.isLooping = !copy.isLooping;
-            Instance::get().getDocumentAccessor().fromModel(copy, juce::NotificationType::sendNotificationSync);
+            Instance::get().getDocumentAccessor().fromModel(copy, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::MovePlayHeadToBeginning:
         {
             auto copy = Instance::get().getDocumentAccessor().getModel();
             copy.playheadPosition = 0.0;
-            Instance::get().getDocumentAccessor().fromModel(copy, juce::NotificationType::sendNotificationSync);
+            Instance::get().getDocumentAccessor().fromModel(copy, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::MovePlayHeadToEnd:
         {
             auto copy = Instance::get().getDocumentAccessor().getModel();
             copy.playheadPosition = 10000.0;
-            Instance::get().getDocumentAccessor().fromModel(copy, juce::NotificationType::sendNotificationSync);
+            Instance::get().getDocumentAccessor().fromModel(copy, NotificationType::synchronous);
             return true;
         }
     }
@@ -233,7 +233,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
         list.erase(std::unique(list.begin(), list.end()), list.end());
         list.insert(list.begin(), fileBased.getFile());
     }
-    Instance::get().getAccessor().fromModel(copy, juce::NotificationType::sendNotificationSync);
+    Instance::get().getAccessor().fromModel(copy, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

@@ -121,7 +121,7 @@ void Application::Window::handleAsyncUpdate()
 {
     auto model = Instance::get().getAccessor().getModel();
     model.windowState = getBounds().toString();
-    Instance::get().getAccessor().fromModel(model, juce::NotificationType::sendNotificationSync);
+    Instance::get().getAccessor().fromModel(model, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlListenerList.h"
+#include "AnlNotifier.h"
 #include "AnlStringParser.h"
 #include "../../magic_enum/include/magic_enum.hpp"
 
@@ -23,9 +23,9 @@ namespace Tools
             return mModel;
         }
         
-        virtual void fromModel(Model const& model, juce::NotificationType const notification) = 0;
+        virtual void fromModel(Model const& model, NotificationType const notification) = 0;
         
-        void fromXml(juce::XmlElement const& xml, Model model, juce::NotificationType const notification)
+        void fromXml(juce::XmlElement const& xml, Model model, NotificationType const notification)
         {
             fromModel(Model::fromXml(xml, model), notification);
         }
@@ -39,7 +39,7 @@ namespace Tools
             std::function<void(Owner const& controller, Attribute A)> onChanged = nullptr;
         };
         
-        virtual void addListener(Listener& listener, juce::NotificationType const notification)
+        virtual void addListener(Listener& listener, NotificationType const notification)
         {
             if(mListeners.add(listener))
             {
@@ -64,7 +64,7 @@ namespace Tools
         
     protected:
         
-        void notifyListener(std::set<Attribute> const& attrs, juce::NotificationType const notification)
+        void notifyListener(std::set<Attribute> const& attrs, NotificationType const notification)
         {
             for(auto const attr : attrs)
             {
@@ -112,7 +112,7 @@ namespace Tools
             }
         }
         
-        template<typename A, typename T> static auto compareAndSet(std::set<Attribute>& attrs, Attribute attr, std::vector<std::unique_ptr<A>>& accessors, std::vector<std::unique_ptr<T>>& currentValues, std::vector<std::unique_ptr<T>> const& newValues, juce::NotificationType const notification)
+        template<typename A, typename T> static auto compareAndSet(std::set<Attribute>& attrs, Attribute attr, std::vector<std::unique_ptr<A>>& accessors, std::vector<std::unique_ptr<T>>& currentValues, std::vector<std::unique_ptr<T>> const& newValues, NotificationType const notification)
         -> std::unique_ptr<std::pair<std::vector<std::unique_ptr<T>>, std::vector<std::unique_ptr<A>>>>
         {
             auto backup = std::make_unique<std::pair<std::vector<std::unique_ptr<T>>, std::vector<std::unique_ptr<A>>>>();
@@ -173,7 +173,7 @@ namespace Tools
         
     private:
         
-        ListenerList<Listener> mListeners;
+        Notifier<Listener> mListeners;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModelAccessor)
     };

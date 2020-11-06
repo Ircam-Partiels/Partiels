@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlListenerList.h"
+#include "AnlNotifier.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -32,7 +32,7 @@ namespace Tools
             mReceivers.remove(listener);
         }
         
-        void sendSignal(Signal signal, juce::var value, juce::NotificationType const notification)
+        void sendSignal(Signal signal, juce::var value, NotificationType const notification)
         {
             mReceivers.notify([=](Receiver& listener)
             {
@@ -46,7 +46,7 @@ namespace Tools
         
     private:
         
-        ListenerList<Receiver> mReceivers;
+        Notifier<Receiver> mReceivers;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SignalBroadcaster)
     };

@@ -35,7 +35,7 @@ PluginList::Table::Table(Accessor& accessor)
     {
         auto copy = mAccessor.getModel();
         copy.descriptions.clear();
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mScanButton);
@@ -61,7 +61,7 @@ PluginList::Table::Table(Accessor& accessor)
         {
             copy.descriptions[description.first] = description.second;
         }
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mSearchField);
@@ -89,7 +89,7 @@ PluginList::Table::Table(Accessor& accessor)
         moveKeyboardFocusToSibling(false);
     };
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(800, 600);
 }
 
@@ -223,7 +223,7 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
             copy.descriptions.erase(entry);
         }
     }
-    mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+    mAccessor.fromModel(copy, NotificationType::synchronous);
 }
 
 void PluginList::Table::returnKeyPressed(int lastRowSelected)
@@ -245,7 +245,7 @@ void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
     auto copy = mAccessor.getModel();
     copy.sortColumn = static_cast<ColumnType>(newSortColumnId);
     copy.sortIsFowards = isForwards;
-    mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+    mAccessor.fromModel(copy, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

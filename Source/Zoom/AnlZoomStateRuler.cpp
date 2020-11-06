@@ -35,7 +35,7 @@ Zoom::State::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t pr
         repaint();
     };
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
 }
 
@@ -164,7 +164,7 @@ void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
     if(event.mods.isShiftDown())
     {
         mNavigationMode = NavigationMode::translate;
-        mAccessor.sendSignal(Signal::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, juce::NotificationType::sendNotificationSync);
+        mAccessor.sendSignal(Signal::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
         event.source.enableUnboundedMouseMovement(true, false);
     }
     else if(event.mods.isCommandDown())
@@ -174,7 +174,7 @@ void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
     else
     {
         mNavigationMode = NavigationMode::zoom;
-        mAccessor.sendSignal(Signal::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, juce::NotificationType::sendNotificationSync);
+        mAccessor.sendSignal(Signal::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
         event.source.enableUnboundedMouseMovement(true, false);
         
         if(onMouseDown != nullptr)
@@ -203,7 +203,7 @@ void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
             auto const size = isVertical ? getHeight() - 1 : getWidth() - 1;
             auto const translation = static_cast<double>(delta) / static_cast<double>(size) * copy.range.getLength();
             copy.range += translation;
-            mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+            mAccessor.fromModel(copy, NotificationType::synchronous);
         }
             break;
         case NavigationMode::select:
@@ -221,8 +221,8 @@ void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
 
             auto copy = mAccessor.getModel();
             copy.range = {mToZoomRange(rangeStart), mToZoomRange(rangeEnd)};
-            mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
-            mAccessor.sendSignal(Signal::moveAnchorPerform, {mToZoomRange(mAnchor)}, juce::NotificationType::sendNotificationSync);
+            mAccessor.fromModel(copy, NotificationType::synchronous);
+            mAccessor.sendSignal(Signal::moveAnchorPerform, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
         }
             break;
     }
@@ -241,7 +241,7 @@ void Zoom::State::Ruler::mouseUp(juce::MouseEvent const& event)
     {
         case NavigationMode::translate:
         {
-            mAccessor.sendSignal(Signal::moveAnchorEnd, {mToZoomRange(mAnchor)}, juce::NotificationType::sendNotificationSync);
+            mAccessor.sendSignal(Signal::moveAnchorEnd, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
         }
             break;
         case NavigationMode::select:
@@ -249,14 +249,14 @@ void Zoom::State::Ruler::mouseUp(juce::MouseEvent const& event)
             mSelectedValueRange = calculateSelectedValueRange(event);
             auto copy = mAccessor.getModel();
             copy.range = mSelectedValueRange;
-            mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+            mAccessor.fromModel(copy, NotificationType::synchronous);
             auto const anchorPos = (mSelectedValueRange.getStart() + mSelectedValueRange.getEnd()) / 2.0;
-            mAccessor.sendSignal(Signal::moveAnchorPerform, {mToZoomRange(anchorPos)}, juce::NotificationType::sendNotificationSync);
+            mAccessor.sendSignal(Signal::moveAnchorPerform, {mToZoomRange(anchorPos)}, NotificationType::synchronous);
         }
             break;
         case NavigationMode::zoom:
         {
-            mAccessor.sendSignal(Signal::moveAnchorEnd, mToZoomRange(mAnchor), juce::NotificationType::sendNotificationSync);
+            mAccessor.sendSignal(Signal::moveAnchorEnd, mToZoomRange(mAnchor), NotificationType::synchronous);
         }
             break;
     }

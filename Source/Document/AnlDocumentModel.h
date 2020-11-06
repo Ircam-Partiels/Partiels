@@ -57,7 +57,7 @@ namespace Document
     public:
         using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
         ~Accessor() override = default;
-        void fromModel(Model const& model, juce::NotificationType const notification) override;
+        void fromModel(Model const& model, NotificationType const notification) override;
         
         Analyzer::Accessor& getAnalyzerAccessor(size_t index);
         Zoom::State::Accessor& getZoomStateTimeAccessor();

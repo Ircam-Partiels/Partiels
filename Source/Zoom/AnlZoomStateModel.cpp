@@ -54,10 +54,10 @@ bool Zoom::State::Model::operator==(Model const& other) const
 Zoom::State::Accessor::Accessor(Model& model, juce::Range<double> const& globalRange, double minimumLength)
 : Tools::ModelAccessor<Accessor, Model, Model::Attribute>(model)
 {
-    setContraints(globalRange, minimumLength, juce::NotificationType::dontSendNotification);
+    setContraints(globalRange, minimumLength, NotificationType::synchronous);
 }
 
-void Zoom::State::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
+void Zoom::State::Accessor::fromModel(Model const& model, NotificationType const notification)
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;
@@ -73,7 +73,7 @@ void Zoom::State::Accessor::fromModel(Model const& model, juce::NotificationType
     notifyListener(attributes, notification);
 }
 
-void Zoom::State::Accessor::setContraints(juce::Range<double> const& globalRange, double minimumLength, juce::NotificationType const notification)
+void Zoom::State::Accessor::setContraints(juce::Range<double> const& globalRange, double minimumLength, NotificationType const notification)
 {
     mGlobalRange = globalRange;
     mMinimumLength = std::min(std::max(minimumLength, 0.0), mGlobalRange.getLength());

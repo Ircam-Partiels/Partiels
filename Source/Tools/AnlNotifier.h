@@ -4,37 +4,43 @@
 
 ANALYSE_FILE_BEGIN
 
+enum class NotificationType : bool
+{
+    synchronous = false,
+    asynchronous = true
+};
+
 namespace Tools
 {
-    template<class ListenerClass> class ListenerList
+    template<class listener_t> class Notifier
     : private juce::AsyncUpdater
     {
     public:
         
-        ListenerList() = default;
-        ~ListenerList() override = default;
+        Notifier() = default;
+        ~Notifier() override = default;
         
-        bool add(ListenerClass& listener)
+        bool add(listener_t& listener)
         {
             std::unique_lock<std::mutex> listenerLock(mListenerMutex);
             return mListeners.insert(&listener).second;
         }
         
-        void remove(ListenerClass& listener)
+        void remove(listener_t& listener)
         {
             std::unique_lock<std::mutex> listenerLock(mListenerMutex);
             mListeners.erase(&listener);
         }
         
-        void notify(std::function<void(ListenerClass&)> method, juce::NotificationType notification)
+        void notify(std::function<void(listener_t&)> method, NotificationType notification)
         {
-            if(notification == juce::NotificationType::sendNotificationAsync)
+            if(notification == NotificationType::asynchronous)
             {
                 triggerAsyncUpdate();
                 std::unique_lock<std::mutex> queueLock(mQueueMutex);
                 mQueue.push(method);
             }
-            else if(notification != juce::NotificationType::dontSendNotification)
+            else
             {
                 std::unique_lock<std::mutex> listenerLock(mListenerMutex);
                 for(auto* listener : mListeners)
@@ -56,18 +62,18 @@ namespace Tools
                 mQueue.pop();
                 queueLock.unlock();
                 
-                notify(method, juce::NotificationType::sendNotificationSync);
+                notify(method, NotificationType::synchronous);
                 
                 queueLock.lock();
             }
         }
         
-        std::queue<std::function<void(ListenerClass&)>> mQueue;
+        std::queue<std::function<void(listener_t&)>> mQueue;
         std::mutex mQueueMutex;
-        std::set<ListenerClass*> mListeners;
+        std::set<listener_t*> mListeners;
         std::mutex mListenerMutex;
         
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ListenerList)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Notifier)
     };
 }
 

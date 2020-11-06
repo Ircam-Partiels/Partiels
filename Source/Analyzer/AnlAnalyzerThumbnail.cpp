@@ -55,7 +55,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
     mReceiver.onSignal(mAccessor, Signal::pluginInstanceChanged, {});
 }

@@ -17,7 +17,7 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
             if(pluginKey.isEmpty())
             {
                 mAccessor.setInstance({});
-                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, juce::NotificationType::sendNotificationSync);
+                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
                 return;
             }
             auto* pluginLoader = PluginLoader::getInstance();
@@ -30,7 +30,7 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
             {
                 juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin manager is not available.").replace("PLGNKEY", pluginKey));
                 mAccessor.setInstance({});
-                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, juce::NotificationType::sendNotificationSync);
+                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
                 return;
             }
             
@@ -39,22 +39,22 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
             {
                 juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin key is invalid.").replace("PLGNKEY", pluginKey));
                 mAccessor.setInstance({});
-                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, juce::NotificationType::sendNotificationSync);
+                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
                 return;
             }
             mAccessor.setInstance(pluginInstance);
-            mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, juce::NotificationType::sendNotificationSync);
+            mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
             
             if(mAccessor.getModel().name.isEmpty())
             {
                 auto copy = mAccessor.getModel();
                 copy.name = pluginInstance->getName();
-                mAccessor.fromModel(copy, juce::NotificationType::sendNotificationAsync);
+                mAccessor.fromModel(copy, NotificationType::asynchronous);
             }
         }
     };
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Analyzer::PluginInstance::~PluginInstance()

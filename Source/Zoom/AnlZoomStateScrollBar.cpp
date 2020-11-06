@@ -16,7 +16,7 @@ Zoom::State::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
     {
         auto copy = mAccessor.getModel();
         copy.range = copy.range.expanded(mIncDec.getValue() - copy.range.getLength());
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     };
     
     mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
@@ -32,7 +32,7 @@ Zoom::State::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
         }
     };
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     mScrollBar.addListener(this);
 }
 
@@ -63,7 +63,7 @@ void Zoom::State::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMov
 {
     juce::ignoreUnused(scrollBarThatHasMoved, newRangeStart);
     anlStrongAssert(scrollBarThatHasMoved == &mScrollBar);
-    mAccessor.fromModel({mScrollBar.getCurrentRange()}, juce::NotificationType::sendNotificationSync);
+    mAccessor.fromModel({mScrollBar.getCurrentRange()}, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

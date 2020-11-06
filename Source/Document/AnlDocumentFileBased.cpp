@@ -12,7 +12,7 @@ Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExten
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
-    mAccessor.addListener(mListener, juce::NotificationType::dontSendNotification);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::FileBased::~FileBased()
@@ -32,7 +32,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
-    mAccessor.fromXml(*xml.get(), {}, juce::NotificationType::sendNotificationSync);
+    mAccessor.fromXml(*xml.get(), {}, NotificationType::synchronous);
     mSavedXml = std::move(xml);
     triggerAsyncUpdate();
     return juce::Result::ok();

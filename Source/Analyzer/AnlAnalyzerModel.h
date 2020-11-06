@@ -65,7 +65,7 @@ namespace Analyzer
     public:
         using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
         ~Accessor() override = default;
-        void fromModel(Model const& model, juce::NotificationType const notification) override;
+        void fromModel(Model const& model, NotificationType const notification) override;
     };
 }
 

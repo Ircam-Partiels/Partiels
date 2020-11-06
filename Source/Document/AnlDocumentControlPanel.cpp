@@ -21,7 +21,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             analyzerModel->key = key;
             auto copy = mAccessor.getModel();
             copy.analyzers.push_back(std::move(analyzerModel));
-            mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+            mAccessor.fromModel(copy, NotificationType::synchronous);
         }
     };
     
@@ -53,7 +53,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                         {
                             auto copy = mAccessor.getModel();
                             copy.analyzers.erase(copy.analyzers.begin() + static_cast<long>(i));
-                            mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+                            mAccessor.fromModel(copy, NotificationType::synchronous);
                         };
                     }
                 }
@@ -62,7 +62,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                 break;
         }
     };
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::ControlPanel::~ControlPanel()

@@ -21,33 +21,67 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 
 void Application::Instance::initialise(juce::String const& commandLine)
 {
-    enum attrs : size_t { v1, v2, v3, v4 };
+    enum AttrType : size_t { v1, v2, v3, v4, v5 };
     using AttrFlag = Anl::Model::AttrFlag;
-    using ModelContainer = Anl::Model::Container
-    <Anl::Model::AttrType<attrs::v1, int, AttrFlag::all>
-    ,Anl::Model::AttrType<attrs::v2, int, AttrFlag::ignored>
-    ,Anl::Model::AttrType<attrs::v3, float, AttrFlag::all>
-    ,Anl::Model::AttrType<attrs::v4, std::vector<int>, AttrFlag::ignored>
+    using Container = Anl::Model::Container
+    <Anl::Model::Attr<AttrType::v1, int, AttrFlag::all>
+    ,Anl::Model::Attr<AttrType::v2, int, AttrFlag::notifying>
+    ,Anl::Model::Attr<AttrType::v3, float, AttrFlag::saveable>
+    ,Anl::Model::Attr<AttrType::v4, std::vector<int>, AttrFlag::ignored>
+    ,Anl::Model::Attr<AttrType::v5, std::string, AttrFlag::notifying>
     >;
     
-    using ModelAcsr = Anl::Model::Accessor<ModelContainer>;
-    ModelAcsr acsr1(ModelContainer{{1}, {2}, {3.0f}, {{}}});
+    using ModelAcsr = Anl::Model::Accessor<Container>;
+    using ModelLtnr = ModelAcsr::Listener;
+    ModelAcsr acsr1({{1}, {2}, {3.0f}, {{1, 2, 3}}, {"john"}});
     ModelAcsr acsr2;
+    
+    ModelLtnr ltnr;
+    ltnr.onChanged = [&](ModelAcsr const& acsr, AttrType attribute)
+    {
+        std::cout << (&acsr == &acsr1 ? "acsr1" : "acsr2") << " changed "<< magic_enum::enum_name(attribute) << ": ";
+        switch(attribute)
+        {
+            case AttrType::v1:
+                std::cout << acsr.getValue<AttrType::v1>() << "\n";
+                break;
+            case AttrType::v2:
+                std::cout << acsr.getValue<AttrType::v2>() << "\n";
+                break;
+            case AttrType::v3:
+                std::cout << acsr.getValue<AttrType::v3>() << "\n";
+                break;
+            case AttrType::v4:
+            {
+                for(auto const& v : acsr.getValue<AttrType::v4>())
+                {
+                    std::cout << v << " ";
+                }
+                std::cout << "\n";
+            }
+                break;
+            case AttrType::v5:
+                std::cout << acsr.getValue<AttrType::v5>() << "\n";
+                break;
+        }
+    };
+    acsr1.addListener(ltnr, NotificationType::synchronous);
+    acsr2.addListener(ltnr, NotificationType::synchronous);
     
     auto xml = acsr1.toXml("state1");
     std::cout << "acsr1: "<< xml->toString() << "\n";
-    acsr1.setValue<attrs::v1>(acsr1.getValue<attrs::v2>() + 2);
-    acsr1.setValue<attrs::v3>(acsr1.getValue<attrs::v3>() - 2.2f);
+    acsr1.setValue<AttrType::v1>(acsr1.getValue<AttrType::v2>() + 2);
+    acsr1.setValue<AttrType::v3>(acsr1.getValue<AttrType::v3>() - 2.2f);
     xml = acsr1.toXml("state2");
     std::cout << "acsr1: "<< xml->toString() << "\n";
     acsr2.fromXml(*xml.get(), "state2");
     xml = acsr2.toXml("state3");
     std::cout << "acsr2: "<< xml->toString() << "\n";
-    acsr2.setValue<attrs::v1>(acsr2.getValue<attrs::v1>() + 2);
-    acsr2.setValue<attrs::v3>(acsr2.getValue<attrs::v3>() - 2.2f);
-//    acsr1.fromModel(acsr2.getModel());
-//    xml = acsr1.toXml("state4");
-//    std::cout << "acsr1: "<< xml->toString() << "\n";
+    acsr2.setValue<AttrType::v1>(acsr2.getValue<AttrType::v1>() + 2);
+    acsr2.setValue<AttrType::v3>(acsr2.getValue<AttrType::v3>() - 2.2f);
+    acsr1.fromModel(acsr2.getModel());
+    xml = acsr1.toXml("state4");
+    std::cout << "acsr1: "<< xml->toString() << "\n";
     
     AnlDebug("Application", "Begin...");
     juce::ignoreUnused(commandLine);
@@ -125,17 +159,17 @@ void Application::Instance::openFile(juce::File const& file)
         mDocumentFileBased.loadFrom(file, true);
         auto copy = mAccessor.getModel();
         copy.currentDocumentFile = file;
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
         Document::Model model;
         model.file = file;
         mDocumentFileBased.setFile({});
-        mDocumentAccessor.fromModel(model, juce::NotificationType::sendNotificationSync);
+        mDocumentAccessor.fromModel(model, NotificationType::synchronous);
         auto copy = mAccessor.getModel();
         copy.currentDocumentFile = juce::File{};
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     }
     else
     {

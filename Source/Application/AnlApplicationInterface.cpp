@@ -40,7 +40,7 @@ Application::Interface::Interface()
     };
     
     auto& documentAccessor = Instance::get().getDocumentAccessor();
-    documentAccessor.addListener(mDocumentListener, juce::NotificationType::sendNotificationSync);
+    documentAccessor.addListener(mDocumentListener, NotificationType::synchronous);
 }
 
 Application::Interface::~Interface()

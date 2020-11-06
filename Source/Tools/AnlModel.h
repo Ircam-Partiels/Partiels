@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlListenerList.h"
+#include "AnlNotifier.h"
 #include "AnlStringParser.h"
 #include "../../magic_enum/include/magic_enum.hpp"
 
@@ -10,15 +10,15 @@ namespace Model
 {
     enum AttrFlag
     {
-        ignored = 0,
-        notifying = 1,
-        saveable = 2,
-        copyable = 4,
-        all = 7
+        ignored = 1 << 0,
+        notifying = 1 << 1,
+        saveable = 1 << 2,
+        comparable = 1 << 3,
+        all = notifying & saveable & comparable
     };
     
     //! @brief The private implementation of an attribute of a model
-    template<typename enum_t, enum_t index_v, typename value_t, AttrFlag flags_v> struct AttrTypeImpl
+    template<typename enum_t, enum_t index_v, typename value_t, AttrFlag flags_v> struct AttrImpl
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
@@ -26,14 +26,13 @@ namespace Model
         using enum_type = enum_t;
         using value_type = value_t;
         
+        static enum_type const type = static_cast<enum_type>(index_v);
         static AttrFlag const flags = flags_v;
-        static enum_t const entry = static_cast<enum_t>(index_v);
-        
         value_type value;
     };
     
     //! @brief The template typle of an attribute of a model
-    template<auto index_v, typename value_t, AttrFlag flags_v> using AttrType = AttrTypeImpl<decltype(index_v), index_v, value_t, flags_v>;
+    template<auto index_v, typename value_t, AttrFlag flags_v> using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
     
     //! @brief The container type for a set of attributes
     template <class ..._Tp> using Container = std::tuple<_Tp...>;
@@ -41,22 +40,19 @@ namespace Model
     //! @brief The accessor a data model
     template<class container_t> class Accessor
     {
-    private:
-        // https://stackoverflow.com/questions/13101061/detect-if-a-type-is-a-stdtuple
-        template <typename> struct is_tuple: std::false_type {};
-        template <typename ...T> struct is_tuple<std::tuple<T...>>: std::true_type {};
-        
     public:
         
         using container_type = container_t;
         using enum_type = typename std::tuple_element<0, container_type>::type::enum_type;
-        static_assert(is_tuple<container_type>{}, "container_t must be a specialization of std::tuple");
+        static_assert(is_specialization<container_type, std::tuple>::value, "econtainer_t must be a specialization of std::tuple");
 
+        //! @brief The constructor
         Accessor(container_type&& data = {})
         : mData(std::move(data))
         {
         }
         
+        //! @brief The destructor
         ~Accessor() = default;
 
         //! @brief Gets a const ref to the model container
@@ -66,22 +62,34 @@ namespace Model
         }
         
         //! @brief Gets the value of an attribute
-        template <enum_type entry>
+        template <enum_type attribute>
         auto getValue() const noexcept
         {
-            return std::get<static_cast<size_t>(entry)>(mData).value;
+            return std::get<static_cast<size_t>(attribute)>(mData).value;
         }
         
         //! @brief Sets the value of an attribute
-        template <enum_type entry, typename value_v>
+        template <enum_type attribute, typename value_v>
         auto setValue(value_v value)
         {
-            using value_type = typename std::tuple_element<static_cast<size_t>(entry), container_type>::type::value_type;
+            using attr_type = typename std::tuple_element<static_cast<size_t>(attribute), container_type>::type;
+            using value_type = typename attr_type::value_type;
             static_assert(std::is_same<value_type, value_v>::value, "enum_t underlying type must be size_t");
-            auto& lvalue = std::get<static_cast<size_t>(entry)>(mData).value;
+            auto& lvalue = std::get<static_cast<size_t>(attribute)>(mData).value;
             if(lvalue != value)
             {
-                std::get<static_cast<size_t>(entry)>(mData).value = value;
+                std::get<static_cast<size_t>(attribute)>(mData).value = value;
+                if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
+                {
+                    mListeners.notify([=](Listener& listener)
+                    {
+                        anlWeakAssert(listener.onChanged != nullptr);
+                        if(listener.onChanged != nullptr)
+                        {
+                            listener.onChanged(*this, attribute);
+                        }
+                    }, NotificationType::synchronous);
+                }
             }
         }
         
@@ -100,7 +108,7 @@ namespace Model
                 using namespace magic_enum::bitwise_operators;
                 if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
                 {
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type::entry));
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
                     xml->setAttribute(enumname.c_str(), d.value);
                 }
             });
@@ -120,7 +128,7 @@ namespace Model
                 using attr_type = typename std::remove_reference<decltype(d)>::type;
                 if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
                 {
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type::entry));
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
                     anlWeakAssert(xml.hasAttribute(enumname));
                     std::stringstream ss(xml.getStringAttribute(enumname, juce::String(d.value)).toRawUTF8());
                     ss >> d.value;
@@ -128,15 +136,15 @@ namespace Model
             });
         }
         
-        void fromModel(container_type const& model)
+        auto fromModel(container_type const& model)
         {
-            Accessor<container_type> acsr{model};
             detail::for_each(mData, [&](auto& d)
-                             {
+            {
                 using attr_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((attr_type::flags & AttrFlag::copyable) != 0)
+                if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
                 {
-                    setValue<attr_type>(acsr.getValue<attr_type>());
+                    auto const& value = std::get<static_cast<size_t>(attr_type::type)>(model).value;
+                    setValue<attr_type::type>(value);
                 }
             });
         }
@@ -150,20 +158,19 @@ namespace Model
             std::function<void(Accessor const&, enum_type attribute)> onChanged = nullptr;
         };
         
-        void addListener(Listener& listener, juce::NotificationType const notification)
+        void addListener(Listener& listener, NotificationType const notification)
         {
             if(mListeners.add(listener))
             {
                 detail::for_each(mData, [&](auto& d)
                 {
                     using attr_type = typename std::remove_reference<decltype(d)>::type;
-                    auto const attribute = attr_type::entry;
-                    mListeners.notify([this, attribute, ptr = &listener](Listener& ltnr)
+                    mListeners.notify([this, ptr = &listener](Listener& ltnr)
                     {
                         anlWeakAssert(ltnr.onChanged != nullptr);
                         if(&ltnr == ptr && ltnr.onChanged != nullptr)
                         {
-                            ltnr.onChanged(this, attribute);
+                            ltnr.onChanged(*this, attr_type::type);
                         }
                     }, notification);
                 });
@@ -176,21 +183,6 @@ namespace Model
         }
         
     private:
-        
-        void notifyListener(std::set<enum_type> const& attrs, juce::NotificationType const notification)
-        {
-            for(auto const attr : attrs)
-            {
-                mListeners.notify([=](Listener& listener)
-                {
-                    anlWeakAssert(listener.onChanged != nullptr);
-                    if(listener.onChanged != nullptr)
-                    {
-                        listener.onChanged(*this, attr);
-                    }
-                }, notification);
-            }
-        }
         
         // This is a for_each mechanism for std::tuple
         struct detail
@@ -205,7 +197,7 @@ namespace Model
         };
         
         container_type mData;
-        Tools::ListenerList<Listener> mListeners;
+        Tools::Notifier<Listener> mListeners;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };

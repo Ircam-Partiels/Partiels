@@ -26,8 +26,8 @@ Application::Properties::Properties()
     loadFromFile(PropertyType::PluginList);
     loadFromFile(PropertyType::AudioSetup);
     
-    Instance::get().getAccessor().addListener(mApplicationListener, juce::NotificationType::dontSendNotification);
-    Instance::get().getPluginListAccessor().addListener(mPluginListListener, juce::NotificationType::dontSendNotification);
+    Instance::get().getAccessor().addListener(mApplicationListener, NotificationType::synchronous);
+    Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
     
     saveToFile(PropertyType::Application);
@@ -111,7 +111,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             if(xml != nullptr)
             {
                 auto& acsr = Instance::get().getAccessor();
-                acsr.fromXml(*xml, acsr.getModel(), juce::NotificationType::sendNotification);
+                acsr.fromXml(*xml, acsr.getModel(), NotificationType::synchronous);
             }
         }
             break;
@@ -121,7 +121,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             if(xml != nullptr)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
-                acsr.fromXml(*xml, acsr.getModel(), juce::NotificationType::sendNotification);
+                acsr.fromXml(*xml, acsr.getModel(), NotificationType::synchronous);
             }
         }
             break;

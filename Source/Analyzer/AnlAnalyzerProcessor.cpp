@@ -46,7 +46,7 @@ public:
                     break;
             }
         };
-        mAccessor.addListener(*this, juce::NotificationType::sendNotificationSync);
+        mAccessor.addListener(*this, NotificationType::synchronous);
     }
     
     ~Impl()

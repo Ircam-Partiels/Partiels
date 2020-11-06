@@ -86,7 +86,7 @@ std::unique_ptr<juce::XmlElement> PluginList::Model::toXml() const
     return xml;
 }
 
-void PluginList::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
+void PluginList::Accessor::fromModel(Model const& model, NotificationType const notification)
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;

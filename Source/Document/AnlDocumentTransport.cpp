@@ -49,25 +49,25 @@ Document::Transport::Transport(Accessor& accessor)
     
     mBackwardButton.onClick = [&]()
     {
-        mAccessor.sendSignal(Signal::movePlayhead, {false}, juce::NotificationType::sendNotificationSync);
+        mAccessor.sendSignal(Signal::movePlayhead, {false}, NotificationType::synchronous);
     };
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
         auto copy = mAccessor.getModel();
         copy.isPlaybackStarted = mPlaybackButton.getToggleState();
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     };
     mForwardButton.onClick = [&]()
     {
-        mAccessor.sendSignal(Signal::movePlayhead, {true}, juce::NotificationType::sendNotificationSync);
+        mAccessor.sendSignal(Signal::movePlayhead, {true}, NotificationType::synchronous);
     };
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
     {
         auto copy = mAccessor.getModel();
         copy.isLooping = mLoopButton.getToggleState();
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     };
     
     mVolumeSlider.setRange(-90.0, 12.0);
@@ -76,7 +76,7 @@ Document::Transport::Transport(Accessor& accessor)
     {
         auto copy = mAccessor.getModel();
         copy.gain = std::min(juce::Decibels::decibelsToGain(mVolumeSlider.getValue(), -90.0), 12.0);
-        mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+        mAccessor.fromModel(copy, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mBackwardButton);

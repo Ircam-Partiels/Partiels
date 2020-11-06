@@ -48,9 +48,9 @@ namespace Zoom
             using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
             Accessor(Model& model, juce::Range<double> const& globalRange, double minimumLength);
             ~Accessor() override = default;
-            void fromModel(Model const& model, juce::NotificationType const notification) override;
+            void fromModel(Model const& model, NotificationType const notification) override;
             
-            void setContraints(juce::Range<double> const& globalRange, double minimumLength, juce::NotificationType const notification);
+            void setContraints(juce::Range<double> const& globalRange, double minimumLength, NotificationType const notification);
             std::tuple<juce::Range<double>, double> getContraints() const;
         private:
             juce::Range<double> mGlobalRange;

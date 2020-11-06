@@ -119,7 +119,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     
     addAndMakeVisible(mPropertyLayout);
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
     setSize(300, 200);
 }

@@ -189,7 +189,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
         }
     };
     mAccessor.addReceiver(mReceiver);
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::AudioReader::~AudioReader()
@@ -254,14 +254,14 @@ void Document::AudioReader::handleAsyncUpdate()
 {
     auto copy = mAccessor.getModel();
     copy.isPlaybackStarted = false;
-    mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+    mAccessor.fromModel(copy, NotificationType::synchronous);
 }
 
 void Document::AudioReader::timerCallback()
 {
     auto copy = mAccessor.getModel();
     copy.playheadPosition = mReadPosition.load();
-    mAccessor.fromModel(copy, juce::NotificationType::sendNotificationSync);
+    mAccessor.fromModel(copy, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

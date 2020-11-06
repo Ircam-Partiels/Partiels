@@ -100,7 +100,7 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
     return xml;
 }
 
-void Document::Accessor::fromModel(Model const& model, juce::NotificationType const notification)
+void Document::Accessor::fromModel(Model const& model, NotificationType const notification)
 {
     using Attribute = Model::Attribute;
     std::set<Attribute> attributes;

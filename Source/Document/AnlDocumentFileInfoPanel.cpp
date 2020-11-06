@@ -71,7 +71,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         }
     };
     
-    mAccessor.addListener(mListener, juce::NotificationType::sendNotificationSync);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     mPropertyLayout1.setPanels({mPanelFileName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
     mPropertyLayout2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
     
