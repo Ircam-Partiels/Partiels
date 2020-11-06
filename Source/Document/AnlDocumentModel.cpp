@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 Document::Model::Model(Model const& other)
 : file(other.file)
 , isLooping(other.isLooping)
-, zoomStateTime(other.zoomStateTime)
+//, zoomStateTime(other.zoomStateTime)
 {
     analyzers.resize(other.analyzers.size());
     std::transform(other.analyzers.cbegin(), other.analyzers.cend(), analyzers.begin(), [](auto const& analyzer)
@@ -18,7 +18,7 @@ Document::Model::Model(Model const& other)
 Document::Model::Model(Model&& other)
 : file(std::move(other.file))
 , isLooping(std::move(other.isLooping))
-, zoomStateTime(std::move(other.zoomStateTime))
+//, zoomStateTime(std::move(other.zoomStateTime))
 , analyzers(std::move(other.analyzers))
 {
     
@@ -73,7 +73,7 @@ Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defa
     if(child != nullptr)
     {
         child->setTagName("Zoom::State::Model");
-        defaultModel.zoomStateTime = Zoom::State::Model::fromXml(*child, defaultModel.zoomStateTime);
+        //defaultModel.zoomStateTime = Zoom::State::Model::fromXml(*child, defaultModel.zoomStateTime);
     }
     return defaultModel;
 }
@@ -90,13 +90,13 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
     xml->setAttribute("isLooping", isLooping);
     xml->setAttribute("gain", gain);
     Tools::XmlUtils::addChilds(*xml, analyzers, "Analyzer");
-    auto child = zoomStateTime.toXml();
-    anlStrongAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        child->setTagName("Zoom::State::Time");
-        xml->addChildElement(child.release());
-    }
+//    auto child = zoomStateTime.toXml();
+//    anlStrongAssert(child != nullptr);
+//    if(child != nullptr)
+//    {
+//        child->setTagName("Zoom::State::Time");
+//        xml->addChildElement(child.release());
+//    }
     return xml;
 }
 
@@ -113,7 +113,7 @@ void Document::Accessor::fromModel(Model const& model, NotificationType const no
     
     auto data = compareAndSet(attributes, Attribute::analyzers, mAnalyzerAccessors, mModel.analyzers, model.analyzers, notification);
     notifyListener(attributes, notification);
-    mZoomStateTimeAccessor.fromModel(model.zoomStateTime, notification);
+    mModel.zoomStateTime.fromModel(model.zoomStateTime.getModel(), notification);
     JUCE_COMPILER_WARNING("fix asynchronous support of data deletion")
 }
 
@@ -124,7 +124,7 @@ Analyzer::Accessor& Document::Accessor::getAnalyzerAccessor(size_t index)
 
 Zoom::State::Accessor& Document::Accessor::getZoomStateTimeAccessor()
 {
-    return mZoomStateTimeAccessor;
+    return mModel.zoomStateTime;
 }
 
 ANALYSE_FILE_END

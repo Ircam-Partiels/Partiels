@@ -12,8 +12,6 @@ namespace Zoom
         : public juce::Component
         {
         public:
-            using Attribute = Model::Attribute;
-            using Signal = Model::Signal;
             
             enum ColourIds : int
             {

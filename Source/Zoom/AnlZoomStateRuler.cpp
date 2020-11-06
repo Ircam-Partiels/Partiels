@@ -11,24 +11,24 @@ Zoom::State::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t pr
     setTickReferenceValue(tickReferenceValue);
     setTickPowerInterval(tickPowerInterval, divisionFactor);
     
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
     };
     
-    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
         juce::ignoreUnused(acsr);
         switch (signal)
         {
-            case Signal::moveAnchorBegin:
+            case SignalType::moveAnchorBegin:
                 mZooming = true;
                 break;
-            case Signal::moveAnchorEnd:
+            case SignalType::moveAnchorEnd:
                 mZooming = false;
                 break;
-            case Signal::moveAnchorPerform:
+            case SignalType::moveAnchorPerform:
                 break;
         }
         mAnchor = mFromZoomRange(static_cast<double>(value));
@@ -149,7 +149,7 @@ void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
         return;
     }
     
-    auto const visibleRange = mAccessor.getModel().range;
+    auto const visibleRange = mAccessor.getValue<AttrType::visibleRange>();
     mInitialValueRange = {mFromZoomRange(visibleRange.getStart()), mFromZoomRange(visibleRange.getEnd())};
        
     if(mInitialValueRange.isEmpty())
@@ -164,7 +164,7 @@ void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
     if(event.mods.isShiftDown())
     {
         mNavigationMode = NavigationMode::translate;
-        mAccessor.sendSignal(Signal::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
+        mAccessor.sendSignal(SignalType::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
         event.source.enableUnboundedMouseMovement(true, false);
     }
     else if(event.mods.isCommandDown())
@@ -174,7 +174,7 @@ void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
     else
     {
         mNavigationMode = NavigationMode::zoom;
-        mAccessor.sendSignal(Signal::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
+        mAccessor.sendSignal(SignalType::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
         event.source.enableUnboundedMouseMovement(true, false);
         
         if(onMouseDown != nullptr)
@@ -198,12 +198,11 @@ void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
     {
         case NavigationMode::translate:
         {
-            auto copy = mAccessor.getModel();
+            auto const visibleRange = mAccessor.getValue<AttrType::visibleRange>();
             auto const delta = isVertical ? mPrevMousePos.y - event.position.y : event.position.x - mPrevMousePos.x;
             auto const size = isVertical ? getHeight() - 1 : getWidth() - 1;
-            auto const translation = static_cast<double>(delta) / static_cast<double>(size) * copy.range.getLength();
-            copy.range += translation;
-            mAccessor.fromModel(copy, NotificationType::synchronous);
+            auto const translation = static_cast<double>(delta) / static_cast<double>(size) * visibleRange.getLength();
+            mAccessor.setValue<AttrType::visibleRange>(visibleRange + translation, NotificationType::synchronous);
         }
             break;
         case NavigationMode::select:
@@ -219,10 +218,8 @@ void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
             auto const rangeStart = mAnchor - (mAnchor - mInitialValueRange.getStart()) * zoomFactor;
             auto const rangeEnd = mAnchor + (mInitialValueRange.getEnd() - mAnchor) * zoomFactor;
 
-            auto copy = mAccessor.getModel();
-            copy.range = {mToZoomRange(rangeStart), mToZoomRange(rangeEnd)};
-            mAccessor.fromModel(copy, NotificationType::synchronous);
-            mAccessor.sendSignal(Signal::moveAnchorPerform, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
+            mAccessor.setValue<AttrType::visibleRange>(range_type{mToZoomRange(rangeStart), mToZoomRange(rangeEnd)}, NotificationType::synchronous);
+            mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
         }
             break;
     }
@@ -241,22 +238,20 @@ void Zoom::State::Ruler::mouseUp(juce::MouseEvent const& event)
     {
         case NavigationMode::translate:
         {
-            mAccessor.sendSignal(Signal::moveAnchorEnd, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
+            mAccessor.sendSignal(SignalType::moveAnchorEnd, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
         }
             break;
         case NavigationMode::select:
         {
             mSelectedValueRange = calculateSelectedValueRange(event);
-            auto copy = mAccessor.getModel();
-            copy.range = mSelectedValueRange;
-            mAccessor.fromModel(copy, NotificationType::synchronous);
+            mAccessor.setValue<AttrType::visibleRange>(mSelectedValueRange, NotificationType::synchronous);
             auto const anchorPos = (mSelectedValueRange.getStart() + mSelectedValueRange.getEnd()) / 2.0;
-            mAccessor.sendSignal(Signal::moveAnchorPerform, {mToZoomRange(anchorPos)}, NotificationType::synchronous);
+            mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(anchorPos)}, NotificationType::synchronous);
         }
             break;
         case NavigationMode::zoom:
         {
-            mAccessor.sendSignal(Signal::moveAnchorEnd, mToZoomRange(mAnchor), NotificationType::synchronous);
+            mAccessor.sendSignal(SignalType::moveAnchorEnd, mToZoomRange(mAnchor), NotificationType::synchronous);
         }
             break;
     }
@@ -295,7 +290,7 @@ void Zoom::State::Ruler::paint(juce::Graphics &g)
         return {mFromZoomRange(range.getStart()), mFromZoomRange(range.getEnd())};
     };
     
-    auto const visibleRange = mAccessor.getModel().range;
+    auto const visibleRange = mAccessor.getValue<AttrType::visibleRange>();
     auto const useableRange = fromZoomRange(visibleRange);
     if(useableRange.isEmpty())
     {

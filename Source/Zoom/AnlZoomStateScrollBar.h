@@ -13,9 +13,7 @@ namespace Zoom
         , private juce::ScrollBar::Listener
         {
         public:
-            using Attribute = Model::Attribute;
-            using Signal = Model::Signal;
-            
+
             enum Orientation : bool
             {
                 vertical,

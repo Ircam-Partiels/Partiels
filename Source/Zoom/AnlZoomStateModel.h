@@ -2,6 +2,7 @@
 
 #include "../Tools/AnlModelAccessor.h"
 #include "../Tools/AnlBroadcaster.h"
+#include "../Tools/AnlModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -9,52 +10,49 @@ namespace Zoom
 {
     namespace State
     {
-        //! @brief The data model of a zoom state
-        //! @details This model represent the state of a zoom. The global range defines the minimum and maximum values
-        //! that can be used for the visible range and the minimum length defines the minimum distance between the minimum
-        //! and maximum values of the visible range.
-        struct Model
+        using range_type = juce::Range<double>;
+        using AttrFlag = Model::AttrFlag;
+        
+        enum AttrType : size_t
         {
-            enum class Attribute
-            {
-                range
-            };
-            
-            enum class Signal
-            {
-                moveAnchorBegin,
-                moveAnchorEnd,
-                moveAnchorPerform
-            };
-            
-            Model(juce::Range<double> vr = {0.0, 0.0});
-            
-            juce::Range<double> range;
-            
-            std::unique_ptr<juce::XmlElement> toXml() const;
-            static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
-            
-            bool operator!=(Model const& other) const;
-            bool operator==(Model const& other) const;
-            
-            JUCE_LEAK_DETECTOR(Model)
+            visibleRange,
+            globalRange,
+            minimumLength
         };
         
+        enum class SignalType
+        {
+            moveAnchorBegin,
+            moveAnchorEnd,
+            moveAnchorPerform
+        };
+        
+        using Container = Model::Container
+        <Model::Attr<AttrType::visibleRange, range_type, AttrFlag::all>
+        ,Model::Attr<AttrType::globalRange, range_type, AttrFlag::notifying>
+        ,Model::Attr<AttrType::minimumLength, double, AttrFlag::notifying>
+        >;
+        
         class Accessor
-        : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
-        , public Broadcaster<Accessor, Model::Signal>
+        : public Model::Accessor<Accessor, Container>
+        , public Broadcaster<Accessor, SignalType>
         {
         public:
-            using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
-            Accessor(Model& model, juce::Range<double> const& globalRange, double minimumLength);
-            ~Accessor() override = default;
-            void fromModel(Model const& model, NotificationType const notification) override;
+            using Model::Accessor<Accessor, Container>::Accessor;
+            using enum_type = Model::Accessor<Accessor, Container>::enum_type;
             
-            void setContraints(juce::Range<double> const& globalRange, double minimumLength, NotificationType const notification);
-            std::tuple<juce::Range<double>, double> getContraints() const;
-        private:
-            juce::Range<double> mGlobalRange;
-            double mMinimumLength;
+            template <enum_type attribute, typename value_v>
+            void setValue(value_v const& value, NotificationType notification)
+            {
+                Model::Accessor<Accessor, Container>::setValue<attribute, value_v>(value, notification);
+            }
+            
+            template <>
+            void setValue<AttrType::visibleRange, range_type>(range_type const& value, NotificationType notification);
+            template <>
+            void setValue<AttrType::globalRange, range_type>(range_type const& value, NotificationType notification);
+            template <>
+            void setValue<AttrType::minimumLength, double>(double const& value, NotificationType notification);
         };
     }
 }

@@ -39,7 +39,7 @@ namespace Model
     
     //! @brief The accessor a data model
     //! @todo Implement a comparaison method
-    template<class container_t> class Accessor
+    template<class parent_t, class container_t> class Accessor
     {
     public:
         
@@ -73,7 +73,7 @@ namespace Model
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         template <enum_type attribute, typename value_v>
-        auto setValue(value_v const& value, NotificationType notification)
+        void setValue(value_v const& value, NotificationType notification)
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(attribute), container_type>::type;
             auto& lvalue = std::get<static_cast<size_t>(attribute)>(mData).value;
@@ -87,7 +87,7 @@ namespace Model
                         anlWeakAssert(listener.onChanged != nullptr);
                         if(listener.onChanged != nullptr)
                         {
-                            listener.onChanged(*this, attribute);
+                            listener.onChanged(*static_cast<parent_t const*>(this), attribute);
                         }
                     }, notification);
                 }
@@ -121,7 +121,7 @@ namespace Model
         //! @brief Parse the model from xml
         //! @details Only the saveable attributes are restored from the xml.
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        auto fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification)
+        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification)
         {
             anlWeakAssert(xml.hasTagName(name));
             if(!xml.hasTagName(name))
@@ -146,7 +146,7 @@ namespace Model
         }
         
         //! @brief Copy the content from another model
-        auto fromModel(container_type const& model, NotificationType notification)
+        void fromModel(container_type const& model, NotificationType notification)
         {
             detail::for_each(mData, [&](auto& d)
             {
@@ -165,7 +165,7 @@ namespace Model
             Listener() = default;
             virtual ~Listener() = default;
             
-            std::function<void(Accessor const&, enum_type attribute)> onChanged = nullptr;
+            std::function<void(parent_t const&, enum_type attribute)> onChanged = nullptr;
         };
         
         void addListener(Listener& listener, NotificationType const notification)
@@ -183,7 +183,7 @@ namespace Model
                             anlWeakAssert(ltnr.onChanged != nullptr);
                             if(&ltnr == ptr && ltnr.onChanged != nullptr)
                             {
-                                ltnr.onChanged(*this, attr_type::type);
+                                ltnr.onChanged(*static_cast<parent_t const*>(this), attr_type::type);
                             }
                         }, notification);
                     }

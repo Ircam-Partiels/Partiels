@@ -41,11 +41,11 @@ namespace Document
         double gain = 1.0; //! The gain of the playback between 0 and 1 (saved/compared)
         bool isPlaybackStarted = false; //! If the playback is started (unsaved/not compared)
         double playheadPosition = 0.0; // The position of the playhead (unsaved/not compared)
-        Zoom::State::Model zoomStateTime {{0.0, 60.0}};  // The zoom state of the time (saved/not compared)
+        Zoom::State::Accessor zoomStateTime {{{Zoom::State::range_type{0.0, 60.0}}, {Zoom::State::range_type{0.0, 60.0}}, {0.001}}};  // The zoom state of the time (saved/not compared)
         std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document (saved/compared)
         
         std::unique_ptr<juce::XmlElement> toXml() const;
-        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});;
+        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
         
         JUCE_LEAK_DETECTOR(Model)
     };
@@ -62,7 +62,6 @@ namespace Document
         Analyzer::Accessor& getAnalyzerAccessor(size_t index);
         Zoom::State::Accessor& getZoomStateTimeAccessor();
     private:
-        Zoom::State::Accessor mZoomStateTimeAccessor {mModel.zoomStateTime, {0.0, 60.0}, 0.001};
         std::vector<std::unique_ptr<Analyzer::Accessor>> mAnalyzerAccessors;
     };
 }

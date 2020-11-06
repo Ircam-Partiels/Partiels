@@ -3,86 +3,68 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::Model::Model(juce::Range<double> vr)
-: range(vr)
+template <>
+void Zoom::State::Accessor::setValue<Zoom::State::AttrType::visibleRange, Zoom::State::range_type>(range_type const& value, NotificationType notification)
 {
-}
-
-Zoom::State::Model Zoom::State::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
-{
-    anlWeakAssert(xml.hasTagName("Zoom::State::Model"));
-    if(!xml.hasTagName("Zoom::State::Model"))
-    {
-        return {};
-    }
-    
-    anlWeakAssert(xml.hasAttribute("range"));
-    
-    defaultModel.range = Tools::StringParser::fromXml(xml, "range", defaultModel.range);
-    
-    return defaultModel;
-}
-
-std::unique_ptr<juce::XmlElement> Zoom::State::Model::toXml() const
-{
-    auto xml = std::make_unique<juce::XmlElement>("Zoom::State::Model");
-    if(xml == nullptr)
-    {
-        return nullptr;
-    }
-    
-    xml->setAttribute("range", Tools::StringParser::toString(range));
-    return xml;
-}
-
-bool Zoom::State::Model::operator!=(Model const& other) const
-{
-    auto equals = [](juce::Range<double> const& lhs, juce::Range<double> const& rhs)
-    {
-        static auto constexpr epsilon = std::numeric_limits<double>::epsilon();
-        return std::abs(lhs.getStart() - rhs.getStart()) < epsilon && std::abs(lhs.getEnd() - rhs.getEnd()) < epsilon;
-    };
-    
-    return !equals(range, other.range);
-}
-
-bool Zoom::State::Model::operator==(Model const& other) const
-{
-    return !(*this != other);
-}
-
-Zoom::State::Accessor::Accessor(Model& model, juce::Range<double> const& globalRange, double minimumLength)
-: Tools::ModelAccessor<Accessor, Model, Model::Attribute>(model)
-{
-    setContraints(globalRange, minimumLength, NotificationType::synchronous);
-}
-
-void Zoom::State::Accessor::fromModel(Model const& model, NotificationType const notification)
-{
-    using Attribute = Model::Attribute;
-    std::set<Attribute> attributes;
     auto sanitizeRange = [&](juce::Range<double> const& input)
     {
-        if(mGlobalRange.isEmpty())
+        auto const& globaleRange = getValue<AttrType::globalRange>();
+        auto const& minimumLength = getValue<AttrType::minimumLength>();
+        if(globaleRange.isEmpty())
         {
-            return input.withEnd(std::max(input.getStart() + mMinimumLength, input.getEnd()));
+            return input.withEnd(std::max(input.getStart() + minimumLength, input.getEnd()));
         }
-        return mGlobalRange.constrainRange(input.withEnd(std::max(input.getStart() + mMinimumLength, input.getEnd())));
+        return globaleRange.constrainRange(input.withEnd(std::max(input.getStart() + minimumLength, input.getEnd())));
     };
-    compareAndSet(attributes, Attribute::range, mModel.range, sanitizeRange(model.range));
-    notifyListener(attributes, notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::visibleRange, Zoom::State::range_type>(sanitizeRange(value), notification);
 }
 
-void Zoom::State::Accessor::setContraints(juce::Range<double> const& globalRange, double minimumLength, NotificationType const notification)
+template <>
+void Zoom::State::Accessor::setValue<Zoom::State::AttrType::globalRange, Zoom::State::range_type>(range_type const& value, NotificationType notification)
 {
-    mGlobalRange = globalRange;
-    mMinimumLength = std::min(std::max(minimumLength, 0.0), mGlobalRange.getLength());
-    fromModel(mModel, notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::globalRange, Zoom::State::range_type>(value, notification);
+    setValue<AttrType::visibleRange, Zoom::State::range_type>(getValue<AttrType::visibleRange>(), notification);
 }
 
-std::tuple<juce::Range<double>, double> Zoom::State::Accessor::getContraints() const
+template <>
+void Zoom::State::Accessor::setValue<Zoom::State::AttrType::minimumLength, double>(double const& value, NotificationType notification)
 {
-    return std::make_tuple(mGlobalRange, mMinimumLength);
+    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::minimumLength, double>(value, notification);
+    setValue<AttrType::visibleRange, Zoom::State::range_type>(getValue<AttrType::visibleRange>(), notification);
 }
+
+class ZoomStateModelUnitTest
+: public juce::UnitTest
+{
+public:
+    
+    ZoomStateModelUnitTest() : juce::UnitTest("Model Util Test", "Model") {}
+    
+    ~ZoomStateModelUnitTest() override = default;
+    
+    void runTest() override
+    {
+        using namespace Zoom::State;
+        Accessor acsr{{{range_type{0.0, 100.0}}, {range_type{0.0, 100.0}}, {0.001}}};
+        Accessor::Listener ltnr;
+        
+        acsr.setValue<AttrType::visibleRange>(juce::Range<double>{0.0, 50.0}, NotificationType::synchronous);
+        std::cout << acsr.getValue<AttrType::visibleRange>().getEnd() << "\n";
+        acsr.setValue<AttrType::visibleRange>(juce::Range<double>{0.0, 120.0}, NotificationType::synchronous);
+        std::cout << acsr.getValue<AttrType::visibleRange>().getEnd() << "\n";
+        int zaza;
+//        beginTest("Test attribute flags");
+//        {
+//            expect(magic_enum::enum_integer(AttrFlag::ignored) == 0);
+//            expect(magic_enum::enum_integer(AttrFlag::notifying) == 1);
+//            expect(magic_enum::enum_integer(AttrFlag::saveable) == 2);
+//            expect(magic_enum::enum_integer(AttrFlag::comparable) == 4);
+//            expect(magic_enum::enum_integer(AttrFlag::all) == 7);
+//        }
+//
+    }
+};
+
+static ZoomStateModelUnitTest zoomStateModelUnitTest;
 
 ANALYSE_FILE_END

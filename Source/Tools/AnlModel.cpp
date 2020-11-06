@@ -35,7 +35,12 @@ public:
         >;
         
         // Declare the data model accessor
-        using ModelAcsr = Anl::Model::Accessor<Ctnr>;
+        class ModelAcsr
+        : public Anl::Model::Accessor<ModelAcsr, Ctnr>
+        {
+            using Model::Accessor<ModelAcsr, Ctnr>::Accessor;
+        };
+        
         // Declare the data model listener
         using ModelLtnr = ModelAcsr::Listener;
         
@@ -145,59 +150,9 @@ public:
             expect(notifications[magic_enum::enum_integer(AttrType::attr3)] == false);
             expect(notifications[magic_enum::enum_integer(AttrType::attr4)] == true);
         }
-//
-//        ModelAcsr acsr1({{1}, {2}, {3.0f}, {{1, 2, 3}}, {"john"}});
-//
-//
-//        ModelLtnr ltnr;
-//        ltnr.onChanged = [&](ModelAcsr const& acsr, AttrType attribute)
-//        {
-//            std::cout << (&acsr == &acsr1 ? "acsr1" : "acsr2") << " changed "<< magic_enum::enum_name(attribute) << ": ";
-//            switch(attribute)
-//            {
-//                case AttrType::attr0:
-//                    std::cout << acsr.getValue<AttrType::attr0>() << "\n";
-//                    break;
-//                case AttrType::attr1:
-//                    std::cout << acsr.getValue<AttrType::attr1>() << "\n";
-//                    break;
-//                case AttrType::attr2:
-//                    std::cout << acsr.getValue<AttrType::attr2>() << "\n";
-//                    break;
-//                case AttrType::attr3:
-//                {
-//                    for(auto const& v : acsr.getValue<AttrType::attr3>())
-//                    {
-//                        std::cout << v << " ";
-//                    }
-//                    std::cout << "\n";
-//                }
-//                    break;
-//                case AttrType::attr4:
-//                    std::cout << acsr.getValue<AttrType::attr4>() << "\n";
-//                    break;
-//            }
-//        };
-//        acsr1.addListener(ltnr, NotificationType::synchronous);
-//        acsr2.addListener(ltnr, NotificationType::synchronous);
-//
-//        auto xml = acsr1.toXml("state1");
-//        std::cout << "acsr1: "<< xml->toString() << "\n";
-//        acsr1.setValue<AttrType::attr0>(acsr1.getValue<AttrType::attr1>() + 2);
-//        acsr1.setValue<AttrType::attr2>(acsr1.getValue<AttrType::attr2>() - 2.2f);
-//        xml = acsr1.toXml("state2");
-//        std::cout << "acsr1: "<< xml->toString() << "\n";
-//        acsr2.fromXml(*xml.get(), "state2");
-//        xml = acsr2.toXml("state3");
-//        std::cout << "acsr2: "<< xml->toString() << "\n";
-//        acsr2.setValue<AttrType::attr0>(acsr2.getValue<AttrType::attr0>() + 2);
-//        acsr2.setValue<AttrType::attr2>(acsr2.getValue<AttrType::attr2>() - 2.2f);
-//        acsr1.fromModel(acsr2.getModel());
-//        xml = acsr1.toXml("state4");
-//        std::cout << "acsr1: "<< xml->toString() << "\n";
     }
 };
 
-static ModelUnitTest fadeScaleMapperTests;
+static ModelUnitTest modelUnitTest;
 
 ANALYSE_FILE_END

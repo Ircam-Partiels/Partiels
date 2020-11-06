@@ -14,19 +14,18 @@ Zoom::State::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
     
     mIncDec.onValueChange = [&]()
     {
-        auto copy = mAccessor.getModel();
-        copy.range = copy.range.expanded(mIncDec.getValue() - copy.range.getLength());
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        auto const range = mAccessor.getValue<AttrType::visibleRange>();
+        mAccessor.setValue<AttrType::visibleRange>(range.expanded(mIncDec.getValue() - range.getLength()), NotificationType::synchronous);
     };
     
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == Zoom::State::Model::Attribute::range)
+        if(attribute == AttrType::visibleRange)
         {
-            auto const globalRange = std::get<0>(acsr.getContraints());
+            auto const globalRange = acsr.getValue<AttrType::globalRange>();
             mScrollBar.setRangeLimits(globalRange, juce::NotificationType::dontSendNotification);
             mIncDec.setRange(globalRange.movedToStartAt(0.0), globalRange.getLength() / 127.0);
-            auto const range = acsr.getModel().range;
+            auto const range = acsr.getValue<AttrType::visibleRange>();
             mScrollBar.setCurrentRange(range, juce::NotificationType::dontSendNotification);
             mIncDec.setValue(range.getLength());
         }
@@ -44,7 +43,7 @@ Zoom::State::ScrollBar::~ScrollBar()
 
 void Zoom::State::ScrollBar::resized()
 {
-    auto const globalRange = std::get<0>(mAccessor.getContraints());
+    auto const globalRange = mAccessor.getValue<AttrType::globalRange>();
     auto bounds = getLocalBounds();
     if(mScrollBar.isVertical())
     {
@@ -63,7 +62,7 @@ void Zoom::State::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMov
 {
     juce::ignoreUnused(scrollBarThatHasMoved, newRangeStart);
     anlStrongAssert(scrollBarThatHasMoved == &mScrollBar);
-    mAccessor.fromModel({mScrollBar.getCurrentRange()}, NotificationType::synchronous);
+    mAccessor.setValue<AttrType::visibleRange>(range_type{mScrollBar.getCurrentRange()}, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
