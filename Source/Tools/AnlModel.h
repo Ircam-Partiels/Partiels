@@ -38,6 +38,7 @@ namespace Model
     template <class ..._Tp> using Container = std::tuple<_Tp...>;
     
     //! @brief The accessor a data model
+    //! @todo Implement a comparaison method
     template<class container_t> class Accessor
     {
     public:
@@ -75,8 +76,6 @@ namespace Model
         auto setValue(value_v const& value, NotificationType notification)
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(attribute), container_type>::type;
-            using value_type = typename attr_type::value_type;
-            //static_assert(std::is_same<value_type, value_v>::value, "value_t underlying type must be size_t");
             auto& lvalue = std::get<static_cast<size_t>(attribute)>(mData).value;
             if(lvalue != value)
             {
@@ -212,7 +211,7 @@ namespace Model
         };
         
         container_type mData;
-        Tools::Notifier<Listener> mListeners;
+        Notifier<Listener> mListeners;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };

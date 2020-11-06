@@ -83,6 +83,35 @@ public:
             expectEquals(acsr.getValue<AttrType::attr4>(), std::string{"Jim"});
         }
         
+        beginTest("Test accessor from model");
+        {
+            ModelAcsr acsr1;
+            ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
+            acsr1.fromModel(acsr2.getModel(), NotificationType::synchronous);
+            expectEquals(acsr1.getValue<AttrType::attr0>(), acsr2.getValue<AttrType::attr0>());
+            expectNotEquals(acsr1.getValue<AttrType::attr1>(), acsr2.getValue<AttrType::attr1>());
+            expectEquals(acsr1.getValue<AttrType::attr2>(), acsr2.getValue<AttrType::attr2>());
+            expect(acsr1.getValue<AttrType::attr3>() != acsr2.getValue<AttrType::attr3>());
+            expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
+        }
+        
+        beginTest("Test accessor from/to xml");
+        {
+            ModelAcsr acsr1;
+            ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
+            auto xml = acsr2.toXml("Test");
+            expect(xml != nullptr);
+            if(xml != nullptr)
+            {
+                acsr1.fromXml(*xml.get(), "Test", NotificationType::synchronous);
+            }
+            expectEquals(acsr1.getValue<AttrType::attr0>(), acsr2.getValue<AttrType::attr0>());
+            expectNotEquals(acsr1.getValue<AttrType::attr1>(), acsr2.getValue<AttrType::attr1>());
+            expectEquals(acsr1.getValue<AttrType::attr2>(), acsr2.getValue<AttrType::attr2>());
+            expect(acsr1.getValue<AttrType::attr3>() != acsr2.getValue<AttrType::attr3>());
+            expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
+        }
+        
         beginTest("Test accessor listener");
         {
             std::array<bool, magic_enum::enum_count<AttrType>()> notifications;
@@ -94,7 +123,7 @@ public:
                 notifications[magic_enum::enum_integer(attribute)] = true;
             };
             
-            ModelAcsr acsr;
+            ModelAcsr acsr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}});
             
             std::fill(notifications.begin(), notifications.end(), false);
             acsr.addListener(ltnr, NotificationType::synchronous);
