@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Tools/AnlModelAccessor.h"
-#include "../Tools/AnlSignalBroadcaster.h"
+#include "../Tools/AnlBroadcaster.h"
 #include "../Tools/AnlAtomicManager.h"
 
 #include <vamp-hostsdk/PluginLoader.h>
@@ -59,7 +59,7 @@ namespace Analyzer
     
     class Accessor
     : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
-    , public Tools::SignalBroadcaster<Accessor, Model::Signal>
+    , public Broadcaster<Accessor, Model::Signal>
     , public Tools::AtomicManager<Vamp::Plugin>
     {
     public:

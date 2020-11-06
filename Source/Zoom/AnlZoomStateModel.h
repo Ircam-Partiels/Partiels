@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Tools/AnlModelAccessor.h"
-#include "../Tools/AnlSignalBroadcaster.h"
+#include "../Tools/AnlBroadcaster.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -42,7 +42,7 @@ namespace Zoom
         
         class Accessor
         : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
-        , public Tools::SignalBroadcaster<Accessor, Model::Signal>
+        , public Broadcaster<Accessor, Model::Signal>
         {
         public:
             using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
