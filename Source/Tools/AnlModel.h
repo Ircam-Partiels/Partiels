@@ -10,11 +10,11 @@ namespace Model
 {
     enum AttrFlag
     {
-        ignored = 1 << 0,
-        notifying = 1 << 1,
-        saveable = 1 << 2,
-        comparable = 1 << 3,
-        all = notifying & saveable & comparable
+        ignored = 0 << 0,
+        notifying = 1 << 0,
+        saveable = 1 << 1,
+        comparable = 1 << 2,
+        all = notifying | saveable | comparable
     };
     
     //! @brief The private implementation of an attribute of a model
@@ -44,6 +44,7 @@ namespace Model
         
         using container_type = container_t;
         using enum_type = typename std::tuple_element<0, container_type>::type::enum_type;
+        static_assert(std::is_same<typename std::underlying_type<enum_type>::type, size_t>::value, "enum_t underlying type must be size_t");
         static_assert(is_specialization<container_type, std::tuple>::value, "econtainer_t must be a specialization of std::tuple");
 
         //! @brief The constructor
@@ -56,25 +57,26 @@ namespace Model
         ~Accessor() = default;
 
         //! @brief Gets a const ref to the model container
-        auto getModel() const noexcept
+        auto const& getModel() const noexcept
         {
             return mData;
         }
         
         //! @brief Gets the value of an attribute
         template <enum_type attribute>
-        auto getValue() const noexcept
+        auto const& getValue() const noexcept
         {
             return std::get<static_cast<size_t>(attribute)>(mData).value;
         }
         
         //! @brief Sets the value of an attribute
+        //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         template <enum_type attribute, typename value_v>
-        auto setValue(value_v value)
+        auto setValue(value_v const& value, NotificationType notification)
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(attribute), container_type>::type;
             using value_type = typename attr_type::value_type;
-            static_assert(std::is_same<value_type, value_v>::value, "enum_t underlying type must be size_t");
+            //static_assert(std::is_same<value_type, value_v>::value, "value_t underlying type must be size_t");
             auto& lvalue = std::get<static_cast<size_t>(attribute)>(mData).value;
             if(lvalue != value)
             {
@@ -88,11 +90,13 @@ namespace Model
                         {
                             listener.onChanged(*this, attribute);
                         }
-                    }, NotificationType::synchronous);
+                    }, notification);
                 }
             }
         }
         
+        //! @brief Parse the model to xml
+        //! @details Only the saveable attributes are stored into the xml
         auto toXml(juce::StringRef const& name) const
         {
             auto xml = std::make_unique<juce::XmlElement>(name);
@@ -115,7 +119,10 @@ namespace Model
             return xml;
         }
         
-        auto fromXml(juce::XmlElement const& xml, juce::StringRef const& name)
+        //! @brief Parse the model from xml
+        //! @details Only the saveable attributes are restored from the xml.
+        //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
+        auto fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification)
         {
             anlWeakAssert(xml.hasTagName(name));
             if(!xml.hasTagName(name))
@@ -128,15 +135,19 @@ namespace Model
                 using attr_type = typename std::remove_reference<decltype(d)>::type;
                 if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
                 {
+                    using value_type = typename attr_type::value_type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
                     anlWeakAssert(xml.hasAttribute(enumname));
+                    value_type newValue;
                     std::stringstream ss(xml.getStringAttribute(enumname, juce::String(d.value)).toRawUTF8());
-                    ss >> d.value;
+                    ss >> newValue;
+                    setValue<attr_type::type>(newValue, notification);
                 }
             });
         }
         
-        auto fromModel(container_type const& model)
+        //! @brief Copy the content from another model
+        auto fromModel(container_type const& model, NotificationType notification)
         {
             detail::for_each(mData, [&](auto& d)
             {
@@ -144,7 +155,7 @@ namespace Model
                 if constexpr((attr_type::flags & AttrFlag::saveable) != 0)
                 {
                     auto const& value = std::get<static_cast<size_t>(attr_type::type)>(model).value;
-                    setValue<attr_type::type>(value);
+                    setValue<attr_type::type>(value, notification);
                 }
             });
         }
@@ -165,14 +176,18 @@ namespace Model
                 detail::for_each(mData, [&](auto& d)
                 {
                     using attr_type = typename std::remove_reference<decltype(d)>::type;
-                    mListeners.notify([this, ptr = &listener](Listener& ltnr)
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type::type));
+                    if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
                     {
-                        anlWeakAssert(ltnr.onChanged != nullptr);
-                        if(&ltnr == ptr && ltnr.onChanged != nullptr)
+                        mListeners.notify([this, ptr = &listener](Listener& ltnr)
                         {
-                            ltnr.onChanged(*this, attr_type::type);
-                        }
-                    }, notification);
+                            anlWeakAssert(ltnr.onChanged != nullptr);
+                            if(&ltnr == ptr && ltnr.onChanged != nullptr)
+                            {
+                                ltnr.onChanged(*this, attr_type::type);
+                            }
+                        }, notification);
+                    }
                 });
             }
         }
