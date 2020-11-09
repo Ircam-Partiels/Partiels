@@ -8,6 +8,78 @@ ANALYSE_FILE_BEGIN
 
 namespace Model
 {
+    class StringParser
+    {
+    public:
+        template <typename T> static
+        T fromString(juce::String const& string)
+        {
+            if constexpr (std::is_constructible<T, juce::String>::value)
+            {
+                return T(string);
+            }
+            else if constexpr(is_container<T>::value)
+            {
+                T value;
+                juce::StringArray stringArray;
+                stringArray.addLines(string);
+                value.resize(static_cast<size_t>(stringArray.size()));
+                std::transform(stringArray.begin(), stringArray.end(), value.begin(), [](auto const line)
+                {
+                    return fromString<typename T::value_type>(line);
+                });
+                return value;
+            }
+            else
+            {
+                T value;
+                std::stringstream stream(string.toRawUTF8());
+                stream >> value;
+                return value;
+            }
+        }
+        
+        template <typename T> static
+        juce::String toString(T const& value)
+        {
+            if constexpr (is_explicitly_convertible<T, juce::String>::value)
+            {
+                return static_cast<juce::String>(value);
+            }
+            else if constexpr(is_container<T>::value)
+            {
+                juce::StringArray stringArray;
+                stringArray.ensureStorageAllocated(static_cast<int>(value.size()));
+                for(auto const& subvalue : value)
+                {
+                    stringArray.add(toString(subvalue));
+                }
+                return stringArray.joinIntoString("\n");
+            }
+            else
+            {
+                std::ostringstream stream;
+                stream << value;
+                return juce::String(stream.str());
+            }
+        }
+        
+        template <typename T>
+        static T fromXml(juce::XmlElement const& xml, juce::StringRef const& name, T const& defaultValue)
+        {
+            return fromString<T>(xml.getStringAttribute(name, toString<T>(defaultValue)));
+        }
+        
+        template <> unsigned long fromString(juce::String const& string);
+        template <> juce::String toString(unsigned long const& value);
+        
+        template <> juce::File fromString(juce::String const& string);
+        template <> juce::String toString(juce::File const& value);
+        
+        template <> juce::Range<double> fromString(juce::String const& string);
+        template <> juce::String toString(juce::Range<double> const& value);
+    };
+    
     enum AttrFlag
     {
         ignored = 0 << 0,
@@ -73,8 +145,8 @@ namespace Model
         
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        template <enum_type type, typename value_v>
-        void setValue(value_v const& value, NotificationType notification)
+        template <enum_type type, typename T>
+        void setValue(T const& value, NotificationType notification = NotificationType::synchronous)
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
@@ -114,7 +186,7 @@ namespace Model
                 {
                     auto constexpr attr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    xml->setAttribute(enumname.c_str(), toString<attr_type>(d.value));
+                    xml->setAttribute(enumname.c_str(), StringParser::toString(d.value));
                 }
             });
             return xml;
@@ -123,7 +195,7 @@ namespace Model
         //! @brief Parse the model from xml
         //! @details Only the saveable attributes are restored from the xml.
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification)
+        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification = NotificationType::synchronous)
         {
             anlWeakAssert(xml.hasTagName(name));
             if(!xml.hasTagName(name))
@@ -136,17 +208,16 @@ namespace Model
                 using element_type = typename std::remove_reference<decltype(d)>::type;
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
-                    using value_type = typename std::remove_reference<decltype(d)>::type;
                     auto constexpr attr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
                     anlWeakAssert(xml.hasAttribute(enumname));
-                    setValue<attr_type>(fromString<attr_type>(xml.getStringAttribute(enumname, toString<attr_type>(d.value))), notification);
+                    setValue<attr_type>(StringParser::fromXml(xml, enumname, d.value), notification);
                 }
             });
         }
         
         template <enum_type type, typename value_v>
-        static juce::String toString(value_v const& value)
+        auto toString(value_v const& value) const
         {
             std::ostringstream stream;
             stream << value;
@@ -154,7 +225,7 @@ namespace Model
         }
         
         template <enum_type type>
-        static auto fromString(juce::String const& str)
+        auto fromString(juce::String const& str) const
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             typename element_type::value_type value;
@@ -164,7 +235,7 @@ namespace Model
         }
         
         //! @brief Copy the content from another model
-        void fromModel(container_type const& model, NotificationType notification)
+        void fromModel(container_type const& model, NotificationType notification = NotificationType::synchronous)
         {
             detail::for_each(mData, [&](auto& d)
             {

@@ -40,7 +40,8 @@ public:
     void runTest() override
     {
         using namespace Zoom::State;
-        Accessor acsr{{{range_type{0.0, 100.0}}, {range_type{0.0, 100.0}}, {1.0}}};
+        Accessor acsr{{{range_type{0.0, 100.0}}, {1.0}, {range_type{0.0, 100.0}}}};
+        
         beginTest("sanitize");
         {
             acsr.setValue<AttrType::visibleRange>(range_type{0.0, 50.0}, NotificationType::synchronous);
@@ -54,11 +55,20 @@ public:
             acsr.setValue<AttrType::minimumLength>(30.0, NotificationType::synchronous);
             expect(acsr.getValue<AttrType::visibleRange>() == range_type{10.0, 40.0});
         }
-        beginTest("from/to xml");
+        
+        beginTest("xml");
         {
             auto const xml = acsr.toXml("Test");
+            expect(xml != nullptr);
+            if(xml != nullptr)
+            {
+                Accessor acsr2{{{range_type{0.0, 100.0}}, {1.0}, {range_type{0.0, 100.0}}}};
+                acsr2.fromXml(*xml.get(), "Test", NotificationType::synchronous);
+                expect(acsr.getValue<AttrType::visibleRange>() == acsr2.getValue<AttrType::visibleRange>());
+                expect(acsr.getValue<AttrType::globalRange>() != acsr2.getValue<AttrType::globalRange>());
+                expect(std::abs(acsr.getValue<AttrType::minimumLength>() - acsr2.getValue<AttrType::minimumLength>()) > std::numeric_limits<double>::epsilon());
+            }
         }
-        
     }
 };
 

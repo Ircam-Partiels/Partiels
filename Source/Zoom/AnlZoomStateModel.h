@@ -15,9 +15,9 @@ namespace Zoom
         
         enum AttrType : size_t
         {
-            visibleRange,
             globalRange,
-            minimumLength
+            minimumLength,
+            visibleRange
         };
         
         enum class SignalType
@@ -28,12 +28,11 @@ namespace Zoom
         };
         
         using Container = Model::Container
-        <Model::Attr<AttrType::visibleRange, range_type, AttrFlag::all>
-        ,Model::Attr<AttrType::globalRange, range_type, AttrFlag::notifying>
-        ,Model::Attr<AttrType::minimumLength, double, AttrFlag::notifying>
+        < Model::Attr<AttrType::globalRange, range_type, AttrFlag::notifying>
+        , Model::Attr<AttrType::minimumLength, double, AttrFlag::notifying>
+        , Model::Attr<AttrType::visibleRange, range_type, AttrFlag::all>
         >;
         
-        JUCE_COMPILER_WARNING("Implement XML parser methods")
         class Accessor
         : public Model::Accessor<Accessor, Container>
         , public Broadcaster<Accessor, SignalType>
@@ -42,10 +41,10 @@ namespace Zoom
             using Model::Accessor<Accessor, Container>::Accessor;
             using enum_type = Model::Accessor<Accessor, Container>::enum_type;
             
-            template <enum_type attribute, typename value_v>
+            template <enum_type type, typename value_v>
             void setValue(value_v const& value, NotificationType notification)
             {
-                Model::Accessor<Accessor, Container>::setValue<attribute, value_v>(value, notification);
+                Model::Accessor<Accessor, Container>::setValue<type, value_v>(value, notification);
             }
             
             template <>
