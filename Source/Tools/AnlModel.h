@@ -90,7 +90,7 @@ namespace Model
     };
     
     //! @brief The private implementation of an attribute of a model
-    template<typename enum_t, enum_t index_v, typename value_t, AttrFlag flags_v> struct AttrImpl
+    template<typename enum_t, enum_t index_v, typename value_t, int flags_v> struct AttrImpl
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
@@ -99,19 +99,17 @@ namespace Model
         using value_type = value_t;
         
         static enum_type const type = static_cast<enum_type>(index_v);
-        static AttrFlag const flags = flags_v;
+        static int const flags = flags_v;
         value_type value;
     };
     
     //! @brief The template typle of an attribute of a model
-    template<auto index_v, typename value_t, AttrFlag flags_v> using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
+    template<auto index_v, typename value_t, int flags_v> using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
     
     //! @brief The container type for a set of attributes
     template <class ..._Tp> using Container = std::tuple<_Tp...>;
     
     //! @brief The accessor a data model
-    //! @todo Implement a comparaison method
-    JUCE_COMPILER_WARNING("Implement a comparaison method")
     template<class parent_t, class container_t> class Accessor
     {
     public:
@@ -167,6 +165,15 @@ namespace Model
             }
         }
         
+        //! @brief Sets the value of an attribute (initializer list specialization)
+        template <enum_type type, typename T>
+        void setValue(std::initializer_list<T>&& tvalue, NotificationType notification = NotificationType::synchronous)
+        {
+            using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            typename attr_type::value_type const value {tvalue};
+            setValue<type>(value, notification);
+        }
+        
         //! @brief Parse the model to xml
         //! @details Only the saveable attributes are stored into the xml
         auto toXml(juce::StringRef const& name) const
@@ -216,24 +223,6 @@ namespace Model
             });
         }
         
-        template <enum_type type, typename value_v>
-        auto toString(value_v const& value) const
-        {
-            std::ostringstream stream;
-            stream << value;
-            return juce::String(stream.str());
-        }
-        
-        template <enum_type type>
-        auto fromString(juce::String const& str) const
-        {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            typename element_type::value_type value;
-            std::stringstream stream(str.toRawUTF8());
-            stream >> value;
-            return value;
-        }
-        
         //! @brief Copy the content from another model
         void fromModel(container_type const& model, NotificationType notification = NotificationType::synchronous)
         {
@@ -249,6 +238,24 @@ namespace Model
             });
         }
         
+        //! @brief Compare the content with  another model
+        bool isEquivalentTo(container_type const& model)
+        {
+            bool result = true;
+            detail::for_each(mData, [&](auto& d)
+            {
+                if(result)
+                {
+                    using element_type = typename std::remove_reference<decltype(d)>::type;
+                    if constexpr((element_type::flags & AttrFlag::comparable) != 0)
+                    {
+                        auto constexpr attr_type = element_type::type;
+                        result = areEquivalent(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
+                    }
+                }
+            });
+            return result;
+        }
         class Listener
         {
         public:
@@ -299,6 +306,30 @@ namespace Model
             template<typename... Ts, typename F> static void for_each(std::tuple<Ts...> const& t, F f) {for_each(t, f, gen_seq<sizeof...(Ts)>());}
             template<typename... Ts, typename F> static void for_each(std::tuple<Ts...>& t, F f) {for_each(t, f, gen_seq<sizeof...(Ts)>());}
         };
+                
+        template <typename T> static
+        bool areEquivalent(T const& lhs, T const& rhs)
+        {
+            if constexpr(is_container<T>::value)
+            {
+                if(lhs.size() != rhs.size())
+                {
+                    return false;
+                }
+                return equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), [](auto const& slhs, auto const& srhs)
+                {
+                    return areEquivalent(slhs, srhs);
+                });
+            }
+            else if constexpr(is_specialization<T, std::unique_ptr>::value)
+            {
+                return lhs != nullptr && rhs != nullptr && areEquivalent(*lhs.get(), *rhs.get());
+            }
+            else
+            {
+                return lhs == rhs;
+            }
+        }
         
         container_type mData;
         Notifier<Listener> mListeners;

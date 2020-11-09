@@ -58,8 +58,8 @@ public:
             explicit DummyStringifier(juce::String const&) {}
             
             explicit operator juce::String() const { return ""; }
-            bool operator==(DummyStringifier const&) { return true; }
-            bool operator!=(DummyStringifier const&) { return false; }
+            bool operator==(DummyStringifier const&) const { return true; }
+            bool operator!=(DummyStringifier const&) const { return false; }
         };
         
         using AttrFlag = Model::AttrFlag;
@@ -73,7 +73,7 @@ public:
             attr3,
             attr4,
             attr5,
-            attr6
+            attr6,
         };
         
         // Declare the data model container
@@ -83,7 +83,7 @@ public:
         , Model::Attr<AttrType::attr2, float, AttrFlag::saveable>
         , Model::Attr<AttrType::attr3, std::vector<int>, AttrFlag::ignored>
         , Model::Attr<AttrType::attr4, std::string, AttrFlag::notifying>
-        , Model::Attr<AttrType::attr5, std::vector<double>, AttrFlag::saveable>
+        , Model::Attr<AttrType::attr5, std::vector<double>, AttrFlag::saveable | AttrFlag::comparable>
         , Model::Attr<AttrType::attr6, DummyStringifier, AttrFlag::all>
         >;
         
@@ -134,9 +134,9 @@ public:
             acsr.setValue<AttrType::attr0>(2, NotificationType::synchronous);
             acsr.setValue<AttrType::attr1>(3, NotificationType::synchronous);
             acsr.setValue<AttrType::attr2>(4.0f, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr3>(std::vector<int>{5, 6, 7}, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr4>(std::string{"Jim"}, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr5>(std::vector<double>{8.0, 9.0}, NotificationType::synchronous);
+            acsr.setValue<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
+            acsr.setValue<AttrType::attr4>("Jim", NotificationType::synchronous);
+            acsr.setValue<AttrType::attr5>({8.0, 9.0}, NotificationType::synchronous);
             expectEquals(acsr.getValue<AttrType::attr0>(), 2);
             expectEquals(acsr.getValue<AttrType::attr1>(), 3);
             expectEquals(acsr.getValue<AttrType::attr2>(), 4.0f);
@@ -175,6 +175,18 @@ public:
             expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
             expect(acsr1.getValue<AttrType::attr5>() == acsr2.getValue<AttrType::attr5>());
         }
+            
+        beginTest("is equivalent");
+        {
+            ModelAcsr acsr1;
+            ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            
+            expect(acsr1.isEquivalentTo(acsr2.getModel()) == false);
+            expect(acsr2.isEquivalentTo(acsr1.getModel()) == false);
+            acsr1.fromModel(acsr2.getModel());
+            expect(acsr1.isEquivalentTo(acsr2.getModel()) == true);
+            expect(acsr2.isEquivalentTo(acsr1.getModel()) == true);
+        }
         
         beginTest("accessor listener");
         {
@@ -202,9 +214,9 @@ public:
             acsr.setValue<AttrType::attr0>(2, NotificationType::synchronous);
             acsr.setValue<AttrType::attr1>(3, NotificationType::synchronous);
             acsr.setValue<AttrType::attr2>(4.0f, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr3>(std::vector<int>{5, 6, 7}, NotificationType::synchronous);
+            acsr.setValue<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
             acsr.setValue<AttrType::attr4>("Jim", NotificationType::synchronous);
-            acsr.setValue<AttrType::attr5>(std::vector<double>{7.0, 8.0}, NotificationType::synchronous);
+            acsr.setValue<AttrType::attr5>({7.0, 8.0}, NotificationType::synchronous);
             expect(notifications[magic_enum::enum_integer(AttrType::attr0)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr1)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr2)] == false);
