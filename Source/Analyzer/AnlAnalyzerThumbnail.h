@@ -9,10 +9,7 @@ namespace Analyzer
     class Thumbnail
     : public juce::Component
     {
-    public:
-        using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
-        
+    public:        
         Thumbnail(Accessor& accessor);
         ~Thumbnail() override;
         

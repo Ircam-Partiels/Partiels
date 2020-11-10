@@ -49,7 +49,7 @@ namespace Model
         static_assert(is_specialization<container_type, std::tuple>::value, "econtainer_t must be a specialization of std::tuple");
 
         //! @brief The constructor
-        Accessor(container_type&& data = {})
+        explicit Accessor(container_type&& data = {})
         : mData(std::move(data))
         {
         }
@@ -76,10 +76,12 @@ namespace Model
         void setValue(T const& value, NotificationType notification = NotificationType::synchronous)
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            using value_type = typename attr_type::value_type;
             auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
-            if(lvalue != value)
+            value_type tempValue {value};
+            if(equal(lvalue, tempValue) == false)
             {
-                std::get<static_cast<size_t>(type)>(mData).value = value;
+                exchange<value_type>(std::get<static_cast<size_t>(type)>(mData).value, tempValue, notification);
                 if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
                 {
                     mListeners.notify([=](Listener& listener)
@@ -178,7 +180,7 @@ namespace Model
                     if constexpr((element_type::flags & AttrFlag::comparable) != 0)
                     {
                         auto constexpr attr_type = element_type::type;
-                        result = areEquivalent(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
+                        result = equal(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
                     }
                 }
             });
@@ -235,9 +237,9 @@ namespace Model
             template<typename... Ts, typename F> static void for_each(std::tuple<Ts...>& t, F f) {for_each(t, f, gen_seq<sizeof...(Ts)>());}
         };
                 
-        // This is a for_each mechanism for std::tuple
+        // This is a specific compare method that manage containers and unique pointer
         template <typename T> static
-        bool areEquivalent(T const& lhs, T const& rhs)
+        bool equal(T const& lhs, T const& rhs)
         {
             if constexpr(is_specialization<T, std::vector>::value ||
                          is_specialization<T, std::map>::value)
@@ -246,24 +248,74 @@ namespace Model
                 {
                     return false;
                 }
-                return equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), [](auto const& slhs, auto const& srhs)
+                return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), [](auto const& slhs, auto const& srhs)
                 {
-                    return areEquivalent(slhs, srhs);
+                    return equal(slhs, srhs);
                 });
             }
             else if constexpr(is_specialization<T, std::unique_ptr>::value)
             {
-                return lhs != nullptr && rhs != nullptr && areEquivalent(*lhs.get(), *rhs.get());
+                return lhs != nullptr && rhs != nullptr && equal(*lhs.get(), *rhs.get());
             }
             else
             {
                 return lhs == rhs;
             }
         }
+
+        
+        // This is a specific assignement method that manage containers and unique pointer
+        template <typename T> static
+        void exchange(T& lhs, T& rhs, NotificationType const notification)
+        {
+            if constexpr(is_specialization<T, std::vector>::value)
+            {
+                lhs.resize(rhs.size());
+                for(size_t i = 0; i < lhs.size(); ++i)
+                {
+                    exchange(lhs[i], rhs[i], notification);
+                }
+            }
+            else if constexpr(is_specialization<T, std::vector>::value)
+            {
+                std::erase_if(lhs, [&](auto const& pair)
+                {
+                    return rhs.count(pair.first) == 0;
+                });
+                
+                for(auto const& pair : rhs)
+                {
+                    exchange(lhs[pair.first], pair.second, notification);
+                }
+            }
+            else if constexpr(is_specialization<T, std::unique_ptr>::value)
+            {
+                if((lhs == nullptr && rhs != nullptr) || (lhs != nullptr && rhs == nullptr))
+                {
+                    std::swap(lhs, rhs);
+                }
+ 
+                if(lhs != nullptr && rhs != nullptr)
+                {
+                    exchange(*lhs.get(), *rhs.get(), notification);
+                }
+            }
+            else if constexpr(is_specialization<T, Accessor>::value)
+            {
+                auto copy = lhs.fromModel();
+                lhs.fromModel(rhs.getModel(), notification);
+                rhs.fromModel(copy, notification);
+            }
+            else
+            {
+                std::swap(lhs, rhs);
+            }
+        }
         
         container_type mData;
         Notifier<Listener> mListeners;
         
+        template<class parent_t_, class container_t_> friend class Accessor;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };
 }

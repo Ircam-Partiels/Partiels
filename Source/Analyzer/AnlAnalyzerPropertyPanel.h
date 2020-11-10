@@ -11,8 +11,6 @@ namespace Analyzer
     : public juce::Component
     {
     public:
-        using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
         
         PropertyPanel(Accessor& accessor);
         ~PropertyPanel() override;

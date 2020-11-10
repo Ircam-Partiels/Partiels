@@ -5,20 +5,27 @@ ANALYSE_FILE_BEGIN
 Document::Model::Model(Model const& other)
 : file(other.file)
 , isLooping(other.isLooping)
-//, zoomStateTime(other.zoomStateTime)
+//, zoomStateTime(other.zoomStateTime.mData)
 {
     analyzers.resize(other.analyzers.size());
     std::transform(other.analyzers.cbegin(), other.analyzers.cend(), analyzers.begin(), [](auto const& analyzer)
     {
         anlStrongAssert(analyzer != nullptr);
-        return analyzer != nullptr ? std::make_unique<Analyzer::Model>(*analyzer.get()) : std::make_unique<Analyzer::Model>();
+        auto newAnalyzer = std::make_unique<Analyzer::Accessor>();
+        if(newAnalyzer)
+        {
+            newAnalyzer->fromModel(analyzer->getModel(), NotificationType::synchronous);
+        }
+        return newAnalyzer;
     });
+    
+    
 }
 
 Document::Model::Model(Model&& other)
 : file(std::move(other.file))
 , isLooping(std::move(other.isLooping))
-//, zoomStateTime(std::move(other.zoomStateTime))
+//, zoomStateTime(std::move(other.zoomStateTime.mData))
 , analyzers(std::move(other.analyzers))
 {
     
@@ -30,7 +37,7 @@ bool Document::Model::operator==(Model const& other) const
     isLooping == other.isLooping &&
     std::equal(analyzers.cbegin(), analyzers.cend(), other.analyzers.cbegin(), [](auto const& lhs, auto const& rhs)
     {
-        return lhs != nullptr && rhs != nullptr && *(lhs.get()) == *(rhs.get());
+        return lhs != nullptr && rhs != nullptr && lhs->isEquivalentTo(rhs->getModel());
     });
 }
 
@@ -54,26 +61,22 @@ Document::Model Document::Model::fromXml(juce::XmlElement const& xml, Model defa
     defaultModel.file = Tools::StringParser::fromXml(xml, "file", defaultModel.file);
     defaultModel.isLooping = xml.getBoolAttribute("isLooping", defaultModel.isLooping);
     defaultModel.gain = xml.getDoubleAttribute("gain", defaultModel.gain);
-    auto const childs = Tools::XmlUtils::getChilds(xml, "Analyzer", "Anl::Analyzer::Model");
+    auto const childs = Tools::XmlUtils::getChilds(xml, "analyzers", "analyzers");
     auto& analyzers = defaultModel.analyzers;
     analyzers.resize(childs.size());
     for(size_t i = 0; i < analyzers.size(); ++i)
     {
         if(analyzers[i] == nullptr)
         {
-            analyzers[i] = std::make_unique<Analyzer::Model>(Analyzer::Model::fromXml(childs[i]));
+            analyzers[i] = std::make_unique<Analyzer::Accessor>();
         }
-        else
-        {
-            *(analyzers[i].get()) = Analyzer::Model::fromXml(childs[i]);
-        }
+        analyzers[i]->fromXml(childs[i], "analyzers", NotificationType::synchronous);
     }
     auto* child = xml.getChildByName("Zoom::State::Time");
     anlWeakAssert(child != nullptr);
     if(child != nullptr)
     {
-        child->setTagName("Zoom::State::Model");
-        //defaultModel.zoomStateTime = Zoom::State::Model::fromXml(*child, defaultModel.zoomStateTime);
+        defaultModel.zoomStateTime.fromXml(*child, "Zoom::State::Time", NotificationType::synchronous);
     }
     return defaultModel;
 }
@@ -89,14 +92,11 @@ std::unique_ptr<juce::XmlElement> Document::Model::toXml() const
     xml->setAttribute("file", Tools::StringParser::toString(file));
     xml->setAttribute("isLooping", isLooping);
     xml->setAttribute("gain", gain);
-    Tools::XmlUtils::addChilds(*xml, analyzers, "Analyzer");
-//    auto child = zoomStateTime.toXml();
-//    anlStrongAssert(child != nullptr);
-//    if(child != nullptr)
-//    {
-//        child->setTagName("Zoom::State::Time");
-//        xml->addChildElement(child.release());
-//    }
+    for(auto const& child : analyzers)
+    {
+        xml->addChildElement(child->toXml("analyzers").release());
+    }
+    xml->addChildElement(zoomStateTime.toXml("Zoom::State::Time").release());
     return xml;
 }
 
@@ -111,7 +111,7 @@ void Document::Accessor::fromModel(Model const& model, NotificationType const no
     compareAndSet(attributes, Attribute::isPlaybackStarted, mModel.isPlaybackStarted, model.isPlaybackStarted);
     compareAndSet(attributes, Attribute::playheadPosition, mModel.playheadPosition, model.playheadPosition);
     
-    auto data = compareAndSet(attributes, Attribute::analyzers, mAnalyzerAccessors, mModel.analyzers, model.analyzers, notification);
+    //auto data = compareAndSet(attributes, Attribute::analyzers, mAnalyzerAccessors, mModel.analyzers, model.analyzers, notification);
     notifyListener(attributes, notification);
     mModel.zoomStateTime.fromModel(model.zoomStateTime.getModel(), notification);
     JUCE_COMPILER_WARNING("fix asynchronous support of data deletion")
@@ -119,7 +119,7 @@ void Document::Accessor::fromModel(Model const& model, NotificationType const no
 
 Analyzer::Accessor& Document::Accessor::getAnalyzerAccessor(size_t index)
 {
-    return *mAnalyzerAccessors[index].get();
+    return *mModel.analyzers[index].get();
 }
 
 Zoom::State::Accessor& Document::Accessor::getZoomStateTimeAccessor()

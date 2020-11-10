@@ -9,9 +9,6 @@ namespace Analyzer
     class PluginInstance
     {
     public:
-        using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
-        
         PluginInstance(Accessor& accessor);
         ~PluginInstance();
 

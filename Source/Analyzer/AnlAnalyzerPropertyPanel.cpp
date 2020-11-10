@@ -15,12 +15,9 @@ Analyzer::PropertyPanel::Property::Property(juce::String const& text, juce::Stri
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == Attribute::key)
-        {
-            
-        }
+        
     };
     
     mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)

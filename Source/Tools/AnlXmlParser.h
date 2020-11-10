@@ -56,11 +56,17 @@ namespace XmlParser
                 }
             }
         }
-        else if constexpr (is_specialization<T, std::unique_ptr>::value)
+        else if constexpr(is_specialization<T, std::unique_ptr>::value)
         {
             if(value != nullptr)
             {
-                toXml(xml, attributeName, *value.get());
+                auto child = std::make_unique<juce::XmlElement>(attributeName);
+                anlWeakAssert(child != nullptr);
+                if(child != nullptr)
+                {
+                    toXml(*child, attributeName, *value.get());
+                    xml.addChildElement(child.release());
+                }
             }
         }
         else
@@ -98,7 +104,7 @@ namespace XmlParser
         else if constexpr(std::is_same<T, float>::value)
         {
             anlWeakAssert(xml.hasAttribute(attributeName));
-            return xml.getDoubleAttribute(attributeName, static_cast<double>(defaultValue));
+            return static_cast<float>(xml.getDoubleAttribute(attributeName, static_cast<double>(defaultValue)));
         }
         else if constexpr(std::is_enum<T>::value)
         {
@@ -134,9 +140,14 @@ namespace XmlParser
             }
             return result;
         }
-        else if constexpr (is_specialization<T, std::unique_ptr>::value)
+        else if constexpr(is_specialization<T, std::unique_ptr>::value)
         {
-            JUCE_COMPILER_WARNING("to do");
+            auto* child = xml.getChildByName(attributeName);
+            if(child != nullptr)
+            {
+                return std::make_unique<T>(fromXml(*child, "attributeName", *defaultValue.get()));
+            }
+            return std::make_unique<T>(*defaultValue.get());
         }
         else
         {

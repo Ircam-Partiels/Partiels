@@ -35,11 +35,16 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         dialogWindow->runModalLoop();
     };
     
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == Attribute::name)
+        switch(attribute)
         {
-            mNameLabel.setText(acsr.getModel().name, juce::NotificationType::dontSendNotification);
+            case AttrType::name:
+                mNameLabel.setText(acsr.getValue<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                break;
+                
+            default:
+                break;
         }
     };
     
@@ -48,7 +53,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         if(signal == Signal::pluginInstanceChanged)
         {
             auto instance = acsr.getInstance();
-            if(instance != nullptr && mAccessor.getModel().name.isEmpty())
+            if(instance != nullptr && mAccessor.getValue<AttrType::name>().isEmpty())
             {
 
             }

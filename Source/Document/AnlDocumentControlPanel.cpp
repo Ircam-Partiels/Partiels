@@ -14,13 +14,13 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             dialogWindow->exitModalState(0);
         }
         
-        auto analyzerModel = std::make_unique<Analyzer::Model>();
-        anlWeakAssert(analyzerModel != nullptr);
-        if(analyzerModel != nullptr)
+        auto analyzer = std::make_unique<Analyzer::Accessor>();
+        anlWeakAssert(analyzer != nullptr);
+        if(analyzer != nullptr)
         {
-            analyzerModel->key = key;
+            analyzer->setValue<Analyzer::AttrType::key>(key);
             auto copy = mAccessor.getModel();
-            copy.analyzers.push_back(std::move(analyzerModel));
+            copy.analyzers.push_back(std::move(analyzer));
             mAccessor.fromModel(copy, NotificationType::synchronous);
         }
     };

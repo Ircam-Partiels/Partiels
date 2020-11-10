@@ -9,14 +9,14 @@ ANALYSE_FILE_BEGIN
 Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == Attribute::key)
+        if(attribute == AttrType::key)
         {
             using namespace Vamp;
             using namespace Vamp::HostExt;
             
-            auto const pluginKey = acsr.getModel().key;
+            auto const pluginKey = acsr.getValue<AttrType::key>();
             if(pluginKey.isEmpty())
             {
                 mAccessor.setInstance({});
@@ -47,13 +47,13 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
             }
             mAccessor.setInstance(pluginInstance);
             mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
-            
-            if(mAccessor.getModel().name.isEmpty())
-            {
-                auto copy = mAccessor.getModel();
-                copy.name = pluginInstance->getName();
-                mAccessor.fromModel(copy, NotificationType::asynchronous);
-            }
+            JUCE_COMPILER_WARNING("todo");
+//            if(mAccessor.getModel().name.isEmpty())
+//            {
+//                auto copy = mAccessor.getModel();
+//                copy.name = pluginInstance->getName();
+//                mAccessor.fromModel(copy, NotificationType::asynchronous);
+//            }
         }
     };
     

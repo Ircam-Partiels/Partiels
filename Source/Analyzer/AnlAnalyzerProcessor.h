@@ -9,8 +9,6 @@ namespace Analyzer
     class Processor
     {
     public:
-        using Attribute = Model::Attribute;
-        
         Processor(Accessor& accessor);
         ~Processor();
         

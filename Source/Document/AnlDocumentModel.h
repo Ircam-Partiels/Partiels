@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Tools/AnlModelAccessor.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
 #include "../Zoom/AnlZoomStateModel.h"
 #include "../Tools/AnlBroadcaster.h"
@@ -42,7 +43,7 @@ namespace Document
         bool isPlaybackStarted = false; //! If the playback is started (unsaved/not compared)
         double playheadPosition = 0.0; // The position of the playhead (unsaved/not compared)
         Zoom::State::Accessor zoomStateTime {{{Zoom::State::range_type{0.0, 60.0}}, {0.001}, {Zoom::State::range_type{0.0, 60.0}}}};  // The zoom state of the time (saved/not compared)
-        std::vector<std::unique_ptr<Analyzer::Model>> analyzers; //!< The analyzers of the document (saved/compared)
+        std::vector<std::unique_ptr<Analyzer::Accessor>> analyzers; //!< The analyzers of the document (saved/compared)
         
         std::unique_ptr<juce::XmlElement> toXml() const;
         static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
@@ -61,8 +62,6 @@ namespace Document
         
         Analyzer::Accessor& getAnalyzerAccessor(size_t index);
         Zoom::State::Accessor& getZoomStateTimeAccessor();
-    private:
-        std::vector<std::unique_ptr<Analyzer::Accessor>> mAnalyzerAccessors;
     };
 }
 

@@ -13,13 +13,13 @@ public:
     Impl(Accessor& accessor)
     : mAccessor(accessor)
     {
-        onChanged = [&](Accessor const& acsr, Attribute attr)
+        onChanged = [&](Accessor const& acsr, AttrType attr)
         {
             switch (attr)
             {
-                case Attribute::key:
+                case AttrType::key:
                 {
-                    auto const pluginKey = acsr.getModel().key;
+                    auto const pluginKey = acsr.getValue<AttrType::key>();
                     if(pluginKey.isEmpty())
                     {
                         mPluginManager.setInstance({nullptr});
@@ -27,22 +27,13 @@ public:
                     }
                 }
                     break;
-                case Attribute::parameters:
+                case AttrType::parameters:
                     std::cout << "parameters: ";
-                    for(auto const& param : acsr.getModel().parameters)
+                    for(auto const& param : acsr.getValue<AttrType::parameters>())
                     {
                         std::cout << "[" << param.first << " " << param.second << "] ";
                     }
                     std::cout << "\n";
-                    break;
-                case Attribute::programName:
-                    std::cout << "program: " << acsr.getModel().programName << "\n";
-                    break;
-                case Attribute::resultFile:
-                    std::cout << "result file: " << acsr.getModel().resultFile.getFullPathName() << "\n";
-                    break;
-                case Attribute::projectFile:
-                    std::cout << "project file: " << acsr.getModel().projectFile.getFullPathName() << "\n";
                     break;
             }
         };
@@ -62,7 +53,7 @@ public:
         using AlertIconType = juce::AlertWindow::AlertIconType;
         auto const errorMessage = juce::translate("Plugin cannot be loaded!");
         
-        auto const pluginKey = mAccessor.getModel().key;
+        auto const pluginKey = mAccessor.getValue<AttrType::key>();
         auto* pluginLoader = PluginLoader::getInstance();
         anlWeakAssert(pluginLoader != nullptr);
         if(pluginLoader == nullptr)
