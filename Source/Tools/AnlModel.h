@@ -30,6 +30,11 @@ namespace Model
                 });
                 return value;
             }
+            else if constexpr(std::is_enum<T>::value)
+            {
+                using underlying_type = typename std::underlying_type<T>::type;
+                return static_cast<T>(fromString<underlying_type>(string));
+            }
             else
             {
                 T value;
@@ -55,6 +60,11 @@ namespace Model
                     stringArray.add(toString(subvalue));
                 }
                 return stringArray.joinIntoString("\n");
+            }
+            else if constexpr(std::is_enum<T>::value)
+            {
+                using underlying_type = typename std::underlying_type<T>::type;
+                return toString(static_cast<underlying_type>(value));
             }
             else
             {
@@ -307,6 +317,7 @@ namespace Model
             template<typename... Ts, typename F> static void for_each(std::tuple<Ts...>& t, F f) {for_each(t, f, gen_seq<sizeof...(Ts)>());}
         };
                 
+        // This is a for_each mechanism for std::tuple
         template <typename T> static
         bool areEquivalent(T const& lhs, T const& rhs)
         {

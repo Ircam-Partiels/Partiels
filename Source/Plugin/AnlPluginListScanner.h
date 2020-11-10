@@ -10,7 +10,7 @@ namespace PluginList
     class Scanner
     {
     public:
-        using Description = PluginList::Model::Description;
+        using Description = PluginList::Description;
         
         static std::set<std::string> getPluginKeys();
         static std::map<juce::String, Description> getPluginDescriptions(double defaultSampleRate = 48000.0);

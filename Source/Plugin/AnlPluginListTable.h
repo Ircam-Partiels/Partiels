@@ -13,9 +13,6 @@ namespace PluginList
     , private juce::TableListBoxModel
     {
     public:
-        using Attribute = PluginList::Model::Attribute;
-        using Description = PluginList::Model::Description;
-        using ColumnType = PluginList::Model::ColumnType;
         
         Table(Accessor& accessor);
         ~Table() override;

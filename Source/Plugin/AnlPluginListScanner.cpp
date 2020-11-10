@@ -17,7 +17,7 @@ std::set<std::string> PluginList::Scanner::getPluginKeys()
     return {keys.cbegin(), keys.cend()};
 }
 
-std::map<juce::String, PluginList::Model::Description> PluginList::Scanner::getPluginDescriptions(double defaultSampleRate)
+std::map<juce::String, PluginList::Description> PluginList::Scanner::getPluginDescriptions(double defaultSampleRate)
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;

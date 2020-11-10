@@ -51,10 +51,9 @@ namespace Application
         
         Model mModel;
         Document::Model mDocumentModel;
-        PluginList::Model mPluginListModel;
         
         Accessor mAccessor {mModel};
-        PluginList::Accessor mPluginListAccessor {mPluginListModel};
+        PluginList::Accessor mPluginListAccessor;
         Document::Accessor mDocumentAccessor {mDocumentModel};
         
         Properties mProperties;

@@ -9,7 +9,7 @@ PluginList::Table::Table(Accessor& accessor)
 , mClearButton(juce::translate("Clear"))
 , mScanButton(juce::translate("Scan"))
 {
-    mListener.onChanged = [this](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         updateContent();
@@ -33,9 +33,7 @@ PluginList::Table::Table(Accessor& accessor)
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
     {
-        auto copy = mAccessor.getModel();
-        copy.descriptions.clear();
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        mAccessor.setValue<AttrType::descriptions>(description_map_type{}, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mScanButton);
@@ -56,12 +54,7 @@ PluginList::Table::Table(Accessor& accessor)
             return {};
         };
         
-        auto copy = mAccessor.getModel();
-        for(auto const& description : getNewList())
-        {
-            copy.descriptions[description.first] = description.second;
-        }
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        mAccessor.setValue<AttrType::descriptions>(getNewList(), NotificationType::synchronous);
     };
     
     addAndMakeVisible(mSearchField);
@@ -113,18 +106,18 @@ void PluginList::Table::resized()
 
 void PluginList::Table::updateContent()
 {
-    auto const& reference = mAccessor.getModel();
-    mFilteredList.resize(reference.descriptions.size());
+    auto const& descriptions = mAccessor.getValue<AttrType::descriptions>();
+    mFilteredList.resize(descriptions.size());
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
-    auto it = std::copy_if(reference.descriptions.cbegin(), reference.descriptions.cend(), mFilteredList.begin(), [&](auto const& pair)
+    auto it = std::copy_if(descriptions.cbegin(), descriptions.cend(), mFilteredList.begin(), [&](auto const& pair)
     {
         auto const filterName = (pair.second.name + pair.second.maker).removeCharacters(" ");
         return searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern);
     });
     mFilteredList.resize(static_cast<size_t>(std::distance(mFilteredList.begin(), it)));
         
-    auto const isForwards = reference.sortIsFowards;
-    switch (reference.sortColumn)
+    auto const isForwards = mAccessor.getValue<AttrType::sortIsFowards>();
+    switch (mAccessor.getValue<AttrType::sortColumn>())
     {
         case ColumnType::Name:
         {
@@ -212,7 +205,7 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
     auto const selectedRows = mPluginTable.getSelectedRows();
     mPluginTable.deselectAllRows();
     
-    auto copy = mAccessor.getModel();
+    auto description = mAccessor.getValue<AttrType::descriptions>();
     auto const numSelectedRows = selectedRows.size();
     for (int i = 0; i < numSelectedRows; ++i)
     {
@@ -220,10 +213,10 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
         if(index < static_cast<int>(mFilteredList.size()))
         {
             auto const entry = mFilteredList[static_cast<size_t>(index)].first;
-            copy.descriptions.erase(entry);
+            description.erase(entry);
         }
     }
-    mAccessor.fromModel(copy, NotificationType::synchronous);
+    mAccessor.setValue<AttrType::descriptions>(description, NotificationType::synchronous);
 }
 
 void PluginList::Table::returnKeyPressed(int lastRowSelected)
@@ -242,10 +235,8 @@ void PluginList::Table::cellDoubleClicked(int rowNumber, int columnId, juce::Mou
 
 void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
 {
-    auto copy = mAccessor.getModel();
-    copy.sortColumn = static_cast<ColumnType>(newSortColumnId);
-    copy.sortIsFowards = isForwards;
-    mAccessor.fromModel(copy, NotificationType::synchronous);
+    mAccessor.setValue<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
+    mAccessor.setValue<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

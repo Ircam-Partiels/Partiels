@@ -11,7 +11,7 @@ Application::Properties::Properties()
         saveToFile(PropertyType::Application);
     };
     
-    mPluginListListener.onChanged = [this](PluginList::Accessor const& acsr, PluginList::Model::Attribute attribute)
+    mPluginListListener.onChanged = [this](PluginList::Accessor const& acsr, PluginList::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         saveToFile(PropertyType::PluginList);
@@ -85,7 +85,7 @@ void Application::Properties::saveToFile(PropertyType type)
             break;
         case PropertyType::PluginList:
         {
-            writeTo(Instance::get().getPluginListAccessor().getModel().toXml(), "pluginlist.settings");
+            writeTo(Instance::get().getPluginListAccessor().toXml("PluginList"), "pluginlist.settings");
         }
             break;
         case PropertyType::AudioSetup:
@@ -121,7 +121,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             if(xml != nullptr)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
-                acsr.fromXml(*xml, acsr.getModel(), NotificationType::synchronous);
+                acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
             }
         }
             break;
