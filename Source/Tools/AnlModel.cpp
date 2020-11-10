@@ -2,43 +2,30 @@
 
 ANALYSE_FILE_BEGIN
 
-template <> unsigned long Anl::Model::StringParser::fromString(juce::String const& string)
+struct DummyAttr
 {
-    return std::stoul(string.toStdString());
-}
+    bool operator==(DummyAttr const&) const { return true; }
+    bool operator!=(DummyAttr const&) const { return false; }
+};
 
-template <> juce::String Anl::Model::StringParser::toString(unsigned long const& value)
+namespace XmlParser
 {
-    return juce::String(std::to_string(value));
-}
-
-template <> juce::File Anl::Model::StringParser::fromString<juce::File>(juce::String const& string)
-{
-    return juce::File(string);
-}
-
-template <> juce::String Anl::Model::StringParser::toString<juce::File>(juce::File const& value)
-{
-    return value.getFullPathName();
-}
-
-template <> juce::Range<double> Anl::Model::StringParser::fromString<juce::Range<double>>(juce::String const& string)
-{
-    juce::StringArray stringArray;
-    stringArray.addLines(string);
-    anlStrongAssert(stringArray.size() == 2);
-    auto const start = stringArray.size() >= 1 ? stringArray.getReference(0).getDoubleValue() : 0.0;
-    auto const end = stringArray.size() >= 2 ? stringArray.getReference(1).getDoubleValue() : 0.0;
-    return {start, end};
-}
-
-template <> juce::String Anl::Model::StringParser::toString<juce::Range<double>>(juce::Range<double> const& value)
-{
-    juce::StringArray stringArray;
-    stringArray.ensureStorageAllocated(2);
-    stringArray.add(juce::String(value.getStart()));
-    stringArray.add(juce::String(value.getEnd()));
-    return stringArray.joinIntoString("\n");
+    template<>
+    void toXml<DummyAttr>(juce::XmlElement& xml, juce::Identifier const& attributeName, DummyAttr const& value)
+    {
+        juce::ignoreUnused(value);
+        xml.setAttribute(attributeName, "DummyAttr");
+    }
+    
+    template<>
+    auto fromXml<DummyAttr>(juce::XmlElement const& xml, juce::Identifier const& attributeName, DummyAttr const& value)
+    -> DummyAttr
+    {
+        juce::ignoreUnused(xml, attributeName, value);
+        anlWeakAssert(xml.hasAttribute(attributeName));
+        anlWeakAssert(xml.getStringAttribute(attributeName) == "DummyAttr");
+        return DummyAttr();
+    }
 }
 
 class ModelUnitTest
@@ -52,16 +39,6 @@ public:
     
     void runTest() override
     {
-        struct DummyStringifier
-        {
-            DummyStringifier() = default;
-            explicit DummyStringifier(juce::String const&) {}
-            
-            explicit operator juce::String() const { return ""; }
-            bool operator==(DummyStringifier const&) const { return true; }
-            bool operator!=(DummyStringifier const&) const { return false; }
-        };
-        
         using AttrFlag = Model::AttrFlag;
         
         // Declare the name (type) of the attributes of the data model
@@ -84,7 +61,7 @@ public:
         , Model::Attr<AttrType::attr3, std::vector<int>, AttrFlag::ignored>
         , Model::Attr<AttrType::attr4, std::string, AttrFlag::notifying>
         , Model::Attr<AttrType::attr5, std::vector<double>, AttrFlag::saveable | AttrFlag::comparable>
-        , Model::Attr<AttrType::attr6, DummyStringifier, AttrFlag::all>
+        , Model::Attr<AttrType::attr6, DummyAttr, AttrFlag::all>
         >;
         
         // Declare the data model accessor

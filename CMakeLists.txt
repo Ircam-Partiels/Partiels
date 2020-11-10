@@ -32,6 +32,8 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlNotifier.h
     ${SOURCES_DIRECTORY}/Tools/AnlBroadcaster.h
     ${SOURCES_DIRECTORY}/Tools/AnlAtomicManager.h
+    ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.cpp
+    ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.h
     ${SOURCES_DIRECTORY}/Tools/AnlModel.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlModel.h
     ${SOURCES_DIRECTORY}/Tools/AnlModelAccessor.h

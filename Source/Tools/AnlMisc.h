@@ -49,18 +49,3 @@ ANALYSE_FILE_END
 // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 template<typename T, template<typename...> class Ref> struct is_specialization : std::false_type {};
 template<template<typename...> class Ref, typename... Args> struct is_specialization<Ref<Args...>, Ref>: std::true_type {};
-
-// This method can be used to test if a class/struct is a container
-// https://stackoverflow.com/questions/12042824/how-to-write-a-type-trait-is-container-or-is-vector
-template<typename T, typename _ = void> struct is_container : std::false_type {};
-template<typename... Ts> struct is_container_helper {};
-template<typename T>
-struct is_container<T, std::conditional_t<
-false, is_container_helper
-< typename T::value_type, typename T::allocator_type, typename T::iterator, typename T::const_iterator
-, decltype(std::declval<T>().begin()), decltype(std::declval<T>().end()), decltype(std::declval<T>().cbegin()), decltype(std::declval<T>().cend())
->,void>> : public std::true_type {};
-
-template <class U, class T>
-struct is_explicitly_convertible { enum {value = std::is_constructible<T, U>::value && !std::is_convertible<U, T>::value}; };
-

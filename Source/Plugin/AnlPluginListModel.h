@@ -16,8 +16,6 @@ namespace PluginList
         juce::String details {}; //!< Further information about the plugin
         
         Description() = default;
-        explicit Description(juce::String const&);
-        explicit operator juce::String() const;
         bool operator==(Description const&) const;
         bool operator!=(Description const&) const;
     };
@@ -55,6 +53,12 @@ namespace PluginList
         using Model::Accessor<Accessor, Container>::Accessor;
         using enum_type = Model::Accessor<Accessor, Container>::enum_type;
     };
+}
+
+namespace XmlParser
+{
+    template<>
+    void toXml<PluginList::description_map_type::value_type>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::description_map_type::value_type const& value);
 }
 
 ANALYSE_FILE_END

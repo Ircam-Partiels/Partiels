@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnlXmlParser.h"
 #include "AnlNotifier.h"
 #include "AnlBroadcaster.h"
 #include "../../magic_enum/include/magic_enum.hpp"
@@ -8,88 +9,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Model
 {
-    class StringParser
-    {
-    public:
-        template <typename T> static
-        T fromString(juce::String const& string)
-        {
-            if constexpr (std::is_constructible<T, juce::String>::value)
-            {
-                return T(string);
-            }
-            else if constexpr(is_container<T>::value)
-            {
-                T value;
-                juce::StringArray stringArray;
-                stringArray.addLines(string);
-                value.resize(static_cast<size_t>(stringArray.size()));
-                std::transform(stringArray.begin(), stringArray.end(), value.begin(), [](auto const line)
-                {
-                    return fromString<typename T::value_type>(line);
-                });
-                return value;
-            }
-            else if constexpr(std::is_enum<T>::value)
-            {
-                using underlying_type = typename std::underlying_type<T>::type;
-                return static_cast<T>(fromString<underlying_type>(string));
-            }
-            else
-            {
-                T value;
-                std::stringstream stream(string.toRawUTF8());
-                stream >> value;
-                return value;
-            }
-        }
-        
-        template <typename T> static
-        juce::String toString(T const& value)
-        {
-            if constexpr (is_explicitly_convertible<T, juce::String>::value)
-            {
-                return static_cast<juce::String>(value);
-            }
-            else if constexpr(is_container<T>::value)
-            {
-                juce::StringArray stringArray;
-                stringArray.ensureStorageAllocated(static_cast<int>(value.size()));
-                for(auto const& subvalue : value)
-                {
-                    stringArray.add(toString(subvalue));
-                }
-                return stringArray.joinIntoString("\n");
-            }
-            else if constexpr(std::is_enum<T>::value)
-            {
-                using underlying_type = typename std::underlying_type<T>::type;
-                return toString(static_cast<underlying_type>(value));
-            }
-            else
-            {
-                std::ostringstream stream;
-                stream << value;
-                return juce::String(stream.str());
-            }
-        }
-        
-        template <typename T>
-        static T fromXml(juce::XmlElement const& xml, juce::StringRef const& name, T const& defaultValue)
-        {
-            return fromString<T>(xml.getStringAttribute(name, toString<T>(defaultValue)));
-        }
-        
-        template <> unsigned long fromString(juce::String const& string);
-        template <> juce::String toString(unsigned long const& value);
-        
-        template <> juce::File fromString(juce::String const& string);
-        template <> juce::String toString(juce::File const& value);
-        
-        template <> juce::Range<double> fromString(juce::String const& string);
-        template <> juce::String toString(juce::Range<double> const& value);
-    };
-    
     enum AttrFlag
     {
         ignored = 0 << 0,
@@ -202,8 +121,8 @@ namespace Model
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    xml->setAttribute(enumname.c_str(), StringParser::toString(d.value));
+                    static auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                    XmlParser::toXml(*xml.get(), enumname.c_str(), d.value);
                 }
             });
             return xml;
@@ -227,8 +146,7 @@ namespace Model
                 {
                     auto constexpr attr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    anlWeakAssert(xml.hasAttribute(enumname));
-                    setValue<attr_type>(StringParser::fromXml(xml, enumname, d.value), notification);
+                    setValue<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
                 }
             });
         }
@@ -321,7 +239,8 @@ namespace Model
         template <typename T> static
         bool areEquivalent(T const& lhs, T const& rhs)
         {
-            if constexpr(is_container<T>::value)
+            if constexpr(is_specialization<T, std::vector>::value ||
+                         is_specialization<T, std::map>::value)
             {
                 if(lhs.size() != rhs.size())
                 {

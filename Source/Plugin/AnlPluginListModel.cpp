@@ -13,16 +13,6 @@ bool PluginList::Description::operator!=(Description const& rhd) const
     return !(*this == rhd);
 }
 
-PluginList::Description::Description(juce::String const&)
-{
-    
-}
-
-PluginList::Description::operator juce::String() const
-{
-    return "";
-}
-
 //PluginList::Model PluginList::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
 //{
 //    anlWeakAssert(xml.hasTagName("Anl::PluginList::Model"));
@@ -105,5 +95,31 @@ PluginList::Description::operator juce::String() const
 //    
 //    return xml;
 //}
+
+template<>
+void XmlParser::toXml<PluginList::description_map_type::value_type>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::description_map_type::value_type const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        child->setAttribute("key", value.first);
+        child->setAttribute("name", value.second.name);
+        child->setAttribute("maker", value.second.maker);
+        child->setAttribute("api", static_cast<int>(value.second.api));
+        child->setAttribute("details", value.second.details);
+        for(auto const& category : value.second.categories)
+        {
+            auto subchild = std::make_unique<juce::XmlElement>("Category");
+            anlWeakAssert(subchild != nullptr);
+            if(subchild != nullptr)
+            {
+                subchild->setAttribute("category", category);
+                child->addChildElement(subchild.release());
+            }
+        }
+        xml.addChildElement(child.release());
+    }
+}
 
 ANALYSE_FILE_END
