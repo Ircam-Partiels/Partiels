@@ -49,7 +49,7 @@ public:
             e0, e1, e2
         };
         
-        beginTest("int double float enum");
+        beginTest("int double float String enum");
         {
             juce::XmlElement xml("Test");
             XmlParser::toXml(xml, "int", 1);

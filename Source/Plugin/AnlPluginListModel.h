@@ -15,12 +15,9 @@ namespace PluginList
         std::set<juce::String> categories {}; //!< The categories of the plugin
         juce::String details {}; //!< Further information about the plugin
         
-        Description() = default;
         bool operator==(Description const&) const;
         bool operator!=(Description const&) const;
     };
-    
-    using description_map_type = std::map<juce::String, Description>;
     
     using AttrFlag = Model::AttrFlag;
     
@@ -41,7 +38,7 @@ namespace PluginList
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::descriptions, description_map_type, AttrFlag::notifying>
+    < Model::Attr<AttrType::descriptions, std::map<juce::String, Description>, AttrFlag::all>
     , Model::Attr<AttrType::sortColumn, ColumnType, AttrFlag::all>
     , Model::Attr<AttrType::sortIsFowards, bool, AttrFlag::all>
     >;
@@ -58,7 +55,14 @@ namespace PluginList
 namespace XmlParser
 {
     template<>
-    void toXml<PluginList::description_map_type::value_type>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::description_map_type::value_type const& value);
+    void toXml<PluginList::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::Description const& value);
+}
+
+namespace XmlParser
+{
+    template<>
+    auto fromXml<PluginList::Description>(juce::XmlElement const& xml, juce::Identifier const& attributeName, PluginList::Description const& defaultValue)
+    -> PluginList::Description;
 }
 
 ANALYSE_FILE_END

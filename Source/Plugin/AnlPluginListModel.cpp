@@ -13,104 +13,20 @@ bool PluginList::Description::operator!=(Description const& rhd) const
     return !(*this == rhd);
 }
 
-//PluginList::Model PluginList::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
-//{
-//    anlWeakAssert(xml.hasTagName("Anl::PluginList::Model"));
-//    if(!xml.hasTagName("Anl::PluginList::Model"))
-//    {
-//        return {};
-//    }
-//    
-//    anlWeakAssert(xml.hasAttribute("sortColumn"));
-//    anlWeakAssert(xml.hasAttribute("sortIsFowards"));
-//    
-//    auto const childs = Tools::XmlUtils::getChilds(xml, "Description");
-//    for(auto const& child : childs)
-//    {
-//        anlWeakAssert(child.get().hasAttribute("key"));
-//        anlWeakAssert(child.get().hasAttribute("name"));
-//        anlWeakAssert(child.get().hasAttribute("maker"));
-//        anlWeakAssert(child.get().hasAttribute("api"));
-//        anlWeakAssert(child.get().hasAttribute("details"));
-//        auto const key = child.get().getStringAttribute("key");
-//        if(key.isNotEmpty())
-//        {
-//            auto& description = defaultModel.descriptions[key];
-//            description.name = child.get().getStringAttribute("name", description.name);
-//            description.maker = child.get().getStringAttribute("maker", description.maker);
-//            description.api = static_cast<unsigned int>(child.get().getIntAttribute("api", static_cast<int>(description.api)));
-//            description.details = child.get().getStringAttribute("details", description.details);
-//            
-//            auto const subchilds = Tools::XmlUtils::getChilds(child.get(), "Category");
-//            for(auto const& subchild : subchilds)
-//            {
-//                anlWeakAssert(subchild.get().hasAttribute("category"));
-//                if(subchild.get().hasAttribute("category"))
-//                {
-//                    description.categories.insert(subchild.get().getStringAttribute("category"));
-//                }
-//            }
-//        }
-//    }
-//    defaultModel.sortColumn = static_cast<ColumnType>(xml.getIntAttribute("sortColumn", static_cast<int>(defaultModel.sortColumn)));
-//    defaultModel.sortIsFowards = xml.getBoolAttribute("sortIsFowards", defaultModel.sortIsFowards);
-//    
-//    return defaultModel;
-//}
-//
-//std::unique_ptr<juce::XmlElement> PluginList::Model::toXml() const
-//{
-//    auto xml = std::make_unique<juce::XmlElement>("Anl::PluginList::Model");
-//    if(xml == nullptr)
-//    {
-//        return nullptr;
-//    }
-//
-//    for(auto const& description : descriptions)
-//    {
-//        auto child = std::make_unique<juce::XmlElement>("Description");
-//        anlWeakAssert(child != nullptr);
-//        if(child != nullptr)
-//        {
-//            child->setAttribute("key", description.first);
-//            child->setAttribute("name", description.second.name);
-//            child->setAttribute("maker", description.second.maker);
-//            child->setAttribute("api", static_cast<int>(description.second.api));
-//            child->setAttribute("details", description.second.details);
-//            for(auto const& category : description.second.categories)
-//            {
-//                auto subchild = std::make_unique<juce::XmlElement>("Category");
-//                anlWeakAssert(subchild != nullptr);
-//                if(subchild != nullptr)
-//                {
-//                    subchild->setAttribute("category", category);
-//                    child->addChildElement(subchild.release());
-//                }
-//            }
-//            xml->addChildElement(child.release());
-//        }
-//    }
-//    xml->setAttribute("sortColumn", static_cast<int>(sortColumn));
-//    xml->setAttribute("sortIsFowards", sortIsFowards);
-//    
-//    return xml;
-//}
-
 template<>
-void XmlParser::toXml<PluginList::description_map_type::value_type>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::description_map_type::value_type const& value)
+void XmlParser::toXml<PluginList::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::Description const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
     anlWeakAssert(child != nullptr);
     if(child != nullptr)
     {
-        child->setAttribute("key", value.first);
-        child->setAttribute("name", value.second.name);
-        child->setAttribute("maker", value.second.maker);
-        child->setAttribute("api", static_cast<int>(value.second.api));
-        child->setAttribute("details", value.second.details);
-        for(auto const& category : value.second.categories)
+        child->setAttribute("name", value.name);
+        child->setAttribute("maker", value.maker);
+        child->setAttribute("api", static_cast<int>(value.api));
+        child->setAttribute("details", value.details);
+        for(auto const& category : value.categories)
         {
-            auto subchild = std::make_unique<juce::XmlElement>("Category");
+            auto subchild = std::make_unique<juce::XmlElement>("category");
             anlWeakAssert(subchild != nullptr);
             if(subchild != nullptr)
             {
@@ -120,6 +36,36 @@ void XmlParser::toXml<PluginList::description_map_type::value_type>(juce::XmlEle
         }
         xml.addChildElement(child.release());
     }
+}
+
+template<>
+auto XmlParser::fromXml<PluginList::Description>(juce::XmlElement const& xml, juce::Identifier const& attributeName, PluginList::Description const& defaultValue)
+-> PluginList::Description
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    anlWeakAssert(child->hasAttribute("name"));
+    anlWeakAssert(child->hasAttribute("maker"));
+    anlWeakAssert(child->hasAttribute("api"));
+    anlWeakAssert(child->hasAttribute("details"));
+    PluginList::Description value;
+    value.name = child->getStringAttribute("name", defaultValue.name);
+    value.maker = child->getStringAttribute("maker", defaultValue.maker);
+    value.api = static_cast<unsigned int>(child->getIntAttribute("api", static_cast<int>(defaultValue.api)));
+    value.details = child->getStringAttribute("details", defaultValue.details);
+    for(auto* subchild = xml.getChildByName("category"); subchild != nullptr; subchild = subchild->getNextElementWithTagName("Category"))
+    {
+        anlWeakAssert(subchild->hasAttribute("category"));
+        if(subchild->hasAttribute("category"))
+        {
+            value.categories.insert(subchild->getStringAttribute("category"));
+        }
+    }
+    return value;
 }
 
 ANALYSE_FILE_END

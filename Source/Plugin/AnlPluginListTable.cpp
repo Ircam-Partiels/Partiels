@@ -33,7 +33,7 @@ PluginList::Table::Table(Accessor& accessor)
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
     {
-        mAccessor.setValue<AttrType::descriptions>(description_map_type{}, NotificationType::synchronous);
+        mAccessor.setValue<AttrType::descriptions>(std::map<juce::String, Description>{}, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mScanButton);
