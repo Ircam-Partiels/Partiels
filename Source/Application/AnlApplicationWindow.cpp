@@ -22,7 +22,7 @@ juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevel
         menu.addCommandItem(&commandManager, CommandIDs::Open);
         juce::PopupMenu recentFilesMenu;
         auto recentFileIndex = static_cast<int>(CommandIDs::OpenRecent);
-        auto const& recentFiles = Instance::get().getAccessor().getModel().recentlyOpenedFilesList;
+        auto const& recentFiles = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
         for(auto const& file : recentFiles)
         {
             auto const isActive = Instance::get().getDocumentFileBased().getFile() != file;
@@ -57,7 +57,7 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
     juce::ignoreUnused(topLevelMenuIndex);
     using CommandIDs = CommandTarget::CommandIDs;
     
-    auto const& recentFiles = Instance::get().getAccessor().getModel().recentlyOpenedFilesList;
+    auto const& recentFiles = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
     auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
     anlWeakAssert(fileIndex < recentFiles.size());
     if(fileIndex < recentFiles.size())
@@ -69,7 +69,7 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
-    if(!restoreWindowStateFromString(Instance::get().getAccessor().getModel().windowState))
+    if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getValue<AttrType::windowState>()))
     {
         centreWithSize(1024, 768);
     }
@@ -119,9 +119,7 @@ void Application::Window::moved()
 
 void Application::Window::handleAsyncUpdate()
 {
-    auto model = Instance::get().getAccessor().getModel();
-    model.windowState = getBounds().toString();
-    Instance::get().getAccessor().fromModel(model, NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().setValue<AttrType::windowState>(getBounds().toString(), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

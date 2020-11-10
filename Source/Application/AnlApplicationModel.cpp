@@ -2,71 +2,21 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Model Application::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)
+std::vector<juce::File> Application::Accessor::sanitize(std::vector<juce::File> const& files)
 {
-    anlWeakAssert(xml.hasTagName("Anl::Application::Model"));
-    if(!xml.hasTagName("Anl::Application::Model"))
+    std::vector<juce::File> copy = files;
+    copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
+    copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
     {
-        return {};
-    }
-    
-    anlWeakAssert(xml.hasAttribute("windowState"));
-    anlWeakAssert(xml.hasAttribute("recentlyOpenedFilesList"));
-    anlWeakAssert(xml.hasAttribute("currentDocumentFile"));
-    
-    auto santizeList = [&](std::vector<juce::File> const& files)
-    {
-        std::vector<juce::File> copy = files;
-        copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
-        copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
-        {
-            return !file.existsAsFile();
-        }), copy.end());
-        return copy;
-    };
-    
-    defaultModel.windowState = xml.getStringAttribute("windowState", defaultModel.windowState);
-    defaultModel.recentlyOpenedFilesList = Tools::StringParser::fromXml(xml, "recentlyOpenedFilesList", santizeList(defaultModel.recentlyOpenedFilesList));
-    defaultModel.currentDocumentFile = Tools::StringParser::fromXml(xml, "currentDocumentFile", defaultModel.currentDocumentFile);
-    
-    return defaultModel;
+        return !file.existsAsFile();
+    }), copy.end());
+    return copy;
 }
 
-std::unique_ptr<juce::XmlElement> Application::Model::toXml() const
+template <>
+void Application::Accessor::setValue<Application::AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification)
 {
-    auto xml = std::make_unique<juce::XmlElement>("Anl::Application::Model");
-    if(xml == nullptr)
-    {
-        return nullptr;
-    }
-    
-    xml->setAttribute("windowState", windowState);
-    xml->setAttribute("recentlyOpenedFilesList", Tools::StringParser::toString(recentlyOpenedFilesList));
-    xml->setAttribute("currentDocumentFile", Tools::StringParser::toString(currentDocumentFile));
-    
-    return xml;
-}
-
-void Application::Accessor::fromModel(Model const& model, NotificationType const notification)
-{
-    using Attribute = Model::Attribute;
-    std::set<Attribute> attributes;
-    
-    auto santizeList = [&](std::vector<juce::File> const& files)
-    {
-        std::vector<juce::File> copy = files;
-        copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
-        copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
-        {
-            return !file.existsAsFile();
-        }), copy.end());
-        return copy;
-    };
-    
-    compareAndSet(attributes, Attribute::windowState, mModel.windowState, model.windowState);
-    compareAndSet(attributes, Attribute::recentlyOpenedFilesList, mModel.recentlyOpenedFilesList, santizeList(model.recentlyOpenedFilesList));
-    compareAndSet(attributes, Attribute::currentDocumentFile, mModel.currentDocumentFile, model.currentDocumentFile);
-    notifyListener(attributes, notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
 }
 
 ANALYSE_FILE_END

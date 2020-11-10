@@ -12,8 +12,7 @@ namespace Application
     , private juce::ChangeListener
     {
     public:
-        using Attribute = Model::Attribute;
-        
+
         enum CommandIDs : int
         {
             Open = 0x200100,

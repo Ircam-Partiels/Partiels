@@ -1,37 +1,43 @@
 #pragma once
 
-#include "../Tools/AnlModelAccessor.h"
+#include "../Tools/AnlModel.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    struct Model
+    using AttrFlag = Model::AttrFlag;
+    
+    enum AttrType : size_t
     {
-        enum class Attribute
-        {
-            windowState,
-            recentlyOpenedFilesList,
-            currentDocumentFile
-        };
-        
-        juce::String windowState;
-        std::vector<juce::File> recentlyOpenedFilesList;
-        juce::File currentDocumentFile;
-        
-        std::unique_ptr<juce::XmlElement> toXml() const;
-        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
-        
-        JUCE_LEAK_DETECTOR(Model)
+        windowState,
+        recentlyOpenedFilesList,
+        currentDocumentFile
     };
     
+    using Container = Model::Container
+    < Model::Attr<AttrType::windowState, juce::String, AttrFlag::all>
+    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, AttrFlag::all>
+    , Model::Attr<AttrType::currentDocumentFile, juce::File, AttrFlag::all>
+    >;
+    
     class Accessor
-    : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
+    : public Model::Accessor<Accessor, Container>
     {
     public:
-        using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
-        ~Accessor() override = default;
-        void fromModel(Model const& model, NotificationType const notification) override;
+        using Model::Accessor<Accessor, Container>::Accessor;
+        using enum_type = Model::Accessor<Accessor, Container>::enum_type;
+        
+        template <enum_type type, typename value_v>
+        void setValue(value_v const& value, NotificationType notification)
+        {
+            Model::Accessor<Accessor, Container>::setValue<type, value_v>(value, notification);
+        }
+        
+        template <>
+        void setValue<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification);
+    private:
+        static std::vector<juce::File> sanitize(std::vector<juce::File> const& files);
     };
 }
 

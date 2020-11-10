@@ -34,7 +34,7 @@ namespace Application
         
         void openFile(juce::File const& file);
         
-        Accessor& getAccessor();
+        Accessor& getApplicationAccessor();
         PluginList::Accessor& getPluginListAccessor();
         Document::Accessor& getDocumentAccessor();
         Document::FileBased& getDocumentFileBased();
@@ -49,10 +49,9 @@ namespace Application
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;
         
-        Model mModel;
         Document::Model mDocumentModel;
         
-        Accessor mAccessor {mModel};
+        Accessor mApplicationAccessor;
         PluginList::Accessor mPluginListAccessor;
         Document::Accessor mDocumentAccessor {mDocumentModel};
         

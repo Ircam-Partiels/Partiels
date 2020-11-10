@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 Application::Properties::Properties()
 {
-    mApplicationListener.onChanged = [this](Accessor const& acsr, Model::Attribute attribute)
+    mApplicationListener.onChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         saveToFile(PropertyType::Application);
@@ -26,7 +26,7 @@ Application::Properties::Properties()
     loadFromFile(PropertyType::PluginList);
     loadFromFile(PropertyType::AudioSetup);
     
-    Instance::get().getAccessor().addListener(mApplicationListener, NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().addListener(mApplicationListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
     
@@ -39,7 +39,7 @@ Application::Properties::~Properties()
 {
     Instance::get().getAudioDeviceManager().removeChangeListener(this);
     Instance::get().getPluginListAccessor().removeListener(mPluginListListener);
-    Instance::get().getAccessor().removeListener(mApplicationListener);
+    Instance::get().getApplicationAccessor().removeListener(mApplicationListener);
 }
 
 void Application::Properties::changeListenerCallback(juce::ChangeBroadcaster* source)
@@ -80,7 +80,7 @@ void Application::Properties::saveToFile(PropertyType type)
     {
         case PropertyType::Application:
         {
-            writeTo(Instance::get().getAccessor().getModel().toXml(), "application.settings");
+            writeTo(Instance::get().getApplicationAccessor().toXml("AppSettings"), "application.settings");
         }
             break;
         case PropertyType::PluginList:
@@ -110,8 +110,8 @@ void Application::Properties::loadFromFile(PropertyType type)
             auto xml = juce::parseXML(getFile("application.settings"));
             if(xml != nullptr)
             {
-                auto& acsr = Instance::get().getAccessor();
-                acsr.fromXml(*xml, acsr.getModel(), NotificationType::synchronous);
+                auto& acsr = Instance::get().getApplicationAccessor();
+                acsr.fromXml(*xml, "AppSettings", NotificationType::synchronous);
             }
         }
             break;

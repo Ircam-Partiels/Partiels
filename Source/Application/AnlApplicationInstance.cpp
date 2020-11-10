@@ -40,7 +40,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         AnlDebug("Application", "Failed.");
         return;
     }
-    openFile(mModel.currentDocumentFile);
+    openFile(mApplicationAccessor.getValue<AttrType::currentDocumentFile>());
     AnlDebug("Application", "Ready.");
 }
 
@@ -100,9 +100,7 @@ void Application::Instance::openFile(juce::File const& file)
     if(getFileExtension() == fileExtension)
     {
         mDocumentFileBased.loadFrom(file, true);
-        auto copy = mAccessor.getModel();
-        copy.currentDocumentFile = file;
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        mApplicationAccessor.setValue<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
@@ -110,9 +108,7 @@ void Application::Instance::openFile(juce::File const& file)
         model.file = file;
         mDocumentFileBased.setFile({});
         mDocumentAccessor.fromModel(model, NotificationType::synchronous);
-        auto copy = mAccessor.getModel();
-        copy.currentDocumentFile = juce::File{};
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        mApplicationAccessor.setValue<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
     }
     else
     {
@@ -120,9 +116,9 @@ void Application::Instance::openFile(juce::File const& file)
     }
 }
 
-Application::Accessor& Application::Instance::getAccessor()
+Application::Accessor& Application::Instance::getApplicationAccessor()
 {
-    return mAccessor;
+    return mApplicationAccessor;
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()
