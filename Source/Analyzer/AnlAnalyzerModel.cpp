@@ -1,5 +1,8 @@
 #include "AnlAnalyzerModel.h"
 
+#include <vamp-hostsdk/PluginLoader.h>
+#include <vamp-hostsdk/PluginHostAdapter.h>
+
 ANALYSE_FILE_BEGIN
 
 Analyzer::Model Analyzer::Model::fromXml(juce::XmlElement const& xml, Model defaultModel)

@@ -4,8 +4,10 @@
 #include "../Tools/AnlBroadcaster.h"
 #include "../Tools/AnlAtomicManager.h"
 
-#include <vamp-hostsdk/PluginLoader.h>
-#include <vamp-hostsdk/PluginHostAdapter.h>
+namespace Vamp
+{
+    class Plugin;
+}
 
 ANALYSE_FILE_BEGIN
 

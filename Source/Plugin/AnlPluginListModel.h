@@ -56,10 +56,7 @@ namespace XmlParser
 {
     template<>
     void toXml<PluginList::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, PluginList::Description const& value);
-}
 
-namespace XmlParser
-{
     template<>
     auto fromXml<PluginList::Description>(juce::XmlElement const& xml, juce::Identifier const& attributeName, PluginList::Description const& defaultValue)
     -> PluginList::Description;

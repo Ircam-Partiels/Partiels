@@ -5,23 +5,29 @@ ANALYSE_FILE_BEGIN
 
 Application::CommandTarget::CommandTarget()
 {
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        if(attribute == Attribute::recentlyOpenedFilesList)
+        switch(attribute)
         {
-            Instance::get().getApplicationCommandManager().commandStatusChanged();
+            case AttrType::recentlyOpenedFilesList:
+                Instance::get().getApplicationCommandManager().commandStatusChanged();
+                break;
+            case AttrType::currentDocumentFile:
+                break;
+            case AttrType::windowState:
+                break;
         }
     };
     
     Instance::get().getDocumentFileBased().addChangeListener(this);
-    Instance::get().getAccessor().addListener(mListener, NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
 }
 
 Application::CommandTarget::~CommandTarget()
 {
-    Instance::get().getAccessor().removeListener(mListener);
+    Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
 }
 
@@ -62,7 +68,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::OpenRecent:
         {
             result.setInfo(juce::translate("Open Recent"), juce::translate("Open a recent document"), "Application", 0);
-            result.setActive(!Instance::get().getAccessor().getModel().recentlyOpenedFilesList.empty());
+            result.setActive(!Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>().empty());
         }
             break;
         case CommandIDs::New:
@@ -225,15 +231,14 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     anlStrongAssert(source == &fileBased);
     Instance::get().getApplicationCommandManager().commandStatusChanged();
     
-    auto copy = Instance::get().getAccessor().getModel();
-    copy.currentDocumentFile = fileBased.getFile();
-    if(fileBased.getFile().existsAsFile())
+    auto const file = fileBased.getFile();
+    Instance::get().getApplicationAccessor().setValue<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
+    if(file.existsAsFile())
     {
-        auto& list = copy.recentlyOpenedFilesList;
-        list.erase(std::unique(list.begin(), list.end()), list.end());
-        list.insert(list.begin(), fileBased.getFile());
+        auto list = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
+        list.insert(list.begin(), file);
+        Instance::get().getApplicationAccessor().setValue<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
     }
-    Instance::get().getAccessor().fromModel(copy, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

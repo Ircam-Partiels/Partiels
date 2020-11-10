@@ -1,4 +1,5 @@
 #include "AnlAnalyzerPropertyPanel.h"
+#include <vamp-hostsdk/PluginLoader.h>
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginInputDomainAdapter.h>
 

@@ -1,6 +1,9 @@
 #include "AnlAnalyzerPluginInstance.h"
 #include "../Plugin/AnlPluginListScanner.h"
 
+#include <vamp-hostsdk/PluginLoader.h>
+#include <vamp-hostsdk/PluginHostAdapter.h>
+
 ANALYSE_FILE_BEGIN
 
 Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
