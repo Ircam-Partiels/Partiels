@@ -19,7 +19,8 @@ namespace Model
     };
     
     //! @brief The private implementation of an attribute of a model
-    template<typename enum_t, enum_t index_v, typename value_t, int flags_v> struct AttrImpl
+    template<typename enum_t, enum_t index_v, typename value_t, int flags_v>
+    struct AttrImpl
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
@@ -33,13 +34,16 @@ namespace Model
     };
     
     //! @brief The template typle of an attribute of a model
-    template<auto index_v, typename value_t, int flags_v> using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
+    template<auto index_v, typename value_t, int flags_v>
+    using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
     
     //! @brief The container type for a set of attributes
-    template <class ..._Tp> using Container = std::tuple<_Tp...>;
+    template <class ..._Tp>
+    using Container = std::tuple<_Tp...>;
     
     //! @brief The accessor a data model
-    template<class parent_t, class container_t> class Accessor
+    template<class parent_t, class container_t>
+    class Accessor
     {
     public:
         
@@ -47,9 +51,9 @@ namespace Model
         using enum_type = typename std::tuple_element<0, container_type>::type::enum_type;
         static_assert(std::is_same<typename std::underlying_type<enum_type>::type, size_t>::value, "enum_t underlying type must be size_t");
         static_assert(is_specialization<container_type, std::tuple>::value, "econtainer_t must be a specialization of std::tuple");
-
-        //! @brief The constructor
-        explicit Accessor(container_type&& data = {})
+        
+        //! @brief The constructor with data
+        Accessor(container_type&& data = {})
         : mData(std::move(data))
         {
         }
@@ -72,13 +76,14 @@ namespace Model
         
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
+        //! @todo Perhaps we should use an internal listener to keep  a temporary previous value
         template <enum_type type, typename T>
         void setValue(T const& value, NotificationType notification = NotificationType::synchronous)
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             using value_type = typename attr_type::value_type;
             auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
-            value_type tempValue {value};
+            value_type tempValue = value;
             if(equal(lvalue, tempValue) == false)
             {
                 exchange<value_type>(std::get<static_cast<size_t>(type)>(mData).value, tempValue, notification);
@@ -186,6 +191,7 @@ namespace Model
             });
             return result;
         }
+        
         class Listener
         {
         public:
@@ -257,6 +263,10 @@ namespace Model
             {
                 return lhs != nullptr && rhs != nullptr && equal(*lhs.get(), *rhs.get());
             }
+            else if constexpr(is_specialization<T, Accessor>::value)
+            {
+                return lhs.isEquivalentTo(rhs.getModel());
+            }
             else
             {
                 return lhs == rhs;
@@ -270,6 +280,7 @@ namespace Model
         {
             if constexpr(is_specialization<T, std::vector>::value)
             {
+                JUCE_COMPILER_WARNING("to do");
                 lhs.resize(rhs.size());
                 for(size_t i = 0; i < lhs.size(); ++i)
                 {
@@ -278,11 +289,11 @@ namespace Model
             }
             else if constexpr(is_specialization<T, std::vector>::value)
             {
+                JUCE_COMPILER_WARNING("to do");
                 std::erase_if(lhs, [&](auto const& pair)
                 {
                     return rhs.count(pair.first) == 0;
                 });
-                
                 for(auto const& pair : rhs)
                 {
                     exchange(lhs[pair.first], pair.second, notification);
@@ -294,7 +305,6 @@ namespace Model
                 {
                     std::swap(lhs, rhs);
                 }
- 
                 if(lhs != nullptr && rhs != nullptr)
                 {
                     exchange(*lhs.get(), *rhs.get(), notification);
