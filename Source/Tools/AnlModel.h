@@ -46,7 +46,7 @@ namespace Model
     class Accessor
     {
     public:
-        
+        static constexpr bool model_accessor = true;
         using container_type = container_t;
         using enum_type = typename std::tuple_element<0, container_type>::type::enum_type;
         static_assert(std::is_same<typename std::underlying_type<enum_type>::type, size_t>::value, "enum_t underlying type must be size_t");
@@ -263,7 +263,7 @@ namespace Model
             {
                 return lhs != nullptr && rhs != nullptr && equal(*lhs.get(), *rhs.get());
             }
-            else if constexpr(is_specialization<T, Accessor>::value)
+            else if constexpr(is_model_accessor<T>::value)
             {
                 return lhs.isEquivalentTo(rhs.getModel());
             }
@@ -310,9 +310,9 @@ namespace Model
                     exchange(*lhs.get(), *rhs.get(), notification);
                 }
             }
-            else if constexpr(is_specialization<T, Accessor>::value)
+            else if constexpr(is_model_accessor<T>::value)
             {
-                auto copy = lhs.fromModel();
+                auto copy = lhs.getModel();
                 lhs.fromModel(rhs.getModel(), notification);
                 rhs.fromModel(copy, notification);
             }
