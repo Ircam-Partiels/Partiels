@@ -54,7 +54,7 @@ public:
         };
         
         // Declare the data model container
-        using Ctnr = Model::Container
+        using ModelCtnr = Model::Container
         < Model::Attr<AttrType::attr0, int, AttrFlag::all>
         , Model::Attr<AttrType::attr1, int, AttrFlag::notifying>
         , Model::Attr<AttrType::attr2, float, AttrFlag::saveable>
@@ -66,9 +66,9 @@ public:
         
         // Declare the data model accessor
         class ModelAcsr
-        : public Model::Accessor<ModelAcsr, Ctnr>
+        : public Model::Accessor<ModelAcsr, ModelCtnr>
         {
-            using Model::Accessor<ModelAcsr, Ctnr>::Accessor;
+            using Model::Accessor<ModelAcsr, ModelCtnr>::Accessor;
         };
         
         // Declare the data model listener
@@ -85,7 +85,8 @@ public:
         
         beginTest("accessor default constructor");
         {
-            ModelAcsr acsr;
+            ModelCtnr ctnr;
+            ModelAcsr acsr {ctnr};
             expectEquals(acsr.getValue<AttrType::attr0>(), 0);
             expectEquals(acsr.getValue<AttrType::attr1>(), 0);
             expectEquals(acsr.getValue<AttrType::attr2>(), 0.0f);
@@ -96,7 +97,8 @@ public:
         
         beginTest("accessor constructor with model");
         {
-            ModelAcsr acsr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelCtnr ctnr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelAcsr acsr(ctnr);
             expectEquals(acsr.getValue<AttrType::attr0>(), 1);
             expectEquals(acsr.getValue<AttrType::attr1>(), 2);
             expectEquals(acsr.getValue<AttrType::attr2>(), 3.0f);
@@ -107,7 +109,8 @@ public:
         
         beginTest("accessor setting attribute");
         {
-            ModelAcsr acsr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelCtnr ctnr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelAcsr acsr(ctnr);
             acsr.setValue<AttrType::attr0>(2, NotificationType::synchronous);
             acsr.setValue<AttrType::attr1>(3, NotificationType::synchronous);
             acsr.setValue<AttrType::attr2>(4.0f, NotificationType::synchronous);
@@ -124,8 +127,10 @@ public:
         
         beginTest("accessor from model");
         {
-            ModelAcsr acsr1;
-            ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelCtnr ctnr1;
+            ModelAcsr acsr1(ctnr1);
+            ModelCtnr ctnr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelAcsr acsr2(ctnr2);
             acsr1.fromModel(acsr2.getModel(), NotificationType::synchronous);
             expectEquals(acsr1.getValue<AttrType::attr0>(), acsr2.getValue<AttrType::attr0>());
             expectNotEquals(acsr1.getValue<AttrType::attr1>(), acsr2.getValue<AttrType::attr1>());
@@ -137,8 +142,10 @@ public:
         
         beginTest("accessor xml");
         {
-            ModelAcsr acsr1;
-            ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelCtnr ctnr1;
+            ModelAcsr acsr1(ctnr1);
+            ModelCtnr ctnr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelAcsr acsr2(ctnr2);
             auto xml = acsr2.toXml("Test");
             expect(xml != nullptr);
             if(xml != nullptr)
@@ -155,9 +162,10 @@ public:
             
         beginTest("is equivalent");
         {
-            ModelAcsr acsr1;
-            ModelAcsr acsr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
-            
+            ModelCtnr ctnr1;
+            ModelAcsr acsr1(ctnr1);
+            ModelCtnr ctnr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
+            ModelAcsr acsr2(ctnr2);
             expect(acsr1.isEquivalentTo(acsr2.getModel()) == false);
             expect(acsr2.isEquivalentTo(acsr1.getModel()) == false);
             acsr1.fromModel(acsr2.getModel());
@@ -200,6 +208,8 @@ public:
             expect(notifications[magic_enum::enum_integer(AttrType::attr3)] == false);
             expect(notifications[magic_enum::enum_integer(AttrType::attr4)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr5)] == false);
+            
+            acsr.removeListener(ltnr);
         }
     }
 };

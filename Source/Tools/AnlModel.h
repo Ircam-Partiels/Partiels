@@ -53,8 +53,8 @@ namespace Model
         static_assert(is_specialization<container_type, std::tuple>::value, "econtainer_t must be a specialization of std::tuple");
         
         //! @brief The constructor with data
-        Accessor(container_type&& data = {})
-        : mData(std::move(data))
+        Accessor(container_type const& data)
+        : mData(data)
         {
         }
         
