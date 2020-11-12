@@ -7,9 +7,11 @@ ANALYSE_FILE_BEGIN
 
 namespace Zoom
 {
+    JUCE_COMPILER_WARNING("remove state")
     namespace State
     {
         using range_type = juce::Range<double>;
+        JUCE_COMPILER_WARNING("remove this using that is annoying")
         using AttrFlag = Model::AttrFlag;
         
         enum AttrType : size_t
