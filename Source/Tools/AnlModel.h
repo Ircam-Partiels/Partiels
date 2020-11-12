@@ -174,7 +174,7 @@ namespace Model
         }
         
         //! @brief Compare the content with  another model
-        bool isEquivalentTo(container_type const& model)
+        bool isEquivalentTo(container_type const& model) const
         {
             bool result = true;
             detail::for_each(mData, [&](auto& d)
