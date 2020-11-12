@@ -8,8 +8,6 @@ ANALYSE_FILE_BEGIN
 namespace Zoom
 {
     using range_type = juce::Range<double>;
-    JUCE_COMPILER_WARNING("remove this using that is annoying")
-    using AttrFlag = Model::AttrFlag;
     
     enum AttrType : size_t
     {
@@ -26,9 +24,9 @@ namespace Zoom
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::globalRange, range_type, AttrFlag::notifying>
-    , Model::Attr<AttrType::minimumLength, double, AttrFlag::notifying>
-    , Model::Attr<AttrType::visibleRange, range_type, AttrFlag::basic>
+    < Model::Attr<AttrType::globalRange, range_type, Model::AttrFlag::notifying>
+    , Model::Attr<AttrType::minimumLength, double, Model::AttrFlag::notifying>
+    , Model::Attr<AttrType::visibleRange, range_type, Model::AttrFlag::basic>
     >;
     
     class Accessor

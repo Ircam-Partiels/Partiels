@@ -19,8 +19,6 @@ namespace PluginList
         bool operator!=(Description const&) const;
     };
     
-    using AttrFlag = Model::AttrFlag;
-    
     enum AttrType : size_t
     {
         descriptions,
@@ -38,9 +36,9 @@ namespace PluginList
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::descriptions, std::map<juce::String, Description>, AttrFlag::basic>
-    , Model::Attr<AttrType::sortColumn, ColumnType, AttrFlag::basic>
-    , Model::Attr<AttrType::sortIsFowards, bool, AttrFlag::basic>
+    < Model::Attr<AttrType::descriptions, std::map<juce::String, Description>, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::sortColumn, ColumnType, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::sortIsFowards, bool, Model::AttrFlag::basic>
     >;
     
     class Accessor

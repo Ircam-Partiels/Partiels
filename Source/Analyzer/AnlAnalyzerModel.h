@@ -13,8 +13,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    using AttrFlag = Model::AttrFlag;
-    
     enum AttrType : size_t
     {
         key,
@@ -25,11 +23,11 @@ namespace Analyzer
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::key, juce::String, AttrFlag::basic>
-    , Model::Attr<AttrType::name, juce::String, AttrFlag::basic>
-    , Model::Attr<AttrType::sampleRate, double, AttrFlag::basic>
-    , Model::Attr<AttrType::numChannels, unsigned long, AttrFlag::basic>
-    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, AttrFlag::basic>
+    < Model::Attr<AttrType::key, juce::String, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::sampleRate, double, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::numChannels, unsigned long, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
     >;
     
     enum class Signal

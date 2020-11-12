@@ -28,14 +28,14 @@ void Zoom::Accessor::setValue<Zoom::AttrType::minimumLength, double>(double cons
     setValue<AttrType::visibleRange, Zoom::range_type>(getValue<AttrType::visibleRange>(), notification);
 }
 
-class ZoomStateModelUnitTest
+class ZoomModelUnitTest
 : public juce::UnitTest
 {
 public:
     
-    ZoomStateModelUnitTest() : juce::UnitTest("Model - Zoom::State", "Model") {}
+    ZoomModelUnitTest() : juce::UnitTest("Model - Zoom::State", "Model") {}
     
-    ~ZoomStateModelUnitTest() override = default;
+    ~ZoomModelUnitTest() override = default;
     
     void runTest() override
     {
@@ -72,6 +72,6 @@ public:
     }
 };
 
-static ZoomStateModelUnitTest zoomStateModelUnitTest;
+static ZoomModelUnitTest zoomStateModelUnitTest;
 
 ANALYSE_FILE_END

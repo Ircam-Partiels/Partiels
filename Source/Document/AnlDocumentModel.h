@@ -9,8 +9,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    using AttrFlag = Model::AttrFlag;
-    
     enum AttrType : size_t
     {
         file,
@@ -29,13 +27,13 @@ namespace Document
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::file, juce::File, AttrFlag::basic>
-    , Model::Attr<AttrType::isLooping, bool, AttrFlag::basic>
-    , Model::Attr<AttrType::gain, double, AttrFlag::basic>
-    , Model::Attr<AttrType::isPlaybackStarted, bool, AttrFlag::notifying>
-    , Model::Attr<AttrType::playheadPosition, double, AttrFlag::notifying>
+    < Model::Attr<AttrType::file, juce::File, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::isLooping, bool, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::gain, double, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
+    , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     //, Model::Attr<AttrType::analyzers, std::vector<std::unique_ptr<Analyzer::Accessor>>, AttrFlag::basic>
-    , Model::Attr<AttrType::timeZoom, Zoom::Container, AttrFlag::model | AttrFlag::saveable>
+    , Model::Attr<AttrType::timeZoom, Zoom::Container, Model::AttrFlag::model | Model::AttrFlag::saveable>
     >;
     
     class Accessor
