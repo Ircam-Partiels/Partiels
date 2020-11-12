@@ -5,26 +5,26 @@ ANALYSE_FILE_BEGIN
 Document::Transport::Transport(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
-            case Attribute::gain:
+            case AttrType::gain:
             {
-                auto const decibel = juce::Decibels::gainToDecibels(acsr.getModel().gain, -90.0);
+                auto const decibel = juce::Decibels::gainToDecibels(acsr.getValue<AttrType::gain>(), -90.0);
                 mVolumeSlider.setValue(decibel, juce::NotificationType::dontSendNotification);
             }
                 break;
-            case Attribute::isPlaybackStarted:
+            case AttrType::isPlaybackStarted:
             {
-                auto const state = mAccessor.getModel().isPlaybackStarted;
+                auto const state = acsr.getValue<AttrType::isPlaybackStarted>();
                 mPlaybackButton.setButtonText(state ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
             }
                 break;
-            case Attribute::playheadPosition:
+            case AttrType::playheadPosition:
             {
-                auto const samples = mAccessor.getModel().playheadPosition;
+                auto const samples = acsr.getValue<AttrType::playheadPosition>();
                 mPlayPositionInSamples.setText(juce::String(samples) + " samples", juce::NotificationType::dontSendNotification);
             }
                 break;
@@ -54,9 +54,7 @@ Document::Transport::Transport(Accessor& accessor)
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
-        auto copy = mAccessor.getModel();
-        copy.isPlaybackStarted = mPlaybackButton.getToggleState();
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        mAccessor.setValue<AttrType::isPlaybackStarted>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
     };
     mForwardButton.onClick = [&]()
     {
@@ -65,18 +63,15 @@ Document::Transport::Transport(Accessor& accessor)
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
     {
-        auto copy = mAccessor.getModel();
-        copy.isLooping = mLoopButton.getToggleState();
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        mAccessor.setValue<AttrType::isLooping>(mLoopButton.getToggleState(), NotificationType::synchronous);
     };
     
     mVolumeSlider.setRange(-90.0, 12.0);
     mVolumeSlider.setDoubleClickReturnValue(true, 0.0);
     mVolumeSlider.onValueChange = [&]()
     {
-        auto copy = mAccessor.getModel();
-        copy.gain = std::min(juce::Decibels::decibelsToGain(mVolumeSlider.getValue(), -90.0), 12.0);
-        mAccessor.fromModel(copy, NotificationType::synchronous);
+        auto const gain = std::min(juce::Decibels::decibelsToGain(mVolumeSlider.getValue(), -90.0), 12.0);
+        mAccessor.setValue<AttrType::gain>(gain, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mBackwardButton);

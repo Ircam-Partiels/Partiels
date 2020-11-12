@@ -17,6 +17,10 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
+    private:
+        
+        void update();
+        
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginInstance)
     };
 }

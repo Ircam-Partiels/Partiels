@@ -6,176 +6,16 @@
 
 ANALYSE_FILE_BEGIN
 
-class Analyzer::Processor::Impl
-: public Accessor::Listener
-{
-public:
-    Impl(Accessor& accessor)
-    : mAccessor(accessor)
-    {
-        onChanged = [&](Accessor const& acsr, AttrType attr)
-        {
-            switch (attr)
-            {
-                case AttrType::key:
-                {
-                    auto const pluginKey = acsr.getValue<AttrType::key>();
-                    if(pluginKey.isEmpty())
-                    {
-                        mPluginManager.setInstance({nullptr});
-                        return;
-                    }
-                }
-                    break;
-                case AttrType::parameters:
-                    std::cout << "parameters: ";
-                    for(auto const& param : acsr.getValue<AttrType::parameters>())
-                    {
-                        std::cout << "[" << param.first << " " << param.second << "] ";
-                    }
-                    std::cout << "\n";
-                    break;
-            }
-        };
-        mAccessor.addListener(*this, NotificationType::synchronous);
-    }
-    
-    ~Impl()
-    {
-        mAccessor.removeListener(*this);
-    }
-    
-    bool initialize(double sampleRate, size_t numChannels, size_t stepSize, size_t blockSize)
-    {
-        using namespace Vamp;
-        using namespace Vamp::HostExt;
-        
-        using AlertIconType = juce::AlertWindow::AlertIconType;
-        auto const errorMessage = juce::translate("Plugin cannot be loaded!");
-        
-        auto const pluginKey = mAccessor.getValue<AttrType::key>();
-        auto* pluginLoader = PluginLoader::getInstance();
-        anlWeakAssert(pluginLoader != nullptr);
-        if(pluginLoader == nullptr)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin manager is not available.").replace("PLGNKEY", pluginKey));
-            return false;
-        }
-        
-        auto pluginInstance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), 48000, PluginLoader::ADAPT_ALL));
-        if(pluginInstance == nullptr)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin key is invalid.").replace("PLGNKEY", pluginKey));
-            return false;
-        }
-        
-        auto pluginContainer = std::make_shared<PluginContainer>(std::move(pluginInstance));
-        if(pluginContainer == nullptr)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin container cannot be allocated.").replace("PLGNKEY", pluginKey));
-            return false;
-        }
-        
-        mPluginManager.setInstance(pluginContainer);
-        if(pluginContainer != nullptr)
-        {
-            return pluginContainer->initialize(sampleRate, numChannels, stepSize, blockSize);
-        }
-        return false;
-    }
-    
-    Vamp::Plugin::FeatureSet process(juce::AudioBuffer<float> const& inputBuffer, long const timeStamp)
-    {
-        auto pluginContainer = mPluginManager.getInstance();
-        if(pluginContainer != nullptr)
-        {
-            return pluginContainer->process(inputBuffer, timeStamp);
-        }
-        return {};
-    }
-    
-    Vamp::Plugin::FeatureSet getRemainingFeatures()
-    {
-        auto pluginContainer = mPluginManager.getInstance();
-        if(pluginContainer != nullptr)
-        {
-            return pluginContainer->getRemainingFeatures();
-        }
-        return {};
-    }
-    
-private:
-    
-    struct PluginContainer
-    {
-        PluginContainer(std::unique_ptr<Vamp::Plugin> istance)
-        : mInstance(std::move(istance))
-        {
-            anlStrongAssert(mInstance != nullptr);
-        }
-        
-        ~PluginContainer() = default;
-        
-        bool initialize(double sampleRate, size_t numChannels, size_t stepSize, size_t blockSize)
-        {
-            if(mInstance == nullptr)
-            {
-                return false;
-            }
-            mSampleRate = 0;
-            auto const result = mInstance->initialise(numChannels, stepSize, blockSize);
-            anlStrongAssert(numChannels != 0 && sampleRate > 0.0);
-            if(result && sampleRate > 0.0)
-            {
-                mSampleRate = static_cast<unsigned int>(sampleRate);
-            }
-            return mSampleRate != 0;
-        }
-        
-        Vamp::Plugin::FeatureSet process(juce::AudioBuffer<float> const& inputBuffer, long const timeStamp)
-        {
-            anlStrongAssert(mInstance != nullptr && mSampleRate != 0);
-            if(mInstance == nullptr || mSampleRate == 0)
-            {
-                return {};
-            }
-            return mInstance->process(inputBuffer.getArrayOfReadPointers(), Vamp::RealTime::frame2RealTime(timeStamp, mSampleRate));
-        }
-        
-        Vamp::Plugin::FeatureSet getRemainingFeatures()
-        {
-            anlStrongAssert(mInstance != nullptr && mSampleRate != 0);
-            if(mInstance == nullptr || mSampleRate == 0)
-            {
-                return {};
-            }
-            return mInstance->getRemainingFeatures();
-        }
-        
-    private:
-        std::unique_ptr<Vamp::Plugin> mInstance {nullptr};
-        unsigned int mSampleRate {0};
-    };
-    
-    Accessor& mAccessor;
-    Tools::AtomicManager<PluginContainer> mPluginManager;
-};
-
 Analyzer::Processor::Processor(Accessor& accessor)
-: mImpl(std::make_unique<Impl>(accessor))
+: mAccessor(accessor)
 {
-    anlStrongAssert(mImpl != nullptr);
-}
-
-Analyzer::Processor::~Processor()
-{
-    JUCE_COMPILER_WARNING("remove that");
+    
 }
 
 void Analyzer::Processor::perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize)
 {
-    anlStrongAssert(mImpl != nullptr);
-    if(mImpl == nullptr)
+    auto instance = mAccessor.getInstance();
+    if(instance == nullptr)
     {
         return;
     }
@@ -201,15 +41,15 @@ void Analyzer::Processor::perform(juce::AudioFormatReader& audioFormatReader, si
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
     
     juce::AudioBuffer<float> buffer(numChannels, static_cast<int>(blockSize));
-    mImpl->initialize(audioFormatReader.sampleRate, static_cast<size_t>(numChannels), blockSize, blockSize);
+    instance->initialise( static_cast<size_t>(numChannels), blockSize, blockSize);
     for(juce::int64 timeStamp = 0; timeStamp < lengthInSamples; timeStamp += blockSize)
     {
         auto const remaininSamples = std::min(lengthInSamples - timeStamp, static_cast<juce::int64>(blockSize));
         audioFormatReader.read(buffer.getArrayOfWritePointers(), numChannels, timeStamp, static_cast<int>(remaininSamples));
-        auto const result = mImpl->process(buffer, static_cast<long>(timeStamp));
+        auto const result = instance->process(buffer.getArrayOfReadPointers(), Vamp::RealTime::frame2RealTime(timeStamp, instance->getInputSampleRate()));
         printResult(result);
     }
-    printResult(mImpl->getRemainingFeatures());
+    printResult(instance->getRemainingFeatures());
 }
 
 ANALYSE_FILE_END

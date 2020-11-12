@@ -20,6 +20,14 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     
+    mRelaunchButton.onClick= [&]()
+    {
+        if(onRelaunch != nullptr)
+        {
+            onRelaunch();
+        }
+    };
+    
     mPropertiesButton.onClick = [&]()
     {
         juce::DialogWindow::LaunchOptions launchOption;

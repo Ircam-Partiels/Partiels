@@ -16,9 +16,9 @@ namespace Application
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::windowState, juce::String, AttrFlag::all>
-    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, AttrFlag::all>
-    , Model::Attr<AttrType::currentDocumentFile, juce::File, AttrFlag::all>
+    < Model::Attr<AttrType::windowState, juce::String, AttrFlag::basic>
+    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, AttrFlag::basic>
+    , Model::Attr<AttrType::currentDocumentFile, juce::File, AttrFlag::basic>
     >;
     
     class Accessor

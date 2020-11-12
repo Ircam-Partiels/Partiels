@@ -5,6 +5,7 @@
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
 #include "../Analyzer/AnlAnalyzerPluginInstance.h"
+#include "../Analyzer/AnlAnalyzerProcessor.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -14,10 +15,7 @@ namespace Document
     : public juce::Component
     {
     public:
-        using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
-        
-        ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor);
+        ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager& audioFormatManager);
         ~ControlPanel() override;
         
         void resized() override;
@@ -25,6 +23,7 @@ namespace Document
     private:
         
         Accessor& mAccessor;
+        juce::AudioFormatManager& mAudioFormatManager;
         Accessor::Listener mListener;
         PluginList::Table mPluginListTable;
         struct Section
@@ -32,11 +31,13 @@ namespace Document
             Section(Analyzer::Accessor& acsr)
             : thumbnail(acsr)
             , instance(acsr)
+            , processor(acsr)
             {
                 
             }
             Analyzer::Thumbnail thumbnail;
             Analyzer::PluginInstance instance;
+            Analyzer::Processor processor;
             Tools::ColouredPanel separator;
         };
         

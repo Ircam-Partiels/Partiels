@@ -38,9 +38,9 @@ namespace PluginList
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::descriptions, std::map<juce::String, Description>, AttrFlag::all>
-    , Model::Attr<AttrType::sortColumn, ColumnType, AttrFlag::all>
-    , Model::Attr<AttrType::sortIsFowards, bool, AttrFlag::all>
+    < Model::Attr<AttrType::descriptions, std::map<juce::String, Description>, AttrFlag::basic>
+    , Model::Attr<AttrType::sortColumn, ColumnType, AttrFlag::basic>
+    , Model::Attr<AttrType::sortIsFowards, bool, AttrFlag::basic>
     >;
     
     class Accessor

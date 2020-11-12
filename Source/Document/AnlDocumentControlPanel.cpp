@@ -3,8 +3,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor)
+Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
+, mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginListAccessor)
 {
     mPluginListTable.onPluginSelected = [&](juce::String key)
@@ -14,52 +15,70 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             dialogWindow->exitModalState(0);
         }
         
-        auto analyzer = std::make_unique<Analyzer::Accessor>();
+        auto container = std::make_unique<Analyzer::Container>();
+        auto analyzer = std::make_unique<Analyzer::Accessor>(*container.get());
         anlWeakAssert(analyzer != nullptr);
         if(analyzer != nullptr)
         {
             analyzer->setValue<Analyzer::AttrType::key>(key);
-            auto copy = mAccessor.getModel();
-            copy.analyzers.push_back(std::move(analyzer));
-            mAccessor.fromModel(copy, NotificationType::synchronous);
+//            auto copy = mAccessor.getModel();
+//            copy.analyzers.push_back(std::move(analyzer));
+//            mAccessor.fromModel(copy, NotificationType::synchronous);
         }
     };
     
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
-            case Attribute::analyzers:
-            {
-                auto const& ref = mAccessor.getModel();
-                for(size_t i = mSections.size(); i < ref.analyzers.size(); ++i)
-                {
-                    auto& anlAcsr = mAccessor.getAnalyzerAccessor(i);
-                    auto section = std::make_unique<Section>(anlAcsr);
-                    anlWeakAssert(section != nullptr);
-                    if(section != nullptr)
-                    {
-                        addAndMakeVisible(section->thumbnail);
-                        addAndMakeVisible(section->separator);
-                        mSections.push_back(std::move(section));
-                    }
-                }
-                mSections.resize(ref.analyzers.size());
-                for(size_t i = 0; i < mSections.size(); ++i)
-                {
-                    if(mSections[i] != nullptr)
-                    {
-                        mSections[i]->thumbnail.onRemove = [this, i]()
-                        {
-                            auto copy = mAccessor.getModel();
-                            copy.analyzers.erase(copy.analyzers.begin() + static_cast<long>(i));
-                            mAccessor.fromModel(copy, NotificationType::synchronous);
-                        };
-                    }
-                }
-                resized();
-            }
-                break;
+//            case Attribute::analyzers:
+//            {
+//                auto const& ref = mAccessor.getModel();
+//                for(size_t i = mSections.size(); i < ref.analyzers.size(); ++i)
+//                {
+//                    auto& anlAcsr = mAccessor.getAnalyzerAccessor(i);
+//                    auto section = std::make_unique<Section>(anlAcsr);
+//                    anlWeakAssert(section != nullptr);
+//                    if(section != nullptr)
+//                    {
+//                        addAndMakeVisible(section->thumbnail);
+//                        addAndMakeVisible(section->separator);
+//                        mSections.push_back(std::move(section));
+//                    }
+//                }
+//                mSections.resize(ref.analyzers.size());
+//                for(size_t i = 0; i < mSections.size(); ++i)
+//                {
+//                    if(mSections[i] != nullptr)
+//                    {
+//                        mSections[i]->thumbnail.onRemove = [this, i]()
+//                        {
+//                            auto copy = mAccessor.getModel();
+//                            copy.analyzers.erase(copy.analyzers.begin() + static_cast<long>(i));
+//                            mAccessor.fromModel(copy, NotificationType::synchronous);
+//                        };
+//                        
+//                        mSections[i]->thumbnail.onRelaunch = [this, i]()
+//                        {
+//                            auto const file = mAccessor.getValue<AttrType::file>();
+//                            auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
+//                            if(audioFormat == nullptr)
+//                            {
+//                                return;
+//                            }
+//                            auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
+//                            if(audioFormatReader == nullptr)
+//                            {
+//                                return;
+//                            }
+//                            
+//                            mSections[i]->processor.perform(*audioFormatReader.get());
+//                        };
+//                    }
+//                }
+//                resized();
+//            }
+//                break;
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);

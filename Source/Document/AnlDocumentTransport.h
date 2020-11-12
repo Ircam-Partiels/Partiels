@@ -10,9 +10,6 @@ namespace Document
     : public juce::Component
     {
     public:
-        using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
-        
         Transport(Accessor& accessor);
         ~Transport() override;
         

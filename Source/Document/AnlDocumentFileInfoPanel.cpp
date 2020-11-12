@@ -14,16 +14,15 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
 , mAudioFormatManager(audioFormatManager)
 , mFileBasedDocument(fileBasedDocument)
 {
-    using Attribute = Model::Attribute;
     using Position = Tools::PropertyPanelBase::Positioning;
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
-            case Attribute::file:
+            case AttrType::file:
             {
                 mPropertyLayout3.setPanels({}, Position::left);
-                auto const file = acsr.getModel().file;
+                auto const file = acsr.getValue<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
                 if(audioFormat == nullptr)
@@ -64,9 +63,9 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 resized();
             }
                 break;
-            case Attribute::analyzers:
-                break;
-            case Attribute::isLooping:
+//            case AttrType::analyzers:
+//                break;
+            case AttrType::isLooping:
                 break;
         }
     };

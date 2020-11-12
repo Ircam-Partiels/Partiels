@@ -69,15 +69,6 @@ namespace XmlParser
                 }
             }
         }
-        else if constexpr(is_model_accessor<T>::value)
-        {
-            auto child = value.toXml(attributeName);
-            anlWeakAssert(child != nullptr);
-            if(child != nullptr)
-            {
-                xml.addChildElement(child.release());
-            }
-        }
         else
         {
             std::ostringstream stream;
@@ -157,17 +148,6 @@ namespace XmlParser
                 return std::make_unique<T>(fromXml(*child, attributeName, *defaultValue.get()));
             }
             return std::make_unique<T>(*defaultValue.get());
-        }
-        else if constexpr(is_model_accessor<T>::value)
-        {
-            T value(defaultValue);
-            auto* child = xml.getChildByName(attributeName);
-            anlWeakAssert(child != nullptr);
-            if(child != nullptr)
-            {
-                value.fromXml(*child, attributeName);
-            }
-            return value;
         }
         else
         {

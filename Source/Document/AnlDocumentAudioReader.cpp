@@ -88,7 +88,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         auto getLastPosition = [&]() -> juce::int64
         {
@@ -102,9 +102,9 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
         
         switch (attribute)
         {
-            case Attribute::file:
+            case AttrType::file:
             {
-                auto const file = acsr.getModel().file;
+                auto const file = acsr.getValue<AttrType::file>();
                 auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
                 if(audioFormat == nullptr)
                 {
@@ -120,29 +120,29 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 auto source = std::make_shared<Source>(std::move(audioFormatReader));
                 if(source != nullptr)
                 {
-                    source->setGain(static_cast<float>(acsr.getModel().gain));
+                    source->setGain(static_cast<float>(acsr.getValue<AttrType::gain>()));
                     source->prepareToPlay(mSamplesPerBlockExpected, mSampleRate);
                 }
                 mSourceManager.setInstance(source);
             }
                 break;
-            case Attribute::isLooping:
+            case AttrType::isLooping:
             {
-                mIsLooping.store(acsr.getModel().isLooping);
+                mIsLooping.store(acsr.getValue<AttrType::isLooping>());
             }
                 break;
-            case Attribute::gain:
+            case AttrType::gain:
             {
                 auto instance = mSourceManager.getInstance();
                 if(instance != nullptr)
                 {
-                    instance->setGain(static_cast<float>(acsr.getModel().gain));
+                    instance->setGain(static_cast<float>(acsr.getValue<AttrType::gain>()));
                 }
             }
                 break;
-            case Attribute::isPlaybackStarted:
+            case AttrType::isPlaybackStarted:
             {
-                if(static_cast<bool>(acsr.getModel().isPlaybackStarted))
+                if(static_cast<bool>(acsr.getValue<AttrType::isPlaybackStarted>()))
                 {
                     auto expected = getLastPosition();
                     mReadPosition.compare_exchange_strong(expected, 0);
@@ -156,13 +156,13 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 }
             }
                 break;
-            case Attribute::playheadPosition:
+            case AttrType::playheadPosition:
             {
                 //mReadPosition = acsr.getModel().playheadPosition;
             }
                 break;
-            case Attribute::analyzers:
-                break;
+//            case AttrType::analyzers:
+//                break;
         }
     };
     
@@ -205,7 +205,7 @@ void Document::AudioReader::prepareToPlay(int samplesPerBlockExpected, double sa
     auto instance = mSourceManager.getInstance();
     if(instance != nullptr)
     {
-        instance->setGain(static_cast<float>(mAccessor.getModel().gain));
+        instance->setGain(static_cast<float>(mAccessor.getValue<AttrType::gain>()));
         instance->prepareToPlay(samplesPerBlockExpected, sampleRate);
     }
 }
@@ -252,16 +252,12 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
 
 void Document::AudioReader::handleAsyncUpdate()
 {
-    auto copy = mAccessor.getModel();
-    copy.isPlaybackStarted = false;
-    mAccessor.fromModel(copy, NotificationType::synchronous);
+    mAccessor.setValue<AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
 }
 
 void Document::AudioReader::timerCallback()
 {
-    auto copy = mAccessor.getModel();
-    copy.playheadPosition = mReadPosition.load();
-    mAccessor.fromModel(copy, NotificationType::synchronous);
+    mAccessor.setValue<AttrType::playheadPosition>(mReadPosition.load(), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

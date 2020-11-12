@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tools/AnlModelAccessor.h"
+#include "../Tools/AnlModel.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
 #include "../Zoom/AnlZoomStateModel.h"
 #include "../Tools/AnlBroadcaster.h"
@@ -9,59 +9,63 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    //! @brief The data model of a document
-    //! @brief The document is a container for a set of analysis
-    struct Model
+    using AttrFlag = Model::AttrFlag;
+    
+    enum AttrType : size_t
     {
-        enum class Attribute
-        {
-            file,
-            isLooping,
-            gain,
-            isPlaybackStarted,
-            playheadPosition,
-            analyzers
-        };
-        
-        enum class Signal
-        {
-            movePlayhead,
-            audioInstanceChanged
-        };
-        
-        Model() {}
-        Model(Model const& other);
-        Model(Model&& other);
-        
-        ~Model() = default;
-        bool operator==(Model const& other) const;
-        bool operator!=(Model const& other) const;
-        
-        juce::File file; //!< The audio file associated with the document (saved/compared)
-        bool isLooping = false; //!< If the loop is active (saved/compared)
-        double gain = 1.0; //! The gain of the playback between 0 and 1 (saved/compared)
-        bool isPlaybackStarted = false; //! If the playback is started (unsaved/not compared)
-        double playheadPosition = 0.0; // The position of the playhead (unsaved/not compared)
-        Zoom::State::Accessor zoomStateTime {{{Zoom::State::range_type{0.0, 60.0}}, {0.001}, {Zoom::State::range_type{0.0, 60.0}}}};  // The zoom state of the time (saved/not compared)
-        std::vector<std::unique_ptr<Analyzer::Accessor>> analyzers; //!< The analyzers of the document (saved/compared)
-        
-        std::unique_ptr<juce::XmlElement> toXml() const;
-        static Model fromXml(juce::XmlElement const& xml, Model defaultModel = {});
-        
-        JUCE_LEAK_DETECTOR(Model)
+        file,
+        isLooping,
+        gain,
+        isPlaybackStarted,
+        playheadPosition,
+        //analyzers,
+        timeZoom
     };
     
+    enum class Signal
+    {
+        movePlayhead,
+        audioInstanceChanged
+    };
+    
+    using Container = Model::Container
+    < Model::Attr<AttrType::file, juce::File, AttrFlag::basic>
+    , Model::Attr<AttrType::isLooping, bool, AttrFlag::basic>
+    , Model::Attr<AttrType::gain, double, AttrFlag::basic>
+    , Model::Attr<AttrType::isPlaybackStarted, bool, AttrFlag::notifying>
+    , Model::Attr<AttrType::playheadPosition, double, AttrFlag::notifying>
+    //, Model::Attr<AttrType::analyzers, std::vector<std::unique_ptr<Analyzer::Accessor>>, AttrFlag::basic>
+    , Model::Attr<AttrType::timeZoom, Zoom::State::Container, AttrFlag::model | AttrFlag::saveable>
+    >;
+    
     class Accessor
-    : public Tools::ModelAccessor<Accessor, Model, Model::Attribute>
-    , public Broadcaster<Accessor, Model::Signal>
+    : public Model::Accessor<Accessor, Container>
+    , public Broadcaster<Accessor, Signal>
+    , public Tools::AtomicManager<Vamp::Plugin>
     {
     public:
-        using Tools::ModelAccessor<Accessor, Model, Model::Attribute>::ModelAccessor;
-        ~Accessor() override = default;
-        void fromModel(Model const& model, NotificationType const notification) override;
+        using Model::Accessor<Accessor, Container>::Accessor;
         
-        Analyzer::Accessor& getAnalyzerAccessor(size_t index);
-        Zoom::State::Accessor& getZoomStateTimeAccessor();
+        template <AttrType type>
+        auto& getAccessor() noexcept;
+        
+        template <AttrType type>
+        auto const& getAccessor() const noexcept;
+
+        template <>
+        auto& getAccessor<AttrType::timeZoom>() noexcept
+        {
+            return zoomState;
+        }
+        
+        template <>
+        auto const& getAccessor<AttrType::timeZoom>() const noexcept
+        {
+            return zoomState;
+        }
+        
+    private:
+        Zoom::State::Accessor zoomState {getValueRef<AttrType::timeZoom>()};
     };
 }
 

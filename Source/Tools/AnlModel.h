@@ -15,7 +15,8 @@ namespace Model
         notifying = 1 << 0,
         saveable = 1 << 1,
         comparable = 1 << 2,
-        all = notifying | saveable | comparable
+        model = 1 << 3,
+        basic = notifying | saveable | comparable
     };
     
     //! @brief The private implementation of an attribute of a model
@@ -82,21 +83,29 @@ namespace Model
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             using value_type = typename attr_type::value_type;
-            auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
-            value_type tempValue = value;
-            if(equal(lvalue, tempValue) == false)
+            if constexpr((attr_type::flags & AttrFlag::model) != 0)
             {
-                exchange<value_type>(std::get<static_cast<size_t>(type)>(mData).value, tempValue, notification);
-                if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
+                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>();
+                acsr.fromModel(value, notification);
+            }
+            else
+            {
+                auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
+                value_type tempValue = value;
+                if(equal(lvalue, tempValue) == false)
                 {
-                    mListeners.notify([=](Listener& listener)
+                    exchange<value_type>(std::get<static_cast<size_t>(type)>(mData).value, tempValue, notification);
+                    if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
                     {
-                        anlWeakAssert(listener.onChanged != nullptr);
-                        if(listener.onChanged != nullptr)
-                        {
-                            listener.onChanged(*static_cast<parent_t const*>(this), type);
-                        }
-                    }, notification);
+                        mListeners.notify([=](Listener& listener)
+                                          {
+                            anlWeakAssert(listener.onChanged != nullptr);
+                            if(listener.onChanged != nullptr)
+                            {
+                                listener.onChanged(*static_cast<parent_t const*>(this), type);
+                            }
+                        }, notification);
+                    }
                 }
             }
         }
@@ -124,12 +133,23 @@ namespace Model
             detail::for_each(mData, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                using namespace magic_enum::bitwise_operators;
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
                     static auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    XmlParser::toXml(*xml.get(), enumname.c_str(), d.value);
+                    if constexpr((element_type::flags & AttrFlag::model) != 0)
+                    {
+                        auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>();
+                        auto child = acsr.toXml(enumname.c_str());
+                        if(child != nullptr)
+                        {
+                            xml->addChildElement(child.release());
+                        }
+                    }
+                    else
+                    {
+                        XmlParser::toXml(*xml.get(), enumname.c_str(), d.value);
+                    }
                 }
             });
             return xml;
@@ -153,7 +173,19 @@ namespace Model
                 {
                     auto constexpr attr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    setValue<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
+                    if constexpr((element_type::flags & AttrFlag::model) != 0)
+                    {
+                        auto* child = xml.getChildByName(enumname.c_str());
+                        if(child != nullptr)
+                        {
+                            auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>();
+                            acsr.fromXml(*child, enumname.c_str(), notification);
+                        }
+                    }
+                    else
+                    {
+                        setValue<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);                       
+                    }
                 }
             });
         }
@@ -164,12 +196,9 @@ namespace Model
             detail::for_each(mData, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
-                {
-                    auto constexpr attr_type = element_type::type;
-                    auto const& value = std::get<static_cast<size_t>(attr_type)>(model).value;
-                    setValue<attr_type>(value, notification);
-                }
+                auto constexpr attr_type = element_type::type;
+                auto const& value = std::get<static_cast<size_t>(attr_type)>(model).value;
+                setValue<attr_type>(value, notification);
             });
         }
         
@@ -185,7 +214,15 @@ namespace Model
                     if constexpr((element_type::flags & AttrFlag::comparable) != 0)
                     {
                         auto constexpr attr_type = element_type::type;
-                        result = equal(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
+                        if constexpr((element_type::flags & AttrFlag::model) != 0)
+                        {
+                            auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>();
+                            result = acsr.isEquivalentTo(std::get<static_cast<size_t>(attr_type)>(model).value);
+                        }
+                        else
+                        {
+                            result = equal(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
+                        }
                     }
                 }
             });
@@ -229,6 +266,23 @@ namespace Model
             mListeners.remove(listener);
         }
         
+    protected:
+        
+        //! @brief Gets the value of an attribute
+        template <enum_type type>
+        auto& getValueRef() noexcept
+        {
+            using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((attr_type::flags & AttrFlag::notifying) == 0, "notifying value cannot be retrieved directly");
+            return std::get<static_cast<size_t>(type)>(mData).value;
+        }
+        
+        template <enum_type type>
+        auto& getAccessor() noexcept;
+        
+        template <enum_type type>
+        auto const& getAccessor() const noexcept;
+        
     private:
         
         // This is a for_each mechanism for std::tuple
@@ -262,10 +316,6 @@ namespace Model
             else if constexpr(is_specialization<T, std::unique_ptr>::value)
             {
                 return lhs != nullptr && rhs != nullptr && equal(*lhs.get(), *rhs.get());
-            }
-            else if constexpr(is_model_accessor<T>::value)
-            {
-                return lhs.isEquivalentTo(rhs.getModel());
             }
             else
             {
@@ -309,12 +359,6 @@ namespace Model
                 {
                     exchange(*lhs.get(), *rhs.get(), notification);
                 }
-            }
-            else if constexpr(is_model_accessor<T>::value)
-            {
-                auto copy = lhs.getModel();
-                lhs.fromModel(rhs.getModel(), notification);
-                rhs.fromModel(copy, notification);
             }
             else
             {

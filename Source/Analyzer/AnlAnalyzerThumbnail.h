@@ -17,6 +17,7 @@ namespace Analyzer
         void resized() override;
         
         std::function<void(void)> onRemove = nullptr;
+        std::function<void(void)> onRelaunch = nullptr;
         
     private:
         Accessor& mAccessor;

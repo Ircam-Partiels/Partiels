@@ -55,13 +55,13 @@ public:
         
         // Declare the data model container
         using ModelCtnr = Model::Container
-        < Model::Attr<AttrType::attr0, int, AttrFlag::all>
+        < Model::Attr<AttrType::attr0, int, AttrFlag::basic>
         , Model::Attr<AttrType::attr1, int, AttrFlag::notifying>
         , Model::Attr<AttrType::attr2, float, AttrFlag::saveable>
         , Model::Attr<AttrType::attr3, std::vector<int>, AttrFlag::ignored>
         , Model::Attr<AttrType::attr4, std::string, AttrFlag::notifying>
         , Model::Attr<AttrType::attr5, std::vector<double>, AttrFlag::saveable | AttrFlag::comparable>
-        , Model::Attr<AttrType::attr6, DummyAttr, AttrFlag::all>
+        , Model::Attr<AttrType::attr6, DummyAttr, AttrFlag::basic>
         >;
         
         // Declare the data model accessor
@@ -80,7 +80,7 @@ public:
             expect(magic_enum::enum_integer(AttrFlag::notifying) == 1);
             expect(magic_enum::enum_integer(AttrFlag::saveable) == 2);
             expect(magic_enum::enum_integer(AttrFlag::comparable) == 4);
-            expect(magic_enum::enum_integer(AttrFlag::all) == 7);
+            expect(magic_enum::enum_integer(AttrFlag::basic) == 7);
         }
         
         beginTest("accessor default constructor");

@@ -25,11 +25,11 @@ namespace Analyzer
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::key, juce::String, AttrFlag::all>
-    , Model::Attr<AttrType::name, juce::String, AttrFlag::all>
-    , Model::Attr<AttrType::sampleRate, double, AttrFlag::all>
-    , Model::Attr<AttrType::numChannels, unsigned long, AttrFlag::all>
-    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, AttrFlag::all>
+    < Model::Attr<AttrType::key, juce::String, AttrFlag::basic>
+    , Model::Attr<AttrType::name, juce::String, AttrFlag::basic>
+    , Model::Attr<AttrType::sampleRate, double, AttrFlag::basic>
+    , Model::Attr<AttrType::numChannels, unsigned long, AttrFlag::basic>
+    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, AttrFlag::basic>
     >;
     
     enum class Signal

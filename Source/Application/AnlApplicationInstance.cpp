@@ -104,10 +104,8 @@ void Application::Instance::openFile(juce::File const& file)
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
-        Document::Model model;
-        model.file = file;
         mDocumentFileBased.setFile({});
-        mDocumentAccessor.fromModel(model, NotificationType::synchronous);
+        mDocumentAccessor.setValue<Document::AttrType::file>(file, NotificationType::synchronous);
         mApplicationAccessor.setValue<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
     }
     else

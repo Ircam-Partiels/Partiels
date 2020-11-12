@@ -14,9 +14,6 @@ namespace Document
     , private juce::Timer
     {
     public:
-        using Attribute = Model::Attribute;
-        using Signal = Model::Signal;
-        
         AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~AudioReader() override;
 

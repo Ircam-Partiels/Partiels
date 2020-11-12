@@ -11,8 +11,6 @@ namespace Document
     , private juce::AsyncUpdater
     {
     public:
-        using Attribute = Model::Attribute;
-        
         FileBased(Accessor& accessor, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
         ~FileBased() override;
 
@@ -35,7 +33,7 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         juce::File mLastFile;
-        std::unique_ptr<juce::XmlElement> mSavedXml;
+        Container mSavedState {mAccessor.getModel()};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileBased)
     };

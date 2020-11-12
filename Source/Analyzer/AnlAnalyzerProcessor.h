@@ -10,14 +10,13 @@ namespace Analyzer
     {
     public:
         Processor(Accessor& accessor);
-        ~Processor();
+        ~Processor() = default;
         
         void perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize = 512);
 
     private:
         
-        class Impl;
-        std::unique_ptr<Impl> mImpl;
+        Accessor& mAccessor;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };

@@ -6,9 +6,9 @@ ANALYSE_FILE_BEGIN
 Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
-, mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor())
-, mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor())
-, mTimeScrollBar(Instance::get().getDocumentAccessor().getZoomStateTimeAccessor(), Zoom::State::ScrollBar::Orientation::horizontal)
+, mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>())
+, mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
+, mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(), Zoom::State::ScrollBar::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);
@@ -25,17 +25,24 @@ Application::Interface::Interface()
     addAndMakeVisible(mTooTipSeparator);
     addAndMakeVisible(mTimeScrollBar);
     
-    mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::Model::Attribute attribute)
+    mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
-        if(attribute == Document::Model::Attribute::file)
+        switch(attribute)
         {
-            auto const file = acsr.getModel().file;
-            auto const& audioFormatManager = Instance::get().getAudioFormatManager();
-            auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
+            case Document::AttrType::file:
+            {
+                auto const file = acsr.getValue<Document::AttrType::file>();
+                auto const& audioFormatManager = Instance::get().getAudioFormatManager();
+                auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
                 
-            mDocumentTransport.setEnabled(isDocumentEnable);
-            mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
-            mDocumentControlPanel.setEnabled(isDocumentEnable);
+                mDocumentTransport.setEnabled(isDocumentEnable);
+                mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
+                mDocumentControlPanel.setEnabled(isDocumentEnable);
+            }
+                break;
+                
+            default:
+                break;
         }
     };
     

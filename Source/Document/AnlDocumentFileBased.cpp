@@ -7,7 +7,7 @@ Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExten
 : juce::FileBasedDocument(fileExtension, fileWildCard, openFileDialogTitle, saveFileDialogTitle)
 , mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor const& acsr, Attribute attribute)
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
@@ -22,7 +22,7 @@ Document::FileBased::~FileBased()
 
 juce::String Document::FileBased::getDocumentTitle()
 {
-    return getFile().existsAsFile() ? getFile().getFileNameWithoutExtension() : (mAccessor.getModel().file.existsAsFile() ? mAccessor.getModel().file.getFileNameWithoutExtension() : "");
+    return getFile().existsAsFile() ? getFile().getFileNameWithoutExtension() : (mAccessor.getValue<AttrType::file>().existsAsFile() ? mAccessor.getValue<AttrType::file>().getFileNameWithoutExtension() : "");
 }
 
 juce::Result Document::FileBased::loadDocument(juce::File const& file)
@@ -33,14 +33,14 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
     mAccessor.fromXml(*xml.get(), {}, NotificationType::synchronous);
-    mSavedXml = std::move(xml);
+    mSavedState = mAccessor.getModel();
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
 
 juce::Result Document::FileBased::saveDocument(juce::File const& file)
 {
-    auto xml = mAccessor.getModel().toXml();
+    auto xml = mAccessor.toXml("document");
     if(xml == nullptr)
     {
         return juce::Result::fail(juce::translate("The document cannot be parsed!"));
@@ -49,14 +49,14 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
     }
-    mSavedXml = std::move(xml);
+    mSavedState = mAccessor.getModel();
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
 
 juce::File Document::FileBased::getLastDocumentOpened()
 {
-    return getFile().existsAsFile() ? getFile() : (mAccessor.getModel().file.existsAsFile() ? mAccessor.getModel().file.getFullPathName() : mLastFile.getParentDirectory());
+    return getFile().existsAsFile() ? getFile() : (mAccessor.getValue<AttrType::file>().existsAsFile() ? mAccessor.getValue<AttrType::file>().getFullPathName() : mLastFile.getParentDirectory());
 }
 
 void Document::FileBased::setLastDocumentOpened(juce::File const& file)
@@ -66,20 +66,7 @@ void Document::FileBased::setLastDocumentOpened(juce::File const& file)
 
 void Document::FileBased::handleAsyncUpdate()
 {
-    auto getChangedState = [&]()
-    {
-        if(mSavedXml == nullptr && mAccessor.getModel() == Model())
-        {
-            return false;
-        }
-        auto xml = mAccessor.getModel().toXml();
-        if(mSavedXml != nullptr && xml != nullptr)
-        {
-            return !mSavedXml->isEquivalentTo(xml.get(), true);
-        }
-        return true;
-    };
-    setChangedFlag(getChangedState());
+    setChangedFlag(!mAccessor.isEquivalentTo(mSavedState));
 }
 
 ANALYSE_FILE_END

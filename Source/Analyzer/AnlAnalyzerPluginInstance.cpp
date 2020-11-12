@@ -11,49 +11,17 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == AttrType::key)
+        juce::ignoreUnused(acsr);
+        switch(attribute)
         {
-            using namespace Vamp;
-            using namespace Vamp::HostExt;
-            
-            auto const pluginKey = acsr.getValue<AttrType::key>();
-            if(pluginKey.isEmpty())
-            {
-                mAccessor.setInstance({});
-                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
-                return;
-            }
-            auto* pluginLoader = PluginLoader::getInstance();
-            anlWeakAssert(pluginLoader != nullptr);
-            
-            using AlertIconType = juce::AlertWindow::AlertIconType;
-            auto const errorMessage = juce::translate("Plugin cannot be loaded!");
-            
-            if(pluginLoader == nullptr)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin manager is not available.").replace("PLGNKEY", pluginKey));
-                mAccessor.setInstance({});
-                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
-                return;
-            }
-            
-            auto pluginInstance = std::shared_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), 48000, PluginLoader::ADAPT_ALL));
-            if(pluginInstance == nullptr)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin key is invalid.").replace("PLGNKEY", pluginKey));
-                mAccessor.setInstance({});
-                mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
-                return;
-            }
-            mAccessor.setInstance(pluginInstance);
-            mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
-            JUCE_COMPILER_WARNING("todo");
-//            if(mAccessor.getModel().name.isEmpty())
-//            {
-//                auto copy = mAccessor.getModel();
-//                copy.name = pluginInstance->getName();
-//                mAccessor.fromModel(copy, NotificationType::asynchronous);
-//            }
+            case AttrType::key:
+            case AttrType::sampleRate:
+                update();
+                break;
+            case AttrType::name:
+            case AttrType::numChannels:
+            case AttrType::parameters:
+                break;
         }
     };
     
@@ -63,6 +31,49 @@ Analyzer::PluginInstance::PluginInstance(Accessor& accessor)
 Analyzer::PluginInstance::~PluginInstance()
 {
     mAccessor.removeListener(mListener);
+}
+
+void Analyzer::PluginInstance::update()
+{
+    using namespace Vamp;
+    using namespace Vamp::HostExt;
+    
+    auto const pluginKey = mAccessor.getValue<AttrType::key>();
+    if(pluginKey.isEmpty())
+    {
+        mAccessor.setInstance({});
+        mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
+        return;
+    }
+    auto* pluginLoader = PluginLoader::getInstance();
+    anlWeakAssert(pluginLoader != nullptr);
+    
+    using AlertIconType = juce::AlertWindow::AlertIconType;
+    auto const errorMessage = juce::translate("Plugin cannot be loaded!");
+    
+    if(pluginLoader == nullptr)
+    {
+        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin manager is not available.").replace("PLGNKEY", pluginKey));
+        mAccessor.setInstance({});
+        mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
+        return;
+    }
+    
+    auto const sampleRate = static_cast<int>(mAccessor.getValue<AttrType::sampleRate>());
+    auto pluginInstance = std::shared_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), sampleRate, PluginLoader::ADAPT_ALL));
+    if(pluginInstance == nullptr)
+    {
+        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin key is invalid.").replace("PLGNKEY", pluginKey));
+        mAccessor.setInstance({});
+        mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
+        return;
+    }
+    mAccessor.setInstance(pluginInstance);
+    mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
+    if(mAccessor.getValue<AttrType::name>().isEmpty())
+    {
+        mAccessor.setValue<AttrType::name>(pluginInstance->getName(), NotificationType::synchronous);
+    }
 }
 
 ANALYSE_FILE_END

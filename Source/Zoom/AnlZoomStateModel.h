@@ -31,7 +31,7 @@ namespace Zoom
         using Container = Model::Container
         < Model::Attr<AttrType::globalRange, range_type, AttrFlag::notifying>
         , Model::Attr<AttrType::minimumLength, double, AttrFlag::notifying>
-        , Model::Attr<AttrType::visibleRange, range_type, AttrFlag::all>
+        , Model::Attr<AttrType::visibleRange, range_type, AttrFlag::basic>
         >;
         
         class Accessor

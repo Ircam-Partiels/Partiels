@@ -49,11 +49,21 @@ namespace Application
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;
         
-        Document::Model mDocumentModel;
-        
-        Accessor mApplicationAccessor;
-        PluginList::Accessor mPluginListAccessor;
-        Document::Accessor mDocumentAccessor {mDocumentModel};
+        Container mApplicationContainer;
+        Accessor mApplicationAccessor {mApplicationContainer};
+        PluginList::Container mPluginListContainer;
+        PluginList::Accessor mPluginListAccessor {mPluginListContainer};
+        Document::Container mDocumentContainer
+        { {juce::File{}}
+            , {false}
+            , {1.0}
+            , {false}
+            , {0.0}
+            //, {std::vector<std::unique_ptr<Analyzer::Accessor>>{}}
+            , {Zoom::State::Container{{juce::Range<double>{0.0, 60.0}}, {0.001}, {juce::Range<double>{0.0, 60.0}}}}
+        };
+        Document::Accessor mDocumentAccessor {mDocumentContainer};
+            
         
         Properties mProperties;
         AudioReader mAudioReader;
