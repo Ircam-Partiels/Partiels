@@ -3,29 +3,29 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::range_type Zoom::State::Accessor::sanitize(range_type const& visible, range_type const& global, double minLength)
+Zoom::range_type Zoom::Accessor::sanitize(range_type const& visible, range_type const& global, double minLength)
 {
     return global.constrainRange(visible.withEnd(std::max(visible.getStart() + minLength, visible.getEnd())));
 }
 
 template <>
-void Zoom::State::Accessor::setValue<Zoom::State::AttrType::visibleRange, Zoom::State::range_type>(range_type const& value, NotificationType notification)
+void Zoom::Accessor::setValue<Zoom::AttrType::visibleRange, Zoom::range_type>(range_type const& value, NotificationType notification)
 {
-    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::visibleRange, Zoom::State::range_type>(sanitize(value, getValue<AttrType::globalRange>(), getValue<AttrType::minimumLength>()), notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::visibleRange, Zoom::range_type>(sanitize(value, getValue<AttrType::globalRange>(), getValue<AttrType::minimumLength>()), notification);
 }
 
 template <>
-void Zoom::State::Accessor::setValue<Zoom::State::AttrType::globalRange, Zoom::State::range_type>(range_type const& value, NotificationType notification)
+void Zoom::Accessor::setValue<Zoom::AttrType::globalRange, Zoom::range_type>(range_type const& value, NotificationType notification)
 {
-    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::globalRange, Zoom::State::range_type>(value, notification);
-    setValue<AttrType::visibleRange, Zoom::State::range_type>(getValue<AttrType::visibleRange>(), notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::globalRange, Zoom::range_type>(value, notification);
+    setValue<AttrType::visibleRange, Zoom::range_type>(getValue<AttrType::visibleRange>(), notification);
 }
 
 template <>
-void Zoom::State::Accessor::setValue<Zoom::State::AttrType::minimumLength, double>(double const& value, NotificationType notification)
+void Zoom::Accessor::setValue<Zoom::AttrType::minimumLength, double>(double const& value, NotificationType notification)
 {
     ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::minimumLength, double>(value, notification);
-    setValue<AttrType::visibleRange, Zoom::State::range_type>(getValue<AttrType::visibleRange>(), notification);
+    setValue<AttrType::visibleRange, Zoom::range_type>(getValue<AttrType::visibleRange>(), notification);
 }
 
 class ZoomStateModelUnitTest
@@ -39,7 +39,7 @@ public:
     
     void runTest() override
     {
-        using namespace Zoom::State;
+        using namespace Zoom;
         Accessor acsr{{{range_type{0.0, 100.0}}, {1.0}, {range_type{0.0, 100.0}}}};
         
         beginTest("sanitize");

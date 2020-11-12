@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
+Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
 : mAccessor(accessor)
 , mScrollBar(orientation == Orientation::vertical)
 {
@@ -54,13 +54,13 @@ Zoom::State::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
     mScrollBar.addListener(this);
 }
 
-Zoom::State::ScrollBar::~ScrollBar()
+Zoom::ScrollBar::~ScrollBar()
 {
     mScrollBar.removeListener(this);
     mAccessor.removeListener(mListener);
 }
 
-void Zoom::State::ScrollBar::resized()
+void Zoom::ScrollBar::resized()
 {
     auto bounds = getLocalBounds();
     if(mScrollBar.isVertical())
@@ -74,7 +74,7 @@ void Zoom::State::ScrollBar::resized()
     mScrollBar.setBounds(bounds);
 }
 
-void Zoom::State::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart)
+void Zoom::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart)
 {
     juce::ignoreUnused(scrollBarThatHasMoved, newRangeStart);
     anlStrongAssert(scrollBarThatHasMoved == &mScrollBar);

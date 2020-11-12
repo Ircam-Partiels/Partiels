@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTickInterval, double tickReferenceValue, double tickPowerInterval, double divisionFactor, double maxStringWidth)
+Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTickInterval, double tickReferenceValue, double tickPowerInterval, double divisionFactor, double maxStringWidth)
 : mAccessor(accessor)
 , mOrientation(orientation)
 {
@@ -39,35 +39,35 @@ Zoom::State::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t pr
     mAccessor.addReceiver(mReceiver);
 }
 
-Zoom::State::Ruler::~Ruler()
+Zoom::Ruler::~Ruler()
 {
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 
-void Zoom::State::Ruler::setPrimaryTickInterval(size_t primaryTickInterval)
+void Zoom::Ruler::setPrimaryTickInterval(size_t primaryTickInterval)
 {
     mPrimaryTickInterval = std::max(primaryTickInterval, static_cast<size_t>(0)) + 1;
     repaint();
 }
 
-size_t Zoom::State::Ruler::getPrimaryTickInterval() const
+size_t Zoom::Ruler::getPrimaryTickInterval() const
 {
     return mPrimaryTickInterval - 1;
 }
 
-void Zoom::State::Ruler::setTickReferenceValue(double tickReferenceValue)
+void Zoom::Ruler::setTickReferenceValue(double tickReferenceValue)
 {
     mTickReferenceValue = tickReferenceValue;
     repaint();
 }
 
-double Zoom::State::Ruler::getTickReferenceValue() const
+double Zoom::Ruler::getTickReferenceValue() const
 {
     return mTickReferenceValue;
 }
 
-void Zoom::State::Ruler::setTickPowerInterval(double tickPowerInterval, double divisionFactor)
+void Zoom::Ruler::setTickPowerInterval(double tickPowerInterval, double divisionFactor)
 {
     anlStrongAssert(tickPowerInterval >= 1.0);
     anlStrongAssert(divisionFactor >= 1.0);
@@ -76,17 +76,17 @@ void Zoom::State::Ruler::setTickPowerInterval(double tickPowerInterval, double d
     repaint();
 }
 
-double Zoom::State::Ruler::getTickPowerInterval() const
+double Zoom::Ruler::getTickPowerInterval() const
 {
     return mTickPowerInterval;
 }
 
-double Zoom::State::Ruler::getTickPowerDivisionFactor() const
+double Zoom::Ruler::getTickPowerDivisionFactor() const
 {
     return mTickPowerDivisionFactor;
 }
 
-void Zoom::State::Ruler::setMaximumStringWidth(double maxStringWidth)
+void Zoom::Ruler::setMaximumStringWidth(double maxStringWidth)
 {
     anlStrongAssert(maxStringWidth > 5.0);
     mMaximumStringWidth = std::max(maxStringWidth, 5.0);
@@ -94,13 +94,13 @@ void Zoom::State::Ruler::setMaximumStringWidth(double maxStringWidth)
     repaint();
 }
 
-void Zoom::State::Ruler::setValueAsStringMethod(std::function<juce::String(double)> valueAsStringMethod)
+void Zoom::Ruler::setValueAsStringMethod(std::function<juce::String(double)> valueAsStringMethod)
 {
     mGetValueAsString = valueAsStringMethod;
     repaint();
 }
 
-void Zoom::State::Ruler::setRangeConversionMethods(std::function<double(double)> fromZoomToRange, std::function<double(double)> toZoomFromRange)
+void Zoom::Ruler::setRangeConversionMethods(std::function<double(double)> fromZoomToRange, std::function<double(double)> toZoomFromRange)
 {
     mFromZoomRange = fromZoomToRange;
     mToZoomRange = toZoomFromRange;
@@ -108,7 +108,7 @@ void Zoom::State::Ruler::setRangeConversionMethods(std::function<double(double)>
     repaint();
 }
 
-void Zoom::State::Ruler::setOrientation(Orientation orientation)
+void Zoom::Ruler::setOrientation(Orientation orientation)
 {
     if(mOrientation != orientation)
     {
@@ -117,27 +117,27 @@ void Zoom::State::Ruler::setOrientation(Orientation orientation)
     }
 }
 
-Zoom::State::Ruler::Orientation Zoom::State::Ruler::getOrientation()
+Zoom::Ruler::Orientation Zoom::Ruler::getOrientation()
 {
     return mOrientation;
 }
 
-juce::String Zoom::State::Ruler::valueAsStringKiloShorthand(double value)
+juce::String Zoom::Ruler::valueAsStringKiloShorthand(double value)
 {
     return std::abs(value / 1000.0) < 1.0 ? juce::String(static_cast<int>(value)) : juce::String(static_cast<int>(value    / 1000.0)) + "K";
 }
 
-double Zoom::State::Ruler::fromZoomRangePassThrough(double input)
+double Zoom::Ruler::fromZoomRangePassThrough(double input)
 {
     return input;
 }
 
-double Zoom::State::Ruler::toZoomRangePassThrough(double input)
+double Zoom::Ruler::toZoomRangePassThrough(double input)
 {
     return input;
 }
 
-void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
+void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
 {
     if(event.mods.isRightButtonDown())
     {
@@ -186,7 +186,7 @@ void Zoom::State::Ruler::mouseDown(juce::MouseEvent const& event)
     mPrevMousePos = event.position;
 }
 
-void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
+void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
 {
     if(event.mods.isRightButtonDown())
     {
@@ -227,7 +227,7 @@ void Zoom::State::Ruler::mouseDrag(juce::MouseEvent const& event)
     mPrevMousePos = event.position;
 }
 
-void Zoom::State::Ruler::mouseUp(juce::MouseEvent const& event)
+void Zoom::Ruler::mouseUp(juce::MouseEvent const& event)
 {
     if(event.mods.isRightButtonDown())
     {
@@ -261,7 +261,7 @@ void Zoom::State::Ruler::mouseUp(juce::MouseEvent const& event)
     mPrevMousePos = {0, 0};
 }
 
-void Zoom::State::Ruler::mouseDoubleClick(juce::MouseEvent const& event)
+void Zoom::Ruler::mouseDoubleClick(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     if(onDoubleClick)
@@ -270,7 +270,7 @@ void Zoom::State::Ruler::mouseDoubleClick(juce::MouseEvent const& event)
     }
 }
 
-juce::Range<double> Zoom::State::Ruler::calculateSelectedValueRange(juce::MouseEvent const& event)
+juce::Range<double> Zoom::Ruler::calculateSelectedValueRange(juce::MouseEvent const& event)
 {
     auto const isVertical = mOrientation == Orientation::vertical;
     auto const size = isVertical ? getHeight() - 1 : getWidth() - 1;
@@ -282,7 +282,7 @@ juce::Range<double> Zoom::State::Ruler::calculateSelectedValueRange(juce::MouseE
     return { mToZoomRange(std::min(startValue, endValue)), mToZoomRange(std::max(startValue, endValue)) };
 }
 
-void Zoom::State::Ruler::paint(juce::Graphics &g)
+void Zoom::Ruler::paint(juce::Graphics &g)
 {
     g.fillAll(findColour(backgroundColourId));
     auto fromZoomRange = [this](juce::Range<double> const& range) -> juce::Range<double>

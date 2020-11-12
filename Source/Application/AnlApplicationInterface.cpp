@@ -8,7 +8,7 @@ Application::Interface::Interface()
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>())
 , mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
-, mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(), Zoom::State::ScrollBar::Orientation::horizontal)
+, mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);

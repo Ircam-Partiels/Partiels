@@ -35,7 +35,7 @@ namespace Document
     , Model::Attr<AttrType::isPlaybackStarted, bool, AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, AttrFlag::notifying>
     //, Model::Attr<AttrType::analyzers, std::vector<std::unique_ptr<Analyzer::Accessor>>, AttrFlag::basic>
-    , Model::Attr<AttrType::timeZoom, Zoom::State::Container, AttrFlag::model | AttrFlag::saveable>
+    , Model::Attr<AttrType::timeZoom, Zoom::Container, AttrFlag::model | AttrFlag::saveable>
     >;
     
     class Accessor
@@ -65,7 +65,7 @@ namespace Document
         }
         
     private:
-        Zoom::State::Accessor zoomState {getValueRef<AttrType::timeZoom>()};
+        Zoom::Accessor zoomState {getValueRef<AttrType::timeZoom>()};
     };
 }
 

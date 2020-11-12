@@ -37,14 +37,14 @@ namespace Application
         Tools::ColouredPanel mHeaderSeparator;
         
         // Main
-        Zoom::State::TimeRuler mZoomStateTimeRuler;
+        Zoom::TimeRuler mZoomStateTimeRuler;
         Tools::ColouredPanel mZoomStateTimeRulerSeparator;
         Document::ControlPanel mDocumentControlPanel;
         Tools::ColouredPanel mDocumentControlPanelSeparator;
         
         //Footer
         Tools::ColouredPanel mBottomSeparator;
-        Zoom::State::ScrollBar mTimeScrollBar;
+        Zoom::ScrollBar mTimeScrollBar;
         Tools::ColouredPanel mTooTipSeparator;
         Tooltip::Display mToolTipDisplay;
   

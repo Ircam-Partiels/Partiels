@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::State::TimeRuler::TimeRuler(Accessor& accessor)
+Zoom::TimeRuler::TimeRuler(Accessor& accessor)
 : mPrimaryRuler(accessor, Ruler::Orientation::horizontal)
 , mSecondaryRuler(accessor, Ruler::Orientation::horizontal)
 {
@@ -52,12 +52,12 @@ Zoom::State::TimeRuler::TimeRuler(Accessor& accessor)
     addAndMakeVisible(mSecondaryRuler);
 }
 
-void Zoom::State::TimeRuler::paint(juce::Graphics &g)
+void Zoom::TimeRuler::paint(juce::Graphics &g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
 }
 
-void Zoom::State::TimeRuler::resized()
+void Zoom::TimeRuler::resized()
 {
     auto bounds = getLocalBounds();
     auto const rulerHeight = bounds.getHeight() / 2;
