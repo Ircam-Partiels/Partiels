@@ -145,7 +145,7 @@ namespace XmlParser
             auto* child = xml.getChildByName(attributeName);
             if(child != nullptr)
             {
-                return std::make_unique<T>(fromXml(*child, "attributeName", *defaultValue.get()));
+                return std::make_unique<T>(fromXml(*child, attributeName, *defaultValue.get()));
             }
             return std::make_unique<T>(*defaultValue.get());
         }
