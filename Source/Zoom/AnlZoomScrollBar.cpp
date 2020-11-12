@@ -1,4 +1,4 @@
-#include "AnlZoomStateScrollBar.h"
+#include "AnlZoomScrollBar.h"
 
 ANALYSE_FILE_BEGIN
 

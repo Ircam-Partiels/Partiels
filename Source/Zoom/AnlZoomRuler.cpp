@@ -1,4 +1,4 @@
-#include "AnlZoomStateRuler.h"
+#include "AnlZoomRuler.h"
 
 ANALYSE_FILE_BEGIN
 

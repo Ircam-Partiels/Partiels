@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlZoomStateModel.h"
+#include "AnlZoomModel.h"
 
 ANALYSE_FILE_BEGIN
 

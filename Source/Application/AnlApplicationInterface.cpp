@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
-, mZoomStateTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>())
+, mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>())
 , mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
 , mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal)
 {
@@ -15,8 +15,8 @@ Application::Interface::Interface()
     addAndMakeVisible(mDocumentFileInfoPanel);
     addAndMakeVisible(mHeaderSeparator);
     
-    addAndMakeVisible(mZoomStateTimeRuler);
-    addAndMakeVisible(mZoomStateTimeRulerSeparator);
+    addAndMakeVisible(mZoomTimeRuler);
+    addAndMakeVisible(mZoomTimeRulerSeparator);
     addAndMakeVisible(mDocumentControlPanel);
     addAndMakeVisible(mDocumentControlPanelSeparator);
     
@@ -82,9 +82,9 @@ void Application::Interface::resized()
     
     {
         auto top = bounds.removeFromTop(24 + separatorSize);
-        mZoomStateTimeRulerSeparator.setBounds(top.removeFromBottom(separatorSize));
+        mZoomTimeRulerSeparator.setBounds(top.removeFromBottom(separatorSize));
         top.removeFromLeft(240);
-        mZoomStateTimeRuler.setBounds(top);
+        mZoomTimeRuler.setBounds(top);
         
         mDocumentControlPanel.setBounds(bounds.removeFromLeft(240));
         mDocumentControlPanelSeparator.setBounds(bounds.removeFromLeft(2));

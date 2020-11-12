@@ -7,8 +7,8 @@
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentControlPanel.h"
-#include "../Zoom/AnlZoomStateTimeRuler.h"
-#include "../Zoom/AnlZoomStateScrollBar.h"
+#include "../Zoom/AnlZoomTimeRuler.h"
+#include "../Zoom/AnlZoomScrollBar.h"
 
 ANALYSE_FILE_BEGIN
 

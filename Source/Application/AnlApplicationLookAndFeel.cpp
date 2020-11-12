@@ -1,7 +1,7 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "../Tools/AnlPropertyLayout.h"
-#include "../Zoom/AnlZoomStateRuler.h"
-#include "../Zoom/AnlZoomStateTimeRuler.h"
+#include "../Zoom/AnlZoomRuler.h"
+#include "../Zoom/AnlZoomTimeRuler.h"
 
 ANALYSE_FILE_BEGIN
 

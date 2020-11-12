@@ -49,14 +49,14 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlTooltip.h)
 
 file(GLOB ZoomSources
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateModel.cpp
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateModel.h
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateRuler.cpp
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateRuler.h
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateScrollBar.cpp
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateScrollBar.h
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.cpp
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomStateTimeRuler.h)
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomModel.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomModel.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomRuler.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomRuler.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomTimeRuler.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomTimeRuler.h)
 
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.cpp

@@ -2,7 +2,7 @@
 
 #include "../Tools/AnlModel.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
-#include "../Zoom/AnlZoomStateModel.h"
+#include "../Zoom/AnlZoomModel.h"
 #include "../Tools/AnlBroadcaster.h"
 
 ANALYSE_FILE_BEGIN

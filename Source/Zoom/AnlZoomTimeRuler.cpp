@@ -1,4 +1,4 @@
-#include "AnlZoomStateTimeRuler.h"
+#include "AnlZoomTimeRuler.h"
 
 ANALYSE_FILE_BEGIN
 
