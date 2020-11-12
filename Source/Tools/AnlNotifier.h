@@ -16,7 +16,10 @@ template<class listener_t> class Notifier
 public:
     
     Notifier() = default;
-    ~Notifier() override = default;
+    ~Notifier() override
+    {
+        anlStrongAssert(mListeners.empty());
+    }
     
     bool add(listener_t& listener)
     {
