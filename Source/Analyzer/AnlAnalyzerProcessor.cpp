@@ -41,7 +41,7 @@ void Analyzer::Processor::perform(juce::AudioFormatReader& audioFormatReader, si
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
     
     juce::AudioBuffer<float> buffer(numChannels, static_cast<int>(blockSize));
-    instance->initialise( static_cast<size_t>(numChannels), blockSize, blockSize);
+    instance->initialise(static_cast<size_t>(numChannels), blockSize, blockSize);
     for(juce::int64 timeStamp = 0; timeStamp < lengthInSamples; timeStamp += blockSize)
     {
         auto const remaininSamples = std::min(lengthInSamples - timeStamp, static_cast<juce::int64>(blockSize));

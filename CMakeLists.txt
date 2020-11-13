@@ -36,9 +36,6 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.h
     ${SOURCES_DIRECTORY}/Tools/AnlModel.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlModel.h
-    ${SOURCES_DIRECTORY}/Tools/AnlModelAccessor.h
-    ${SOURCES_DIRECTORY}/Tools/AnlStringParser.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlStringParser.h
     ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.h
     ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.cpp

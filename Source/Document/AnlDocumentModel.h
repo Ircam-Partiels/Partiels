@@ -33,7 +33,7 @@ namespace Document
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::timeZoom, Zoom::Container, Model::AttrFlag::model | Model::AttrFlag::saveable>
-    , Model::AttrNoCopy<AttrType::analyzers, std::vector<std::unique_ptr<int>>, Model::AttrFlag::model | Model::AttrFlag::saveable>
+    , Model::AttrNoCopy<AttrType::analyzers, std::vector<std::unique_ptr<Analyzer::Container>>, Model::AttrFlag::model | Model::AttrFlag::basic>
     >;
     
     class Accessor
@@ -44,50 +44,43 @@ namespace Document
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
         
-        template <enum_type type, typename value_v>
-        void setValue(value_v const& value, NotificationType notification)
-        {
-            Model::Accessor<Accessor, Container>::setValue<type, value_v>(value, notification);
-        }
-        
-        template <>
-        void setValue<AttrType::analyzers, std::vector<std::unique_ptr<int>>>(std::vector<std::unique_ptr<int>> const& value, NotificationType notification)
-        {
-            std::cout << "aki\n";
-        }
+        template <AttrType type>
+        auto& getAccessor(size_t) noexcept;
         
         template <AttrType type>
-        auto& getAccessor() noexcept;
-        
-        template <AttrType type>
-        auto const& getAccessor() const noexcept;
+        auto const& getAccessor(size_t) const noexcept;
 
         template <>
-        auto& getAccessor<AttrType::timeZoom>() noexcept
+        auto& getAccessor<AttrType::timeZoom>(size_t) noexcept
         {
-            return zoomState;
+            return mZoomState;
         }
         
         template <>
-        auto const& getAccessor<AttrType::timeZoom>() const noexcept
+        auto const& getAccessor<AttrType::timeZoom>(size_t) const noexcept
         {
-            return zoomState;
+            return mZoomState;
         }
         
         template <>
-        auto& getAccessor<AttrType::analyzers>() noexcept
+        auto& getAccessor<AttrType::analyzers>(size_t index) noexcept
         {
-            return zoomState;
+            while(mAnalyzers.size() <= index)
+            {
+                mAnalyzers.push_back(std::make_unique<Analyzer::Accessor>(*getValueRef<AttrType::analyzers>()[mAnalyzers.size()].get()));
+            }
+            return *mAnalyzers[index].get();
         }
         
         template <>
-        auto const& getAccessor<AttrType::analyzers>() const noexcept
+        auto const& getAccessor<AttrType::analyzers>(size_t index) const noexcept
         {
-            return zoomState;
+            return *mAnalyzers[index].get();
         }
         
     private:
-        Zoom::Accessor zoomState {getValueRef<AttrType::timeZoom>()};
+        Zoom::Accessor mZoomState {getValueRef<AttrType::timeZoom>()};
+        std::vector<std::unique_ptr<Analyzer::Accessor>> mAnalyzers;
     };
 }
 

@@ -6,9 +6,9 @@ ANALYSE_FILE_BEGIN
 Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
-, mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>())
+, mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0))
 , mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
-, mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal)
+, mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);

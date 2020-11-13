@@ -32,7 +32,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
-    mAccessor.fromXml(*xml.get(), {}, NotificationType::synchronous);
+    mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mSavedState = mAccessor.getModel();
     triggerAsyncUpdate();
     return juce::Result::ok();

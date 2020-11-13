@@ -15,15 +15,25 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             dialogWindow->exitModalState(0);
         }
         
-        auto container = std::make_unique<Analyzer::Container>();
-        auto analyzer = std::make_unique<Analyzer::Accessor>(*container.get());
-        anlWeakAssert(analyzer != nullptr);
-        if(analyzer != nullptr)
+        auto const& analyzers = mAccessor.getValue<AttrType::analyzers>();
+        using container_type = std::remove_const<std::remove_reference<decltype(analyzers)>::type>::type;
+        using pointer_type = container_type::value_type;
+        using value_type = pointer_type::element_type;
+        container_type copy;
+        for(auto const& analyzer : analyzers)
         {
-            analyzer->setValue<Analyzer::AttrType::key>(key);
-//            auto copy = mAccessor.getModel();
-//            copy.analyzers.push_back(std::move(analyzer));
-//            mAccessor.fromModel(copy, NotificationType::synchronous);
+            auto value = std::make_unique<value_type>(analyzer != nullptr ? *analyzer.get() : value_type{});
+            if(value != nullptr)
+            {
+                copy.push_back(std::move(value));
+            }
+        }
+        auto container = std::make_unique<value_type>(value_type{{key}, {""}, {44100.0}, {0ul}, {{}}});
+        anlWeakAssert(container != nullptr);
+        if(container != nullptr)
+        {
+            copy.push_back(std::move(container));
+            mAccessor.setValue<AttrType::analyzers>(copy);
         }
     };
     
@@ -31,54 +41,66 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
     {
         switch (attribute)
         {
-//            case Attribute::analyzers:
-//            {
-//                auto const& ref = mAccessor.getModel();
-//                for(size_t i = mSections.size(); i < ref.analyzers.size(); ++i)
-//                {
-//                    auto& anlAcsr = mAccessor.getAnalyzerAccessor(i);
-//                    auto section = std::make_unique<Section>(anlAcsr);
-//                    anlWeakAssert(section != nullptr);
-//                    if(section != nullptr)
-//                    {
-//                        addAndMakeVisible(section->thumbnail);
-//                        addAndMakeVisible(section->separator);
-//                        mSections.push_back(std::move(section));
-//                    }
-//                }
-//                mSections.resize(ref.analyzers.size());
-//                for(size_t i = 0; i < mSections.size(); ++i)
-//                {
-//                    if(mSections[i] != nullptr)
-//                    {
-//                        mSections[i]->thumbnail.onRemove = [this, i]()
-//                        {
-//                            auto copy = mAccessor.getModel();
-//                            copy.analyzers.erase(copy.analyzers.begin() + static_cast<long>(i));
-//                            mAccessor.fromModel(copy, NotificationType::synchronous);
-//                        };
-//                        
-//                        mSections[i]->thumbnail.onRelaunch = [this, i]()
-//                        {
-//                            auto const file = mAccessor.getValue<AttrType::file>();
-//                            auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
-//                            if(audioFormat == nullptr)
-//                            {
-//                                return;
-//                            }
-//                            auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
-//                            if(audioFormatReader == nullptr)
-//                            {
-//                                return;
-//                            }
-//                            
-//                            mSections[i]->processor.perform(*audioFormatReader.get());
-//                        };
-//                    }
-//                }
-//                resized();
-//            }
-//                break;
+            case AttrType::analyzers:
+            {
+                auto const& analyzers = mAccessor.getValue<AttrType::analyzers>();
+                for(size_t i = mSections.size(); i < analyzers.size(); ++i)
+                {
+                    auto& anlAcsr = mAccessor.getAccessor<AttrType::analyzers>(i);
+                    auto section = std::make_unique<Section>(anlAcsr);
+                    anlWeakAssert(section != nullptr);
+                    if(section != nullptr)
+                    {
+                        addAndMakeVisible(section->thumbnail);
+                        addAndMakeVisible(section->separator);
+                        mSections.push_back(std::move(section));
+                    }
+                }
+                mSections.resize(analyzers.size());
+                for(size_t i = 0; i < mSections.size(); ++i)
+                {
+                    if(mSections[i] != nullptr)
+                    {
+                        mSections[i]->thumbnail.onRemove = [this, i]()
+                        {
+                            auto const& lanalyzers = mAccessor.getValue<AttrType::analyzers>();
+                            using container_type = std::remove_const<std::remove_reference<decltype(analyzers)>::type>::type;
+                            using pointer_type = container_type::value_type;
+                            using value_type = pointer_type::element_type;
+                            container_type copy;
+                            for(auto const& analyzer : lanalyzers)
+                            {
+                                auto value = std::make_unique<value_type>(analyzer != nullptr ? *analyzer.get() : value_type{});
+                                if(value != nullptr)
+                                {
+                                    copy.push_back(std::move(value));
+                                }
+                            }
+                            copy.erase(copy.begin() + static_cast<long>(i));
+                            mAccessor.setValue<AttrType::analyzers>(copy, NotificationType::synchronous);
+                        };
+                        
+                        mSections[i]->thumbnail.onRelaunch = [this, i]()
+                        {
+                            auto const file = mAccessor.getValue<AttrType::file>();
+                            auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
+                            if(audioFormat == nullptr)
+                            {
+                                return;
+                            }
+                            auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
+                            if(audioFormatReader == nullptr)
+                            {
+                                return;
+                            }
+                            
+                            mSections[i]->processor.perform(*audioFormatReader.get());
+                        };
+                    }
+                }
+                resized();
+            }
+                break;
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);

@@ -1,5 +1,4 @@
 #include "AnlZoomModel.h"
-#include "../Tools/AnlStringParser.h"
 
 ANALYSE_FILE_BEGIN
 

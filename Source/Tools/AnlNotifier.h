@@ -23,13 +23,13 @@ public:
     
     bool add(listener_t& listener)
     {
-        std::unique_lock<std::mutex> listenerLock(mListenerMutex);
+        std::unique_lock<std::recursive_mutex> listenerLock(mListenerMutex);
         return mListeners.insert(&listener).second;
     }
     
     void remove(listener_t& listener)
     {
-        std::unique_lock<std::mutex> listenerLock(mListenerMutex);
+        std::unique_lock<std::recursive_mutex> listenerLock(mListenerMutex);
         mListeners.erase(&listener);
     }
     
@@ -43,7 +43,7 @@ public:
         }
         else
         {
-            std::unique_lock<std::mutex> listenerLock(mListenerMutex);
+            std::unique_lock<std::recursive_mutex> listenerLock(mListenerMutex);
             for(auto* listener : mListeners)
             {
                 method(*listener);
@@ -72,7 +72,7 @@ private:
     std::queue<std::function<void(listener_t&)>> mQueue;
     std::mutex mQueueMutex;
     std::set<listener_t*> mListeners;
-    std::mutex mListenerMutex;
+    std::recursive_mutex mListenerMutex;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Notifier)
 };

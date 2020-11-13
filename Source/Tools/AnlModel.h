@@ -19,8 +19,6 @@ namespace Model
         model = 1 << 3,
     };
     
-    struct dummy {};
-    
     //! @brief The private implementation of an attribute of a model
     template<typename enum_t, enum_t index_v, typename value_t, int flags_v>
     struct AttrImpl
@@ -127,17 +125,64 @@ namespace Model
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             using value_type = typename attr_type::value_type;
+            auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
             if constexpr((attr_type::flags & AttrFlag::model) != 0)
             {
-                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>();
-                acsr.fromModel(value, notification);
+                if constexpr(is_specialization<value_type, std::vector>::value)
+                {
+                    using vector_value_type = typename value_type::value_type;
+                    lvalue.reserve(value.size());
+                    while(lvalue.size() < value.size())
+                    {
+                        if constexpr(is_specialization<vector_value_type, std::unique_ptr>::value)
+                        {
+                            using element_value_type = typename vector_value_type::element_type;
+                            lvalue.push_back(std::make_unique<element_value_type>(*value[lvalue.size()].get()));
+                        }
+                        else
+                        {
+                            lvalue.push_back(value[lvalue.size()]);
+                        }
+                    }
+                    for(size_t index = 0; index < value.size(); ++index)
+                    {
+                        auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>(index);
+                        if constexpr(is_specialization<vector_value_type, std::unique_ptr>::value)
+                        {
+                            if(value[index] != nullptr)
+                            {
+                                acsr.fromModel(*value[index].get(), notification);
+                            }
+                        }
+                        else
+                        {
+                            acsr.fromModel(value[index], notification);
+                        }
+                    }
+                    JUCE_COMPILER_WARNING("improve that")
+                    if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
+                    {
+                        mListeners.notify([=](Listener& listener)
+                        {
+                            anlWeakAssert(listener.onChanged != nullptr);
+                            if(listener.onChanged != nullptr)
+                            {
+                                listener.onChanged(*static_cast<parent_t const*>(this), type);
+                            }
+                        }, notification);
+                    }
+                }
+                else
+                {
+                    auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>(0);
+                    acsr.fromModel(value, notification);
+                }
             }
             else if constexpr(std::is_same<value_type, T>::value)
             {
-                auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
                 if(equal(lvalue, value) == false)
                 {
-                    set<value_type>(std::get<static_cast<size_t>(type)>(mData).value, value);
+                    set<value_type>(lvalue, value);
                     if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([=](Listener& listener)
@@ -184,14 +229,49 @@ namespace Model
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
+                    using value_type = typename element_type::value_type;
                     static auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                    
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>();
-                        auto child = acsr.toXml(enumname.c_str());
-                        if(child != nullptr)
+                        if constexpr(is_specialization<value_type, std::vector>::value)
                         {
-                            xml->addChildElement(child.release());
+                            using vector_value_type = typename value_type::value_type;
+                            for(size_t i = 0; i < d.value.size(); ++i)
+                            {
+                                if constexpr(is_specialization<vector_value_type, std::unique_ptr>::value)
+                                {
+                                    anlWeakAssert(d.value[i] != nullptr);
+                                    if(d.value[i] != nullptr)
+                                    {
+                                        auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(i);
+                                        auto child = acsr.toXml(enumname.c_str());
+                                        if(child != nullptr)
+                                        {
+                                            xml->addChildElement(child.release());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    
+                                    auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(i);
+                                    auto child = acsr.toXml(enumname.c_str());
+                                    if(child != nullptr)
+                                    {
+                                        xml->addChildElement(child.release());
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(0);
+                            auto child = acsr.toXml(enumname.c_str());
+                            if(child != nullptr)
+                            {
+                                xml->addChildElement(child.release());
+                            }
                         }
                     }
                     else
@@ -221,13 +301,30 @@ namespace Model
                 {
                     auto constexpr attr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                    
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        auto* child = xml.getChildByName(enumname.c_str());
-                        if(child != nullptr)
+                        using value_type = typename element_type::value_type;
+                        if constexpr(is_specialization<value_type, std::vector>::value)
                         {
-                            auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>();
-                            acsr.fromXml(*child, enumname.c_str(), notification);
+                            size_t index = 0;
+                            auto* child = xml.getChildByName(enumname.c_str());
+                            while(child != nullptr)
+                            {
+                                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>(index);
+                                acsr.fromXml(*child, enumname.c_str(), notification);
+                                child = child->getNextElementWithTagName(enumname.c_str());
+                                ++index;
+                            }
+                        }
+                        else
+                        {
+                            auto* child = xml.getChildByName(enumname.c_str());
+                            if(child != nullptr)
+                            {
+                                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>(0);
+                                acsr.fromXml(*child, enumname.c_str(), notification);
+                            }
                         }
                     }
                     else
@@ -263,11 +360,19 @@ namespace Model
                     using element_type = typename std::remove_reference<decltype(d)>::type;
                     if constexpr((element_type::flags & AttrFlag::comparable) != 0)
                     {
+                        using value_type = typename element_type::value_type;
                         auto constexpr attr_type = element_type::type;
                         if constexpr((element_type::flags & AttrFlag::model) != 0)
                         {
-                            auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>();
-                            result = acsr.isEquivalentTo(std::get<static_cast<size_t>(attr_type)>(model).value);
+                            if constexpr(is_specialization<value_type, std::vector>::value)
+                            {
+                                JUCE_COMPILER_WARNING("to do")
+                            }
+                            else
+                            {
+                                auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(0);
+                                result = acsr.isEquivalentTo(std::get<static_cast<size_t>(attr_type)>(model).value);
+                            }
                         }
                         else
                         {
@@ -322,16 +427,14 @@ namespace Model
         template <enum_type type>
         auto& getValueRef() noexcept
         {
-            using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((attr_type::flags & AttrFlag::notifying) == 0, "notifying value cannot be retrieved directly");
             return std::get<static_cast<size_t>(type)>(mData).value;
         }
         
         template <enum_type type>
-        auto& getAccessor() noexcept;
+        auto& getAccessor(size_t index) noexcept;
         
         template <enum_type type>
-        auto const& getAccessor() const noexcept;
+        auto const& getAccessor(size_t index) const noexcept;
         
     private:
         
