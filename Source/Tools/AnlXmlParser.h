@@ -142,12 +142,13 @@ namespace XmlParser
         }
         else if constexpr(is_specialization<T, std::unique_ptr>::value)
         {
+            using element_type = typename T::element_type;
             auto* child = xml.getChildByName(attributeName);
             if(child != nullptr)
             {
-                return std::make_unique<T>(fromXml(*child, attributeName, *defaultValue.get()));
+                return std::make_unique<element_type>(fromXml(*child, attributeName, *defaultValue.get()));
             }
-            return std::make_unique<T>(*defaultValue.get());
+            return std::make_unique<element_type>(*defaultValue.get());
         }
         else
         {

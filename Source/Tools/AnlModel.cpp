@@ -39,8 +39,6 @@ public:
     
     void runTest() override
     {
-        using AttrFlag = Model::AttrFlag;
-        
         // Declare the name (type) of the attributes of the data model
         enum AttrType : size_t
         {
@@ -50,18 +48,18 @@ public:
             attr3,
             attr4,
             attr5,
-            attr6,
+            attr6
         };
         
         // Declare the data model container
         using ModelCtnr = Model::Container
-        < Model::Attr<AttrType::attr0, int, AttrFlag::basic>
-        , Model::Attr<AttrType::attr1, int, AttrFlag::notifying>
-        , Model::Attr<AttrType::attr2, float, AttrFlag::saveable>
-        , Model::Attr<AttrType::attr3, std::vector<int>, AttrFlag::ignored>
-        , Model::Attr<AttrType::attr4, std::string, AttrFlag::notifying>
-        , Model::Attr<AttrType::attr5, std::vector<double>, AttrFlag::saveable | AttrFlag::comparable>
-        , Model::Attr<AttrType::attr6, DummyAttr, AttrFlag::basic>
+        < Model::Attr<AttrType::attr0, int, Model::AttrFlag::basic>
+        , Model::Attr<AttrType::attr1, int, Model::AttrFlag::notifying>
+        , Model::Attr<AttrType::attr2, float, Model::AttrFlag::saveable>
+        , Model::Attr<AttrType::attr3, std::vector<int>, Model::AttrFlag::ignored>
+        , Model::Attr<AttrType::attr4, std::string, Model::AttrFlag::notifying>
+        , Model::Attr<AttrType::attr5, std::vector<double>, Model::AttrFlag::saveable | Model::AttrFlag::comparable>
+        , Model::Attr<AttrType::attr6, DummyAttr, Model::AttrFlag::basic>
         >;
         
         // Declare the data model accessor
@@ -69,6 +67,7 @@ public:
         : public Model::Accessor<ModelAcsr, ModelCtnr>
         {
             using Model::Accessor<ModelAcsr, ModelCtnr>::Accessor;
+            using enum_type = Model::Accessor<ModelAcsr, ModelCtnr>::enum_type;
         };
         
         // Declare the data model listener
@@ -76,11 +75,11 @@ public:
         
         beginTest("attribute flags");
         {
-            expect(magic_enum::enum_integer(AttrFlag::ignored) == 0);
-            expect(magic_enum::enum_integer(AttrFlag::notifying) == 1);
-            expect(magic_enum::enum_integer(AttrFlag::saveable) == 2);
-            expect(magic_enum::enum_integer(AttrFlag::comparable) == 4);
-            expect(magic_enum::enum_integer(AttrFlag::basic) == 7);
+            expect(magic_enum::enum_integer(Model::AttrFlag::ignored) == 0);
+            expect(magic_enum::enum_integer(Model::AttrFlag::notifying) == 1);
+            expect(magic_enum::enum_integer(Model::AttrFlag::saveable) == 2);
+            expect(magic_enum::enum_integer(Model::AttrFlag::comparable) == 4);
+            expect(magic_enum::enum_integer(Model::AttrFlag::basic) == 7);
         }
         
         beginTest("accessor default constructor");

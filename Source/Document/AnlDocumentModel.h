@@ -16,8 +16,8 @@ namespace Document
         gain,
         isPlaybackStarted,
         playheadPosition,
-        //analyzers,
-        timeZoom
+        timeZoom,
+        analyzers
     };
     
     enum class Signal
@@ -32,8 +32,8 @@ namespace Document
     , Model::Attr<AttrType::gain, double, Model::AttrFlag::basic>
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
-    //, Model::Attr<AttrType::analyzers, std::vector<std::unique_ptr<Analyzer::Accessor>>, AttrFlag::basic>
     , Model::Attr<AttrType::timeZoom, Zoom::Container, Model::AttrFlag::model | Model::AttrFlag::saveable>
+    , Model::AttrNoCopy<AttrType::analyzers, std::vector<std::unique_ptr<int>>, Model::AttrFlag::model | Model::AttrFlag::saveable>
     >;
     
     class Accessor
@@ -43,6 +43,18 @@ namespace Document
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
+        
+        template <enum_type type, typename value_v>
+        void setValue(value_v const& value, NotificationType notification)
+        {
+            Model::Accessor<Accessor, Container>::setValue<type, value_v>(value, notification);
+        }
+        
+        template <>
+        void setValue<AttrType::analyzers, std::vector<std::unique_ptr<int>>>(std::vector<std::unique_ptr<int>> const& value, NotificationType notification)
+        {
+            std::cout << "aki\n";
+        }
         
         template <AttrType type>
         auto& getAccessor() noexcept;
@@ -58,6 +70,18 @@ namespace Document
         
         template <>
         auto const& getAccessor<AttrType::timeZoom>() const noexcept
+        {
+            return zoomState;
+        }
+        
+        template <>
+        auto& getAccessor<AttrType::analyzers>() noexcept
+        {
+            return zoomState;
+        }
+        
+        template <>
+        auto const& getAccessor<AttrType::analyzers>() const noexcept
         {
             return zoomState;
         }

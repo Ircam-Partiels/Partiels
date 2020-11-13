@@ -15,9 +15,11 @@ namespace Model
         notifying = 1 << 0,
         saveable = 1 << 1,
         comparable = 1 << 2,
+        basic = notifying | saveable | comparable,
         model = 1 << 3,
-        basic = notifying | saveable | comparable
     };
+    
+    struct dummy {};
     
     //! @brief The private implementation of an attribute of a model
     template<typename enum_t, enum_t index_v, typename value_t, int flags_v>
@@ -32,11 +34,54 @@ namespace Model
         static enum_type const type = static_cast<enum_type>(index_v);
         static int const flags = flags_v;
         value_type value;
+        AttrImpl() = default;
+        AttrImpl(AttrImpl const& other)
+        {
+            if constexpr((flags & move_semanti_only) == 0)
+            {
+                value = other.value;
+            }
+        }
+        AttrImpl(AttrImpl&& other) : value(std::move(other.value)) {}
+        AttrImpl(value_type const& other)
+        {
+            if constexpr((flags & move_semanti_only) == 0)
+            {
+                value = other;
+            }
+        }
+        AttrImpl(value_type&& other) : value(std::move(other)) {}
+        
+        AttrImpl& operator=(AttrImpl const& other)
+        {
+            if constexpr((flags & move_semanti_only) == 0)
+            {
+                value = other.value;
+            }
+            return *this;
+        }
+        AttrImpl& operator=(AttrImpl&& other) {value = std::move(other.value); return *this;}
+        AttrImpl& operator=(value_type const& other)
+        {
+            if constexpr((flags & move_semanti_only) == 0)
+            {
+                value = other;
+            }
+            return *this;
+        }
+        AttrImpl& operator=(value_type&& other) {value = std::move(other); return *this;}
+        
+    private:
+        static constexpr int move_semanti_only = 1 << 16;
     };
-    
+
     //! @brief The template typle of an attribute of a model
     template<auto index_v, typename value_t, int flags_v>
     using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
+    
+    //! @brief The template typle of an attribute of a model
+    template<auto index_v, typename value_t, int flags_v>
+    using AttrNoCopy = AttrImpl<decltype(index_v), index_v, value_t, flags_v+(1 << 16)>;
     
     //! @brief The container type for a set of attributes
     template <class ..._Tp>
@@ -77,7 +122,6 @@ namespace Model
         
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        //! @todo Perhaps we should use an internal listener to keep  a temporary previous value
         template <enum_type type, typename T>
         void setValue(T const& value, NotificationType notification = NotificationType::synchronous)
         {
@@ -88,17 +132,16 @@ namespace Model
                 auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>();
                 acsr.fromModel(value, notification);
             }
-            else
+            else if constexpr(std::is_same<value_type, T>::value)
             {
                 auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
-                value_type tempValue = value;
-                if(equal(lvalue, tempValue) == false)
+                if(equal(lvalue, value) == false)
                 {
-                    exchange<value_type>(std::get<static_cast<size_t>(type)>(mData).value, tempValue, notification);
+                    set<value_type>(std::get<static_cast<size_t>(type)>(mData).value, value);
                     if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([=](Listener& listener)
-                                          {
+                        {
                             anlWeakAssert(listener.onChanged != nullptr);
                             if(listener.onChanged != nullptr)
                             {
@@ -108,6 +151,11 @@ namespace Model
                     }
                 }
             }
+            else
+            {
+                value_type const tvalue(value);
+                static_cast<parent_t*>(this)->template setValue<type>(tvalue, notification);
+            }
         }
         
         //! @brief Sets the value of an attribute (initializer list specialization)
@@ -116,7 +164,7 @@ namespace Model
         {
             using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             typename attr_type::value_type const value {tvalue};
-            setValue<type>(value, notification);
+            static_cast<parent_t*>(this)->template setValue<type>(value, notification);
         }
         
         //! @brief Parse the model to xml
@@ -184,7 +232,7 @@ namespace Model
                     }
                     else
                     {
-                        setValue<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);                       
+                        static_cast<parent_t*>(this)->template setValue<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
                     }
                 }
             });
@@ -193,12 +241,14 @@ namespace Model
         //! @brief Copy the content from another model
         void fromModel(container_type const& model, NotificationType notification = NotificationType::synchronous)
         {
-            detail::for_each(mData, [&](auto& d)
+            detail::for_each(model, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                auto constexpr attr_type = element_type::type;
-                auto const& value = std::get<static_cast<size_t>(attr_type)>(model).value;
-                setValue<attr_type>(value, notification);
+                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                {
+                    auto constexpr attr_type = element_type::type;
+                    static_cast<parent_t*>(this)->template setValue<attr_type>(d.value, notification);
+                }
             });
         }
         
@@ -326,43 +376,37 @@ namespace Model
         
         // This is a specific assignement method that manage containers and unique pointer
         template <typename T> static
-        void exchange(T& lhs, T& rhs, NotificationType const notification)
+        void set(T& lhs, T const& rhs)
         {
             if constexpr(is_specialization<T, std::vector>::value)
             {
-                JUCE_COMPILER_WARNING("to do");
                 lhs.resize(rhs.size());
                 for(size_t i = 0; i < lhs.size(); ++i)
                 {
-                    exchange(lhs[i], rhs[i], notification);
+                    set(lhs[i], rhs[i]);
                 }
             }
             else if constexpr(is_specialization<T, std::vector>::value)
             {
-                JUCE_COMPILER_WARNING("to do");
                 std::erase_if(lhs, [&](auto const& pair)
                 {
                     return rhs.count(pair.first) == 0;
                 });
                 for(auto const& pair : rhs)
                 {
-                    exchange(lhs[pair.first], pair.second, notification);
+                    set(lhs[pair.first], pair.second);
                 }
             }
             else if constexpr(is_specialization<T, std::unique_ptr>::value)
             {
-                if((lhs == nullptr && rhs != nullptr) || (lhs != nullptr && rhs == nullptr))
-                {
-                    std::swap(lhs, rhs);
-                }
                 if(lhs != nullptr && rhs != nullptr)
                 {
-                    exchange(*lhs.get(), *rhs.get(), notification);
+                    set(*lhs.get(), *rhs.get());
                 }
             }
             else
             {
-                std::swap(lhs, rhs);
+                lhs = rhs;
             }
         }
         
