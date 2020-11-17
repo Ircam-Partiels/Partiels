@@ -212,8 +212,8 @@ namespace Model
             return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
         }
         
-        template <enum_type type, typename T>
-        void insertModel(long index, T model, NotificationType notification = NotificationType::synchronous)
+        template <enum_type type>
+        void insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type model, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
@@ -221,7 +221,7 @@ namespace Model
             using submodel_container_type = typename element_type::container_type;
             static_assert(element_type::size_flags == 0, "model is not resizable");
             
-            auto container = std::make_unique<submodel_container_type>(std::forward<T>(model));
+            auto container = std::make_unique<submodel_container_type>(std::move(model));
             anlStrongAssert(container != nullptr);
             if(container == nullptr)
             {
@@ -389,21 +389,42 @@ namespace Model
                     
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        JUCE_COMPILER_WARNING("to do");
-//
-//                        using value_type = typename element_type::value_type;
-//                        if constexpr(is_specialization<value_type, std::vector>::value)
-//                        {
-//                            size_t index = 0;
-//                            auto* child = xml.getChildByName(enumname.c_str());
-//                            while(child != nullptr)
-//                            {
-//                                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>(index);
-//                                acsr.fromXml(*child, enumname.c_str(), notification);
-//                                child = child->getNextElementWithTagName(enumname.c_str());
-//                                ++index;
-//                            }
-//                        }
+                        std::vector<juce::XmlElement const*> childs;
+                        for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
+                        {
+                            childs.push_back(child);
+                        }
+                        
+                        auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
+                        anlStrongAssert(element_type::size_flags == 0 || childs.size() == containers.size());
+                        if constexpr(element_type::size_flags == 0)
+                        {
+                            while(containers.size() > childs.size())
+                            {
+                                auto const index = containers.size() - 1;
+                                eraseModel<attr_type>(index);
+                            }
+                        }
+                        for(size_t index = 0; index < std::min(containers.size(), childs.size()); ++index)
+                        {
+                            anlStrongAssert(containers[index] != nullptr);
+                            if(containers[index] != nullptr)
+                            {
+                                containers[index]->accessor.fromXml(*childs[index], enumname.c_str(), notification);
+                            }
+                        }
+                        if constexpr(element_type::size_flags == 0)
+                        {
+                            while(childs.size() > containers.size())
+                            {
+                                auto const index = containers.size();
+                                insertModel<attr_type>(static_cast<long>(index), {});
+                                if(containers[index] != nullptr)
+                                {
+                                    containers[index]->accessor.fromXml(*childs[index], enumname.c_str(), notification);
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -424,29 +445,29 @@ namespace Model
                     auto constexpr attr_type = element_type::type;
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        auto acsrs = getAccessors<attr_type>();
-                        anlStrongAssert(element_type::size_flags == 0 || d.containers.size() == acsrs.size());
+                        auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
+                        anlStrongAssert(element_type::size_flags == 0 || d.containers.size() == containers.size());
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(acsrs.size() > d.containers.size())
+                            while(containers.size() > d.containers.size())
                             {
-                                auto const index = acsrs.size() - 1;
+                                auto const index = containers.size() - 1;
                                 eraseModel<attr_type>(index);
                             }
                         }
-                        for(size_t index = 0; index < std::min(acsrs.size(), d.containers.size()); ++index)
+                        for(size_t index = 0; index < std::min(containers.size(), d.containers.size()); ++index)
                         {
-                            anlStrongAssert(d.containers[index] != nullptr);
-                            if(d.containers[index] != nullptr)
+                            anlStrongAssert(containers[index] != nullptr && d.containers[index] != nullptr);
+                            if(containers[index] != nullptr && d.containers[index] != nullptr)
                             {
-                                acsrs[index].get().fromModel(d.containers[index]->accessor.getModel(), notification);
+                                containers[index]->accessor.fromModel(d.containers[index]->accessor.getModel(), notification);
                             }
                         }
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(d.containers.size() > acsrs.size())
+                            while(d.containers.size() > containers.size())
                             {
-                                auto const index = acsrs.size();
+                                auto const index = containers.size();
                                 anlStrongAssert(d.containers[index] != nullptr);
                                 if(d.containers[index] != nullptr)
                                 {
@@ -479,11 +500,7 @@ namespace Model
                         if constexpr((element_type::flags & AttrFlag::model) != 0)
                         {
                             auto const acsrs = getAccessors<attr_type>();
-                            if(acsrs.size() != d.containers.size())
-                            {
-                                result = false;
-                            }
-                            result = std::equal(acsrs.cbegin(), acsrs.cend(), d.containers.cbegin(), [](auto const& acsr, auto const& ctnr)
+                            result = acsrs.size() != d.containers.size() || std::equal(acsrs.cbegin(), acsrs.cend(), d.containers.cbegin(), [](auto const& acsr, auto const& ctnr)
                             {
                                 return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->accessor.getModel());
                             });
