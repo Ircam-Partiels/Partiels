@@ -66,8 +66,8 @@ file(GLOB PluginSources
 file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginInstance.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginManager.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPluginManager.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.cpp

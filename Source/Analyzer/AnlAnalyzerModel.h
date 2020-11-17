@@ -4,11 +4,6 @@
 #include "../Tools/AnlBroadcaster.h"
 #include "../Tools/AnlAtomicManager.h"
 
-namespace Vamp
-{
-    class Plugin;
-}
-
 ANALYSE_FILE_BEGIN
 
 namespace Analyzer
@@ -29,20 +24,12 @@ namespace Analyzer
     , Model::Attr<AttrType::numChannels, unsigned long, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
     >;
-    
-    enum class Signal
-    {
-        pluginInstanceChanged
-    };
-    
+
     class Accessor
     : public Model::Accessor<Accessor, Container>
-    , public Broadcaster<Accessor, Signal>
-    , public Tools::AtomicManager<Vamp::Plugin>
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
-        using enum_type = Model::Accessor<Accessor, Container>::enum_type;
     };
 }
 

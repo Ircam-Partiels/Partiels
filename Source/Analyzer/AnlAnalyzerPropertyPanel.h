@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
+#include "AnlAnalyzerPluginManager.h"
 #include "../Tools/AnlPropertyLayout.h"
 
 ANALYSE_FILE_BEGIN
@@ -9,6 +10,7 @@ namespace Analyzer
 {
     class PropertyPanel
     : public juce::Component
+    , public Tools::AtomicManager<Vamp::Plugin>
     {
     public:
         
@@ -30,7 +32,6 @@ namespace Analyzer
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
         
         std::vector<std::unique_ptr<Property>> mProperties;
         Tools::PropertyLayout mPropertyLayout;

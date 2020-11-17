@@ -1,5 +1,5 @@
 #include "AnlAnalyzerProcessor.h"
-#include "../Tools/AnlAtomicManager.h"
+#include "AnlAnalyzerPluginManager.h"
 
 #include <vamp-hostsdk/PluginLoader.h>
 #include <vamp-hostsdk/PluginHostAdapter.h>
@@ -14,7 +14,7 @@ Analyzer::Processor::Processor(Accessor& accessor)
 
 void Analyzer::Processor::perform(juce::AudioFormatReader& audioFormatReader, size_t blockSize)
 {
-    auto instance = mAccessor.getInstance();
+    auto instance = PluginManager::createInstance(mAccessor, true);
     if(instance == nullptr)
     {
         return;

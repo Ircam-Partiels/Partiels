@@ -4,7 +4,6 @@
 #include "../Tools/AnlColouredPanel.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
-#include "../Analyzer/AnlAnalyzerPluginInstance.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 
 ANALYSE_FILE_BEGIN
@@ -30,13 +29,11 @@ namespace Document
         {
             Section(Analyzer::Accessor& acsr)
             : thumbnail(acsr)
-            , instance(acsr)
             , processor(acsr)
             {
                 
             }
             Analyzer::Thumbnail thumbnail;
-            Analyzer::PluginInstance instance;
             Analyzer::Processor processor;
             Tools::ColouredPanel separator;
         };

@@ -39,8 +39,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         launchOption.useNativeTitleBar = false;
         launchOption.resizable = false;
         launchOption.useBottomRightCornerResizer = false;
-        auto dialogWindow = launchOption.launchAsync();
-        dialogWindow->runModalLoop();
+        launchOption.runModal();
     };
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -50,32 +49,19 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::name:
                 mNameLabel.setText(acsr.getValue<AttrType::name>(), juce::NotificationType::dontSendNotification);
                 break;
-                
-            default:
+            case AttrType::key:
+            case AttrType::sampleRate:
+            case AttrType::numChannels:
+            case AttrType::parameters:
                 break;
         }
     };
-    
-    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
-    {
-        if(signal == Signal::pluginInstanceChanged)
-        {
-            auto instance = acsr.getInstance();
-            if(instance != nullptr && mAccessor.getValue<AttrType::name>().isEmpty())
-            {
 
-            }
-        }
-    };
-    
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.addReceiver(mReceiver);
-    mReceiver.onSignal(mAccessor, Signal::pluginInstanceChanged, {});
 }
 
 Analyzer::Thumbnail::~Thumbnail()
 {
-    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 
