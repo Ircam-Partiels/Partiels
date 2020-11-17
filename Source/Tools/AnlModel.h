@@ -16,7 +16,7 @@ namespace Model
         saveable = 1 << 1,
         comparable = 1 << 2,
         basic = notifying | saveable | comparable,
-        model = 1 << 3,
+        model = 1 << 3 // private
     };
     
     //! @brief The private implementation of an attribute of a model
@@ -25,6 +25,8 @@ namespace Model
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
+        static_assert(std::is_default_constructible<value_t>::value, "value_t must be default constructible");
+        static_assert(std::is_copy_constructible<value_t>::value, "value_t must be copy constructible");
         
         using enum_type = enum_t;
         using value_type = value_t;
@@ -32,54 +34,94 @@ namespace Model
         static enum_type const type = static_cast<enum_type>(index_v);
         static int const flags = flags_v;
         value_type value;
-        AttrImpl() = default;
-        AttrImpl(AttrImpl const& other)
-        {
-            if constexpr((flags & move_semanti_only) == 0)
-            {
-                value = other.value;
-            }
-        }
-        AttrImpl(AttrImpl&& other) : value(std::move(other.value)) {}
-        AttrImpl(value_type const& other)
-        {
-            if constexpr((flags & move_semanti_only) == 0)
-            {
-                value = other;
-            }
-        }
-        AttrImpl(value_type&& other) : value(std::move(other)) {}
+    };
+    
+    //! @brief The private implementation of sub model
+    template<typename enum_t, enum_t index_v, typename model_t, typename accessor_t, int flags_v, size_t size_flags_v>
+    struct SubModelImp
+    {
+        static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
+        static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
         
-        AttrImpl& operator=(AttrImpl const& other)
-        {
-            if constexpr((flags & move_semanti_only) == 0)
-            {
-                value = other.value;
-            }
-            return *this;
-        }
-        AttrImpl& operator=(AttrImpl&& other) {value = std::move(other.value); return *this;}
-        AttrImpl& operator=(value_type const& other)
-        {
-            if constexpr((flags & move_semanti_only) == 0)
-            {
-                value = other;
-            }
-            return *this;
-        }
-        AttrImpl& operator=(value_type&& other) {value = std::move(other); return *this;}
+        using enum_type = enum_t;
+        using model_type = model_t;
+        using accessor_type = accessor_t;
         
-    private:
-        static constexpr int move_semanti_only = 1 << 16;
+        struct container_type
+        {
+        private:
+            model_type model;
+            
+        public:
+            accessor_type accessor {model};
+            container_type() = default;
+            container_type(model_type const& m)
+            : model(m)
+            {
+            }
+            
+            container_type(model_type&& m)
+            : model(std::move(m))
+            {
+            }
+        };
+        
+        static enum_type const type = static_cast<enum_type>(index_v);
+        static int const flags = flags_v | model;
+        static size_t const size_flags = size_flags_v;
+        std::vector<std::unique_ptr<container_type>> containers;
+        
+        SubModelImp()
+        {
+            containers.reserve(size_flags);
+            for(size_t i = 0; i < size_flags; ++i)
+            {
+                containers.push_back(std::make_unique<container_type>());
+            }
+        }
+        
+        SubModelImp(SubModelImp const& other)
+        {
+            auto const& ctnrs = other.containers;
+            anlStrongAssert(size_flags == 0 || ctnrs.size() == size_flags);
+            auto const numContainers = size_flags > 0 ? size_flags : ctnrs.size();
+            for(size_t i = 0; i < numContainers; ++i)
+            {
+                anlStrongAssert(i < ctnrs.size() && ctnrs[i] != nullptr);
+                if(i < ctnrs.size() && ctnrs[i] != nullptr)
+                {
+                    containers.push_back(std::make_unique<container_type>(ctnrs[i]->accessor.getModel()));
+                }
+                else
+                {
+                    containers.push_back(std::make_unique<container_type>());
+                }
+            }
+        }
+        
+        SubModelImp(SubModelImp&& other) : containers(std::move(other.containers))
+        {
+            anlStrongAssert(size_flags == 0 || containers.size() == size_flags);
+        }
+        
+        SubModelImp(std::initializer_list<model_type> models)
+        {
+            containers.reserve(models.size());
+            for(auto model : models)
+            {
+                containers.push_back(std::make_unique<container_type>(model));
+            }
+            anlStrongAssert(size_flags == 0 || containers.size() == size_flags);
+        }
     };
 
-    //! @brief The template typle of an attribute of a model
+    //! @brief The template implementation of an attribute of a model
     template<auto index_v, typename value_t, int flags_v>
     using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
     
-    //! @brief The template typle of an attribute of a model
-    template<auto index_v, typename value_t, int flags_v>
-    using AttrNoCopy = AttrImpl<decltype(index_v), index_v, value_t, flags_v+(1 << 16)>;
+    //! @brief The template implementation of an attribute of a model
+    template<auto index_v, typename model_t, typename accessor_t, int flags_v, size_t size_v>
+    using Model = SubModelImp<decltype(index_v), index_v, model_t, accessor_t, flags_v, size_v>;
     
     //! @brief The container type for a set of attributes
     template <class ..._Tp>
@@ -90,11 +132,11 @@ namespace Model
     class Accessor
     {
     public:
-        static constexpr bool model_accessor = true;
         using container_type = container_t;
         using enum_type = typename std::tuple_element<0, container_type>::type::enum_type;
+        
         static_assert(std::is_same<typename std::underlying_type<enum_type>::type, size_t>::value, "enum_t underlying type must be size_t");
-        static_assert(is_specialization<container_type, std::tuple>::value, "econtainer_t must be a specialization of std::tuple");
+        static_assert(is_specialization<container_type, std::tuple>::value, "container_t must be a specialization of std::tuple");
         
         //! @brief The constructor with data
         Accessor(container_type const& data)
@@ -111,10 +153,132 @@ namespace Model
             return mData;
         }
         
+        //! @brief Gets all the accessors of an attriute
+        template <enum_type type>
+        auto getAccessors() noexcept
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            
+            using accessor_type = typename element_type::accessor_type;
+            auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
+            std::vector<std::reference_wrapper<accessor_type>> acrs;
+            acrs.reserve(containers.size());
+            for(auto& container : containers)
+            {
+                anlStrongAssert(container != nullptr);
+                if(container != nullptr)
+                {
+                    acrs.push_back(container->accessor);
+                }
+            }
+            return acrs;
+        }
+        
+        template <enum_type type>
+        auto const getAccessors() const noexcept
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            
+            using accessor_type = typename element_type::accessor_type;
+            auto const& containers = std::get<static_cast<size_t>(type)>(mData).containers;
+            std::vector<std::reference_wrapper<accessor_type const>> acrs;
+            acrs.reserve(containers.size());
+            for(auto const& container : containers)
+            {
+                anlStrongAssert(container != nullptr);
+                if(container != nullptr)
+                {
+                    acrs.push_back(container->accessor);
+                }
+            }
+            return acrs;
+        }
+        
+        template <enum_type type>
+        auto& getAccessor(size_t index) noexcept
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
+        }
+        
+        template <enum_type type>
+        auto const& getAccessor(size_t index) const noexcept
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
+        }
+        
+        template <enum_type type, typename T>
+        void insertModel(long index, T model, NotificationType notification = NotificationType::synchronous)
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            
+            using submodel_container_type = typename element_type::container_type;
+            static_assert(element_type::size_flags == 0, "model is not resizable");
+            
+            auto container = std::make_unique<submodel_container_type>(std::forward<T>(model));
+            anlStrongAssert(container != nullptr);
+            if(container == nullptr)
+            {
+                return;
+            }
+            
+            auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
+            auto it = containers.insert(containers.begin() + std::max(index, static_cast<long>(containers.size())), std::move(container));
+            if(it != containers.end())
+            {
+                if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+                {
+                    mListeners.notify([=](Listener& listener)
+                    {
+                        anlWeakAssert(listener.onChanged != nullptr);
+                        if(listener.onChanged != nullptr)
+                        {
+                            listener.onChanged(*static_cast<parent_t const*>(this), type);
+                        }
+                    }, notification);
+                }
+            }
+        }
+        
+        template <enum_type type>
+        void eraseModel(size_t index, NotificationType notification = NotificationType::synchronous)
+        {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            
+            using submodel_container_type = typename element_type::container_type;
+            static_assert(element_type::size_flags == 0, "model is not resizable");
+            
+            auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
+            auto backup = std::shared_ptr<submodel_container_type>(containers[index].release());
+            containers.erase(containers.begin() + static_cast<long>(index));
+            if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+            {
+                mListeners.notify([=](Listener& listener) mutable
+                {
+                    anlWeakAssert(listener.onChanged != nullptr);
+                    anlWeakAssert(backup != nullptr);
+                    if(listener.onChanged != nullptr)
+                    {
+                        listener.onChanged(*static_cast<parent_t const*>(this), type);
+                    }
+                    backup.reset();
+                }, notification);
+            }
+        }
+        
         //! @brief Gets the value of an attribute
         template <enum_type type>
         auto const& getValue() const noexcept
         {
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model) == 0, "element is a not an attribute");
             return std::get<static_cast<size_t>(type)>(mData).value;
         }
         
@@ -123,67 +287,17 @@ namespace Model
         template <enum_type type, typename T>
         void setValue(T const& value, NotificationType notification = NotificationType::synchronous)
         {
-            using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            using value_type = typename attr_type::value_type;
-            auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
-            if constexpr((attr_type::flags & AttrFlag::model) != 0)
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model) == 0, "element is a not an attribute");
+            
+            using value_type = typename element_type::value_type;
+            if constexpr(std::is_same<value_type, T>::value)
             {
-                if constexpr(is_specialization<value_type, std::vector>::value)
-                {
-                    using vector_value_type = typename value_type::value_type;
-                    lvalue.reserve(value.size());
-                    while(lvalue.size() < value.size())
-                    {
-                        if constexpr(is_specialization<vector_value_type, std::unique_ptr>::value)
-                        {
-                            using element_value_type = typename vector_value_type::element_type;
-                            lvalue.push_back(std::make_unique<element_value_type>(*value[lvalue.size()].get()));
-                        }
-                        else
-                        {
-                            lvalue.push_back(value[lvalue.size()]);
-                        }
-                    }
-                    for(size_t index = 0; index < value.size(); ++index)
-                    {
-                        auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>(index);
-                        if constexpr(is_specialization<vector_value_type, std::unique_ptr>::value)
-                        {
-                            if(value[index] != nullptr)
-                            {
-                                acsr.fromModel(*value[index].get(), notification);
-                            }
-                        }
-                        else
-                        {
-                            acsr.fromModel(value[index], notification);
-                        }
-                    }
-                    JUCE_COMPILER_WARNING("improve that")
-                    if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
-                    {
-                        mListeners.notify([=](Listener& listener)
-                        {
-                            anlWeakAssert(listener.onChanged != nullptr);
-                            if(listener.onChanged != nullptr)
-                            {
-                                listener.onChanged(*static_cast<parent_t const*>(this), type);
-                            }
-                        }, notification);
-                    }
-                }
-                else
-                {
-                    auto& acsr = static_cast<parent_t*>(this)->template getAccessor<type>(0);
-                    acsr.fromModel(value, notification);
-                }
-            }
-            else if constexpr(std::is_same<value_type, T>::value)
-            {
+                auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
                 if(equal(lvalue, value) == false)
                 {
                     set<value_type>(lvalue, value);
-                    if constexpr((attr_type::flags & AttrFlag::notifying) != 0)
+                    if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([=](Listener& listener)
                         {
@@ -207,8 +321,10 @@ namespace Model
         template <enum_type type, typename T>
         void setValue(std::initializer_list<T>&& tvalue, NotificationType notification = NotificationType::synchronous)
         {
-            using attr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            typename attr_type::value_type const value {tvalue};
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::model) == 0, "element is a not an attribute");
+            
+            typename element_type::value_type const value {tvalue};
             static_cast<parent_t*>(this)->template setValue<type>(value, notification);
         }
         
@@ -229,48 +345,20 @@ namespace Model
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
-                    using value_type = typename element_type::value_type;
                     static auto const enumname = std::string(magic_enum::enum_name(attr_type));
                     
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        if constexpr(is_specialization<value_type, std::vector>::value)
+                        for(auto const& container : d.containers)
                         {
-                            using vector_value_type = typename value_type::value_type;
-                            for(size_t i = 0; i < d.value.size(); ++i)
+                            anlStrongAssert(container != nullptr);
+                            if(container != nullptr)
                             {
-                                if constexpr(is_specialization<vector_value_type, std::unique_ptr>::value)
+                                auto child = container->accessor.toXml(enumname.c_str());
+                                if(child != nullptr)
                                 {
-                                    anlWeakAssert(d.value[i] != nullptr);
-                                    if(d.value[i] != nullptr)
-                                    {
-                                        auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(i);
-                                        auto child = acsr.toXml(enumname.c_str());
-                                        if(child != nullptr)
-                                        {
-                                            xml->addChildElement(child.release());
-                                        }
-                                    }
+                                    xml->addChildElement(child.release());
                                 }
-                                else
-                                {
-                                    
-                                    auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(i);
-                                    auto child = acsr.toXml(enumname.c_str());
-                                    if(child != nullptr)
-                                    {
-                                        xml->addChildElement(child.release());
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(0);
-                            auto child = acsr.toXml(enumname.c_str());
-                            if(child != nullptr)
-                            {
-                                xml->addChildElement(child.release());
                             }
                         }
                     }
@@ -304,28 +392,20 @@ namespace Model
                     
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        using value_type = typename element_type::value_type;
-                        if constexpr(is_specialization<value_type, std::vector>::value)
-                        {
-                            size_t index = 0;
-                            auto* child = xml.getChildByName(enumname.c_str());
-                            while(child != nullptr)
-                            {
-                                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>(index);
-                                acsr.fromXml(*child, enumname.c_str(), notification);
-                                child = child->getNextElementWithTagName(enumname.c_str());
-                                ++index;
-                            }
-                        }
-                        else
-                        {
-                            auto* child = xml.getChildByName(enumname.c_str());
-                            if(child != nullptr)
-                            {
-                                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>(0);
-                                acsr.fromXml(*child, enumname.c_str(), notification);
-                            }
-                        }
+//
+//                        using value_type = typename element_type::value_type;
+//                        if constexpr(is_specialization<value_type, std::vector>::value)
+//                        {
+//                            size_t index = 0;
+//                            auto* child = xml.getChildByName(enumname.c_str());
+//                            while(child != nullptr)
+//                            {
+//                                auto& acsr = static_cast<parent_t*>(this)->template getAccessor<attr_type>(index);
+//                                acsr.fromXml(*child, enumname.c_str(), notification);
+//                                child = child->getNextElementWithTagName(enumname.c_str());
+//                                ++index;
+//                            }
+//                        }
                     }
                     else
                     {
@@ -344,7 +424,44 @@ namespace Model
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
-                    static_cast<parent_t*>(this)->template setValue<attr_type>(d.value, notification);
+                    if constexpr((element_type::flags & AttrFlag::model) != 0)
+                    {
+                        auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
+                        anlStrongAssert(element_type::size_flags == 0 || d.containers.size() == containers.size());
+                        if constexpr(element_type::size_flags == 0)
+                        {
+                            while(containers.size() > d.containers.size())
+                            {
+                                auto const index = containers.size() - 1;
+                                eraseModel<attr_type>(index);
+                            }
+                        }
+                        for(size_t index = 0; index < std::min(containers.size(), d.containers.size()); ++index)
+                        {
+                            anlStrongAssert(containers[index] != nullptr && d.containers[index] != nullptr);
+                            if(containers[index] != nullptr && d.containers[index] != nullptr)
+                            {
+                                containers[index]->accessor.fromModel(d.containers[index]->accessor.getModel());
+                            }
+                        }
+                        if constexpr(element_type::size_flags == 0)
+                        {
+                            while(d.containers.size() > containers.size())
+                            {
+                                auto const index = containers.size();
+                                anlStrongAssert(d.containers[index] != nullptr);
+                                if(d.containers[index] != nullptr)
+                                {
+                                    insertModel<attr_type>(index, d.containers[index]->accessor.getModel());
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        static_cast<parent_t*>(this)->template setValue<attr_type>(d.value, notification);
+                    }
+                    
                 }
             });
         }
@@ -360,22 +477,13 @@ namespace Model
                     using element_type = typename std::remove_reference<decltype(d)>::type;
                     if constexpr((element_type::flags & AttrFlag::comparable) != 0)
                     {
-                        using value_type = typename element_type::value_type;
-                        auto constexpr attr_type = element_type::type;
                         if constexpr((element_type::flags & AttrFlag::model) != 0)
                         {
-                            if constexpr(is_specialization<value_type, std::vector>::value)
-                            {
-                                JUCE_COMPILER_WARNING("to do")
-                            }
-                            else
-                            {
-                                auto& acsr = static_cast<parent_t const*>(this)->template getAccessor<attr_type>(0);
-                                result = acsr.isEquivalentTo(std::get<static_cast<size_t>(attr_type)>(model).value);
-                            }
+                            
                         }
                         else
                         {
+                            auto constexpr attr_type = element_type::type;
                             result = equal(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
                         }
                     }
@@ -429,12 +537,6 @@ namespace Model
         {
             return std::get<static_cast<size_t>(type)>(mData).value;
         }
-        
-        template <enum_type type>
-        auto& getAccessor(size_t index) noexcept;
-        
-        template <enum_type type>
-        auto const& getAccessor(size_t index) const noexcept;
         
     private:
         
@@ -516,7 +618,6 @@ namespace Model
         container_type mData;
         Notifier<Listener> mListeners;
         
-        template<class parent_t_, class container_t_> friend class Accessor;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };
 }

@@ -15,26 +15,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             dialogWindow->exitModalState(0);
         }
         
-        auto const& analyzers = mAccessor.getValue<AttrType::analyzers>();
-        using container_type = std::remove_const<std::remove_reference<decltype(analyzers)>::type>::type;
-        using pointer_type = container_type::value_type;
-        using value_type = pointer_type::element_type;
-        container_type copy;
-        for(auto const& analyzer : analyzers)
-        {
-            auto value = std::make_unique<value_type>(analyzer != nullptr ? *analyzer.get() : value_type{});
-            if(value != nullptr)
-            {
-                copy.push_back(std::move(value));
-            }
-        }
-        auto container = std::make_unique<value_type>(value_type{{key}, {""}, {44100.0}, {0ul}, {{}}});
-        anlWeakAssert(container != nullptr);
-        if(container != nullptr)
-        {
-            copy.push_back(std::move(container));
-            mAccessor.setValue<AttrType::analyzers>(copy);
-        }
+        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {""}, {44100.0}, {0ul}, {{}}});
     };
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -43,11 +24,10 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
         {
             case AttrType::analyzers:
             {
-                auto const& analyzers = mAccessor.getValue<AttrType::analyzers>();
-                for(size_t i = mSections.size(); i < analyzers.size(); ++i)
+                auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
+                for(size_t i = mSections.size(); i < anlAcsrs.size(); ++i)
                 {
-                    auto& anlAcsr = mAccessor.getAccessor<AttrType::analyzers>(i);
-                    auto section = std::make_unique<Section>(anlAcsr);
+                    auto section = std::make_unique<Section>(anlAcsrs[i]);
                     anlWeakAssert(section != nullptr);
                     if(section != nullptr)
                     {
@@ -56,28 +36,14 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                         mSections.push_back(std::move(section));
                     }
                 }
-                mSections.resize(analyzers.size());
+                mSections.resize(anlAcsrs.size());
                 for(size_t i = 0; i < mSections.size(); ++i)
                 {
                     if(mSections[i] != nullptr)
                     {
                         mSections[i]->thumbnail.onRemove = [this, i]()
                         {
-                            auto const& lanalyzers = mAccessor.getValue<AttrType::analyzers>();
-                            using container_type = std::remove_const<std::remove_reference<decltype(analyzers)>::type>::type;
-                            using pointer_type = container_type::value_type;
-                            using value_type = pointer_type::element_type;
-                            container_type copy;
-                            for(auto const& analyzer : lanalyzers)
-                            {
-                                auto value = std::make_unique<value_type>(analyzer != nullptr ? *analyzer.get() : value_type{});
-                                if(value != nullptr)
-                                {
-                                    copy.push_back(std::move(value));
-                                }
-                            }
-                            copy.erase(copy.begin() + static_cast<long>(i));
-                            mAccessor.setValue<AttrType::analyzers>(copy, NotificationType::synchronous);
+                            mAccessor.eraseModel<AttrType::analyzers>(i, NotificationType::synchronous);
                         };
                         
                         mSections[i]->thumbnail.onRelaunch = [this, i]()

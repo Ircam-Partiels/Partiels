@@ -39,6 +39,8 @@ public:
     
     void runTest() override
     {
+        std::vector<std::unique_ptr<std::monostate>> vec;
+        
         // Declare the name (type) of the attributes of the data model
         enum AttrType : size_t
         {
@@ -67,7 +69,6 @@ public:
         : public Model::Accessor<ModelAcsr, ModelCtnr>
         {
             using Model::Accessor<ModelAcsr, ModelCtnr>::Accessor;
-            using enum_type = Model::Accessor<ModelAcsr, ModelCtnr>::enum_type;
         };
         
         // Declare the data model listener

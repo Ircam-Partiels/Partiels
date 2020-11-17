@@ -28,8 +28,15 @@ Document::Transport::Transport(Accessor& accessor)
                 mPlayPositionInSamples.setText(juce::String(samples) + " samples", juce::NotificationType::dontSendNotification);
             }
                 break;
-                
-            default:
+            case AttrType::isLooping:
+            {
+                auto const state = acsr.getValue<AttrType::isLooping>();
+                mLoopButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+            }
+                break;
+            case AttrType::file:
+            case AttrType::timeZoom:
+            case AttrType::analyzers:
                 break;
         }
     };
@@ -41,11 +48,13 @@ Document::Transport::Transport(Accessor& accessor)
         {
             case Signal::movePlayhead:
             {
+                
             }
+                break;
+            case Signal::audioInstanceChanged:
                 break;
         }
     };
-    mAccessor.addReceiver(mReceiver);
     
     mBackwardButton.onClick = [&]()
     {
@@ -85,10 +94,13 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mPlayPositionInHMSms);
     
     addAndMakeVisible(mVolumeSlider);
+    mAccessor.addReceiver(mReceiver);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::Transport::~Transport()
 {
+    mAccessor.removeListener(mListener);
     mAccessor.removeReceiver(mReceiver);
 }
 

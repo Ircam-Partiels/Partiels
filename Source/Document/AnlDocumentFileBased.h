@@ -28,12 +28,11 @@ namespace Document
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
         
-        void updateChangeFlag();
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         juce::File mLastFile;
-        Container mSavedState {mAccessor.getModel()};
+        Container mSavedStateContainer;
+        Accessor mSavedStateAccessor {mSavedStateContainer};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileBased)
     };

@@ -44,6 +44,7 @@ ANALYSE_FILE_END
 #include <functional>
 #include <type_traits>
 #include <tuple>
+#include <variant>
 
 // This method can be used to test if a class/struct is a specialization of template class
 // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector

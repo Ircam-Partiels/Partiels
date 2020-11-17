@@ -1,7 +1,6 @@
 #include "AnlApplicationAudioReader.h"
 #include "AnlApplicationInstance.h"
 
-
 ANALYSE_FILE_BEGIN
 
 Application::AudioReader::AudioReader()
