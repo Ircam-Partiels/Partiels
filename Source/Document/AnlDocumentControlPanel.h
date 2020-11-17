@@ -42,8 +42,6 @@ namespace Document
         };
         
         std::vector<std::unique_ptr<Section>> mSections;
-        juce::DialogWindow* dialogWindow;
-        
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ControlPanel)
     };
 }

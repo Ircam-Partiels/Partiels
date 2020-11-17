@@ -80,6 +80,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
     addAndMakeVisible(mSeparator2);
     addAndMakeVisible(mPropertyLayout3);
     mFileBasedDocument.addChangeListener(this);
+    changeListenerCallback(&mFileBasedDocument);
 }
 
 Document::FileInfoPanel::~FileInfoPanel()

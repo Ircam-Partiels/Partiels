@@ -19,6 +19,8 @@ namespace Model
         model = 1 << 3 // private
     };
     
+    static constexpr int resizable = 0;
+    
     //! @brief The private implementation of an attribute of a model
     template<typename enum_t, enum_t index_v, typename value_t, int flags_v>
     struct AttrImpl
@@ -27,6 +29,7 @@ namespace Model
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
         static_assert(std::is_default_constructible<value_t>::value, "value_t must be default constructible");
         static_assert(std::is_copy_constructible<value_t>::value, "value_t must be copy constructible");
+        static_assert((flags_v & AttrFlag::model) == 0, "attribute cannot be a model");
         
         using enum_type = enum_t;
         using value_type = value_t;
@@ -42,6 +45,7 @@ namespace Model
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
+        static_assert((flags_v & AttrFlag::model) == 0, "model flag is implicit");
         
         using enum_type = enum_t;
         using model_type = model_t;
@@ -83,8 +87,8 @@ namespace Model
         SubModelImp(SubModelImp const& other)
         {
             auto const& ctnrs = other.containers;
-            anlStrongAssert(size_flags == 0 || ctnrs.size() == size_flags);
-            auto const numContainers = size_flags > 0 ? size_flags : ctnrs.size();
+            anlStrongAssert(size_flags == resizable || ctnrs.size() == size_flags);
+            auto const numContainers = size_flags > resizable ? size_flags : ctnrs.size();
             for(size_t i = 0; i < numContainers; ++i)
             {
                 anlStrongAssert(i < ctnrs.size() && ctnrs[i] != nullptr);
@@ -101,7 +105,7 @@ namespace Model
         
         SubModelImp(SubModelImp&& other) : containers(std::move(other.containers))
         {
-            anlStrongAssert(size_flags == 0 || containers.size() == size_flags);
+            anlStrongAssert(size_flags == resizable || containers.size() == size_flags);
         }
         
         SubModelImp(std::initializer_list<model_type> models)
@@ -111,7 +115,7 @@ namespace Model
             {
                 containers.push_back(std::make_unique<container_type>(model));
             }
-            anlStrongAssert(size_flags == 0 || containers.size() == size_flags);
+            anlStrongAssert(size_flags == resizable || containers.size() == size_flags);
         }
     };
 
@@ -153,12 +157,12 @@ namespace Model
             return mData;
         }
         
-        //! @brief Gets all the accessors of an attriute
+        //! @brief Gets all the accessors of a container
         template <enum_type type>
         auto getAccessors() noexcept
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
             using accessor_type = typename element_type::accessor_type;
             auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
@@ -175,11 +179,12 @@ namespace Model
             return acrs;
         }
         
+        //! @brief Gets all the accessors of a container
         template <enum_type type>
         auto getAccessors() const noexcept
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
             using accessor_type = typename element_type::accessor_type;
             auto const& containers = std::get<static_cast<size_t>(type)>(mData).containers;
@@ -196,11 +201,12 @@ namespace Model
             return acrs;
         }
         
+        //! @brief Gets an accessor of a container
         template <enum_type type>
         auto& getAccessor(size_t index) noexcept
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
         }
         

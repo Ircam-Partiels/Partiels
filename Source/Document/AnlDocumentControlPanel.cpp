@@ -10,12 +10,8 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
 {
     mPluginListTable.onPluginSelected = [&](juce::String key)
     {
-        if(dialogWindow != nullptr)
-        {
-            dialogWindow->exitModalState(0);
-        }
-        
-        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {""}, {44100.0}, {0ul}, {{}}});
+        auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
+        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {44100.0}, {0ul}, {{}}});
     };
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -108,8 +104,7 @@ void Document::ControlPanel::mouseDoubleClick(juce::MouseEvent const& event)
     launchOption.useNativeTitleBar = false;
     launchOption.resizable = false;
     launchOption.useBottomRightCornerResizer = false;
-    dialogWindow = launchOption.launchAsync();
-    dialogWindow->runModalLoop();
+    launchOption.runModal();
 }
 
 ANALYSE_FILE_END

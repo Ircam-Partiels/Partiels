@@ -28,12 +28,12 @@ namespace Document
     
     using Container = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::isLooping, bool, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::gain, double, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::isLooping, bool, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
+    , Model::Attr<AttrType::gain, double, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     , Model::Model<AttrType::timeZoom, Zoom::Container, Zoom::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Model<AttrType::analyzers, Analyzer::Container, Analyzer::Accessor, Model::AttrFlag::basic, 0>
+    , Model::Model<AttrType::analyzers, Analyzer::Container, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
     class Accessor

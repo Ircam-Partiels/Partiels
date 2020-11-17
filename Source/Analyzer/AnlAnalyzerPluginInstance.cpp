@@ -70,11 +70,6 @@ void Analyzer::PluginInstance::update()
     }
     mAccessor.setInstance(pluginInstance);
     mAccessor.sendSignal(Signal::pluginInstanceChanged, {}, NotificationType::synchronous);
-    JUCE_COMPILER_WARNING("it would be geat to avoid that")
-    if(mAccessor.getValue<AttrType::name>().isEmpty())
-    {
-        mAccessor.setValue<AttrType::name>(pluginInstance->getName(), NotificationType::synchronous);
-    }
 }
 
 ANALYSE_FILE_END
