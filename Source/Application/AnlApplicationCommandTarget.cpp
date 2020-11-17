@@ -50,7 +50,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         CommandIDs::MovePlayHeadToBeginning,
         CommandIDs::MovePlayHeadToEnd,
         
-        CommandIDs::OpenRecent
+        //CommandIDs::OpenRecent
     });
 }
 
@@ -82,14 +82,14 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Save"), juce::translate("Save the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(Instance::get().getDocumentFileBased().hasChangedSinceSaved());
+            result.setActive(true);
         }
             break;
         case CommandIDs::Duplicate:
         {
             result.setInfo(juce::translate("Duplicate..."), juce::translate("Save the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getValue<Document::AttrType::file>() != juce::File());
+            result.setActive(true);
         }
             break;
         case CommandIDs::Consolidate:

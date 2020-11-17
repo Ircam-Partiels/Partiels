@@ -59,7 +59,6 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
     
     auto const& recentFiles = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
     auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
-    anlWeakAssert(fileIndex < recentFiles.size());
     if(fileIndex < recentFiles.size())
     {
         Instance::get().openFile(recentFiles[fileIndex]);

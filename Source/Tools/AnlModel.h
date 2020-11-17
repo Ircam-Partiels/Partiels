@@ -176,7 +176,7 @@ namespace Model
         }
         
         template <enum_type type>
-        auto const getAccessors() const noexcept
+        auto getAccessors() const noexcept
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
@@ -349,16 +349,13 @@ namespace Model
                     
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        for(auto const& container : d.containers)
+                        auto const acsrs = getAccessors<attr_type>();
+                        for(auto const& acsr : acsrs)
                         {
-                            anlStrongAssert(container != nullptr);
-                            if(container != nullptr)
+                            auto child = acsr.get().toXml(enumname.c_str());
+                            if(child != nullptr)
                             {
-                                auto child = container->accessor.toXml(enumname.c_str());
-                                if(child != nullptr)
-                                {
-                                    xml->addChildElement(child.release());
-                                }
+                                xml->addChildElement(child.release());
                             }
                         }
                     }
@@ -392,6 +389,7 @@ namespace Model
                     
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
+                        JUCE_COMPILER_WARNING("to do");
 //
 //                        using value_type = typename element_type::value_type;
 //                        if constexpr(is_specialization<value_type, std::vector>::value)
@@ -426,33 +424,33 @@ namespace Model
                     auto constexpr attr_type = element_type::type;
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
-                        anlStrongAssert(element_type::size_flags == 0 || d.containers.size() == containers.size());
+                        auto acsrs = getAccessors<attr_type>();
+                        anlStrongAssert(element_type::size_flags == 0 || d.containers.size() == acsrs.size());
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(containers.size() > d.containers.size())
+                            while(acsrs.size() > d.containers.size())
                             {
-                                auto const index = containers.size() - 1;
+                                auto const index = acsrs.size() - 1;
                                 eraseModel<attr_type>(index);
                             }
                         }
-                        for(size_t index = 0; index < std::min(containers.size(), d.containers.size()); ++index)
+                        for(size_t index = 0; index < std::min(acsrs.size(), d.containers.size()); ++index)
                         {
-                            anlStrongAssert(containers[index] != nullptr && d.containers[index] != nullptr);
-                            if(containers[index] != nullptr && d.containers[index] != nullptr)
+                            anlStrongAssert(d.containers[index] != nullptr);
+                            if(d.containers[index] != nullptr)
                             {
-                                containers[index]->accessor.fromModel(d.containers[index]->accessor.getModel());
+                                acsrs[index].get().fromModel(d.containers[index]->accessor.getModel(), notification);
                             }
                         }
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(d.containers.size() > containers.size())
+                            while(d.containers.size() > acsrs.size())
                             {
-                                auto const index = containers.size();
+                                auto const index = acsrs.size();
                                 anlStrongAssert(d.containers[index] != nullptr);
                                 if(d.containers[index] != nullptr)
                                 {
-                                    insertModel<attr_type>(index, d.containers[index]->accessor.getModel());
+                                    insertModel<attr_type>(static_cast<long>(index), d.containers[index]->accessor.getModel());
                                 }
                             }
                         }
@@ -470,21 +468,29 @@ namespace Model
         bool isEquivalentTo(container_type const& model) const
         {
             bool result = true;
-            detail::for_each(mData, [&](auto& d)
+            detail::for_each(model, [&](auto& d)
             {
                 if(result)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
+                    auto constexpr attr_type = element_type::type;
                     if constexpr((element_type::flags & AttrFlag::comparable) != 0)
                     {
                         if constexpr((element_type::flags & AttrFlag::model) != 0)
                         {
-                            
+                            auto const acsrs = getAccessors<attr_type>();
+                            if(acsrs.size() != d.containers.size())
+                            {
+                                result = false;
+                            }
+                            result = std::equal(acsrs.cbegin(), acsrs.cend(), d.containers.cbegin(), [](auto const& acsr, auto const& ctnr)
+                            {
+                                return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->accessor.getModel());
+                            });
                         }
                         else
                         {
-                            auto constexpr attr_type = element_type::type;
-                            result = equal(d.value, std::get<static_cast<size_t>(attr_type)>(model).value);
+                            result = equal(getValue<attr_type>(), d.value);
                         }
                     }
                 }
