@@ -8,6 +8,7 @@ Application::Interface::Interface()
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0))
 , mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
+, mDocumentMainPanel(Instance::get().getDocumentAccessor())
 , mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal)
 {
     addAndMakeVisible(mDocumentTransport);
@@ -19,6 +20,7 @@ Application::Interface::Interface()
     addAndMakeVisible(mZoomTimeRulerSeparator);
     addAndMakeVisible(mDocumentControlPanel);
     addAndMakeVisible(mDocumentControlPanelSeparator);
+    addAndMakeVisible(mDocumentMainPanel);
     
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mToolTipDisplay);
@@ -88,6 +90,7 @@ void Application::Interface::resized()
         
         mDocumentControlPanel.setBounds(bounds.removeFromLeft(240));
         mDocumentControlPanelSeparator.setBounds(bounds.removeFromLeft(2));
+        mDocumentMainPanel.setBounds(bounds);
     }
 }
 

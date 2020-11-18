@@ -14,10 +14,12 @@ namespace Analyzer
         ~ResultRenderer() override;
         
         // juce::Component
-        void resized() override;
+//        void resized() override;
+        void paint(juce::Graphics& g) override;
         
     private:
         Accessor& mAccessor;
+        Accessor::Listener mListener;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ResultRenderer)
     };
