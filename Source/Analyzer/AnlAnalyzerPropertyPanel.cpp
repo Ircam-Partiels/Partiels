@@ -1,9 +1,16 @@
 #include "AnlAnalyzerPropertyPanel.h"
+#include "AnlAnalyzerProcessor.h"
 #include <vamp-hostsdk/PluginLoader.h>
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginInputDomainAdapter.h>
 
 ANALYSE_FILE_BEGIN
+
+Analyzer::PropertyPanel::Title::Title(juce::String const& text, juce::String const& tooltip)
+: Tools::PropertyPanel<juce::Label>(text, tooltip)
+{
+    entry.setVisible(false);
+}
 
 Analyzer::PropertyPanel::Property::Property(juce::String const& text, juce::String const& tooltip)
 : Tools::PropertyPanel<juce::Label>(text, tooltip)
@@ -21,13 +28,11 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::key:
-            case AttrType::sampleRate:
             {
                 mPropertyLayout.setPanels({}, Tools::PropertyPanelBase::left);
                 mProperties.clear();
                 
-                auto instance = PluginManager::createInstance(acsr, true);
-                setInstance(instance);
+                auto instance = createPlugin(acsr, 44100.0, true);
                 if(instance == nullptr)
                 {
                     resized();
@@ -43,10 +48,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     return juce::String(pvalue, 2) + descriptor.unit;
                 };
                 
-                
-                
                 mProperties.push_back(std::make_unique<Property>("Name", "The name fo the plugin"));
                 mProperties[0]->entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
+                mProperties.push_back(std::make_unique<Title>("Parameters", "The parameters of the plugin"));
                 
                 if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get()))
                 {
@@ -90,7 +94,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 
                 
-                auto const& parameterDescriptors = instance->getParameterDescriptors();
+                auto const parameterDescriptors = instance->getParameterDescriptors();
                 mProperties.reserve(mProperties.size() + parameterDescriptors.size());
                 
                 for(auto const& descriptor : parameterDescriptors)
@@ -100,6 +104,20 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     {
                         auto const pvalue = instance->getParameter(descriptor.identifier);
                         property->entry.setText(getParameterTextValue(descriptor, pvalue), juce::NotificationType::dontSendNotification);
+                        mProperties.push_back(std::move(property));
+                    }
+                }
+                
+                mProperties.push_back(std::make_unique<Title>("Outputs", "The outputs of the plugin"));
+                auto const outputDescriptors = instance->getOutputDescriptors();
+                mProperties.reserve(mProperties.size() + outputDescriptors.size());
+                
+                for(auto const& descriptor : outputDescriptors)
+                {
+                    auto property = std::make_unique<Property>(descriptor.name, descriptor.description);
+                    if(property != nullptr)
+                    {
+                        property->entry.setText(descriptor.unit, juce::NotificationType::dontSendNotification);
                         mProperties.push_back(std::move(property));
                     }
                 }
@@ -115,7 +133,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
                 break;
             case AttrType::name:
-            case AttrType::numChannels:
             case AttrType::parameters:
                 break;
         }

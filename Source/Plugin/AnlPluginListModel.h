@@ -46,7 +46,6 @@ namespace PluginList
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
-        using enum_type = Model::Accessor<Accessor, Container>::enum_type;
     };
 }
 

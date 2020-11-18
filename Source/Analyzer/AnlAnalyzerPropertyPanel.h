@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
-#include "AnlAnalyzerPluginManager.h"
 #include "../Tools/AnlPropertyLayout.h"
 
 ANALYSE_FILE_BEGIN
@@ -10,7 +9,6 @@ namespace Analyzer
 {
     class PropertyPanel
     : public juce::Component
-    , public Tools::AtomicManager<Vamp::Plugin>
     {
     public:
         
@@ -21,6 +19,14 @@ namespace Analyzer
         void resized() override;
         
     private:
+        
+        class Title
+        : public Tools::PropertyPanel<juce::Label>
+        {
+        public:
+            Title(juce::String const& text, juce::String const& tooltip);
+            ~Title() override = default;
+        };
         
         class Property
         : public Tools::PropertyPanel<juce::Label>
@@ -33,7 +39,7 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        std::vector<std::unique_ptr<Property>> mProperties;
+        std::vector<std::unique_ptr<Tools::PropertyPanel<juce::Label>>> mProperties;
         Tools::PropertyLayout mPropertyLayout;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PropertyPanel)

@@ -7,6 +7,8 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
+    std::unique_ptr<juce::AudioFormatReader> createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, bool showMessageOnFailure);
+    
     //! @brief The audio reader of a document
     class AudioReader
     : public juce::AudioSource
@@ -14,7 +16,7 @@ namespace Document
     , private juce::Timer
     {
     public:
-        AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
+        AudioReader(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
         ~AudioReader() override;
 
         // juce::AudioSource
@@ -61,7 +63,7 @@ namespace Document
         };
         
         Accessor& mAccessor;
-        juce::AudioFormatManager& mAudioFormatManager;
+        juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
         double mSampleRate = 44100.0;

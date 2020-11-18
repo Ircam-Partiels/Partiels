@@ -1,17 +1,19 @@
 #include "AnlDocumentControlPanel.h"
+#include "AnlDocumentAudioReader.h"
 #include "../Plugin/AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 
-Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager& audioFormatManager)
+Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager const& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginListAccessor)
 {
     mPluginListTable.onPluginSelected = [&](juce::String key)
     {
+        juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {44100.0}, {0ul}, {{}}});
+        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {{}}, {}});
     };
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -21,6 +23,14 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             case AttrType::analyzers:
             {
                 auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
+                mSections.erase(std::remove_if(mSections.begin(), mSections.end(), [&](auto const& section)
+                {
+                    return std::none_of(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
+                    {
+                        return &(section->accessor) == &(anlAcsr.get());
+                    });
+                }), mSections.end());
+                
                 for(size_t i = mSections.size(); i < anlAcsrs.size(); ++i)
                 {
                     auto section = std::make_unique<Section>(anlAcsrs[i]);
@@ -32,7 +42,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                         mSections.push_back(std::move(section));
                     }
                 }
-                mSections.resize(anlAcsrs.size());
+                
                 for(size_t i = 0; i < mSections.size(); ++i)
                 {
                     if(mSections[i] != nullptr)
@@ -44,19 +54,12 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                         
                         mSections[i]->thumbnail.onRelaunch = [this, i]()
                         {
-                            auto const file = mAccessor.getValue<AttrType::file>();
-                            auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
-                            if(audioFormat == nullptr)
-                            {
-                                return;
-                            }
-                            auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
+                            auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
                             if(audioFormatReader == nullptr)
                             {
                                 return;
                             }
-                            
-                            mSections[i]->processor.perform(*audioFormatReader.get());
+                            Analyzer::performAnalysis(mSections[i]->accessor, *audioFormatReader.get());
                         };
                     }
                 }

@@ -214,7 +214,7 @@ namespace Model
         auto const& getAccessor(size_t index) const noexcept
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
         }
         
@@ -222,7 +222,7 @@ namespace Model
         void insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type model, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
             using submodel_container_type = typename element_type::container_type;
             static_assert(element_type::size_flags == 0, "model is not resizable");
@@ -256,25 +256,24 @@ namespace Model
         void eraseModel(size_t index, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
-            static_assert((element_type::flags & AttrFlag::model)!= 0, "element is not a model");
+            static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
             using submodel_container_type = typename element_type::container_type;
             static_assert(element_type::size_flags == 0, "model is not resizable");
             
             auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
             auto backup = std::shared_ptr<submodel_container_type>(containers[index].release());
+            anlWeakAssert(backup != nullptr);
             containers.erase(containers.begin() + static_cast<long>(index));
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
             {
-                mListeners.notify([=](Listener& listener) mutable
+                mListeners.notify([this](Listener& listener) mutable
                 {
                     anlWeakAssert(listener.onChanged != nullptr);
-                    anlWeakAssert(backup != nullptr);
                     if(listener.onChanged != nullptr)
                     {
                         listener.onChanged(*static_cast<parent_t const*>(this), type);
                     }
-                    backup.reset();
                 }, notification);
             }
         }
@@ -300,7 +299,7 @@ namespace Model
             if constexpr(std::is_same<value_type, T>::value)
             {
                 auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
-                if(equal(lvalue, value) == false)
+                if(isEquivalentTo(lvalue, value) == false)
                 {
                     set<value_type>(lvalue, value);
                     if constexpr((element_type::flags & AttrFlag::notifying) != 0)
@@ -513,7 +512,7 @@ namespace Model
                         }
                         else
                         {
-                            result = equal(getValue<attr_type>(), d.value);
+                            result = isEquivalentTo(getValue<attr_type>(), d.value);
                         }
                     }
                 }
@@ -558,15 +557,6 @@ namespace Model
             mListeners.remove(listener);
         }
         
-    protected:
-        
-        //! @brief Gets the value of an attribute
-        template <enum_type type>
-        auto& getValueRef() noexcept
-        {
-            return std::get<static_cast<size_t>(type)>(mData).value;
-        }
-        
     private:
         
         // This is a for_each mechanism for std::tuple
@@ -583,7 +573,7 @@ namespace Model
                 
         // This is a specific compare method that manage containers and unique pointer
         template <typename T> static
-        bool equal(T const& lhs, T const& rhs)
+        bool isEquivalentTo(T const& lhs, T const& rhs)
         {
             if constexpr(is_specialization<T, std::vector>::value ||
                          is_specialization<T, std::map>::value)
@@ -594,12 +584,12 @@ namespace Model
                 }
                 return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), [](auto const& slhs, auto const& srhs)
                 {
-                    return equal(slhs, srhs);
+                    return isEquivalentTo(slhs, srhs);
                 });
             }
             else if constexpr(is_specialization<T, std::unique_ptr>::value)
             {
-                return lhs != nullptr && rhs != nullptr && equal(*lhs.get(), *rhs.get());
+                return lhs != nullptr && rhs != nullptr && isEquivalentTo(*lhs.get(), *rhs.get());
             }
             else
             {

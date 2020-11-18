@@ -14,7 +14,7 @@ namespace Document
     : public juce::Component
     {
     public:
-        ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager& audioFormatManager);
+        ControlPanel(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager const& audioFormatManager);
         ~ControlPanel() override;
         
         void resized() override;
@@ -22,19 +22,18 @@ namespace Document
     private:
         
         Accessor& mAccessor;
-        juce::AudioFormatManager& mAudioFormatManager;
+        juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
         PluginList::Table mPluginListTable;
+        
         struct Section
         {
             Section(Analyzer::Accessor& acsr)
-            : thumbnail(acsr)
-            , processor(acsr)
+            : accessor(acsr)
             {
-                
             }
-            Analyzer::Thumbnail thumbnail;
-            Analyzer::Processor processor;
+            Analyzer::Accessor& accessor;
+            Analyzer::Thumbnail thumbnail {accessor};
             Tools::ColouredPanel separator;
         };
         

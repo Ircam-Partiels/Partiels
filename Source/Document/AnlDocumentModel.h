@@ -22,8 +22,7 @@ namespace Document
     
     enum class Signal
     {
-        movePlayhead,
-        audioInstanceChanged
+        movePlayhead
     };
     
     using Container = Model::Container

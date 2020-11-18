@@ -41,21 +41,6 @@ Document::Transport::Transport(Accessor& accessor)
         }
     };
     
-    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
-    {
-        juce::ignoreUnused(acsr);
-        switch (signal)
-        {
-            case Signal::movePlayhead:
-            {
-                
-            }
-                break;
-            case Signal::audioInstanceChanged:
-                break;
-        }
-    };
-    
     mBackwardButton.onClick = [&]()
     {
         mAccessor.sendSignal(Signal::movePlayhead, {false}, NotificationType::synchronous);
@@ -94,14 +79,12 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mPlayPositionInHMSms);
     
     addAndMakeVisible(mVolumeSlider);
-    mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::Transport::~Transport()
 {
     mAccessor.removeListener(mListener);
-    mAccessor.removeReceiver(mReceiver);
 }
 
 void Document::Transport::resized()

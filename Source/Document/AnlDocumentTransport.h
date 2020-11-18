@@ -18,8 +18,7 @@ namespace Document
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
-        
+
         juce::TextButton mBackwardButton {juce::CharPointer_UTF8("«")};
         juce::TextButton mPlaybackButton {juce::CharPointer_UTF8("›")};
         juce::TextButton mForwardButton {juce::CharPointer_UTF8("»")};

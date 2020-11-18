@@ -50,8 +50,6 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
                 mNameLabel.setText(acsr.getValue<AttrType::name>(), juce::NotificationType::dontSendNotification);
                 break;
             case AttrType::key:
-            case AttrType::sampleRate:
-            case AttrType::numChannels:
             case AttrType::parameters:
                 break;
         }

@@ -2,10 +2,37 @@
 
 ANALYSE_FILE_BEGIN
 
+std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, bool showMessageOnFailure)
+{
+    using AlertIconType = juce::AlertWindow::AlertIconType;
+    auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
+    
+    auto const file = accessor.getValue<AttrType::file>();
+    auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
+    if(audioFormat == nullptr)
+    {
+        if(showMessageOnFailure)
+        {
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format for the file extension FLEXTS couldn't be found.").replace("FLEXTS", file.getFileExtension()));
+        }
+        return nullptr;
+    }
+    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
+    if(audioFormatReader == nullptr)
+    {
+        if(showMessageOnFailure)
+        {
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format reader cannot be allocated for the input stream FLNAME.").replace("FLNAME", file.getFullPathName()));
+        }
+        return nullptr;
+    }
+    return audioFormatReader;
+}
+
 Document::AudioReader::Source::Source(std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAudioFormatReader(std::move(audioFormatReader))
 , mAudioFormatReaderSource(mAudioFormatReader.get(), false)
-, mResamplingAudioSource(&mAudioFormatReaderSource, false, static_cast<int>(mAudioFormatReader->numChannels))
+, mResamplingAudioSource(&mAudioFormatReaderSource, false, std::max(static_cast<int>(mAudioFormatReader->numChannels), 2))
 {
     anlStrongAssert(mAudioFormatReader != nullptr);
 }
@@ -84,7 +111,7 @@ void Document::AudioReader::Source::setGain(float gain)
     mVolumeTargetValue = gain;
 }
 
-Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
+Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
@@ -105,19 +132,12 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             case AttrType::file:
             {
                 auto const file = acsr.getValue<AttrType::file>();
-                auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
-                if(audioFormat == nullptr)
+                if(file == juce::File{})
                 {
-                    mSourceManager.setInstance({});
+                    mSourceManager.setInstance(nullptr);
                     return;
                 }
-                auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
-                if(audioFormatReader == nullptr)
-                {
-                    mSourceManager.setInstance({});
-                    return;
-                }
-                auto source = std::make_shared<Source>(std::move(audioFormatReader));
+                auto source = std::make_shared<Source>(createAudioFormatReader(mAccessor, mAudioFormatManager, true));
                 if(source != nullptr)
                 {
                     source->setGain(static_cast<float>(acsr.getValue<AttrType::gain>()));
