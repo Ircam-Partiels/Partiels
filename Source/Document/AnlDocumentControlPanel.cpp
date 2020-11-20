@@ -13,7 +13,18 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
     {
         juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {{}}, {}});
+        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {}});
+        Analyzer::PropertyPanel panel(mAccessor.getAccessors<AttrType::analyzers>().back());
+        juce::DialogWindow::LaunchOptions launchOption;
+        launchOption.dialogTitle = juce::translate("Analyzer Properties");
+        launchOption.content.setNonOwned(&panel);
+        launchOption.componentToCentreAround = this;
+        launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
+        launchOption.escapeKeyTriggersCloseButton = true;
+        launchOption.useNativeTitleBar = false;
+        launchOption.resizable = false;
+        launchOption.useBottomRightCornerResizer = false;
+        launchOption.runModal();
     };
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)

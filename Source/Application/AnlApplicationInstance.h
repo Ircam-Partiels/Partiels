@@ -6,6 +6,7 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationAudioReader.h"
+#include "../Document/AnlDocumentFileWatcher.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -59,11 +60,11 @@ namespace Application
             , {1.0}
             , {false}
             , {0.0}
-            , {Zoom::Container{{juce::Range<double>{0.0, 60.0}}, {0.001}, {juce::Range<double>{0.0, 60.0}}}}
+            , {Zoom::Container{{juce::Range<double>{0.0, 47.0}}, {0.001}, {juce::Range<double>{0.0, 47.0}}}}
             , {}
         };
         Document::Accessor mDocumentAccessor {mDocumentContainer};
-            
+        Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};
         
         Properties mProperties;
         AudioReader mAudioReader;

@@ -12,13 +12,6 @@ Analyzer::PropertyPanel::Title::Title(juce::String const& text, juce::String con
     entry.setVisible(false);
 }
 
-Analyzer::PropertyPanel::Property::Property(juce::String const& text, juce::String const& tooltip)
-: Tools::PropertyPanel<juce::Label>(text, tooltip)
-{
-    entry.setJustificationType(juce::Justification::right);
-    entry.setMinimumHorizontalScale(1.0f);
-}
-
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 {
@@ -48,15 +41,34 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     return juce::String(pvalue, 2) + descriptor.unit;
                 };
                 
-                mProperties.push_back(std::make_unique<Property>("Name", "The name fo the plugin"));
-                mProperties[0]->entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
+                mProperties.push_back(std::make_unique<Tools::PropertyLabel>("Name", "The name fo the plugin"));
+                static_cast<Tools::PropertyLabel*>(mProperties[0].get())->entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
+                
+                auto const outputDescriptors = instance->getOutputDescriptors();
+                if(!outputDescriptors.empty())
+                {
+                    juce::StringArray names;
+                    names.ensureStorageAllocated(static_cast<int>(outputDescriptors.size()));
+                    for(auto const& descriptor : outputDescriptors)
+                    {
+                        names.add(descriptor.name);
+                    }
+                    
+                    auto property = std::make_unique<Tools::PropertyComboBox>("Feature", "The feature fo the plugin", names, [&](juce::ComboBox const& entry)
+                    {
+                        mAccessor.setValue<AttrType::feature>(entry.getSelectedItemIndex());
+                    });
+                    property->entry.setSelectedItemIndex(static_cast<int>(acsr.getValue<AttrType::feature>()), juce::NotificationType::dontSendNotification);
+                    mProperties.push_back(std::move(property));
+                }
+                
                 mProperties.push_back(std::make_unique<Title>("Parameters", "The parameters of the plugin"));
                 
                 if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get()))
                 {
                     if(auto* adapt = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
                     {
-                        auto property = std::make_unique<Property>("Window Type", "The window type...");
+                        auto property = std::make_unique<Tools::PropertyLabel>("Window Type", "The window type...");
                         if(property != nullptr)
                         {
                             auto getWindowText = [&]() -> juce::String
@@ -99,25 +111,11 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 
                 for(auto const& descriptor : parameterDescriptors)
                 {
-                    auto property = std::make_unique<Property>(descriptor.name, descriptor.description);
+                    auto property = std::make_unique<Tools::PropertyLabel>(descriptor.name, descriptor.description);
                     if(property != nullptr)
                     {
                         auto const pvalue = instance->getParameter(descriptor.identifier);
                         property->entry.setText(getParameterTextValue(descriptor, pvalue), juce::NotificationType::dontSendNotification);
-                        mProperties.push_back(std::move(property));
-                    }
-                }
-                
-                mProperties.push_back(std::make_unique<Title>("Outputs", "The outputs of the plugin"));
-                auto const outputDescriptors = instance->getOutputDescriptors();
-                mProperties.reserve(mProperties.size() + outputDescriptors.size());
-                
-                for(auto const& descriptor : outputDescriptors)
-                {
-                    auto property = std::make_unique<Property>(descriptor.name, descriptor.description);
-                    if(property != nullptr)
-                    {
-                        property->entry.setText(descriptor.unit, juce::NotificationType::dontSendNotification);
                         mProperties.push_back(std::move(property));
                     }
                 }

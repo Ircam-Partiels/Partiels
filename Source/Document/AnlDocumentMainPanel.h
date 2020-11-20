@@ -24,12 +24,13 @@ namespace Document
         
         struct Section
         {
-            Section(Analyzer::Accessor& acsr)
+            Section(Analyzer::Accessor& acsr, Zoom::Accessor& zoomAcsr)
             : accessor(acsr)
+            , renderer(acsr, zoomAcsr)
             {
             }
             Analyzer::Accessor& accessor;
-            Analyzer::ResultRenderer renderer {accessor};
+            Analyzer::ResultRenderer renderer;
             Tools::ColouredPanel separator;
         };
         

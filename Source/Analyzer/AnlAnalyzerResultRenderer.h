@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerPropertyPanel.h"
+#include "../Zoom/AnlZoomModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +11,7 @@ namespace Analyzer
     : public juce::Component
     {
     public:        
-        ResultRenderer(Accessor& accessor);
+        ResultRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor);
         ~ResultRenderer() override;
         
         // juce::Component
@@ -20,6 +21,8 @@ namespace Analyzer
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        Zoom::Accessor& mZoomAccessor;
+        Zoom::Accessor::Listener mZoomListener;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ResultRenderer)
     };

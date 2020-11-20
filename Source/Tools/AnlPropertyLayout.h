@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlPropertyPanel.h"
-#include "AnlColouredPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -11,6 +10,11 @@ namespace Tools
     : public juce::Component
     {
     public:
+        
+        enum ColourIds : int
+        {
+            separatorColourId = 0x2000100
+        };
         
         using PanelRef = std::reference_wrapper<PropertyPanelBase>;
         using Positioning = PropertyPanelBase::Positioning;
@@ -25,7 +29,19 @@ namespace Tools
         
     private:
         
-        using Container = std::tuple<PanelRef, ColouredPanel>;
+        class Separator
+        : public juce::Component
+        {
+        public:
+            
+            Separator() = default;
+            ~Separator() override = default;
+            
+            // juce::Component
+            void paint(juce::Graphics& g) override;
+        };
+        
+        using Container = std::tuple<PanelRef, Separator>;
         
         juce::Component mContent;
         juce::Viewport mViewport;

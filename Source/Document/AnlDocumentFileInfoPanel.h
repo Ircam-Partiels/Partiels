@@ -2,6 +2,7 @@
 
 #include "AnlDocumentModel.h"
 #include "../Tools/AnlPropertyLayout.h"
+#include "../Tools/AnlColouredPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -25,30 +26,22 @@ namespace Document
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         
-        class Property
-        : public Tools::PropertyPanel<juce::Label>
-        {
-        public:
-            Property(juce::String const& text, juce::String const& tooltip);
-            ~Property() override = default;
-        };
-        
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
         juce::FileBasedDocument& mFileBasedDocument;
         Accessor::Listener mListener;
         
-        Property mPanelFileName {juce::translate("Project"), juce::translate("The name of the project")};
-        Property mPanelFilePath {juce::translate("File"), juce::translate("The path of the audio file")};
-        Property mPanelFileFormat {juce::translate("Format"), juce::translate("The format of the audio file")};
-        Property mPanelSampleRate {juce::translate("Sample Rate"), juce::translate("The sample rate of the audio file")};
+        Tools::PropertyLabel mPanelFileName {juce::translate("Project"), juce::translate("The name of the project")};
+         Tools::PropertyLabel mPanelFilePath {juce::translate("File"), juce::translate("The path of the audio file")};
+         Tools::PropertyLabel mPanelFileFormat {juce::translate("Format"), juce::translate("The format of the audio file")};
+         Tools::PropertyLabel mPanelSampleRate {juce::translate("Sample Rate"), juce::translate("The sample rate of the audio file")};
         
-        Property mPanelBitPerSample {juce::translate("Bits"), juce::translate("The number of bits per samples of the audio file")};
-        Property mPanelLengthInSamples {juce::translate("Length"), juce::translate("The length of the audio file in samples")};
-        Property mPanelDurationInSeconds {juce::translate("Duration"), juce::translate("The duration of the audio file in seconds")};
-        Property mPanelNumChannels {juce::translate("Channels"), juce::translate("The number of channels of the audio file")};
+         Tools::PropertyLabel mPanelBitPerSample {juce::translate("Bits"), juce::translate("The number of bits per samples of the audio file")};
+         Tools::PropertyLabel mPanelLengthInSamples {juce::translate("Length"), juce::translate("The length of the audio file in samples")};
+         Tools::PropertyLabel mPanelDurationInSeconds {juce::translate("Duration"), juce::translate("The duration of the audio file in seconds")};
+         Tools::PropertyLabel mPanelNumChannels {juce::translate("Channels"), juce::translate("The number of channels of the audio file")};
         
-        std::vector<std::unique_ptr<Property>> mMetaDataPanels;
+        std::vector<std::unique_ptr<Tools::PropertyLabel>> mMetaDataPanels;
         
         Tools::PropertyLayout mPropertyLayout1;
         Tools::ColouredPanel mSeparator1;

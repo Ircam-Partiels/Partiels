@@ -2,11 +2,11 @@
 
 ANALYSE_FILE_BEGIN
 
-Tools::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& text, juce::String const& tooltip, Positioning p)
+Tools::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip, Positioning p)
 : positioning(p)
 , content(std::move(c))
 {
-    title.setText(text + ":", juce::NotificationType::dontSendNotification);
+    title.setText(name + ":", juce::NotificationType::dontSendNotification);
     title.setTooltip(tooltip);
     title.setMinimumHorizontalScale(1.f);
     title.setInterceptsMouseClicks(false, false);
@@ -37,6 +37,37 @@ void Tools::PropertyPanelBase::resized()
         content->setBounds(bounds);
     }
     title.setJustificationType(isLeft ? juce::Justification::centredLeft : juce::Justification::centredTop);
+}
+
+Tools::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
+: Tools::PropertyPanel<juce::Label>(name, tooltip, fn)
+{
+    entry.setTooltip(tooltip);
+    entry.setText(text, juce::NotificationType::dontSendNotification);
+    entry.setJustificationType(juce::Justification::right);
+    entry.setMinimumHorizontalScale(1.0f);
+    entry.onTextChange = [&]()
+    {
+        if(callback != nullptr)
+        {
+            callback(entry);
+        }
+    };
+}
+
+Tools::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::String const& tooltip, juce::StringArray const& items, callback_type fn)
+: Tools::PropertyPanel<juce::ComboBox>(name, tooltip, fn)
+{
+    entry.setTooltip(tooltip);
+    entry.addItemList(items, 1);
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.onChange = [&]()
+    {
+        if(callback != nullptr)
+        {
+            callback(entry);
+        }
+    };
 }
 
 ANALYSE_FILE_END

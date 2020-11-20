@@ -2,13 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::FileInfoPanel::Property::Property(juce::String const& text, juce::String const& tooltip)
-: Tools::PropertyPanel<juce::Label>(text, tooltip)
-{
-    entry.setJustificationType(juce::Justification::right);
-    entry.setMinimumHorizontalScale(1.0f);
-}
-
 Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocument& fileBasedDocument, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
@@ -49,7 +42,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
-                    auto property = std::make_unique<Property>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
+                    auto property = std::make_unique<Tools::PropertyLabel>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
                     anlStrongAssert(property != nullptr);
                     if(property != nullptr)
                     {

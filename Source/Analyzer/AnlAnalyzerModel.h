@@ -13,6 +13,7 @@ namespace Analyzer
     {
         key,
         name,
+        feature,
         parameters,
         results
     };
@@ -22,6 +23,7 @@ namespace Analyzer
     using Container = Model::Container
     < Model::Attr<AttrType::key, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
     , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
     >;

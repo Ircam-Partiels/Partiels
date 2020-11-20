@@ -2,6 +2,11 @@
 
 ANALYSE_FILE_BEGIN
 
+void Tools::PropertyLayout::Separator::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(ColourIds::separatorColourId, true));
+}
+
 Tools::PropertyLayout::PropertyLayout()
 {
     mViewport.setScrollBarThickness(6);

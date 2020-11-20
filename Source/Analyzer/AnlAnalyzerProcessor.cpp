@@ -48,7 +48,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
     auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
     auto const sampleRate = audioFormatReader.sampleRate;
-    size_t featureIndex = 1;
+    auto const featureIndex = accessor.getValue<AttrType::feature>();
     auto instance = createPlugin(accessor, sampleRate, true);
     if(instance == nullptr)
     {

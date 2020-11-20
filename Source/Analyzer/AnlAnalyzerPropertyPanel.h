@@ -28,18 +28,10 @@ namespace Analyzer
             ~Title() override = default;
         };
         
-        class Property
-        : public Tools::PropertyPanel<juce::Label>
-        {
-        public:
-            Property(juce::String const& text, juce::String const& tooltip);
-            ~Property() override = default;
-        };
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        std::vector<std::unique_ptr<Tools::PropertyPanel<juce::Label>>> mProperties;
+        std::vector<std::unique_ptr<Tools::PropertyPanelBase>> mProperties;
         Tools::PropertyLayout mPropertyLayout;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PropertyPanel)

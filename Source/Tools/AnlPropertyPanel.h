@@ -22,7 +22,7 @@ namespace Tools
         juce::Label title;
         Positioning positioning;
         
-        PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& text, juce::String const& tooltip = {}, Positioning p = Positioning::left);
+        PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip = {}, Positioning p = Positioning::left);
         ~PropertyPanelBase() override = default;
         
         // juce::Component
@@ -32,21 +32,43 @@ namespace Tools
         std::unique_ptr<juce::Component> content;
     };
     
-    template <class EntryClass> class PropertyPanel
+    template <class entry_t> class PropertyPanel
     : public PropertyPanelBase
     {
     public:
-        static_assert(std::is_base_of<juce::Component, EntryClass>::value, "Entry should inherit from juce::Component");
+        static_assert(std::is_base_of<juce::Component, entry_t>::value, "Entry should inherit from juce::Component");
+        using entry_type = entry_t;
+        using callback_type = std::function<void(entry_type const&)>;
         
-        EntryClass& entry;
+        entry_type& entry;
         
-        PropertyPanel(juce::String const& text, juce::String const& tooltip = {})
-        : PropertyPanelBase(std::make_unique<EntryClass>(), text, tooltip)
-        , entry(*static_cast<EntryClass*>(content.get()))
+        PropertyPanel(juce::String const& name, juce::String const& tooltip = {}, callback_type fn = nullptr)
+        : PropertyPanelBase(std::make_unique<entry_type>(), name, tooltip)
+        , entry(*static_cast<entry_type*>(content.get()))
+        , callback(fn)
         {
         }
         
         ~PropertyPanel() override = default;
+        
+    protected:
+        callback_type callback = nullptr;
+    };
+    
+    class PropertyLabel
+    : public Tools::PropertyPanel<juce::Label>
+    {
+    public:
+        PropertyLabel(juce::String const& name, juce::String const& tooltip = {}, juce::String const& text = {}, callback_type fn = nullptr);
+        ~PropertyLabel() override = default;
+    };
+    
+    class PropertyComboBox
+    : public Tools::PropertyPanel<juce::ComboBox>
+    {
+    public:
+        PropertyComboBox(juce::String const& text, juce::String const& tooltip = {}, juce::StringArray const& items = {}, callback_type fn = nullptr);
+        ~PropertyComboBox() override = default;
     };
 }
 

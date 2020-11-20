@@ -76,10 +76,11 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h)
 
 file(GLOB DocumentSources
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileWatcher.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileWatcher.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentControlPanel.cpp
