@@ -39,9 +39,16 @@ void Tools::PropertyPanelBase::resized()
     title.setJustificationType(isLeft ? juce::Justification::centredLeft : juce::Justification::centredTop);
 }
 
+Tools::PropertyTitle::PropertyTitle(juce::String const& name, juce::String const& tooltip)
+: Tools::PropertyPanel<juce::Component>(name, tooltip, nullptr)
+{
+    title.setFont(title.getFont().boldened());
+}
+
 Tools::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
 : Tools::PropertyPanel<juce::Label>(name, tooltip, fn)
 {
+    entry.setEditable(true);
     entry.setTooltip(tooltip);
     entry.setText(text, juce::NotificationType::dontSendNotification);
     entry.setJustificationType(juce::Justification::right);
@@ -55,11 +62,12 @@ Tools::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const
     };
 }
 
-Tools::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::String const& tooltip, juce::StringArray const& items, callback_type fn)
+Tools::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::String const& tooltip, juce::StringArray const& items, size_t index, callback_type fn)
 : Tools::PropertyPanel<juce::ComboBox>(name, tooltip, fn)
 {
     entry.setTooltip(tooltip);
     entry.addItemList(items, 1);
+    entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
     entry.setJustificationType(juce::Justification::centredRight);
     entry.onChange = [&]()
     {

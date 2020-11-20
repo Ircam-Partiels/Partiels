@@ -61,10 +61,11 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
             case AttrType::isLooping:
                 break;
         }
+        changeListenerCallback(&mFileBasedDocument);
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mPropertyLayout1.setPanels({mPanelFileName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
+    mPropertyLayout1.setPanels({mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
     mPropertyLayout2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
     
     addAndMakeVisible(mPropertyLayout1);
@@ -119,8 +120,8 @@ void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* so
     auto const file = mFileBasedDocument.getFile();
     auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved";
     auto const extension = file.existsAsFile() && mFileBasedDocument.hasChangedSinceSaved() ? "*" : "";
-    mPanelFileName.entry.setText(name + extension, juce::NotificationType::dontSendNotification);
-    mPanelFileName.entry.setTooltip(file.existsAsFile() ? file.getFullPathName() : "");
+    mPanelProjectName.entry.setText(name + extension, juce::NotificationType::dontSendNotification);
+    mPanelProjectName.entry.setTooltip(file.existsAsFile() ? file.getFullPathName() : "");
 }
 
 ANALYSE_FILE_END

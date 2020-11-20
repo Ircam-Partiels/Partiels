@@ -30,6 +30,8 @@ Document::MainPanel::MainPanel(Accessor& accessor)
                     {
                         addAndMakeVisible(section->renderer);
                         addAndMakeVisible(section->separator);
+                        addAndMakeVisible(section->ruler);
+                        addAndMakeVisible(section->scrollbar);
                         mSections.push_back(std::move(section));
                     }
                 }
@@ -56,6 +58,8 @@ void Document::MainPanel::resized()
         {
             auto lbounds = bounds.removeFromTop(size);
             section->separator.setBounds(lbounds.removeFromBottom(2));
+            section->scrollbar.setBounds(lbounds.removeFromRight(8));
+            section->ruler.setBounds(lbounds.removeFromRight(16));
             section->renderer.setBounds(lbounds);
         }
     }

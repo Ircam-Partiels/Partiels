@@ -6,15 +6,15 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::PropertyPanel::Title::Title(juce::String const& text, juce::String const& tooltip)
-: Tools::PropertyPanel<juce::Label>(text, tooltip)
-{
-    entry.setVisible(false);
-}
-
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 {
+    mPluginName.entry.setEnabled(false);
+    mFeatures.callback = [&](juce::ComboBox const& entry)
+    {
+        mAccessor.setValue<AttrType::feature>(entry.getSelectedItemIndex());
+    };
+    
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -32,6 +32,18 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     return;
                 }
                 
+                mPluginName.entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
+                auto const outputDescriptors = instance->getOutputDescriptors();
+                anlWeakAssert(!outputDescriptors.empty());
+                int itemId = 0;
+                mPluginName.entry.setEnabled(outputDescriptors.size() > 1);
+                mFeatures.entry.clear();
+                for(auto const& descriptor : outputDescriptors)
+                {
+                    mFeatures.entry.addItem(descriptor.name, ++itemId);
+                }
+                mFeatures.entry.setSelectedItemIndex(static_cast<int>(acsr.getValue<AttrType::feature>()));
+                
                 auto getParameterTextValue = [](Vamp::Plugin::ParameterDescriptor const& descriptor, float pvalue) -> juce::String
                 {
                     if(descriptor.isQuantized && !descriptor.valueNames.empty())
@@ -40,75 +52,23 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                     return juce::String(pvalue, 2) + descriptor.unit;
                 };
-                
-                mProperties.push_back(std::make_unique<Tools::PropertyLabel>("Name", "The name fo the plugin"));
-                static_cast<Tools::PropertyLabel*>(mProperties[0].get())->entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
-                
-                auto const outputDescriptors = instance->getOutputDescriptors();
-                if(!outputDescriptors.empty())
-                {
-                    juce::StringArray names;
-                    names.ensureStorageAllocated(static_cast<int>(outputDescriptors.size()));
-                    for(auto const& descriptor : outputDescriptors)
-                    {
-                        names.add(descriptor.name);
-                    }
-                    
-                    auto property = std::make_unique<Tools::PropertyComboBox>("Feature", "The feature fo the plugin", names, [&](juce::ComboBox const& entry)
-                    {
-                        mAccessor.setValue<AttrType::feature>(entry.getSelectedItemIndex());
-                    });
-                    property->entry.setSelectedItemIndex(static_cast<int>(acsr.getValue<AttrType::feature>()), juce::NotificationType::dontSendNotification);
-                    mProperties.push_back(std::move(property));
-                }
-                
-                mProperties.push_back(std::make_unique<Title>("Parameters", "The parameters of the plugin"));
-                
+
                 if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get()))
                 {
                     if(auto* adapt = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
                     {
-                        auto property = std::make_unique<Tools::PropertyLabel>("Window Type", "The window type...");
-                        if(property != nullptr)
+                        juce::StringArray const names {"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Blackman-Harris"};
+                        auto property = std::make_unique<Tools::PropertyComboBox>("Window Type", "The feature fo the plugin", names, static_cast<size_t>(adapt->getWindowType()), [&](juce::ComboBox const& entry)
                         {
-                            auto getWindowText = [&]() -> juce::String
-                            {
-                                using WindowType = Vamp::HostExt::PluginInputDomainAdapter::WindowType;
-                                switch (adapt->getWindowType())
-                                {
-                                    case WindowType::RectangularWindow:
-                                        return "Rectangular";
-                                        break;
-                                    case WindowType::TriangularWindow:
-                                        return "Triangular";
-                                        break;
-                                    case WindowType::HammingWindow:
-                                        return "Hamming";
-                                        break;
-                                    case WindowType::HanningWindow:
-                                        return "Hanning";
-                                        break;
-                                    case WindowType::BlackmanWindow:
-                                        return "Blackman";
-                                        break;
-                                    case WindowType::NuttallWindow:
-                                        return "Nuttall";
-                                        break;
-                                    case WindowType::BlackmanHarrisWindow:
-                                        return "Blackman-Harris";
-                                        break;
-                                }
-                            };
-                            property->entry.setText(getWindowText(), juce::NotificationType::dontSendNotification);
-                            mProperties.push_back(std::move(property));
-                        }
+                            using WindowType = Vamp::HostExt::PluginInputDomainAdapter::WindowType;
+                            //adapt->setWindowType(static_cast<WindowType>(entry.getSelectedItemIndex()));
+                        });
+                        mProperties.push_back(std::move(property));
                     }
                 }
                 
                 
                 auto const parameterDescriptors = instance->getParameterDescriptors();
-                mProperties.reserve(mProperties.size() + parameterDescriptors.size());
-                
                 for(auto const& descriptor : parameterDescriptors)
                 {
                     auto property = std::make_unique<Tools::PropertyLabel>(descriptor.name, descriptor.description);
@@ -121,13 +81,49 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 
                 std::vector<Tools::PropertyLayout::PanelRef> panels;
-                for(auto const& property : mProperties)
+                panels.push_back(mPluginName);
+                panels.push_back(mFeatures);
+                if(!mProperties.empty())
                 {
-                    panels.push_back(*property.get());
+                    panels.push_back(mAnalysisParameters);
+                    for(auto const& property : mProperties)
+                    {
+                        panels.push_back(*property.get());
+                    }
                 }
+                panels.push_back(mGraphicalParameters);
+                
                 mPropertyLayout.setPanels(panels, Tools::PropertyPanelBase::left);
-                setSize(300, std::min(600, static_cast<int>(mProperties.size()) * 30));
+                setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
                 resized();
+            }
+            case AttrType::feature:
+            {
+                auto getRange = [&]() -> juce::Range<double>
+                {
+                    auto instance = createPlugin(acsr, 44100.0, true);
+                    if(instance == nullptr)
+                    {
+                        return {-1.0, 0.0};
+                    }
+                    instance->initialise(1, 512, 512);
+                    auto const feature = acsr.getValue<AttrType::feature>();
+                    auto const outputDescriptors = instance->getOutputDescriptors();
+                    if(feature >= outputDescriptors.size())
+                    {
+                        return {-1.0, 0.0};
+                    }
+                    if(!outputDescriptors[feature].hasKnownExtents || outputDescriptors[feature].binCount == 0)
+                    {
+                        return {-1.0, 1.0};
+                    }
+                    return {outputDescriptors[feature].minValue, outputDescriptors[feature].maxValue};
+                };
+                
+                auto& zoomAcsr = mAccessor.getAccessors<AttrType::zoom>()[0].get();
+                auto const range = getRange();
+                zoomAcsr.setValue<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+                zoomAcsr.setValue<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
             }
                 break;
             case AttrType::name:
@@ -137,9 +133,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     };
     
     addAndMakeVisible(mPropertyLayout);
-    
-    mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(300, 200);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Analyzer::PropertyPanel::~PropertyPanel()

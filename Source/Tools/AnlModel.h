@@ -401,7 +401,7 @@ namespace Model
                         }
                         
                         auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
-                        anlStrongAssert(element_type::size_flags == 0 || childs.size() == containers.size());
+                        anlWeakAssert(element_type::size_flags == 0 || childs.size() == containers.size());
                         if constexpr(element_type::size_flags == 0)
                         {
                             while(containers.size() > childs.size())

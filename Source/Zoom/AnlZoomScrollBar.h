@@ -32,7 +32,6 @@ namespace Zoom
         Accessor& mAccessor;
         Accessor::Listener mListener;
         juce::ScrollBar mScrollBar;
-        juce::Slider mIncDec;
     };
 }
 

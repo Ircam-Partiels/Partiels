@@ -8,23 +8,6 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
 {
     mScrollBar.setAutoHide(false);
     addAndMakeVisible(mScrollBar);
-    mIncDec.setSliderStyle(juce::Slider::SliderStyle::IncDecButtons);
-    mIncDec.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
-    addAndMakeVisible(mIncDec);
-    
-    mIncDec.onValueChange = [&]()
-    {
-        auto const range = mAccessor.getValue<AttrType::visibleRange>();
-        auto const globalRange = mAccessor.getValue<AttrType::globalRange>();
-        if(globalRange.getLength() - mIncDec.getValue() < mIncDec.getInterval())
-        {
-            mAccessor.setValue<AttrType::visibleRange>(globalRange.expanded(-mIncDec.getInterval()), NotificationType::synchronous);
-        }
-        else
-        {
-             mAccessor.setValue<AttrType::visibleRange>(range.expanded(-(mIncDec.getValue() - range.getLength())), NotificationType::synchronous);
-        }
-    };
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -34,18 +17,19 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
             {
                 auto const globalRange = acsr.getValue<AttrType::globalRange>();
                 mScrollBar.setRangeLimits(globalRange, juce::NotificationType::dontSendNotification);
-//                mIncDec.setRange(globalRange.movedToStartAt(0.0), globalRange.getLength() / 127.0);
+                mScrollBar.setSingleStepSize(globalRange.getLength() / 127.0);
             }
                 break;
             case AttrType::visibleRange:
             {
                 auto const range = acsr.getValue<AttrType::visibleRange>();
                 mScrollBar.setCurrentRange(range, juce::NotificationType::dontSendNotification);
-//                mIncDec.setValue(range.getLength(), juce::NotificationType::dontSendNotification);
             }
                 break;
             
             case AttrType::minimumLength:
+            {
+            }
                 break;
         }
     };
@@ -62,16 +46,7 @@ Zoom::ScrollBar::~ScrollBar()
 
 void Zoom::ScrollBar::resized()
 {
-    auto bounds = getLocalBounds();
-    if(mScrollBar.isVertical())
-    {
-        mIncDec.setBounds(bounds.removeFromBottom(bounds.getWidth() * 2));
-    }
-    else
-    {
-        mIncDec.setBounds(bounds.removeFromRight(bounds.getHeight() * 2));
-    }
-    mScrollBar.setBounds(bounds);
+    mScrollBar.setBounds(getLocalBounds());
 }
 
 void Zoom::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart)

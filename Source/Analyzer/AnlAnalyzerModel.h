@@ -3,6 +3,7 @@
 #include "../Tools/AnlModel.h"
 #include "../Tools/AnlBroadcaster.h"
 #include "../Tools/AnlAtomicManager.h"
+#include "../Zoom/AnlZoomModel.h"
 #include <vamp-hostsdk/PluginHostAdapter.h>
 
 ANALYSE_FILE_BEGIN
@@ -15,7 +16,8 @@ namespace Analyzer
         name,
         feature,
         parameters,
-        results
+        results,
+        zoom
     };
     
     using Result = Vamp::Plugin::Feature;
@@ -25,7 +27,8 @@ namespace Analyzer
     , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
+    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
+    , Model::Model<AttrType::zoom, Zoom::Container, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     >;
 
     class Accessor

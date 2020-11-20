@@ -56,32 +56,13 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
     }
     
     auto const outputDescriptor = instance->getOutputDescriptors();
-    
-    auto getFeatureName = [&](size_t index)
+    anlStrongAssert(featureIndex < outputDescriptor.size());
+    if(featureIndex >= outputDescriptor.size())
     {
-        if(outputDescriptor.size() > index)
-        {
-            return outputDescriptor[index].name;
-        }
-        return std::to_string(index);
-    };
+        return;
+    }
     
-    auto printResult = [&](Vamp::Plugin::FeatureSet const& results)
-    {
-        for(auto const& channel : results)
-        {
-            std::cout << "Feature " << getFeatureName(static_cast<size_t>(channel.first)) << " - ";
-            for(auto const& feature : channel.second)
-            {
-                std::cout << (feature.hasTimestamp ? "(" + feature.timestamp.toText(true) + ")" : "") << ": ";
-                for(auto const& value : feature.values)
-                {
-                    std::cout << value << feature.label << " ";
-                }
-            }
-            std::cout << "\n";
-        }
-    };
+    auto const numDimension = std::min(outputDescriptor[featureIndex].binCount, 2ul) + 1;
     
     using result_type = std::remove_const<std::remove_reference<decltype(accessor.getValue<AttrType::results>())>::type>::type;
     result_type results;
@@ -98,14 +79,24 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
         {
             results.insert(results.end(), it->second.begin(), it->second.end());
         }
-        printResult(result);
     }
     auto const result = instance->getRemainingFeatures();
-    printResult(result);
     auto it = result.find(static_cast<int>(featureIndex));
     if(it != result.end())
     {
-        results.insert(results.end(), it->second.begin(), it->second.end());
+        results.insert(results.end(), it->second.cbegin(), it->second.cend());
+    }
+    if(numDimension == 2)
+    {
+        auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+        {
+            return lhs.values[0] < rhs.values[0];
+        });
+        auto const min = static_cast<double>(pair.first->values[0]);
+        auto const max = static_cast<double>(pair.second->values[0]);
+        auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
+        zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
+        zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
     }
     
     accessor.setValue<AttrType::results>(results, NotificationType::synchronous);

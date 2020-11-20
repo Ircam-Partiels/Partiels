@@ -12,6 +12,11 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mRelaunchButton);
     
+    mNameLabel.onTextChange = [&]()
+    {
+        mAccessor.setValue<AttrType::name>(mNameLabel.getText(), NotificationType::synchronous);
+    };
+    
     mRemoveButton.onClick = [&]()
     {
         if(onRemove != nullptr)
@@ -31,7 +36,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     mPropertiesButton.onClick = [&]()
     {
         juce::DialogWindow::LaunchOptions launchOption;
-        launchOption.dialogTitle = juce::translate("Analyzer Properties");
+        launchOption.dialogTitle = juce::translate("ANLNAME Properties").replace("ANLNAME", mAccessor.getValue<AttrType::name>());
         launchOption.content.setNonOwned(&mPropertyPanel);
         launchOption.componentToCentreAround = this;
         launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);

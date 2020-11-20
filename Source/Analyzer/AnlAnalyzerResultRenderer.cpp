@@ -21,12 +21,14 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.getAccessors<AttrType::zoom>()[0].get().addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::ResultRenderer::~ResultRenderer()
 {
     mZoomAccessor.removeListener(mZoomListener);
+    mAccessor.getAccessors<AttrType::zoom>()[0].get().removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -34,17 +36,17 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
 {
     auto const width = getWidth();
     auto const height = getHeight();
-    auto const range = mZoomAccessor.getValue<Zoom::AttrType::visibleRange>();
+    auto const timeRange = mZoomAccessor.getValue<Zoom::AttrType::visibleRange>();
     
     auto timeToPixel = [&](Vamp::RealTime const&  timestamp)
     {
-        auto const time = (((timestamp.sec * 1000.0 + timestamp.msec()) / 1000.0) - range.getStart()) / range.getLength();
+        auto const time = (((timestamp.sec * 1000.0 + timestamp.msec()) / 1000.0) - timeRange.getStart()) / timeRange.getLength();
         return static_cast<int>(time * width);
     };
-    
+    auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
     auto valueToPixel = [&](float const value)
     {
-        return static_cast<int>((1.0f - value / 22050.0f) * height);
+        return static_cast<int>((1.0f - (value - valueRange.getStart()) / valueRange.getLength()) * height);
     };
     
     g.setColour(juce::Colours::black);

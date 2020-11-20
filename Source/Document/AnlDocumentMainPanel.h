@@ -2,6 +2,8 @@
 
 #include "AnlDocumentModel.h"
 #include "../Tools/AnlColouredPanel.h"
+#include "../Zoom/AnlZoomRuler.h"
+#include "../Zoom/AnlZoomScrollBar.h"
 #include "../Analyzer/AnlAnalyzerResultRenderer.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 
@@ -32,6 +34,8 @@ namespace Document
             Analyzer::Accessor& accessor;
             Analyzer::ResultRenderer renderer;
             Tools::ColouredPanel separator;
+            Zoom::Ruler ruler {accessor.getAccessors<Analyzer::AttrType::zoom>()[0], Zoom::Ruler::Orientation::vertical};
+            Zoom::ScrollBar scrollbar {accessor.getAccessors<Analyzer::AttrType::zoom>()[0], Zoom::ScrollBar::Orientation::vertical};
         };
         
         std::vector<std::unique_ptr<Section>> mSections;

@@ -41,6 +41,7 @@ namespace Tools
         using callback_type = std::function<void(entry_type const&)>;
         
         entry_type& entry;
+        callback_type callback = nullptr;
         
         PropertyPanel(juce::String const& name, juce::String const& tooltip = {}, callback_type fn = nullptr)
         : PropertyPanelBase(std::make_unique<entry_type>(), name, tooltip)
@@ -51,8 +52,14 @@ namespace Tools
         
         ~PropertyPanel() override = default;
         
-    protected:
-        callback_type callback = nullptr;
+    };
+    
+    class PropertyTitle
+    : public Tools::PropertyPanel<juce::Component>
+    {
+    public:
+        PropertyTitle(juce::String const& name, juce::String const& tooltip = {});
+        ~PropertyTitle() override = default;
     };
     
     class PropertyLabel
@@ -67,7 +74,7 @@ namespace Tools
     : public Tools::PropertyPanel<juce::ComboBox>
     {
     public:
-        PropertyComboBox(juce::String const& text, juce::String const& tooltip = {}, juce::StringArray const& items = {}, callback_type fn = nullptr);
+        PropertyComboBox(juce::String const& text, juce::String const& tooltip = {}, juce::StringArray const& items = {}, size_t index = 0, callback_type fn = nullptr);
         ~PropertyComboBox() override = default;
     };
 }
