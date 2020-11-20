@@ -277,7 +277,8 @@ void Document::AudioReader::handleAsyncUpdate()
 
 void Document::AudioReader::timerCallback()
 {
-    mAccessor.setValue<AttrType::playheadPosition>(mReadPosition.load(), NotificationType::synchronous);
+    auto const sampleRate = mSampleRate > 0.0 ? mSampleRate : 44100.0;
+    mAccessor.setValue<AttrType::playheadPosition>(static_cast<double>(mReadPosition.load()) / sampleRate, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

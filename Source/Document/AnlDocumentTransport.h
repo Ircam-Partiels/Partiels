@@ -24,7 +24,6 @@ namespace Document
         juce::TextButton mForwardButton {juce::CharPointer_UTF8("»")};
         juce::TextButton mLoopButton {juce::CharPointer_UTF8("∞")};
         
-        juce::Label mPlayPositionInSamples {"", "0samples"};
         juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
         juce::Slider mVolumeSlider {juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};
         

@@ -24,8 +24,16 @@ Document::Transport::Transport(Accessor& accessor)
                 break;
             case AttrType::playheadPosition:
             {
-                auto const samples = acsr.getValue<AttrType::playheadPosition>();
-                mPlayPositionInSamples.setText(juce::String(samples) + " samples", juce::NotificationType::dontSendNotification);
+                auto time = acsr.getValue<AttrType::playheadPosition>();
+                auto const hours = static_cast<int>(std::floor(time / 3600.0));
+                time -= static_cast<double>(hours) * 3600.0;
+                auto const minutes = static_cast<int>(std::floor(time / 60.0));
+                time -= static_cast<double>(minutes) * 60.0;
+                auto const seconds = static_cast<int>(std::floor(time));
+                time -= static_cast<double>(seconds);
+                auto const ms = static_cast<int>(std::floor(time * 1000.0));
+                auto const text = juce::String::formatted("%02dh %02dm %02ds %03dms", hours, minutes, seconds, ms);
+                mPlayPositionInHMSms.setText(text, juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::isLooping:
@@ -73,8 +81,6 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mForwardButton);
     addAndMakeVisible(mLoopButton);
     
-    mPlayPositionInSamples.setJustificationType(juce::Justification::centredRight);
-    addAndMakeVisible(mPlayPositionInSamples);
     mPlayPositionInHMSms.setJustificationType(juce::Justification::centredRight);
     addAndMakeVisible(mPlayPositionInHMSms);
     
@@ -98,7 +104,7 @@ void Document::Transport::resized()
     mForwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     
-    mPlayPositionInSamples.setBounds(bounds.removeFromTop(bounds.getHeight() / 3));
+    bounds.removeFromTop(bounds.getHeight() / 3);
     mPlayPositionInHMSms.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
     mVolumeSlider.setBounds(bounds);
 }

@@ -6,11 +6,35 @@ ANALYSE_FILE_BEGIN
 Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
-, mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0))
+, mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal)
 , mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
 , mDocumentMainPanel(Instance::get().getDocumentAccessor())
 , mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal)
 {
+    mZoomTimeRuler.setPrimaryTickInterval(0);
+    mZoomTimeRuler.setTickReferenceValue(0.0);
+    mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
+    mZoomTimeRuler.setMaximumStringWidth(65.0);
+    mZoomTimeRuler.setValueAsStringMethod([](double value)
+    {
+        auto time = value;
+        auto const hours = static_cast<int>(std::floor(time / 3600.0));
+        time -= static_cast<double>(hours) * 3600.0;
+        auto const minutes = static_cast<int>(std::floor(time / 60.0));
+        time -= static_cast<double>(minutes) * 60.0;
+        auto const seconds = static_cast<int>(std::floor(time));
+        time -= static_cast<double>(seconds);
+        auto const ms = static_cast<int>(std::floor(time * 1000.0));
+        return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, seconds, ms);
+    });
+    
+    mZoomTimeRuler.onDoubleClick = [&]()
+    {
+        auto& acsr = Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0);
+        acsr.setValue<Zoom::AttrType::visibleRange>(acsr.getValue<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+    };
+    addAndMakeVisible(mZoomTimeRuler);
+    
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mDocumentTransportSeparator);
     addAndMakeVisible(mDocumentFileInfoPanel);
@@ -83,7 +107,7 @@ void Application::Interface::resized()
     }
     
     {
-        auto top = bounds.removeFromTop(24 + separatorSize);
+        auto top = bounds.removeFromTop(14 + separatorSize);
         mZoomTimeRulerSeparator.setBounds(top.removeFromBottom(separatorSize));
         top.removeFromLeft(240);
         mZoomTimeRuler.setBounds(top);

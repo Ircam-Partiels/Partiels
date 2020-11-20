@@ -8,8 +8,8 @@
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentControlPanel.h"
 #include "../Document/AnlDocumentMainPanel.h"
-#include "../Zoom/AnlZoomTimeRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
+#include "../Zoom/AnlZoomRuler.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -38,7 +38,7 @@ namespace Application
         Tools::ColouredPanel mHeaderSeparator;
         
         // Main
-        Zoom::TimeRuler mZoomTimeRuler;
+        Zoom::Ruler mZoomTimeRuler;
         Tools::ColouredPanel mZoomTimeRulerSeparator;
         Document::ControlPanel mDocumentControlPanel;
         Tools::ColouredPanel mDocumentControlPanelSeparator;

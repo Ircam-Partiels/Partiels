@@ -2,7 +2,6 @@
 #include "../Tools/AnlPropertyLayout.h"
 #include "../Tools/AnlColouredPanel.h"
 #include "../Zoom/AnlZoomRuler.h"
-#include "../Zoom/AnlZoomTimeRuler.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -17,7 +16,6 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::textColourId, juce::Colours::white);
     setColour(Zoom::Ruler::anchorColourId, juce::Colours::red);
     setColour(Zoom::Ruler::selectionColourId, juce::Colours::blue);
-    setColour(Zoom::TimeRuler::backgroundColourId, juce::Colours::transparentBlack);
     
     // juce::ComboBox::LookAndFeelMethods
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
