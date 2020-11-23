@@ -14,7 +14,7 @@ Application::Interface::Interface()
     mZoomTimeRuler.setPrimaryTickInterval(0);
     mZoomTimeRuler.setTickReferenceValue(0.0);
     mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
-    mZoomTimeRuler.setMaximumStringWidth(65.0);
+    mZoomTimeRuler.setMaximumStringWidth(70.0);
     mZoomTimeRuler.setValueAsStringMethod([](double value)
     {
         auto time = value;

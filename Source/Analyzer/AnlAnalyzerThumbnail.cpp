@@ -24,6 +24,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             onRemove();
         }
     };
+    mRemoveButton.setTooltip(juce::translate("Remove analysis"));
     
     mRelaunchButton.onClick= [&]()
     {
@@ -32,6 +33,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             onRelaunch();
         }
     };
+    mRemoveButton.setTooltip(juce::translate("Run analysis"));
     
     mPropertiesButton.onClick = [&]()
     {
@@ -46,6 +48,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         launchOption.useBottomRightCornerResizer = false;
         launchOption.runModal();
     };
+    mRemoveButton.setTooltip(juce::translate("Analysis properties"));
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
