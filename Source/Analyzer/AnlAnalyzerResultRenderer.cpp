@@ -1,5 +1,6 @@
 #include "AnlAnalyzerResultRenderer.h"
 #include "AnlAnalyzerProcessor.h"
+#include "../Tools/AnlMisc.h"
 #include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
@@ -8,10 +9,47 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
 : mAccessor(accessor)
 , mZoomAccessor(zoomAccessor)
 {
+    mInformation.setEditable(false);
+    mInformation.setInterceptsMouseClicks(false, false);
+    addChildComponent(mInformation);
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         if(attribute == AttrType::results)
         {
+            auto const& results = acsr.getValue<AttrType::results>();
+            if(results.empty())
+            {
+                repaint();
+                return;
+            }
+            
+            if(results.front().values.size() > 1)
+            {
+                auto const witdh = static_cast<int>(results.size());
+                auto const height = static_cast<int>(results.front().values.size());
+                juce::Image image(juce::Image::PixelFormat::ARGB, witdh, height, false);
+                juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
+                
+                float maxValue = 0.0;
+                auto valueToColour = [&](float const value)
+                {
+                    maxValue = std::max(maxValue, value);
+                    auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), tinycolormap::ColormapType::Turbo);
+                    return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+                };
+                
+                for(int i = 0; i < witdh; ++i)
+                {
+                    for(int j = 0; j < height; ++j)
+                    {
+                        auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
+                        data.setPixelColour(i, height - 1 - j, colour);
+                    }
+                }
+                std::cout << "max " << maxValue << "\n";
+                mImage = image;
+            }
+            
             repaint();
         }
     };
@@ -33,6 +71,11 @@ Analyzer::ResultRenderer::~ResultRenderer()
     mAccessor.removeListener(mListener);
 }
 
+void Analyzer::ResultRenderer::resized()
+{
+    mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
+}
+
 void Analyzer::ResultRenderer::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
@@ -50,6 +93,9 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     }
     
     auto const timeRange = mZoomAccessor.getValue<Zoom::AttrType::visibleRange>();
+    
+    auto const realTimeRange = juce::Range<Vamp::RealTime>{Vamp::RealTime::fromSeconds(timeRange.getStart()), Vamp::RealTime::fromSeconds(timeRange.getEnd())};
+    
     auto const timeLength = timeRange.getLength();
     auto timeToPixel = [&](Vamp::RealTime const&  timestamp)
     {
@@ -64,10 +110,14 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     {
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
-            auto const x = timeToPixel(results[i].timestamp);
-            if(horizontalRange.contains(x))
+            if(realTimeRange.contains(results[i].timestamp))
             {
+                auto const x = timeToPixel(results[i].timestamp);
                 g.drawVerticalLine(x, 0.0f, static_cast<float>(height));
+            }
+            else if(results[i].timestamp >= realTimeRange.getEnd())
+            {
+                break;
             }
         }
     }
@@ -81,53 +131,102 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         };
         juce::Point<float> pt;
         
+        
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
-            auto const x = timeToPixel(results[i].timestamp);
-            if(horizontalRange.contains(x))
+            auto const next = i + resultIncrement;
+            auto const isVisible = realTimeRange.contains(results[i].timestamp) || (next < results.size() && realTimeRange.contains(results[next].timestamp));
+            if(isVisible)
             {
+                auto const x = timeToPixel(results[i].timestamp);
                 juce::Point<float> const npt{static_cast<float>(x), static_cast<float>(valueToPixel(results[i].values[0]))};
                 g.drawLine({pt, npt});
                 pt = npt;
+            }
+            else if(results[i].timestamp >= realTimeRange.getEnd())
+            {
+                break;
             }
         }
     }
     else
     {
+        auto image = mImage;
         
-        auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        auto const globalValueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::globalRange>();
+        auto const vRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        auto const globalTimeRange = mZoomAccessor.getValue<Zoom::AttrType::globalRange>();
         
-        auto valueToColour = [&](float const value)
-        {
-            auto const color = tinycolormap::GetColor(static_cast<double>(value) / valueRange.getEnd(), tinycolormap::ColormapType::Hot);
-            return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
-        };
+        auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - vRange.getEnd(), globalValueRange.getEnd() - vRange.getStart());
         
+        auto const deltaX = static_cast<float>(timeRange.getStart() / globalTimeRange.getLength() * static_cast<double>(image.getWidth()));
+        auto const deltaY = static_cast<float>(valueRange.getStart() / globalValueRange.getLength() * static_cast<double>(image.getHeight()));
         
-        auto const start = static_cast<size_t>(std::floor(valueRange.getStart()));
-        auto const end = static_cast<size_t>(std::floor(valueRange.getEnd()));
+        auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image.getWidth()));
+        auto const scaleY = static_cast<float>(globalValueRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
         
-        auto const valueRatio = valueRange.getLength() / static_cast<double>(height);
-        auto const valuetIncrement = static_cast<size_t>(std::floor(std::max(valueRatio, 1.0)));
-        auto const cellHeight = static_cast<int>(std::ceil(std::max(1.0 / valueRatio, 1.0)));
-        auto const cellWidth = static_cast<int>(std::ceil(std::max(width / timeLength, 1.0)));
-        
-        for(size_t i = 0; i < results.size(); i += resultIncrement)
-        {
-            auto const x = timeToPixel(results[i].timestamp);
-            if(horizontalRange.contains(x))
-            {
-                auto y = height - cellHeight;
-                for(auto index = start; index < end; index += valuetIncrement)
-                {
-                    g.setColour(valueToColour(results[i].values[index]));
-                    g.fillRect(x, y, cellWidth, cellHeight);
-                    y -= cellHeight;
-                }
-            }
-        }
+        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
+        g.drawImageTransformed(image, transform);
+    }
+}
+
+void Analyzer::ResultRenderer::mouseMove(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    repaint();
+    auto const& results = mAccessor.getValue<AttrType::results>();
+    if(results.empty() && getWidth() > 0)
+    {
+        return;
+    }
+    juce::String text;
+    
+    auto const timeRange = mZoomAccessor.getValue<Zoom::AttrType::visibleRange>();
+    auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
+    auto const rtr = Vamp::RealTime::fromSeconds(time);
+    text += Tools::secondsToString(time) + "\n";
+    if(results.front().values.empty())
+    {
         
     }
+    else if(results.front().values.size() == 1)
+    {
+        for(size_t i = 0; i < results.size(); i++)
+        {
+            if(results[i].timestamp >= rtr)
+            {
+                text += juce::String(results[i].values[0]) + results[i].label;
+                break;
+            }
+        }
+    }
+    else
+    {
+        auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        for(size_t i = 0; i < results.size(); i++)
+        {
+            if(results[i].timestamp >= rtr)
+            {
+                auto const index = std::max(std::min((1.0 - static_cast<double>(event.y) / static_cast<double>(getHeight())), 1.0), 0.0) * valueRange.getLength() + valueRange.getStart();
+                text += juce::String(static_cast<long>(index)) + "\n";
+                text += juce::String(results[i].values[static_cast<size_t>(index)] / valueRange.getLength()) + results[i].label;
+                break;
+            }
+        }
+    }
+    mInformation.setText(text, juce::NotificationType::dontSendNotification);
+}
+
+void Analyzer::ResultRenderer::mouseEnter(juce::MouseEvent const& event)
+{
+    mInformation.setVisible(true);
+    mouseMove(event);
+}
+
+void Analyzer::ResultRenderer::mouseExit(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    mInformation.setVisible(false);
 }
 
 ANALYSE_FILE_END

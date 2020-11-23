@@ -24,16 +24,8 @@ Document::Transport::Transport(Accessor& accessor)
                 break;
             case AttrType::playheadPosition:
             {
-                auto time = acsr.getValue<AttrType::playheadPosition>();
-                auto const hours = static_cast<int>(std::floor(time / 3600.0));
-                time -= static_cast<double>(hours) * 3600.0;
-                auto const minutes = static_cast<int>(std::floor(time / 60.0));
-                time -= static_cast<double>(minutes) * 60.0;
-                auto const seconds = static_cast<int>(std::floor(time));
-                time -= static_cast<double>(seconds);
-                auto const ms = static_cast<int>(std::floor(time * 1000.0));
-                auto const text = juce::String::formatted("%02dh %02dm %02ds %03dms", hours, minutes, seconds, ms);
-                mPlayPositionInHMSms.setText(text, juce::NotificationType::dontSendNotification);
+                auto const time = acsr.getValue<AttrType::playheadPosition>();
+                mPlayPositionInHMSms.setText(Tools::secondsToString(time), juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::isLooping:

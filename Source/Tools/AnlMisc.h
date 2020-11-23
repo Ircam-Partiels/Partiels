@@ -25,6 +25,21 @@ namespace Tools
     }
 }
 
+namespace Tools
+{
+    inline juce::String secondsToString(double time)
+    {
+        auto const hours = static_cast<int>(std::floor(time / 3600.0));
+        time -= static_cast<double>(hours) * 3600.0;
+        auto const minutes = static_cast<int>(std::floor(time / 60.0));
+        time -= static_cast<double>(minutes) * 60.0;
+        auto const seconds = static_cast<int>(std::floor(time));
+        time -= static_cast<double>(seconds);
+        auto const ms = static_cast<int>(std::floor(time * 1000.0));
+        return juce::String::formatted("%02dh %02dm %02ds %03dms", hours, minutes, seconds, ms);
+    }
+}
+
 ANALYSE_FILE_END
 
 #ifdef JUCE_DEBUG
@@ -50,3 +65,4 @@ ANALYSE_FILE_END
 // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 template<typename T, template<typename...> class Ref> struct is_specialization: std::false_type {};
 template<template<typename...> class Ref, typename... Args> struct is_specialization<Ref<Args...>, Ref>: std::true_type {};
+
