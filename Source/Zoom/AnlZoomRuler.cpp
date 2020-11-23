@@ -157,33 +157,54 @@ void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
         return;
     }
     
-    auto const useableRangeAnchorPoint = mOrientation == Orientation::vertical ?
-    static_cast<double>(getHeight() - 1 - event.y) / static_cast<double>(getHeight() - 1) * mInitialValueRange.getLength() + mInitialValueRange.getStart() :
-    static_cast<double>(event.x) / static_cast<double>(getWidth() - 1) * mInitialValueRange.getLength() + mInitialValueRange.getStart();
-    
-    if(event.mods.isShiftDown())
+    auto getAnchorPoint = [&]()
     {
-        mNavigationMode = NavigationMode::translate;
-        mAccessor.sendSignal(SignalType::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
-        event.source.enableUnboundedMouseMovement(true, false);
-    }
-    else if(event.mods.isCommandDown())
-    {
-        mNavigationMode = NavigationMode::select;
-    }
-    else
-    {
-        mNavigationMode = NavigationMode::zoom;
-        mAccessor.sendSignal(SignalType::moveAnchorBegin, {mToZoomRange(useableRangeAnchorPoint)}, NotificationType::synchronous);
-        event.source.enableUnboundedMouseMovement(true, false);
-        
-        if(onMouseDown != nullptr)
+        if(mOrientation == Orientation::vertical)
         {
-            onMouseDown(event.x);
+            auto const height = static_cast<double>(getHeight() - 1);
+            return (height - event.y) / height * visibleRange.getLength() + visibleRange.getStart();
         }
-    }
+        auto const width = static_cast<double>(getWidth() - 1);
+        return static_cast<double>(event.x) / width * visibleRange.getLength() + visibleRange.getStart();
+    };
     
-    mPrevMousePos = event.position;
+    auto getNavigationMode = [&]()
+    {
+        if(event.mods.isShiftDown())
+        {
+            return NavigationMode::translate;
+        }
+        else if(event.mods.isCommandDown())
+        {
+            return NavigationMode::select;
+        }
+        return NavigationMode::zoom;
+    };
+
+    mNavigationMode = getNavigationMode();
+    switch (mNavigationMode)
+    {
+        case NavigationMode::translate:
+        {
+            mAccessor.sendSignal(SignalType::moveAnchorBegin, {getAnchorPoint()}, NotificationType::synchronous);
+            event.source.enableUnboundedMouseMovement(true, false);
+            mPrevMousePos = event.position;
+        }
+            break;
+        case NavigationMode::select:
+            break;
+        case NavigationMode::zoom:
+        {
+            mAccessor.sendSignal(SignalType::moveAnchorBegin, {getAnchorPoint()}, NotificationType::synchronous);
+            event.source.enableUnboundedMouseMovement(true, false);
+            
+            if(onMouseDown != nullptr)
+            {
+                onMouseDown(event.x);
+            }
+        }
+            break;
+    }
 }
 
 void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
@@ -384,7 +405,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
         auto const anchor = (mAnchor - useableRange.getStart()) / useableRange.getLength();
         if(isVerticallyOriented)
         {
-            auto const anchorPosition = static_cast<int>(static_cast<float>(height) - (1.0f - anchor));
+            auto const anchorPosition = static_cast<int>((1.0f - anchor) * static_cast<float>(height))
             g.drawHorizontalLine(anchorPosition, 0.0f, static_cast<float>(width));
         }
         else
