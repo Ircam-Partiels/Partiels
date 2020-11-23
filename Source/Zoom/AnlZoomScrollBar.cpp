@@ -2,9 +2,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
+Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isInversed)
 : mAccessor(accessor)
 , mScrollBar(orientation == Orientation::vertical)
+, mIsInversed(isInversed)
 {
     mScrollBar.setAutoHide(false);
     addAndMakeVisible(mScrollBar);
@@ -23,7 +24,15 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation)
             case AttrType::visibleRange:
             {
                 auto const range = acsr.getValue<AttrType::visibleRange>();
-                mScrollBar.setCurrentRange(range, juce::NotificationType::dontSendNotification);
+                if(mIsInversed)
+                {
+                    auto const globalRange = acsr.getValue<AttrType::globalRange>();
+                    mScrollBar.setCurrentRange({globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mScrollBar.setCurrentRange(range, juce::NotificationType::dontSendNotification);
+                }
             }
                 break;
             
@@ -53,7 +62,16 @@ void Zoom::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, dou
 {
     juce::ignoreUnused(scrollBarThatHasMoved, newRangeStart);
     anlStrongAssert(scrollBarThatHasMoved == &mScrollBar);
-    mAccessor.setValue<AttrType::visibleRange>(range_type{mScrollBar.getCurrentRange()}, NotificationType::synchronous);
+    if(mIsInversed)
+    {
+        auto const globalRange = mAccessor.getValue<AttrType::globalRange>();
+        auto const range = mScrollBar.getCurrentRange();
+        mAccessor.setValue<AttrType::visibleRange>(range_type{globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, NotificationType::synchronous);
+    }
+    else
+    {
+        mAccessor.setValue<AttrType::visibleRange>(mScrollBar.getCurrentRange(), NotificationType::synchronous);
+    }
 }
 
 ANALYSE_FILE_END

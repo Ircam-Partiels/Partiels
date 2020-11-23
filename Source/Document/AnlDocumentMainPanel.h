@@ -35,7 +35,8 @@ namespace Document
             Analyzer::ResultRenderer renderer;
             Tools::ColouredPanel separator;
             Zoom::Ruler ruler {accessor.getAccessors<Analyzer::AttrType::zoom>()[0], Zoom::Ruler::Orientation::vertical};
-            Zoom::ScrollBar scrollbar {accessor.getAccessors<Analyzer::AttrType::zoom>()[0], Zoom::ScrollBar::Orientation::vertical};
+            Zoom::ScrollBar scrollbar {accessor.getAccessors<Analyzer::AttrType::zoom>()[0], Zoom::ScrollBar::Orientation::vertical, true};
+            Tools::ColouredPanel zoomSeparator;
         };
         
         std::vector<std::unique_ptr<Section>> mSections;

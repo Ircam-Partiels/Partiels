@@ -18,7 +18,7 @@ namespace Zoom
             horizontal
         };
         
-        ScrollBar(Accessor& accessor, Orientation orientation);
+        ScrollBar(Accessor& accessor, Orientation orientation, bool isInversed = false);
         ~ScrollBar() override;
         
         // juce::Component
@@ -32,6 +32,7 @@ namespace Zoom
         Accessor& mAccessor;
         Accessor::Listener mListener;
         juce::ScrollBar mScrollBar;
+        bool const mIsInversed;
     };
 }
 

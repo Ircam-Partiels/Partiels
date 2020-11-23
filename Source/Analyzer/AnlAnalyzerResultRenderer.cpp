@@ -1,5 +1,6 @@
 #include "AnlAnalyzerResultRenderer.h"
 #include "AnlAnalyzerProcessor.h"
+#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
@@ -98,7 +99,8 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         
         auto valueToColour = [&](float const value)
         {
-            return value < 0.00001 ? juce::Colours::transparentBlack : juce::Colour::fromHSV(value / valueRange.getEnd(), 1.0f, 1.0f, 1.0f);
+            auto const color = tinycolormap::GetColor(static_cast<double>(value) / valueRange.getEnd(), tinycolormap::ColormapType::Hot);
+            return juce::Colour::fromFloatRGBA(color.r(), color.g(), color.b(), 1.0f);
         };
         
         
