@@ -100,7 +100,7 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         auto valueToColour = [&](float const value)
         {
             auto const color = tinycolormap::GetColor(static_cast<double>(value) / valueRange.getEnd(), tinycolormap::ColormapType::Hot);
-            return juce::Colour::fromFloatRGBA(color.r(), color.g(), color.b(), 1.0f);
+            return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
         };
         
         
@@ -112,7 +112,6 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         auto const cellHeight = static_cast<int>(std::ceil(std::max(1.0 / valueRatio, 1.0)));
         auto const cellWidth = static_cast<int>(std::ceil(std::max(width / timeLength, 1.0)));
         
-        std::cout << "valueRatio: " << valueRatio << " valuetIncrement: " << valuetIncrement << " cellHeight: " << cellHeight << "\n";
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
             auto const x = timeToPixel(results[i].timestamp);

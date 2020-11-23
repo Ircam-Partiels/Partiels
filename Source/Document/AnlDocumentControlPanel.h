@@ -18,7 +18,6 @@ namespace Document
         ~ControlPanel() override;
         
         void resized() override;
-        void mouseDoubleClick(juce::MouseEvent const& event) override;
     private:
         
         Accessor& mAccessor;
@@ -38,6 +37,7 @@ namespace Document
         };
         
         std::vector<std::unique_ptr<Section>> mSections;
+        juce::TextButton mAddButton {juce::translate("+")};
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ControlPanel)
     };
 }

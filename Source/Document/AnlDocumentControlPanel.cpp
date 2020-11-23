@@ -9,6 +9,22 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginListAccessor)
 {
+    addAndMakeVisible(mAddButton);
+    mAddButton.setTooltip(juce::translate("Add a new analysis..."));
+    mAddButton.onClick = [&]()
+    {
+        juce::DialogWindow::LaunchOptions launchOption;
+        launchOption.dialogTitle = juce::translate("New Analyzer...");
+        launchOption.content.setNonOwned(&mPluginListTable);
+        launchOption.componentToCentreAround = this;
+        launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
+        launchOption.escapeKeyTriggersCloseButton = true;
+        launchOption.useNativeTitleBar = false;
+        launchOption.resizable = false;
+        launchOption.useBottomRightCornerResizer = false;
+        launchOption.runModal();
+    };
+    
     mPluginListTable.onPluginSelected = [&](juce::String key)
     {
         juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
@@ -102,25 +118,7 @@ void Document::ControlPanel::resized()
             section->thumbnail.setBounds(lbounds);
         }
     }
-}
-
-void Document::ControlPanel::mouseDoubleClick(juce::MouseEvent const& event)
-{
-    if(!isEnabled())
-    {
-        return;
-    }
-    juce::ignoreUnused(event);
-    juce::DialogWindow::LaunchOptions launchOption;
-    launchOption.dialogTitle = juce::translate("New Analyzer...");
-    launchOption.content.setNonOwned(&mPluginListTable);
-    launchOption.componentToCentreAround = this;
-    launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
-    launchOption.escapeKeyTriggersCloseButton = true;
-    launchOption.useNativeTitleBar = false;
-    launchOption.resizable = false;
-    launchOption.useBottomRightCornerResizer = false;
-    launchOption.runModal();
+    mAddButton.setBounds(bounds.removeFromTop(24).withWidth(bounds.getWidth() / 3).reduced(2));
 }
 
 ANALYSE_FILE_END

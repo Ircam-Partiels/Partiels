@@ -33,7 +33,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             onRelaunch();
         }
     };
-    mRemoveButton.setTooltip(juce::translate("Run analysis"));
+    mRelaunchButton.setTooltip(juce::translate("Run analysis"));
     
     mPropertiesButton.onClick = [&]()
     {
@@ -48,7 +48,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         launchOption.useBottomRightCornerResizer = false;
         launchOption.runModal();
     };
-    mRemoveButton.setTooltip(juce::translate("Analysis properties"));
+    mPropertiesButton.setTooltip(juce::translate("Analysis properties"));
     
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
