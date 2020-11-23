@@ -102,7 +102,6 @@ namespace Zoom
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
         
-        juce::String const mZoomType;
         size_t mPrimaryTickInterval = 3;
         double mTickReferenceValue = 0.0;
         double mTickPowerInterval = 0.0;

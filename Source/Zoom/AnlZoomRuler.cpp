@@ -405,7 +405,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
         auto const anchor = (mAnchor - useableRange.getStart()) / useableRange.getLength();
         if(isVerticallyOriented)
         {
-            auto const anchorPosition = static_cast<int>((1.0f - anchor) * static_cast<float>(height))
+            auto const anchorPosition = static_cast<int>((1.0f - anchor) * static_cast<float>(height));
             g.drawHorizontalLine(anchorPosition, 0.0f, static_cast<float>(width));
         }
         else
