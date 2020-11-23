@@ -99,31 +99,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
             case AttrType::feature:
             {
-                auto getRange = [&]() -> juce::Range<double>
-                {
-                    auto instance = createPlugin(acsr, 44100.0, true);
-                    if(instance == nullptr)
-                    {
-                        return {-1.0, 0.0};
-                    }
-                    instance->initialise(1, 512, 512);
-                    auto const feature = acsr.getValue<AttrType::feature>();
-                    auto const outputDescriptors = instance->getOutputDescriptors();
-                    if(feature >= outputDescriptors.size())
-                    {
-                        return {-1.0, 0.0};
-                    }
-                    if(!outputDescriptors[feature].hasKnownExtents || outputDescriptors[feature].binCount == 0)
-                    {
-                        return {-1.0, 1.0};
-                    }
-                    return {outputDescriptors[feature].minValue, outputDescriptors[feature].maxValue};
-                };
-                
-                auto& zoomAcsr = mAccessor.getAccessors<AttrType::zoom>()[0].get();
-                auto const range = getRange();
-                zoomAcsr.setValue<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
-                zoomAcsr.setValue<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
             }
                 break;
             case AttrType::name:

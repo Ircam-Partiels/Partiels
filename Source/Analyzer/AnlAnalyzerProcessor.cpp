@@ -80,13 +80,24 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
             results.insert(results.end(), it->second.begin(), it->second.end());
         }
     }
-    auto const result = instance->getRemainingFeatures();
-    auto it = result.find(static_cast<int>(featureIndex));
-    if(it != result.end())
     {
-        results.insert(results.end(), it->second.cbegin(), it->second.cend());
+        auto const result = instance->getRemainingFeatures();
+        auto it = result.find(static_cast<int>(featureIndex));
+        if(it != result.end())
+        {
+            results.insert(results.end(), it->second.cbegin(), it->second.cend());
+        }
     }
-    if(numDimension == 2)
+    
+    // Update the zoom range
+    if(numDimension == 1)
+    {
+        auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
+        zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
+        zoomAcsr.setValue<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
+        zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, 1.9}, NotificationType::synchronous);
+    }
+    else if(numDimension == 2)
     {
         auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
         {
@@ -97,6 +108,18 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
         auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
         zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
         zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
+    }
+    else
+    {
+        auto it = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+        {
+            return lhs.values.size() < rhs.values.size();
+        });
+        
+        auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
+        zoomAcsr.setValue<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
+        zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
+        zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
     }
     
     accessor.setValue<AttrType::results>(results, NotificationType::synchronous);

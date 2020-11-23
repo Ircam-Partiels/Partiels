@@ -34,40 +34,98 @@ Analyzer::ResultRenderer::~ResultRenderer()
 
 void Analyzer::ResultRenderer::paint(juce::Graphics& g)
 {
-    auto const width = getWidth();
-    auto const height = getHeight();
-    auto const timeRange = mZoomAccessor.getValue<Zoom::AttrType::visibleRange>();
+    auto const bounds = getLocalBounds();
+    auto const width = bounds.getWidth();
+    auto const height = bounds.getHeight();
     
-    auto timeToPixel = [&](Vamp::RealTime const&  timestamp)
-    {
-        auto const time = (((timestamp.sec * 1000.0 + timestamp.msec()) / 1000.0) - timeRange.getStart()) / timeRange.getLength();
-        return static_cast<int>(time * width);
-    };
-    auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
-    auto valueToPixel = [&](float const value)
-    {
-        return static_cast<int>((1.0f - (value - valueRange.getStart()) / valueRange.getLength()) * height);
-    };
+    auto const clip = g.getClipBounds();
+    auto const horizontalRange = clip.getHorizontalRange().expanded(1);
     
     g.setColour(juce::Colours::black);
     auto const& results = mAccessor.getValue<AttrType::results>();
-    juce::Point<float> pt;
-    for(auto const& result : results)
+    if(results.empty() && width > 0)
     {
-        if(result.values.empty())
+        return;
+    }
+    
+    auto const timeRange = mZoomAccessor.getValue<Zoom::AttrType::visibleRange>();
+    auto const timeLength = timeRange.getLength();
+    auto timeToPixel = [&](Vamp::RealTime const&  timestamp)
+    {
+        auto const time = (((timestamp.sec * 1000.0 + timestamp.msec()) / 1000.0) - timeRange.getStart()) / timeLength;
+        return static_cast<int>(time * width);
+    };
+    
+    auto const resultRatio = static_cast<double>(results.size()) / static_cast<double>(width);
+    auto const resultIncrement = static_cast<size_t>(std::floor(std::max(resultRatio, 1.0)));
+    
+    if(results.front().values.empty())
+    {
+        for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
-            g.drawVerticalLine(timeToPixel(result.timestamp), 0.0f, static_cast<float>(height));
+            auto const x = timeToPixel(results[i].timestamp);
+            if(horizontalRange.contains(x))
+            {
+                g.drawVerticalLine(x, 0.0f, static_cast<float>(height));
+            }
         }
-        else if(result.values.size() == 1)
+    }
+    else if(results.front().values.size() == 1)
+    {
+        auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        auto valueToPixel = [&](float const value)
         {
-            juce::Point<float> const npt{static_cast<float>(timeToPixel(result.timestamp)), static_cast<float>(valueToPixel(result.values[0]))};
-            g.drawLine({pt, npt});
-            pt = npt;
-        }
-        else
+            auto const ratio = 1.0f - (value - valueRange.getStart()) / valueRange.getLength();
+            return static_cast<int>(ratio * height);
+        };
+        juce::Point<float> pt;
+        
+        for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
-            
+            auto const x = timeToPixel(results[i].timestamp);
+            if(horizontalRange.contains(x))
+            {
+                juce::Point<float> const npt{static_cast<float>(x), static_cast<float>(valueToPixel(results[i].values[0]))};
+                g.drawLine({pt, npt});
+                pt = npt;
+            }
         }
+    }
+    else
+    {
+        
+        auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        
+        auto valueToColour = [&](float const value)
+        {
+            return value < 0.00001 ? juce::Colours::transparentBlack : juce::Colour::fromHSV(value / valueRange.getEnd(), 1.0f, 1.0f, 1.0f);
+        };
+        
+        
+        auto const start = static_cast<size_t>(std::floor(valueRange.getStart()));
+        auto const end = static_cast<size_t>(std::floor(valueRange.getEnd()));
+        
+        auto const valueRatio = valueRange.getLength() / static_cast<double>(height);
+        auto const valuetIncrement = static_cast<size_t>(std::floor(std::max(valueRatio, 1.0)));
+        auto const cellHeight = static_cast<int>(std::ceil(std::max(1.0 / valueRatio, 1.0)));
+        auto const cellWidth = static_cast<int>(std::ceil(std::max(width / timeLength, 1.0)));
+        
+        std::cout << "valueRatio: " << valueRatio << " valuetIncrement: " << valuetIncrement << " cellHeight: " << cellHeight << "\n";
+        for(size_t i = 0; i < results.size(); i += resultIncrement)
+        {
+            auto const x = timeToPixel(results[i].timestamp);
+            if(horizontalRange.contains(x))
+            {
+                auto y = height - cellHeight;
+                for(auto index = start; index < end; index += valuetIncrement)
+                {
+                    g.setColour(valueToColour(results[i].values[index]));
+                    g.fillRect(x, y, cellWidth, cellHeight);
+                    y -= cellHeight;
+                }
+            }
+        }
+        
     }
 }
 
