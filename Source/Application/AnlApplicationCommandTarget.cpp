@@ -197,21 +197,21 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto constexpr attr = Document::AttrType::isPlaybackStarted;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setValue<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::ToggleLooping:
         {
             auto constexpr attr = Document::AttrType::isLooping;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setValue<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::MovePlayHeadToBeginning:
         {
             auto constexpr attr = Document::AttrType::playheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setValue<attr>(0.0, NotificationType::synchronous);
+            documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::MovePlayHeadToEnd:
@@ -219,7 +219,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto constexpr attr = Document::AttrType::playheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
             JUCE_COMPILER_WARNING("fix this")
-            documentAcsr.setValue<attr>(10000.0, NotificationType::synchronous);
+            documentAcsr.setAttr<attr>(10000.0, NotificationType::synchronous);
             return true;
         }
     }
@@ -233,12 +233,12 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     Instance::get().getApplicationCommandManager().commandStatusChanged();
     
     auto const file = fileBased.getFile();
-    Instance::get().getApplicationAccessor().setValue<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     if(file.existsAsFile())
     {
         auto list = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
         list.insert(list.begin(), file);
-        Instance::get().getApplicationAccessor().setValue<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
+        Instance::get().getApplicationAccessor().setAttr<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
     }
 }
 

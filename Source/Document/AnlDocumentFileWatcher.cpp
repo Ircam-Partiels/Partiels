@@ -22,7 +22,7 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
                     {
                         // I'm noy sure that's the best place to do it
                         auto& zoomAccessor = mAccessor.getAccessor<AttrType::timeZoom>(0);
-                        zoomAccessor.setValue<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, audioReader->sampleRate > 0.0 ? static_cast<double>(audioReader->lengthInSamples) / audioReader->sampleRate : 0.0}, NotificationType::synchronous);
+                        zoomAccessor.setAttr<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, audioReader->sampleRate > 0.0 ? static_cast<double>(audioReader->lengthInSamples) / audioReader->sampleRate : 0.0}, NotificationType::synchronous);
                     }
                     mModificationTime = file.getLastModificationTime();
                     startTimer(200);                    

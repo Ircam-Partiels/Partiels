@@ -14,7 +14,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     
     mNameLabel.onTextChange = [&]()
     {
-        mAccessor.setValue<AttrType::name>(mNameLabel.getText(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::name>(mNameLabel.getText(), NotificationType::synchronous);
     };
     
     mRemoveButton.onClick = [&]()

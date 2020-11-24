@@ -8,23 +8,23 @@ Zoom::range_type Zoom::Accessor::sanitize(range_type const& visible, range_type 
 }
 
 template <>
-void Zoom::Accessor::setValue<Zoom::AttrType::visibleRange, Zoom::range_type>(range_type const& value, NotificationType notification)
+void Zoom::Accessor::setAttr<Zoom::AttrType::visibleRange, Zoom::range_type>(range_type const& value, NotificationType notification)
 {
-    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::visibleRange, Zoom::range_type>(sanitize(value, getAttr<AttrType::globalRange>(), getAttr<AttrType::minimumLength>()), notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::visibleRange, Zoom::range_type>(sanitize(value, getAttr<AttrType::globalRange>(), getAttr<AttrType::minimumLength>()), notification);
 }
 
 template <>
-void Zoom::Accessor::setValue<Zoom::AttrType::globalRange, Zoom::range_type>(range_type const& value, NotificationType notification)
+void Zoom::Accessor::setAttr<Zoom::AttrType::globalRange, Zoom::range_type>(range_type const& value, NotificationType notification)
 {
-    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::globalRange, Zoom::range_type>(value, notification);
-    setValue<AttrType::visibleRange, Zoom::range_type>(getAttr<AttrType::visibleRange>(), notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::globalRange, Zoom::range_type>(value, notification);
+    setAttr<AttrType::visibleRange, Zoom::range_type>(getAttr<AttrType::visibleRange>(), notification);
 }
 
 template <>
-void Zoom::Accessor::setValue<Zoom::AttrType::minimumLength, double>(double const& value, NotificationType notification)
+void Zoom::Accessor::setAttr<Zoom::AttrType::minimumLength, double>(double const& value, NotificationType notification)
 {
-    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::minimumLength, double>(value, notification);
-    setValue<AttrType::visibleRange, Zoom::range_type>(getAttr<AttrType::visibleRange>(), notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::minimumLength, double>(value, notification);
+    setAttr<AttrType::visibleRange, Zoom::range_type>(getAttr<AttrType::visibleRange>(), notification);
 }
 
 class ZoomModelUnitTest
@@ -43,15 +43,15 @@ public:
         
         beginTest("sanitize");
         {
-            acsr.setValue<AttrType::visibleRange>(range_type{0.0, 50.0}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::visibleRange>(range_type{0.0, 50.0}, NotificationType::synchronous);
             expect(acsr.getAttr<AttrType::visibleRange>() == range_type{0.0, 50.0});
-            acsr.setValue<AttrType::visibleRange>(range_type{0.0, 120.0}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::visibleRange>(range_type{0.0, 120.0}, NotificationType::synchronous);
             expect(acsr.getAttr<AttrType::visibleRange>() == range_type{0.0, 100.0});
-            acsr.setValue<AttrType::globalRange>(range_type{10.0, 80.0}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::globalRange>(range_type{10.0, 80.0}, NotificationType::synchronous);
             expect(acsr.getAttr<AttrType::visibleRange>() == range_type{10.0, 80.0});
-            acsr.setValue<AttrType::visibleRange>(range_type{10.0, 20.0}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::visibleRange>(range_type{10.0, 20.0}, NotificationType::synchronous);
             expect(acsr.getAttr<AttrType::visibleRange>() == range_type{10.0, 20.0});
-            acsr.setValue<AttrType::minimumLength>(30.0, NotificationType::synchronous);
+            acsr.setAttr<AttrType::minimumLength>(30.0, NotificationType::synchronous);
             expect(acsr.getAttr<AttrType::visibleRange>() == range_type{10.0, 40.0});
         }
         

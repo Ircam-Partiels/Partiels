@@ -31,7 +31,7 @@ Application::Interface::Interface()
     mZoomTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0);
-        acsr.setValue<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+        acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     addAndMakeVisible(mZoomTimeRuler);
     

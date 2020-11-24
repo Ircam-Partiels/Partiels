@@ -29,13 +29,13 @@ namespace Application
         using enum_type = Model::Accessor<Accessor, Container>::enum_type;
         
         template <enum_type type, typename value_v>
-        void setValue(value_v const& value, NotificationType notification)
+        void setAttr(value_v const& value, NotificationType notification)
         {
-            Model::Accessor<Accessor, Container>::setValue<type, value_v>(value, notification);
+            Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
         }
         
         template <>
-        void setValue<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification);
+        void setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification);
     private:
         static std::vector<juce::File> sanitize(std::vector<juce::File> const& files);
     };

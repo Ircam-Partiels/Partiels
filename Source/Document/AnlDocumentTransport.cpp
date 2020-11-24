@@ -48,7 +48,7 @@ Document::Transport::Transport(Accessor& accessor)
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
-        mAccessor.setValue<AttrType::isPlaybackStarted>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::isPlaybackStarted>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
     };
     mForwardButton.onClick = [&]()
     {
@@ -57,7 +57,7 @@ Document::Transport::Transport(Accessor& accessor)
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
     {
-        mAccessor.setValue<AttrType::isLooping>(mLoopButton.getToggleState(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::isLooping>(mLoopButton.getToggleState(), NotificationType::synchronous);
     };
     
     mVolumeSlider.setRange(-90.0, 12.0);
@@ -65,7 +65,7 @@ Document::Transport::Transport(Accessor& accessor)
     mVolumeSlider.onValueChange = [&]()
     {
         auto const gain = std::min(juce::Decibels::decibelsToGain(mVolumeSlider.getValue(), -90.0), 12.0);
-        mAccessor.setValue<AttrType::gain>(gain, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::gain>(gain, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mBackwardButton);

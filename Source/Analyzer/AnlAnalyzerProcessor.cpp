@@ -93,9 +93,9 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
     if(numDimension == 1)
     {
         auto& zoomAcsr = accessor.getAccessor<AttrType::zoom>(0);
-        zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
-        zoomAcsr.setValue<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
-        zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, 1.9}, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, 1.9}, NotificationType::synchronous);
     }
     else if(numDimension == 2)
     {
@@ -106,8 +106,8 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
         auto const min = static_cast<double>(pair.first->values[0]);
         auto const max = static_cast<double>(pair.second->values[0]);
         auto& zoomAcsr = accessor.getAccessor<AttrType::zoom>(0);
-        zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
-        zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
     }
     else
     {
@@ -117,12 +117,12 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
         });
         
         auto& zoomAcsr = accessor.getAccessor<AttrType::zoom>(0);
-        zoomAcsr.setValue<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
-        zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
-        zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
     }
     
-    accessor.setValue<AttrType::results>(results, NotificationType::synchronous);
+    accessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

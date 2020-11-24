@@ -111,12 +111,12 @@ public:
         {
             ModelCtnr ctnr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
             ModelAcsr acsr(ctnr);
-            acsr.setValue<AttrType::attr0>(2, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr1>(3, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr2>(4.0f, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr4>("Jim", NotificationType::synchronous);
-            acsr.setValue<AttrType::attr5>({8.0, 9.0}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr0>(2, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr1>(3, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr2>(4.0f, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr4>("Jim", NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr5>({8.0, 9.0}, NotificationType::synchronous);
             expectEquals(acsr.getAttr<AttrType::attr0>(), 2);
             expectEquals(acsr.getAttr<AttrType::attr1>(), 3);
             expectEquals(acsr.getAttr<AttrType::attr2>(), 4.0f);
@@ -196,12 +196,12 @@ public:
             expect(notifications[magic_enum::enum_integer(AttrType::attr5)] == false);
             
             std::fill(notifications.begin(), notifications.end(), false);
-            acsr.setValue<AttrType::attr0>(2, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr1>(3, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr2>(4.0f, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
-            acsr.setValue<AttrType::attr4>("Jim", NotificationType::synchronous);
-            acsr.setValue<AttrType::attr5>({7.0, 8.0}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr0>(2, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr1>(3, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr2>(4.0f, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr4>("Jim", NotificationType::synchronous);
+            acsr.setAttr<AttrType::attr5>({7.0, 8.0}, NotificationType::synchronous);
             expect(notifications[magic_enum::enum_integer(AttrType::attr0)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr1)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr2)] == false);

@@ -115,7 +115,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mPluginName.entry.setEnabled(false);
     mFeatures.callback = [&](juce::ComboBox const& entry)
     {
-        mAccessor.setValue<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()));
+        mAccessor.setAttr<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()));
     };
     mAnalyse.callback = [&](juce::TextButton const&)
     {
@@ -152,7 +152,7 @@ void Analyzer::PropertyPanel::resized()
 
 void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    mAccessor.setValue<AttrType::colour>(mColourSelector.getCurrentColour());
+    mAccessor.setAttr<AttrType::colour>(mColourSelector.getCurrentColour());
 }
 
 ANALYSE_FILE_END

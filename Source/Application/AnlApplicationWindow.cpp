@@ -118,7 +118,7 @@ void Application::Window::moved()
 
 void Application::Window::handleAsyncUpdate()
 {
-    Instance::get().getApplicationAccessor().setValue<AttrType::windowState>(getBounds().toString(), NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().setAttr<AttrType::windowState>(getBounds().toString(), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

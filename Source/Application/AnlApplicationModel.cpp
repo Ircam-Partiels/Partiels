@@ -14,9 +14,9 @@ std::vector<juce::File> Application::Accessor::sanitize(std::vector<juce::File> 
 }
 
 template <>
-void Application::Accessor::setValue<Application::AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification)
+void Application::Accessor::setAttr<Application::AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification)
 {
-    ::Anl::Model::Accessor<Accessor, Container>::setValue<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
 }
 
 ANALYSE_FILE_END

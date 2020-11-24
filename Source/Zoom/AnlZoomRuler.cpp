@@ -223,7 +223,7 @@ void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
             auto const delta = isVertical ? mPrevMousePos.y - event.position.y : event.position.x - mPrevMousePos.x;
             auto const size = isVertical ? getHeight() - 1 : getWidth() - 1;
             auto const translation = static_cast<double>(delta) / static_cast<double>(size) * visibleRange.getLength();
-            mAccessor.setValue<AttrType::visibleRange>(visibleRange + translation, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::visibleRange>(visibleRange + translation, NotificationType::synchronous);
         }
             break;
         case NavigationMode::select:
@@ -239,7 +239,7 @@ void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
             auto const rangeStart = mAnchor - (mAnchor - mInitialValueRange.getStart()) * zoomFactor;
             auto const rangeEnd = mAnchor + (mInitialValueRange.getEnd() - mAnchor) * zoomFactor;
 
-            mAccessor.setValue<AttrType::visibleRange>(range_type{mToZoomRange(rangeStart), mToZoomRange(rangeEnd)}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::visibleRange>(range_type{mToZoomRange(rangeStart), mToZoomRange(rangeEnd)}, NotificationType::synchronous);
             mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
         }
             break;
@@ -265,7 +265,7 @@ void Zoom::Ruler::mouseUp(juce::MouseEvent const& event)
         case NavigationMode::select:
         {
             mSelectedValueRange = calculateSelectedValueRange(event);
-            mAccessor.setValue<AttrType::visibleRange>(mSelectedValueRange, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::visibleRange>(mSelectedValueRange, NotificationType::synchronous);
             auto const anchorPos = (mSelectedValueRange.getStart() + mSelectedValueRange.getEnd()) / 2.0;
             mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(anchorPos)}, NotificationType::synchronous);
         }

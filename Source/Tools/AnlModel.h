@@ -274,7 +274,7 @@ namespace Model
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         template <enum_type type, typename T>
-        void setValue(T const& value, NotificationType notification = NotificationType::synchronous)
+        void setAttr(T const& value, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
@@ -302,19 +302,19 @@ namespace Model
             else
             {
                 value_type const tvalue(value);
-                static_cast<parent_t*>(this)->template setValue<type>(tvalue, notification);
+                static_cast<parent_t*>(this)->template setAttr<type>(tvalue, notification);
             }
         }
         
         //! @brief Sets the value of an attribute (initializer list specialization)
         template <enum_type type, typename T>
-        void setValue(std::initializer_list<T>&& tvalue, NotificationType notification = NotificationType::synchronous)
+        void setAttr(std::initializer_list<T>&& tvalue, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
             
             typename element_type::value_type const value {tvalue};
-            static_cast<parent_t*>(this)->template setValue<type>(value, notification);
+            static_cast<parent_t*>(this)->template setAttr<type>(value, notification);
         }
         
         //! @brief Parse the model to xml
@@ -423,7 +423,7 @@ namespace Model
                     }
                     else
                     {
-                        static_cast<parent_t*>(this)->template setValue<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
+                        static_cast<parent_t*>(this)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
                     }
                 }
             });
@@ -473,7 +473,7 @@ namespace Model
                     }
                     else
                     {
-                        static_cast<parent_t*>(this)->template setValue<attr_type>(d.value, notification);
+                        static_cast<parent_t*>(this)->template setAttr<attr_type>(d.value, notification);
                     }
                     
                 }

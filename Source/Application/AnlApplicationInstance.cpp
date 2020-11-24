@@ -100,13 +100,13 @@ void Application::Instance::openFile(juce::File const& file)
     if(getFileExtension() == fileExtension)
     {
         mDocumentFileBased.loadFrom(file, true);
-        mApplicationAccessor.setValue<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
+        mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
         mDocumentFileBased.setFile({});
-        mDocumentAccessor.setValue<Document::AttrType::file>(file, NotificationType::synchronous);
-        mApplicationAccessor.setValue<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
+        mDocumentAccessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
+        mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
     }
     else
     {

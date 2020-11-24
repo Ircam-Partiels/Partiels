@@ -33,7 +33,7 @@ PluginList::Table::Table(Accessor& accessor)
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
     {
-        mAccessor.setValue<AttrType::descriptions>(std::map<juce::String, Description>{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::descriptions>(std::map<juce::String, Description>{}, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mScanButton);
@@ -54,7 +54,7 @@ PluginList::Table::Table(Accessor& accessor)
             return {};
         };
         
-        mAccessor.setValue<AttrType::descriptions>(getNewList(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::descriptions>(getNewList(), NotificationType::synchronous);
     };
     
     addAndMakeVisible(mSearchField);
@@ -216,7 +216,7 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
             description.erase(entry);
         }
     }
-    mAccessor.setValue<AttrType::descriptions>(description, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::descriptions>(description, NotificationType::synchronous);
 }
 
 void PluginList::Table::returnKeyPressed(int lastRowSelected)
@@ -235,8 +235,8 @@ void PluginList::Table::cellDoubleClicked(int rowNumber, int columnId, juce::Mou
 
 void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
 {
-    mAccessor.setValue<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
-    mAccessor.setValue<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

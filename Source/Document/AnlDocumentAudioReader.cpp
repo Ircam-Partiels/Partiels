@@ -272,13 +272,13 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
 
 void Document::AudioReader::handleAsyncUpdate()
 {
-    mAccessor.setValue<AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
 }
 
 void Document::AudioReader::timerCallback()
 {
     auto const sampleRate = mSampleRate > 0.0 ? mSampleRate : 44100.0;
-    mAccessor.setValue<AttrType::playheadPosition>(static_cast<double>(mReadPosition.load()) / sampleRate, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::playheadPosition>(static_cast<double>(mReadPosition.load()) / sampleRate, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

@@ -38,17 +38,17 @@ namespace Zoom
         using enum_type = Model::Accessor<Accessor, Container>::enum_type;
         
         template <enum_type type, typename value_v>
-        void setValue(value_v const& value, NotificationType notification)
+        void setAttr(value_v const& value, NotificationType notification)
         {
-            Model::Accessor<Accessor, Container>::setValue<type, value_v>(value, notification);
+            Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
         }
         
         template <>
-        void setValue<AttrType::visibleRange, range_type>(range_type const& value, NotificationType notification);
+        void setAttr<AttrType::visibleRange, range_type>(range_type const& value, NotificationType notification);
         template <>
-        void setValue<AttrType::globalRange, range_type>(range_type const& value, NotificationType notification);
+        void setAttr<AttrType::globalRange, range_type>(range_type const& value, NotificationType notification);
         template <>
-        void setValue<AttrType::minimumLength, double>(double const& value, NotificationType notification);
+        void setAttr<AttrType::minimumLength, double>(double const& value, NotificationType notification);
         
     private:
         static range_type sanitize(range_type const& visible, range_type const& global, double minLength);
