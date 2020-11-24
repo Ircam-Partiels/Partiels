@@ -7,7 +7,7 @@ Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExten
 : juce::FileBasedDocument(fileExtension, fileWildCard, openFileDialogTitle, saveFileDialogTitle)
 , mAccessor(accessor)
 {
-    mSavedStateAccessor.fromModel(mAccessor.getModel(), NotificationType::synchronous);
+    mSavedStateAccessor.fromModel(mAccessor.getContainer(), NotificationType::synchronous);
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
@@ -36,7 +36,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
-    mSavedStateAccessor.fromModel(mAccessor.getModel(), NotificationType::synchronous);
+    mSavedStateAccessor.fromModel(mAccessor.getContainer(), NotificationType::synchronous);
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
@@ -52,7 +52,7 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
     }
-    mSavedStateAccessor.fromModel(mAccessor.getModel(), NotificationType::synchronous);
+    mSavedStateAccessor.fromModel(mAccessor.getContainer(), NotificationType::synchronous);
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
@@ -69,7 +69,7 @@ void Document::FileBased::setLastDocumentOpened(juce::File const& file)
 
 void Document::FileBased::handleAsyncUpdate()
 {
-    setChangedFlag(!mAccessor.isEquivalentTo(mSavedStateAccessor.getModel()));
+    setChangedFlag(!mAccessor.isEquivalentTo(mSavedStateAccessor.getContainer()));
 }
 
 ANALYSE_FILE_END

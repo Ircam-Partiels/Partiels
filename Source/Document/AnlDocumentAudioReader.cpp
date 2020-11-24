@@ -178,7 +178,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 break;
             case AttrType::playheadPosition:
             {
-                //mReadPosition = acsr.getModel().playheadPosition;
+                //mReadPosition = acsr.getContainer().playheadPosition;
             }
                 break;
 //            case AttrType::analyzers:

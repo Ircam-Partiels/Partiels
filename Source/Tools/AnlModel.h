@@ -39,7 +39,7 @@ namespace Model
         value_type value;
     };
     
-    //! @brief The private implementation of sub container
+    //! @brief The private implementation of an accessor
     template<typename enum_t, enum_t index_v, typename model_t, typename accessor_t, int flags_v, size_t size_flags_v>
     struct AcsrImp
     {
@@ -75,7 +75,7 @@ namespace Model
                 anlStrongAssert(i < acsrs.size() && acsrs[i] != nullptr);
                 if(i < acsrs.size() && acsrs[i] != nullptr)
                 {
-                    accessors.push_back(std::make_unique<accessor_type>(acsrs[i]->getModel()));
+                    accessors.push_back(std::make_unique<accessor_type>(acsrs[i]->getContainer()));
                 }
                 else
                 {
@@ -100,11 +100,11 @@ namespace Model
         }
     };
 
-    //! @brief The template implementation of an attribute of a model
+    //! @brief The template implementation of an attribute
     template<auto index_v, typename value_t, int flags_v>
     using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
     
-    //! @brief The template implementation of an attribute of a model
+    //! @brief The template implementation of an accessor
     template<auto index_v, typename model_t, typename accessor_t, int flags_v, size_t size_v>
     using Acsr = AcsrImp<decltype(index_v), index_v, model_t, accessor_t, flags_v, size_v>;
     
@@ -133,7 +133,7 @@ namespace Model
         ~Accessor() = default;
 
         //! @brief Gets a const ref to the model container
-        auto const& getModel() const noexcept
+        auto const& getContainer() const noexcept
         {
             return mData;
         }
@@ -446,7 +446,7 @@ namespace Model
                             anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
                             if(accessors[index] != nullptr && d.accessors[index] != nullptr)
                             {
-                                accessors[index]->fromModel(d.accessors[index]->getModel(), notification);
+                                accessors[index]->fromModel(d.accessors[index]->getContainer(), notification);
                             }
                         }
                         if constexpr(element_type::size_flags == 0)
@@ -457,7 +457,7 @@ namespace Model
                                 anlStrongAssert(d.accessors[index] != nullptr);
                                 if(d.accessors[index] != nullptr)
                                 {
-                                    insertModel<attr_type>(static_cast<long>(index), d.accessors[index]->getModel());
+                                    insertModel<attr_type>(static_cast<long>(index), d.accessors[index]->getContainer());
                                 }
                             }
                         }
@@ -488,7 +488,7 @@ namespace Model
                             auto const acsrs = getAccessors<attr_type>();
                             result = acsrs.size() != d.accessors.size() || std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
                             {
-                                return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->getModel());
+                                return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->getContainer());
                             });
                         }
                         else
