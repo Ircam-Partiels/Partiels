@@ -51,71 +51,52 @@ namespace Model
         using model_type = model_t;
         using accessor_type = accessor_t;
         
-        struct container_type
-        {
-        private:
-            model_type model;
-            
-        public:
-            accessor_type accessor {model};
-            container_type() = default;
-            container_type(model_type const& m)
-            : model(m)
-            {
-            }
-            
-            container_type(model_type&& m)
-            : model(std::move(m))
-            {
-            }
-        };
-        
         static enum_type const type = static_cast<enum_type>(index_v);
         static int const flags = flags_v | model;
         static size_t const size_flags = size_flags_v;
-        std::vector<std::unique_ptr<container_type>> containers;
+        std::vector<std::unique_ptr<accessor_type>> accessors;
         
         SubModelImp()
         {
-            containers.reserve(size_flags);
+            accessors.reserve(size_flags);
             for(size_t i = 0; i < size_flags; ++i)
             {
-                containers.push_back(std::make_unique<container_type>());
+                accessors.push_back(std::make_unique<accessor_type>(model_type{}));
             }
         }
         
         SubModelImp(SubModelImp const& other)
         {
-            auto const& ctnrs = other.containers;
-            anlStrongAssert(size_flags == resizable || ctnrs.size() == size_flags);
-            auto const numContainers = size_flags > resizable ? size_flags : ctnrs.size();
+            auto const& acsrs = other.accessors;
+            anlStrongAssert(size_flags == resizable || acsrs.size() == size_flags);
+            auto const numContainers = size_flags > resizable ? size_flags : acsrs.size();
             for(size_t i = 0; i < numContainers; ++i)
             {
-                anlStrongAssert(i < ctnrs.size() && ctnrs[i] != nullptr);
-                if(i < ctnrs.size() && ctnrs[i] != nullptr)
+                anlStrongAssert(i < acsrs.size() && acsrs[i] != nullptr);
+                if(i < acsrs.size() && acsrs[i] != nullptr)
                 {
-                    containers.push_back(std::make_unique<container_type>(ctnrs[i]->accessor.getModel()));
+                    accessors.push_back(std::make_unique<accessor_type>(acsrs[i]->getModel()));
                 }
                 else
                 {
-                    containers.push_back(std::make_unique<container_type>());
+                    accessors.push_back(std::make_unique<accessor_type>(model_type{}));
                 }
             }
         }
         
-        SubModelImp(SubModelImp&& other) : containers(std::move(other.containers))
+        SubModelImp(SubModelImp&& other) : accessors(std::move(other.accessors))
         {
-            anlStrongAssert(size_flags == resizable || containers.size() == size_flags);
+            anlStrongAssert(size_flags == resizable || accessors.size() == size_flags);
         }
         
         SubModelImp(std::initializer_list<model_type> models)
         {
-            containers.reserve(models.size());
+            accessors.reserve(models.size());
             for(auto model : models)
             {
-                containers.push_back(std::make_unique<container_type>(model));
+                accessors.push_back(std::make_unique<accessor_type>(model));
             }
-            anlStrongAssert(size_flags == resizable || containers.size() == size_flags);
+            anlStrongAssert(size_flags == resizable || accessors.size() == size_flags);
         }
     };
 
@@ -165,15 +146,14 @@ namespace Model
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
             using accessor_type = typename element_type::accessor_type;
-            auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
+            auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
             std::vector<std::reference_wrapper<accessor_type>> acrs;
-            acrs.reserve(containers.size());
-            for(auto& container : containers)
+            acrs.reserve(accessors.size());
+            for(auto& accessor : accessors)
             {
-                anlStrongAssert(container != nullptr);
-                if(container != nullptr)
+                if(accessor != nullptr)
                 {
-                    acrs.push_back(container->accessor);
+                    acrs.push_back(*accessor.get());
                 }
             }
             return acrs;
@@ -187,15 +167,15 @@ namespace Model
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
             using accessor_type = typename element_type::accessor_type;
-            auto const& containers = std::get<static_cast<size_t>(type)>(mData).containers;
+            auto const& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
             std::vector<std::reference_wrapper<accessor_type const>> acrs;
-            acrs.reserve(containers.size());
-            for(auto const& container : containers)
+            acrs.reserve(accessors.size());
+            for(auto const& accessor : accessors)
             {
-                anlStrongAssert(container != nullptr);
-                if(container != nullptr)
+                anlStrongAssert(accessor != nullptr);
+                if(accessor != nullptr)
                 {
-                    acrs.push_back(container->accessor);
+                    acrs.push_back(*accessor.get());
                 }
             }
             return acrs;
@@ -207,7 +187,7 @@ namespace Model
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
-            return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
+            return *std::get<static_cast<size_t>(type)>(mData).accessors[index].get();
         }
         
         template <enum_type type>
@@ -215,28 +195,28 @@ namespace Model
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
-            return std::get<static_cast<size_t>(type)>(mData).containers[index]->accessor;
+            return *std::get<static_cast<size_t>(type)>(mData).accessors[index].get();
         }
         
         template <enum_type type>
-        void insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type model, NotificationType notification = NotificationType::synchronous)
+        void insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type const& model, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
-            using submodel_container_type = typename element_type::container_type;
+            using accessor_type = typename element_type::accessor_type;
             static_assert(element_type::size_flags == 0, "model is not resizable");
             
-            auto container = std::make_unique<submodel_container_type>(std::move(model));
-            anlStrongAssert(container != nullptr);
-            if(container == nullptr)
+            auto accessor = std::make_unique<accessor_type>(model);
+            anlStrongAssert(accessor != nullptr);
+            if(accessor == nullptr)
             {
                 return;
             }
             
-            auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
-            auto it = containers.insert(containers.begin() + std::max(index, static_cast<long>(containers.size())), std::move(container));
-            if(it != containers.end())
+            auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
+            auto it = accessors.insert(accessors.begin() + std::max(index, static_cast<long>(accessors.size())), std::move(accessor));
+            if(it != accessors.end())
             {
                 if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                 {
@@ -258,13 +238,13 @@ namespace Model
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
             
-            using submodel_container_type = typename element_type::container_type;
+            using accessor_type = typename element_type::accessor_type;
             static_assert(element_type::size_flags == 0, "model is not resizable");
             
-            auto& containers = std::get<static_cast<size_t>(type)>(mData).containers;
-            auto backup = std::shared_ptr<submodel_container_type>(containers[index].release());
+            auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
+            auto backup = std::shared_ptr<accessor_type>(accessors[index].release());
             anlWeakAssert(backup != nullptr);
-            containers.erase(containers.begin() + static_cast<long>(index));
+            accessors.erase(accessors.begin() + static_cast<long>(index));
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
             {
                 mListeners.notify([this](Listener& listener) mutable
@@ -400,33 +380,33 @@ namespace Model
                             childs.push_back(child);
                         }
                         
-                        auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
-                        anlWeakAssert(element_type::size_flags == 0 || childs.size() == containers.size());
+                        auto& accessors = std::get<static_cast<size_t>(attr_type)>(mData).accessors;
+                        anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(containers.size() > childs.size())
+                            while(accessors.size() > childs.size())
                             {
-                                auto const index = containers.size() - 1;
+                                auto const index = accessors.size() - 1;
                                 eraseModel<attr_type>(index);
                             }
                         }
-                        for(size_t index = 0; index < std::min(containers.size(), childs.size()); ++index)
+                        for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
                         {
-                            anlStrongAssert(containers[index] != nullptr);
-                            if(containers[index] != nullptr)
+                            anlStrongAssert(accessors[index] != nullptr);
+                            if(accessors[index] != nullptr)
                             {
-                                containers[index]->accessor.fromXml(*childs[index], enumname.c_str(), notification);
+                                accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
                             }
                         }
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(childs.size() > containers.size())
+                            while(childs.size() > accessors.size())
                             {
-                                auto const index = containers.size();
-                                insertModel<attr_type>(static_cast<long>(index), {});
-                                if(containers[index] != nullptr)
+                                auto const index = accessors.size();
+                                insertModel<attr_type>(static_cast<long>(index), static_cast<parent_t*>(this)->template getDefaultModel<attr_type>());
+                                if(accessors[index] != nullptr)
                                 {
-                                    containers[index]->accessor.fromXml(*childs[index], enumname.c_str(), notification);
+                                    accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
                                 }
                             }
                         }
@@ -450,33 +430,33 @@ namespace Model
                     auto constexpr attr_type = element_type::type;
                     if constexpr((element_type::flags & AttrFlag::model) != 0)
                     {
-                        auto& containers = std::get<static_cast<size_t>(attr_type)>(mData).containers;
-                        anlStrongAssert(element_type::size_flags == 0 || d.containers.size() == containers.size());
+                        auto& accessors = std::get<static_cast<size_t>(attr_type)>(mData).accessors;
+                        anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(containers.size() > d.containers.size())
+                            while(accessors.size() > d.accessors.size())
                             {
-                                auto const index = containers.size() - 1;
+                                auto const index = accessors.size() - 1;
                                 eraseModel<attr_type>(index);
                             }
                         }
-                        for(size_t index = 0; index < std::min(containers.size(), d.containers.size()); ++index)
+                        for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
                         {
-                            anlStrongAssert(containers[index] != nullptr && d.containers[index] != nullptr);
-                            if(containers[index] != nullptr && d.containers[index] != nullptr)
+                            anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
+                            if(accessors[index] != nullptr && d.accessors[index] != nullptr)
                             {
-                                containers[index]->accessor.fromModel(d.containers[index]->accessor.getModel(), notification);
+                                accessors[index]->fromModel(d.accessors[index]->getModel(), notification);
                             }
                         }
                         if constexpr(element_type::size_flags == 0)
                         {
-                            while(d.containers.size() > containers.size())
+                            while(d.accessors.size() > accessors.size())
                             {
-                                auto const index = containers.size();
-                                anlStrongAssert(d.containers[index] != nullptr);
-                                if(d.containers[index] != nullptr)
+                                auto const index = accessors.size();
+                                anlStrongAssert(d.accessors[index] != nullptr);
+                                if(d.accessors[index] != nullptr)
                                 {
-                                    insertModel<attr_type>(static_cast<long>(index), d.containers[index]->accessor.getModel());
+                                    insertModel<attr_type>(static_cast<long>(index), d.accessors[index]->getModel());
                                 }
                             }
                         }
@@ -505,9 +485,9 @@ namespace Model
                         if constexpr((element_type::flags & AttrFlag::model) != 0)
                         {
                             auto const acsrs = getAccessors<attr_type>();
-                            result = acsrs.size() != d.containers.size() || std::equal(acsrs.cbegin(), acsrs.cend(), d.containers.cbegin(), [](auto const& acsr, auto const& ctnr)
+                            result = acsrs.size() != d.accessors.size() || std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
                             {
-                                return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->accessor.getModel());
+                                return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->getModel());
                             });
                         }
                         else
@@ -555,6 +535,16 @@ namespace Model
         void removeListener(Listener& listener)
         {
             mListeners.remove(listener);
+        }
+        
+    protected:
+        
+        template <enum_type type>
+        auto getDefaultModel() const
+        -> typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type
+        {
+            using model_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type;
+            return model_type{};
         }
         
     private:

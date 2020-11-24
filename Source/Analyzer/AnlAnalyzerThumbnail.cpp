@@ -26,7 +26,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     };
     mRemoveButton.setTooltip(juce::translate("Remove analysis"));
     
-    mRelaunchButton.onClick= [&]()
+    mRelaunchButton.onClick = [&]()
     {
         if(onRelaunch != nullptr)
         {
@@ -34,6 +34,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     mRelaunchButton.setTooltip(juce::translate("Run analysis"));
+    mPropertyPanel.onAnalyse = mRelaunchButton.onClick;
     
     mPropertiesButton.onClick = [&]()
     {

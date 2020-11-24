@@ -41,6 +41,18 @@ namespace Document
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
+        
+        template <enum_type type>
+        auto getDefaultModel() const
+        {
+            return Model::Accessor<Accessor, Container>::getDefaultModel<type>();
+        }
+        
+        template <>
+        auto getDefaultModel<AttrType::analyzers>() const
+        {
+            return Analyzer::Container{{""}, {""}, {0}, {{}}, {juce::Colours::black}, {}, {}};
+        }
     };
 }
 

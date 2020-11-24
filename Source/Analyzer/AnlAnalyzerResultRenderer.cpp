@@ -14,7 +14,11 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
     addChildComponent(mInformation);
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == AttrType::results)
+        if(attribute == AttrType::colour)
+        {
+            repaint();
+        }
+        else if(attribute == AttrType::results)
         {
             auto const& results = acsr.getValue<AttrType::results>();
             if(results.empty())
@@ -46,7 +50,6 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
                         data.setPixelColour(i, height - 1 - j, colour);
                     }
                 }
-                std::cout << "max " << maxValue << "\n";
                 mImage = image;
             }
             
@@ -82,10 +85,6 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     auto const width = bounds.getWidth();
     auto const height = bounds.getHeight();
     
-    auto const clip = g.getClipBounds();
-    auto const horizontalRange = clip.getHorizontalRange().expanded(1);
-    
-    g.setColour(juce::Colours::black);
     auto const& results = mAccessor.getValue<AttrType::results>();
     if(results.empty() && width > 0)
     {
@@ -108,6 +107,7 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     
     if(results.front().values.empty())
     {
+        g.setColour(mAccessor.getValue<AttrType::colour>());
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
             if(realTimeRange.contains(results[i].timestamp))
@@ -123,6 +123,7 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     }
     else if(results.front().values.size() == 1)
     {
+        g.setColour(mAccessor.getValue<AttrType::colour>());
         auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
         auto valueToPixel = [&](float const value)
         {

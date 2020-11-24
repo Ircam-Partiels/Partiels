@@ -62,6 +62,17 @@ namespace Tools
         ~PropertyTitle() override = default;
     };
     
+    class PropertyTextButton
+    : public Tools::PropertyPanel<juce::TextButton>
+    {
+    public:
+        PropertyTextButton(juce::String const& name, juce::String const& tooltip = {}, callback_type fn = nullptr);
+        ~PropertyTextButton() override = default;
+        
+        // juce::Component
+        void resized() override;
+    };
+    
     class PropertyLabel
     : public Tools::PropertyPanel<juce::Label>
     {

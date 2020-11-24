@@ -45,6 +45,26 @@ Tools::PropertyTitle::PropertyTitle(juce::String const& name, juce::String const
     title.setFont(title.getFont().boldened());
 }
 
+Tools::PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, callback_type fn)
+: Tools::PropertyPanel<juce::TextButton>(name, tooltip, fn)
+{
+    title.setVisible(false);
+    entry.setButtonText(name);
+    entry.setTooltip(tooltip);
+    entry.onClick = [&]()
+    {
+        if(callback != nullptr)
+        {
+            callback(entry);
+        }
+    };
+}
+
+void Tools::PropertyTextButton::resized()
+{
+    entry.setBounds(getLocalBounds());
+}
+
 Tools::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
 : Tools::PropertyPanel<juce::Label>(name, tooltip, fn)
 {

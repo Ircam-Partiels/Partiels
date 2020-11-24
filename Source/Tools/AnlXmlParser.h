@@ -21,6 +21,10 @@ namespace XmlParser
         {
             xml.setAttribute(attributeName, value);
         }
+        else if constexpr(std::is_same<T, juce::Colour>::value)
+        {
+            xml.setAttribute(attributeName, value.toString());
+        }
         else if constexpr(std::is_same<T, float>::value)
         {
             xml.setAttribute(attributeName, static_cast<double>(value));
@@ -100,6 +104,10 @@ namespace XmlParser
         else if constexpr(std::is_same<T, juce::String>::value)
         {
             return xml.getStringAttribute(attributeName, defaultValue);
+        }
+        else if constexpr(std::is_same<T, juce::Colour>::value)
+        {
+            return juce::Colour::fromString(xml.getStringAttribute(attributeName, defaultValue.toString()));
         }
         else if constexpr(std::is_same<T, float>::value)
         {

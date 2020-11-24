@@ -9,18 +9,13 @@ ANALYSE_FILE_BEGIN
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mPluginName.entry.setEnabled(false);
-    mFeatures.callback = [&](juce::ComboBox const& entry)
-    {
-        mAccessor.setValue<AttrType::feature>(entry.getSelectedItemIndex());
-    };
-    
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::key:
+            case AttrType::feature:
             {
                 mPropertyLayout.setPanels({}, Tools::PropertyPanelBase::left);
                 mProperties.clear();
@@ -42,7 +37,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 {
                     mFeatures.entry.addItem(descriptor.name, ++itemId);
                 }
-                mFeatures.entry.setSelectedItemIndex(static_cast<int>(acsr.getValue<AttrType::feature>()));
+                auto const selectedFeature = acsr.getValue<AttrType::feature>();
+                mFeatures.entry.setSelectedItemIndex(static_cast<int>(selectedFeature));
                 
                 auto getParameterTextValue = [](Vamp::Plugin::ParameterDescriptor const& descriptor, float pvalue) -> juce::String
                 {
@@ -92,23 +88,55 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 panels.push_back(mGraphicalParameters);
+                if(selectedFeature < outputDescriptors.size())
+                {
+                    auto const& outputDescriptor = outputDescriptors[selectedFeature];
+                    if(outputDescriptor.binCount > 1)
+                    {
+                        panels.push_back(mColourMap);
+                    }
+                    else
+                    {
+                        panels.push_back(mColour);
+                    }
+                }
+                panels.push_back(mAnalyse);
                 
                 mPropertyLayout.setPanels(panels, Tools::PropertyPanelBase::left);
                 setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
                 resized();
             }
-            case AttrType::feature:
-            {
-            }
-                break;
             case AttrType::name:
             case AttrType::parameters:
                 break;
         }
     };
     
+    mPluginName.entry.setEnabled(false);
+    mFeatures.callback = [&](juce::ComboBox const& entry)
+    {
+        mAccessor.setValue<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()));
+    };
+    mAnalyse.callback = [&](juce::TextButton const&)
+    {
+        if(onAnalyse != nullptr)
+        {
+            onAnalyse();
+        }
+    };
+    
+    mColour.callback = [&](juce::TextButton const&)
+    {
+        juce::DialogWindow::showModalDialog("Set Colour", &mColourSelector, this, juce::Colours::black, true);
+    };
+    
+    mColourMap.entry.clear();
+    mColourMap.entry.addItemList({"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, 1);
+    
     addAndMakeVisible(mPropertyLayout);
     setSize(300, 200);
+    mColourSelector.setSize(400, 300);
+    mColourSelector.addChangeListener(this);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -120,6 +148,11 @@ Analyzer::PropertyPanel::~PropertyPanel()
 void Analyzer::PropertyPanel::resized()
 {
     mPropertyLayout.setBounds(getLocalBounds());
+}
+
+void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    mAccessor.setValue<AttrType::colour>(mColourSelector.getCurrentColour());
 }
 
 ANALYSE_FILE_END
