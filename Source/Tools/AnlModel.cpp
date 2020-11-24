@@ -87,24 +87,24 @@ public:
         {
             ModelCtnr ctnr;
             ModelAcsr acsr {ctnr};
-            expectEquals(acsr.getValue<AttrType::attr0>(), 0);
-            expectEquals(acsr.getValue<AttrType::attr1>(), 0);
-            expectEquals(acsr.getValue<AttrType::attr2>(), 0.0f);
-            expect(acsr.getValue<AttrType::attr3>() == std::vector<int>{});
-            expectEquals(acsr.getValue<AttrType::attr4>(), std::string{});
-            expect(acsr.getValue<AttrType::attr5>() == std::vector<double>{});
+            expectEquals(acsr.getAttr<AttrType::attr0>(), 0);
+            expectEquals(acsr.getAttr<AttrType::attr1>(), 0);
+            expectEquals(acsr.getAttr<AttrType::attr2>(), 0.0f);
+            expect(acsr.getAttr<AttrType::attr3>() == std::vector<int>{});
+            expectEquals(acsr.getAttr<AttrType::attr4>(), std::string{});
+            expect(acsr.getAttr<AttrType::attr5>() == std::vector<double>{});
         }
         
         beginTest("accessor constructor with model");
         {
             ModelCtnr ctnr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
             ModelAcsr acsr(ctnr);
-            expectEquals(acsr.getValue<AttrType::attr0>(), 1);
-            expectEquals(acsr.getValue<AttrType::attr1>(), 2);
-            expectEquals(acsr.getValue<AttrType::attr2>(), 3.0f);
-            expect(acsr.getValue<AttrType::attr3>() == std::vector<int>{4, 5, 6});
-            expectEquals(acsr.getValue<AttrType::attr4>(), std::string{"Jules"});
-            expect(acsr.getValue<AttrType::attr5>() == std::vector<double>{7.0, 8.0});
+            expectEquals(acsr.getAttr<AttrType::attr0>(), 1);
+            expectEquals(acsr.getAttr<AttrType::attr1>(), 2);
+            expectEquals(acsr.getAttr<AttrType::attr2>(), 3.0f);
+            expect(acsr.getAttr<AttrType::attr3>() == std::vector<int>{4, 5, 6});
+            expectEquals(acsr.getAttr<AttrType::attr4>(), std::string{"Jules"});
+            expect(acsr.getAttr<AttrType::attr5>() == std::vector<double>{7.0, 8.0});
         }
         
         beginTest("accessor setting attribute");
@@ -117,12 +117,12 @@ public:
             acsr.setValue<AttrType::attr3>({5, 6, 7}, NotificationType::synchronous);
             acsr.setValue<AttrType::attr4>("Jim", NotificationType::synchronous);
             acsr.setValue<AttrType::attr5>({8.0, 9.0}, NotificationType::synchronous);
-            expectEquals(acsr.getValue<AttrType::attr0>(), 2);
-            expectEquals(acsr.getValue<AttrType::attr1>(), 3);
-            expectEquals(acsr.getValue<AttrType::attr2>(), 4.0f);
-            expect(acsr.getValue<AttrType::attr3>() == std::vector<int>{5, 6, 7});
-            expectEquals(acsr.getValue<AttrType::attr4>(), std::string{"Jim"});
-            expect(acsr.getValue<AttrType::attr5>() == std::vector<double>{8.0, 9.0});
+            expectEquals(acsr.getAttr<AttrType::attr0>(), 2);
+            expectEquals(acsr.getAttr<AttrType::attr1>(), 3);
+            expectEquals(acsr.getAttr<AttrType::attr2>(), 4.0f);
+            expect(acsr.getAttr<AttrType::attr3>() == std::vector<int>{5, 6, 7});
+            expectEquals(acsr.getAttr<AttrType::attr4>(), std::string{"Jim"});
+            expect(acsr.getAttr<AttrType::attr5>() == std::vector<double>{8.0, 9.0});
         }
         
         beginTest("accessor from model");
@@ -132,12 +132,12 @@ public:
             ModelCtnr ctnr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
             ModelAcsr acsr2(ctnr2);
             acsr1.fromModel(acsr2.getContainer(), NotificationType::synchronous);
-            expectEquals(acsr1.getValue<AttrType::attr0>(), acsr2.getValue<AttrType::attr0>());
-            expectNotEquals(acsr1.getValue<AttrType::attr1>(), acsr2.getValue<AttrType::attr1>());
-            expectEquals(acsr1.getValue<AttrType::attr2>(), acsr2.getValue<AttrType::attr2>());
-            expect(acsr1.getValue<AttrType::attr3>() != acsr2.getValue<AttrType::attr3>());
-            expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
-            expect(acsr1.getValue<AttrType::attr5>() == acsr2.getValue<AttrType::attr5>());
+            expectEquals(acsr1.getAttr<AttrType::attr0>(), acsr2.getAttr<AttrType::attr0>());
+            expectNotEquals(acsr1.getAttr<AttrType::attr1>(), acsr2.getAttr<AttrType::attr1>());
+            expectEquals(acsr1.getAttr<AttrType::attr2>(), acsr2.getAttr<AttrType::attr2>());
+            expect(acsr1.getAttr<AttrType::attr3>() != acsr2.getAttr<AttrType::attr3>());
+            expectNotEquals(acsr1.getAttr<AttrType::attr4>(), acsr2.getAttr<AttrType::attr4>());
+            expect(acsr1.getAttr<AttrType::attr5>() == acsr2.getAttr<AttrType::attr5>());
         }
         
         beginTest("accessor xml");
@@ -152,12 +152,12 @@ public:
             {
                 acsr1.fromXml(*xml.get(), "Test", NotificationType::synchronous);
             }
-            expectEquals(acsr1.getValue<AttrType::attr0>(), acsr2.getValue<AttrType::attr0>());
-            expectNotEquals(acsr1.getValue<AttrType::attr1>(), acsr2.getValue<AttrType::attr1>());
-            expectEquals(acsr1.getValue<AttrType::attr2>(), acsr2.getValue<AttrType::attr2>());
-            expect(acsr1.getValue<AttrType::attr3>() != acsr2.getValue<AttrType::attr3>());
-            expectNotEquals(acsr1.getValue<AttrType::attr4>(), acsr2.getValue<AttrType::attr4>());
-            expect(acsr1.getValue<AttrType::attr5>() == acsr2.getValue<AttrType::attr5>());
+            expectEquals(acsr1.getAttr<AttrType::attr0>(), acsr2.getAttr<AttrType::attr0>());
+            expectNotEquals(acsr1.getAttr<AttrType::attr1>(), acsr2.getAttr<AttrType::attr1>());
+            expectEquals(acsr1.getAttr<AttrType::attr2>(), acsr2.getAttr<AttrType::attr2>());
+            expect(acsr1.getAttr<AttrType::attr3>() != acsr2.getAttr<AttrType::attr3>());
+            expectNotEquals(acsr1.getAttr<AttrType::attr4>(), acsr2.getAttr<AttrType::attr4>());
+            expect(acsr1.getAttr<AttrType::attr5>() == acsr2.getAttr<AttrType::attr5>());
         }
             
         beginTest("is equivalent");

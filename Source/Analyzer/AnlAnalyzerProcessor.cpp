@@ -10,7 +10,7 @@ std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, d
     using namespace Vamp;
     using namespace Vamp::HostExt;
     
-    auto const pluginKey = accessor.getValue<AttrType::key>();
+    auto const pluginKey = accessor.getAttr<AttrType::key>();
     if(pluginKey.isEmpty())
     {
         return nullptr;
@@ -48,7 +48,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
     auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
     auto const sampleRate = audioFormatReader.sampleRate;
-    auto const featureIndex = accessor.getValue<AttrType::feature>();
+    auto const featureIndex = accessor.getAttr<AttrType::feature>();
     auto instance = createPlugin(accessor, sampleRate, true);
     if(instance == nullptr)
     {
@@ -64,7 +64,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
     
     auto const numDimension = std::min(outputDescriptor[featureIndex].binCount, 2ul) + 1;
     
-    using result_type = std::remove_const<std::remove_reference<decltype(accessor.getValue<AttrType::results>())>::type>::type;
+    using result_type = std::remove_const<std::remove_reference<decltype(accessor.getAttr<AttrType::results>())>::type>::type;
     result_type results;
     
     juce::AudioBuffer<float> buffer(numChannels, static_cast<int>(blockSize));

@@ -16,17 +16,17 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
         {
             case AttrType::globalRange:
             {
-                auto const globalRange = acsr.getValue<AttrType::globalRange>();
+                auto const globalRange = acsr.getAttr<AttrType::globalRange>();
                 mScrollBar.setRangeLimits(globalRange, juce::NotificationType::dontSendNotification);
                 mScrollBar.setSingleStepSize(globalRange.getLength() / 127.0);
             }
                 break;
             case AttrType::visibleRange:
             {
-                auto const range = acsr.getValue<AttrType::visibleRange>();
+                auto const range = acsr.getAttr<AttrType::visibleRange>();
                 if(mIsInversed)
                 {
-                    auto const globalRange = acsr.getValue<AttrType::globalRange>();
+                    auto const globalRange = acsr.getAttr<AttrType::globalRange>();
                     mScrollBar.setCurrentRange({globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, juce::NotificationType::dontSendNotification);
                 }
                 else
@@ -64,7 +64,7 @@ void Zoom::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, dou
     anlStrongAssert(scrollBarThatHasMoved == &mScrollBar);
     if(mIsInversed)
     {
-        auto const globalRange = mAccessor.getValue<AttrType::globalRange>();
+        auto const globalRange = mAccessor.getAttr<AttrType::globalRange>();
         auto const range = mScrollBar.getCurrentRange();
         mAccessor.setValue<AttrType::visibleRange>(range_type{globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, NotificationType::synchronous);
     }

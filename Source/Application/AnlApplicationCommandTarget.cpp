@@ -68,7 +68,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::OpenRecent:
         {
             result.setInfo(juce::translate("Open Recent"), juce::translate("Open a recent document"), "Application", 0);
-            result.setActive(!Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>().empty());
+            result.setActive(!Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>().empty());
         }
             break;
         case CommandIDs::New:
@@ -104,23 +104,23 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Toggle Playback"), TRANS("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getValue<Document::AttrType::file>() != juce::File());
-            result.setTicked(Instance::get().getDocumentAccessor().getValue<Document::AttrType::isPlaybackStarted>());
+            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File());
+            result.setTicked(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::isPlaybackStarted>());
         }
             break;
         case CommandIDs::ToggleLooping:
         {
             result.setInfo(juce::translate("Toggle Loop"), TRANS("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getValue<Document::AttrType::file>() != juce::File());
-            result.setTicked(Instance::get().getDocumentAccessor().getValue<Document::AttrType::isLooping>());
+            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File());
+            result.setTicked(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::isLooping>());
         }
             break;
         case CommandIDs::MovePlayHeadToBeginning:
         {
             result.setInfo(juce::translate("Rewind Playhead"), TRANS("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getValue<Document::AttrType::file>() != juce::File() && Instance::get().getDocumentAccessor().getValue<Document::AttrType::playheadPosition>() > 0.0);
+            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File() && Instance::get().getDocumentAccessor().getAttr<Document::AttrType::playheadPosition>() > 0.0);
         }
             break;
         case CommandIDs::MovePlayHeadToEnd:
@@ -128,7 +128,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Unspool Playhead"), TRANS("Move the playhead to the end of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('q', juce::ModifierKeys::commandModifier, 0));
             JUCE_COMPILER_WARNING("fix that")
-            result.setActive(Instance::get().getDocumentAccessor().getValue<Document::AttrType::file>() != juce::File() && Instance::get().getDocumentAccessor().getValue<Document::AttrType::playheadPosition>() < 10000.0);
+            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File() && Instance::get().getDocumentAccessor().getAttr<Document::AttrType::playheadPosition>() < 10000.0);
         }
             break;
     }
@@ -197,14 +197,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto constexpr attr = Document::AttrType::isPlaybackStarted;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setValue<attr>(!documentAcsr.getValue<attr>(), NotificationType::synchronous);
+            documentAcsr.setValue<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::ToggleLooping:
         {
             auto constexpr attr = Document::AttrType::isLooping;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setValue<attr>(!documentAcsr.getValue<attr>(), NotificationType::synchronous);
+            documentAcsr.setValue<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::MovePlayHeadToBeginning:
@@ -236,7 +236,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     Instance::get().getApplicationAccessor().setValue<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     if(file.existsAsFile())
     {
-        auto list = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
+        auto list = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
         list.insert(list.begin(), file);
         Instance::get().getApplicationAccessor().setValue<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
     }

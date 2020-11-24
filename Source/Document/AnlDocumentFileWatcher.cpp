@@ -14,7 +14,7 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
             case AttrType::file:
             {
                 stopTimer();
-                auto const file = mAccessor.getValue<AttrType::file>();
+                auto const file = mAccessor.getAttr<AttrType::file>();
                 if(file != juce::File())
                 {
                     auto audioReader = createAudioFormatReader(acsr, mAudioFormatManager, false);
@@ -41,7 +41,7 @@ Document::FileWatcher::~FileWatcher()
 
 void Document::FileWatcher::timerCallback()
 {
-    auto const file = mAccessor.getValue<AttrType::file>();
+    auto const file = mAccessor.getAttr<AttrType::file>();
     auto const time = file.getLastModificationTime();
     if(time > mModificationTime)
     {

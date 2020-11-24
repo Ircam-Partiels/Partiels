@@ -106,7 +106,7 @@ void PluginList::Table::resized()
 
 void PluginList::Table::updateContent()
 {
-    auto const& descriptions = mAccessor.getValue<AttrType::descriptions>();
+    auto const& descriptions = mAccessor.getAttr<AttrType::descriptions>();
     mFilteredList.resize(descriptions.size());
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
     auto it = std::copy_if(descriptions.cbegin(), descriptions.cend(), mFilteredList.begin(), [&](auto const& pair)
@@ -116,8 +116,8 @@ void PluginList::Table::updateContent()
     });
     mFilteredList.resize(static_cast<size_t>(std::distance(mFilteredList.begin(), it)));
         
-    auto const isForwards = mAccessor.getValue<AttrType::sortIsFowards>();
-    switch (mAccessor.getValue<AttrType::sortColumn>())
+    auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
+    switch (mAccessor.getAttr<AttrType::sortColumn>())
     {
         case ColumnType::Name:
         {
@@ -205,7 +205,7 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
     auto const selectedRows = mPluginTable.getSelectedRows();
     mPluginTable.deselectAllRows();
     
-    auto description = mAccessor.getValue<AttrType::descriptions>();
+    auto description = mAccessor.getAttr<AttrType::descriptions>();
     auto const numSelectedRows = selectedRows.size();
     for (int i = 0; i < numSelectedRows; ++i)
     {

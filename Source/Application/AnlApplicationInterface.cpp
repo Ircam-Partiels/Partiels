@@ -31,7 +31,7 @@ Application::Interface::Interface()
     mZoomTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0);
-        acsr.setValue<Zoom::AttrType::visibleRange>(acsr.getValue<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+        acsr.setValue<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     addAndMakeVisible(mZoomTimeRuler);
     
@@ -57,7 +57,7 @@ Application::Interface::Interface()
         {
             case Document::AttrType::file:
             {
-                auto const file = acsr.getValue<Document::AttrType::file>();
+                auto const file = acsr.getAttr<Document::AttrType::file>();
                 auto const& audioFormatManager = Instance::get().getAudioFormatManager();
                 auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
                 

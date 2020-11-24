@@ -39,7 +39,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     mPropertiesButton.onClick = [&]()
     {
         juce::DialogWindow::LaunchOptions launchOption;
-        launchOption.dialogTitle = juce::translate("ANLNAME Properties").replace("ANLNAME", mAccessor.getValue<AttrType::name>());
+        launchOption.dialogTitle = juce::translate("ANLNAME Properties").replace("ANLNAME", mAccessor.getAttr<AttrType::name>());
         launchOption.content.setNonOwned(&mPropertyPanel);
         launchOption.componentToCentreAround = this;
         launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
@@ -56,7 +56,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::name:
-                mNameLabel.setText(acsr.getValue<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                mNameLabel.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
                 break;
             case AttrType::key:
             case AttrType::parameters:

@@ -22,7 +22,7 @@ juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevel
         menu.addCommandItem(&commandManager, CommandIDs::Open);
         juce::PopupMenu recentFilesMenu;
         auto recentFileIndex = static_cast<int>(CommandIDs::OpenRecent);
-        auto const& recentFiles = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
+        auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
         for(auto const& file : recentFiles)
         {
             auto const isActive = Instance::get().getDocumentFileBased().getFile() != file;
@@ -57,7 +57,7 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
     juce::ignoreUnused(topLevelMenuIndex);
     using CommandIDs = CommandTarget::CommandIDs;
     
-    auto const& recentFiles = Instance::get().getApplicationAccessor().getValue<AttrType::recentlyOpenedFilesList>();
+    auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
     auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
     if(fileIndex < recentFiles.size())
     {
@@ -68,7 +68,7 @@ void Application::Window::MainMenuModel::menuItemSelected(int menuItemID, int to
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
-    if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getValue<AttrType::windowState>()))
+    if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
     {
         centreWithSize(1024, 768);
     }

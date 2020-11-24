@@ -11,26 +11,26 @@ Document::Transport::Transport(Accessor& accessor)
         {
             case AttrType::gain:
             {
-                auto const decibel = juce::Decibels::gainToDecibels(acsr.getValue<AttrType::gain>(), -90.0);
+                auto const decibel = juce::Decibels::gainToDecibels(acsr.getAttr<AttrType::gain>(), -90.0);
                 mVolumeSlider.setValue(decibel, juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::isPlaybackStarted:
             {
-                auto const state = acsr.getValue<AttrType::isPlaybackStarted>();
+                auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
                 mPlaybackButton.setButtonText(state ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::playheadPosition:
             {
-                auto const time = acsr.getValue<AttrType::playheadPosition>();
+                auto const time = acsr.getAttr<AttrType::playheadPosition>();
                 mPlayPositionInHMSms.setText(Tools::secondsToString(time), juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::isLooping:
             {
-                auto const state = acsr.getValue<AttrType::isLooping>();
+                auto const state = acsr.getAttr<AttrType::isLooping>();
                 mLoopButton.setToggleState(state, juce::NotificationType::dontSendNotification);
             }
                 break;

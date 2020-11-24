@@ -40,7 +40,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         AnlDebug("Application", "Failed.");
         return;
     }
-    openFile(mApplicationAccessor.getValue<AttrType::currentDocumentFile>());
+    openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
     AnlDebug("Application", "Ready.");
 }
 

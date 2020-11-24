@@ -7,7 +7,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     using AlertIconType = juce::AlertWindow::AlertIconType;
     auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
     
-    auto const file = accessor.getValue<AttrType::file>();
+    auto const file = accessor.getAttr<AttrType::file>();
     auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
     if(audioFormat == nullptr)
     {
@@ -131,7 +131,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
         {
             case AttrType::file:
             {
-                auto const file = acsr.getValue<AttrType::file>();
+                auto const file = acsr.getAttr<AttrType::file>();
                 if(file == juce::File{})
                 {
                     mSourceManager.setInstance(nullptr);
@@ -140,7 +140,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 auto source = std::make_shared<Source>(createAudioFormatReader(mAccessor, mAudioFormatManager, true));
                 if(source != nullptr)
                 {
-                    source->setGain(static_cast<float>(acsr.getValue<AttrType::gain>()));
+                    source->setGain(static_cast<float>(acsr.getAttr<AttrType::gain>()));
                     source->prepareToPlay(mSamplesPerBlockExpected, mSampleRate);
                 }
                 mSourceManager.setInstance(source);
@@ -148,7 +148,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 break;
             case AttrType::isLooping:
             {
-                mIsLooping.store(acsr.getValue<AttrType::isLooping>());
+                mIsLooping.store(acsr.getAttr<AttrType::isLooping>());
             }
                 break;
             case AttrType::gain:
@@ -156,13 +156,13 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 auto instance = mSourceManager.getInstance();
                 if(instance != nullptr)
                 {
-                    instance->setGain(static_cast<float>(acsr.getValue<AttrType::gain>()));
+                    instance->setGain(static_cast<float>(acsr.getAttr<AttrType::gain>()));
                 }
             }
                 break;
             case AttrType::isPlaybackStarted:
             {
-                if(static_cast<bool>(acsr.getValue<AttrType::isPlaybackStarted>()))
+                if(static_cast<bool>(acsr.getAttr<AttrType::isPlaybackStarted>()))
                 {
                     auto expected = getLastPosition();
                     mReadPosition.compare_exchange_strong(expected, 0);
@@ -225,7 +225,7 @@ void Document::AudioReader::prepareToPlay(int samplesPerBlockExpected, double sa
     auto instance = mSourceManager.getInstance();
     if(instance != nullptr)
     {
-        instance->setGain(static_cast<float>(mAccessor.getValue<AttrType::gain>()));
+        instance->setGain(static_cast<float>(mAccessor.getAttr<AttrType::gain>()));
         instance->prepareToPlay(samplesPerBlockExpected, sampleRate);
     }
 }

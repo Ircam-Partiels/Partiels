@@ -149,7 +149,7 @@ void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
         return;
     }
     
-    auto const visibleRange = mAccessor.getValue<AttrType::visibleRange>();
+    auto const visibleRange = mAccessor.getAttr<AttrType::visibleRange>();
     mInitialValueRange = {mFromZoomRange(visibleRange.getStart()), mFromZoomRange(visibleRange.getEnd())};
        
     if(mInitialValueRange.isEmpty())
@@ -219,7 +219,7 @@ void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
     {
         case NavigationMode::translate:
         {
-            auto const visibleRange = mAccessor.getValue<AttrType::visibleRange>();
+            auto const visibleRange = mAccessor.getAttr<AttrType::visibleRange>();
             auto const delta = isVertical ? mPrevMousePos.y - event.position.y : event.position.x - mPrevMousePos.x;
             auto const size = isVertical ? getHeight() - 1 : getWidth() - 1;
             auto const translation = static_cast<double>(delta) / static_cast<double>(size) * visibleRange.getLength();
@@ -311,7 +311,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
         return {mFromZoomRange(range.getStart()), mFromZoomRange(range.getEnd())};
     };
     
-    auto const visibleRange = mAccessor.getValue<AttrType::visibleRange>();
+    auto const visibleRange = mAccessor.getAttr<AttrType::visibleRange>();
     auto const useableRange = fromZoomRange(visibleRange);
     if(useableRange.isEmpty())
     {

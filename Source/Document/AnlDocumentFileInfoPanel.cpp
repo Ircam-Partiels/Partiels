@@ -15,7 +15,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
             case AttrType::file:
             {
                 mPropertyLayout3.setPanels({}, Position::left);
-                auto const file = acsr.getValue<AttrType::file>();
+                auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
                 if(audioFormat == nullptr)

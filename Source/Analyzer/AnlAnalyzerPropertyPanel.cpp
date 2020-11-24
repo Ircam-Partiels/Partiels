@@ -37,7 +37,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 {
                     mFeatures.entry.addItem(descriptor.name, ++itemId);
                 }
-                auto const selectedFeature = acsr.getValue<AttrType::feature>();
+                auto const selectedFeature = acsr.getAttr<AttrType::feature>();
                 mFeatures.entry.setSelectedItemIndex(static_cast<int>(selectedFeature));
                 
                 auto getParameterTextValue = [](Vamp::Plugin::ParameterDescriptor const& descriptor, float pvalue) -> juce::String

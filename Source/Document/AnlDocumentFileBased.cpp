@@ -25,7 +25,7 @@ Document::FileBased::~FileBased()
 
 juce::String Document::FileBased::getDocumentTitle()
 {
-    return getFile().existsAsFile() ? getFile().getFileNameWithoutExtension() : (mAccessor.getValue<AttrType::file>().existsAsFile() ? mAccessor.getValue<AttrType::file>().getFileNameWithoutExtension() : "");
+    return getFile().existsAsFile() ? getFile().getFileNameWithoutExtension() : (mAccessor.getAttr<AttrType::file>().existsAsFile() ? mAccessor.getAttr<AttrType::file>().getFileNameWithoutExtension() : "");
 }
 
 juce::Result Document::FileBased::loadDocument(juce::File const& file)
@@ -59,7 +59,7 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
 
 juce::File Document::FileBased::getLastDocumentOpened()
 {
-    return getFile().existsAsFile() ? getFile() : (mAccessor.getValue<AttrType::file>().existsAsFile() ? mAccessor.getValue<AttrType::file>().getFullPathName() : mLastFile.getParentDirectory());
+    return getFile().existsAsFile() ? getFile() : (mAccessor.getAttr<AttrType::file>().existsAsFile() ? mAccessor.getAttr<AttrType::file>().getFullPathName() : mLastFile.getParentDirectory());
 }
 
 void Document::FileBased::setLastDocumentOpened(juce::File const& file)
