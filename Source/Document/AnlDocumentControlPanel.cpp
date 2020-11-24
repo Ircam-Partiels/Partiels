@@ -30,7 +30,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
         juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
         
-        if(!mAccessor.insertAccessor<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {juce::Colours::black}, {Analyzer::ColorMap::Heat}, {}, {}}))
+        if(!mAccessor.insertAccessor<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {}, {juce::Colours::black}, {Analyzer::ColorMap::Heat},  {}}))
         {
             return;
         }
@@ -73,9 +73,19 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                     });
                 }), mSections.end());
                 
+                auto analyseFn = [&](Analyzer::Accessor& acsr)
+                {
+                    auto afr = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
+                    if(afr == nullptr)
+                    {
+                        return;
+                    }
+                    Analyzer::performAnalysis(acsr, *afr.get());
+                };
+                
                 for(size_t i = mSections.size(); i < anlAcsrs.size(); ++i)
                 {
-                    auto section = std::make_unique<Section>(anlAcsrs[i]);
+                    auto section = std::make_unique<Section>(anlAcsrs[i], analyseFn);
                     anlWeakAssert(section != nullptr);
                     if(section != nullptr)
                     {
@@ -96,12 +106,12 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                         
                         mSections[i]->thumbnail.onRelaunch = [this, i]()
                         {
-                            auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
-                            if(audioFormatReader == nullptr)
+                            auto afr = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
+                            if(afr == nullptr)
                             {
                                 return;
                             }
-                            Analyzer::performAnalysis(mSections[i]->accessor, *audioFormatReader.get());
+                            Analyzer::performAnalysis(mSections[i]->accessor, *afr.get());
                         };
                     }
                 }

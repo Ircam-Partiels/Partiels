@@ -15,11 +15,20 @@ void XmlParser::toXml<Analyzer::Result>(juce::XmlElement& xml, juce::Identifier 
             JUCE_COMPILER_WARNING("to do")
             //child->setAttribute("duration", value.duration.toString());
         }
+        child->setAttribute("hasTimestamp", value.hasTimestamp);
         if(value.hasTimestamp)
         {
-            //child->setAttribute("timestamp", value.timestamp.toString());
+            child->setAttribute("timestamp::sec", value.timestamp.sec);
+            child->setAttribute("timestamp::nsec", value.timestamp.nsec);
         }
-        XmlParser::toXml(*child.get(), "values", value.values);
+        if(value.values.size() == 1)
+        {
+            child->setAttribute("value", value.values[0]);
+        }
+        else if(value.values.size() > 1)
+        {
+            //XmlParser::toXml(*child.get(), "values", value.values);
+        }
         xml.addChildElement(child.release());
     }
 }
@@ -38,7 +47,24 @@ auto XmlParser::fromXml<Analyzer::Result>(juce::XmlElement const& xml, juce::Ide
     Analyzer::Result value;
     JUCE_COMPILER_WARNING("to do")
     value.label = child->getStringAttribute("label", defaultValue.label).toStdString();
-    value.values = XmlParser::fromXml(*child, "values", defaultValue.values);
+    value.hasDuration = child->getBoolAttribute("hasTimestamp", defaultValue.hasDuration);
+    if(value.hasDuration)
+    {
+        anlWeakAssert(child->hasAttribute("timestamp::sec") && child->hasAttribute("timestamp::nsec"));
+        if(child->hasAttribute("timestamp::sec") && child->hasAttribute("timestamp::nsec"))
+        {
+            value.timestamp.sec = child->getIntAttribute("timestamp::sec");
+            value.timestamp.nsec = child->getIntAttribute("timestamp::nsec");
+        }
+        else
+        {
+            value.hasDuration = false;
+        }
+    }
+    if(child->hasAttribute("value"))
+    {
+        value.values = {static_cast<float>(xml.getDoubleAttribute("value"))};
+    }
     return value;
 }
 

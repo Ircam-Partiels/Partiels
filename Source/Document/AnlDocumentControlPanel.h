@@ -27,13 +27,39 @@ namespace Document
         
         struct Section
         {
-            Section(Analyzer::Accessor& acsr)
+            Section(Analyzer::Accessor& acsr, std::function<void(Analyzer::Accessor&)> fn)
             : accessor(acsr)
+            , onKeyChanged(fn)
             {
+                listener.onChanged = [&](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
+                {
+                    if(attribute == Analyzer::AttrType::key && acsr.getAttr<Analyzer::AttrType::key>() != "")
+                    {
+                        
+                        juce::MessageManager::callAsync([&]()
+                        {
+                            if(onKeyChanged)
+                            {
+                                onKeyChanged(accessor);
+                            }
+                        });
+                        
+                    }
+                };
+                accessor.addListener(listener, NotificationType::synchronous);
             }
+            
+            ~Section()
+            {
+                accessor.removeListener(listener);
+            }
+            
             Analyzer::Accessor& accessor;
+            Analyzer::Accessor::Listener listener;
             Analyzer::Thumbnail thumbnail {accessor};
             Tools::ColouredPanel separator;
+            
+            std::function<void(Analyzer::Accessor&)> onKeyChanged = nullptr;
         };
         
         std::vector<std::unique_ptr<Section>> mSections;

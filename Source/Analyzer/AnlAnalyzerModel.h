@@ -17,10 +17,10 @@ namespace Analyzer
         name,
         feature,
         parameters,
+        zoom,
         colour,
         colourMap,
-        results,
-        zoom
+        results
     };
     
     using Result = Vamp::Plugin::Feature;
@@ -31,10 +31,10 @@ namespace Analyzer
     , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
+    , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
-    , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::saveable | Model::AttrFlag::notifying>
     >;
 
     class Accessor

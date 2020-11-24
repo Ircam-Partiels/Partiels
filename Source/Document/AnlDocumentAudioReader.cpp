@@ -8,6 +8,10 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
     
     auto const file = accessor.getAttr<AttrType::file>();
+    if(file == juce::File())
+    {
+        return nullptr;
+    }
     auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
     if(audioFormat == nullptr)
     {

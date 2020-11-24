@@ -109,6 +109,11 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::name:
             case AttrType::parameters:
                 break;
+            case AttrType::colourMap:
+            {
+                mColourMap.entry.setSelectedItemIndex(static_cast<int>(acsr.getAttr<AttrType::colourMap>()));
+            }
+                break;
         }
     };
     
