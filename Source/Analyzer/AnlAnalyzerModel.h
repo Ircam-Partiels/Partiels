@@ -30,7 +30,7 @@ namespace Analyzer
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
-    , Model::Acsr<AttrType::zoom, Zoom::Container, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     >;
 
     class Accessor

@@ -29,7 +29,7 @@ namespace Model
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
         static_assert(std::is_default_constructible<value_t>::value, "value_t must be default constructible");
         static_assert(std::is_copy_constructible<value_t>::value, "value_t must be copy constructible");
-        static_assert((flags_v & AttrFlag::container) == 0, "attribute cannot be a model");
+        static_assert((flags_v & AttrFlag::container) == 0, "attribute cannot be a container");
         
         using enum_type = enum_t;
         using value_type = value_t;
@@ -40,7 +40,7 @@ namespace Model
     };
     
     //! @brief The private implementation of an accessor
-    template<typename enum_t, enum_t index_v, typename model_t, typename accessor_t, int flags_v, size_t size_flags_v>
+    template<typename enum_t, enum_t index_v, typename accessor_t, int flags_v, size_t size_flags_v>
     struct AcsrImp
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
@@ -48,8 +48,8 @@ namespace Model
         static_assert((flags_v & AttrFlag::container) == 0, "model flag is implicit");
         
         using enum_type = enum_t;
-        using model_type = model_t;
         using accessor_type = accessor_t;
+        using container_type = typename accessor_type::container_type;
         
         static enum_type const type = static_cast<enum_type>(index_v);
         static int const flags = flags_v | AttrFlag::container;
@@ -61,7 +61,7 @@ namespace Model
             accessors.reserve(size_flags);
             for(size_t i = 0; i < size_flags; ++i)
             {
-                accessors.push_back(std::make_unique<accessor_type>(model_type{}));
+                accessors.push_back(std::make_unique<accessor_type>(container_type{}));
             }
         }
         
@@ -79,7 +79,7 @@ namespace Model
                 }
                 else
                 {
-                    accessors.push_back(std::make_unique<accessor_type>(model_type{}));
+                    accessors.push_back(std::make_unique<accessor_type>(container_type{}));
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace Model
             anlStrongAssert(size_flags == resizable || accessors.size() == size_flags);
         }
         
-        AcsrImp(std::initializer_list<model_type> models)
+        AcsrImp(std::initializer_list<container_type> models)
         {
             accessors.reserve(models.size());
             for(auto model : models)
@@ -105,8 +105,8 @@ namespace Model
     using Attr = AttrImpl<decltype(index_v), index_v, value_t, flags_v>;
     
     //! @brief The template implementation of an accessor
-    template<auto index_v, typename model_t, typename accessor_t, int flags_v, size_t size_v>
-    using Acsr = AcsrImp<decltype(index_v), index_v, model_t, accessor_t, flags_v, size_v>;
+    template<auto index_v, typename accessor_t, int flags_v, size_t size_v>
+    using Acsr = AcsrImp<decltype(index_v), index_v, accessor_t, flags_v, size_v>;
     
     //! @brief The container type for a set of attributes
     template <class ..._Tp>
@@ -117,14 +117,14 @@ namespace Model
     class Accessor
     {
     public:
-        using model_type = container_t;
-        using enum_type = typename std::tuple_element<0, model_type>::type::enum_type;
+        using container_type = container_t;
+        using enum_type = typename std::tuple_element<0, container_type>::type::enum_type;
         
         static_assert(std::is_same<typename std::underlying_type<enum_type>::type, size_t>::value, "enum_t underlying type must be size_t");
-        static_assert(is_specialization<model_type, std::tuple>::value, "container_t must be a specialization of std::tuple");
+        static_assert(is_specialization<container_type, std::tuple>::value, "container_t must be a specialization of std::tuple");
         
         //! @brief The constructor with data
-        Accessor(model_type const& data)
+        Accessor(container_type const& data)
         : mData(data)
         {
         }
@@ -132,7 +132,7 @@ namespace Model
         //! @brief The destructor
         ~Accessor() = default;
 
-        //! @brief Gets a const ref to the model container
+        //! @brief Gets a const ref to the container
         auto const& getContainer() const noexcept
         {
             return mData;
@@ -142,7 +142,7 @@ namespace Model
         template <enum_type type>
         auto getAccessors() noexcept
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
             using accessor_type = typename element_type::accessor_type;
@@ -163,7 +163,7 @@ namespace Model
         template <enum_type type>
         auto getAccessors() const noexcept
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
             using accessor_type = typename element_type::accessor_type;
@@ -185,7 +185,7 @@ namespace Model
         template <enum_type type>
         auto& getAccessor(size_t index) noexcept
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             return *std::get<static_cast<size_t>(type)>(mData).accessors[index].get();
         }
@@ -194,16 +194,16 @@ namespace Model
         template <enum_type type>
         auto const& getAccessor(size_t index) const noexcept
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             return *std::get<static_cast<size_t>(type)>(mData).accessors[index].get();
         }
         
         //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        bool insertAccessor(long index, typename std::tuple_element<static_cast<size_t>(type), model_type>::type::model_type const& model, NotificationType notification = NotificationType::synchronous)
+        bool insertAccessor(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type const& model, NotificationType notification = NotificationType::synchronous)
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
             using accessor_type = typename element_type::accessor_type;
@@ -239,7 +239,7 @@ namespace Model
         template <enum_type type>
         void eraseAccessor(size_t index, NotificationType notification = NotificationType::synchronous)
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
             using accessor_type = typename element_type::accessor_type;
@@ -266,7 +266,7 @@ namespace Model
         template <enum_type type>
         auto const& getAttr() const noexcept
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
             return std::get<static_cast<size_t>(type)>(mData).value;
         }
@@ -276,7 +276,7 @@ namespace Model
         template <enum_type type, typename T>
         void setAttr(T const& value, NotificationType notification = NotificationType::synchronous)
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
             
             using value_type = typename element_type::value_type;
@@ -310,7 +310,7 @@ namespace Model
         template <enum_type type, typename T>
         void setAttr(std::initializer_list<T>&& tvalue, NotificationType notification = NotificationType::synchronous)
         {
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
             
             typename element_type::value_type const value {tvalue};
@@ -430,7 +430,7 @@ namespace Model
         }
         
         //! @brief Copy the content from another model
-        void fromModel(model_type const& model, NotificationType notification = NotificationType::synchronous)
+        void fromModel(container_type const& model, NotificationType notification = NotificationType::synchronous)
         {
             detail::for_each(model, [&](auto const& d)
             {
@@ -481,7 +481,7 @@ namespace Model
         }
         
         //! @brief Compare the content with  another model
-        bool isEquivalentTo(model_type const& model) const
+        bool isEquivalentTo(container_type const& model) const
         {
             bool result = true;
             detail::for_each(model, [&](auto& d)
@@ -551,10 +551,10 @@ namespace Model
         
         template <enum_type type>
         auto getDefaultModel() const
-        -> typename std::tuple_element<static_cast<size_t>(type), model_type>::type::model_type
+        -> typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type
         {
-            using model_type = typename std::tuple_element<static_cast<size_t>(type), model_type>::type::model_type;
-            return model_type{};
+            using container_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type;
+            return container_type{};
         }
         
     private:
@@ -634,7 +634,7 @@ namespace Model
             }
         }
         
-        model_type mData;
+        container_type mData;
         Notifier<Listener> mListeners;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
