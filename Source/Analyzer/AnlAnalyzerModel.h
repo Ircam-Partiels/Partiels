@@ -5,6 +5,7 @@
 #include "../Tools/AnlAtomicManager.h"
 #include "../Zoom/AnlZoomModel.h"
 #include <vamp-hostsdk/PluginHostAdapter.h>
+#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
@@ -17,11 +18,13 @@ namespace Analyzer
         feature,
         parameters,
         colour,
+        colourMap,
         results,
         zoom
     };
     
     using Result = Vamp::Plugin::Feature;
+    using ColorMap = tinycolormap::ColormapType;
     
     using Container = Model::Container
     < Model::Attr<AttrType::key, juce::String, Model::AttrFlag::basic>
@@ -29,6 +32,7 @@ namespace Analyzer
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
     , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
     , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     >;

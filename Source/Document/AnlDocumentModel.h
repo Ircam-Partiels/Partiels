@@ -51,7 +51,7 @@ namespace Document
         template <>
         auto getDefaultModel<AttrType::analyzers>() const
         {
-            return Analyzer::Container{{""}, {""}, {0}, {{}}, {juce::Colours::black}, {}, {}};
+            return Analyzer::Container{{""}, {""}, {0}, {{}}, {juce::Colours::black}, {Analyzer::ColorMap::Heat}, {}, {}};
         }
     };
 }

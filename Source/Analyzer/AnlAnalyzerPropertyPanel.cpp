@@ -129,6 +129,10 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     {
         juce::DialogWindow::showModalDialog("Set Colour", &mColourSelector, this, juce::Colours::black, true);
     };
+    mColourMap.callback = [&](juce::ComboBox const& entry)
+    {
+        mAccessor.setAttr<AttrType::colourMap>(static_cast<ColorMap>(entry.getSelectedItemIndex()));
+    };
     
     mColourMap.entry.clear();
     mColourMap.entry.addItemList({"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, 1);
