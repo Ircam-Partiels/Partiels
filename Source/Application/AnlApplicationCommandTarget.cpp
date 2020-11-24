@@ -173,7 +173,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             fileBased.setFile({});
-            Instance::get().getDocumentAccessor().fromModel({}, NotificationType::synchronous);
+            Instance::get().getDocumentAccessor().fromContainer({}, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::Save:

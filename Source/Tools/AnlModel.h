@@ -45,7 +45,7 @@ namespace Model
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
-        static_assert((flags_v & AttrFlag::container) == 0, "model flag is implicit");
+        static_assert((flags_v & AttrFlag::container) == 0, "container flag is implicit");
         
         using enum_type = enum_t;
         using accessor_type = accessor_t;
@@ -89,12 +89,12 @@ namespace Model
             anlStrongAssert(size_flags == resizable || accessors.size() == size_flags);
         }
         
-        AcsrImp(std::initializer_list<container_type> models)
+        AcsrImp(std::initializer_list<container_type> containers)
         {
-            accessors.reserve(models.size());
-            for(auto model : models)
+            accessors.reserve(containers.size());
+            for(auto container : containers)
             {
-                accessors.push_back(std::make_unique<accessor_type>(model));
+                accessors.push_back(std::make_unique<accessor_type>(container));
             }
             anlStrongAssert(size_flags == resizable || accessors.size() == size_flags);
         }
@@ -108,11 +108,11 @@ namespace Model
     template<auto index_v, typename accessor_t, int flags_v, size_t size_v>
     using Acsr = AcsrImp<decltype(index_v), index_v, accessor_t, flags_v, size_v>;
     
-    //! @brief The container type for a set of attributes
+    //! @brief The container of a data model of attributes and accessors
     template <class ..._Tp>
     using Container = std::tuple<_Tp...>;
     
-    //! @brief The accessor a data model
+    //! @brief The accessor a container
     template<class parent_t, class container_t>
     class Accessor
     {
@@ -201,15 +201,15 @@ namespace Model
         
         //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        bool insertAccessor(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type const& model, NotificationType notification = NotificationType::synchronous)
+        bool insertAccessor(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type const& container, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
             using accessor_type = typename element_type::accessor_type;
-            static_assert(element_type::size_flags == 0, "model is not resizable");
+            static_assert(element_type::size_flags == 0, "container is not resizable");
             
-            auto accessor = std::make_unique<accessor_type>(model);
+            auto accessor = std::make_unique<accessor_type>(container);
             anlStrongAssert(accessor != nullptr);
             if(accessor == nullptr)
             {
@@ -243,7 +243,7 @@ namespace Model
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
             using accessor_type = typename element_type::accessor_type;
-            static_assert(element_type::size_flags == 0, "model is not resizable");
+            static_assert(element_type::size_flags == 0, "container is not resizable");
             
             auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
             auto backup = std::shared_ptr<accessor_type>(accessors[index].release());
@@ -317,7 +317,7 @@ namespace Model
             static_cast<parent_t*>(this)->template setAttr<type>(value, notification);
         }
         
-        //! @brief Parse the model to xml
+        //! @brief Parse the container to xml
         //! @details Only the saveable attributes are stored into the xml
         auto toXml(juce::StringRef const& name) const
         {
@@ -357,7 +357,7 @@ namespace Model
             return xml;
         }
         
-        //! @brief Parse the model from xml
+        //! @brief Parse the container from xml
         //! @details Only the saveable attributes are restored from the xml.
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification = NotificationType::synchronous)
@@ -429,10 +429,10 @@ namespace Model
             });
         }
         
-        //! @brief Copy the content from another model
-        void fromModel(container_type const& model, NotificationType notification = NotificationType::synchronous)
+        //! @brief Copy the content from another container
+        void fromContainer(container_type const& container, NotificationType notification = NotificationType::synchronous)
         {
-            detail::for_each(model, [&](auto const& d)
+            detail::for_each(container, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
                 if constexpr((element_type::flags & AttrFlag::saveable) != 0)
@@ -455,7 +455,7 @@ namespace Model
                             anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
                             if(accessors[index] != nullptr && d.accessors[index] != nullptr)
                             {
-                                accessors[index]->fromModel(d.accessors[index]->getContainer(), notification);
+                                accessors[index]->fromContainer(d.accessors[index]->getContainer(), notification);
                             }
                         }
                         if constexpr(element_type::size_flags == 0)
@@ -480,11 +480,11 @@ namespace Model
             });
         }
         
-        //! @brief Compare the content with  another model
-        bool isEquivalentTo(container_type const& model) const
+        //! @brief Compare the content with another container
+        bool isEquivalentTo(container_type const& container) const
         {
             bool result = true;
-            detail::for_each(model, [&](auto& d)
+            detail::for_each(container, [&](auto& d)
             {
                 if(result)
                 {
@@ -553,8 +553,8 @@ namespace Model
         auto getDefaultModel() const
         -> typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type
         {
-            using container_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type;
-            return container_type{};
+            using sub_ctnr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type;
+            return sub_ctnr_type{};
         }
         
     private:
