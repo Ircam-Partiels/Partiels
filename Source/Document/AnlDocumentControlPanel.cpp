@@ -43,7 +43,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             {
                 return;
             }
-            Analyzer::performAnalysis(anlAcsr, *audioFormatReader.get());
+            Analyzer::performAnalysis(mAccessor.getAccessors<AttrType::analyzers>().back(), *audioFormatReader.get());
         };
         
         juce::DialogWindow::LaunchOptions launchOption;

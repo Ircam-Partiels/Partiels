@@ -217,7 +217,8 @@ namespace Model
             }
             
             auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
-            auto it = accessors.insert(accessors.begin() + std::max(index, static_cast<long>(accessors.size())), std::move(accessor));
+            index = index < 0 ? static_cast<long>(accessors.size()) : std::max(index, static_cast<long>(accessors.size()));
+            auto it = accessors.insert(accessors.begin() + index, std::move(accessor));
             if(it != accessors.end())
             {
                 if constexpr((element_type::flags & AttrFlag::notifying) != 0)
