@@ -21,7 +21,7 @@ namespace Model
     
     static constexpr int resizable = 0;
     
-    //! @brief The private implementation of an attribute of a model
+    //! @brief The private implementation of an attribute
     template<typename enum_t, enum_t index_v, typename value_t, int flags_v>
     struct AttrImpl
     {
@@ -39,9 +39,9 @@ namespace Model
         value_type value;
     };
     
-    //! @brief The private implementation of sub model
+    //! @brief The private implementation of sub container
     template<typename enum_t, enum_t index_v, typename model_t, typename accessor_t, int flags_v, size_t size_flags_v>
-    struct SubModelImp
+    struct AcsrImp
     {
         static_assert(std::is_enum<enum_t>::value, "enum_t must be an enum");
         static_assert(std::is_same<std::underlying_type_t<enum_t>, size_t>::value, "enum_t underlying type must be size_t");
@@ -56,7 +56,7 @@ namespace Model
         static size_t const size_flags = size_flags_v;
         std::vector<std::unique_ptr<accessor_type>> accessors;
         
-        SubModelImp()
+        AcsrImp()
         {
             accessors.reserve(size_flags);
             for(size_t i = 0; i < size_flags; ++i)
@@ -65,7 +65,7 @@ namespace Model
             }
         }
         
-        SubModelImp(SubModelImp const& other)
+        AcsrImp(AcsrImp const& other)
         {
             auto const& acsrs = other.accessors;
             anlStrongAssert(size_flags == resizable || acsrs.size() == size_flags);
@@ -84,12 +84,12 @@ namespace Model
             }
         }
         
-        SubModelImp(SubModelImp&& other) : accessors(std::move(other.accessors))
+        AcsrImp(AcsrImp&& other) : accessors(std::move(other.accessors))
         {
             anlStrongAssert(size_flags == resizable || accessors.size() == size_flags);
         }
         
-        SubModelImp(std::initializer_list<model_type> models)
+        AcsrImp(std::initializer_list<model_type> models)
         {
             accessors.reserve(models.size());
             for(auto model : models)
@@ -106,7 +106,7 @@ namespace Model
     
     //! @brief The template implementation of an attribute of a model
     template<auto index_v, typename model_t, typename accessor_t, int flags_v, size_t size_v>
-    using Model = SubModelImp<decltype(index_v), index_v, model_t, accessor_t, flags_v, size_v>;
+    using Acsr = AcsrImp<decltype(index_v), index_v, model_t, accessor_t, flags_v, size_v>;
     
     //! @brief The container type for a set of attributes
     template <class ..._Tp>
@@ -199,7 +199,7 @@ namespace Model
         }
         
         template <enum_type type>
-        void insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type const& model, NotificationType notification = NotificationType::synchronous)
+        bool insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type const& model, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
@@ -211,7 +211,7 @@ namespace Model
             anlStrongAssert(accessor != nullptr);
             if(accessor == nullptr)
             {
-                return;
+                return false;
             }
             
             auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
@@ -230,6 +230,7 @@ namespace Model
                     }, notification);
                 }
             }
+            return true;
         }
         
         template <enum_type type>
