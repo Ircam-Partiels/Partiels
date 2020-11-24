@@ -30,9 +30,12 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
         juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
         
-        mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {juce::Colours::black}, {}, {}});
-        
-        Analyzer::PropertyPanel panel(mAccessor.getAccessors<AttrType::analyzers>().back());
+        if(!mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {juce::Colours::black}, {}, {}}))
+        {
+            return;
+        }
+        auto& anlAcsr = mAccessor.getAccessors<AttrType::analyzers>().back();
+        Analyzer::PropertyPanel panel(anlAcsr);
         panel.onAnalyse = [&]()
         {
             auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
@@ -40,7 +43,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
             {
                 return;
             }
-            //Analyzer::performAnalysis(mSections[i]->accessor, *audioFormatReader.get());
+            Analyzer::performAnalysis(anlAcsr, *audioFormatReader.get());
         };
         
         juce::DialogWindow::LaunchOptions launchOption;

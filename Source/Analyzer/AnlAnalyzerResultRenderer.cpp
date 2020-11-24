@@ -63,14 +63,14 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessors<AttrType::zoom>()[0].get().addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AttrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::ResultRenderer::~ResultRenderer()
 {
     mZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessors<AttrType::zoom>()[0].get().removeListener(mZoomListener);
+    mAccessor.getAccessor<AttrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -124,7 +124,7 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     else if(results.front().values.size() == 1)
     {
         g.setColour(mAccessor.getValue<AttrType::colour>());
-        auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        auto const valueRange = mAccessor.getAccessor<AttrType::zoom>(0).getValue<Zoom::AttrType::visibleRange>();
         auto valueToPixel = [&](float const value)
         {
             auto const ratio = 1.0f - (value - valueRange.getStart()) / valueRange.getLength();
@@ -154,8 +154,8 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     {
         auto image = mImage;
         
-        auto const globalValueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::globalRange>();
-        auto const vRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        auto const globalValueRange = mAccessor.getAccessor<AttrType::zoom>(0).getValue<Zoom::AttrType::globalRange>();
+        auto const vRange = mAccessor.getAccessor<AttrType::zoom>(0).getValue<Zoom::AttrType::visibleRange>();
         auto const globalTimeRange = mZoomAccessor.getValue<Zoom::AttrType::globalRange>();
         
         auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - vRange.getEnd(), globalValueRange.getEnd() - vRange.getStart());
@@ -203,7 +203,7 @@ void Analyzer::ResultRenderer::mouseMove(juce::MouseEvent const& event)
     }
     else
     {
-        auto const valueRange = mAccessor.getAccessors<AttrType::zoom>()[0].get().getValue<Zoom::AttrType::visibleRange>();
+        auto const valueRange = mAccessor.getAccessor<AttrType::zoom>(0).getValue<Zoom::AttrType::visibleRange>();
         for(size_t i = 0; i < results.size(); i++)
         {
             if(results[i].timestamp >= rtr)

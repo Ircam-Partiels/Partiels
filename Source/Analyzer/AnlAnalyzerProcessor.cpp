@@ -92,7 +92,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
     // Update the zoom range
     if(numDimension == 1)
     {
-        auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
+        auto& zoomAcsr = accessor.getAccessor<AttrType::zoom>(0);
         zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
         zoomAcsr.setValue<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
         zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, 1.9}, NotificationType::synchronous);
@@ -105,7 +105,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
         });
         auto const min = static_cast<double>(pair.first->values[0]);
         auto const max = static_cast<double>(pair.second->values[0]);
-        auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
+        auto& zoomAcsr = accessor.getAccessor<AttrType::zoom>(0);
         zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
         zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
     }
@@ -116,7 +116,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
             return lhs.values.size() < rhs.values.size();
         });
         
-        auto& zoomAcsr = accessor.getAccessors<AttrType::zoom>()[0].get();
+        auto& zoomAcsr = accessor.getAccessor<AttrType::zoom>(0);
         zoomAcsr.setValue<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
         zoomAcsr.setValue<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
         zoomAcsr.setValue<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);

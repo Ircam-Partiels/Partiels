@@ -24,7 +24,7 @@ Document::MainPanel::MainPanel(Accessor& accessor)
                 
                 for(size_t i = mSections.size(); i < anlAcsrs.size(); ++i)
                 {
-                    auto section = std::make_unique<Section>(anlAcsrs[i], mAccessor.getAccessors<AttrType::timeZoom>()[0]);
+                    auto section = std::make_unique<Section>(anlAcsrs[i], mAccessor.getAccessor<AttrType::timeZoom>(0));
                     anlWeakAssert(section != nullptr);
                     if(section != nullptr)
                     {
