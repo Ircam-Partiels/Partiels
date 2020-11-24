@@ -30,7 +30,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
         juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
         
-        if(!mAccessor.insertModel<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {juce::Colours::black}, {}, {}}))
+        if(!mAccessor.insertAccessor<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {juce::Colours::black}, {}, {}}))
         {
             return;
         }
@@ -91,7 +91,7 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
                     {
                         mSections[i]->thumbnail.onRemove = [this, i]()
                         {
-                            mAccessor.eraseModel<AttrType::analyzers>(i, NotificationType::synchronous);
+                            mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);
                         };
                         
                         mSections[i]->thumbnail.onRelaunch = [this, i]()

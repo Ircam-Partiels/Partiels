@@ -190,6 +190,7 @@ namespace Model
             return *std::get<static_cast<size_t>(type)>(mData).accessors[index].get();
         }
         
+        //! @brief Gets an accessor of a container
         template <enum_type type>
         auto const& getAccessor(size_t index) const noexcept
         {
@@ -198,8 +199,9 @@ namespace Model
             return *std::get<static_cast<size_t>(type)>(mData).accessors[index].get();
         }
         
+        //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        bool insertModel(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type const& model, NotificationType notification = NotificationType::synchronous)
+        bool insertAccessor(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::model_type const& model, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
@@ -233,8 +235,9 @@ namespace Model
             return true;
         }
         
+        //! @brief Erase an accessor from the container
         template <enum_type type>
-        void eraseModel(size_t index, NotificationType notification = NotificationType::synchronous)
+        void eraseAccessor(size_t index, NotificationType notification = NotificationType::synchronous)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::model) != 0, "element is not a model");
@@ -388,7 +391,7 @@ namespace Model
                             while(accessors.size() > childs.size())
                             {
                                 auto const index = accessors.size() - 1;
-                                eraseModel<attr_type>(index);
+                                eraseAccessor<attr_type>(index);
                             }
                         }
                         for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
@@ -404,10 +407,16 @@ namespace Model
                             while(childs.size() > accessors.size())
                             {
                                 auto const index = accessors.size();
-                                insertModel<attr_type>(static_cast<long>(index), static_cast<parent_t*>(this)->template getDefaultModel<attr_type>());
-                                if(accessors[index] != nullptr)
+                                if(insertAccessor<attr_type>(static_cast<long>(index), static_cast<parent_t*>(this)->template getDefaultModel<attr_type>()))
                                 {
-                                    accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
+                                    if(accessors[index] != nullptr)
+                                    {
+                                        accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
+                                    }
+                                }
+                                else
+                                {
+                                    anlStrongAssert(false && "allocation failed");
                                 }
                             }
                         }
@@ -438,7 +447,7 @@ namespace Model
                             while(accessors.size() > d.accessors.size())
                             {
                                 auto const index = accessors.size() - 1;
-                                eraseModel<attr_type>(index);
+                                eraseAccessor<attr_type>(index);
                             }
                         }
                         for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
@@ -457,7 +466,7 @@ namespace Model
                                 anlStrongAssert(d.accessors[index] != nullptr);
                                 if(d.accessors[index] != nullptr)
                                 {
-                                    insertModel<attr_type>(static_cast<long>(index), d.accessors[index]->getContainer());
+                                    insertAccessor<attr_type>(static_cast<long>(index), d.accessors[index]->getContainer());
                                 }
                             }
                         }
