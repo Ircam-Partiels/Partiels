@@ -99,7 +99,9 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h)
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
 
 file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp

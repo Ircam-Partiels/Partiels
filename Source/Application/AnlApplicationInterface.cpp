@@ -7,8 +7,7 @@ Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal)
-, mDocumentControlPanel(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
-, mDocumentMainPanel(Instance::get().getDocumentAccessor())
+, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
 , mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal)
 {
     mZoomTimeRuler.setPrimaryTickInterval(0);
@@ -42,9 +41,7 @@ Application::Interface::Interface()
     
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mZoomTimeRulerSeparator);
-    addAndMakeVisible(mDocumentControlPanel);
-    addAndMakeVisible(mDocumentControlPanelSeparator);
-    addAndMakeVisible(mDocumentMainPanel);
+    addAndMakeVisible(mDocumentSection);
     
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mToolTipDisplay);
@@ -63,7 +60,7 @@ Application::Interface::Interface()
                 
                 mDocumentTransport.setEnabled(isDocumentEnable);
                 mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
-                mDocumentControlPanel.setEnabled(isDocumentEnable);
+                mDocumentSection.setEnabled(isDocumentEnable);
             }
                 break;
                 
@@ -111,10 +108,7 @@ void Application::Interface::resized()
         mZoomTimeRulerSeparator.setBounds(top.removeFromBottom(separatorSize));
         top.removeFromLeft(240);
         mZoomTimeRuler.setBounds(top);
-        
-        mDocumentControlPanel.setBounds(bounds.removeFromLeft(240));
-        mDocumentControlPanelSeparator.setBounds(bounds.removeFromLeft(2));
-        mDocumentMainPanel.setBounds(bounds);
+        mDocumentSection.setBounds(bounds);
     }
 }
 

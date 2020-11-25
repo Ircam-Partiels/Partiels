@@ -1,6 +1,7 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "../Layout/AnlLayout.h"
 #include "../Zoom/AnlZoomRuler.h"
+#include "../Document/AnlDocumentSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,13 +9,19 @@ Application::LookAndFeel::LookAndFeel()
 {
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
     setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, juce::Colours::black);
-    setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
     
-    setColour(Zoom::Ruler::backgroundColourId, juce::Colours::transparentBlack);
+    auto const grey = juce::Colours::grey;
+    setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
+    setColour(Layout::StrechableContainer::Section::resizerActiveColourId, grey.brighter());
+    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, grey.brighter());
+    
+    setColour(Zoom::Ruler::backgroundColourId, grey);
     setColour(Zoom::Ruler::tickColourId, juce::Colours::black);
     setColour(Zoom::Ruler::textColourId, juce::Colours::white);
     setColour(Zoom::Ruler::anchorColourId, juce::Colours::red);
     setColour(Zoom::Ruler::selectionColourId, juce::Colours::blue);
+    
+    setColour(Document::Section::backgroundColourId, juce::Colours::black);
     
     // juce::ComboBox::LookAndFeelMethods
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);

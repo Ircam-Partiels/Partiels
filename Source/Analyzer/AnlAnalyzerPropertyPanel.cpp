@@ -28,8 +28,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 
                 mPluginName.entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
+                auto const selectedFeature = acsr.getAttr<AttrType::feature>();
                 auto const outputDescriptors = instance->getOutputDescriptors();
-                anlWeakAssert(!outputDescriptors.empty());
+                anlWeakAssert(outputDescriptors.size() > selectedFeature);
                 int itemId = 0;
                 mPluginName.entry.setEnabled(outputDescriptors.size() > 1);
                 mFeatures.entry.clear();
@@ -37,7 +38,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 {
                     mFeatures.entry.addItem(descriptor.name, ++itemId);
                 }
-                auto const selectedFeature = acsr.getAttr<AttrType::feature>();
                 mFeatures.entry.setSelectedItemIndex(static_cast<int>(selectedFeature));
                 
                 auto getParameterTextValue = [](Vamp::Plugin::ParameterDescriptor const& descriptor, float pvalue) -> juce::String
@@ -119,7 +119,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mPluginName.entry.setEnabled(false);
     mFeatures.callback = [&](juce::ComboBox const& entry)
     {
-        mAccessor.setAttr<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()));
+        mAccessor.setAttr<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()), NotificationType::synchronous);
     };
     mAnalyse.callback = [&](juce::TextButton const&)
     {

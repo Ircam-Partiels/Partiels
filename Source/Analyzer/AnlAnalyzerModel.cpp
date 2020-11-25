@@ -23,11 +23,17 @@ void XmlParser::toXml<Analyzer::Result>(juce::XmlElement& xml, juce::Identifier 
         }
         if(value.values.size() == 1)
         {
-            child->setAttribute("value", value.values[0]);
+            child->setAttribute("value", static_cast<double>(value.values[0]));
         }
         else if(value.values.size() > 1)
         {
-            //XmlParser::toXml(*child.get(), "values", value.values);
+//            juce::StringArray array;
+//            array.ensureStorageAllocated(static_cast<int>(value.values.size()));
+//            for(auto const& v : value.values)
+//            {
+//                array.add(juce::String(v));
+//            }
+//            child->setAttribute("values", array.joinIntoString(","));
         }
         xml.addChildElement(child.release());
     }
@@ -63,7 +69,17 @@ auto XmlParser::fromXml<Analyzer::Result>(juce::XmlElement const& xml, juce::Ide
     }
     if(child->hasAttribute("value"))
     {
-        value.values = {static_cast<float>(xml.getDoubleAttribute("value"))};
+        value.values = {static_cast<float>(child->getDoubleAttribute("value"))};
+    }
+    else if(child->hasAttribute("values"))
+    {
+        juce::StringArray array;
+        auto const size = array.addTokens(child->getStringAttribute("values"), ",", "");
+        value.values.reserve(static_cast<size_t>(size));
+        for(auto const& str : array)
+        {
+            value.values.push_back(str.getFloatValue());
+        }
     }
     return value;
 }

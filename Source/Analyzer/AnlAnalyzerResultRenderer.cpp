@@ -27,6 +27,39 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
                 return;
             }
             
+            auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
+            auto const numDimension = results.front().values.size() + 1;
+            
+            // Update the zoom range
+            if(numDimension == 1)
+            {
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
+            }
+            else if(numDimension == 2)
+            {
+                auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+                {
+                    return lhs.values[0] < rhs.values[0];
+                });
+                auto const min = static_cast<double>(pair.first->values[0]);
+                auto const max = static_cast<double>(pair.second->values[0]);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
+            }
+            else
+            {
+                auto it = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+                                           {
+                    return lhs.values.size() < rhs.values.size();
+                });
+                
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
+            }
+            
             if(results.front().values.size() > 1)
             {
                 auto const witdh = static_cast<int>(results.size());
@@ -91,6 +124,8 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         return;
     }
     
+    auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
+    auto const globalValueRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     
     auto const realTimeRange = juce::Range<Vamp::RealTime>{Vamp::RealTime::fromSeconds(timeRange.getStart()), Vamp::RealTime::fromSeconds(timeRange.getEnd())};
@@ -137,24 +172,24 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         {
             auto const next = i + resultIncrement;
             auto const isVisible = realTimeRange.contains(results[i].timestamp) || (next < results.size() && realTimeRange.contains(results[next].timestamp));
-            if(isVisible)
+            
+            auto const x = timeToPixel(results[i].timestamp);
+            juce::Point<float> const npt{static_cast<float>(x), static_cast<float>(valueToPixel(results[i].values[0]))};
+            if(isVisible && i > 0)
             {
-                auto const x = timeToPixel(results[i].timestamp);
-                juce::Point<float> const npt{static_cast<float>(x), static_cast<float>(valueToPixel(results[i].values[0]))};
                 g.drawLine({pt, npt});
-                pt = npt;
             }
             else if(results[i].timestamp >= realTimeRange.getEnd())
             {
                 break;
             }
+            pt = npt;
         }
     }
     else
     {
         auto image = mImage;
         
-        auto const globalValueRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::globalRange>();
         auto const vRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         

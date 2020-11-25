@@ -8,6 +8,7 @@
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentControlPanel.h"
 #include "../Document/AnlDocumentMainPanel.h"
+#include "../Document/AnlDocumentSection.h"
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "../Zoom/AnlZoomRuler.h"
 
@@ -40,9 +41,10 @@ namespace Application
         // Main
         Zoom::Ruler mZoomTimeRuler;
         Tools::ColouredPanel mZoomTimeRulerSeparator;
-        Document::ControlPanel mDocumentControlPanel;
-        Tools::ColouredPanel mDocumentControlPanelSeparator;
-        Document::MainPanel mDocumentMainPanel;
+        Document::Section mDocumentSection;
+//        Document::ControlPanel mDocumentControlPanel;
+//        Tools::ColouredPanel mDocumentControlPanelSeparator;
+//        Document::MainPanel mDocumentMainPanel;
         
         //Footer
         Tools::ColouredPanel mBottomSeparator;

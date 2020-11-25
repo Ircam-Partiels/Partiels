@@ -62,6 +62,7 @@ namespace Application
             , {0.0}
             , {Zoom::Container{{juce::Range<double>{0.0, 47.0}}, {0.01}, {juce::Range<double>{0.0, 47.0}}}}
             , {}
+            , {}
         };
         Document::Accessor mDocumentAccessor {mDocumentContainer};
         Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};

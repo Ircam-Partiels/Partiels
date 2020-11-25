@@ -3,6 +3,7 @@
 #include "../Tools/AnlModel.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
 #include "../Zoom/AnlZoomModel.h"
+#include "../Layout/AnlLayoutStrechableContainerSection.h"
 #include "../Tools/AnlBroadcaster.h"
 
 ANALYSE_FILE_BEGIN
@@ -17,6 +18,7 @@ namespace Document
         isPlaybackStarted,
         playheadPosition,
         timeZoom,
+        layout,
         analyzers
     };
     
@@ -32,6 +34,7 @@ namespace Document
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     , Model::Acsr<AttrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    , Model::Acsr<AttrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
