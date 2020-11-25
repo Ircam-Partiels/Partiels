@@ -100,7 +100,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                         panels.push_back(mColour);
                     }
                 }
-                panels.push_back(mAnalyse);
                 
                 mPropertyLayout.setPanels(panels, Tools::PropertyPanelBase::left);
                 setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
@@ -132,6 +131,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     
     mColour.callback = [&](juce::TextButton const&)
     {
+        mColourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
         juce::DialogWindow::showModalDialog("Set Colour", &mColourSelector, this, juce::Colours::black, true);
     };
     mColourMap.callback = [&](juce::ComboBox const& entry)
@@ -143,6 +143,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mColourMap.entry.addItemList({"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, 1);
     
     addAndMakeVisible(mPropertyLayout);
+    addAndMakeVisible(mBottomSeparator);
+    addAndMakeVisible(mAnalyse);
     setSize(300, 200);
     mColourSelector.setSize(400, 300);
     mColourSelector.addChangeListener(this);
@@ -156,7 +158,10 @@ Analyzer::PropertyPanel::~PropertyPanel()
 
 void Analyzer::PropertyPanel::resized()
 {
-    mPropertyLayout.setBounds(getLocalBounds());
+    auto bounds = getLocalBounds();
+    mAnalyse.setBounds(bounds.removeFromBottom(mAnalyse.getHeight()));
+    mBottomSeparator.setBounds(bounds.removeFromBottom(2));
+    mPropertyLayout.setBounds(bounds);
 }
 
 void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* source)

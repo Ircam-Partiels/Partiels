@@ -2,6 +2,7 @@
 
 #include "AnlAnalyzerModel.h"
 #include "../Tools/AnlPropertyLayout.h"
+#include "../Tools/AnlColouredPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -35,6 +36,7 @@ namespace Analyzer
         Tools::PropertyTitle mGraphicalParameters {juce::translate("Graphical Parameters"), juce::translate("The graphical parameters of the analyzer")};
         Tools::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
         Tools::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
+        Tools::ColouredPanel mBottomSeparator;
         Tools::PropertyTextButton mAnalyse {juce::translate("Analyse"), juce::translate("Run the analysis")};
         
         Tools::PropertyLayout mPropertyLayout;
