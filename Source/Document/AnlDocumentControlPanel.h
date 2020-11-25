@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
-#include "../Tools/AnlColouredPanel.h"
+#include "../Layout/AnlLayout.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"

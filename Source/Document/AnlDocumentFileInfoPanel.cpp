@@ -7,7 +7,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
 , mAudioFormatManager(audioFormatManager)
 , mFileBasedDocument(fileBasedDocument)
 {
-    using Position = Tools::PropertyPanelBase::Positioning;
+    using Position = Layout::PropertyPanelBase::Positioning;
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
@@ -38,11 +38,11 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<Tools::PropertyLayout::PanelRef> panels;
+                std::vector<Layout::PropertyLayout::PanelRef> panels;
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
-                    auto property = std::make_unique<Tools::PropertyLabel>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
+                    auto property = std::make_unique<Layout::PropertyLabel>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
                     anlStrongAssert(property != nullptr);
                     if(property != nullptr)
                     {

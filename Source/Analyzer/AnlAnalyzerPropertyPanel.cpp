@@ -17,7 +17,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::key:
             case AttrType::feature:
             {
-                mPropertyLayout.setPanels({}, Tools::PropertyPanelBase::left);
+                mPropertyLayout.setPanels({}, Layout::PropertyPanelBase::left);
                 mProperties.clear();
                 
                 auto instance = createPlugin(acsr, 44100.0, true);
@@ -54,7 +54,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     if(auto* adapt = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
                     {
                         juce::StringArray const names {"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Blackman-Harris"};
-                        auto property = std::make_unique<Tools::PropertyComboBox>("Window Type", "The feature fo the plugin", names, static_cast<size_t>(adapt->getWindowType()), [&](juce::ComboBox const& entry)
+                        auto property = std::make_unique<Layout::PropertyComboBox>("Window Type", "The feature fo the plugin", names, static_cast<size_t>(adapt->getWindowType()), [&](juce::ComboBox const& entry)
                         {
                             using WindowType = Vamp::HostExt::PluginInputDomainAdapter::WindowType;
                             //adapt->setWindowType(static_cast<WindowType>(entry.getSelectedItemIndex()));
@@ -67,7 +67,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 auto const parameterDescriptors = instance->getParameterDescriptors();
                 for(auto const& descriptor : parameterDescriptors)
                 {
-                    auto property = std::make_unique<Tools::PropertyLabel>(descriptor.name, descriptor.description);
+                    auto property = std::make_unique<Layout::PropertyLabel>(descriptor.name, descriptor.description);
                     if(property != nullptr)
                     {
                         auto const pvalue = instance->getParameter(descriptor.identifier);
@@ -76,7 +76,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 
-                std::vector<Tools::PropertyLayout::PanelRef> panels;
+                std::vector<Layout::PropertyLayout::PanelRef> panels;
                 panels.push_back(mPluginName);
                 panels.push_back(mFeatures);
                 if(!mProperties.empty())
@@ -101,7 +101,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 
-                mPropertyLayout.setPanels(panels, Tools::PropertyPanelBase::left);
+                mPropertyLayout.setPanels(panels, Layout::PropertyPanelBase::left);
                 setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
                 resized();
             }

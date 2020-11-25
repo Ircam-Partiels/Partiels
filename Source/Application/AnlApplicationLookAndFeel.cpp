@@ -1,6 +1,5 @@
 #include "AnlApplicationLookAndFeel.h"
-#include "../Tools/AnlPropertyLayout.h"
-#include "../Tools/AnlColouredPanel.h"
+#include "../Layout/AnlLayout.h"
 #include "../Zoom/AnlZoomRuler.h"
 
 ANALYSE_FILE_BEGIN
@@ -9,7 +8,7 @@ Application::LookAndFeel::LookAndFeel()
 {
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
     setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, juce::Colours::black);
-    setColour(Tools::PropertyLayout::ColourIds::separatorColourId, juce::Colours::transparentBlack);
+    setColour(Layout::PropertyLayout::ColourIds::separatorColourId, juce::Colours::transparentBlack);
     
     setColour(Zoom::Ruler::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Zoom::Ruler::tickColourId, juce::Colours::black);
