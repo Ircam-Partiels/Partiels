@@ -52,7 +52,9 @@ file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.h)
+    ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.h
+    ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.h)
 
 file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomModel.cpp

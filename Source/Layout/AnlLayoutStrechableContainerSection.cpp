@@ -1,17 +1,14 @@
+#include "AnlLayoutStrechableContainerSection.h"
 
-#include "ilf_LayoutManagerStrechableContainerView.h"
-#include <numeric>
+ANALYSE_FILE_BEGIN
 
-ILF_WARNING_BEGIN
-ILF_NAMESPACE_BEGIN
-
-LayoutManager::Strechable::Container::View::Holder::ResizerBar::ResizerBar(Holder& owner)
+Layout::StrechableContainer::Section::Holder::ResizerBar::ResizerBar(Holder& owner)
 : mOwner(owner)
 {
     setRepaintsOnMouseActivity(true);
 }
 
-void LayoutManager::Strechable::Container::View::Holder::ResizerBar::paint(juce::Graphics& g)
+void Layout::StrechableContainer::Section::Holder::ResizerBar::paint(juce::Graphics& g)
 {
     auto const isVertical = mOwner.mOwner.mOrientation == Orientation::vertical;
     setMouseCursor(isVertical ? juce::MouseCursor::UpDownResizeCursor : juce::MouseCursor::LeftRightResizeCursor);
@@ -25,30 +22,30 @@ void LayoutManager::Strechable::Container::View::Holder::ResizerBar::paint(juce:
     }
 }
 
-void LayoutManager::Strechable::Container::View::Holder::ResizerBar::mouseDown(juce::MouseEvent const& event)
+void Layout::StrechableContainer::Section::Holder::ResizerBar::mouseDown(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     auto const isVertical = mOwner.mOwner.mOrientation == Orientation::vertical;
     mSavedSize = isVertical ? mOwner.getHeight() : mOwner.getWidth();
 }
 
-void LayoutManager::Strechable::Container::View::Holder::ResizerBar::mouseDrag(juce::MouseEvent const& event)
+void Layout::StrechableContainer::Section::Holder::ResizerBar::mouseDrag(juce::MouseEvent const& event)
 {
     auto const isVertical = mOwner.mOwner.mOrientation == Orientation::vertical;
     auto const offset = isVertical ? event.getDistanceFromDragStartY() : event.getDistanceFromDragStartX();
     auto const newSize = mSavedSize + offset;
     auto const index = mOwner.mIndex;
-    auto& ctrl = mOwner.mOwner.mController;
-    auto sizes = ctrl.getSizes();
-    ilfStrongAssert(index < sizes.size());
+    auto& acsr = mOwner.mOwner.mAccessor;
+    auto sizes = acsr.getAttr<AttrType::sizes>();
+    anlStrongAssert(index < sizes.size());
     if(index < sizes.size())
     {
         sizes[index] = std::max(mOwner.mMinimumSize + 2, newSize);
-        ctrl.setSizes(sizes, juce::NotificationType::sendNotification);
+        acsr.setAttr<AttrType::sizes>(sizes, NotificationType::synchronous);
     }
 }
     
-LayoutManager::Strechable::Container::View::Holder::Holder(View& owner, size_t index)
+Layout::StrechableContainer::Section::Holder::Holder(Section& owner, size_t index)
 : mOwner(owner)
 , mIndex(index)
 , mResizer(*this)
@@ -56,7 +53,7 @@ LayoutManager::Strechable::Container::View::Holder::Holder(View& owner, size_t i
     addAndMakeVisible(mResizer);
 }
 
-void LayoutManager::Strechable::Container::View::Holder::resized()
+void Layout::StrechableContainer::Section::Holder::resized()
 {
     auto bounds = getLocalBounds();
     auto const isVertical = mOwner.mOrientation == Orientation::vertical;
@@ -67,7 +64,7 @@ void LayoutManager::Strechable::Container::View::Holder::resized()
     }
 }
 
-void LayoutManager::Strechable::Container::View::Holder::setContent(juce::Component* content, int minimumSize)
+void Layout::StrechableContainer::Section::Holder::setContent(juce::Component* content, int minimumSize)
 {
     if(mContent != content)
     {
@@ -82,40 +79,61 @@ void LayoutManager::Strechable::Container::View::Holder::setContent(juce::Compon
     }
 }
 
-LayoutManager::Strechable::Container::View::View(Controller& controller, Orientation orientation)
-: mController(controller)
+Layout::StrechableContainer::Section::Section(Accessor& acessor, Orientation orientation)
+: mAccessor(acessor)
 , mOrientation(orientation)
 {
+    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::sizes:
+            {
+                auto const sizes = acsr.getAttr<AttrType::sizes>();
+                mHolders.reserve(sizes.size());
+                for(size_t index = mHolders.size(); index < sizes.size(); ++index)
+                {
+                    auto holder = std::make_unique<Holder>(*this, index);
+                    if(holder != nullptr)
+                    {
+                        mInnerContainer.addAndMakeVisible(holder.get());
+                    }
+                    mHolders.push_back(std::move(holder));
+                }
+                mHolders.resize(sizes.size());
+                resized();
+            }
+                break;
+        }
+    };
     auto const isVertical = mOrientation == Orientation::vertical;
     mViewport.setScrollBarsShown(isVertical, !isVertical);
     mViewport.setViewedComponent(&mInnerContainer, false);
     addAndMakeVisible(mViewport);
-    mController.addListener(this, juce::NotificationType::sendNotification);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-LayoutManager::Strechable::Container::View::~View()
+Layout::StrechableContainer::Section::~Section()
 {
-    mController.removeListener(this);
+    mAccessor.removeListener(mListener);
 }
 
-LayoutManager::Strechable::Container::View::Orientation LayoutManager::Strechable::Container::View::getOrientation() const
+Layout::StrechableContainer::Section::Orientation Layout::StrechableContainer::Section::getOrientation() const
 {
     return mOrientation;
 }
 
-void LayoutManager::Strechable::Container::View::setContent(size_t index, juce::Component* content, int minimumSize)
+void Layout::StrechableContainer::Section::setContent(size_t index, juce::Component* content, int minimumSize)
 {
-    using AttributeType = Controller::Listener::AttributeType;
-    auto const sizes = mController.getSizes();
-    layoutManagerStrechableContainerAttributeChanged(&mController, AttributeType::sizes, {sizes.data(), sizes.size()});
-    ilfStrongAssert(index < mHolders.size() && mHolders[index] != nullptr);
+    mListener.onChanged(mAccessor, AttrType::sizes);
+    anlStrongAssert(index < mHolders.size() && mHolders[index] != nullptr);
     if(index < mHolders.size() && mHolders[index] != nullptr)
     {
         mHolders[index]->setContent(content, minimumSize);
     }
 }
 
-void LayoutManager::Strechable::Container::View::setOrientation(Orientation orientation)
+void Layout::StrechableContainer::Section::setOrientation(Orientation orientation)
 {
     mOrientation = orientation;
     for(auto& holder : mHolders)
@@ -130,10 +148,10 @@ void LayoutManager::Strechable::Container::View::setOrientation(Orientation orie
     resized();
 }
 
-void LayoutManager::Strechable::Container::View::resized()
+void Layout::StrechableContainer::Section::resized()
 {
     auto const isVertical = mOrientation == Orientation::vertical;
-    auto const sizes = mController.getSizes();
+    auto const sizes = mAccessor.getAttr<AttrType::sizes>();
     
     auto const savedViewportPosition = mViewport.getViewPosition();
     mViewport.setBounds(getLocalBounds());
@@ -141,10 +159,10 @@ void LayoutManager::Strechable::Container::View::resized()
     mInnerContainer.setBounds(0, 0, isVertical ? getWidth() : fullSize, isVertical ? fullSize : getHeight());
     
     auto bounds = mInnerContainer.getLocalBounds();
-    ilfStrongAssert(sizes.size() == mHolders.size());
+    anlStrongAssert(sizes.size() == mHolders.size());
     for(size_t index = 0; index < mHolders.size() && index < sizes.size(); ++index)
     {
-        ilfStrongAssert(mHolders[index] != nullptr);
+        anlStrongAssert(mHolders[index] != nullptr);
         if(mHolders[index] != nullptr)
         {
             auto const size = sizes[index];
@@ -154,31 +172,4 @@ void LayoutManager::Strechable::Container::View::resized()
     mViewport.setViewPosition(savedViewportPosition);
 }
 
-void LayoutManager::Strechable::Container::View::layoutManagerStrechableContainerAttributeChanged(Controller* controller, Controller::Listener::AttributeType type, juce::var const& value)
-{
-    juce::ignoreUnused(controller, value);
-    using AttributeType = Controller::Listener::AttributeType;
-    switch(type)
-    {
-        case AttributeType::sizes:
-        {
-            auto const sizes = mController.getSizes();
-            mHolders.reserve(sizes.size());
-            for(size_t index = mHolders.size(); index < sizes.size(); ++index)
-            {
-                auto holder = std::make_unique<Holder>(*this, index);
-                if(holder != nullptr)
-                {
-                    mInnerContainer.addAndMakeVisible(holder.get());
-                }
-                mHolders.push_back(std::move(holder));
-            }
-            mHolders.resize(sizes.size());
-            resized();
-        }
-            break;
-    }
-}
-
-ILF_NAMESPACE_END
-ILF_WARNING_END
+ANALYSE_FILE_END
