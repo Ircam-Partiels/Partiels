@@ -4,9 +4,9 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Tools
+namespace Layout
 {
-    class PropertyLayout
+    class PropertySection
     : public juce::Component
     {
     public:
@@ -19,8 +19,8 @@ namespace Tools
         using PanelRef = std::reference_wrapper<PropertyPanelBase>;
         using Positioning = PropertyPanelBase::Positioning;
         
-        PropertyLayout();
-        ~PropertyLayout() override = default;
+        PropertySection();
+        ~PropertySection() override = default;
         
         // juce::Component
         void resized() override;

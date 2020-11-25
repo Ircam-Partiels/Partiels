@@ -38,7 +38,7 @@ namespace Analyzer
         Tools::ColouredPanel mBottomSeparator;
         Layout::PropertyTextButton mAnalyse {juce::translate("Analyse"), juce::translate("Run the analysis")};
         
-        Layout::PropertyLayout mPropertyLayout;
+        Layout::PropertySection mPropertySection;
     
         juce::ColourSelector mColourSelector;
         

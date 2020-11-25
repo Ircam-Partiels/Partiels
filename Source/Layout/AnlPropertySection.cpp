@@ -1,20 +1,20 @@
-#include "AnlPropertyLayout.h"
+#include "AnlPropertySection.h"
 
 ANALYSE_FILE_BEGIN
 
-void Layout::PropertyLayout::Separator::paint(juce::Graphics& g)
+void Layout::PropertySection::Separator::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::separatorColourId, true));
 }
 
-Layout::PropertyLayout::PropertyLayout()
+Layout::PropertySection::PropertySection()
 {
     mViewport.setScrollBarThickness(6);
     mViewport.setViewedComponent(&mContent, false);
     addAndMakeVisible(mViewport);
 }
 
-void Layout::PropertyLayout::resized()
+void Layout::PropertySection::resized()
 {
     auto constexpr separatorSize = 2;
     auto constexpr maxSize = std::numeric_limits<int>::max();
@@ -35,7 +35,7 @@ void Layout::PropertyLayout::resized()
     mViewport.setBounds(getLocalBounds());
 }
 
-void Layout::PropertyLayout::setPanels(std::vector<PanelRef> const& panels, Positioning positioning)
+void Layout::PropertySection::setPanels(std::vector<PanelRef> const& panels, Positioning positioning)
 {
     mContent.removeAllChildren();
     mPositioning = positioning;

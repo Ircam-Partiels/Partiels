@@ -51,8 +51,8 @@ file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlColouredPanel.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertyLayout.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertyLayout.h)
+    ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.h)
 
 file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomModel.cpp

@@ -17,7 +17,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::key:
             case AttrType::feature:
             {
-                mPropertyLayout.setPanels({}, Layout::PropertyPanelBase::left);
+                mPropertySection.setPanels({}, Layout::PropertyPanelBase::left);
                 mProperties.clear();
                 
                 auto instance = createPlugin(acsr, 44100.0, true);
@@ -76,7 +76,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 
-                std::vector<Layout::PropertyLayout::PanelRef> panels;
+                std::vector<Layout::PropertySection::PanelRef> panels;
                 panels.push_back(mPluginName);
                 panels.push_back(mFeatures);
                 if(!mProperties.empty())
@@ -101,7 +101,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 
-                mPropertyLayout.setPanels(panels, Layout::PropertyPanelBase::left);
+                mPropertySection.setPanels(panels, Layout::PropertyPanelBase::left);
                 setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
                 resized();
             }
@@ -142,7 +142,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mColourMap.entry.clear();
     mColourMap.entry.addItemList({"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, 1);
     
-    addAndMakeVisible(mPropertyLayout);
+    addAndMakeVisible(mPropertySection);
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mAnalyse);
     setSize(300, 200);
@@ -161,7 +161,7 @@ void Analyzer::PropertyPanel::resized()
     auto bounds = getLocalBounds();
     mAnalyse.setBounds(bounds.removeFromBottom(mAnalyse.getHeight()));
     mBottomSeparator.setBounds(bounds.removeFromBottom(2));
-    mPropertyLayout.setBounds(bounds);
+    mPropertySection.setBounds(bounds);
 }
 
 void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* source)

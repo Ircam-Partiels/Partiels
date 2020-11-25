@@ -14,7 +14,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         {
             case AttrType::file:
             {
-                mPropertyLayout3.setPanels({}, Position::left);
+                mPropertySection3.setPanels({}, Position::left);
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
@@ -38,7 +38,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<Layout::PropertyLayout::PanelRef> panels;
+                std::vector<Layout::PropertySection::PanelRef> panels;
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
@@ -52,7 +52,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                         mMetaDataPanels.push_back(std::move(property));
                     }
                 }
-                mPropertyLayout3.setPanels(panels, Position::left);
+                mPropertySection3.setPanels(panels, Position::left);
                 resized();
             }
                 break;
@@ -65,14 +65,14 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mPropertyLayout1.setPanels({mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
-    mPropertyLayout2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
+    mPropertySection1.setPanels({mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
+    mPropertySection2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
     
-    addAndMakeVisible(mPropertyLayout1);
+    addAndMakeVisible(mPropertySection1);
     addAndMakeVisible(mSeparator1);
-    addAndMakeVisible(mPropertyLayout2);
+    addAndMakeVisible(mPropertySection2);
     addAndMakeVisible(mSeparator2);
-    addAndMakeVisible(mPropertyLayout3);
+    addAndMakeVisible(mPropertySection3);
     mFileBasedDocument.addChangeListener(this);
     changeListenerCallback(&mFileBasedDocument);
 }
@@ -93,24 +93,24 @@ void Document::FileInfoPanel::resized()
     auto const numVisibleLayout = std::min(width / (minimumWidth + separatorWidth), mMetaDataPanels.empty() ? 2 : 3);
     auto const layoutWidth = numVisibleLayout > 0 ? width / numVisibleLayout : 0;
     
-    mPropertyLayout3.setVisible(numVisibleLayout == 3);
-    mSeparator2.setVisible(mPropertyLayout3.isVisible());
-    mPropertyLayout2.setVisible(numVisibleLayout >= 2);
-    mSeparator1.setVisible(mPropertyLayout2.isVisible());
-    mPropertyLayout1.setVisible(numVisibleLayout >= 1);
+    mPropertySection3.setVisible(numVisibleLayout == 3);
+    mSeparator2.setVisible(mPropertySection3.isVisible());
+    mPropertySection2.setVisible(numVisibleLayout >= 2);
+    mSeparator1.setVisible(mPropertySection2.isVisible());
+    mPropertySection1.setVisible(numVisibleLayout >= 1);
     if(numVisibleLayout == 3)
     {
-        mPropertyLayout3.setBounds(bounds.removeFromRight(layoutWidth - separatorWidth));
+        mPropertySection3.setBounds(bounds.removeFromRight(layoutWidth - separatorWidth));
         mSeparator2.setBounds(bounds.removeFromRight(separatorWidth));
     }
     if(numVisibleLayout >= 2)
     {
-        mPropertyLayout2.setBounds(bounds.removeFromRight(layoutWidth));
+        mPropertySection2.setBounds(bounds.removeFromRight(layoutWidth));
         mSeparator1.setBounds(bounds.removeFromRight(separatorWidth));
     }
     if(numVisibleLayout >= 1)
     {
-        mPropertyLayout1.setBounds(bounds);
+        mPropertySection1.setBounds(bounds);
     }
 }
 

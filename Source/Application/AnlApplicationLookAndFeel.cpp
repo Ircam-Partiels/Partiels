@@ -8,7 +8,7 @@ Application::LookAndFeel::LookAndFeel()
 {
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
     setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, juce::Colours::black);
-    setColour(Layout::PropertyLayout::ColourIds::separatorColourId, juce::Colours::transparentBlack);
+    setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
     
     setColour(Zoom::Ruler::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Zoom::Ruler::tickColourId, juce::Colours::black);

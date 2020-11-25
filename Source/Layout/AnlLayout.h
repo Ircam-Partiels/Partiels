@@ -2,4 +2,4 @@
 
 #include "AnlColouredPanel.h"
 #include "AnlPropertyPanel.h"
-#include "AnlPropertyLayout.h"
+#include "AnlPropertySection.h"
