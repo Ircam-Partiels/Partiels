@@ -33,15 +33,6 @@ namespace Document
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
-    class Sanitizer
-    {
-    public:
-        Sanitizer() = default;
-        virtual ~Sanitizer() = default;
-        
-        virtual Zoom::range_type getGlobalRangeForFile(juce::File const& file) const = 0;
-    };
-    
     //! @todo Check if the zoom state is well initialized
     //! @todo Use a default gain to 1
     class Accessor
@@ -49,17 +40,6 @@ namespace Document
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
-        
-        void setSanitizer(Sanitizer* santizer);
-        
-        template <enum_type type, typename value_v>
-        void setAttr(value_v const& value, NotificationType notification)
-        {
-            Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
-        }
-        
-        template <>
-        void setAttr<AttrType::file, juce::File>(juce::File const& value, NotificationType notification);
         
         template <enum_type type>
         bool insertAccessor(long index, NotificationType notification)
@@ -84,9 +64,6 @@ namespace Document
             auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);
             return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::analyzers>(index, std::move(accessor), notification);
         }
-        
-    private:
-        Sanitizer* mSanitizer = nullptr;
     };
 }
 

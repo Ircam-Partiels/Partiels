@@ -12,44 +12,29 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 {
 }
 
-Zoom::range_type Document::Director::getGlobalRangeForFile(juce::File const& file) const
+void Document::Director::updated(AttrType type, NotificationType notification)
 {
-    auto const fileExtension = file.getFileExtension();
-    if(file != juce::File() && mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
+    if(type == AttrType::file)
     {
-        auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-        if(reader != nullptr)
+        auto getRange = [&]() -> Zoom::range_type
         {
-            auto const sampleRate = reader->sampleRate;
-            auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
-            return {0.0, duration};
-        }
-    }
-    return {0.0, 0.0};
-}
-
-void Document::Director::loadAudioFile(juce::File const& file, AlertType alertType)
-{
-    auto const fileExtension = file.getFileExtension();
-    if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
-    {
-        mAccessor.setAttr<AttrType::file>(file, NotificationType::synchronous);
-        auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, alertType);
-        if(reader != nullptr)
-        {
-            auto const sampleRate = reader->sampleRate;
-            auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
-            Zoom::range_type const range = {0.0, duration};
-            auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
-            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
-        }
-    }
-    else if(alertType == AlertType::window)
-    {
-        auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-        auto const title = juce::translate("File format unsupported");
-        auto const message = juce::translate("The file extension FLEX is not supported by the audio format manager.").replace("FLEX", fileExtension);
-        juce::AlertWindow::showMessageBox(icon, title, message);
+            auto const file = mAccessor.getAttr<AttrType::file>();
+            auto const fileExtension = file.getFileExtension();
+            if(file != juce::File() && mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
+            {
+                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                if(reader != nullptr)
+                {
+                    auto const sampleRate = reader->sampleRate;
+                    auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
+                    return {0.0, duration};
+                }
+            }
+            return {0.0, 0.0};
+        };
+        
+        auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(getRange(), notification);
     }
 }
 

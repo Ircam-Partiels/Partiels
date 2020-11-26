@@ -8,17 +8,16 @@ ANALYSE_FILE_BEGIN
 namespace Document
 {
     class Director
-    : public Sanitizer
+    : public Accessor::Sanitizer
     {
     public:
         Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager);
         ~Director() override = default;
         
-        void loadAudioFile(juce::File const& file, AlertType alertType);
         void addAnalysis(AlertType alertType);
         
-        // Sanitizer
-        Zoom::range_type getGlobalRangeForFile(juce::File const& file) const;
+        void updated(AttrType type, NotificationType notification) override;
+        
     private:
         
         Accessor& mAccessor;

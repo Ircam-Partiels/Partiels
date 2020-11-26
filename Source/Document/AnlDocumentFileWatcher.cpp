@@ -3,9 +3,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::FileWatcher::FileWatcher(Accessor& accessor, Director& director, juce::AudioFormatManager const& audioFormatManager)
+Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
 : mAccessor(accessor)
-, mDirector(director)
 , mAudioFormatManager(audioFormatManager)
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -57,7 +56,7 @@ void Document::FileWatcher::timerCallback()
             {
                 return;
             }
-            mDirector.loadAudioFile(fc.getResult(), AlertType::window);
+            mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
         }
     }
     auto const time = file.getLastModificationTime();
@@ -68,7 +67,7 @@ void Document::FileWatcher::timerCallback()
         auto const message = juce::translate("The audio file FLNM has been modified. Would you like to reload it?").replace("FLNM", file.getFullPathName());
         if(juce::AlertWindow::showOkCancelBox(icon, title, message))
         {
-            mDirector.loadAudioFile(file, AlertType::window);
+            mAccessor.setAttr<AttrType::file>(file, NotificationType::synchronous);
         }
     }
 }

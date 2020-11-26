@@ -115,7 +115,7 @@ void Application::Instance::openFile(juce::File const& file)
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
         mDocumentFileBased.setFile({});
-        mDocumentDirector.loadAudioFile(file, AlertType::window);
+        mDocumentAccessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
     }
     else

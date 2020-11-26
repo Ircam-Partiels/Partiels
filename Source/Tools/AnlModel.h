@@ -261,7 +261,7 @@ namespace Model
                 auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
                 if(isEquivalentTo(lvalue, value) == false)
                 {
-                    set<value_type>(lvalue, value);
+                    setValue<value_type>(lvalue, value);
                     if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([=](Listener& listener)
@@ -272,6 +272,10 @@ namespace Model
                                 listener.onChanged(*static_cast<parent_t const*>(this), type);
                             }
                         }, notification);
+                    }
+                    if(mSanitizer != nullptr)
+                    {
+                        mSanitizer->updated(type, notification);
                     }
                 }
             }
@@ -496,6 +500,23 @@ namespace Model
             return result;
         }
         
+        class Sanitizer
+        {
+        public:
+            Sanitizer() = default;
+            virtual ~Sanitizer() = default;
+            
+            virtual void updated(enum_type type, NotificationType notification)
+            {
+                juce::ignoreUnused(type, notification);
+            }
+        };
+        
+        void setSanitizer(Sanitizer* sanitizer)
+        {
+            mSanitizer = sanitizer;
+        }
+        
         class Listener
         {
         public:
@@ -611,14 +632,14 @@ namespace Model
         
         // This is a specific assignement method that manage containers and unique pointer
         template <typename T> static
-        void set(T& lhs, T const& rhs)
+        void setValue(T& lhs, T const& rhs)
         {
             if constexpr(is_specialization<T, std::vector>::value)
             {
                 lhs.resize(rhs.size());
                 for(size_t i = 0; i < lhs.size(); ++i)
                 {
-                    set(lhs[i], rhs[i]);
+                    setValue(lhs[i], rhs[i]);
                 }
             }
             else if constexpr(is_specialization<T, std::vector>::value)
@@ -629,14 +650,14 @@ namespace Model
                 });
                 for(auto const& pair : rhs)
                 {
-                    set(lhs[pair.first], pair.second);
+                    setValue(lhs[pair.first], pair.second);
                 }
             }
             else if constexpr(is_specialization<T, std::unique_ptr>::value)
             {
                 if(lhs != nullptr && rhs != nullptr)
                 {
-                    set(*lhs.get(), *rhs.get());
+                    setValue(*lhs.get(), *rhs.get());
                 }
             }
             else
@@ -647,6 +668,7 @@ namespace Model
         
         container_type mData;
         Notifier<Listener> mListeners;
+        Sanitizer* mSanitizer = nullptr;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };
