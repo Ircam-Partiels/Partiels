@@ -36,15 +36,6 @@ Document::ControlPanel::ControlPanel(Accessor& accessor, PluginList::Accessor& p
         }
         auto& anlAcsr = mAccessor.getAccessors<AttrType::analyzers>().back();
         Analyzer::PropertyPanel panel(anlAcsr);
-        panel.onAnalyse = [&]()
-        {
-            auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
-            if(audioFormatReader == nullptr)
-            {
-                return;
-            }
-            Analyzer::performAnalysis(mAccessor.getAccessors<AttrType::analyzers>().back(), *audioFormatReader.get());
-        };
         
         juce::DialogWindow::LaunchOptions launchOption;
         launchOption.dialogTitle = juce::translate("Analyzer Properties");

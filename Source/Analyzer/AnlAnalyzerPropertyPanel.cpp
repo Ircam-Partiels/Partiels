@@ -121,13 +121,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     {
         mAccessor.setAttr<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()), NotificationType::synchronous);
     };
-    mAnalyse.callback = [&](juce::TextButton const&)
-    {
-        if(onAnalyse != nullptr)
-        {
-            onAnalyse();
-        }
-    };
     
     mColour.callback = [&](juce::TextButton const&)
     {
@@ -143,8 +136,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mColourMap.entry.addItemList({"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, 1);
     
     addAndMakeVisible(mPropertySection);
-    addAndMakeVisible(mBottomSeparator);
-    addAndMakeVisible(mAnalyse);
     setSize(300, 200);
     mColourSelector.setSize(400, 300);
     mColourSelector.addChangeListener(this);
@@ -158,14 +149,13 @@ Analyzer::PropertyPanel::~PropertyPanel()
 
 void Analyzer::PropertyPanel::resized()
 {
-    auto bounds = getLocalBounds();
-    mAnalyse.setBounds(bounds.removeFromBottom(mAnalyse.getHeight()));
-    mBottomSeparator.setBounds(bounds.removeFromBottom(2));
-    mPropertySection.setBounds(bounds);
+    mPropertySection.setBounds(getLocalBounds());
 }
 
 void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
+    juce::ignoreUnused(source);
+    anlWeakAssert(source == &mColourSelector);
     mAccessor.setAttr<AttrType::colour>(mColourSelector.getCurrentColour());
 }
 

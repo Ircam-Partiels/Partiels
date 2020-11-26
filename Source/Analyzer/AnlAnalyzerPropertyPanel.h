@@ -18,8 +18,6 @@ namespace Analyzer
         
         // juce::Component
         void resized() override;
-        
-        std::function<void(void)> onAnalyse = nullptr;
     private:
         
         // juce::ChangeListener
@@ -35,8 +33,6 @@ namespace Analyzer
         Layout::PropertyTitle mGraphicalParameters {juce::translate("Graphical Parameters"), juce::translate("The graphical parameters of the analyzer")};
         Layout::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
         Layout::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
-        Tools::ColouredPanel mBottomSeparator;
-        Layout::PropertyTextButton mAnalyse {juce::translate("Analyse"), juce::translate("Run the analysis")};
         
         Layout::PropertySection mPropertySection;
     

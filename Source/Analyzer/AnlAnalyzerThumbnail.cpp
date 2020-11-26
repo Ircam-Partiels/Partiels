@@ -34,7 +34,6 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     mRelaunchButton.setTooltip(juce::translate("Run analysis"));
-    mPropertyPanel.onAnalyse = mRelaunchButton.onClick;
     
     mPropertiesButton.onClick = [&]()
     {
