@@ -74,12 +74,17 @@ Analyzer::Thumbnail::~Thumbnail()
 void Analyzer::Thumbnail::resized()
 {
     auto bounds = getLocalBounds();
+    mNameLabel.setBounds(bounds.removeFromTop(24));
     auto bottomBounds = bounds.removeFromBottom(24);
     auto const bottomButtonWidth = bottomBounds.getWidth() / 3;
     mRemoveButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
     mPropertiesButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
     mRelaunchButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
-    mNameLabel.setBounds(bounds);
+}
+
+void Analyzer::Thumbnail::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(ColourIds::backgroundColourId));
 }
 
 ANALYSE_FILE_END

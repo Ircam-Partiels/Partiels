@@ -68,11 +68,9 @@ void Document::Director::addAnalysis(AlertType alertType)
             mModalWindow->exitModalState(0);
             mModalWindow = nullptr;
         }
+        
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        static auto const colour = juce::Colours::blue;
-        static auto const colourMap = Analyzer::ColorMap::Heat;
-        Analyzer::Container const ctnr {{key}, {name}, {0}, {{}}, {}, {colour}, {colourMap},  {}};
-        if(!mAccessor.insertAccessor<Document::AttrType::analyzers>(-1, ctnr))
+        if(!mAccessor.insertAccessor<Document::AttrType::analyzers>(-1, NotificationType::synchronous))
         {
             if(alertType == AlertType::window)
             {
@@ -83,8 +81,13 @@ void Document::Director::addAnalysis(AlertType alertType)
             }
             return;
         }
+
+        auto& anlAcsr = mAccessor.getAccessors<Document::AttrType::analyzers>().back().get();
+        anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
+        anlAcsr.setAttr<Analyzer::AttrType::name>(name, NotificationType::synchronous);
+        anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
+        anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::ColorMap::Heat, NotificationType::synchronous);
         
-        auto& anlAcsr = mAccessor.getAccessors<Document::AttrType::analyzers>().back();
         Analyzer::PropertyPanel panel(anlAcsr);
         auto const title = juce::translate("Analyzer Properties");
         auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();

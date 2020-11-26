@@ -9,12 +9,19 @@ namespace Analyzer
     class Thumbnail
     : public juce::Component
     {
-    public:        
+    public:
+        
+        enum ColourIds : int
+        {
+            backgroundColourId = 0x2000330
+        };
+        
         Thumbnail(Accessor& accessor);
         ~Thumbnail() override;
         
         // juce::Component
         void resized() override;
+        void paint(juce::Graphics& g) override;
         
         std::function<void(void)> onRemove = nullptr;
         std::function<void(void)> onRelaunch = nullptr;

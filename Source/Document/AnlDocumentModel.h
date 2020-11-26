@@ -62,16 +62,16 @@ namespace Document
         void setAttr<AttrType::file, juce::File>(juce::File const& value, NotificationType notification);
         
         template <enum_type type>
-        auto getDefaultContainer() const
+        bool insertAccessor(long index, NotificationType notification)
         {
-            return Model::Accessor<Accessor, Container>::getDefaultContainer<type>();
+             return Model::Accessor<Accessor, Container>::insertAccessor<type>(index, notification);
         }
         
         template <>
-        auto getDefaultContainer<AttrType::analyzers>() const
+        bool insertAccessor<AttrType::analyzers>(long index, NotificationType notification)
         {
-            static const Analyzer::Container ctnr {
-                  {""}
+            static const Analyzer::Container ctnr{
+                {""}
                 , {""}
                 , {0}
                 , {{}}
@@ -80,7 +80,9 @@ namespace Document
                 , {Analyzer::ColorMap::Heat}
                 ,  {}
             };
-            return ctnr;
+            
+            auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);
+            return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::analyzers>(index, std::move(accessor), notification);
         }
         
     private:

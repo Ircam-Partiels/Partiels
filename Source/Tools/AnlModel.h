@@ -201,53 +201,28 @@ namespace Model
         
         //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        bool insertAccessor(long index, typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type const& container, NotificationType notification = NotificationType::synchronous)
+        bool insertAccessor(long index, NotificationType notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
-            using accessor_type = typename element_type::accessor_type;
-            static_assert(element_type::size_flags == 0, "container is not resizable");
-            
-            auto accessor = std::make_unique<accessor_type>(container);
-            anlStrongAssert(accessor != nullptr);
-            if(accessor == nullptr)
-            {
-                return false;
-            }
-            
-            auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
-            index = index < 0 ? static_cast<long>(accessors.size()) : std::max(index, static_cast<long>(accessors.size()));
-            auto it = accessors.insert(accessors.begin() + index, std::move(accessor));
-            if(it != accessors.end())
-            {
-                if constexpr((element_type::flags & AttrFlag::notifying) != 0)
-                {
-                    mListeners.notify([=](Listener& listener)
-                    {
-                        anlWeakAssert(listener.onChanged != nullptr);
-                        if(listener.onChanged != nullptr)
-                        {
-                            listener.onChanged(*static_cast<parent_t const*>(this), type);
-                        }
-                    }, notification);
-                }
-            }
-            return true;
+            using sub_container_type = typename element_type::container_type;
+            using sub_accessor_type = typename element_type::accessor_type;
+            return insertAccessor(index, std::make_unique<sub_accessor_type>(sub_container_type{}), notification);
         }
         
         //! @brief Erase an accessor from the container
         template <enum_type type>
-        void eraseAccessor(size_t index, NotificationType notification = NotificationType::synchronous)
+        void eraseAccessor(size_t index, NotificationType notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
             
-            using accessor_type = typename element_type::accessor_type;
+            using sub_accessor_type = typename element_type::accessor_type;
             static_assert(element_type::size_flags == 0, "container is not resizable");
             
             auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
-            auto backup = std::shared_ptr<accessor_type>(accessors[index].release());
+            auto backup = std::shared_ptr<sub_accessor_type>(accessors[index].release());
             anlWeakAssert(backup != nullptr);
             accessors.erase(accessors.begin() + static_cast<long>(index));
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
@@ -275,7 +250,7 @@ namespace Model
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         template <enum_type type, typename T>
-        void setAttr(T const& value, NotificationType notification = NotificationType::synchronous)
+        void setAttr(T const& value, NotificationType notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
@@ -309,7 +284,7 @@ namespace Model
         
         //! @brief Sets the value of an attribute (initializer list specialization)
         template <enum_type type, typename T>
-        void setAttr(std::initializer_list<T>&& tvalue, NotificationType notification = NotificationType::synchronous)
+        void setAttr(std::initializer_list<T>&& tvalue, NotificationType notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
@@ -361,7 +336,7 @@ namespace Model
         //! @brief Parse the container from xml
         //! @details Only the saveable attributes are restored from the xml.
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification = NotificationType::synchronous)
+        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification)
         {
             anlWeakAssert(xml.hasTagName(name));
             if(!xml.hasTagName(name))
@@ -392,7 +367,7 @@ namespace Model
                             while(accessors.size() > childs.size())
                             {
                                 auto const index = accessors.size() - 1;
-                                eraseAccessor<attr_type>(index);
+                                static_cast<parent_t*>(this)->template eraseAccessor<attr_type>(index, notification);
                             }
                         }
                         for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
@@ -408,7 +383,7 @@ namespace Model
                             while(childs.size() > accessors.size())
                             {
                                 auto const index = accessors.size();
-                                if(insertAccessor<attr_type>(static_cast<long>(index), static_cast<parent_t*>(this)->template getDefaultContainer<attr_type>()))
+                                if(static_cast<parent_t*>(this)->template insertAccessor<attr_type>(static_cast<long>(index), notification))
                                 {
                                     if(accessors[index] != nullptr)
                                     {
@@ -431,7 +406,7 @@ namespace Model
         }
         
         //! @brief Copy the content from another container
-        void fromContainer(container_type const& container, NotificationType notification = NotificationType::synchronous)
+        void fromContainer(container_type const& container, NotificationType notification)
         {
             detail::for_each(container, [&](auto const& d)
             {
@@ -448,7 +423,7 @@ namespace Model
                             while(accessors.size() > d.accessors.size())
                             {
                                 auto const index = accessors.size() - 1;
-                                eraseAccessor<attr_type>(index);
+                                static_cast<parent_t*>(this)->template eraseAccessor<attr_type>(index, notification);
                             }
                         }
                         for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
@@ -467,7 +442,17 @@ namespace Model
                                 anlStrongAssert(d.accessors[index] != nullptr);
                                 if(d.accessors[index] != nullptr)
                                 {
-                                    insertAccessor<attr_type>(static_cast<long>(index), d.accessors[index]->getContainer(), notification);
+                                    if(static_cast<parent_t*>(this)->template insertAccessor<attr_type>(static_cast<long>(index), notification))
+                                    {
+                                        if(accessors[index] != nullptr)
+                                        {
+                                            accessors[index]->fromContainer(d.accessors[index]->getContainer(), notification);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        anlStrongAssert(false && "allocation failed");
+                                    }
                                 }
                             }
                         }
@@ -550,13 +535,37 @@ namespace Model
         
     protected:
         
+        //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        auto getDefaultContainer() const
-        -> typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type const&
+        bool insertAccessor(long index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), container_type>::type::accessor_type> accessor, NotificationType notification)
         {
-            using sub_ctnr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type;
-            static const sub_ctnr_type ctnr;
-            return ctnr;
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
+            static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
+            
+            anlStrongAssert(accessor != nullptr);
+            if(accessor == nullptr)
+            {
+                return false;
+            }
+            
+            auto& accessors = std::get<static_cast<size_t>(type)>(mData).accessors;
+            index = index < 0 ? static_cast<long>(accessors.size()) : std::max(index, static_cast<long>(accessors.size()));
+            auto it = accessors.insert(accessors.begin() + index, std::move(accessor));
+            if(it != accessors.end())
+            {
+                if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+                {
+                    mListeners.notify([=](Listener& listener)
+                                      {
+                        anlWeakAssert(listener.onChanged != nullptr);
+                        if(listener.onChanged != nullptr)
+                        {
+                            listener.onChanged(*static_cast<parent_t const*>(this), type);
+                        }
+                    }, notification);
+                }
+            }
+            return true;
         }
         
     private:

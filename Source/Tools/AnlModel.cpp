@@ -168,7 +168,7 @@ public:
             ModelAcsr acsr2(ctnr2);
             expect(acsr1.isEquivalentTo(acsr2.getContainer()) == false);
             expect(acsr2.isEquivalentTo(acsr1.getContainer()) == false);
-            acsr1.fromContainer(acsr2.getContainer());
+            acsr1.fromContainer(acsr2.getContainer(), NotificationType::synchronous);
             expect(acsr1.isEquivalentTo(acsr2.getContainer()) == true);
             expect(acsr2.isEquivalentTo(acsr1.getContainer()) == true);
         }

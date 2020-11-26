@@ -129,7 +129,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     };
     mColourMap.callback = [&](juce::ComboBox const& entry)
     {
-        mAccessor.setAttr<AttrType::colourMap>(static_cast<ColorMap>(entry.getSelectedItemIndex()));
+        mAccessor.setAttr<AttrType::colourMap>(static_cast<ColorMap>(entry.getSelectedItemIndex()), NotificationType::synchronous);
     };
     
     mColourMap.entry.clear();
@@ -156,7 +156,7 @@ void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* so
 {
     juce::ignoreUnused(source);
     anlWeakAssert(source == &mColourSelector);
-    mAccessor.setAttr<AttrType::colour>(mColourSelector.getCurrentColour());
+    mAccessor.setAttr<AttrType::colour>(mColourSelector.getCurrentColour(), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

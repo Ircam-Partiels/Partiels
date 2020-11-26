@@ -13,7 +13,7 @@ Application::LookAndFeel::LookAndFeel()
     auto const grey = juce::Colours::grey;
     setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
     setColour(Layout::StrechableContainer::Section::resizerActiveColourId, grey.brighter());
-    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, grey.brighter());
+    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, grey.darker());
     
     setColour(Zoom::Ruler::backgroundColourId, grey);
     setColour(Zoom::Ruler::tickColourId, juce::Colours::black);
@@ -21,6 +21,7 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::anchorColourId, juce::Colours::red);
     setColour(Zoom::Ruler::selectionColourId, juce::Colours::blue);
     
+    setColour(Analyzer::Thumbnail::backgroundColourId, grey);
     setColour(Document::Section::backgroundColourId, juce::Colours::black);
     
     // juce::ComboBox::LookAndFeelMethods
