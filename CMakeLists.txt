@@ -85,6 +85,8 @@ file(GLOB AnalyzerSources
 
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentDirector.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentDirector.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileBased.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileWatcher.cpp

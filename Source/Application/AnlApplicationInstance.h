@@ -39,6 +39,7 @@ namespace Application
         Accessor& getApplicationAccessor();
         PluginList::Accessor& getPluginListAccessor();
         Document::Accessor& getDocumentAccessor();
+        Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
         
         juce::ApplicationCommandManager& getApplicationCommandManager();
@@ -66,7 +67,7 @@ namespace Application
             , {}
         };
         Document::Accessor mDocumentAccessor {mDocumentContainer};
-        Document::Director mDocumentDirector {mDocumentAccessor, mAudioFormatManager};
+        Document::Director mDocumentDirector {mDocumentAccessor, mPluginListAccessor, mAudioFormatManager};
         Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mDocumentDirector, mAudioFormatManager};
         
         Properties mProperties;

@@ -39,7 +39,6 @@ void Application::CommandTarget::showUnsupportedAction()
 }
 
 Application::CommandTarget::CommandTarget()
-: mPluginListTable(Instance::get().getPluginListAccessor())
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -54,29 +53,6 @@ Application::CommandTarget::CommandTarget()
             case AttrType::windowState:
                 break;
         }
-    };
-    
-    mPluginListTable.onPluginSelected = [&](juce::String key)
-    {
-        if(mWindow != nullptr)
-        {
-            mWindow->exitModalState(0);
-            mWindow = nullptr;
-        }
-        auto& docAcsr = Instance::get().getDocumentAccessor();
-        auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        static auto const colour = juce::Colours::blue;
-        static auto const colourMap = Analyzer::ColorMap::Heat;
-        Analyzer::Container const ctnr {{key}, {name}, {0}, {{}}, {}, {colour}, {colourMap},  {}};
-        if(!docAcsr.insertAccessor<Document::AttrType::analyzers>(-1, ctnr))
-        {
-            return;
-        }
-        auto& anlAcsr = docAcsr.getAccessors<Document::AttrType::analyzers>().back();
-        Analyzer::PropertyPanel panel(anlAcsr);
-        auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
-        auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
-        juce::DialogWindow::showModalDialog(juce::translate("Analyzer Properties"), &panel, nullptr, bgColor, true, false, false);
     };
     
     Instance::get().getDocumentFileBased().addChangeListener(this);
@@ -277,29 +253,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             
         case CommandIDs::AddAnalysis:
         {
-            if(mWindow != nullptr)
-            {
-                mWindow->exitModalState(0);
-                mWindow = nullptr;
-            }
-            
-            auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
-            auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
-            
-            juce::DialogWindow::LaunchOptions o;
-            o.dialogTitle = juce::translate("New Analyzer...");
-            o.content.setNonOwned(&mPluginListTable);
-            o.componentToCentreAround = nullptr;
-            o.dialogBackgroundColour = bgColor;
-            o.escapeKeyTriggersCloseButton = true;
-            o.useNativeTitleBar = false;
-            o.resizable = false;
-            o.useBottomRightCornerResizer = false;
-            mWindow = o.launchAsync();
-            if(mWindow != nullptr)
-            {
-                mWindow->runModalLoop();
-            }
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.addAnalysis(AlertType::window);
             return true;
         }
     }

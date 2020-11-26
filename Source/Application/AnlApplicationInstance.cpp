@@ -129,6 +129,11 @@ Document::Accessor& Application::Instance::getDocumentAccessor()
     return mDocumentAccessor;
 }
 
+Document::Director& Application::Instance::getDocumentDirector()
+{
+    return mDocumentDirector;
+}
+
 Document::FileBased& Application::Instance::getDocumentFileBased()
 {
     return mDocumentFileBased;

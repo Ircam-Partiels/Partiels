@@ -49,8 +49,6 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         
         Accessor::Listener mListener;
-        PluginList::Table mPluginListTable;
-        juce::Component* mWindow;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CommandTarget)
     };

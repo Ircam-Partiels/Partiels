@@ -33,6 +33,8 @@ namespace Document
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
+    //! @todo Check if the zoom state is well initialized
+    //! @todo Use a default gain to 1
     class Accessor
     : public Model::Accessor<Accessor, Container>
     {
