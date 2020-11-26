@@ -86,7 +86,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                         
                         mContents[i]->onRelaunch = [this, i]()
                         {
-                            auto afr = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
+                            auto afr = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
                             if(afr == nullptr)
                             {
                                 return;

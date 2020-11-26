@@ -4,12 +4,6 @@
 
 ANALYSE_FILE_BEGIN
 
-enum class NotificationType : bool
-{
-    synchronous = false,
-    asynchronous = true
-};
-
 template<class listener_t> class Notifier
 : private juce::AsyncUpdater
 {

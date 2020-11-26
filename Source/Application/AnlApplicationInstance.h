@@ -6,6 +6,7 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationAudioReader.h"
+
 #include "../Document/AnlDocumentFileWatcher.h"
 
 ANALYSE_FILE_BEGIN
@@ -65,7 +66,8 @@ namespace Application
             , {}
         };
         Document::Accessor mDocumentAccessor {mDocumentContainer};
-        Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};
+        Document::Director mDocumentDirector {mDocumentAccessor, mAudioFormatManager};
+        Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mDocumentDirector, mAudioFormatManager};
         
         Properties mProperties;
         AudioReader mAudioReader;

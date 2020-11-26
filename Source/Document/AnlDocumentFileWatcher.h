@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentDirector.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +11,7 @@ namespace Document
     : private juce::Timer
     {
     public:
-        FileWatcher(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
+        FileWatcher(Accessor& accessor, Director& director, juce::AudioFormatManager const& audioFormatManager);
         ~FileWatcher() override;
     private:
         
@@ -18,6 +19,7 @@ namespace Document
         void timerCallback() override;
         
         Accessor& mAccessor;
+        Director& mDirector;
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
         juce::Time mModificationTime;

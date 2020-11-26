@@ -3,8 +3,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
+Document::FileWatcher::FileWatcher(Accessor& accessor, Director& director, juce::AudioFormatManager const& audioFormatManager)
 : mAccessor(accessor)
+, mDirector(director)
 , mAudioFormatManager(audioFormatManager)
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -14,17 +15,9 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
             case AttrType::file:
             {
                 stopTimer();
-                auto const file = mAccessor.getAttr<AttrType::file>();
+                auto const file = acsr.getAttr<AttrType::file>();
                 if(file != juce::File())
                 {
-                    auto audioReader = createAudioFormatReader(acsr, mAudioFormatManager, false);
-                    if(audioReader != nullptr)
-                    {
-                        JUCE_COMPILER_WARNING("I'm not sure that's the best place to do it");
-                        auto& zoomAccessor = mAccessor.getAccessor<AttrType::timeZoom>(0);
-                        auto const durationInMs = audioReader->sampleRate > 0.0 ? static_cast<double>(audioReader->lengthInSamples) / audioReader->sampleRate : 0.0;
-                        zoomAccessor.setAttr<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, durationInMs}, NotificationType::synchronous);
-                    }
                     mModificationTime = file.getLastModificationTime();
                     startTimer(200);                    
                 }
@@ -64,7 +57,7 @@ void Document::FileWatcher::timerCallback()
             {
                 return;
             }
-            mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+            mDirector.loadAudioFile(fc.getResult(), AlertType::window);
         }
     }
     auto const time = file.getLastModificationTime();
@@ -75,7 +68,7 @@ void Document::FileWatcher::timerCallback()
         auto const message = juce::translate("The audio file FLNM has been modified. Would you like to reload it?").replace("FLNM", file.getFullPathName());
         if(juce::AlertWindow::showOkCancelBox(icon, title, message))
         {
-            JUCE_COMPILER_WARNING("What to do?")
+            mDirector.loadAudioFile(file, AlertType::window);
         }
     }
 }

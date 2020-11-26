@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    std::unique_ptr<juce::AudioFormatReader> createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, bool showMessageOnFailure);
+    std::unique_ptr<juce::AudioFormatReader> createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, AlertType alertType);
     
     //! @brief The audio reader of a document
     class AudioReader

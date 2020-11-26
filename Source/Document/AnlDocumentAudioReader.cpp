@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, bool showMessageOnFailure)
+std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, AlertType alertType)
 {
     using AlertIconType = juce::AlertWindow::AlertIconType;
     auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
@@ -15,7 +15,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
     if(audioFormat == nullptr)
     {
-        if(showMessageOnFailure)
+        if(alertType == AlertType::window)
         {
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format for the file extension FLEXTS couldn't be found.").replace("FLEXTS", file.getFileExtension()));
         }
@@ -24,7 +24,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
     if(audioFormatReader == nullptr)
     {
-        if(showMessageOnFailure)
+        if(alertType == AlertType::window)
         {
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format reader cannot be allocated for the input stream FLNAME.").replace("FLNAME", file.getFullPathName()));
         }
@@ -141,7 +141,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                     mSourceManager.setInstance(nullptr);
                     return;
                 }
-                auto source = std::make_shared<Source>(createAudioFormatReader(mAccessor, mAudioFormatManager, true));
+                auto source = std::make_shared<Source>(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window));
                 if(source != nullptr)
                 {
                     source->setGain(static_cast<float>(acsr.getAttr<AttrType::gain>()));
