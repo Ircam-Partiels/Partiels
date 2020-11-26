@@ -19,9 +19,8 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
 
-        juce::TextButton mBackwardButton {juce::CharPointer_UTF8("«")};
+        juce::TextButton mRewindButton {juce::CharPointer_UTF8("«")};
         juce::TextButton mPlaybackButton {juce::CharPointer_UTF8("›")};
-        juce::TextButton mForwardButton {juce::CharPointer_UTF8("»")};
         juce::TextButton mLoopButton {juce::CharPointer_UTF8("∞")};
         
         juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};

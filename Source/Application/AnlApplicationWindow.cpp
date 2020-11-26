@@ -38,8 +38,7 @@ juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevel
         menu.addCommandItem(&commandManager, CommandIDs::TogglePlayback);
         menu.addCommandItem(&commandManager, CommandIDs::ToggleLooping);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::MovePlayHeadToBeginning);
-        menu.addCommandItem(&commandManager, CommandIDs::MovePlayHeadToEnd);
+        menu.addCommandItem(&commandManager, CommandIDs::RewindPlayHead);
     }
     else if(menuName == "Help")
     {

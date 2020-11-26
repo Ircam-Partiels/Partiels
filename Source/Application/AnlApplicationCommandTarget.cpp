@@ -3,10 +3,36 @@
 
 ANALYSE_FILE_BEGIN
 
-static void showUnsupportedAction()
+void Application::CommandTarget::showUnsupportedAction()
 {
-//    juce::ImageComponent:: getFromMemory::get
-//    juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
+    juce::ImageComponent imageComponent;
+    auto const image = juce::ImageCache::getFromMemory(BinaryData::MagicWord_jpeg, BinaryData::MagicWord_jpegSize);
+    imageComponent.setImage(image);
+    imageComponent.setImagePlacement(juce::RectanglePlacement::fillDestination);
+    imageComponent.setSize(image.getWidth() / 2, image.getHeight() / 2);
+    
+    juce::TextButton button("OK");
+    button.setBounds({480, 270, 80, 32});
+    imageComponent.addAndMakeVisible(button);
+    
+    juce::DialogWindow::LaunchOptions o;
+    o.dialogTitle = juce::translate("Action Unavailable!");
+    o.content.setNonOwned(&imageComponent);
+    o.componentToCentreAround = nullptr;
+    o.dialogBackgroundColour = juce::Colours::red;
+    o.escapeKeyTriggersCloseButton = true;
+    o.useNativeTitleBar = false;
+    o.resizable = false;
+    o.useBottomRightCornerResizer = false;
+    auto* window = o.launchAsync();
+    if(window != nullptr)
+    {
+        button.onClick = [&]()
+        {
+            window->exitModalState(0);
+        };
+        window->runModalLoop();
+    }
 }
 
 Application::CommandTarget::CommandTarget()
@@ -54,14 +80,14 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::TogglePlayback
         , CommandIDs::ToggleLooping
-        , CommandIDs::MovePlayHeadToBeginning
-        , CommandIDs::MovePlayHeadToEnd
+        , CommandIDs::RewindPlayHead
 
     });
 }
 
 void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result)
 {
+    auto const& docAcsr = Instance::get().getDocumentAccessor();
     switch (commandID)
     {
         case CommandIDs::Open:
@@ -102,7 +128,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidate the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
-            result.setActive(false);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
             
@@ -110,31 +136,23 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Toggle Playback"), TRANS("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File());
-            result.setTicked(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::isPlaybackStarted>());
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setTicked(docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
         }
             break;
         case CommandIDs::ToggleLooping:
         {
             result.setInfo(juce::translate("Toggle Loop"), TRANS("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File());
-            result.setTicked(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::isLooping>());
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setTicked(docAcsr.getAttr<Document::AttrType::isLooping>());
         }
             break;
-        case CommandIDs::MovePlayHeadToBeginning:
+        case CommandIDs::RewindPlayHead:
         {
             result.setInfo(juce::translate("Rewind Playhead"), TRANS("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File() && Instance::get().getDocumentAccessor().getAttr<Document::AttrType::playheadPosition>() > 0.0);
-        }
-            break;
-        case CommandIDs::MovePlayHeadToEnd:
-        {
-            result.setInfo(juce::translate("Unspool Playhead"), TRANS("Move the playhead to the end of the document"), "Transport", 0);
-            result.defaultKeypresses.add(juce::KeyPress('q', juce::ModifierKeys::commandModifier, 0));
-            JUCE_COMPILER_WARNING("fix that")
-            result.setActive(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::file>() != juce::File() && Instance::get().getDocumentAccessor().getAttr<Document::AttrType::playheadPosition>() < 10000.0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0);
         }
             break;
     }
@@ -194,8 +212,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::Consolidate:
         {
-            JUCE_COMPILER_WARNING("todo");
-            anlWeakAssert(false && "todo");
+            showUnsupportedAction();
             return true;
         }
             
@@ -213,19 +230,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::MovePlayHeadToBeginning:
+        case CommandIDs::RewindPlayHead:
         {
             auto constexpr attr = Document::AttrType::playheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
             documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
-            return true;
-        }
-        case CommandIDs::MovePlayHeadToEnd:
-        {
-            auto constexpr attr = Document::AttrType::playheadPosition;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            JUCE_COMPILER_WARNING("fix this")
-            documentAcsr.setAttr<attr>(10000.0, NotificationType::synchronous);
             return true;
         }
     }

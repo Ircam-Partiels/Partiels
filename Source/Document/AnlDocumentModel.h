@@ -22,11 +22,6 @@ namespace Document
         analyzers
     };
     
-    enum class Signal
-    {
-        movePlayhead
-    };
-    
     using Container = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::AttrFlag::basic>
     , Model::Attr<AttrType::isLooping, bool, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
@@ -40,7 +35,6 @@ namespace Document
     
     class Accessor
     : public Model::Accessor<Accessor, Container>
-    , public Broadcaster<Accessor, Signal>
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;

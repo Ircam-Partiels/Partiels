@@ -182,43 +182,23 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 break;
             case AttrType::playheadPosition:
             {
-                //mReadPosition = acsr.getContainer().playheadPosition;
+                auto const sampleRate = mSampleRate > 0.0 ? mSampleRate : 44100.0;
+                auto const position = acsr.getAttr<AttrType::playheadPosition>();
+                mReadPosition = static_cast<juce::int64>(position * sampleRate);
             }
                 break;
-//            case AttrType::analyzers:
-//                break;
+            case AttrType::timeZoom:
+            case AttrType::layout:
+            case AttrType::analyzers:
+                break;
         }
     };
     
-    mReceiver.onSignal = [&](Accessor const& acsr, Signal signal, juce::var value)
-    {
-        juce::ignoreUnused(acsr);
-        auto getLastPosition = [&]() -> juce::int64
-        {
-            auto instance = mSourceManager.getInstance();
-            if(instance != nullptr)
-            {
-                return instance->getTotalLength();
-            }
-            return 0;
-        };
-        
-        switch (signal)
-        {
-            case Signal::movePlayhead:
-            {
-                mReadPosition.store(static_cast<bool>(value) ? getLastPosition() : 0);
-            }
-                break;
-        }
-    };
-    mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::AudioReader::~AudioReader()
 {
-    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 

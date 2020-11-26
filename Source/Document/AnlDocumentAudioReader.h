@@ -65,7 +65,6 @@ namespace Document
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
         double mSampleRate = 44100.0;
         int mSamplesPerBlockExpected = 512;
         

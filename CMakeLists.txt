@@ -180,6 +180,7 @@ target_compile_definitions(Analyse PRIVATE
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/icon.png
+    ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg
     ${BINARYDATA_DIRECTORY}/Translations/Fr.txt)
 
 juce_add_binary_data(AnalyseData SOURCES ${BinaryDataSources})

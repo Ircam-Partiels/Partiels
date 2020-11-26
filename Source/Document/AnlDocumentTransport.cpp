@@ -41,18 +41,14 @@ Document::Transport::Transport(Accessor& accessor)
         }
     };
     
-    mBackwardButton.onClick = [&]()
+    mRewindButton.onClick = [&]()
     {
-        mAccessor.sendSignal(Signal::movePlayhead, {false}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::playheadPosition>(0.0, NotificationType::synchronous);
     };
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::isPlaybackStarted>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
-    };
-    mForwardButton.onClick = [&]()
-    {
-        mAccessor.sendSignal(Signal::movePlayhead, {true}, NotificationType::synchronous);
     };
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
@@ -68,9 +64,8 @@ Document::Transport::Transport(Accessor& accessor)
         mAccessor.setAttr<AttrType::gain>(gain, NotificationType::synchronous);
     };
     
-    addAndMakeVisible(mBackwardButton);
+    addAndMakeVisible(mRewindButton);
     addAndMakeVisible(mPlaybackButton);
-    addAndMakeVisible(mForwardButton);
     addAndMakeVisible(mLoopButton);
     
     mPlayPositionInHMSms.setJustificationType(juce::Justification::centredRight);
@@ -90,10 +85,9 @@ void Document::Transport::resized()
     auto bounds = getLocalBounds();
     
     auto topBounds = bounds.removeFromTop(bounds.getHeight() / 3);
-    auto const buttonWidth = topBounds.getWidth() / 4;
-    mBackwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
+    auto const buttonWidth = topBounds.getWidth() / 3;
+    mRewindButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mPlaybackButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
-    mForwardButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     
     bounds.removeFromTop(bounds.getHeight() / 3);
