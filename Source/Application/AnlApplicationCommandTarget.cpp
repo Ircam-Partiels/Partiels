@@ -3,6 +3,12 @@
 
 ANALYSE_FILE_BEGIN
 
+static void showUnsupportedAction()
+{
+//    juce::ImageComponent:: getFromMemory::get
+//    juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
+}
+
 Application::CommandTarget::CommandTarget()
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -38,19 +44,19 @@ juce::ApplicationCommandTarget* Application::CommandTarget::getNextCommandTarget
 
 void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& commands)
 {
-    commands.addArray({
-        CommandIDs::Open,
-        CommandIDs::New,
-        CommandIDs::Save,
-        CommandIDs::Duplicate,
-        CommandIDs::Consolidate,
+    commands.addArray(
+    {
+        CommandIDs::Open
+        , CommandIDs::New
+        , CommandIDs::Save
+        , CommandIDs::Duplicate
+        , CommandIDs::Consolidate
         
-        CommandIDs::TogglePlayback,
-        CommandIDs::ToggleLooping,
-        CommandIDs::MovePlayHeadToBeginning,
-        CommandIDs::MovePlayHeadToEnd,
-        
-        //CommandIDs::OpenRecent
+        , CommandIDs::TogglePlayback
+        , CommandIDs::ToggleLooping
+        , CommandIDs::MovePlayHeadToBeginning
+        , CommandIDs::MovePlayHeadToEnd
+
     });
 }
 

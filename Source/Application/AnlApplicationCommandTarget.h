@@ -15,18 +15,20 @@ namespace Application
 
         enum CommandIDs : int
         {
-            Open = 0x200100,
-            New = 0x200101,
-            Save = 0x200102,
-            Duplicate = 0x200103,
-            Consolidate = 0x200104,
+            Open = 0x200100
+            , New
+            , Save
+            , Duplicate
+            , Consolidate
             
-            TogglePlayback = 0x200105,
-            ToggleLooping = 0x200106,
-            MovePlayHeadToBeginning = 0x200107,
-            MovePlayHeadToEnd = 0x200108,
+            , TogglePlayback
+            , ToggleLooping
+            , MovePlayHeadToBeginning
+            , MovePlayHeadToEnd
             
-            OpenRecent = 0x200200 // Always at the end
+            , AddAnalysis
+            
+            , OpenRecent
         };
         
         CommandTarget();

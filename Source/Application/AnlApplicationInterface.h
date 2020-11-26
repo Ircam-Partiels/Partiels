@@ -42,9 +42,6 @@ namespace Application
         Zoom::Ruler mZoomTimeRuler;
         Tools::ColouredPanel mZoomTimeRulerSeparator;
         Document::Section mDocumentSection;
-//        Document::ControlPanel mDocumentControlPanel;
-//        Tools::ColouredPanel mDocumentControlPanelSeparator;
-//        Document::MainPanel mDocumentMainPanel;
         
         //Footer
         Tools::ColouredPanel mBottomSeparator;
