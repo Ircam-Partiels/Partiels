@@ -36,6 +36,7 @@ Document::Transport::Transport(Accessor& accessor)
                 break;
             case AttrType::file:
             case AttrType::timeZoom:
+            case AttrType::layout:
             case AttrType::analyzers:
                 break;
         }
