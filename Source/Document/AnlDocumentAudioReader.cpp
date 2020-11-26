@@ -182,14 +182,16 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 break;
             case AttrType::playheadPosition:
             {
-                JUCE_COMPILER_WARNING("to do");
-//                auto instance = mSourceManager.getInstance();
-//                if(instance != nullptr)
-//                {
-//                    auto const sampleRate = mSampleRate > 0.0 ? mSampleRate : 44100.0;
-//                    auto const position = acsr.getAttr<AttrType::playheadPosition>();
-//                    instance->setNextReadPosition(static_cast<juce::int64>(position * sampleRate));
-//                }
+                if(!mIsPlaying.load())
+                {
+                    auto instance = mSourceManager.getInstance();
+                    if(instance != nullptr)
+                    {
+                        auto const sampleRate = mSampleRate > 0.0 ? mSampleRate : 44100.0;
+                        auto const position = acsr.getAttr<AttrType::playheadPosition>();
+                        instance->setNextReadPosition(static_cast<juce::int64>(position * sampleRate));
+                    }
+                }
             }
                 break;
             case AttrType::timeZoom:

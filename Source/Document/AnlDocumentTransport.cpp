@@ -20,6 +20,7 @@ Document::Transport::Transport(Accessor& accessor)
                 auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
                 mPlaybackButton.setButtonText(state ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                mRewindButton.setEnabled(!state);
             }
                 break;
             case AttrType::playheadPosition:

@@ -1,6 +1,7 @@
 #include "AnlDocumentDirector.h"
 #include "AnlDocumentAudioReader.h"
 #include "../Plugin/AnlPluginListScanner.h"
+#include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Analyzer/AnlAnalyzerPropertyPanel.h"
 
 ANALYSE_FILE_BEGIN
@@ -10,31 +11,35 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginAccessor)
 {
+    mAccessor.setSanitizer(this);
 }
 
-void Document::Director::updated(AttrType type, NotificationType notification)
+Document::Director::~Director()
+{
+    mAccessor.setSanitizer(nullptr);
+}
+
+void Document::Director::updated(Accessor& accessor, AttrType type, NotificationType notification)
 {
     if(type == AttrType::file)
     {
-        auto getRange = [&]() -> Zoom::range_type
+        auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+        if(reader == nullptr)
         {
-            auto const file = mAccessor.getAttr<AttrType::file>();
-            auto const fileExtension = file.getFileExtension();
-            if(file != juce::File() && mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
-            {
-                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-                if(reader != nullptr)
-                {
-                    auto const sampleRate = reader->sampleRate;
-                    auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
-                    return {0.0, duration};
-                }
-            }
-            return {0.0, 0.0};
-        };
+            return;
+        }
+        auto const sampleRate = reader->sampleRate;
+        auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
+
+        auto& zoomAcsr = accessor.getAccessor<AttrType::timeZoom>(0);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, duration}, notification);
         
-        auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
-        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(getRange(), notification);
+        auto anlAcsrs = accessor.getAccessors<AttrType::analyzers>();
+        for(auto& anlAcsr : anlAcsrs)
+        {
+            Analyzer::performAnalysis(anlAcsr, *reader.get());
+        }
+        auto const file = accessor.getAttr<AttrType::file>();
     }
 }
 

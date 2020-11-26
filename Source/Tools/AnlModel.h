@@ -275,7 +275,7 @@ namespace Model
                     }
                     if(mSanitizer != nullptr)
                     {
-                        mSanitizer->updated(type, notification);
+                        mSanitizer->updated(*static_cast<parent_t*>(this), type, notification);
                     }
                 }
             }
@@ -506,9 +506,8 @@ namespace Model
             Sanitizer() = default;
             virtual ~Sanitizer() = default;
             
-            virtual void updated(enum_type type, NotificationType notification)
+            virtual void updated(parent_t&, enum_type, NotificationType)
             {
-                juce::ignoreUnused(type, notification);
             }
         };
         

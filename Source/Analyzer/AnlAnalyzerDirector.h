@@ -1,20 +1,17 @@
 #pragma once
 
-#include "AnlDocumentModel.h"
-#include "../Plugin/AnlPluginListTable.h"
+#include "AnlAnalyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 
-namespace Document
+namespace Analyzer
 {
     class Director
     : public Accessor::Sanitizer
     {
     public:
-        Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager);
+        Director(Accessor& accessor);
         ~Director() override;
-        
-        void addAnalysis(AlertType alertType);
         
         // Accessor::Sanitizer
         void updated(Accessor& accessor, AttrType type, NotificationType notification) override;
@@ -22,9 +19,6 @@ namespace Document
     private:
         
         Accessor& mAccessor;
-        juce::AudioFormatManager const& mAudioFormatManager;
-        PluginList::Table mPluginListTable;
-        juce::Component* mModalWindow = nullptr;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
