@@ -15,11 +15,14 @@ void Application::CommandTarget::showUnsupportedAction()
     button.setBounds({480, 270, 80, 32});
     imageComponent.addAndMakeVisible(button);
     
+    auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
+    auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
+    
     juce::DialogWindow::LaunchOptions o;
     o.dialogTitle = juce::translate("Action Unavailable!");
     o.content.setNonOwned(&imageComponent);
     o.componentToCentreAround = nullptr;
-    o.dialogBackgroundColour = juce::Colours::red;
+    o.dialogBackgroundColour = bgColor;
     o.escapeKeyTriggersCloseButton = true;
     o.useNativeTitleBar = false;
     o.resizable = false;
@@ -36,6 +39,7 @@ void Application::CommandTarget::showUnsupportedAction()
 }
 
 Application::CommandTarget::CommandTarget()
+: mPluginListTable(Instance::get().getPluginListAccessor())
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -50,6 +54,29 @@ Application::CommandTarget::CommandTarget()
             case AttrType::windowState:
                 break;
         }
+    };
+    
+    mPluginListTable.onPluginSelected = [&](juce::String key)
+    {
+        if(mWindow != nullptr)
+        {
+            mWindow->exitModalState(0);
+            mWindow = nullptr;
+        }
+        auto& docAcsr = Instance::get().getDocumentAccessor();
+        auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
+        static auto const colour = juce::Colours::blue;
+        static auto const colourMap = Analyzer::ColorMap::Heat;
+        Analyzer::Container const ctnr {{key}, {name}, {0}, {{}}, {}, {colour}, {colourMap},  {}};
+        if(!docAcsr.insertAccessor<Document::AttrType::analyzers>(-1, ctnr))
+        {
+            return;
+        }
+        auto& anlAcsr = docAcsr.getAccessors<Document::AttrType::analyzers>().back();
+        Analyzer::PropertyPanel panel(anlAcsr);
+        auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
+        auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
+        juce::DialogWindow::showModalDialog(juce::translate("Analyzer Properties"), &panel, nullptr, bgColor, true, false, false);
     };
     
     Instance::get().getDocumentFileBased().addChangeListener(this);
@@ -82,6 +109,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::ToggleLooping
         , CommandIDs::RewindPlayHead
 
+        , CommandIDs::AddAnalysis
     });
 }
 
@@ -135,7 +163,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             
         case CommandIDs::TogglePlayback:
         {
-            result.setInfo(juce::translate("Toggle Playback"), TRANS("Start or stop the audio playback"), "Transport", 0);
+            result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
             result.setTicked(docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
@@ -143,7 +171,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             break;
         case CommandIDs::ToggleLooping:
         {
-            result.setInfo(juce::translate("Toggle Loop"), TRANS("Enable or disable the loop audio playback"), "Transport", 0);
+            result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
             result.setTicked(docAcsr.getAttr<Document::AttrType::isLooping>());
@@ -151,9 +179,17 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             break;
         case CommandIDs::RewindPlayHead:
         {
-            result.setInfo(juce::translate("Rewind Playhead"), TRANS("Move the playhead to the start of the document"), "Transport", 0);
+            result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0);
+        }
+            break;
+            
+        case CommandIDs::AddAnalysis:
+        {
+            result.setInfo(juce::translate("Add Analysis"), juce::translate("Adds a new analysis to the document"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
     }
@@ -236,6 +272,34 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto constexpr attr = Document::AttrType::playheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
             documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
+            return true;
+        }
+            
+        case CommandIDs::AddAnalysis:
+        {
+            if(mWindow != nullptr)
+            {
+                mWindow->exitModalState(0);
+                mWindow = nullptr;
+            }
+            
+            auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
+            auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
+            
+            juce::DialogWindow::LaunchOptions o;
+            o.dialogTitle = juce::translate("New Analyzer...");
+            o.content.setNonOwned(&mPluginListTable);
+            o.componentToCentreAround = nullptr;
+            o.dialogBackgroundColour = bgColor;
+            o.escapeKeyTriggersCloseButton = true;
+            o.useNativeTitleBar = false;
+            o.resizable = false;
+            o.useBottomRightCornerResizer = false;
+            mWindow = o.launchAsync();
+            if(mWindow != nullptr)
+            {
+                mWindow->runModalLoop();
+            }
             return true;
         }
     }

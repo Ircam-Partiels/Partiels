@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 
 juce::StringArray Application::Window::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Transport", "Help"};
+    return {"File", "Transport", "Edit", "Help"};
 }
 
 juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -39,6 +39,10 @@ juce::PopupMenu Application::Window::MainMenuModel::getMenuForIndex(int topLevel
         menu.addCommandItem(&commandManager, CommandIDs::ToggleLooping);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::RewindPlayHead);
+    }
+    else if(menuName == "Edit")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::AddAnalysis);
     }
     else if(menuName == "Help")
     {
