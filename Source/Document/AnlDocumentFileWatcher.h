@@ -1,9 +1,6 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
-#include "../Layout/AnlLayout.h"
-#include "../Analyzer/AnlAnalyzerResultRenderer.h"
-#include "../Analyzer/AnlAnalyzerProcessor.h"
 
 ANALYSE_FILE_BEGIN
 
