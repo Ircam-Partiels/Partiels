@@ -12,6 +12,22 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 {
 }
 
+Zoom::range_type Document::Director::getGlobalRangeForFile(juce::File const& file) const
+{
+    auto const fileExtension = file.getFileExtension();
+    if(file != juce::File() && mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
+    {
+        auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+        if(reader != nullptr)
+        {
+            auto const sampleRate = reader->sampleRate;
+            auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
+            return {0.0, duration};
+        }
+    }
+    return {0.0, 0.0};
+}
+
 void Document::Director::loadAudioFile(juce::File const& file, AlertType alertType)
 {
     auto const fileExtension = file.getFileExtension();
@@ -26,7 +42,6 @@ void Document::Director::loadAudioFile(juce::File const& file, AlertType alertTy
             Zoom::range_type const range = {0.0, duration};
             auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
         }
     }
     else if(alertType == AlertType::window)

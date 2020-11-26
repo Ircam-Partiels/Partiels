@@ -35,7 +35,6 @@ namespace Zoom
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
-        using enum_type = Model::Accessor<Accessor, Container>::enum_type;
         
         template <enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)

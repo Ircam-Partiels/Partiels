@@ -124,8 +124,8 @@ namespace Model
         static_assert(is_specialization<container_type, std::tuple>::value, "container_t must be a specialization of std::tuple");
         
         //! @brief The constructor with data
-        Accessor(container_type const& data)
-        : mData(data)
+        Accessor(container_type const& container)
+        : mData(container)
         {
         }
         
@@ -408,7 +408,7 @@ namespace Model
                             while(childs.size() > accessors.size())
                             {
                                 auto const index = accessors.size();
-                                if(insertAccessor<attr_type>(static_cast<long>(index), static_cast<parent_t*>(this)->template getDefaultModel<attr_type>()))
+                                if(insertAccessor<attr_type>(static_cast<long>(index), static_cast<parent_t*>(this)->template getDefaultContainer<attr_type>()))
                                 {
                                     if(accessors[index] != nullptr)
                                     {
@@ -551,11 +551,12 @@ namespace Model
     protected:
         
         template <enum_type type>
-        auto getDefaultModel() const
-        -> typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type
+        auto getDefaultContainer() const
+        -> typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type const&
         {
             using sub_ctnr_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type::container_type;
-            return sub_ctnr_type{};
+            static const sub_ctnr_type ctnr;
+            return ctnr;
         }
         
     private:

@@ -4,6 +4,16 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::Instance::Instance()
+{
+    mDocumentAccessor.setSanitizer(&mDocumentDirector);
+}
+
+Application::Instance::~Instance()
+{
+    mDocumentAccessor.setSanitizer(nullptr);
+}
+
 juce::String const Application::Instance::getApplicationName()
 {
     return ProjectInfo::projectName;

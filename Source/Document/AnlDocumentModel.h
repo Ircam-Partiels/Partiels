@@ -33,6 +33,15 @@ namespace Document
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
+    class Sanitizer
+    {
+    public:
+        Sanitizer() = default;
+        virtual ~Sanitizer() = default;
+        
+        virtual Zoom::range_type getGlobalRangeForFile(juce::File const& file) const = 0;
+    };
+    
     //! @todo Check if the zoom state is well initialized
     //! @todo Use a default gain to 1
     class Accessor
@@ -41,17 +50,41 @@ namespace Document
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
         
-        template <enum_type type>
-        auto getDefaultModel() const
+        void setSanitizer(Sanitizer* santizer);
+        
+        template <enum_type type, typename value_v>
+        void setAttr(value_v const& value, NotificationType notification)
         {
-            return Model::Accessor<Accessor, Container>::getDefaultModel<type>();
+            Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
         }
         
         template <>
-        auto getDefaultModel<AttrType::analyzers>() const
+        void setAttr<AttrType::file, juce::File>(juce::File const& value, NotificationType notification);
+        
+        template <enum_type type>
+        auto getDefaultContainer() const
         {
-            return Analyzer::Container{{""}, {""}, {0}, {{}}, {}, {juce::Colours::black}, {Analyzer::ColorMap::Heat},  {}};
+            return Model::Accessor<Accessor, Container>::getDefaultContainer<type>();
         }
+        
+        template <>
+        auto getDefaultContainer<AttrType::analyzers>() const
+        {
+            static const Analyzer::Container ctnr {
+                  {""}
+                , {""}
+                , {0}
+                , {{}}
+                , {}
+                , {juce::Colours::black}
+                , {Analyzer::ColorMap::Heat}
+                ,  {}
+            };
+            return ctnr;
+        }
+        
+    private:
+        Sanitizer* mSanitizer = nullptr;
     };
 }
 
