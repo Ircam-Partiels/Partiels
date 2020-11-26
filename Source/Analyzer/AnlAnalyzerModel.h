@@ -34,7 +34,7 @@ namespace Analyzer
     , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::saveable | Model::AttrFlag::notifying>
+    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
     >;
 
     class Accessor
@@ -43,16 +43,6 @@ namespace Analyzer
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
     };
-}
-
-namespace XmlParser
-{
-    template<>
-    void toXml<Analyzer::Result>(juce::XmlElement& xml, juce::Identifier const& attributeName, Analyzer::Result const& value);
-    
-    template<>
-    auto fromXml<Analyzer::Result>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Analyzer::Result const& defaultValue)
-    -> Analyzer::Result;
 }
 
 ANALYSE_FILE_END
