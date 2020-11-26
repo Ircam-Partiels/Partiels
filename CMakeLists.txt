@@ -91,10 +91,6 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileWatcher.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentControlPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentControlPanel.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentMainPanel.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentMainPanel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp

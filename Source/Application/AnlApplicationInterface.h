@@ -6,8 +6,6 @@
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
-#include "../Document/AnlDocumentControlPanel.h"
-#include "../Document/AnlDocumentMainPanel.h"
 #include "../Document/AnlDocumentSection.h"
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "../Zoom/AnlZoomRuler.h"
