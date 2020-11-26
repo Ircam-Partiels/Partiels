@@ -99,8 +99,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             break;
         case CommandIDs::OpenRecent:
         {
+            auto const& appAcsr = Instance::get().getApplicationAccessor();
             result.setInfo(juce::translate("Open Recent"), juce::translate("Open a recent document"), "Application", 0);
-            result.setActive(!Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>().empty());
+            result.setActive(!appAcsr.getAttr<AttrType::recentlyOpenedFilesList>().empty());
         }
             break;
         case CommandIDs::New:
