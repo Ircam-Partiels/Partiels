@@ -24,7 +24,7 @@ namespace Document
             backgroundColourId = 0x2000400
         };
         
-        Section(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager const& audioFormatManager);
+        Section(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
         ~Section() override;
         
         // juce::Component
@@ -64,9 +64,7 @@ namespace Document
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
-        PluginList::Table mPluginListTable;
         std::vector<std::unique_ptr<Content>> mContents;
-        juce::TextButton mAddButton {juce::translate("+")};
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AttrType::layout>(0)};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)

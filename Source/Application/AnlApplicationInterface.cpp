@@ -7,7 +7,7 @@ Application::Interface::Interface()
 : mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal)
-, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getPluginListAccessor(), Instance::get().getAudioFormatManager())
+, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
 , mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal)
 {
     mZoomTimeRuler.setPrimaryTickInterval(0);

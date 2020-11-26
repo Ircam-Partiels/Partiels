@@ -43,10 +43,9 @@ void Document::Section::Content::resized()
     mRenderer.setBounds(bounds);
 }
 
-Document::Section::Section(Accessor& accessor, PluginList::Accessor& pluginListAccessor, juce::AudioFormatManager const& audioFormatManager)
+Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
-, mPluginListTable(pluginListAccessor)
 {
     mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -123,38 +122,7 @@ Document::Section::Section(Accessor& accessor, PluginList::Accessor& pluginListA
         }
     };
     
-    mPluginListTable.onPluginSelected = [&](juce::String key)
-    {
-        juce::ModalComponentManager::getInstance()->cancelAllModalComponents();
-        auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        
-        if(!mAccessor.insertAccessor<AttrType::analyzers>(-1, Analyzer::Container{{key}, {name}, {0}, {{}}, {}, {juce::Colours::black}, {Analyzer::ColorMap::Heat},  {}}))
-        {
-            return;
-        }
-        auto& anlAcsr = mAccessor.getAccessors<AttrType::analyzers>().back();
-        Analyzer::PropertyPanel panel(anlAcsr);
-        panel.onAnalyse = [&]()
-        {
-            auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, true);
-            if(audioFormatReader == nullptr)
-            {
-                return;
-            }
-            Analyzer::performAnalysis(mAccessor.getAccessors<AttrType::analyzers>().back(), *audioFormatReader.get());
-        };
-        
-        juce::DialogWindow::showModalDialog(juce::translate("Analyzer Properties"), &panel, this, findColour(juce::ResizableWindow::backgroundColourId, true), true, false, false);
-    };
-    
     addAndMakeVisible(mContainer);
-    addAndMakeVisible(mAddButton);
-    mAddButton.setTooltip(juce::translate("Add a new analysis..."));
-    mAddButton.onClick = [&]()
-    {
-        juce::DialogWindow::showModalDialog(juce::translate("New Analyzer..."), &mPluginListTable, this, findColour(juce::ResizableWindow::backgroundColourId, true), true, false, false);
-    };
-    
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -165,9 +133,7 @@ Document::Section::~Section()
 
 void Document::Section::resized()
 {
-    auto bounds = getLocalBounds();
-    mAddButton.setBounds(bounds.removeFromBottom(20).withWidth(180).reduced(2));
-    mContainer.setBounds(bounds);
+    mContainer.setBounds(getLocalBounds());
 }
 
 void Document::Section::paint(juce::Graphics& g)
