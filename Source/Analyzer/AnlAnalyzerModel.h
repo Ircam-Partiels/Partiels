@@ -44,6 +44,28 @@ namespace Analyzer
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
+        
+        template <enum_type type>
+        bool insertAccessor(long index, NotificationType notification)
+        {
+            return Model::Accessor<Accessor, Container>::insertAccessor<type>(index, notification);
+        }
+        
+        template <>
+        bool insertAccessor<AttrType::zoom>(long index, NotificationType notification)
+        {
+            auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
+            auto constexpr max = std::numeric_limits<double>::max() / 100.0;
+            auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+            static const Zoom::Container ctnr {
+                  {{min, max}}
+                , {epsilon}
+                , {{min, max}}
+            };
+            
+            auto accessor = std::make_unique<Zoom::Accessor>(ctnr);
+            return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::zoom>(index, std::move(accessor), notification);
+        }
     };
 }
 

@@ -225,6 +225,8 @@ namespace Model
             auto backup = std::shared_ptr<sub_accessor_type>(accessors[index].release());
             anlWeakAssert(backup != nullptr);
             accessors.erase(accessors.begin() + static_cast<long>(index));
+            // Detach the mutex thta has been attached during insertion
+            backup->mListeners.setMutex(nullptr);
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
             {
                 mListeners.notify([this](Listener& listener) mutable
@@ -236,7 +238,6 @@ namespace Model
                     }
                 }, notification);
             }
-            backup->mListeners.setMutex(nullptr);
         }
         
         //! @brief Gets an attribute from the container
@@ -575,7 +576,8 @@ namespace Model
                         }
                     }, notification);
                 }
-                JUCE_COMPILER_WARNING("clean this");
+                // Called after the notification to ensure that listeners of the sub accesso
+                // can be created created and attached to the sub accessor
                 (*it)->mListeners.setMutex(&mListeners.getMutex());
             }
             return true;

@@ -239,7 +239,7 @@ void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
             auto const rangeStart = mAnchor - (mAnchor - mInitialValueRange.getStart()) * zoomFactor;
             auto const rangeEnd = mAnchor + (mInitialValueRange.getEnd() - mAnchor) * zoomFactor;
 
-            mAccessor.setAttr<AttrType::visibleRange>(range_type{mToZoomRange(rangeStart), mToZoomRange(rangeEnd)}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::visibleRange>(Range{mToZoomRange(rangeStart), mToZoomRange(rangeEnd)}, NotificationType::synchronous);
             mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
         }
             break;

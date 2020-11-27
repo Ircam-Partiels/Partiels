@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Zoom
 {
-    using range_type = juce::Range<double>;
+    using Range = juce::Range<double>;
     
     enum AttrType : size_t
     {
@@ -24,9 +24,9 @@ namespace Zoom
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::globalRange, range_type, Model::AttrFlag::notifying>
+    < Model::Attr<AttrType::globalRange, Range, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::minimumLength, double, Model::AttrFlag::notifying>
-    , Model::Attr<AttrType::visibleRange, range_type, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::visibleRange, Range, Model::AttrFlag::basic>
     >;
     
     class Accessor
@@ -43,14 +43,14 @@ namespace Zoom
         }
         
         template <>
-        void setAttr<AttrType::visibleRange, range_type>(range_type const& value, NotificationType notification);
+        void setAttr<AttrType::visibleRange, Range>(Range const& value, NotificationType notification);
         template <>
-        void setAttr<AttrType::globalRange, range_type>(range_type const& value, NotificationType notification);
+        void setAttr<AttrType::globalRange, Range>(Range const& value, NotificationType notification);
         template <>
         void setAttr<AttrType::minimumLength, double>(double const& value, NotificationType notification);
         
     private:
-        static range_type sanitize(range_type const& visible, range_type const& global, double minLength);
+        static Range sanitize(Range const& visible, Range const& global, double minLength);
     };
 }
 

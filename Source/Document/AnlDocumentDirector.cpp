@@ -97,7 +97,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
                 
                 auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, duration}, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
                 
                 auto anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
                 for(auto& anlAcsr : anlAcsrs)
@@ -145,6 +145,7 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
                     {
                         return;
                     }
+                    
                     Analyzer::performAnalysis(acsr, *reader.get(), 512, NotificationType::asynchronous);
                     triggerAsyncUpdate();
                 });

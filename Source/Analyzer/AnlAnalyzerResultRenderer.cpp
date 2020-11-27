@@ -86,10 +86,6 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
                 anlDebug("Analyzer", "range 0 " + std::to_string(static_cast<double>(it->values.size())));
             }
-            if(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().isEmpty())
-            {
-                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(zoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
-            }
         }
     };
     
@@ -150,7 +146,6 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     
     if(results.front().values.empty())
     {
-        anlDebug("Analyzer", "Paint 1D ");
         g.setColour(mAccessor.getAttr<AttrType::colour>());
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
@@ -176,7 +171,6 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
         };
         juce::Point<float> pt;
         
-        anlDebug("Analyzer", "Paint 2D " + std::to_string(results.size()));
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
             auto const next = i + resultIncrement;
@@ -199,7 +193,6 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     else
     {
         auto image = mImage;
-        anlDebug("Analyzer", "Paint 3D ");
         
         auto const vRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();

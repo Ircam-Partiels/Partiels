@@ -12,7 +12,7 @@ namespace Document
     {
     public:
         Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager);
-        ~Director();
+        ~Director() override;
         
         void addAnalysis(AlertType alertType);
         

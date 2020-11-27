@@ -50,13 +50,22 @@ namespace Document
         template <>
         bool insertAccessor<AttrType::analyzers>(long index, NotificationType notification)
         {
+            auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
+            auto constexpr max = std::numeric_limits<double>::max() / 100.0;
+            auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+            static const Zoom::Container zoomCtnr {
+                {{min, max}}
+                , {epsilon}
+                , {{min, max}}
+            };
+            
             static const Analyzer::Container ctnr {
                   {""}
                 , {""}
                 , {0}
                 , {{}}
                 , {512}
-                , {}
+                , {zoomCtnr}
                 , {juce::Colours::black}
                 , {Analyzer::ColorMap::Heat}
                 ,  {}

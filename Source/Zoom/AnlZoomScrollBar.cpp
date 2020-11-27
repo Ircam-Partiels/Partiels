@@ -66,7 +66,7 @@ void Zoom::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, dou
     {
         auto const globalRange = mAccessor.getAttr<AttrType::globalRange>();
         auto const range = mScrollBar.getCurrentRange();
-        mAccessor.setAttr<AttrType::visibleRange>(range_type{globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::visibleRange>(Range{globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, NotificationType::synchronous);
     }
     else
     {
