@@ -85,7 +85,10 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::ToggleLooping
         , CommandIDs::RewindPlayHead
 
-        , CommandIDs::AddAnalysis
+        , CommandIDs::AnalysisAdd
+        , CommandIDs::AnalysisDuplicate
+        , CommandIDs::AnalysisRemove
+        , CommandIDs::AnalysisProperties
     });
 }
 
@@ -161,10 +164,28 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
             
-        case CommandIDs::AddAnalysis:
+        case CommandIDs::AnalysisAdd:
         {
-            result.setInfo(juce::translate("Add Analysis"), juce::translate("Adds a new analysis to the document"), "Edit", 0);
+            result.setInfo(juce::translate("Add Analysis"), juce::translate("Adds a new analysis to the document"), "Analysis", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+        case CommandIDs::AnalysisDuplicate:
+        {
+            result.setInfo(juce::translate("Duplicate Analysis"), juce::translate("Duplicates the analysis of the document"), "Analysis", 0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+        case CommandIDs::AnalysisRemove:
+        {
+            result.setInfo(juce::translate("Remove Analysis"), juce::translate("Removes the analysis from the document"), "Analysis", 0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+        case CommandIDs::AnalysisProperties:
+        {
+            result.setInfo(juce::translate("Show Analysis Properties"), juce::translate("Shows the analysis property window"), "Analysis", 0);
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
@@ -260,10 +281,25 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
             
-        case CommandIDs::AddAnalysis:
+        case CommandIDs::AnalysisAdd:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.addAnalysis(AlertType::window);
+            return true;
+        }
+        case CommandIDs::AnalysisDuplicate:
+        {
+            showUnsupportedAction();
+            return true;
+        }
+        case CommandIDs::AnalysisRemove:
+        {
+            showUnsupportedAction();
+            return true;
+        }
+        case CommandIDs::AnalysisProperties:
+        {
+            showUnsupportedAction();
             return true;
         }
     }
@@ -283,6 +319,73 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
         auto list = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
         list.insert(list.begin(), file);
         Instance::get().getApplicationAccessor().setAttr<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
+    }
+}
+
+juce::StringArray Application::MainMenuModel::getMenuBarNames()
+{
+    return {"File", "Transport", "Analysis", "Help"};
+}
+
+juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
+{
+    juce::ignoreUnused(topLevelMenuIndex);
+    
+    using CommandIDs = CommandTarget::CommandIDs;
+    auto& commandManager = Instance::get().getApplicationCommandManager();
+    juce::PopupMenu menu;
+    if(menuName == "File")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::New);
+        menu.addCommandItem(&commandManager, CommandIDs::Open);
+        juce::PopupMenu recentFilesMenu;
+        auto recentFileIndex = static_cast<int>(CommandIDs::OpenRecent);
+        auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
+        for(auto const& file : recentFiles)
+        {
+            auto const isActive = Instance::get().getDocumentFileBased().getFile() != file;
+            recentFilesMenu.addItem(recentFileIndex++, file.getFileNameWithoutExtension(), isActive);
+        }
+        menu.addSubMenu("Open Recent", recentFilesMenu);
+        menu.addCommandItem(&commandManager, CommandIDs::Save);
+        menu.addCommandItem(&commandManager, CommandIDs::Duplicate);
+        menu.addCommandItem(&commandManager, CommandIDs::Consolidate);
+    }
+    else if(menuName == "Transport")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::TogglePlayback);
+        menu.addCommandItem(&commandManager, CommandIDs::ToggleLooping);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::RewindPlayHead);
+    }
+    else if(menuName == "Analysis")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisAdd);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisDuplicate);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisRemove);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisProperties);
+    }
+    else if(menuName == "Help")
+    {
+        
+    }
+    else
+    {
+        anlStrongAssert(false && "menu name is invalid");
+    }
+    return menu;
+}
+
+void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMenuIndex)
+{
+    juce::ignoreUnused(topLevelMenuIndex);
+    using CommandIDs = CommandTarget::CommandIDs;
+    
+    auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
+    auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
+    if(fileIndex < recentFiles.size())
+    {
+        Instance::get().openFile(recentFiles[fileIndex]);
     }
 }
 

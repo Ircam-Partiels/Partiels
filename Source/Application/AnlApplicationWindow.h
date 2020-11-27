@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlApplicationInterface.h"
+#include "AnlApplicationCommandTarget.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -20,18 +21,6 @@ namespace Application
         void moved() override;
         
     private:
-        
-        class MainMenuModel
-        : public juce::MenuBarModel
-        {
-        public:
-            MainMenuModel() = default;
-            ~MainMenuModel() override = default;
-            
-            juce::StringArray getMenuBarNames() override;
-            juce::PopupMenu getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName) override;
-            void menuItemSelected(int menuItemID, int topLevelMenuIndex) override;
-        };
         
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;

@@ -63,8 +63,13 @@ Application::Interface::Interface()
                 mDocumentSection.setEnabled(isDocumentEnable);
             }
                 break;
-                
-            default:
+            case Document::isLooping:
+            case Document::gain:
+            case Document::isPlaybackStarted:
+            case Document::playheadPosition:
+            case Document::timeZoom:
+            case Document::layout:
+            case Document::analyzers:
                 break;
         }
     };

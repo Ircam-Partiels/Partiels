@@ -23,6 +23,7 @@ Application::LookAndFeel::LookAndFeel()
     
     setColour(Analyzer::Thumbnail::backgroundColourId, grey);
     setColour(Document::Section::backgroundColourId, juce::Colours::black);
+    setColour(Document::Section::sectionColourId, findColour(juce::ResizableWindow::backgroundColourId));
     
     // juce::ComboBox::LookAndFeelMethods
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);

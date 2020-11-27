@@ -64,11 +64,15 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 resized();
             }
                 break;
-//            case AttrType::analyzers:
-//                break;
             case AttrType::isLooping:
+            case gain:
+            case isPlaybackStarted:
+            case playheadPosition:
+            case timeZoom:
+            case layout:
+            case analyzers:
                 break;
-        }
+}
         changeListenerCallback(&mFileBasedDocument);
     };
     

@@ -38,10 +38,16 @@ Analyzer::Accessor const& Document::Section::Content::getAccessor() const
 void Document::Section::Content::resized()
 {
     auto bounds = getLocalBounds();
+    bounds.removeFromRight(8);
     mThumbnail.setBounds(bounds.removeFromLeft(240));
     mScrollbar.setBounds(bounds.removeFromRight(8));
     mRuler.setBounds(bounds.removeFromRight(16));
     mRenderer.setBounds(bounds);
+}
+
+void Document::Section::Content::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(ColourIds::sectionColourId, true));
 }
 
 Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
@@ -73,6 +79,8 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                     anlWeakAssert(content != nullptr);
                     if(content != nullptr)
                     {
+                        JUCE_COMPILER_WARNING("to move");
+                        
                         mContents.push_back(std::move(content));
                     }
                 }
