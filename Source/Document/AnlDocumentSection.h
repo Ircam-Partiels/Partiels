@@ -42,8 +42,6 @@ namespace Document
             Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr);
             ~Content() override = default;
             
-            Analyzer::Accessor const& getAccessor() const;
-            
             std::function<void(void)> onAnalyse = nullptr;
             std::function<void(void)> onRemove = nullptr;
             
@@ -61,10 +59,23 @@ namespace Document
             Zoom::ScrollBar mScrollbar {mValueZoomAccessor, Zoom::ScrollBar::Orientation::vertical, true};
         };
         
+        struct Container
+        {
+        public:
+            Container(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr)
+            : content(acsr, timeZoomAcsr)
+            , accessor(acsr)
+            {
+            }
+            
+            Content content;
+            Analyzer::Accessor& accessor;
+        };
+        
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
-        std::vector<std::unique_ptr<Content>> mContents;
+        std::vector<std::unique_ptr<Container>> mContents;
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AttrType::layout>(0)};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)
