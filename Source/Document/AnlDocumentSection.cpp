@@ -56,16 +56,41 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
             case AttrType::analyzers:
             {
                 JUCE_COMPILER_WARNING("fix deletion and recursive approach")
+                
                 auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
                 auto& timeZoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
+                auto& layoutAcsr = mAccessor.getAccessor<AttrType::layout>(0);
+                auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
                 
-                mContents.erase(std::remove_if(mContents.begin(), mContents.end(), [&](auto const& content)
+                for(size_t i = 0; i < mContents.size(); ++i)
                 {
-                    return std::none_of(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
+                    mContainer.setContent(i, nullptr, 100);
+                }
+                
+                layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, NotificationType::synchronous);
+                auto it = mContents.begin();
+                while (it != mContents.end())
+                {
+                    if(std::none_of(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
                     {
-                        return &(content->accessor) == &(anlAcsr.get());
-                    });
-                }), mContents.end());
+                        return &((*it)->accessor) == &(anlAcsr.get());
+                    }))
+                    {
+                        sizes.erase(sizes.begin() + std::distance(mContents.begin(), it));
+                        it = mContents.erase(it);
+                    }
+                    else
+                    {
+                        ++it;
+                    }
+                }
+//                mContents.erase(std::remove_if(mContents.begin(), mContents.end(), [&](auto const& content)
+//                {
+//                    return std::none_of(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
+//                    {
+//                        return &(content->accessor) == &(anlAcsr.get());
+//                    });
+//                }), mContents.end());
                 
                 
                 for(size_t i = mContents.size(); i < anlAcsrs.size(); ++i)
@@ -75,6 +100,10 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                     if(container != nullptr)
                     {
                         mContents.push_back(std::move(container));
+                        if(i >= sizes.size())
+                        {
+                            sizes.push_back(100);
+                        }
                     }
                 }
                 
@@ -99,17 +128,11 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                     };
                 }
                 
-                std::vector<int> sizes;
-                for(size_t i = 0; i < mContents.size(); ++i)
-                {
-                    sizes.push_back(mContents[i]->content.getHeight());
-                }
-                auto& layoutAcsr = mAccessor.getAccessor<AttrType::layout>(0);
                 layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, NotificationType::synchronous);
                 
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {
-                    mContainer.setContent(i, mContents[i]->content, 100);
+                    mContainer.setContent(i, &(mContents[i]->content), 100);
                 }
             }
                 break;

@@ -123,13 +123,13 @@ Layout::StrechableContainer::Section::Orientation Layout::StrechableContainer::S
     return mOrientation;
 }
 
-void Layout::StrechableContainer::Section::setContent(size_t index, juce::Component& content, int minimumSize)
+void Layout::StrechableContainer::Section::setContent(size_t index, juce::Component* content, int minimumSize)
 {
     mListener.onChanged(mAccessor, AttrType::sizes);
     anlStrongAssert(index < mHolders.size() && mHolders[index] != nullptr);
     if(index < mHolders.size() && mHolders[index] != nullptr)
     {
-        mHolders[index]->setContent(&content, minimumSize);
+        mHolders[index]->setContent(content, minimumSize);
     }
 }
 

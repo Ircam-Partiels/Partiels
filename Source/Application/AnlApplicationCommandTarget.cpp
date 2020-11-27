@@ -83,9 +83,8 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::DocumentOpenTemplate
         , CommandIDs::DocumentSaveTemplate
         
-        , CommandIDs::TransportTogglePlayback
-        , CommandIDs::TransportToggleLooping
-        , CommandIDs::TransportRewindPlayHead
+        , CommandIDs::EditUndo
+        , CommandIDs::EditRedo
 
         , CommandIDs::AnalysisOpen
         , CommandIDs::AnalysisNew
@@ -95,14 +94,18 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::AnalysisProperties
         , CommandIDs::AnalysisExport
         
-        , CommandIDs::EditNewPoints
-        , CommandIDs::EditRemovePoints
-        , CommandIDs::EditMovePoints
-        , CommandIDs::EditCopyPoints
-        , CommandIDs::EditPastePoints
-        , CommandIDs::EditScalePoints
-        , CommandIDs::EditQuantifyPoints
-        , CommandIDs::EditDiscretizePoints
+        , CommandIDs::PointsNew
+        , CommandIDs::PointsRemove
+        , CommandIDs::PointsMove
+        , CommandIDs::PointsCopy
+        , CommandIDs::PointsPaste
+        , CommandIDs::PointsScale
+        , CommandIDs::PointsQuantify
+        , CommandIDs::PointsDiscretize
+        
+        , CommandIDs::TransportTogglePlayback
+        , CommandIDs::TransportToggleLooping
+        , CommandIDs::TransportRewindPlayHead
         
         , CommandIDs::HelpOpenManual
         , CommandIDs::HelpOpenForum
@@ -169,27 +172,18 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
             
-        case CommandIDs::TransportTogglePlayback:
+        case CommandIDs::EditUndo:
         {
-            result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
-            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-            result.setTicked(docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
+            result.setInfo(juce::translate("Undo Action"), juce::translate(""), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(false);
         }
             break;
-        case CommandIDs::TransportToggleLooping:
+        case CommandIDs::EditRedo:
         {
-            result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
-            result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-            result.setTicked(docAcsr.getAttr<Document::AttrType::isLooping>());
-        }
-            break;
-        case CommandIDs::TransportRewindPlayHead:
-        {
-            result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
-            result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0 && !docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
+            result.setInfo(juce::translate("Redo Action"), juce::translate(""), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(false);
         }
             break;
         
@@ -221,7 +215,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::AnalysisRemove:
         {
             result.setInfo(juce::translate("Remove Analysis"), juce::translate("Removes the analysis from the document"), "Analysis", 0);
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
+            result.setActive(!docAcsr.getAccessors<Document::AttrType::analyzers>().empty());
         }
             break;
         case CommandIDs::AnalysisProperties:
@@ -237,52 +234,77 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
             
-        case CommandIDs::EditNewPoints:
+        case CommandIDs::PointsNew:
         {
-            result.setInfo(juce::translate("New Point(s) or Marker(s)"), juce::translate("Adds new points or markers to the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("New Point(s) or Marker(s)"), juce::translate("Adds new points or markers to the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditRemovePoints:
+        case CommandIDs::PointsRemove:
         {
-            result.setInfo(juce::translate("Remove Point(s) or Marker(s)"), juce::translate("Removes points or markers from the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Remove Point(s) or Marker(s)"), juce::translate("Removes points or markers from the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditMovePoints:
+        case CommandIDs::PointsMove:
         {
-            result.setInfo(juce::translate("Move Point(s) or Marker(s)"), juce::translate("Moves points or markers of the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Move Point(s) or Marker(s)"), juce::translate("Moves points or markers of the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditCopyPoints:
+        case CommandIDs::PointsCopy:
         {
-            result.setInfo(juce::translate("Copy Point(s) or Marker(s)"), juce::translate("Copies points or markers of the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Copy Point(s) or Marker(s)"), juce::translate("Copies points or markers of the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditPastePoints:
+        case CommandIDs::PointsPaste:
         {
-            result.setInfo(juce::translate("Paste Point(s) or Marker(s)"), juce::translate("Pastes points or markers to the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Paste Point(s) or Marker(s)"), juce::translate("Pastes points or markers to the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditScalePoints:
+        case CommandIDs::PointsScale:
         {
-            result.setInfo(juce::translate("Scale Point(s) or Marker(s)"), juce::translate("Scales points or markers of the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Scale Point(s) or Marker(s)"), juce::translate("Scales points or markers of the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditQuantifyPoints:
+        case CommandIDs::PointsQuantify:
         {
-            result.setInfo(juce::translate("Quantify Point(s) or Marker(s)"), juce::translate("Quantifies points or markers of the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Quantify Point(s) or Marker(s)"), juce::translate("Quantifies points or markers of the analysis"), "Points", 0);
             result.setActive(true);
         }
             break;
-        case CommandIDs::EditDiscretizePoints:
+        case CommandIDs::PointsDiscretize:
         {
-            result.setInfo(juce::translate("Discretize Point(s) or Marker(s)"), juce::translate("Discretizes points or markers of the analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Discretize Point(s) or Marker(s)"), juce::translate("Discretizes points or markers of the analysis"), "Points", 0);
             result.setActive(true);
+        }
+            break;
+            
+            
+        case CommandIDs::TransportTogglePlayback:
+        {
+            result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setTicked(docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
+        }
+            break;
+        case CommandIDs::TransportToggleLooping:
+        {
+            result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
+            result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setTicked(docAcsr.getAttr<Document::AttrType::isLooping>());
+        }
+            break;
+        case CommandIDs::TransportRewindPlayHead:
+        {
+            result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
+            result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0 && !docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
         }
             break;
             
@@ -371,27 +393,13 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
             
-        case CommandIDs::TransportTogglePlayback:
+        case CommandIDs::EditUndo:
+        case CommandIDs::EditRedo:
         {
-            auto constexpr attr = Document::AttrType::isPlaybackStarted;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            showUnsupportedAction();
             return true;
         }
-        case CommandIDs::TransportToggleLooping:
-        {
-            auto constexpr attr = Document::AttrType::isLooping;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
-            return true;
-        }
-        case CommandIDs::TransportRewindPlayHead:
-        {
-            auto constexpr attr = Document::AttrType::playheadPosition;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
-            return true;
-        }
+            
             
         case CommandIDs::AnalysisOpen:
         {
@@ -414,16 +422,38 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
             
-        case CommandIDs::EditNewPoints:
-        case CommandIDs::EditRemovePoints:
-        case CommandIDs::EditMovePoints:
-        case CommandIDs::EditCopyPoints:
-        case CommandIDs::EditPastePoints:
-        case CommandIDs::EditScalePoints:
-        case CommandIDs::EditQuantifyPoints:
-        case CommandIDs::EditDiscretizePoints:
+        case CommandIDs::PointsNew:
+        case CommandIDs::PointsRemove:
+        case CommandIDs::PointsMove:
+        case CommandIDs::PointsCopy:
+        case CommandIDs::PointsPaste:
+        case CommandIDs::PointsScale:
+        case CommandIDs::PointsQuantify:
+        case CommandIDs::PointsDiscretize:
         {
             showUnsupportedAction();
+            return true;
+        }
+            
+        case CommandIDs::TransportTogglePlayback:
+        {
+            auto constexpr attr = Document::AttrType::isPlaybackStarted;
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::TransportToggleLooping:
+        {
+            auto constexpr attr = Document::AttrType::isLooping;
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::TransportRewindPlayHead:
+        {
+            auto constexpr attr = Document::AttrType::playheadPosition;
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
             return true;
         }
             
@@ -455,7 +485,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Transport", "Analysis", "Edit", "Help"};
+    return {"File", "Edit", "Transport", "Analysis", "Points", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -485,12 +515,10 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::DocumentOpenTemplate);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentSaveTemplate);
     }
-    else if(menuName == "Transport")
+    else if(menuName == "Edit")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::TransportTogglePlayback);
-        menu.addCommandItem(&commandManager, CommandIDs::TransportToggleLooping);
-        menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::TransportRewindPlayHead);
+        menu.addCommandItem(&commandManager, CommandIDs::EditUndo);
+        menu.addCommandItem(&commandManager, CommandIDs::EditRedo);
     }
     else if(menuName == "Analysis")
     {
@@ -502,17 +530,24 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisExport);
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisProperties);
     }
-    else if(menuName == "Edit")
+    else if(menuName == "Points")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::EditNewPoints);
-        menu.addCommandItem(&commandManager, CommandIDs::EditRemovePoints);
-        menu.addCommandItem(&commandManager, CommandIDs::EditMovePoints);
-        menu.addCommandItem(&commandManager, CommandIDs::EditCopyPoints);
-        menu.addCommandItem(&commandManager, CommandIDs::EditPastePoints);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsNew);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsRemove);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsMove);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsCopy);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsPaste);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::EditScalePoints);
-        menu.addCommandItem(&commandManager, CommandIDs::EditQuantifyPoints);
-        menu.addCommandItem(&commandManager, CommandIDs::EditDiscretizePoints);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsScale);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsQuantify);
+        menu.addCommandItem(&commandManager, CommandIDs::PointsDiscretize);
+    }
+    else if(menuName == "Transport")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::TransportTogglePlayback);
+        menu.addCommandItem(&commandManager, CommandIDs::TransportToggleLooping);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::TransportRewindPlayHead);
     }
     else if(menuName == "Help")
     {

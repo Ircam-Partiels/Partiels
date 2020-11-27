@@ -48,7 +48,7 @@ namespace Layout
             
             Orientation getOrientation() const;
             
-            void setContent(size_t index, juce::Component& content, int minimumSize = 0);
+            void setContent(size_t index, juce::Component* content, int minimumSize = 0);
             void setOrientation(Orientation orientation);
             
             // juce::Component

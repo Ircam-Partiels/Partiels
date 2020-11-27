@@ -25,9 +25,8 @@ namespace Application
             , DocumentOpenTemplate
             , DocumentSaveTemplate
             
-            , TransportTogglePlayback
-            , TransportToggleLooping
-            , TransportRewindPlayHead
+            , EditUndo
+            , EditRedo
             
             , AnalysisOpen
             , AnalysisNew
@@ -37,14 +36,18 @@ namespace Application
             , AnalysisProperties
             , AnalysisExport
             
-            , EditNewPoints
-            , EditRemovePoints
-            , EditMovePoints
-            , EditCopyPoints
-            , EditPastePoints
-            , EditScalePoints
-            , EditQuantifyPoints
-            , EditDiscretizePoints
+            , PointsNew
+            , PointsRemove
+            , PointsMove
+            , PointsCopy
+            , PointsPaste
+            , PointsScale
+            , PointsQuantify
+            , PointsDiscretize
+            
+            , TransportTogglePlayback
+            , TransportToggleLooping
+            , TransportRewindPlayHead
             
             , HelpOpenManual
             , HelpOpenForum
