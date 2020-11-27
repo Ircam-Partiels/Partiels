@@ -75,20 +75,37 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
 {
     commands.addArray(
     {
-        CommandIDs::Open
-        , CommandIDs::New
-        , CommandIDs::Save
-        , CommandIDs::Duplicate
-        , CommandIDs::Consolidate
+        CommandIDs::DocumentOpen
+        , CommandIDs::DocumentNew
+        , CommandIDs::DocumentSave
+        , CommandIDs::DocumentDuplicate
+        , CommandIDs::DocumentConsolidate
+        , CommandIDs::DocumentOpenTemplate
+        , CommandIDs::DocumentSaveTemplate
         
-        , CommandIDs::TogglePlayback
-        , CommandIDs::ToggleLooping
-        , CommandIDs::RewindPlayHead
+        , CommandIDs::TransportTogglePlayback
+        , CommandIDs::TransportToggleLooping
+        , CommandIDs::TransportRewindPlayHead
 
-        , CommandIDs::AnalysisAdd
+        , CommandIDs::AnalysisOpen
+        , CommandIDs::AnalysisNew
+        , CommandIDs::AnalysisSave
         , CommandIDs::AnalysisDuplicate
         , CommandIDs::AnalysisRemove
         , CommandIDs::AnalysisProperties
+        , CommandIDs::AnalysisExport
+        
+        , CommandIDs::EditNewPoints
+        , CommandIDs::EditRemovePoints
+        , CommandIDs::EditMovePoints
+        , CommandIDs::EditCopyPoints
+        , CommandIDs::EditPastePoints
+        , CommandIDs::EditScalePoints
+        , CommandIDs::EditQuantifyPoints
+        , CommandIDs::EditDiscretizePoints
+        
+        , CommandIDs::HelpOpenManual
+        , CommandIDs::HelpOpenForum
     });
 }
 
@@ -97,50 +114,62 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
     auto const& docAcsr = Instance::get().getDocumentAccessor();
     switch (commandID)
     {
-        case CommandIDs::Open:
+        case CommandIDs::DocumentOpen:
         {
             result.setInfo(juce::translate("Open..."), juce::translate("Open a document or an audio file"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('o', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
         }
             break;
-        case CommandIDs::OpenRecent:
+        case CommandIDs::DocumentOpenRecent:
         {
             auto const& appAcsr = Instance::get().getApplicationAccessor();
             result.setInfo(juce::translate("Open Recent"), juce::translate("Open a recent document"), "Application", 0);
             result.setActive(!appAcsr.getAttr<AttrType::recentlyOpenedFilesList>().empty());
         }
             break;
-        case CommandIDs::New:
+        case CommandIDs::DocumentNew:
         {
             result.setInfo(juce::translate("New"), juce::translate("Create a new document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
         }
             break;
-        case CommandIDs::Save:
+        case CommandIDs::DocumentSave:
         {
             result.setInfo(juce::translate("Save"), juce::translate("Save the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
         }
             break;
-        case CommandIDs::Duplicate:
+        case CommandIDs::DocumentDuplicate:
         {
             result.setInfo(juce::translate("Duplicate..."), juce::translate("Save the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(true);
         }
             break;
-        case CommandIDs::Consolidate:
+        case CommandIDs::DocumentConsolidate:
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidate the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
+        case CommandIDs::DocumentOpenTemplate:
+        {
+            result.setInfo(juce::translate("Open Template..."), juce::translate("Open a template"), "Application", 0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+        case CommandIDs::DocumentSaveTemplate:
+        {
+            result.setInfo(juce::translate("Save Template..."), juce::translate("Save as a template"), "Application", 0);
+            result.setActive(!docAcsr.getAccessors<Document::AttrType::analyzers>().empty());
+        }
+            break;
             
-        case CommandIDs::TogglePlayback:
+        case CommandIDs::TransportTogglePlayback:
         {
             result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
@@ -148,7 +177,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setTicked(docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
         }
             break;
-        case CommandIDs::ToggleLooping:
+        case CommandIDs::TransportToggleLooping:
         {
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
@@ -156,18 +185,30 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setTicked(docAcsr.getAttr<Document::AttrType::isLooping>());
         }
             break;
-        case CommandIDs::RewindPlayHead:
+        case CommandIDs::TransportRewindPlayHead:
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0 && !docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
         }
             break;
-            
-        case CommandIDs::AnalysisAdd:
+        
+        case CommandIDs::AnalysisOpen:
         {
-            result.setInfo(juce::translate("Add Analysis"), juce::translate("Adds a new analysis to the document"), "Analysis", 0);
+            result.setInfo(juce::translate("Open Analysis Template"), juce::translate("Open a new analysis"), "Analysis", 0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+        case CommandIDs::AnalysisNew:
+        {
+            result.setInfo(juce::translate("Add New Analysis"), juce::translate("Adds a new analysis"), "Analysis", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+        case CommandIDs::AnalysisSave:
+        {
+            result.setInfo(juce::translate("Save Analysis Template"), juce::translate("Save the analysis"), "Analysis", 0);
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
@@ -189,6 +230,75 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
+        case CommandIDs::AnalysisExport:
+        {
+            result.setInfo(juce::translate("Exports Analysis"), juce::translate("Exports the analysis"), "Analysis", 0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
+            
+        case CommandIDs::EditNewPoints:
+        {
+            result.setInfo(juce::translate("New Point(s) or Marker(s)"), juce::translate("Adds new points or markers to the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditRemovePoints:
+        {
+            result.setInfo(juce::translate("Remove Point(s) or Marker(s)"), juce::translate("Removes points or markers from the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditMovePoints:
+        {
+            result.setInfo(juce::translate("Move Point(s) or Marker(s)"), juce::translate("Moves points or markers of the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditCopyPoints:
+        {
+            result.setInfo(juce::translate("Copy Point(s) or Marker(s)"), juce::translate("Copies points or markers of the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditPastePoints:
+        {
+            result.setInfo(juce::translate("Paste Point(s) or Marker(s)"), juce::translate("Pastes points or markers to the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditScalePoints:
+        {
+            result.setInfo(juce::translate("Scale Point(s) or Marker(s)"), juce::translate("Scales points or markers of the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditQuantifyPoints:
+        {
+            result.setInfo(juce::translate("Quantify Point(s) or Marker(s)"), juce::translate("Quantifies points or markers of the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::EditDiscretizePoints:
+        {
+            result.setInfo(juce::translate("Discretize Point(s) or Marker(s)"), juce::translate("Discretizes points or markers of the analysis"), "Edit", 0);
+            result.setActive(true);
+        }
+            break;
+            
+            
+        case CommandIDs::HelpOpenManual:
+        {
+            result.setInfo(juce::translate("Open Manual"), juce::translate("Opens the manual in a web browser"), "Help", 0);
+            result.setActive(true);
+        }
+            break;
+        case CommandIDs::HelpOpenForum:
+        {
+            result.setInfo(juce::translate("Proceed to Forum"), juce::translate("Opens the forum page in a web browser"), "Help", 0);
+            result.setActive(true);
+        }
+            break;
     }
 }
 
@@ -204,7 +314,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     auto& fileBased = Instance::get().getDocumentFileBased();
     switch (info.commandID)
     {
-        case CommandIDs::Open:
+        case CommandIDs::DocumentOpen:
         {
             if(fileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
             {
@@ -219,12 +329,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             Instance::get().openFile(fc.getResult());
             return true;
         }
-        case CommandIDs::OpenRecent:
+        case CommandIDs::DocumentOpenRecent:
         {
             // Managed 
             return true;
         }
-        case CommandIDs::New:
+        case CommandIDs::DocumentNew:
         {
             if(fileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
             {
@@ -243,37 +353,39 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }, NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::Save:
+        case CommandIDs::DocumentSave:
         {
             fileBased.save(true, true);
             return true;
         }
-        case CommandIDs::Duplicate:
+        case CommandIDs::DocumentDuplicate:
         {
             fileBased.saveAsInteractive(true);
             return true;
         }
-        case CommandIDs::Consolidate:
+        case CommandIDs::DocumentConsolidate:
+        case CommandIDs::DocumentOpenTemplate:
+        case CommandIDs::DocumentSaveTemplate:
         {
             showUnsupportedAction();
             return true;
         }
             
-        case CommandIDs::TogglePlayback:
+        case CommandIDs::TransportTogglePlayback:
         {
             auto constexpr attr = Document::AttrType::isPlaybackStarted;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
             documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::ToggleLooping:
+        case CommandIDs::TransportToggleLooping:
         {
             auto constexpr attr = Document::AttrType::isLooping;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
             documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::RewindPlayHead:
+        case CommandIDs::TransportRewindPlayHead:
         {
             auto constexpr attr = Document::AttrType::playheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
@@ -281,23 +393,42 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
             
-        case CommandIDs::AnalysisAdd:
+        case CommandIDs::AnalysisOpen:
+        {
+            showUnsupportedAction();
+            return true;
+        }
+        case CommandIDs::AnalysisNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.addAnalysis(AlertType::window);
             return true;
         }
+        case CommandIDs::AnalysisSave:
         case CommandIDs::AnalysisDuplicate:
-        {
-            showUnsupportedAction();
-            return true;
-        }
         case CommandIDs::AnalysisRemove:
+        case CommandIDs::AnalysisProperties:
+        case CommandIDs::AnalysisExport:
         {
             showUnsupportedAction();
             return true;
         }
-        case CommandIDs::AnalysisProperties:
+            
+        case CommandIDs::EditNewPoints:
+        case CommandIDs::EditRemovePoints:
+        case CommandIDs::EditMovePoints:
+        case CommandIDs::EditCopyPoints:
+        case CommandIDs::EditPastePoints:
+        case CommandIDs::EditScalePoints:
+        case CommandIDs::EditQuantifyPoints:
+        case CommandIDs::EditDiscretizePoints:
+        {
+            showUnsupportedAction();
+            return true;
+        }
+            
+        case CommandIDs::HelpOpenManual:
+        case CommandIDs::HelpOpenForum:
         {
             showUnsupportedAction();
             return true;
@@ -324,7 +455,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Transport", "Analysis", "Help"};
+    return {"File", "Transport", "Analysis", "Edit", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -336,10 +467,10 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     juce::PopupMenu menu;
     if(menuName == "File")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::New);
-        menu.addCommandItem(&commandManager, CommandIDs::Open);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentNew);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentOpen);
         juce::PopupMenu recentFilesMenu;
-        auto recentFileIndex = static_cast<int>(CommandIDs::OpenRecent);
+        auto recentFileIndex = static_cast<int>(CommandIDs::DocumentOpenRecent);
         auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
         for(auto const& file : recentFiles)
         {
@@ -347,27 +478,46 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
             recentFilesMenu.addItem(recentFileIndex++, file.getFileNameWithoutExtension(), isActive);
         }
         menu.addSubMenu("Open Recent", recentFilesMenu);
-        menu.addCommandItem(&commandManager, CommandIDs::Save);
-        menu.addCommandItem(&commandManager, CommandIDs::Duplicate);
-        menu.addCommandItem(&commandManager, CommandIDs::Consolidate);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentSave);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentDuplicate);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentConsolidate);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentOpenTemplate);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentSaveTemplate);
     }
     else if(menuName == "Transport")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::TogglePlayback);
-        menu.addCommandItem(&commandManager, CommandIDs::ToggleLooping);
+        menu.addCommandItem(&commandManager, CommandIDs::TransportTogglePlayback);
+        menu.addCommandItem(&commandManager, CommandIDs::TransportToggleLooping);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::RewindPlayHead);
+        menu.addCommandItem(&commandManager, CommandIDs::TransportRewindPlayHead);
     }
     else if(menuName == "Analysis")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisAdd);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisOpen);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisNew);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisSave);
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisDuplicate);
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisRemove);
+        menu.addCommandItem(&commandManager, CommandIDs::AnalysisExport);
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisProperties);
+    }
+    else if(menuName == "Edit")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::EditNewPoints);
+        menu.addCommandItem(&commandManager, CommandIDs::EditRemovePoints);
+        menu.addCommandItem(&commandManager, CommandIDs::EditMovePoints);
+        menu.addCommandItem(&commandManager, CommandIDs::EditCopyPoints);
+        menu.addCommandItem(&commandManager, CommandIDs::EditPastePoints);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::EditScalePoints);
+        menu.addCommandItem(&commandManager, CommandIDs::EditQuantifyPoints);
+        menu.addCommandItem(&commandManager, CommandIDs::EditDiscretizePoints);
     }
     else if(menuName == "Help")
     {
-        
+        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenManual);
+        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenForum);
     }
     else
     {
@@ -382,7 +532,7 @@ void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMe
     using CommandIDs = CommandTarget::CommandIDs;
     
     auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
-    auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::OpenRecent));
+    auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::DocumentOpenRecent));
     if(fileIndex < recentFiles.size())
     {
         Instance::get().openFile(recentFiles[fileIndex]);

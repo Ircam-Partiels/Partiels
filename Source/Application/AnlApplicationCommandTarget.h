@@ -17,22 +17,39 @@ namespace Application
 
         enum CommandIDs : int
         {
-            Open = 0x200100
-            , New
-            , Save
-            , Duplicate
-            , Consolidate
+              DocumentOpen = 0x2001
+            , DocumentNew
+            , DocumentSave
+            , DocumentDuplicate
+            , DocumentConsolidate
+            , DocumentOpenTemplate
+            , DocumentSaveTemplate
             
-            , TogglePlayback
-            , ToggleLooping
-            , RewindPlayHead
+            , TransportTogglePlayback
+            , TransportToggleLooping
+            , TransportRewindPlayHead
             
-            , AnalysisAdd
+            , AnalysisOpen
+            , AnalysisNew
+            , AnalysisSave
             , AnalysisDuplicate
             , AnalysisRemove
             , AnalysisProperties
+            , AnalysisExport
             
-            , OpenRecent
+            , EditNewPoints
+            , EditRemovePoints
+            , EditMovePoints
+            , EditCopyPoints
+            , EditPastePoints
+            , EditScalePoints
+            , EditQuantifyPoints
+            , EditDiscretizePoints
+            
+            , HelpOpenManual
+            , HelpOpenForum
+
+            , DocumentOpenRecent
         };
         
         CommandTarget();
