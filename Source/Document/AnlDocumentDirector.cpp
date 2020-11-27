@@ -136,15 +136,19 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
             case Analyzer::key:
             case Analyzer::AttrType::feature:
             case Analyzer::AttrType::parameters:
+            case Analyzer::blockSize:
             {
-                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-                if(reader == nullptr)
+                std::thread thd([&]()
                 {
-                    return;
-                }
-                JUCE_COMPILER_WARNING("add threaded  appraoch")
-                anlDebug("Analyzer", "Perform...");
-                Analyzer::performAnalysis(acsr, *reader.get(), 512, notification);
+                    auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                    if(reader == nullptr)
+                    {
+                        return;
+                    }
+                    Analyzer::performAnalysis(acsr, *reader.get(), 512, NotificationType::asynchronous);
+                    triggerAsyncUpdate();
+                });
+                mThreads.emplace_back(std::move(thd));
             }
                 break;
             case Analyzer::AttrType::zoom:
@@ -155,6 +159,20 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
                 break;
         }
     };
+}
+
+void Document::Director::handleAsyncUpdate()
+{
+    JUCE_COMPILER_WARNING("Improve")
+    auto it = std::remove_if(mThreads.begin(), mThreads.end(), [](auto const& thd)
+    {
+        return thd.joinable();
+    });
+    for(auto end = it; end != mThreads.end(); ++end)
+    {
+        end->join();
+    }
+    mThreads.erase(it, mThreads.end());
 }
 
 ANALYSE_FILE_END

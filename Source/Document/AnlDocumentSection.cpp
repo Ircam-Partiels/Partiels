@@ -54,6 +54,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
         {
             case AttrType::analyzers:
             {
+                JUCE_COMPILER_WARNING("fix deletion and recursive approach")
                 auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
                 auto& timeZoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
                 

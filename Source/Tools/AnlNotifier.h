@@ -4,8 +4,30 @@
 
 ANALYSE_FILE_BEGIN
 
-template<class listener_t> class Notifier
-: private juce::AsyncUpdater
+class SharedMutexBase
+{
+public:
+    
+    void setMutex(std::mutex* mutex)
+    {
+        mSharedMutex = mutex;
+    }
+    
+    std::mutex& getMutex()
+    {
+        return mSharedMutex == nullptr ? mMutex : *mSharedMutex;
+    }
+    
+private:
+    
+    std::mutex mMutex;
+    std::mutex* mSharedMutex = nullptr;
+};
+
+template<class listener_t>
+class Notifier
+: public SharedMutexBase
+, private juce::AsyncUpdater
 {
 public:
     
@@ -17,13 +39,13 @@ public:
     
     bool add(listener_t& listener)
     {
-        std::unique_lock<std::recursive_mutex> listenerLock(mListenerMutex);
+        std::unique_lock<std::mutex> listenerLock(mListenerMutex);
         return mListeners.insert(&listener).second;
     }
     
     void remove(listener_t& listener)
     {
-        std::unique_lock<std::recursive_mutex> listenerLock(mListenerMutex);
+        std::unique_lock<std::mutex> listenerLock(mListenerMutex);
         mListeners.erase(&listener);
     }
     
@@ -37,9 +59,10 @@ public:
         }
         else
         {
-            std::unique_lock<std::recursive_mutex> listenerLock(mListenerMutex);
+            std::unique_lock<std::mutex> listenerLock(mListenerMutex);
             for(auto* listener : mListeners)
             {
+                std::unique_lock<std::mutex> notifyingLock(getMutex());
                 method(*listener);
             }
         }
@@ -66,7 +89,7 @@ private:
     std::queue<std::function<void(listener_t&)>> mQueue;
     std::mutex mQueueMutex;
     std::set<listener_t*> mListeners;
-    std::recursive_mutex mListenerMutex;
+    std::mutex mListenerMutex;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Notifier)
 };

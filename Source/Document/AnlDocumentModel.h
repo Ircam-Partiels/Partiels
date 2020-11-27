@@ -50,11 +50,12 @@ namespace Document
         template <>
         bool insertAccessor<AttrType::analyzers>(long index, NotificationType notification)
         {
-            static const Analyzer::Container ctnr{
-                {""}
+            static const Analyzer::Container ctnr {
+                  {""}
                 , {""}
                 , {0}
                 , {{}}
+                , {512}
                 , {}
                 , {juce::Colours::black}
                 , {Analyzer::ColorMap::Heat}

@@ -236,6 +236,7 @@ namespace Model
                     }
                 }, notification);
             }
+            backup->mListeners.setMutex(nullptr);
         }
         
         //! @brief Gets an attribute from the container
@@ -511,7 +512,6 @@ namespace Model
         
         void addListener(Listener& listener, NotificationType const notification)
         {
-            JUCE_COMPILER_WARNING("Ensure non recursive notificatiton of submodels");
             if(mListeners.add(listener))
             {
                 detail::for_each(mData, [&](auto& d)
@@ -567,7 +567,7 @@ namespace Model
                 if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                 {
                     mListeners.notify([=](Listener& listener)
-                                      {
+                    {
                         anlWeakAssert(listener.onChanged != nullptr);
                         if(listener.onChanged != nullptr)
                         {
@@ -575,6 +575,8 @@ namespace Model
                         }
                     }, notification);
                 }
+                JUCE_COMPILER_WARNING("clean this");
+                (*it)->mListeners.setMutex(&mListeners.getMutex());
             }
             return true;
         }
@@ -658,6 +660,8 @@ namespace Model
         
         container_type mData;
         Notifier<Listener> mListeners;
+        
+        template<class, class> friend class Accessor;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };

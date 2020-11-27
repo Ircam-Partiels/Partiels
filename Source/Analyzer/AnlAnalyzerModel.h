@@ -17,6 +17,7 @@ namespace Analyzer
         name,
         feature,
         parameters,
+        blockSize,
         zoom,
         colour,
         colourMap,
@@ -31,6 +32,7 @@ namespace Analyzer
     , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::blockSize, size_t, Model::AttrFlag::basic>
     , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
