@@ -26,11 +26,7 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
                 repaint();
                 return;
             }
-            
-            auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
-            auto const numDimension = results.front().values.size() + 1;
-            
-            anlDebug("Analyzer", "Results updated....");
+        
             if(results.front().values.size() > 1)
             {
                 auto const witdh = static_cast<int>(results.size());
@@ -57,45 +53,13 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
                 }
             }
             
-            // Update the zoom range
-            if(numDimension == 1)
-            {
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, 1.0}, NotificationType::synchronous);
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
-                anlDebug("Analyzer", "range 0 1");
-            }
-            else if(numDimension == 2)
-            {
-                auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                                                {
-                    return lhs.values[0] < rhs.values[0];
-                });
-                auto const min = static_cast<double>(pair.first->values[0]);
-                auto const max = static_cast<double>(pair.second->values[0]);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{min, max}, NotificationType::synchronous);
-                anlDebug("Analyzer", "range " + std::to_string(min) + " " + std::to_string(max));
-            }
-            else
-            {
-                auto it = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                                           {
-                    return lhs.values.size() < rhs.values.size();
-                });
-                
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, NotificationType::synchronous);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(juce::Range<double>{0.0, static_cast<double>(it->values.size())}, NotificationType::synchronous);
-                anlDebug("Analyzer", "range 0 " + std::to_string(static_cast<double>(it->values.size())));
-            }
+            repaint();
         }
     };
     
     mZoomListener.onChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
-        if(attribute == Zoom::AttrType::globalRange)
-        {
-            auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-            //anlWeakAssert(!range.isEmpty());
-        }
+        juce::ignoreUnused(acsr, attribute);
         repaint();
     };
     

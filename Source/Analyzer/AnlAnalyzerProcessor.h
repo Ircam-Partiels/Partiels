@@ -6,9 +6,9 @@ ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    std::unique_ptr<Vamp::Plugin> createPlugin(Accessor const& accessor, double sampleRate, bool showMessageOnFailure);
+    std::unique_ptr<Vamp::Plugin> createPlugin(Accessor const& accessor, double sampleRate, AlertType alertType);
     
-    void performAnalysis(Accessor& accessor, juce::AudioFormatReader& audioFormatReader, size_t blockSize, NotificationType notification);
+    std::vector<Analyzer::Result> performAnalysis(Accessor const& accessor, juce::AudioFormatReader& audioFormatReader);
 }
 
 ANALYSE_FILE_END

@@ -102,7 +102,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 auto anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
                 for(auto& anlAcsr : anlAcsrs)
                 {
-                    Analyzer::performAnalysis(anlAcsr, *reader.get(), 512, notification);
+                    anlAcsr.get().onUpdated(Analyzer::AttrType::key, notification);
                 }
             }
                 break;
@@ -146,7 +146,44 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
                         return;
                     }
                     
-                    Analyzer::performAnalysis(acsr, *reader.get(), 512, NotificationType::asynchronous);
+                    auto const results = Analyzer::performAnalysis(acsr, *reader.get());
+                    if(results.empty())
+                    {
+                        triggerAsyncUpdate();
+                        return;
+                    }
+                    
+                    auto& zoomAcsr = acsr.getAccessor<Analyzer::AttrType::zoom>(0);
+                    auto getZoomState = [&]() -> std::pair<double, Zoom::Range>
+                    {
+                        auto const numDimension = results.front().values.size() + 1;
+                        if(numDimension == 1)
+                        {
+                            return {1.0, {0.0, 1.0}};
+                        }
+                        else if(numDimension == 2)
+                        {
+                            auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+                            {
+                                return lhs.values[0] < rhs.values[0];
+                            });
+                            return {std::numeric_limits<double>::epsilon(), {static_cast<double>(pair.first->values[0]), static_cast<double>(pair.second->values[0])}};
+                        }
+                        else
+                        {
+                            auto it = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+                            {
+                                return lhs.values.size() < rhs.values.size();
+                            });
+                            return {1.0, {0.0, static_cast<double>(it->values.size())}};
+                        }
+                    };
+                    
+                    auto const zoomState = getZoomState();
+                    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(zoomState.second, NotificationType::asynchronous);
+                    zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(zoomState.first, NotificationType::asynchronous);
+                    
+                    acsr.setAttr<Analyzer::AttrType::results>(results, NotificationType::asynchronous);
                     triggerAsyncUpdate();
                 });
                 mThreads.emplace_back(std::move(thd));

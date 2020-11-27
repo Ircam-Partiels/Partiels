@@ -5,7 +5,7 @@
 
 ANALYSE_FILE_BEGIN
 
-std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, double sampleRate, bool showMessageOnFailure)
+std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, double sampleRate, AlertType alertType)
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;
@@ -23,7 +23,7 @@ std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, d
     
     if(pluginLoader == nullptr)
     {
-        if(showMessageOnFailure)
+        if(alertType == AlertType::window)
         {
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin manager is not available.").replace("PLGNKEY", pluginKey));
         }
@@ -33,7 +33,7 @@ std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, d
     auto pluginInstance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), static_cast<int>(sampleRate), PluginLoader::ADAPT_ALL));
     if(pluginInstance == nullptr)
     {
-        if(showMessageOnFailure)
+        if(alertType == AlertType::window)
         {
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin key is invalid.").replace("PLGNKEY", pluginKey));
         }
@@ -43,20 +43,20 @@ std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, d
     return pluginInstance;
 }
 
-void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audioFormatReader, size_t blockSize, NotificationType notification)
+std::vector<Analyzer::Result> Analyzer::performAnalysis(Accessor const& accessor, juce::AudioFormatReader& audioFormatReader)
 {
     auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
     auto const sampleRate = audioFormatReader.sampleRate;
     auto const featureIndex = accessor.getAttr<AttrType::feature>();
-    auto instance = createPlugin(accessor, sampleRate, true);
+    auto const blockSize = accessor.getAttr<AttrType::blockSize>();
+    auto instance = createPlugin(accessor, sampleRate, AlertType::window);
     if(instance == nullptr)
     {
-        return;
+        return {};
     }
 
-    using result_type = std::remove_const<std::remove_reference<decltype(accessor.getAttr<AttrType::results>())>::type>::type;
-    result_type results;
+    std::vector<Analyzer::Result> results;
     
     juce::AudioBuffer<float> buffer(numChannels, static_cast<int>(blockSize));
     instance->initialise(static_cast<size_t>(numChannels), blockSize, blockSize);
@@ -71,16 +71,14 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
             results.insert(results.end(), it->second.begin(), it->second.end());
         }
     }
+    auto const result = instance->getRemainingFeatures();
+    auto it = result.find(static_cast<int>(featureIndex));
+    if(it != result.end())
     {
-        auto const result = instance->getRemainingFeatures();
-        auto it = result.find(static_cast<int>(featureIndex));
-        if(it != result.end())
-        {
-            results.insert(results.end(), it->second.cbegin(), it->second.cend());
-        }
+        results.insert(results.end(), it->second.cbegin(), it->second.cend());
     }
     
-    accessor.setAttr<AttrType::results>(results, notification);
+    return results;
 }
 
 ANALYSE_FILE_END

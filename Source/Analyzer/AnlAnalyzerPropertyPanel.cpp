@@ -20,7 +20,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertySection.setPanels({}, Layout::PropertyPanelBase::left);
                 mProperties.clear();
                 
-                auto instance = createPlugin(acsr, 44100.0, true);
+                auto instance = createPlugin(acsr, 44100.0, AlertType::silent);
                 if(instance == nullptr)
                 {
                     resized();
