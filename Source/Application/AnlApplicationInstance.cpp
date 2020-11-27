@@ -4,16 +4,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Instance::Instance()
-{
-    mDocumentAccessor.setSanitizer(&mDocumentDirector);
-}
-
-Application::Instance::~Instance()
-{
-    mDocumentAccessor.setSanitizer(nullptr);
-}
-
 juce::String const Application::Instance::getApplicationName()
 {
     return ProjectInfo::projectName;
@@ -36,7 +26,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     unitTestRunner.runAllTests();
 #endif
     
-    AnlDebug("Application", "Begin...");
+    anlDebug("Application", "Begin...");
     juce::ignoreUnused(commandLine);
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
     juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
@@ -47,11 +37,11 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mWindow = std::make_unique<Window>();
     if(mWindow == nullptr)
     {
-        AnlDebug("Application", "Failed.");
+        anlDebug("Application", "Failed.");
         return;
     }
     openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
-    AnlDebug("Application", "Ready.");
+    anlDebug("Application", "Ready.");
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -61,7 +51,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 
 void Application::Instance::systemRequestedQuit()
 {
-    AnlDebug("Application", "Begin...");
+    anlDebug("Application", "Begin...");
     if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
     {
         return;
@@ -69,7 +59,7 @@ void Application::Instance::systemRequestedQuit()
     
     if(juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
     {
-        AnlDebug("Application", "Delayed...");
+        anlDebug("Application", "Delayed...");
         juce::Timer::callAfterDelay(500, [this]()
         {
             systemRequestedQuit();
@@ -77,7 +67,7 @@ void Application::Instance::systemRequestedQuit()
     }
     else
     {
-        AnlDebug("Application", "Ready");
+        anlDebug("Application", "Ready");
         quit();
     }
 }
@@ -86,7 +76,7 @@ void Application::Instance::shutdown()
 {
     mWindow.reset();
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-    AnlDebug("Application", "Done");
+    anlDebug("Application", "Done");
 }
 
 Application::Instance& Application::Instance::get()

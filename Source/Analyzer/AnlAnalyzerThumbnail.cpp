@@ -10,7 +10,6 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mNameLabel);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mPropertiesButton);
-    addAndMakeVisible(mRelaunchButton);
     
     mNameLabel.onTextChange = [&]()
     {
@@ -25,15 +24,6 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
     mRemoveButton.setTooltip(juce::translate("Remove analysis"));
-    
-    mRelaunchButton.onClick = [&]()
-    {
-        if(onRelaunch != nullptr)
-        {
-            onRelaunch();
-        }
-    };
-    mRelaunchButton.setTooltip(juce::translate("Run analysis"));
     
     mPropertiesButton.onClick = [&]()
     {
@@ -79,7 +69,6 @@ void Analyzer::Thumbnail::resized()
     auto const bottomButtonWidth = bottomBounds.getWidth() / 3;
     mRemoveButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
     mPropertiesButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
-    mRelaunchButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
 }
 
 void Analyzer::Thumbnail::paint(juce::Graphics& g)

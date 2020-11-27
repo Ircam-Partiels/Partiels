@@ -24,7 +24,6 @@ namespace Analyzer
         void paint(juce::Graphics& g) override;
         
         std::function<void(void)> onRemove = nullptr;
-        std::function<void(void)> onRelaunch = nullptr;
         
     private:
         Accessor& mAccessor;
@@ -34,7 +33,6 @@ namespace Analyzer
         juce::Label mNameLabel;
         juce::TextButton mRemoveButton {juce::CharPointer_UTF8("×")};
         juce::TextButton mPropertiesButton {juce::CharPointer_UTF8("φ")};
-        juce::TextButton mRelaunchButton {juce::CharPointer_UTF8("›")};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Thumbnail)
     };

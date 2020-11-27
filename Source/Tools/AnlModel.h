@@ -201,7 +201,7 @@ namespace Model
         
         //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        bool insertAccessor(long index, NotificationType notification)
+        bool insertAccessor(long index, NotificationType const notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
@@ -213,7 +213,7 @@ namespace Model
         
         //! @brief Erase an accessor from the container
         template <enum_type type>
-        void eraseAccessor(size_t index, NotificationType notification)
+        void eraseAccessor(size_t index, NotificationType const notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
@@ -250,7 +250,7 @@ namespace Model
         //! @brief Sets the value of an attribute
         //! @details If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         template <enum_type type, typename T>
-        void setAttr(T const& value, NotificationType notification)
+        void setAttr(T const& value, NotificationType const notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
@@ -262,6 +262,10 @@ namespace Model
                 if(isEquivalentTo(lvalue, value) == false)
                 {
                     setValue<value_type>(lvalue, value);
+                    if(onUpdated != nullptr)
+                    {
+                        onUpdated(type, notification);
+                    }
                     if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([=](Listener& listener)
@@ -272,10 +276,6 @@ namespace Model
                                 listener.onChanged(*static_cast<parent_t const*>(this), type);
                             }
                         }, notification);
-                    }
-                    if(mSanitizer != nullptr)
-                    {
-                        mSanitizer->updated(*static_cast<parent_t*>(this), type, notification);
                     }
                 }
             }
@@ -288,7 +288,7 @@ namespace Model
         
         //! @brief Sets the value of an attribute (initializer list specialization)
         template <enum_type type, typename T>
-        void setAttr(std::initializer_list<T>&& tvalue, NotificationType notification)
+        void setAttr(std::initializer_list<T>&& tvalue, NotificationType const notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) == 0, "element is a not an attribute");
@@ -340,7 +340,7 @@ namespace Model
         //! @brief Parse the container from xml
         //! @details Only the saveable attributes are restored from the xml.
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
-        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType notification)
+        void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType const notification)
         {
             anlWeakAssert(xml.hasTagName(name));
             if(!xml.hasTagName(name))
@@ -410,7 +410,7 @@ namespace Model
         }
         
         //! @brief Copy the content from another container
-        void fromContainer(container_type const& container, NotificationType notification)
+        void fromContainer(container_type const& container, NotificationType const notification)
         {
             detail::for_each(container, [&](auto const& d)
             {
@@ -500,22 +500,6 @@ namespace Model
             return result;
         }
         
-        class Sanitizer
-        {
-        public:
-            Sanitizer() = default;
-            virtual ~Sanitizer() = default;
-            
-            virtual void updated(parent_t&, enum_type, NotificationType)
-            {
-            }
-        };
-        
-        void setSanitizer(Sanitizer* sanitizer)
-        {
-            mSanitizer = sanitizer;
-        }
-        
         class Listener
         {
         public:
@@ -527,6 +511,7 @@ namespace Model
         
         void addListener(Listener& listener, NotificationType const notification)
         {
+            JUCE_COMPILER_WARNING("Ensure non recursive notificatiton of submodels");
             if(mListeners.add(listener))
             {
                 detail::for_each(mData, [&](auto& d)
@@ -553,11 +538,13 @@ namespace Model
             mListeners.remove(listener);
         }
         
+        std::function<void(enum_type type, NotificationType notification)> onUpdated = nullptr;
+        
     protected:
         
         //! @brief Inserts a new accessor in the container
         template <enum_type type>
-        bool insertAccessor(long index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), container_type>::type::accessor_type> accessor, NotificationType notification)
+        bool insertAccessor(long index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), container_type>::type::accessor_type> accessor, NotificationType const notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), container_type>::type;
             static_assert((element_type::flags & AttrFlag::container) != 0, "element is not a container");
@@ -573,6 +560,10 @@ namespace Model
             auto it = accessors.insert(accessors.begin() + index, std::move(accessor));
             if(it != accessors.end())
             {
+                if(onUpdated != nullptr)
+                {
+                    onUpdated(type, notification);
+                }
                 if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                 {
                     mListeners.notify([=](Listener& listener)
@@ -667,7 +658,6 @@ namespace Model
         
         container_type mData;
         Notifier<Listener> mListeners;
-        Sanitizer* mSanitizer = nullptr;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };

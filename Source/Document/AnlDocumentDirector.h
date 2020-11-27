@@ -8,18 +8,17 @@ ANALYSE_FILE_BEGIN
 namespace Document
 {
     class Director
-    : public Accessor::Sanitizer
     {
     public:
         Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager);
-        ~Director() override;
+        ~Director();
         
         void addAnalysis(AlertType alertType);
         
-        // Accessor::Sanitizer
-        void updated(Accessor& accessor, AttrType type, NotificationType notification) override;
-        
     private:
+        
+        void setupDocument(Document::Accessor& acsr);
+        void setupAnalyzer(Analyzer::Accessor& acsr);
         
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;

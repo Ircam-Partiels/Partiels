@@ -19,8 +19,8 @@ namespace Application
     {
     public:
         
-        Instance();
-        ~Instance() override;
+        Instance() = default;
+        ~Instance() override = default;
         
         // juce::JUCEApplication
         juce::String const getApplicationName() override;

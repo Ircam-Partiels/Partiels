@@ -15,13 +15,14 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
             onRemove();
         }
     };
-    mThumbnail.onRelaunch = [&]()
+    
+    mRuler.onDoubleClick = [&]()
     {
-        if(onRelaunch != nullptr)
-        {
-            onRelaunch();
-        }
+        auto& valueZoomAcsr = mAccessor.getAccessor<Analyzer::AttrType::zoom>(0);
+        auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
+    
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mRenderer);
     addAndMakeVisible(mRuler);
@@ -82,17 +83,6 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                         mContents[i]->onRemove = [this, i]()
                         {
                             mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);
-                        };
-                        
-                        mContents[i]->onRelaunch = [this, i]()
-                        {
-                            auto afr = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-                            if(afr == nullptr)
-                            {
-                                return;
-                            }
-                            auto& anlAcsr = mAccessor.getAccessor<AttrType::analyzers>(i);
-                            Analyzer::performAnalysis(anlAcsr, *afr.get());
                         };
                     }
                 }

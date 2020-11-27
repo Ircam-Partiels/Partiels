@@ -11,36 +11,12 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginAccessor)
 {
-    mAccessor.setSanitizer(this);
+    setupDocument(mAccessor);
 }
 
 Document::Director::~Director()
 {
-    mAccessor.setSanitizer(nullptr);
-}
-
-void Document::Director::updated(Accessor& accessor, AttrType type, NotificationType notification)
-{
-    if(type == AttrType::file)
-    {
-        auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-        if(reader == nullptr)
-        {
-            return;
-        }
-        auto const sampleRate = reader->sampleRate;
-        auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
-
-        auto& zoomAcsr = accessor.getAccessor<AttrType::timeZoom>(0);
-        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, duration}, notification);
-        
-        auto anlAcsrs = accessor.getAccessors<AttrType::analyzers>();
-        for(auto& anlAcsr : anlAcsrs)
-        {
-            Analyzer::performAnalysis(anlAcsr, *reader.get());
-        }
-        auto const file = accessor.getAttr<AttrType::file>();
-    }
+    mAccessor.onUpdated = nullptr;
 }
 
 void Document::Director::addAnalysis(AlertType alertType)
@@ -102,6 +78,83 @@ void Document::Director::addAnalysis(AlertType alertType)
     {
         mModalWindow->runModalLoop();
     }
+}
+
+void Document::Director::setupDocument(Document::Accessor& acsr)
+{
+    acsr.onUpdated = [&](AttrType attribute, NotificationType notification)
+    {
+        switch (attribute)
+        {
+            case AttrType::file:
+            {
+                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                if(reader == nullptr)
+                {
+                    return;
+                }
+                auto const sampleRate = reader->sampleRate;
+                auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
+                
+                auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::range_type{0.0, duration}, notification);
+                
+                auto anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
+                for(auto& anlAcsr : anlAcsrs)
+                {
+                    Analyzer::performAnalysis(anlAcsr, *reader.get(), 512, notification);
+                }
+            }
+                break;
+            case isLooping:
+            case gain:
+            case isPlaybackStarted:
+            case playheadPosition:
+            case timeZoom:
+            case layout:
+                break;
+            case analyzers:
+            {
+                auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
+                for(auto& anlAcsr : anlAcsrs)
+                {
+                    JUCE_COMPILER_WARNING("Remove onUpdate");
+                    setupAnalyzer(anlAcsr);
+                }
+            }
+                break;
+        }
+    };
+}
+
+void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
+{
+    acsr.onUpdated = [&](Analyzer::AttrType anlAttr, NotificationType notification)
+    {
+        switch (anlAttr)
+        {
+            case Analyzer::key:
+            case Analyzer::AttrType::feature:
+            case Analyzer::AttrType::parameters:
+            {
+                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                if(reader == nullptr)
+                {
+                    return;
+                }
+                JUCE_COMPILER_WARNING("add threaded  appraoch")
+                anlDebug("Analyzer", "Perform...");
+                Analyzer::performAnalysis(acsr, *reader.get(), 512, notification);
+            }
+                break;
+            case Analyzer::AttrType::zoom:
+            case Analyzer::AttrType::name:
+            case Analyzer::AttrType::colour:
+            case Analyzer::AttrType::colourMap:
+            case Analyzer::AttrType::results:
+                break;
+        }
+    };
 }
 
 ANALYSE_FILE_END

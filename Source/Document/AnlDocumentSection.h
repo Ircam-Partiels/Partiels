@@ -45,7 +45,6 @@ namespace Document
             
             std::function<void(void)> onAnalyse = nullptr;
             std::function<void(void)> onRemove = nullptr;
-            std::function<void(void)> onRelaunch = nullptr;
             
             // juce::Component
             void resized() override;

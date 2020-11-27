@@ -55,11 +55,11 @@ enum class AlertType : bool
 ANALYSE_FILE_END
 
 #ifdef JUCE_DEBUG
-#define AnlDebug(domain, message) Anl::Tools::Logger::writeToLog("Debug", domain, __FUNCTION__, __LINE__, message)
-#define AnlError(domain, message) Anl::Tools::Logger::writeToLog("Error", domain, __FUNCTION__, __LINE__, message)
+#define anlDebug(domain, message) Anl::Tools::Logger::writeToLog("Debug", domain, __FUNCTION__, __LINE__, message)
+#define anlError(domain, message) Anl::Tools::Logger::writeToLog("Error", domain, __FUNCTION__, __LINE__, message)
 #else
-#define AnlDebug(domain, message)
-#define AnlError(domain, message)
+#define anlDebug(domain, message)
+#define anlError(domain, message)
 #endif
 
 #include <mutex>

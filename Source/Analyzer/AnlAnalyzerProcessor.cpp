@@ -43,7 +43,7 @@ std::unique_ptr<Vamp::Plugin> Analyzer::createPlugin(Accessor const& accessor, d
     return pluginInstance;
 }
 
-void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audioFormatReader, size_t blockSize)
+void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audioFormatReader, size_t blockSize, NotificationType notification)
 {
     auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
     auto const lengthInSamples = audioFormatReader.lengthInSamples;
@@ -80,7 +80,7 @@ void Analyzer::performAnalysis(Accessor& accessor, juce::AudioFormatReader& audi
         }
     }
     
-    accessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+    accessor.setAttr<AttrType::results>(results, notification);
 }
 
 ANALYSE_FILE_END
