@@ -1,11 +1,11 @@
-#include "AnlAnalyzerResultRenderer.h"
+#include "AnlAnalyzerTimeRenderer.h"
 #include "AnlAnalyzerProcessor.h"
 #include "../Tools/AnlMisc.h"
 #include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor)
+Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor)
 : mAccessor(accessor)
 , mZoomAccessor(zoomAccessor)
 {
@@ -68,19 +68,19 @@ Analyzer::ResultRenderer::ResultRenderer(Accessor& accessor, Zoom::Accessor& zoo
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
-Analyzer::ResultRenderer::~ResultRenderer()
+Analyzer::TimeRenderer::~TimeRenderer()
 {
     mZoomAccessor.removeListener(mZoomListener);
     mAccessor.getAccessor<AttrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
-void Analyzer::ResultRenderer::resized()
+void Analyzer::TimeRenderer::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
 }
 
-void Analyzer::ResultRenderer::paint(juce::Graphics& g)
+void Analyzer::TimeRenderer::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
     auto const width = bounds.getWidth();
@@ -174,7 +174,7 @@ void Analyzer::ResultRenderer::paint(juce::Graphics& g)
     }
 }
 
-void Analyzer::ResultRenderer::mouseMove(juce::MouseEvent const& event)
+void Analyzer::TimeRenderer::mouseMove(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     repaint();
@@ -221,13 +221,13 @@ void Analyzer::ResultRenderer::mouseMove(juce::MouseEvent const& event)
     mInformation.setText(text, juce::NotificationType::dontSendNotification);
 }
 
-void Analyzer::ResultRenderer::mouseEnter(juce::MouseEvent const& event)
+void Analyzer::TimeRenderer::mouseEnter(juce::MouseEvent const& event)
 {
     mInformation.setVisible(true);
     mouseMove(event);
 }
 
-void Analyzer::ResultRenderer::mouseExit(juce::MouseEvent const& event)
+void Analyzer::TimeRenderer::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     mInformation.setVisible(false);

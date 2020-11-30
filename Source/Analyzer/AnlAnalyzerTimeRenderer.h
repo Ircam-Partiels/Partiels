@@ -7,12 +7,12 @@ ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    class ResultRenderer
+    class TimeRenderer
     : public juce::Component
     {
     public:        
-        ResultRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor);
-        ~ResultRenderer() override;
+        TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor);
+        ~TimeRenderer() override;
         
         // juce::Component
         void resized() override;
@@ -28,7 +28,7 @@ namespace Analyzer
         juce::Label mInformation;
         juce::Image mImage;
         
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ResultRenderer)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeRenderer)
     };
 }
 

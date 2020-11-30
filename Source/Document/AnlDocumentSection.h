@@ -7,7 +7,7 @@
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
-#include "../Analyzer/AnlAnalyzerResultRenderer.h"
+#include "../Analyzer/AnlAnalyzerTimeRenderer.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 
 ANALYSE_FILE_BEGIN
@@ -57,7 +57,7 @@ namespace Document
             Zoom::Accessor& mTimeZoomAccessor;
             Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AttrType::zoom>(0)};
             Analyzer::Thumbnail mThumbnail {mAccessor};
-            Analyzer::ResultRenderer mRenderer {mAccessor, mTimeZoomAccessor};
+            Analyzer::TimeRenderer mRenderer {mAccessor, mTimeZoomAccessor};
             Zoom::Ruler mRuler {mValueZoomAccessor, Zoom::Ruler::Orientation::vertical};
             Zoom::ScrollBar mScrollbar {mValueZoomAccessor, Zoom::ScrollBar::Orientation::vertical, true};
             
