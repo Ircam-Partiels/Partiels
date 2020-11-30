@@ -35,10 +35,8 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
                 auto image = mImage;
                 juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
                 
-                float maxValue = 0.0;
                 auto valueToColour = [&](float const value)
                 {
-                    maxValue = std::max(maxValue, value);
                     auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), acsr.getAttr<AttrType::colourMap>());
                     return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
                 };

@@ -39,14 +39,13 @@ namespace Document
         {
         public:
             
-            Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr);
+            Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr, juce::StretchableLayoutManager& layoutManager);
             ~Content() override = default;
             
             std::function<void(void)> onAnalyse = nullptr;
             std::function<void(void)> onRemove = nullptr;
             std::function<void(int)> onThumbnailResized = nullptr;
             
-            void setThumbnailSize(int size);
             void setTime(double time);
             
             // juce::Component
@@ -57,10 +56,10 @@ namespace Document
             Analyzer::Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
             Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AttrType::zoom>(0)};
-            juce::StretchableLayoutManager mLayoutManager;
+            juce::StretchableLayoutManager& mLayoutManager;
             
             Analyzer::Thumbnail mThumbnail {mAccessor};
-            Analyzer::InstantRenderer mInstantRenderer {mAccessor};
+            Analyzer::InstantRenderer mInstantRenderer {mAccessor, mTimeZoomAccessor};
             Zoom::Ruler mRuler {mValueZoomAccessor, Zoom::Ruler::Orientation::vertical};
             Layout::StretchableResizerBar mResizerBar {&mLayoutManager, 3, true};
             Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
@@ -71,8 +70,8 @@ namespace Document
         struct Container
         {
         public:
-            Container(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr)
-            : content(acsr, timeZoomAcsr)
+            Container(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr, juce::StretchableLayoutManager& layoutManager)
+            : content(acsr, timeZoomAcsr, layoutManager)
             , accessor(acsr)
             {
             }
@@ -84,6 +83,8 @@ namespace Document
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
+        
+        juce::StretchableLayoutManager mLayoutManager;
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         Playhead mPlayhead {mAccessor};
         std::vector<std::unique_ptr<Container>> mContents;

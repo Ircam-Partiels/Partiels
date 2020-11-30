@@ -4,9 +4,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr)
+Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr, juce::StretchableLayoutManager& layoutManager)
 : mAccessor(acsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mLayoutManager(layoutManager)
 {
     mThumbnail.onRemove = [&]()
     {
@@ -25,21 +26,12 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
     
     mResizerBar.onMoved = [&]()
     {
-        resized();
         if(onThumbnailResized != nullptr)
         {
-            auto const position = mLayoutManager.getItemCurrentPosition(3);
-            onThumbnailResized(position);
+            onThumbnailResized(mLayoutManager.getItemCurrentPosition(3));
         }
+        resized();
     };
-    
-    mLayoutManager.setItemLayout(0, 66.0, 66.0, 66.0);
-    mLayoutManager.setItemLayout(1, 10.0, 200.0, 20.0);
-    mLayoutManager.setItemLayout(2, 16.0, 16.0, 16.0);
-    mLayoutManager.setItemLayout(3, 2.0, 2.0, 2.0);
-    mLayoutManager.setItemLayout(4, 20.0, -1.0, -1.0);
-    mLayoutManager.setItemLayout(5, 8.0, 8.0, 8.0);
-    mLayoutManager.setItemLayout(6, 8.0, 8.0, 8.0);
     
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mInstantRenderer);
@@ -48,14 +40,6 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
     addAndMakeVisible(mRuler);
     addAndMakeVisible(mScrollbar);
     setSize(80, 100);
-}
-
-void Document::Section::Content::setThumbnailSize(int size)
-{
-    mLayoutManager.setItemPosition(3, size);
-    resized();
-    mLayoutManager.setItemPosition(3, size);
-    resized();
 }
 
 void Document::Section::Content::setTime(double time)
@@ -150,7 +134,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                 
                 for(size_t i = mContents.size(); i < anlAcsrs.size(); ++i)
                 {
-                    auto container = std::make_unique<Container>(anlAcsrs[i], timeZoomAcsr);
+                    auto container = std::make_unique<Container>(anlAcsrs[i], timeZoomAcsr, mLayoutManager);
                     anlWeakAssert(container != nullptr);
                     if(container != nullptr)
                     {
@@ -195,13 +179,11 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                 
                 layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, NotificationType::synchronous);
                 
-                
-                auto const size = acsr.getAttr<AttrType::layoutHorizontal>();
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {
                     mContainer.setContent(i, &(mContents[i]->content), 100);
-                    mContents[i]->content.setThumbnailSize(size);
                 }
+                resized();
             }
                 break;
             case AttrType::file:
@@ -219,12 +201,12 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
             };
                 break;
             case AttrType::timeZoom:
+                break;
             case AttrType::layoutHorizontal:
             {
-                auto const size = acsr.getAttr<AttrType::layoutHorizontal>();
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {
-                    mContents[i]->content.setThumbnailSize(size);
+                    mContents[i]->content.resized();
                 }
                 resized();
             }
@@ -234,6 +216,14 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
         }
     };
     
+    mLayoutManager.setItemLayout(0, 66.0, 66.0, 66.0);
+    mLayoutManager.setItemLayout(1, 10.0, 200.0, 20.0);
+    mLayoutManager.setItemLayout(2, 16.0, 16.0, 16.0);
+    mLayoutManager.setItemLayout(3, 2.0, 2.0, 2.0);
+    mLayoutManager.setItemLayout(4, 20.0, -1.0, -1.0);
+    mLayoutManager.setItemLayout(5, 8.0, 8.0, 8.0);
+    mLayoutManager.setItemLayout(6, 8.0, 8.0, 8.0);
+    
     mZoomTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
@@ -242,6 +232,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
     
     mPlayhead.setInterceptsMouseClicks(false, false);
     
+    setSize(480, 200);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mContainer);
     addAndMakeVisible(mZoomTimeScrollBar);
