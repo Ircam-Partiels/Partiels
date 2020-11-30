@@ -7,6 +7,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
 {
     mNameLabel.setEditable(true);
     mNameLabel.setJustificationType(juce::Justification::topLeft);
+    mNameLabel.setMinimumHorizontalScale(1.0f);
     addAndMakeVisible(mNameLabel);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mPropertiesButton);
@@ -64,11 +65,11 @@ Analyzer::Thumbnail::~Thumbnail()
 void Analyzer::Thumbnail::resized()
 {
     auto bounds = getLocalBounds();
-    mNameLabel.setBounds(bounds.removeFromTop(24));
     auto bottomBounds = bounds.removeFromBottom(24);
-    auto const bottomButtonWidth = bottomBounds.getWidth() / 3;
+    auto const bottomButtonWidth = 33;
     mRemoveButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
     mPropertiesButton.setBounds(bottomBounds.removeFromLeft(bottomButtonWidth).reduced(2));
+    mNameLabel.setBounds(bounds);
 }
 
 void Analyzer::Thumbnail::paint(juce::Graphics& g)

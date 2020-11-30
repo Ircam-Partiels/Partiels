@@ -32,11 +32,12 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
         }
     };
     
-    mLayoutManager.setItemLayout(0, 100.0, 240.0, 240.0);
+    mLayoutManager.setItemLayout(0, 66.0, 66.0, 240.0);
     mLayoutManager.setItemLayout(1, 2.0, 2.0, 2.0);
     mLayoutManager.setItemLayout(2, 20.0, -1.0, -1.0);
     mLayoutManager.setItemLayout(3, 16.0, 16.0, 16.0);
-    mLayoutManager.setItemLayout(4, 16.0, 16.0, 16.0);
+    mLayoutManager.setItemLayout(4, 8.0, 8.0, 8.0);
+    mLayoutManager.setItemLayout(5, 8.0, 8.0, 8.0);
     
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mResizerBar);
@@ -61,8 +62,9 @@ void Document::Section::Content::resized()
         &mRenderer,
         &mRuler,
         &mScrollbar,
+        &mDummy
     };
-    mLayoutManager.layOutComponents(components, 5, 0, 0, getWidth(), getHeight(), false, true);
+    mLayoutManager.layOutComponents(components, 6, 0, 0, getWidth(), getHeight(), false, true);
 }
 
 void Document::Section::Content::paint(juce::Graphics& g)

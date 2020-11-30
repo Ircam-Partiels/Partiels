@@ -20,7 +20,6 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
                 mScrollBar.setRangeLimits(globalRange, juce::NotificationType::dontSendNotification);
                 mScrollBar.setSingleStepSize(globalRange.getLength() / 127.0);
             }
-                break;
             case AttrType::visibleRange:
             {
                 auto const range = acsr.getAttr<AttrType::visibleRange>();
@@ -33,18 +32,17 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
                 {
                     mScrollBar.setCurrentRange(range, juce::NotificationType::dontSendNotification);
                 }
+                repaint();
             }
                 break;
             
             case AttrType::minimumLength:
-            {
-            }
                 break;
         }
     };
     
-    mAccessor.addListener(mListener, NotificationType::synchronous);
     mScrollBar.addListener(this);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Zoom::ScrollBar::~ScrollBar()

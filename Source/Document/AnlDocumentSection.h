@@ -61,6 +61,7 @@ namespace Document
             Analyzer::TimeRenderer mRenderer {mAccessor, mTimeZoomAccessor};
             Zoom::Ruler mRuler {mValueZoomAccessor, Zoom::Ruler::Orientation::vertical};
             Zoom::ScrollBar mScrollbar {mValueZoomAccessor, Zoom::ScrollBar::Orientation::vertical, true};
+            juce::Component mDummy;
             
             juce::StretchableLayoutManager mLayoutManager;
             Layout::StretchableResizerBar mResizerBar {&mLayoutManager, 1, true};
