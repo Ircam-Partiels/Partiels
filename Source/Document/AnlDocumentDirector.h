@@ -28,7 +28,22 @@ namespace Document
         juce::AudioFormatManager const& mAudioFormatManager;
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
-        std::vector<std::thread> mThreads;
+        
+        struct results_container
+        {
+            results_container(double v1, Zoom::Range v2, std::vector<Analyzer::Result>&& v3)
+            : minimumLength(v1), range(v2), results(std::forward<std::vector<Analyzer::Result>>(v3))
+            {
+                
+            }
+            
+            double minimumLength = 0.0;
+            Zoom::Range range {};
+            std::vector<Analyzer::Result> results {};
+        };
+        
+        std::mutex mMutex;
+        std::vector<std::tuple<std::thread, std::reference_wrapper<Analyzer::Accessor>, std::shared_ptr<results_container>>> mProcesses;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

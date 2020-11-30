@@ -19,6 +19,7 @@ namespace Document
         playheadPosition,
         timeZoom,
         layout,
+        layoutHorizontal,
         analyzers
     };
     
@@ -30,6 +31,7 @@ namespace Document
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     , Model::Acsr<AttrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Acsr<AttrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
+    , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::saveable>
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
@@ -66,6 +68,7 @@ namespace Document
                 , {{}}
                 , {512}
                 , {zoomCtnr}
+                , {240}
                 , {juce::Colours::black}
                 , {Analyzer::ColorMap::Heat}
                 ,  {}

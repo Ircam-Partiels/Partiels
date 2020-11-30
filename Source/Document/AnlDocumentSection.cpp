@@ -23,21 +23,64 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
         valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
     
+    mListener.onChanged = [&](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Analyzer::key:
+            case Analyzer::name:
+            case Analyzer::feature:
+            case Analyzer::parameters:
+            case Analyzer::blockSize:
+            case Analyzer::zoom:
+                break;
+            case Analyzer::layout:
+            {
+                auto const position = acsr.getAttr<Analyzer::AttrType::layout>();
+                mLayoutManager.setItemPosition(1, position);
+                resized();
+            }
+                break;
+            case Analyzer::colour:
+            case Analyzer::colourMap:
+            case Analyzer::results:
+                break;
+        }
+    };
+    
+    mLayoutManager.setItemLayout(0, 100.0, 240.0, 240.0);
+    mLayoutManager.setItemLayout(1, 2.0, 2.0, 2.0);
+    mLayoutManager.setItemLayout(2, 20.0, -1.0, -1.0);
+    mLayoutManager.setItemLayout(3, 16.0, 16.0,16.0);
+    mLayoutManager.setItemLayout(4, 16.0, 16.0,16.0);
+    
     addAndMakeVisible(mThumbnail);
+    addAndMakeVisible(mResizerBar);
     addAndMakeVisible(mRenderer);
     addAndMakeVisible(mRuler);
     addAndMakeVisible(mScrollbar);
     setSize(80, 100);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Document::Section::Content::~Content()
+{
+    mAccessor.removeListener(mListener);
 }
 
 void Document::Section::Content::resized()
 {
-    auto bounds = getLocalBounds();
-    bounds.removeFromRight(8);
-    mThumbnail.setBounds(bounds.removeFromLeft(240));
-    mScrollbar.setBounds(bounds.removeFromRight(8));
-    mRuler.setBounds(bounds.removeFromRight(16));
-    mRenderer.setBounds(bounds);
+    juce::Component* components[] =
+    {
+        &mThumbnail,
+        &mResizerBar,
+        &mRenderer,
+        &mRuler,
+        &mScrollbar,
+    };
+    mLayoutManager.layOutComponents(components, 5, 0, 0, getWidth(), getHeight(), false, true);
+    auto const position = mLayoutManager.getItemCurrentPosition(1);
+    mAccessor.setAttr<Analyzer::AttrType::layout>(position, NotificationType::synchronous);
 }
 
 void Document::Section::Content::paint(juce::Graphics& g)
@@ -142,6 +185,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
             case AttrType::isPlaybackStarted:
             case AttrType::playheadPosition:
             case AttrType::timeZoom:
+            case AttrType::layoutHorizontal:
             case AttrType::layout:
                 break;
         }

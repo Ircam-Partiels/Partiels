@@ -40,7 +40,7 @@ namespace Document
         public:
             
             Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr);
-            ~Content() override = default;
+            ~Content() override;
             
             std::function<void(void)> onAnalyse = nullptr;
             std::function<void(void)> onRemove = nullptr;
@@ -53,10 +53,14 @@ namespace Document
             Analyzer::Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
             Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AttrType::zoom>(0)};
+            Analyzer::Accessor::Listener mListener;
             Analyzer::Thumbnail mThumbnail {mAccessor};
             Analyzer::ResultRenderer mRenderer {mAccessor, mTimeZoomAccessor};
             Zoom::Ruler mRuler {mValueZoomAccessor, Zoom::Ruler::Orientation::vertical};
             Zoom::ScrollBar mScrollbar {mValueZoomAccessor, Zoom::ScrollBar::Orientation::vertical, true};
+            
+            juce::StretchableLayoutManager mLayoutManager;
+            juce::StretchableLayoutResizerBar mResizerBar {&mLayoutManager, 1, true};
         };
         
         struct Container

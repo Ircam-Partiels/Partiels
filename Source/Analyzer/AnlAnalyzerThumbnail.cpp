@@ -30,7 +30,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         juce::DialogWindow::LaunchOptions launchOption;
         launchOption.dialogTitle = juce::translate("ANLNAME Properties").replace("ANLNAME", mAccessor.getAttr<AttrType::name>());
         launchOption.content.setNonOwned(&mPropertyPanel);
-        launchOption.componentToCentreAround = this;
+        launchOption.componentToCentreAround = nullptr;
         launchOption.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
         launchOption.escapeKeyTriggersCloseButton = true;
         launchOption.useNativeTitleBar = false;

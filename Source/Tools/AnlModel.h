@@ -225,7 +225,7 @@ namespace Model
             auto backup = std::shared_ptr<sub_accessor_type>(accessors[index].release());
             anlWeakAssert(backup != nullptr);
             accessors.erase(accessors.begin() + static_cast<long>(index));
-            // Detach the mutex thta has been attached during insertion
+            // Detach the mutex that has been attached during insertion
             backup->mListeners.setMutex(nullptr);
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
             {

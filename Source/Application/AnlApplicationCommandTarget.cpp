@@ -364,13 +364,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             fileBased.setFile({});
             Instance::get().getDocumentAccessor().fromContainer({
-                {juce::File{}}
+                  {juce::File{}}
                 , {false}
                 , {1.0}
                 , {false}
                 , {0.0}
                 , {}
                 , {}
+                , {240}
                 , {}
             }, NotificationType::synchronous);
             return true;

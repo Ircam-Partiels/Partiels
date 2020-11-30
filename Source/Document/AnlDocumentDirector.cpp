@@ -86,9 +86,9 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
     {
         switch (attribute)
         {
-            case AttrType::file:
+            case file:
             {
-                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                auto reader = createAudioFormatReader(acsr, mAudioFormatManager, AlertType::window);
                 if(reader == nullptr)
                 {
                     return;
@@ -96,10 +96,10 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 auto const sampleRate = reader->sampleRate;
                 auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
                 
-                auto& zoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
+                auto& zoomAcsr = acsr.getAccessor<AttrType::timeZoom>(0);
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
                 
-                auto anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
+                auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
                 for(auto& anlAcsr : anlAcsrs)
                 {
                     anlAcsr.get().onUpdated(Analyzer::AttrType::key, notification);
@@ -112,6 +112,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             case playheadPosition:
             case timeZoom:
             case layout:
+            case layoutHorizontal:
                 break;
             case analyzers:
             {
@@ -133,20 +134,21 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
     {
         switch (anlAttr)
         {
-            case Analyzer::key:
+            case Analyzer::AttrType::key:
             case Analyzer::AttrType::feature:
             case Analyzer::AttrType::parameters:
-            case Analyzer::blockSize:
+            case Analyzer::AttrType::blockSize:
             {
-                std::thread thd([&]()
+                std::thread thd([&]() mutable
                 {
                     auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
                     if(reader == nullptr)
                     {
+                        triggerAsyncUpdate();
                         return;
                     }
                     
-                    auto const results = Analyzer::performAnalysis(acsr, *reader.get());
+                    auto results = Analyzer::performAnalysis(acsr, *reader.get());
                     if(results.empty())
                     {
                         triggerAsyncUpdate();
@@ -171,25 +173,44 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
                         }
                         else
                         {
-                            auto it = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
+                            auto rit = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
                             {
                                 return lhs.values.size() < rhs.values.size();
                             });
-                            return {1.0, {0.0, static_cast<double>(it->values.size())}};
+                            return {1.0, {0.0, static_cast<double>(rit->values.size())}};
                         }
                     };
                     
                     auto const zoomState = getZoomState();
-                    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(zoomState.second, NotificationType::asynchronous);
-                    zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(zoomState.first, NotificationType::asynchronous);
                     
-                    acsr.setAttr<Analyzer::AttrType::results>(results, NotificationType::asynchronous);
+                    auto ret = std::make_shared<results_container>(zoomState.first, zoomState.second, std::move(results));
+                    
+                    std::unique_lock<std::mutex> lock(mMutex);
+                    auto it = std::find_if(mProcesses.begin(), mProcesses.end(), [](auto const& process)
+                    {
+                        return std::get<0>(process).get_id() == std::this_thread::get_id();
+                    });
+                    anlWeakAssert(it != mProcesses.end());
+                    std::get<2>(*it) = ret;
+
                     triggerAsyncUpdate();
                 });
-                mThreads.emplace_back(std::move(thd));
+                
+                std::unique_lock<std::mutex> lock(mMutex);
+                mProcesses.push_back({std::move(thd), acsr, nullptr});
             }
                 break;
             case Analyzer::AttrType::zoom:
+            case Analyzer::AttrType::layout:
+            {
+                auto const position = acsr.getAttr<Analyzer::AttrType::layout>();
+                mAccessor.setAttr<AttrType::layoutHorizontal>(position, NotificationType::asynchronous);
+                auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
+                for(auto& anlAcsr : anlAcsrs)
+                {
+                    anlAcsr.get().setAttr<Analyzer::AttrType::layout>(position, NotificationType::asynchronous);
+                }
+            }
             case Analyzer::AttrType::name:
             case Analyzer::AttrType::colour:
             case Analyzer::AttrType::colourMap:
@@ -202,15 +223,25 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
 void Document::Director::handleAsyncUpdate()
 {
     JUCE_COMPILER_WARNING("Improve")
-    auto it = std::remove_if(mThreads.begin(), mThreads.end(), [](auto const& thd)
+    auto it = std::remove_if(mProcesses.begin(), mProcesses.end(), [](auto const& process)
     {
-        return thd.joinable();
+        return std::get<0>(process).joinable();
     });
-    for(auto end = it; end != mThreads.end(); ++end)
+    for(auto end = it; end != mProcesses.end(); ++end)
     {
-        end->join();
+        std::get<0>(*end).join();
+        if(std::get<2>(*end) != nullptr)
+        {
+            auto& anlAcsr = std::get<1>(*end).get();
+            auto& zoomAcsr = anlAcsr.getAccessor<Analyzer::AttrType::zoom>(0);
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<2>(*end)->range, NotificationType::asynchronous);
+            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<2>(*end)->minimumLength, NotificationType::asynchronous);
+            
+            anlAcsr.setAttr<Analyzer::AttrType::results>(std::get<2>(*end)->results, NotificationType::asynchronous);
+        }
     }
-    mThreads.erase(it, mThreads.end());
+    std::unique_lock<std::mutex> lock(mMutex);
+    mProcesses.erase(it, mProcesses.end());
 }
 
 ANALYSE_FILE_END
