@@ -97,6 +97,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentAudioReader.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentTransport.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentPlayhead.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentPlayhead.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp

@@ -55,7 +55,6 @@ Application::Interface::~Interface()
 
 void Application::Interface::resized()
 {
-    auto constexpr separatorSize = 2;
     auto bounds = getLocalBounds();
     
     auto header = bounds.removeFromTop(102);

@@ -9,6 +9,7 @@
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
 #include "../Analyzer/AnlAnalyzerTimeRenderer.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
+#include "AnlDocumentPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -82,6 +83,7 @@ namespace Document
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
+        Playhead mPlayhead {mAccessor};
         std::vector<std::unique_ptr<Container>> mContents;
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AttrType::layout>(0)};
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};

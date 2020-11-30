@@ -212,9 +212,12 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     
+    mPlayhead.setInterceptsMouseClicks(false, false);
+    
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mContainer);
     addAndMakeVisible(mZoomTimeScrollBar);
+    addAndMakeVisible(mPlayhead);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -232,6 +235,7 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
     mContainer.setBounds(bounds);
+    mPlayhead.setBounds(bounds.withLeft(left).withRight(right));
 }
 
 void Document::Section::paint(juce::Graphics& g)

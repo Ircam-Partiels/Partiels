@@ -22,8 +22,11 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::selectionColourId, juce::Colours::blue);
     
     setColour(Analyzer::Thumbnail::backgroundColourId, grey);
+    
     setColour(Document::Section::backgroundColourId, juce::Colours::black);
     setColour(Document::Section::sectionColourId, findColour(juce::ResizableWindow::backgroundColourId));
+    setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);
+    setColour(Document::Playhead::playheadColourId, juce::Colours::blue);
     
     // juce::ComboBox::LookAndFeelMethods
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
