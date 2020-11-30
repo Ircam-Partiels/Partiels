@@ -196,6 +196,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                 break;
             case AttrType::timeZoom:
             case AttrType::layout:
+            case AttrType::layoutHorizontal:
             case AttrType::analyzers:
                 break;
         }

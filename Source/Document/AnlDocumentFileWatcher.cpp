@@ -22,13 +22,14 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
                 }
             }
                 break;
-            case isLooping:
-            case gain:
-            case isPlaybackStarted:
-            case playheadPosition:
-            case timeZoom:
-            case layout:
-            case analyzers:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+            case AttrType::playheadPosition:
+            case AttrType::timeZoom:
+            case AttrType::layout:
+            case AttrType::layoutHorizontal:
+            case AttrType::analyzers:
                 break;
         }
     };

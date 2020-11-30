@@ -155,7 +155,6 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
                         return;
                     }
                     
-                    auto& zoomAcsr = acsr.getAccessor<Analyzer::AttrType::zoom>(0);
                     auto getZoomState = [&]() -> std::pair<double, Zoom::Range>
                     {
                         auto const numDimension = results.front().values.size() + 1;
@@ -197,20 +196,10 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
                 });
                 
                 std::unique_lock<std::mutex> lock(mMutex);
-                mProcesses.push_back({std::move(thd), acsr, nullptr});
+                mProcesses.push_back({std::move(thd), acsr, nullptr, notification});
             }
                 break;
             case Analyzer::AttrType::zoom:
-            case Analyzer::AttrType::layout:
-            {
-                auto const position = acsr.getAttr<Analyzer::AttrType::layout>();
-                mAccessor.setAttr<AttrType::layoutHorizontal>(position, NotificationType::asynchronous);
-                auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
-                for(auto& anlAcsr : anlAcsrs)
-                {
-                    anlAcsr.get().setAttr<Analyzer::AttrType::layout>(position, NotificationType::asynchronous);
-                }
-            }
             case Analyzer::AttrType::name:
             case Analyzer::AttrType::colour:
             case Analyzer::AttrType::colourMap:
@@ -232,12 +221,13 @@ void Document::Director::handleAsyncUpdate()
         std::get<0>(*end).join();
         if(std::get<2>(*end) != nullptr)
         {
+            auto const notification = std::get<3>(*end);
             auto& anlAcsr = std::get<1>(*end).get();
             auto& zoomAcsr = anlAcsr.getAccessor<Analyzer::AttrType::zoom>(0);
-            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<2>(*end)->range, NotificationType::asynchronous);
-            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<2>(*end)->minimumLength, NotificationType::asynchronous);
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<2>(*end)->range, notification);
+            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<2>(*end)->minimumLength, notification);
             
-            anlAcsr.setAttr<Analyzer::AttrType::results>(std::get<2>(*end)->results, NotificationType::asynchronous);
+            anlAcsr.setAttr<Analyzer::AttrType::results>(std::get<2>(*end)->results, notification);
         }
     }
     std::unique_lock<std::mutex> lock(mMutex);

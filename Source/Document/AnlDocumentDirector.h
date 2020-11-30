@@ -43,7 +43,7 @@ namespace Document
         };
         
         std::mutex mMutex;
-        std::vector<std::tuple<std::thread, std::reference_wrapper<Analyzer::Accessor>, std::shared_ptr<results_container>>> mProcesses;
+        std::vector<std::tuple<std::thread, std::reference_wrapper<Analyzer::Accessor>, std::shared_ptr<results_container>, NotificationType>> mProcesses;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

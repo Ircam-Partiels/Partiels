@@ -23,28 +23,12 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
         valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
     
-    mListener.onChanged = [&](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
+    mResizerBar.onMoved = [&]()
     {
-        switch(attribute)
+        resized();
+        if(onThumbnailResized != nullptr)
         {
-            case Analyzer::key:
-            case Analyzer::name:
-            case Analyzer::feature:
-            case Analyzer::parameters:
-            case Analyzer::blockSize:
-            case Analyzer::zoom:
-                break;
-            case Analyzer::layout:
-            {
-                auto const position = acsr.getAttr<Analyzer::AttrType::layout>();
-                mLayoutManager.setItemPosition(1, position);
-                resized();
-            }
-                break;
-            case Analyzer::colour:
-            case Analyzer::colourMap:
-            case Analyzer::results:
-                break;
+            onThumbnailResized(mLayoutManager.getItemCurrentPosition(1));
         }
     };
     
@@ -60,12 +44,12 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
     addAndMakeVisible(mRuler);
     addAndMakeVisible(mScrollbar);
     setSize(80, 100);
-    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Document::Section::Content::~Content()
+void Document::Section::Content::setThumbnailSize(int size)
 {
-    mAccessor.removeListener(mListener);
+    mLayoutManager.setItemPosition(1, size);
+    resized();
 }
 
 void Document::Section::Content::resized()
@@ -79,8 +63,6 @@ void Document::Section::Content::resized()
         &mScrollbar,
     };
     mLayoutManager.layOutComponents(components, 5, 0, 0, getWidth(), getHeight(), false, true);
-    auto const position = mLayoutManager.getItemCurrentPosition(1);
-    mAccessor.setAttr<Analyzer::AttrType::layout>(position, NotificationType::synchronous);
 }
 
 void Document::Section::Content::paint(juce::Graphics& g)
@@ -142,6 +124,14 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                     anlWeakAssert(container != nullptr);
                     if(container != nullptr)
                     {
+                        container->content.onThumbnailResized = [&](int size)
+                        {
+                            mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
+                            for(size_t j = 0; j < mContents.size(); ++j)
+                            {
+                                mContents[j]->content.setThumbnailSize(size);
+                            }
+                        };
                         mContents.push_back(std::move(container));
                         if(i >= sizes.size())
                         {
