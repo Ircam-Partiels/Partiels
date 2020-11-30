@@ -23,7 +23,6 @@ Application::LookAndFeel::LookAndFeel()
     
     setColour(Analyzer::Thumbnail::backgroundColourId, grey);
     
-    setColour(Document::Section::backgroundColourId, juce::Colours::black);
     setColour(Document::Section::sectionColourId, findColour(juce::ResizableWindow::backgroundColourId));
     setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Document::Playhead::playheadColourId, juce::Colours::blue);

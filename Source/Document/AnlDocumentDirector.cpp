@@ -110,6 +110,16 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             case gain:
             case isPlaybackStarted:
             case playheadPosition:
+            {
+                auto const time = acsr.getAttr<AttrType::playheadPosition>();
+                auto& zoomAcsr = acsr.getAccessor<AttrType::timeZoom>(0);
+                auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                if(!range.contains(time))
+                {
+                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
+                }
+            }
+                break;
             case timeZoom:
             case layout:
             case layoutHorizontal:

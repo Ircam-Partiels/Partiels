@@ -28,20 +28,23 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
         resized();
         if(onThumbnailResized != nullptr)
         {
-            onThumbnailResized(mLayoutManager.getItemCurrentPosition(1));
+            auto const position = mLayoutManager.getItemCurrentPosition(3);
+            onThumbnailResized(position);
         }
     };
     
-    mLayoutManager.setItemLayout(0, 66.0, 66.0, 240.0);
-    mLayoutManager.setItemLayout(1, 2.0, 2.0, 2.0);
-    mLayoutManager.setItemLayout(2, 20.0, -1.0, -1.0);
-    mLayoutManager.setItemLayout(3, 16.0, 16.0, 16.0);
-    mLayoutManager.setItemLayout(4, 8.0, 8.0, 8.0);
+    mLayoutManager.setItemLayout(0, 66.0, 66.0, 66.0);
+    mLayoutManager.setItemLayout(1, 10.0, 200.0, 20.0);
+    mLayoutManager.setItemLayout(2, 16.0, 16.0, 16.0);
+    mLayoutManager.setItemLayout(3, 2.0, 2.0, 2.0);
+    mLayoutManager.setItemLayout(4, 20.0, -1.0, -1.0);
     mLayoutManager.setItemLayout(5, 8.0, 8.0, 8.0);
+    mLayoutManager.setItemLayout(6, 8.0, 8.0, 8.0);
     
     addAndMakeVisible(mThumbnail);
+    addAndMakeVisible(mInstantRenderer);
     addAndMakeVisible(mResizerBar);
-    addAndMakeVisible(mRenderer);
+    addAndMakeVisible(mTimeRenderer);
     addAndMakeVisible(mRuler);
     addAndMakeVisible(mScrollbar);
     setSize(80, 100);
@@ -49,8 +52,15 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
 
 void Document::Section::Content::setThumbnailSize(int size)
 {
-    mLayoutManager.setItemPosition(1, size);
+    mLayoutManager.setItemPosition(3, size);
     resized();
+    mLayoutManager.setItemPosition(3, size);
+    resized();
+}
+
+void Document::Section::Content::setTime(double time)
+{
+    mInstantRenderer.setTime(time);
 }
 
 void Document::Section::Content::resized()
@@ -58,13 +68,14 @@ void Document::Section::Content::resized()
     juce::Component* components[] =
     {
         &mThumbnail,
-        &mResizerBar,
-        &mRenderer,
+        &mInstantRenderer,
         &mRuler,
+        &mResizerBar,
+        &mTimeRenderer,
         &mScrollbar,
         &mDummy
     };
-    mLayoutManager.layOutComponents(components, 6, 0, 0, getWidth(), getHeight(), false, true);
+    mLayoutManager.layOutComponents(components, 7, 0, 0, getWidth(), getHeight(), false, true);
 }
 
 void Document::Section::Content::paint(juce::Graphics& g)
@@ -197,7 +208,16 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
+                break;
             case AttrType::playheadPosition:
+            {
+                auto const time = acsr.getAttr<AttrType::playheadPosition>();
+                for(size_t i = 0; i < mContents.size(); ++i)
+                {
+                    mContents[i]->content.setTime(time);
+                }
+            };
+                break;
             case AttrType::timeZoom:
             case AttrType::layoutHorizontal:
             {
@@ -238,16 +258,11 @@ void Document::Section::resized()
 {
     auto bounds = getLocalBounds();
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
-    auto const right = getWidth() - 32;
+    auto const right = getWidth() - 16;
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
     mContainer.setBounds(bounds);
     mPlayhead.setBounds(bounds.withLeft(left).withRight(right));
-}
-
-void Document::Section::paint(juce::Graphics& g)
-{
-    g.fillAll(findColour(ColourIds::backgroundColourId));
 }
 
 ANALYSE_FILE_END

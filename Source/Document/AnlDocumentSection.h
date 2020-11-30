@@ -8,6 +8,7 @@
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerThumbnail.h"
 #include "../Analyzer/AnlAnalyzerTimeRenderer.h"
+#include "../Analyzer/AnlAnalyzerInstantRenderer.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "AnlDocumentPlayhead.h"
 
@@ -22,8 +23,7 @@ namespace Document
         
         enum ColourIds : int
         {
-            backgroundColourId = 0x2000400
-            , sectionColourId = 0x2000401
+            sectionColourId = 0x2000401
         };
         
         Section(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
@@ -31,7 +31,6 @@ namespace Document
         
         // juce::Component
         void resized() override;
-        void paint(juce::Graphics& g) override;
         
     private:
         
@@ -48,6 +47,7 @@ namespace Document
             std::function<void(int)> onThumbnailResized = nullptr;
             
             void setThumbnailSize(int size);
+            void setTime(double time);
             
             // juce::Component
             void resized() override;
@@ -57,14 +57,15 @@ namespace Document
             Analyzer::Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
             Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AttrType::zoom>(0)};
+            juce::StretchableLayoutManager mLayoutManager;
+            
             Analyzer::Thumbnail mThumbnail {mAccessor};
-            Analyzer::TimeRenderer mRenderer {mAccessor, mTimeZoomAccessor};
+            Analyzer::InstantRenderer mInstantRenderer {mAccessor};
             Zoom::Ruler mRuler {mValueZoomAccessor, Zoom::Ruler::Orientation::vertical};
+            Layout::StretchableResizerBar mResizerBar {&mLayoutManager, 3, true};
+            Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
             Zoom::ScrollBar mScrollbar {mValueZoomAccessor, Zoom::ScrollBar::Orientation::vertical, true};
             juce::Component mDummy;
-            
-            juce::StretchableLayoutManager mLayoutManager;
-            Layout::StretchableResizerBar mResizerBar {&mLayoutManager, 1, true};
         };
         
         struct Container
