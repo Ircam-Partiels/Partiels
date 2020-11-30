@@ -170,7 +170,13 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                 {
                     mContents[i]->content.onRemove = [this, i]()
                     {
-                        mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);
+                        auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+                        auto const title = juce::translate("Remove Analysis?");
+                        auto const message = juce::translate("Are you sure you want to rremove this analysis?");
+                        if(juce::AlertWindow::showOkCancelBox(icon, title, message))
+                        {
+                            mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);                            
+                        }
                     };
                 }
                 
@@ -229,7 +235,6 @@ Document::Section::~Section()
 void Document::Section::resized()
 {
     auto bounds = getLocalBounds();
-    
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
     auto const right = getWidth() - 32;
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
