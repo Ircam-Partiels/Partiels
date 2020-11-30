@@ -14,7 +14,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         {
             case AttrType::file:
             {
-                mPropertySection3.setPanels({}, Position::left);
+                mPropertySection.setPanels({}, Position::left);
+                
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setEditable(false);
@@ -45,7 +46,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<Layout::PropertySection::PanelRef> panels;
+                std::vector<Layout::PropertySection::PanelRef> panels {mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
+                
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
@@ -60,7 +62,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                         mMetaDataPanels.push_back(std::move(property));
                     }
                 }
-                mPropertySection3.setPanels(panels, Position::left);
+                mPropertySection.setPanels(panels, Position::left);
                 resized();
             }
                 break;
@@ -77,15 +79,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         changeListenerCallback(&mFileBasedDocument);
     };
     
+    addAndMakeVisible(mPropertySection);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mPropertySection1.setPanels({mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate}, Position::left);
-    mPropertySection2.setPanels({mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels}, Position::left);
-    
-    addAndMakeVisible(mPropertySection1);
-    addAndMakeVisible(mSeparator1);
-    addAndMakeVisible(mPropertySection2);
-    addAndMakeVisible(mSeparator2);
-    addAndMakeVisible(mPropertySection3);
     mFileBasedDocument.addChangeListener(this);
     changeListenerCallback(&mFileBasedDocument);
 }
@@ -98,33 +93,7 @@ Document::FileInfoPanel::~FileInfoPanel()
 
 void Document::FileInfoPanel::resized()
 {
-    auto constexpr minimumWidth = 138;
-    auto constexpr separatorWidth = 2;
-    
-    auto bounds = getLocalBounds();
-    auto const width = bounds.getWidth();
-    auto const numVisibleLayout = std::min(width / (minimumWidth + separatorWidth), mMetaDataPanels.empty() ? 2 : 3);
-    auto const layoutWidth = numVisibleLayout > 0 ? width / numVisibleLayout : 0;
-    
-    mPropertySection3.setVisible(numVisibleLayout == 3);
-    mSeparator2.setVisible(mPropertySection3.isVisible());
-    mPropertySection2.setVisible(numVisibleLayout >= 2);
-    mSeparator1.setVisible(mPropertySection2.isVisible());
-    mPropertySection1.setVisible(numVisibleLayout >= 1);
-    if(numVisibleLayout == 3)
-    {
-        mPropertySection3.setBounds(bounds.removeFromRight(layoutWidth - separatorWidth));
-        mSeparator2.setBounds(bounds.removeFromRight(separatorWidth));
-    }
-    if(numVisibleLayout >= 2)
-    {
-        mPropertySection2.setBounds(bounds.removeFromRight(layoutWidth));
-        mSeparator1.setBounds(bounds.removeFromRight(separatorWidth));
-    }
-    if(numVisibleLayout >= 1)
-    {
-        mPropertySection1.setBounds(bounds);
-    }
+    mPropertySection.setBounds(getLocalBounds());
 }
 
 void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* source)

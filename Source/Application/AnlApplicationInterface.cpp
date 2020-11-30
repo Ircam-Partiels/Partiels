@@ -4,49 +4,17 @@
 ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
-: mDocumentTransport(Instance::get().getDocumentAccessor())
-, mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
-, mZoomTimeRuler(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal)
+: mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
+, mDocumentTransport(Instance::get().getDocumentAccessor())
+
 , mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
-, mTimeScrollBar(Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal)
-{
-    mZoomTimeRuler.setPrimaryTickInterval(0);
-    mZoomTimeRuler.setTickReferenceValue(0.0);
-    mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
-    mZoomTimeRuler.setMaximumStringWidth(70.0);
-    mZoomTimeRuler.setValueAsStringMethod([](double value)
-    {
-        auto time = value;
-        auto const hours = static_cast<int>(std::floor(time / 3600.0));
-        time -= static_cast<double>(hours) * 3600.0;
-        auto const minutes = static_cast<int>(std::floor(time / 60.0));
-        time -= static_cast<double>(minutes) * 60.0;
-        auto const seconds = static_cast<int>(std::floor(time));
-        time -= static_cast<double>(seconds);
-        auto const ms = static_cast<int>(std::floor(time * 1000.0));
-        return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, seconds, ms);
-    });
-    
-    mZoomTimeRuler.onDoubleClick = [&]()
-    {
-        auto& acsr = Instance::get().getDocumentAccessor().getAccessor<Document::AttrType::timeZoom>(0);
-        acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
-    };
-    addAndMakeVisible(mZoomTimeRuler);
-    
-    addAndMakeVisible(mDocumentTransport);
-    addAndMakeVisible(mDocumentTransportSeparator);
+{    
     addAndMakeVisible(mDocumentFileInfoPanel);
-    addAndMakeVisible(mHeaderSeparator);
+    addAndMakeVisible(mDocumentTransport);
     
-    addAndMakeVisible(mZoomTimeRuler);
-    addAndMakeVisible(mZoomTimeRulerSeparator);
     addAndMakeVisible(mDocumentSection);
     
-    addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mToolTipDisplay);
-    addAndMakeVisible(mTooTipSeparator);
-    addAndMakeVisible(mTimeScrollBar);
     
     mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
@@ -69,6 +37,7 @@ Application::Interface::Interface()
             case Document::playheadPosition:
             case Document::timeZoom:
             case Document::layout:
+            case Document::layoutHorizontal:
             case Document::analyzers:
                 break;
         }
@@ -89,32 +58,12 @@ void Application::Interface::resized()
     auto constexpr separatorSize = 2;
     auto bounds = getLocalBounds();
     
-    {
-        auto header = bounds.removeFromTop(102);
-        mDocumentTransport.setBounds(header.removeFromLeft(240));
-        mDocumentTransportSeparator.setBounds(header.removeFromLeft(separatorSize));
-        mDocumentFileInfoPanel.setBounds(header);
-        mHeaderSeparator.setBounds(bounds.removeFromTop(separatorSize));
-    }
+    auto header = bounds.removeFromTop(102);
+    mDocumentFileInfoPanel.setBounds(header.removeFromRight(320));
+    mDocumentTransport.setBounds(header.removeFromLeft(240));
     
-    
-    {
-        auto footer = bounds.removeFromBottom(36);
-        mToolTipDisplay.setBounds(footer.removeFromBottom(24));
-        mTooTipSeparator.setBounds(footer.removeFromBottom(separatorSize));
-        footer.removeFromRight(8);
-        footer.removeFromLeft(240);
-        mTimeScrollBar.setBounds(footer);
-        mBottomSeparator.setBounds(bounds.removeFromBottom(separatorSize));
-    }
-    
-    {
-        auto top = bounds.removeFromTop(14 + separatorSize);
-        mZoomTimeRulerSeparator.setBounds(top.removeFromBottom(separatorSize));
-        top.removeFromLeft(240);
-        mZoomTimeRuler.setBounds(top);
-        mDocumentSection.setBounds(bounds);
-    }
+    mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
+    mDocumentSection.setBounds(bounds);
 }
 
 ANALYSE_FILE_END

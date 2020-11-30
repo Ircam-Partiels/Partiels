@@ -31,20 +31,13 @@ namespace Application
         Document::Accessor::Listener mDocumentListener;
         
         // Header
-        Document::Transport mDocumentTransport;
-        Tools::ColouredPanel mDocumentTransportSeparator;
         Document::FileInfoPanel mDocumentFileInfoPanel;
-        Tools::ColouredPanel mHeaderSeparator;
+        Document::Transport mDocumentTransport;
         
         // Main
-        Zoom::Ruler mZoomTimeRuler;
-        Tools::ColouredPanel mZoomTimeRulerSeparator;
         Document::Section mDocumentSection;
         
         //Footer
-        Tools::ColouredPanel mBottomSeparator;
-        Zoom::ScrollBar mTimeScrollBar;
-        Tools::ColouredPanel mTooTipSeparator;
         Tooltip::Display mToolTipDisplay;
   
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Interface)

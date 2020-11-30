@@ -81,8 +81,10 @@ namespace Document
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
+        Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         std::vector<std::unique_ptr<Container>> mContents;
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AttrType::layout>(0)};
+        Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)
     };

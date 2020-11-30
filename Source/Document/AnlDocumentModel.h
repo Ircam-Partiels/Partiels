@@ -31,7 +31,7 @@ namespace Document
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     , Model::Acsr<AttrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Acsr<AttrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::saveable>
+    , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::basic>
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
