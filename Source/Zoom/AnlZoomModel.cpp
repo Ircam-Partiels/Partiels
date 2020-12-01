@@ -2,31 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Zoom::Range Zoom::Accessor::sanitize(Range const& visible, Range const& global, double minLength)
-{
-    return global.constrainRange(visible.withEnd(std::max(visible.getStart() + minLength, visible.getEnd())));
-}
-
-template <>
-void Zoom::Accessor::setAttr<Zoom::AttrType::visibleRange, Zoom::Range>(Range const& value, NotificationType notification)
-{
-    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::visibleRange, Zoom::Range>(sanitize(value, getAttr<AttrType::globalRange>(), getAttr<AttrType::minimumLength>()), notification);
-}
-
-template <>
-void Zoom::Accessor::setAttr<Zoom::AttrType::globalRange, Zoom::Range>(Range const& value, NotificationType notification)
-{
-    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::globalRange, Zoom::Range>(value, notification);
-    setAttr<AttrType::visibleRange, Zoom::Range>(getAttr<AttrType::visibleRange>(), notification);
-}
-
-template <>
-void Zoom::Accessor::setAttr<Zoom::AttrType::minimumLength, double>(double const& value, NotificationType notification)
-{
-    ::Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::minimumLength, double>(value, notification);
-    setAttr<AttrType::visibleRange, Zoom::Range>(getAttr<AttrType::visibleRange>(), notification);
-}
-
 class ZoomModelUnitTest
 : public juce::UnitTest
 {

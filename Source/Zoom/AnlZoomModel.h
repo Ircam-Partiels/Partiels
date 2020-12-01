@@ -36,18 +36,23 @@ namespace Zoom
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
         
-        template <enum_type type, typename value_v>
+        template <enum_type type, typename value_v, typename fake = void>
         void setAttr(value_v const& value, NotificationType notification)
         {
-            Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
+            if constexpr(type == Zoom::AttrType::visibleRange)
+            {
+                auto sanitize = [](Range const& visible, Range const& global, double minLength)
+                {
+                    return global.constrainRange(visible.withEnd(std::max(visible.getStart() + minLength, visible.getEnd())));
+                };
+                Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::visibleRange, Zoom::Range>(sanitize(value, getAttr<AttrType::globalRange>(), getAttr<AttrType::minimumLength>()), notification);
+            }
+            else
+            {
+                Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
+                setAttr<AttrType::visibleRange, Zoom::Range>(getAttr<AttrType::visibleRange>(), notification);
+            }
         }
-        
-        template <>
-        void setAttr<AttrType::visibleRange, Range>(Range const& value, NotificationType notification);
-        template <>
-        void setAttr<AttrType::globalRange, Range>(Range const& value, NotificationType notification);
-        template <>
-        void setAttr<AttrType::minimumLength, double>(double const& value, NotificationType notification);
         
     private:
         static Range sanitize(Range const& visible, Range const& global, double minLength);
