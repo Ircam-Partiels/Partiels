@@ -46,35 +46,38 @@ namespace Document
         template <enum_type type>
         bool insertAccessor(long index, NotificationType notification)
         {
-             return Model::Accessor<Accessor, Container>::insertAccessor<type>(index, notification);
-        }
-        
-        template <>
-        bool insertAccessor<AttrType::analyzers>(long index, NotificationType notification)
-        {
-            auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
-            auto constexpr max = std::numeric_limits<double>::max() / 100.0;
-            auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-            static const Zoom::Container zoomCtnr {
-                {{min, max}}
-                , {epsilon}
-                , {{min, max}}
-            };
-            
-            static const Analyzer::Container ctnr {
-                  {""}
-                , {""}
-                , {0}
-                , {{}}
-                , {512}
-                , {zoomCtnr}
-                , {juce::Colours::black}
-                , {Analyzer::ColorMap::Inferno}
-                ,  {}
-            };
-            
-            auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);
-            return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::analyzers>(index, std::move(accessor), notification);
+            if constexpr(type == AttrType::analyzers)
+            {
+                auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
+                auto constexpr max = std::numeric_limits<double>::max() / 100.0;
+                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+                static const Zoom::Container zoomCtnr
+                {
+                      {{min, max}}
+                    , {epsilon}
+                    , {{min, max}}
+                };
+                
+                static const Analyzer::Container ctnr
+                {
+                      {""}
+                    , {""}
+                    , {0}
+                    , {{}}
+                    , {512}
+                    , {zoomCtnr}
+                    , {juce::Colours::black}
+                    , {Analyzer::ColorMap::Inferno}
+                    ,  {}
+                };
+                
+                auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);
+                return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::analyzers>(index, std::move(accessor), notification);
+            }
+            else
+            {
+                return Model::Accessor<Accessor, Container>::insertAccessor<type>(index, notification);
+            }
         }
     };
 }
