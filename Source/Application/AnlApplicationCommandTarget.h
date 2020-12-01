@@ -49,6 +49,9 @@ namespace Application
             , TransportToggleLooping
             , TransportRewindPlayHead
             
+            , ZoomIn
+            , ZoomOut
+            
             , HelpOpenManual
             , HelpOpenForum
 

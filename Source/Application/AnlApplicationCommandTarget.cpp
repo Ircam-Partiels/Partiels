@@ -107,6 +107,9 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::TransportToggleLooping
         , CommandIDs::TransportRewindPlayHead
         
+        , CommandIDs::ZoomIn
+        , CommandIDs::ZoomOut
+        
         , CommandIDs::HelpOpenManual
         , CommandIDs::HelpOpenForum
     });
@@ -308,6 +311,22 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
             
+        case CommandIDs::ZoomIn:
+        {
+            auto const& zoomAcsr = docAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
+            result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
+        }
+            break;
+        case CommandIDs::ZoomOut:
+        {
+            auto const& zoomAcsr = docAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
+            result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
+        }
+            break;
             
         case CommandIDs::HelpOpenManual:
         {
@@ -467,6 +486,25 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
             
+        case CommandIDs::ZoomIn:
+        {
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& zoomAcsr = documentAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / -100.0), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::ZoomOut:
+        {
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto& zoomAcsr = documentAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / 100.0), NotificationType::synchronous);
+            return true;
+        }
+            
         case CommandIDs::HelpOpenManual:
         case CommandIDs::HelpOpenForum:
         {
@@ -495,7 +533,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Transport", "Analysis", "Points", "Help"};
+    return {"File", "Edit", "Transport", "Analysis", "Points", "Zoom", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -558,6 +596,11 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::TransportToggleLooping);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::TransportRewindPlayHead);
+    }
+    else if(menuName == "Zoom")
+    {
+        menu.addCommandItem(&commandManager, CommandIDs::ZoomIn);
+        menu.addCommandItem(&commandManager, CommandIDs::ZoomOut);
     }
     else if(menuName == "Help")
     {

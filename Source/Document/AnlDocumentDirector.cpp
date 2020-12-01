@@ -52,7 +52,7 @@ void Document::Director::addAnalysis(AlertType alertType)
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::name>(name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::ColorMap::Heat, NotificationType::synchronous);
+        anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::ColorMap::Inferno, NotificationType::synchronous);
         
         Analyzer::PropertyPanel panel(anlAcsr);
         auto const title = juce::translate("Analyzer Properties");
@@ -98,6 +98,8 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 
                 auto& zoomAcsr = acsr.getAccessor<AttrType::timeZoom>(0);
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
                 
                 auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
                 for(auto& anlAcsr : anlAcsrs)

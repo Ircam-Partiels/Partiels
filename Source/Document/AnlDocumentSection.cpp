@@ -102,7 +102,7 @@ Document::Section::Section(Accessor& accessor)
                 auto& layoutAcsr = mAccessor.getAccessor<AttrType::layout>(0);
                 auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
                 
-                for(size_t i = 0; i < mContents.size(); ++i)
+                for(size_t i = 0; i < mContents.size() && i < sizes.size(); ++i)
                 {
                     mContainer.setContent(i, nullptr, 100);
                 }
@@ -116,7 +116,11 @@ Document::Section::Section(Accessor& accessor)
                         return &((*it)->accessor) == &(anlAcsr.get());
                     }))
                     {
-                        sizes.erase(sizes.begin() + std::distance(mContents.begin(), it));
+                        auto const distance = std::distance(mContents.begin(), it);
+                        if(sizes.size() > static_cast<size_t>(distance))
+                        {
+                            sizes.erase(sizes.begin() + distance);
+                        }
                         it = mContents.erase(it);
                     }
                     else
