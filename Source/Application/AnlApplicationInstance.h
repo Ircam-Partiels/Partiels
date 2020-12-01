@@ -65,7 +65,7 @@ namespace Application
             , {0.0}
             , {}
             , {}
-            , {66}
+            , {144}
             , {}
         };
         Document::Accessor mDocumentAccessor {mDocumentContainer};

@@ -390,7 +390,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 , {0.0}
                 , {}
                 , {}
-                , {66}
+                , {144}
                 , {}
             }, NotificationType::synchronous);
             return true;
