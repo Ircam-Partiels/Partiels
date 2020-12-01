@@ -6,8 +6,7 @@ ANALYSE_FILE_BEGIN
 Application::Interface::Interface()
 : mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
 , mDocumentTransport(Instance::get().getDocumentAccessor())
-
-, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
+, mDocumentSection(Instance::get().getDocumentAccessor())
 {    
     addAndMakeVisible(mDocumentFileInfoPanel);
     addAndMakeVisible(mDocumentTransport);

@@ -69,9 +69,8 @@ void Document::Section::Content::paint(juce::Graphics& g)
     g.fillAll(findColour(ColourIds::sectionColourId, true));
 }
 
-Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
+Document::Section::Section(Accessor& accessor)
 : mAccessor(accessor)
-, mAudioFormatManager(audioFormatManager)
 {
     mZoomTimeRuler.setPrimaryTickInterval(0);
     mZoomTimeRuler.setTickReferenceValue(0.0);

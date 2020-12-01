@@ -98,6 +98,7 @@ void Document::FileInfoPanel::resized()
 
 void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
+    juce::ignoreUnused(source);
     anlStrongAssert(source == &mFileBasedDocument);
     auto const file = mFileBasedDocument.getFile();
     auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved";

@@ -27,7 +27,7 @@ namespace Document
             sectionColourId = 0x2000401
         };
         
-        Section(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
+        Section(Accessor& accessor);
         ~Section() override;
         
         // juce::Component
@@ -82,7 +82,6 @@ namespace Document
         };
         
         Accessor& mAccessor;
-        juce::AudioFormatManager const& mAudioFormatManager;
         Accessor::Listener mListener;
         
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};

@@ -169,6 +169,8 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
         auto const scaleY = static_cast<float>(globalValueRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
         
         auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
+        
+        g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
         g.drawImageTransformed(image, transform);
     }
 }
