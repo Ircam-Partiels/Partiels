@@ -31,13 +31,26 @@ namespace Application
         template <enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
-            Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
+            if constexpr(type == AttrType::recentlyOpenedFilesList)
+            {
+                auto sanitize = [](std::vector<juce::File> const& files)
+                {
+                    std::vector<juce::File> copy = files;
+                    copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
+                    copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
+                    {
+                        return !file.existsAsFile();
+                    }), copy.end());
+                    return copy;
+                };
+                
+                Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+            }
+            else
+            {
+                Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
+            }
         }
-        
-        template <>
-        void setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(std::vector<juce::File> const& value, NotificationType notification);
-    private:
-        static std::vector<juce::File> sanitize(std::vector<juce::File> const& files);
     };
 }
 
