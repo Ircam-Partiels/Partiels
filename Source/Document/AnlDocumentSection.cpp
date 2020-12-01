@@ -4,10 +4,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr, juce::StretchableLayoutManager& layoutManager)
+Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr)
 : mAccessor(acsr)
 , mTimeZoomAccessor(timeZoomAcsr)
-, mLayoutManager(layoutManager)
 {
     mThumbnail.onRemove = [&]()
     {
@@ -24,13 +23,12 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
         valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
     
-    mResizerBar.onMoved = [&]()
+    mResizerBar.onMoved = [&](int position)
     {
         if(onThumbnailResized != nullptr)
         {
-            onThumbnailResized(mLayoutManager.getItemCurrentPosition(3));
+            onThumbnailResized(position);
         }
-        resized();
     };
     
     addAndMakeVisible(mThumbnail);
@@ -47,19 +45,24 @@ void Document::Section::Content::setTime(double time)
     mInstantRenderer.setTime(time);
 }
 
+void Document::Section::Content::setThumbnailSize(int size)
+{
+    mResizerBar.setTopLeftPosition(size, 0);
+    resized();
+}
+
 void Document::Section::Content::resized()
 {
-    juce::Component* components[] =
-    {
-        &mThumbnail,
-        &mInstantRenderer,
-        &mRuler,
-        &mResizerBar,
-        &mTimeRenderer,
-        &mScrollbar,
-        &mDummy
-    };
-    mLayoutManager.layOutComponents(components, 7, 0, 0, getWidth(), getHeight(), false, true);
+    auto bounds = getLocalBounds();
+    bounds.removeFromRight(8);
+    auto const resizerPos = mResizerBar.getX();
+    mScrollbar.setBounds(bounds.removeFromRight(8));
+    
+    mThumbnail.setBounds(bounds.removeFromLeft(66));
+    mInstantRenderer.setBounds(bounds.removeFromLeft(resizerPos - bounds.getX() - 16));
+    mRuler.setBounds(bounds.removeFromLeft(16));
+    mResizerBar.setBounds(bounds.removeFromLeft(2));
+    mTimeRenderer.setBounds(bounds);
 }
 
 void Document::Section::Content::paint(juce::Graphics& g)
@@ -134,7 +137,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                 
                 for(size_t i = mContents.size(); i < anlAcsrs.size(); ++i)
                 {
-                    auto container = std::make_unique<Container>(anlAcsrs[i], timeZoomAcsr, mLayoutManager);
+                    auto container = std::make_unique<Container>(anlAcsrs[i], timeZoomAcsr);
                     anlWeakAssert(container != nullptr);
                     if(container != nullptr)
                     {
@@ -142,6 +145,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                         {
                             mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
                         };
+                
                         mContents.push_back(std::move(container));
                         if(i >= sizes.size())
                         {
@@ -184,6 +188,11 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                     mContainer.setContent(i, &(mContents[i]->content), 100);
                 }
                 resized();
+                auto const pos = acsr.getAttr<AttrType::layoutHorizontal>();
+                for(size_t i = 0; i < mContents.size(); ++i)
+                {
+                    mContents[i]->content.setThumbnailSize(pos);
+                }
             }
                 break;
             case AttrType::file:
@@ -204,25 +213,18 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager const& a
                 break;
             case AttrType::layoutHorizontal:
             {
+                resized();
+                auto const pos = acsr.getAttr<AttrType::layoutHorizontal>();
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {
-                    mContents[i]->content.resized();
+                    mContents[i]->content.setThumbnailSize(pos);
                 }
-                resized();
             }
                 break;
             case AttrType::layout:
                 break;
         }
     };
-    
-    mLayoutManager.setItemLayout(0, 66.0, 66.0, 66.0);
-    mLayoutManager.setItemLayout(1, 10.0, 200.0, 20.0);
-    mLayoutManager.setItemLayout(2, 16.0, 16.0, 16.0);
-    mLayoutManager.setItemLayout(3, 2.0, 2.0, 2.0);
-    mLayoutManager.setItemLayout(4, 20.0, -1.0, -1.0);
-    mLayoutManager.setItemLayout(5, 8.0, 8.0, 8.0);
-    mLayoutManager.setItemLayout(6, 8.0, 8.0, 8.0);
     
     mZoomTimeRuler.onDoubleClick = [&]()
     {
@@ -248,7 +250,7 @@ Document::Section::~Section()
 void Document::Section::resized()
 {
     auto bounds = getLocalBounds();
-    auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
+    auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
     auto const right = getWidth() - 16;
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));

@@ -7,31 +7,37 @@ ANALYSE_FILE_BEGIN
 
 Application::LookAndFeel::LookAndFeel()
 {
+    auto const backgroundColour = juce::Colours::black;
+    auto const rulerColour = juce::Colours::grey;
+    auto const textColour = juce::Colours::white;
+    auto const thumbColour = juce::Colours::blue;
+    
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
-    setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, juce::Colours::black);
-    
-    auto const grey = juce::Colours::grey;
+    setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
+
     setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
-    setColour(Layout::StrechableContainer::Section::resizerActiveColourId, grey.brighter());
-    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, grey.darker());
+    setColour(Layout::StrechableContainer::Section::resizerActiveColourId, rulerColour.brighter());
+    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, rulerColour.darker());
     
-    setColour(Zoom::Ruler::backgroundColourId, grey);
-    setColour(Zoom::Ruler::tickColourId, juce::Colours::black);
-    setColour(Zoom::Ruler::textColourId, juce::Colours::white);
-    setColour(Zoom::Ruler::anchorColourId, juce::Colours::red);
-    setColour(Zoom::Ruler::selectionColourId, juce::Colours::blue);
+    setColour(Zoom::Ruler::backgroundColourId, rulerColour);
+    setColour(Zoom::Ruler::tickColourId, backgroundColour);
+    setColour(Zoom::Ruler::textColourId, textColour);
+    setColour(Zoom::Ruler::anchorColourId, thumbColour);
+    setColour(Zoom::Ruler::selectionColourId, thumbColour);
     
-    setColour(Analyzer::Thumbnail::backgroundColourId, grey);
+    setColour(Analyzer::Thumbnail::backgroundColourId, rulerColour);
     
-    setColour(Document::Section::sectionColourId, findColour(juce::ResizableWindow::backgroundColourId));
+    setColour(Document::Section::sectionColourId, backgroundColour);
     setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);
-    setColour(Document::Playhead::playheadColourId, juce::Colours::blue);
+    setColour(Document::Playhead::playheadColourId, thumbColour);
     
     // juce::ComboBox::LookAndFeelMethods
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::arrowColourId, juce::Colours::white);
+    
+    setColour(juce::ScrollBar::ColourIds::backgroundColourId, rulerColour);
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
