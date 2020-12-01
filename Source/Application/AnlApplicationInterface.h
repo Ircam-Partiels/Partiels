@@ -38,6 +38,8 @@ namespace Application
         juce::ImageButton mInspect;
         juce::ImageButton mEdit;
         
+        juce::TextButton mLoad {juce::translate("Load File")};
+        
         // Main
         Document::Section mDocumentSection;
         

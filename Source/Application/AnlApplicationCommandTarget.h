@@ -18,7 +18,6 @@ namespace Application
         enum CommandIDs : int
         {
               DocumentOpen = 0x2001
-            , DocumentNew
             , DocumentSave
             , DocumentDuplicate
             , DocumentConsolidate

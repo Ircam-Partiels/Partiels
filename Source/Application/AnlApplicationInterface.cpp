@@ -28,6 +28,12 @@ Application::Interface::Interface()
     setupImage(mInspect, juce::ImageCache::getFromMemory(BinaryData::chercher_png, BinaryData::chercher_pngSize));
     setupImage(mEdit, juce::ImageCache::getFromMemory(BinaryData::editer_png, BinaryData::editer_pngSize));
     
+    mLoad.onClick = []()
+    {
+        using CommandIDs = CommandTarget::CommandIDs;
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
+    };
+    
     mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
         switch(attribute)
@@ -41,6 +47,14 @@ Application::Interface::Interface()
                 mDocumentTransport.setEnabled(isDocumentEnable);
                 mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
                 mDocumentSection.setEnabled(isDocumentEnable);
+                if(!isDocumentEnable)
+                {
+                    addAndMakeVisible(mLoad);
+                }
+                else
+                {
+                    removeChildComponent(&mLoad);
+                }
             }
                 break;
             case Document::isLooping:
@@ -81,6 +95,8 @@ void Application::Interface::resized()
     
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
     mDocumentSection.setBounds(bounds);
+    
+    mLoad.setBounds(bounds.withSizeKeepingCentre(200, 32));
 }
 
 ANALYSE_FILE_END
