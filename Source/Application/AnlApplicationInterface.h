@@ -34,6 +34,10 @@ namespace Application
         Document::FileInfoPanel mDocumentFileInfoPanel;
         Document::Transport mDocumentTransport;
         
+        juce::ImageButton mNavigate;
+        juce::ImageButton mInspect;
+        juce::ImageButton mEdit;
+        
         // Main
         Document::Section mDocumentSection;
         

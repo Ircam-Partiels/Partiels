@@ -10,10 +10,23 @@ Application::Interface::Interface()
 {    
     addAndMakeVisible(mDocumentFileInfoPanel);
     addAndMakeVisible(mDocumentTransport);
-    
+    addAndMakeVisible(mNavigate);
+    addAndMakeVisible(mInspect);
+    addAndMakeVisible(mEdit);
     addAndMakeVisible(mDocumentSection);
-    
     addAndMakeVisible(mToolTipDisplay);
+    
+    mNavigate.setTooltip(juce::translate("Navigate"));
+    mInspect.setTooltip(juce::translate("Inspect"));
+    mEdit.setTooltip(juce::translate("Edit"));
+    
+    auto setupImage = [](juce::ImageButton& button, juce::Image image)
+    {
+        button.setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
+    };
+    setupImage(mNavigate, juce::ImageCache::getFromMemory(BinaryData::naviguer_png, BinaryData::naviguer_pngSize));
+    setupImage(mInspect, juce::ImageCache::getFromMemory(BinaryData::chercher_png, BinaryData::chercher_pngSize));
+    setupImage(mEdit, juce::ImageCache::getFromMemory(BinaryData::editer_png, BinaryData::editer_pngSize));
     
     mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
@@ -56,9 +69,15 @@ void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
     
-    auto header = bounds.removeFromTop(102);
+    auto header = bounds.removeFromTop(82);
     mDocumentFileInfoPanel.setBounds(header.removeFromRight(320));
     mDocumentTransport.setBounds(header.removeFromLeft(240));
+    auto buttons = header.withSizeKeepingCentre(120, 32);
+    mNavigate.setBounds(buttons.removeFromLeft(32));
+    buttons.removeFromLeft(12);
+    mInspect.setBounds(buttons.removeFromLeft(32));
+    buttons.removeFromLeft(12);
+    mEdit.setBounds(buttons.removeFromLeft(32));
     
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
     mDocumentSection.setBounds(bounds);

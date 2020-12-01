@@ -53,8 +53,8 @@ file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.h
-    ${SOURCES_DIRECTORY}/Layout/AnlLayoutStretchableResizerBar.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlLayoutStretchableResizerBar.h
+    ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.h
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.h)
 
@@ -184,6 +184,9 @@ target_compile_definitions(Analyse PRIVATE
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/icon.png
+    ${BINARYDATA_DIRECTORY}/Icons/chercher.png
+    ${BINARYDATA_DIRECTORY}/Icons/editer.png
+    ${BINARYDATA_DIRECTORY}/Icons/naviguer.png
     ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg
     ${BINARYDATA_DIRECTORY}/Translations/Fr.txt)
 

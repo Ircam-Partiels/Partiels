@@ -10,7 +10,7 @@ Application::LookAndFeel::LookAndFeel()
     auto const backgroundColour = juce::Colours::grey.darker();
     auto const rulerColour = juce::Colours::grey;
     auto const textColour = juce::Colours::white;
-    auto const thumbColour = juce::Colours::lightblue;
+    auto const thumbColour = juce::Colours::white;
     
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
     setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
@@ -36,11 +36,19 @@ Application::LookAndFeel::LookAndFeel()
     // juce::ResizableWindow
     setColour(juce::ResizableWindow::ColourIds::backgroundColourId, backgroundColour.darker());
     
+    // juce::TextButton
+    setColour(juce::TextButton::ColourIds::buttonColourId, backgroundColour);
+    setColour(juce::TextButton::ColourIds::buttonOnColourId, backgroundColour.brighter());
+    
+    // juce::TextButton
+    setColour(juce::Slider::ColourIds::backgroundColourId, backgroundColour);
+    setColour(juce::Slider::ColourIds::thumbColourId, thumbColour);
+    
     // juce::ComboBox
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
-    setColour(juce::ComboBox::ColourIds::arrowColourId, juce::Colours::white);
+    setColour(juce::ComboBox::ColourIds::arrowColourId, textColour);
     
     // juce::ScrollBar
     setColour(juce::ScrollBar::ColourIds::backgroundColourId, backgroundColour.darker());

@@ -92,8 +92,6 @@ void Document::Transport::resized()
     mRewindButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mPlaybackButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
     mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
-    
-    bounds.removeFromTop(bounds.getHeight() / 3);
     mPlayPositionInHMSms.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
     mVolumeSlider.setBounds(bounds);
 }
