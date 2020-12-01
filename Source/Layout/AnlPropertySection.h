@@ -41,7 +41,17 @@ namespace Layout
             void paint(juce::Graphics& g) override;
         };
         
-        using Container = std::tuple<PanelRef, Separator>;
+        struct Container
+        {
+            Container(PanelRef ref)
+            : panel(ref)
+            {
+                
+            }
+            
+            PanelRef panel;
+            Separator separator;
+        };
         
         juce::Component mContent;
         juce::Viewport mViewport;

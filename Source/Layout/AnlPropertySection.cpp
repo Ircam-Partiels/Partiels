@@ -25,10 +25,10 @@ void Layout::PropertySection::resized()
         anlStrongAssert(container != nullptr);
         if(container != nullptr)
         {
-            auto const panel = std::get<0>(*container.get());
+            auto const panel = container.get()->panel;
             auto const containerSize = isLeft ? panel.get().getHeight() : panel.get().getWidth();
             panel.get().setBounds(isLeft ? bounds.removeFromTop(containerSize) : bounds.removeFromLeft(containerSize));
-            std::get<1>(*container.get()).setBounds(isLeft ? bounds.removeFromTop(separatorSize) : bounds.removeFromLeft(separatorSize));
+            container.get()->separator.setBounds(isLeft ? bounds.removeFromTop(separatorSize) : bounds.removeFromLeft(separatorSize));
         }
     }
     mContent.setSize(isLeft ? getWidth() : bounds.getX() - separatorSize, !isLeft ? getHeight() : bounds.getY() - separatorSize);
@@ -48,10 +48,10 @@ void Layout::PropertySection::setPanels(std::vector<PanelRef> const& panels, Pos
         anlStrongAssert(container != nullptr);
         if(container != nullptr)
         {
-            anlWeakAssert(std::get<0>(*container.get()).get().positioning == mPositioning);
-            std::get<0>(*container.get()).get().positioning = mPositioning;
-            mContent.addAndMakeVisible(std::get<0>(*container.get()));
-            mContent.addAndMakeVisible(std::get<1>(*container.get()));
+            anlWeakAssert(container.get()->panel.get().positioning == mPositioning);
+            container.get()->panel.get().positioning = mPositioning;
+            mContent.addAndMakeVisible(container.get()->panel);
+            mContent.addAndMakeVisible(container.get()->separator);
             mContainers.push_back(std::move(container));
         }
     }
