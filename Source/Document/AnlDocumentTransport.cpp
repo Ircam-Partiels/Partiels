@@ -20,7 +20,6 @@ Document::Transport::Transport(Accessor& accessor)
                 auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
                 mPlaybackButton.setButtonText(state ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
-                mRewindButton.setEnabled(!state);
             }
                 break;
             case AttrType::playheadPosition:
@@ -46,7 +45,16 @@ Document::Transport::Transport(Accessor& accessor)
     
     mRewindButton.onClick = [&]()
     {
+        auto const isPlaying = mAccessor.getAttr<Document::AttrType::isPlaybackStarted>();
+        if(isPlaying)
+        {
+            mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
+        }
         mAccessor.setAttr<AttrType::playheadPosition>(0.0, NotificationType::synchronous);
+        if(isPlaying)
+        {
+            mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
+        }
     };
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()

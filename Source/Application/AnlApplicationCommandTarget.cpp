@@ -304,7 +304,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0 && !docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0);
         }
             break;
             
@@ -454,7 +454,16 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto constexpr attr = Document::AttrType::playheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
+            auto const isPlaying = documentAcsr.getAttr<Document::AttrType::isPlaybackStarted>();
+            if(isPlaying)
+            {
+                documentAcsr.setAttr<Document::AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
+            }
             documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
+            if(isPlaying)
+            {
+                documentAcsr.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
+            }
             return true;
         }
             
