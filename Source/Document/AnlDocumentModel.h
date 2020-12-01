@@ -69,7 +69,7 @@ namespace Document
                 , {512}
                 , {zoomCtnr}
                 , {juce::Colours::black}
-                , {Analyzer::ColorMap::Heat}
+                , {Analyzer::ColorMap::Inferno}
                 ,  {}
             };
             

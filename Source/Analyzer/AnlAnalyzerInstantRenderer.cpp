@@ -95,17 +95,18 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
     }
     
     auto const realTime = Vamp::RealTime::fromSeconds(mTime);
-    auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& time)
-    {
-        return result.timestamp < time;
-    });
-    if(it == results.cend())
-    {
-        return;
-    }
     
-    if(it->values.size() == 1)
+    if(results.cbegin()->values.size() == 1)
     {
+        auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& time)
+        {
+            return result.timestamp < time;
+        });
+        if(it == results.cend())
+        {
+            return;
+        }
+        
         auto const value = (it->values[0]  - visibleRange.getStart()) / visibleRange.getLength();
         auto const bounds = getLocalBounds();
         auto const position = static_cast<int>((1.0 - value) * static_cast<double>(bounds.getHeight()));
@@ -118,7 +119,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
         g.setColour(colour);
         g.fillRect(area.withHeight(1.0f));
     }
-    else if(it->values.size() > 1)
+    else if(results.cbegin()->values.size() > 1)
     {
 //        auto const bounds = getLocalBounds();
 //        auto const dheight = static_cast<double>(bounds.getHeight());

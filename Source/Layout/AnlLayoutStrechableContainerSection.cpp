@@ -157,6 +157,8 @@ void Layout::StrechableContainer::Section::resized()
     mViewport.setBounds(getLocalBounds());
     auto const fullSize = std::accumulate(sizes.cbegin(), sizes.cend(), 0);
     mInnerContainer.setBounds(0, 0, isVertical ? getWidth() : fullSize, isVertical ? fullSize : getHeight());
+    auto const isCrollBarShown = isVertical ? mViewport.getVerticalScrollBar().isVisible() : mViewport.getHorizontalScrollBar().isVisible();
+    mInnerContainer.setBounds(0, 0, isVertical ? (getWidth() - (isCrollBarShown ? 8 : 0)) : fullSize, isVertical ? fullSize : (getHeight() - (isCrollBarShown ? 8 : 0)));
     
     auto bounds = mInnerContainer.getLocalBounds();
     anlStrongAssert(sizes.size() == mHolders.size());

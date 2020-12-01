@@ -7,42 +7,61 @@ ANALYSE_FILE_BEGIN
 
 Application::LookAndFeel::LookAndFeel()
 {
-    auto const backgroundColour = juce::Colours::black;
+    auto const backgroundColour = juce::Colours::grey.darker();
     auto const rulerColour = juce::Colours::grey;
     auto const textColour = juce::Colours::white;
-    auto const thumbColour = juce::Colours::blue;
+    auto const thumbColour = juce::Colours::lightblue;
     
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
     setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
 
     setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
     setColour(Layout::StrechableContainer::Section::resizerActiveColourId, rulerColour.brighter());
-    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, rulerColour.darker());
+    setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, backgroundColour.darker());
     
-    setColour(Zoom::Ruler::backgroundColourId, rulerColour);
-    setColour(Zoom::Ruler::tickColourId, backgroundColour);
+    setColour(Zoom::Ruler::backgroundColourId, backgroundColour.darker());
+    setColour(Zoom::Ruler::tickColourId, textColour);
     setColour(Zoom::Ruler::textColourId, textColour);
     setColour(Zoom::Ruler::anchorColourId, thumbColour);
     setColour(Zoom::Ruler::selectionColourId, thumbColour);
     
-    setColour(Analyzer::Thumbnail::backgroundColourId, rulerColour);
+    setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
     
-    setColour(Document::Section::sectionColourId, backgroundColour);
+    setColour(Document::Section::sectionColourId, juce::Colours::black);
+    setColour(Document::Section::backgroundColourId, backgroundColour);
+    
     setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Document::Playhead::playheadColourId, thumbColour);
     
-    // juce::ComboBox::LookAndFeelMethods
+    // juce::ResizableWindow
+    setColour(juce::ResizableWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+    
+    // juce::ComboBox
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::arrowColourId, juce::Colours::white);
     
-    setColour(juce::ScrollBar::ColourIds::backgroundColourId, rulerColour);
+    // juce::ScrollBar
+    setColour(juce::ScrollBar::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(juce::ScrollBar::ColourIds::thumbColourId, thumbColour);
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
 {
     return false;
+}
+
+void Application::LookAndFeel::drawScrollbar(juce::Graphics& g, juce::ScrollBar& scrollbar, int x, int y, int width, int height, bool isScrollbarVertical, int thumbStartPosition, int thumbSize, bool isMouseOver, bool isMouseDown)
+{
+    juce::ignoreUnused(isMouseDown);
+    g.fillAll(scrollbar.findColour(juce::ScrollBar::ColourIds::backgroundColourId));
+    
+    auto const thumbBounds = isScrollbarVertical ?  juce::Rectangle<int>{x, thumbStartPosition, width, thumbSize} : juce::Rectangle<int>{thumbStartPosition, y, thumbSize, height};
+    
+    auto const colour = scrollbar.findColour(juce::ScrollBar::ColourIds::thumbColourId);
+    g.setColour(isMouseOver ? colour.brighter (0.25f) :colour);
+    g.fillRoundedRectangle(thumbBounds.reduced(1).toFloat(), 4.0f);
 }
 
 void Application::LookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, const bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box)

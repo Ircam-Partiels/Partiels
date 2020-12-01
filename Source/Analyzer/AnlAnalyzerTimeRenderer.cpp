@@ -124,6 +124,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
     }
     else if(results.front().values.size() == 1)
     {
+        auto const clip = g.getClipBounds();
         g.setColour(mAccessor.getAttr<AttrType::colour>());
         auto const valueRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto valueToPixel = [&](float const value)
@@ -141,11 +142,11 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
             auto const x = timeToPixel(results[i].timestamp);
             auto const y = valueToPixel(results[i].values[0]);
             juce::Point<float> const npt{static_cast<float>(x), static_cast<float>(y)};
-            if(isVisible && i > 0)
+            if(x >= clip.getX() && x <= clip.getRight() && isVisible && i > 0)
             {
                 g.drawLine({pt, npt});
             }
-            else if(results[i].timestamp >= realTimeRange.getEnd())
+            else if(results[i].timestamp >= realTimeRange.getEnd() || x > clip.getRight())
             {
                 break;
             }

@@ -27,7 +27,7 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
     {
         if(onThumbnailResized != nullptr)
         {
-            onThumbnailResized(position);
+            onThumbnailResized(position + 4);
         }
     };
     
@@ -47,21 +47,20 @@ void Document::Section::Content::setTime(double time)
 
 void Document::Section::Content::setThumbnailSize(int size)
 {
-    mResizerBar.setTopLeftPosition(size, 0);
+    mResizerBar.setTopLeftPosition(size - 4, 0);
     resized();
 }
 
 void Document::Section::Content::resized()
 {
     auto bounds = getLocalBounds();
-    bounds.removeFromRight(8);
     auto const resizerPos = mResizerBar.getX();
     mScrollbar.setBounds(bounds.removeFromRight(8));
+    mRuler.setBounds(bounds.removeFromRight(16));
     
     mThumbnail.setBounds(bounds.removeFromLeft(66));
-    mInstantRenderer.setBounds(bounds.removeFromLeft(resizerPos - bounds.getX() - 16));
-    mRuler.setBounds(bounds.removeFromLeft(16));
-    mResizerBar.setBounds(bounds.removeFromLeft(2));
+    mInstantRenderer.setBounds(bounds.removeFromLeft(resizerPos - bounds.getX()));
+    mResizerBar.setBounds(bounds.removeFromLeft(4));
     mTimeRenderer.setBounds(bounds);
 }
 
@@ -251,11 +250,19 @@ void Document::Section::resized()
 {
     auto bounds = getLocalBounds();
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
-    auto const right = getWidth() - 16;
+    auto const right = getWidth() - 24;
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
     mContainer.setBounds(bounds);
     mPlayhead.setBounds(bounds.withLeft(left).withRight(right));
+}
+
+void Document::Section::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(ColourIds::backgroundColourId));
+    auto bounds = getLocalBounds();
+    g.setColour(mZoomTimeRuler.findColour(Zoom::Ruler::backgroundColourId));
+    g.fillRect(bounds.removeFromTop(mZoomTimeRuler.getHeight()));
 }
 
 ANALYSE_FILE_END
