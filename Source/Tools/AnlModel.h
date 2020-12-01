@@ -34,8 +34,8 @@ namespace Model
         using enum_type = enum_t;
         using value_type = value_t;
         
-        static enum_type const type = static_cast<enum_type>(index_v);
-        static int const flags = flags_v;
+        static enum_type constexpr type = static_cast<enum_type>(index_v);
+        static int constexpr flags = flags_v;
         value_type value;
     };
     
@@ -51,9 +51,9 @@ namespace Model
         using accessor_type = accessor_t;
         using container_type = typename accessor_type::container_type;
         
-        static enum_type const type = static_cast<enum_type>(index_v);
-        static int const flags = flags_v | AttrFlag::container;
-        static size_t const size_flags = size_flags_v;
+        static enum_type constexpr type = static_cast<enum_type>(index_v);
+        static int constexpr flags = flags_v | AttrFlag::container;
+        static size_t constexpr size_flags = size_flags_v;
         std::vector<std::unique_ptr<accessor_type>> accessors;
         
         AcsrImp()
