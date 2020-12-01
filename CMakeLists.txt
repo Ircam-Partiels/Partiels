@@ -5,6 +5,10 @@ project(Analyse VERSION 0.0.1 LANGUAGES C CXX)
 add_subdirectory(JUCE)
 include(vamp.cmake)
 
+if(WIN32)
+target_compile_definitions(vamp PRIVATE _USE_MATH_DEFINES)
+endif()
+
 juce_add_gui_app(Analyse
     PRODUCT_NAME                        "Brioche"
     VERSION                             "0.0.1"
