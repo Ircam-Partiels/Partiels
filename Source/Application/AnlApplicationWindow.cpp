@@ -22,7 +22,7 @@ Application::Window::Window()
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     mMainMenuModel.setApplicationCommandManagerToWatch(&Instance::get().getApplicationCommandManager());
 #if !JUCE_MAC
-    setMenuBar(&MainMenuModel);
+    setMenuBar(&mMainMenuModel);
 #elif !defined(JUCE_IOS)
     juce::PopupMenu extraAppleMenuItems;
     juce::MenuBarModel::setMacMainMenu(&mMainMenuModel, nullptr);

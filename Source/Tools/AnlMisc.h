@@ -1,13 +1,26 @@
 #pragma once
 
-#define anlStrongAssert assert
-#define anlWeakAssert jassert
-
 #define ANALYSE_FILE_BEGIN namespace Anl {
     
 #define ANALYSE_FILE_END }
 
 #include "JuceHeader.h"
+
+#include <mutex>
+#include <set>
+#include <utility>
+#include <atomic>
+#include <memory>
+#include <thread>
+#include <functional>
+#include <type_traits>
+#include <tuple>
+#include <variant>
+#include <numeric>
+#include <cassert>
+
+#define anlStrongAssert assert
+#define anlWeakAssert jassert
 
 ANALYSE_FILE_BEGIN
 
@@ -61,18 +74,6 @@ ANALYSE_FILE_END
 #define anlDebug(domain, message)
 #define anlError(domain, message)
 #endif
-
-#include <mutex>
-#include <set>
-#include <utility>
-#include <atomic>
-#include <memory>
-#include <thread>
-#include <functional>
-#include <type_traits>
-#include <tuple>
-#include <variant>
-#include <numeric>
 
 // This method can be used to test if a class/struct is a specialization of template class
 // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
