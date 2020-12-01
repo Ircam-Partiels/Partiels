@@ -128,14 +128,6 @@ Document::Section::Section(Accessor& accessor)
                         ++it;
                     }
                 }
-//                mContents.erase(std::remove_if(mContents.begin(), mContents.end(), [&](auto const& content)
-//                {
-//                    return std::none_of(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
-//                    {
-//                        return &(content->accessor) == &(anlAcsr.get());
-//                    });
-//                }), mContents.end());
-                
                 
                 for(size_t i = mContents.size(); i < anlAcsrs.size(); ++i)
                 {
