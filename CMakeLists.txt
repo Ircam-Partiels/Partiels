@@ -5,10 +5,6 @@ project(Analyse VERSION 0.0.1 LANGUAGES C CXX)
 add_subdirectory(JUCE)
 include(vamp.cmake)
 
-if(WIN32)
-target_compile_definitions(vamp PRIVATE _USE_MATH_DEFINES)
-endif()
-
 juce_add_gui_app(Analyse
     PRODUCT_NAME                        "Brioche"
     VERSION                             "0.0.1"
@@ -17,9 +13,10 @@ juce_add_gui_app(Analyse
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
     ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Icons/icon.png"
-    DOCUMENT_EXTENSIONS                 anl
+    DOCUMENT_EXTENSIONS                 brioche
     NEEDS_CURL                          FALSE
-    NEEDS_WEB_BROWSER                   FALSE)
+    NEEDS_WEB_BROWSER                   FALSE
+    NEEDS_STORE_KIT                     FALSE)
     #HARDENED_RUNTIME_ENABLED)
 
 juce_generate_juce_header(Analyse)
@@ -183,7 +180,9 @@ target_compile_definitions(Analyse PRIVATE
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_LOG_ASSERTIONS=1
-    JUCE_STRICT_REFCOUNTEDPOINTER=1)
+    JUCE_STRICT_REFCOUNTEDPOINTER=1
+    JUCE_USE_CURL=0
+    JUCE_WEB_BROWSER=0)
 
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
@@ -195,7 +194,6 @@ file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Translations/Fr.txt)
 
 juce_add_binary_data(AnalyseData SOURCES ${BinaryDataSources})
-# juce_add_bundle_resources_directory(Analyse ${CMAKE_CURRENT_SOURCE_DIR}/Resources/Translations)
 
 target_link_libraries(Analyse PRIVATE
     vamp

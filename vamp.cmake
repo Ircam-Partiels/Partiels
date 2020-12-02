@@ -8,4 +8,7 @@ file(GLOB VAMP_HOST_SDK_SOURCES ${VAMP_HOST_SOURCES_DIRECTORY}/*h  ${VAMP_HOST_S
 source_group("Vamp" FILES ${VAMP_HOST_SDK_HEADERS} ${VAMP_HOST_SDK_SOURCES})
 add_library(vamp STATIC ${VAMP_HOST_SDK_HEADERS} ${VAMP_HOST_SDK_SOURCES})
 target_compile_definitions(vamp PUBLIC _VAMP_NO_HOST_NAMESPACE=1)
+if(WIN32)
+target_compile_definitions(vamp PRIVATE _USE_MATH_DEFINES)
+endif()
 target_include_directories(vamp PUBLIC ${VAMP_SDK_DIRECTORY})
