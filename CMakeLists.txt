@@ -25,7 +25,7 @@ set_target_properties(Analyse PROPERTIES CXX_STANDARD 20)
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
 file(GLOB_RECURSE GlobalSources
-    ${SOURCES_DIRECTORY}/main.cpp
+    ${SOURCES_DIRECTORY}/Main.cpp
     ${CMAKE_CACHEFILE_DIR}/Analyse_artefacts/JuceLibraryCode/JuceHeader.h)
 
 file(GLOB ToolsSources
