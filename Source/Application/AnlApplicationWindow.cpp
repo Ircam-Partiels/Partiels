@@ -31,7 +31,9 @@ Application::Window::Window()
 
 Application::Window::~Window()
 {
-#if JUCE_MAC && (!defined(JUCE_IOS))
+#if !JUCE_MAC
+    setMenuBar(nullptr);
+#elif  !defined(JUCE_IOS)
     juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
