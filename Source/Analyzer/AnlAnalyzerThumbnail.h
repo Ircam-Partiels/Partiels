@@ -13,7 +13,8 @@ namespace Analyzer
         
         enum ColourIds : int
         {
-            backgroundColourId = 0x2000330
+              backgroundColourId = 0x2000330
+            , textColourId = 0x2000331
         };
         
         Thumbnail(Accessor& accessor);
@@ -29,10 +30,8 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         PropertyPanel mPropertyPanel {mAccessor};
-        
-        juce::Label mNameLabel;
-        juce::TextButton mRemoveButton {juce::CharPointer_UTF8("×")};
-        juce::TextButton mPropertiesButton {juce::CharPointer_UTF8("φ")};
+        juce::ImageButton mRemoveButton;
+        juce::ImageButton mPropertiesButton;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Thumbnail)
     };

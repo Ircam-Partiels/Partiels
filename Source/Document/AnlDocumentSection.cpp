@@ -58,7 +58,7 @@ void Document::Section::Content::resized()
     mScrollbar.setBounds(bounds.removeFromRight(8));
     mRuler.setBounds(bounds.removeFromRight(16));
     
-    mThumbnail.setBounds(bounds.removeFromLeft(66));
+    mThumbnail.setBounds(bounds.removeFromLeft(24));
     mInstantRenderer.setBounds(bounds.removeFromLeft(resizerPos - bounds.getX()));
     mResizerBar.setBounds(bounds.removeFromLeft(4));
     mTimeRenderer.setBounds(bounds);

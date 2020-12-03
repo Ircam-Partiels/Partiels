@@ -187,9 +187,11 @@ target_compile_definitions(Analyse PRIVATE
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/icon.png
+    ${BINARYDATA_DIRECTORY}/Icons/annuler.png
     ${BINARYDATA_DIRECTORY}/Icons/chercher.png
     ${BINARYDATA_DIRECTORY}/Icons/editer.png
     ${BINARYDATA_DIRECTORY}/Icons/naviguer.png
+    ${BINARYDATA_DIRECTORY}/Icons/reglages.png
     ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg
     ${BINARYDATA_DIRECTORY}/Translations/Fr.txt)
 

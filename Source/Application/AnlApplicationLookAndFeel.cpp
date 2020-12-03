@@ -26,6 +26,7 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::selectionColourId, thumbColour);
     
     setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
+    setColour(Analyzer::Thumbnail::textColourId, textColour);
     
     setColour(Document::Section::sectionColourId, juce::Colours::black);
     setColour(Document::Section::backgroundColourId, backgroundColour);
