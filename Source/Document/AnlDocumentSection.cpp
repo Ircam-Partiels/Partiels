@@ -165,9 +165,10 @@ Document::Section::Section(Accessor& accessor)
                 {
                     mContents[i]->content.onRemove = [this, i]()
                     {
+                        auto const& anlAcsr = mAccessor.getAccessor<AttrType::analyzers>(i);
                         auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-                        auto const title = juce::translate("Remove Analysis?");
-                        auto const message = juce::translate("Are you sure you want to rremove this analysis?");
+                        auto const title = juce::translate("Remove Analysis");
+                        auto const message = juce::translate("Are you sure you want to remove the ANLNAME analysis from the project?\nThe result of the analysis might be lost!").replace("ANLNAME", anlAcsr.getAttr<Analyzer::AttrType::name>());
                         if(juce::AlertWindow::showOkCancelBox(icon, title, message))
                         {
                             mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);                            

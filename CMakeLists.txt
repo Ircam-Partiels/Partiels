@@ -187,6 +187,9 @@ target_compile_definitions(Analyse PRIVATE
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/icon.png
+    ${BINARYDATA_DIRECTORY}/Icons/alert.png
+    ${BINARYDATA_DIRECTORY}/Icons/information.png
+    ${BINARYDATA_DIRECTORY}/Icons/question.png
     ${BINARYDATA_DIRECTORY}/Icons/annuler.png
     ${BINARYDATA_DIRECTORY}/Icons/chercher.png
     ${BINARYDATA_DIRECTORY}/Icons/editer.png

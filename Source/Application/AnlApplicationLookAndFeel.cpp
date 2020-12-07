@@ -54,6 +54,9 @@ Application::LookAndFeel::LookAndFeel()
     // juce::ScrollBar
     setColour(juce::ScrollBar::ColourIds::backgroundColourId, backgroundColour.darker());
     setColour(juce::ScrollBar::ColourIds::thumbColourId, thumbColour);
+    
+    // juce::AlertWindow
+    setColour(juce::AlertWindow::ColourIds::backgroundColourId, backgroundColour.darker());
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
@@ -87,6 +90,45 @@ void Application::LookAndFeel::drawComboBox(juce::Graphics& g, int width, int he
     juce::Path p;
     p.addTriangle(arrawBounds.getTopLeft(), arrawBounds.getTopRight(), arrawBounds.getBottomLeft().withX(arrawBounds.getCentreX()));
     g.fillPath(p);
+}
+
+void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, juce::Rectangle<int> const& textArea, juce::TextLayout& textLayout)
+{
+    auto constexpr cornerSize = 4.0f;
+    
+    g.setColour(alert.findColour(juce::AlertWindow::ColourIds::outlineColourId));
+    g.drawRoundedRectangle(alert.getLocalBounds().toFloat(), cornerSize, 2.0f);
+    
+    auto const bounds = alert.getLocalBounds().reduced(1);
+    g.reduceClipRegion(bounds);
+    
+    g.setColour(alert.findColour(juce::AlertWindow::ColourIds::backgroundColourId));
+    g.fillRoundedRectangle(bounds.toFloat(), cornerSize);
+
+    auto getIcon = [&]()
+    {
+        switch (alert.getAlertType())
+        {
+            case juce::AlertWindow::QuestionIcon:
+                return juce::ImageCache::getFromMemory(BinaryData::question_png, BinaryData::question_pngSize);
+            case juce::AlertWindow::WarningIcon:
+                return juce::ImageCache::getFromMemory(BinaryData::alert_png, BinaryData::alert_pngSize);
+            case juce::AlertWindow::InfoIcon:
+                return juce::ImageCache::getFromMemory(BinaryData::information_png, BinaryData::information_pngSize);
+            case juce::AlertWindow::NoIcon:
+                return juce::Image();
+        }
+    };
+    
+    g.drawImage(getIcon(), bounds.withSize(188, 188).reduced(8).toFloat());
+    
+    g.setColour(alert.findColour(juce::AlertWindow::ColourIds::textColourId));
+    textLayout.draw(g, textArea.withX(84).withTop(12).toFloat());
+}
+
+int Application::LookAndFeel::getAlertWindowButtonHeight()
+{
+    return 36;
 }
 
 ANALYSE_FILE_END
