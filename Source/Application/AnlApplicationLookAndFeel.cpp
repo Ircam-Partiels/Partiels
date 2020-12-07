@@ -120,7 +120,7 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
         }
     };
     
-    g.drawImage(getIcon(), bounds.withSize(188, 188).reduced(8).toFloat());
+    g.drawImage(getIcon(), {-48.0f, -20.0f, 180.0f, 180.0f});
     
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::textColourId));
     textLayout.draw(g, textArea.withX(84).withTop(12).toFloat());
