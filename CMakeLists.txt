@@ -189,6 +189,10 @@ file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/icon.png
     ${BINARYDATA_DIRECTORY}/Icons/alert.png
     ${BINARYDATA_DIRECTORY}/Icons/information.png
+    ${BINARYDATA_DIRECTORY}/Icons/jouer.png
+    ${BINARYDATA_DIRECTORY}/Icons/pause.png
+    ${BINARYDATA_DIRECTORY}/Icons/precedent.png
+    ${BINARYDATA_DIRECTORY}/Icons/repeter.png
     ${BINARYDATA_DIRECTORY}/Icons/question.png
     ${BINARYDATA_DIRECTORY}/Icons/annuler.png
     ${BINARYDATA_DIRECTORY}/Icons/chercher.png

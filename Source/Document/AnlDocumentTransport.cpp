@@ -5,7 +5,12 @@ ANALYSE_FILE_BEGIN
 Document::Transport::Transport(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    auto setupImage = [](juce::ImageButton& button, juce::Image image)
+    {
+        button.setImages(false, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
+    };
+    
+    mListener.onChanged = [&, setupImage](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
@@ -18,7 +23,7 @@ Document::Transport::Transport(Accessor& accessor)
             case AttrType::isPlaybackStarted:
             {
                 auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
-                mPlaybackButton.setButtonText(state ? juce::CharPointer_UTF8("□") : juce::CharPointer_UTF8("›"));
+                setupImage(mPlaybackButton, state ? juce::ImageCache::getFromMemory(BinaryData::pause_png, BinaryData::pause_pngSize) : juce::ImageCache::getFromMemory(BinaryData::jouer_png, BinaryData::jouer_pngSize));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
             }
                 break;
@@ -56,16 +61,20 @@ Document::Transport::Transport(Accessor& accessor)
             mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
         }
     };
+    setupImage(mRewindButton, juce::ImageCache::getFromMemory(BinaryData::precedent_png, BinaryData::precedent_pngSize));
+    
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::isPlaybackStarted>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
     };
+    
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::isLooping>(mLoopButton.getToggleState(), NotificationType::synchronous);
     };
+    setupImage(mLoopButton, juce::ImageCache::getFromMemory(BinaryData::repeter_png, BinaryData::repeter_pngSize));
     
     mVolumeSlider.setRange(-90.0, 12.0);
     mVolumeSlider.setDoubleClickReturnValue(true, 0.0);
@@ -79,7 +88,7 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mPlaybackButton);
     addAndMakeVisible(mLoopButton);
     
-    mPlayPositionInHMSms.setJustificationType(juce::Justification::centredRight);
+    mPlayPositionInHMSms.setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(mPlayPositionInHMSms);
     
     addAndMakeVisible(mVolumeSlider);
@@ -94,13 +103,13 @@ Document::Transport::~Transport()
 void Document::Transport::resized()
 {
     auto bounds = getLocalBounds();
-    
-    auto topBounds = bounds.removeFromTop(bounds.getHeight() / 3);
-    auto const buttonWidth = topBounds.getWidth() / 3;
-    mRewindButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
-    mPlaybackButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
-    mLoopButton.setBounds(topBounds.removeFromLeft(buttonWidth).reduced(4));
-    mPlayPositionInHMSms.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
+    auto const height = bounds.getHeight() / 4;
+    auto const width = bounds.getWidth() / 3;
+    auto topBounds = bounds.removeFromTop(height * 2);
+    mRewindButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
+    mPlaybackButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
+    mLoopButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
+    mPlayPositionInHMSms.setBounds(bounds.removeFromTop(height));
     mVolumeSlider.setBounds(bounds);
 }
 

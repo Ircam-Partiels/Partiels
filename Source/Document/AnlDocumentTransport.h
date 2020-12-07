@@ -19,9 +19,9 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
 
-        juce::TextButton mRewindButton {juce::CharPointer_UTF8("«")};
-        juce::TextButton mPlaybackButton {juce::CharPointer_UTF8("›")};
-        juce::TextButton mLoopButton {juce::CharPointer_UTF8("∞")};
+        juce::ImageButton mRewindButton;
+        juce::ImageButton mPlaybackButton;
+        juce::ImageButton mLoopButton;
         
         juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
         juce::Slider mVolumeSlider {juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};

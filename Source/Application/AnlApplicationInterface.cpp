@@ -85,7 +85,7 @@ void Application::Interface::resized()
     
     auto header = bounds.removeFromTop(82);
     mDocumentFileInfoPanel.setBounds(header.removeFromRight(320));
-    mDocumentTransport.setBounds(header.removeFromLeft(240));
+    mDocumentTransport.setBounds(header.removeFromLeft(140));
     auto buttons = header.withSizeKeepingCentre(120, 32);
     mNavigate.setBounds(buttons.removeFromLeft(32));
     buttons.removeFromLeft(12);
