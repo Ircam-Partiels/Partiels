@@ -149,7 +149,6 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
             case Analyzer::AttrType::key:
             case Analyzer::AttrType::feature:
             case Analyzer::AttrType::parameters:
-            case Analyzer::AttrType::blockSize:
             {
                 std::thread thd([&]() mutable
                 {

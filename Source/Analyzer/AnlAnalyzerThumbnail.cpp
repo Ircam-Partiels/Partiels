@@ -51,7 +51,6 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::key:
             case AttrType::parameters:
             case AttrType::feature:
-            case AttrType::blockSize:
             case AttrType::zoom:
             case AttrType::colour:
             case AttrType::colourMap:

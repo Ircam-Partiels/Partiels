@@ -1,8 +1,6 @@
 #include "AnlAnalyzerPropertyPanel.h"
 #include "AnlAnalyzerProcessor.h"
 #include <vamp-hostsdk/PluginLoader.h>
-#include <vamp-hostsdk/PluginHostAdapter.h>
-#include <vamp-hostsdk/PluginInputDomainAdapter.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -20,7 +18,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertySection.setPanels({}, Layout::PropertyPanelBase::left);
                 mProperties.clear();
                 
-                auto instance = createPlugin(acsr, 44100.0, AlertType::silent);
+                auto instance = createProcessor(acsr, 44100.0, AlertType::silent);
                 if(instance == nullptr)
                 {
                     resized();
@@ -49,30 +47,41 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     return juce::String(pvalue, 2) + descriptor.unit;
                 };
 
-                if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get()))
-                {
-                    if(auto* adapt = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-                    {
-                        juce::StringArray const names {"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Blackman-Harris"};
-                        auto property = std::make_unique<Layout::PropertyComboBox>("Window Type", "The feature fo the plugin", names, static_cast<size_t>(adapt->getWindowType()), [&](juce::ComboBox const& entry)
-                        {
-                            using WindowType = Vamp::HostExt::PluginInputDomainAdapter::WindowType;
-                            //adapt->setWindowType(static_cast<WindowType>(entry.getSelectedItemIndex()));
-                        });
-                        mProperties.push_back(std::move(property));
-                    }
-                }
-                
-                
                 auto const parameterDescriptors = instance->getParameterDescriptors();
                 for(auto const& descriptor : parameterDescriptors)
                 {
-                    auto property = std::make_unique<Layout::PropertyLabel>(descriptor.name, descriptor.description);
-                    if(property != nullptr)
+                    if(descriptor.isQuantized && !descriptor.valueNames.empty())
                     {
-                        auto const pvalue = instance->getParameter(descriptor.identifier);
-                        property->entry.setText(getParameterTextValue(descriptor, pvalue), juce::NotificationType::dontSendNotification);
-                        mProperties.push_back(std::move(property));
+                        juce::StringArray strings;
+                        for(auto const& names : descriptor.valueNames)
+                        {
+                            strings.add(names);
+                        }
+                        auto property = std::make_unique<Layout::PropertyComboBox>(descriptor.name, descriptor.description, strings, instance->getParameter(descriptor.identifier), [&, uid = descriptor.identifier](juce::ComboBox const& entry)
+                        {
+                            auto parameters = mAccessor.getAttr<AttrType::parameters>();
+                            parameters[uid] = static_cast<float>(entry.getSelectedItemIndex());
+                            mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
+                        });
+                        if(property != nullptr)
+                        {
+                            mProperties.push_back(std::move(property));
+                        }
+                    }
+                    else
+                    {
+                        auto property = std::make_unique<Layout::PropertyLabel>(descriptor.name, descriptor.description, "", [&, uid = descriptor.identifier](juce::Label const& entry)
+                                                                                {
+                            auto parameters = mAccessor.getAttr<AttrType::parameters>();
+                            parameters[uid] = entry.getText().getFloatValue();
+                            mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
+                        });
+                        if(property != nullptr)
+                        {
+                            auto const pvalue = instance->getParameter(descriptor.identifier);
+                            property->entry.setText(getParameterTextValue(descriptor, pvalue), juce::NotificationType::dontSendNotification);
+                            mProperties.push_back(std::move(property));
+                        }
                     }
                 }
                 
