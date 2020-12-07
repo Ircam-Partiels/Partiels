@@ -168,7 +168,7 @@ Document::Section::Section(Accessor& accessor)
                         auto const& anlAcsr = mAccessor.getAccessor<AttrType::analyzers>(i);
                         auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
                         auto const title = juce::translate("Remove Analysis");
-                        auto const message = juce::translate("Are you sure you want to remove the ANLNAME analysis from the project?\nThe result of the analysis might be lost!").replace("ANLNAME", anlAcsr.getAttr<Analyzer::AttrType::name>());
+                        auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsr.getAttr<Analyzer::AttrType::name>());
                         if(juce::AlertWindow::showOkCancelBox(icon, title, message))
                         {
                             mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);                            
