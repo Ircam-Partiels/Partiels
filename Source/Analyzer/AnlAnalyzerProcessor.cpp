@@ -20,7 +20,7 @@ size_t Analyzer::Processor::getWindowSize() const
 
 size_t Analyzer::Processor::getStepSize() const
 {
-    return mStepSize;
+    return mWindowSize / mWindowOverlapping;
 }
 
 Analyzer::Processor::ParameterList Analyzer::Processor::getParameterDescriptors() const
@@ -41,16 +41,16 @@ Analyzer::Processor::ParameterList Analyzer::Processor::getParameterDescriptors(
             Vamp::Plugin::ParameterDescriptor descriptor;
             JUCE_COMPILER_WARNING("ensure the identifier is unique")
             descriptor.identifier = "z3";
-            descriptor.name = "Window Increment";
-            descriptor.description = "The window increment used to perform the FFT";
-            descriptor.unit = "samples";
-            for(unsigned int i = 8; i <= 65536; i *= 2)
+            descriptor.name = "Window Overlapping";
+            descriptor.description = "The window overlapping used to perform the FFT";
+            descriptor.unit = "x";
+            for(unsigned int i = 1; i <= 16; i *= 2)
             {
                 descriptor.valueNames.push_back(std::to_string(i));
             }
             descriptor.minValue = 0.0f;
             descriptor.minValue = static_cast<float>(descriptor.valueNames.size() - 1);
-            descriptor.defaultValue = 6.0f;
+            descriptor.defaultValue = 4.0f;
             descriptor.isQuantized = true;
             descriptor.quantizeStep = 1.0f;
             parameters.insert(parameters.begin(), descriptor);
@@ -117,7 +117,11 @@ float Analyzer::Processor::getParameter(std::string identifier) const
         if(identifier == "z3")
         {
             anlWeakAssert(wrapper->getWrapper<PluginBufferingAdapter>() == nullptr);
-            return std::log(static_cast<float>(mStepSize)) / std::log(2.0f) - 3.f;
+            if(wrapper->getWrapper<PluginBufferingAdapter>() != nullptr)
+            {
+                return getParameter("z2");
+            }
+            return std::log(static_cast<float>(mWindowOverlapping)) / std::log(2.0f);
         }
     }
     
@@ -143,22 +147,18 @@ void Analyzer::Processor::setParameter(std::string identifier, float value)
                 anlWeakAssert(value >= 0.0f && value <= 13.0f);
                 value = std::min(std::max(0.0f, value), 13.0f);
                 mWindowSize = static_cast<size_t>(std::floor(std::pow(2.0f, (value + 3.f))));
-                if(wrapper->getWrapper<PluginBufferingAdapter>() != nullptr)
-                {
-                    mStepSize = mWindowSize;
-                }
                 return;
             }
             if(identifier == "z3")
             {
-                anlWeakAssert(value >= 0.0f && value <= 13.0f);
-                value = std::min(std::max(0.0f, value), 13.0f);
+                anlWeakAssert(value >= 0.0f && value <= 8.0f);
+                value = std::min(std::max(0.0f, value), 8.0f);
                 anlWeakAssert(adapter->getWrapper<PluginBufferingAdapter>() == nullptr);
                 if(adapter->getWrapper<PluginBufferingAdapter>() != nullptr)
                 {
                     return;
                 }
-                mStepSize = static_cast<size_t>(std::floor(std::pow(2.0f, (value + 3.f))));
+                mWindowOverlapping = static_cast<size_t>(std::floor(std::pow(2.0f, (value))));
                 return;
             }
         }

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
+
 project(Analyse VERSION 0.0.1 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
@@ -182,7 +184,8 @@ target_compile_definitions(Analyse PRIVATE
     JUCE_LOG_ASSERTIONS=1
     JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_USE_CURL=0
-    JUCE_WEB_BROWSER=0)
+    JUCE_WEB_BROWSER=0
+    BRIOCHE_ALPHA_VERSION=2)
 
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources

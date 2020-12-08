@@ -142,6 +142,18 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
 
 void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
 {
+    auto processor = Analyzer::createProcessor(acsr, 48000.0, AlertType::silent);
+    if(processor != nullptr)
+    {
+        auto parameters = acsr.getAttr<Analyzer::AttrType::parameters>();
+        auto const descriptors = processor->getParameterDescriptors();
+        for(auto const& descriptor : descriptors)
+        {
+            parameters[descriptor.identifier] = processor->getParameter(descriptor.identifier);
+        }
+        acsr.setAttr<Analyzer::AttrType::parameters>(parameters, NotificationType::synchronous);
+    }
+    
     acsr.onUpdated = [&](Analyzer::AttrType anlAttr, NotificationType notification)
     {
         switch (anlAttr)

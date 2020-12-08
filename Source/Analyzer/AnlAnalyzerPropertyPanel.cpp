@@ -13,7 +13,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::key:
-            case AttrType::feature:
             {
                 mPropertySection.setPanels({}, Layout::PropertyPanelBase::left);
                 mProperties.clear();
@@ -37,51 +36,52 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     mFeatures.entry.addItem(descriptor.name, ++itemId);
                 }
                 mFeatures.entry.setSelectedItemIndex(static_cast<int>(selectedFeature));
-                
-                auto getParameterTextValue = [](Vamp::Plugin::ParameterDescriptor const& descriptor, float pvalue) -> juce::String
-                {
-                    if(descriptor.isQuantized && !descriptor.valueNames.empty())
-                    {
-                        return descriptor.valueNames[static_cast<size_t>(pvalue)];
-                    }
-                    return juce::String(pvalue, 2) + descriptor.unit;
-                };
 
-                auto const parameterDescriptors = instance->getParameterDescriptors();
-                for(auto const& descriptor : parameterDescriptors)
+                auto createParameterEntry = [&](Processor::ParameterDescriptor const& descriptor) -> std::unique_ptr<Layout::PropertyPanelBase>
                 {
+                    auto const uid = descriptor.identifier;
                     if(descriptor.isQuantized && !descriptor.valueNames.empty())
                     {
-                        juce::StringArray strings;
-                        for(auto const& names : descriptor.valueNames)
+                        juce::StringArray names;
+                        for(auto const& name : descriptor.valueNames)
                         {
-                            strings.add(names);
+                            names.add(name + descriptor.unit);
                         }
-                        auto property = std::make_unique<Layout::PropertyComboBox>(descriptor.name, descriptor.description, strings, instance->getParameter(descriptor.identifier), [&, uid = descriptor.identifier](juce::ComboBox const& entry)
+                        auto property = std::make_unique<Layout::PropertyComboBox>(descriptor.name, descriptor.description, names, 0, [&, uid](juce::ComboBox const& entry)
                         {
                             auto parameters = mAccessor.getAttr<AttrType::parameters>();
                             parameters[uid] = static_cast<float>(entry.getSelectedItemIndex());
                             mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
                         });
-                        if(property != nullptr)
-                        {
-                            mProperties.push_back(std::move(property));
-                        }
+                        return property;
                     }
-                    else
+                    
+                    auto property = std::make_unique<Layout::PropertyLabel>(descriptor.name, descriptor.description, "", [&, uid = descriptor.identifier](juce::Label const& entry)
                     {
-                        auto property = std::make_unique<Layout::PropertyLabel>(descriptor.name, descriptor.description, "", [&, uid = descriptor.identifier](juce::Label const& entry)
-                                                                                {
-                            auto parameters = mAccessor.getAttr<AttrType::parameters>();
-                            parameters[uid] = entry.getText().getFloatValue();
-                            mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
-                        });
-                        if(property != nullptr)
+                        JUCE_COMPILER_WARNING("limit the value");
+                        auto parameters = mAccessor.getAttr<AttrType::parameters>();
+                        parameters[uid] = entry.getText().getFloatValue();
+                        mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
+                    });
+                    
+                    property->entry.onEditorShow = [rawProperty = property.get()]()
+                    {
+                        if(auto* textEditor = rawProperty->entry.getCurrentTextEditor())
                         {
-                            auto const pvalue = instance->getParameter(descriptor.identifier);
-                            property->entry.setText(getParameterTextValue(descriptor, pvalue), juce::NotificationType::dontSendNotification);
-                            mProperties.push_back(std::move(property));
+                            textEditor->setKeyboardType(juce::TextInputTarget::VirtualKeyboardType::decimalKeyboard);
+                            textEditor->setInputRestrictions(0, "0123456789.");
                         }
+                    };
+                    return property;
+                };
+                
+                auto const parameterDescriptors = instance->getParameterDescriptors();
+                for(auto const& descriptor : parameterDescriptors)
+                {
+                    auto property = createParameterEntry(descriptor);
+                    if(property != nullptr)
+                    {
+                        mProperties[descriptor.identifier] = std::move(property);
                     }
                 }
                 
@@ -93,7 +93,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     panels.push_back(mAnalysisParameters);
                     for(auto const& property : mProperties)
                     {
-                        panels.push_back(*property.get());
+                        panels.push_back(*property.second.get());
                     }
                 }
                 panels.push_back(mGraphicalParameters);
@@ -114,8 +114,34 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
                 resized();
             }
+            case AttrType::feature:
+                break;
             case AttrType::name:
+                break;
             case AttrType::parameters:
+            {
+                auto const parameters = acsr.getAttr<AttrType::parameters>();
+                for(auto& property : mProperties)
+                {
+                    auto const uid = property.first;
+                    auto const parameter = parameters.find(uid);
+                    if(parameter != parameters.cend())
+                    {
+                        if(auto* comboxBox = dynamic_cast<Layout::PropertyComboBox*>(property.second.get()))
+                        {
+                            comboxBox->entry.setSelectedId(static_cast<int>(parameter->second), juce::NotificationType::dontSendNotification);
+                        }
+                        else if(auto* label = dynamic_cast<Layout::PropertyLabel*>(property.second.get()))
+                        {
+                            label->entry.setText(juce::String(parameter->second, 2), juce::NotificationType::dontSendNotification);
+                        }
+                        else
+                        {
+                            anlWeakAssert(false && "Unsupported layout");
+                        }
+                    }
+                }
+            }
                 break;
             case AttrType::colourMap:
             {
