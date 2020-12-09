@@ -1,0 +1,48 @@
+
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+Test::Windows:
+  stage: test
+  tags:
+    - windows
+  script:
+    - cd $CI_PROJECT_DIR
+    - mkdir debug
+    - cd debug
+    - cmake .. -G"Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build .
+
+Build::Windows:
+  stage: build
+  needs: ["Test::Windows"]
+  tags:
+    - windows
+  script:
+    - cd $CI_PROJECT_DIR
+    - mkdir release
+    - cd release
+    - cmake .. -G"Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release
+    - cmake --build .
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR\release\Analyse_artefacts\Release\Brioche.exe
+    expire_in: 1 week
+
+Deploy::Windows:
+  stage: deploy
+  needs: ["Build::Windows"]
+  variables:
+    INSTALLER_PATH: $CI_PROJECT_DIR\Output\TS_v$CI_COMMIT_TAG-install.exe
+  tags:
+    - windows
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - cd $CI_PROJECT_DIR\release\Analyse_artefacts\Release
+    - tar.exe -a -c -f Brioche-v$CI_COMMIT_TAG-Windows-10.zip Brioche.exe
