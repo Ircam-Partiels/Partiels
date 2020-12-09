@@ -6,9 +6,6 @@ ANALYSE_FILE_BEGIN
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
-#ifdef BRIOCHE_ALPHA_VERSION
-    setName(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString + "-alpha" + juce::String(BRIOCHE_ALPHA_VERSION));
-#endif
     if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
     {
         centreWithSize(1024, 768);

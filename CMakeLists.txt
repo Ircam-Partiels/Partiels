@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
-
-project(Analyse VERSION 0.0.1 LANGUAGES C CXX)
+project(Analyse VERSION 0.0.2 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 include(vamp.cmake)
 
 juce_add_gui_app(Analyse
     PRODUCT_NAME                        "Brioche"
-    VERSION                             "0.0.1"
+    VERSION                             "0.0.2"
     BUNDLE_ID                           com.ircam.analyse
     COMPANY_COPYRIGHT                   "Copyright 2020 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
@@ -184,8 +182,7 @@ target_compile_definitions(Analyse PRIVATE
     JUCE_LOG_ASSERTIONS=1
     JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_USE_CURL=0
-    JUCE_WEB_BROWSER=0
-    BRIOCHE_ALPHA_VERSION=2)
+    JUCE_WEB_BROWSER=0)
 
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
