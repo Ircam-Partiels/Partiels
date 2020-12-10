@@ -46,4 +46,4 @@ Deploy::Windows:
   script:
     - cd $CI_PROJECT_DIR\release\Analyse_artefacts\Release
     - tar.exe -a -c -f Brioche-v$CI_COMMIT_TAG-Windows-10.zip Brioche.exe
-    - cp Brioche-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud
+    - cp Brioche-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Brioche\Alpha
