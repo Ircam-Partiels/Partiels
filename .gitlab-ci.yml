@@ -58,7 +58,7 @@ Build::Linux:
     - cmake --build . -j 3
   artifacts:
     paths:
-      - $CI_PROJECT_DIR\release\Analyse_artefacts\Brioche
+      - $CI_PROJECT_DIR/release/Analyse_artefacts/Release/Brioche
     expire_in: 1 week
 
 Deploy::Windows:
@@ -81,11 +81,11 @@ Deploy::Linux:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR\release\Analyse_artefacts
+    - cd $CI_PROJECT_DIR/release/Analyse_artefacts/
     - mkdir Bioche-v$CI_COMMIT_TAG && cd Bioche-v$CI_COMMIT_TAG
-    - cp ..\Brioche Bioche
-    - cp ..\..\..\BinaryData\Icons\icon.png icon.png
-    - cp ..\..\..\BinaryData\Misc\Brioche.desktop Brioche.desktop
+    - cp ../Release/Brioche Bioche
+    - cp ../../../BinaryData/Icons/icon.png icon.png
+    - cp ../../../BinaryData/Misc/Brioche.desktop Brioche.desktop
     - cd ..
     - tar -a -c -f Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.zip Bioche-v$CI_COMMIT_TAG
-    - cp Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.zip ~\Nextcloud\Brioche\Alpha
+    - cp Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.zip ~/Nextcloud/Brioche/Alpha
