@@ -375,7 +375,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
         }
         else
         {
-            g.drawVerticalLine(static_cast<int>(std::floor(position)) + 1, height - tickLengh, height);
+            g.drawVerticalLine(static_cast<int>(std::floor(position)) + 1, static_cast<float>(height) - tickLengh, static_cast<float>(height));
         }
 
         if(isPrimaryTick && position < size + 1.f)
