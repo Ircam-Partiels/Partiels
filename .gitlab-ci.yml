@@ -18,6 +18,17 @@ Test::Windows:
     - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Debug
 
+Test::Linux:
+  stage: test
+  tags:
+    - linux
+  script:
+    - cd $CI_PROJECT_DIR
+    - mkdir debug
+    - cd debug
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build .
+
 Build::Windows:
   stage: build
   needs: ["Test::Windows"]
@@ -28,7 +39,23 @@ Build::Windows:
     - mkdir release
     - cd release
     - cmake .. -G"Visual Studio 16 2019" -A x64
-    - cmake --build .  --config Release
+    - cmake --build . --config Release
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR\release\Analyse_artefacts\Release\Brioche.exe
+    expire_in: 1 week
+
+Build::Linux:
+  stage: build
+  needs: ["Test::Linux"]
+  tags:
+    - linux
+  script:
+    - cd $CI_PROJECT_DIR
+    - mkdir release
+    - cd release
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build .
   artifacts:
     paths:
       - $CI_PROJECT_DIR\release\Analyse_artefacts\Release\Brioche.exe
