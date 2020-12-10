@@ -33,7 +33,7 @@ public:
     
     void sendSignal(Signal signal, juce::var value, NotificationType const notification)
     {
-        mReceivers.notify([=](Receiver& listener)
+        mReceivers.notify([=, this](Receiver& listener)
         {
             anlWeakAssert(listener.onSignal != nullptr);
             if(listener.onSignal != nullptr)

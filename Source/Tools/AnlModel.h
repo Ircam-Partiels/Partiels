@@ -270,7 +270,7 @@ namespace Model
                     }
                     if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
-                        mListeners.notify([=](Listener& listener)
+                        mListeners.notify([=, this](Listener& listener)
                         {
                             anlWeakAssert(listener.onChanged != nullptr);
                             if(listener.onChanged != nullptr)
@@ -567,7 +567,7 @@ namespace Model
                 }
                 if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                 {
-                    mListeners.notify([=](Listener& listener)
+                    mListeners.notify([=, this](Listener& listener)
                     {
                         anlWeakAssert(listener.onChanged != nullptr);
                         if(listener.onChanged != nullptr)
