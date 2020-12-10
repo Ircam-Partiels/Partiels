@@ -12,14 +12,11 @@ Test::Windows:
   tags:
     - windows
   script:
-    - echo zaza
-    - $Env:Path = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64;"+$Env:Path
-    - echo $env:path
     - cd $CI_PROJECT_DIR
     - mkdir debug
     - cd debug
-    - cmake .. -G "Visual Studio 16 2019" -A x64 -T v142 -D CMAKE_C_COMPILER="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe" -D CMAKE_CXX_COMPILER="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe"
-    - cmake --build .
+    - cmake .. -G "Visual Studio 16 2019" -A x64
+    - cmake --build . --config Debug
 
 Build::Windows:
   stage: build
@@ -30,8 +27,8 @@ Build::Windows:
     - cd $CI_PROJECT_DIR
     - mkdir release
     - cd release
-    - cmake .. -G"Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release
-    - cmake --build .
+    - cmake .. -G"Visual Studio 16 2019" -A x64
+    - cmake --build .  --config Release
   artifacts:
     paths:
       - $CI_PROJECT_DIR\release\Analyse_artefacts\Release\Brioche.exe
