@@ -10,9 +10,6 @@
 [submodule "tuple_utility"]
 	path = tuple_utility
 	url = https://github.com/jaredhoberock/tuple_utility.git
-[submodule "named_types"]
-	path = named_types
-	url = https://github.com/duckie/named_types.git
 [submodule "tinycolormap"]
 	path = tinycolormap
 	url = https://github.com/yuki-koyama/tinycolormap.git
