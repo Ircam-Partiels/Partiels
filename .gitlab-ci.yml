@@ -27,7 +27,7 @@ Test::Linux:
     - mkdir debug
     - cd debug
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - cmake --build .
+    - cmake --build . -j 3
 
 Build::Windows:
   stage: build
@@ -55,7 +55,7 @@ Build::Linux:
     - mkdir release
     - cd release
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build .
+    - cmake --build . -j 3
   artifacts:
     paths:
       - $CI_PROJECT_DIR\release\Analyse_artefacts\Brioche
