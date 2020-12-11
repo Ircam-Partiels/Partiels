@@ -68,7 +68,7 @@ namespace Document
         double mSampleRate = 44100.0;
         int mSamplesPerBlockExpected = 512;
         
-        Tools::AtomicManager<Source> mSourceManager;
+        AtomicManager<Source> mSourceManager;
         std::atomic<bool> mIsPlaying {false};
         std::atomic<bool> mIsLooping {false};
         std::atomic<juce::int64> mReadPosition {0};

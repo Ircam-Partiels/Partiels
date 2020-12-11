@@ -4,53 +4,69 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Tools
+template <class T> class AtomicManager
 {
-    template <class T> class AtomicManager
+public:
+    
+    AtomicManager() = default;
+    
+    ~AtomicManager()
     {
-    public:
-        
-        ~AtomicManager()
+        setInstance({});
+    }
+    
+    std::shared_ptr<T> getInstance()
+    {
+#if __cpp_lib_atomic_shared_ptr
+        return mInstance.load();
+#else
+        return std::atomic_load(&mInstance);
+#endif
+    }
+    
+    std::shared_ptr<T> const getInstance() const
+    {
+#if __cpp_lib_atomic_shared_ptr
+        return mInstance.load();
+#else
+        return std::atomic_load(&mInstance);
+#endif
+    }
+    
+    void setInstance(std::shared_ptr<T> instance)
+    {
+        anlStrongAssert(instance == nullptr || instance != getInstance());
+        if(instance != getInstance())
         {
-            setInstance({});
+#if __cpp_lib_atomic_shared_ptr
+            deleteInstance(mInstance.exchange(instance));
+#else
+            deleteInstance(std::atomic_exchange(&mInstance, instance));
+#endif
         }
-        
-        std::shared_ptr<T> getInstance()
+    }
+    
+private:
+    
+    static void deleteInstance(std::shared_ptr<T> instance)
+    {
+        if(instance != nullptr && instance.use_count() > 1)
         {
-            return std::atomic_load(&mInstance);
-        }
-        
-        std::shared_ptr<T> const getInstance() const
-        {
-            return std::atomic_load(&mInstance);
-        }
-        
-        void setInstance(std::shared_ptr<T> instance)
-        {
-            anlStrongAssert(instance == nullptr || instance != getInstance());
-            if(instance != getInstance())
+            juce::MessageManager::callAsync([instance = std::move(instance)]() mutable
             {
-                deleteInstance(std::atomic_exchange(&mInstance, instance));
-            }
-        }
-        
-    private:
-        
-        static void deleteInstance(std::shared_ptr<T> instance)
-        {
-            if(instance != nullptr && instance.use_count() > 1)
-            {
-                juce::MessageManager::callAsync([ptr = std::move(instance)]() mutable
-                {
-                    deleteInstance(std::move(ptr));
-                    anlStrongAssert(ptr == nullptr);
-                });
+                deleteInstance(std::move(instance));
                 anlStrongAssert(instance == nullptr);
-            }
+            });
+            anlStrongAssert(instance == nullptr);
         }
-        
-        std::shared_ptr<T> mInstance {nullptr};
-    };
-}
-
+    }
+    
+#if __cpp_lib_atomic_shared_ptr
+    std::atomic<std::shared_ptr<T>> mInstance {nullptr};
+#else
+    std::shared_ptr<T> mInstance {nullptr};
+#endif
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AtomicManager)
+};
 ANALYSE_FILE_END
