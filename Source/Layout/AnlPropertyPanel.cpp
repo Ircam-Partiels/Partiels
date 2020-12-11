@@ -26,12 +26,25 @@ Layout::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c,
 
 void Layout::PropertyPanelBase::resized()
 {
+    auto& titleLookAndFeel = title.getLookAndFeel();
+    auto const minimumHorizontalScale = title.getMinimumHorizontalScale();
+    auto const font = titleLookAndFeel.getLabelFont(title).withHorizontalScale(minimumHorizontalScale);
+    auto const bdSize = titleLookAndFeel.getLabelBorderSize(title);
+    
     auto bounds = getLocalBounds();
     auto const isLeft = positioning == Positioning::left;
-    auto const font = title.getLookAndFeel().getLabelFont(title).withHorizontalScale(title.getMinimumHorizontalScale());
-    auto const borderSize = title.getLookAndFeel().getLabelBorderSize(title);
-    auto const textSize = isLeft ? font.getStringWidthFloat(title.getText()) + borderSize.getLeft() + borderSize.getRight() : font.getHeight() + borderSize.getTop() + borderSize.getBottom();
-    title.setBounds(isLeft ? bounds.removeFromLeft(static_cast<int>(std::ceil(textSize))) : bounds.removeFromTop(static_cast<int>(std::ceil(textSize))));
+    if(isLeft)
+    {
+        auto const textWidth = font.getStringWidth(title.getText());
+        auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
+        title.setBounds(bounds.removeFromLeft(textSize));
+    }
+    else
+    {
+        auto const textHeight = static_cast<int>(std::ceil(font.getHeight()));
+        auto const textSize = textHeight + bdSize.getTop() + bdSize.getBottom();
+        title.setBounds(bounds.removeFromTop(textSize));
+    }
     if(content != nullptr)
     {
         content->setBounds(bounds);
