@@ -17,6 +17,7 @@ Test::Windows:
     - cd debug
     - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Debug
+    - ctest -C Debug
 
 Test::Linux:
   stage: test
@@ -28,6 +29,7 @@ Test::Linux:
     - cd debug
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build . -j 3
+    - ctest -C Debug
 
 Build::Windows:
   stage: build
@@ -40,6 +42,7 @@ Build::Windows:
     - cd release
     - cmake .. -G"Visual Studio 16 2019" -A x64
     - cmake --build . --config Release
+    - ctest -C Release
   artifacts:
     paths:
       - $CI_PROJECT_DIR\release\Brioche_artefacts\Release\Brioche.exe
@@ -56,6 +59,7 @@ Build::Linux:
     - cd release
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j 3
+    - ctest -C Release
   artifacts:
     paths:
       - $CI_PROJECT_DIR/release/Brioche_artefacts/Release/Brioche

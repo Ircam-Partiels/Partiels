@@ -21,11 +21,6 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 
 void Application::Instance::initialise(juce::String const& commandLine)
 {
-#ifdef JUCE_DEBUG
-    juce::UnitTestRunner unitTestRunner;
-    unitTestRunner.runAllTests();
-#endif
-    
     anlDebug("Application", "Begin...");
     juce::ignoreUnused(commandLine);
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();

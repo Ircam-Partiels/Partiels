@@ -19,9 +19,16 @@ juce_add_gui_app(Brioche
     NEEDS_STORE_KIT                     FALSE)
     #HARDENED_RUNTIME_ENABLED)
 
+juce_add_console_app(BriocheTest
+    PRODUCT_NAME                        "BriocheTest"
+    VERSION                             "0.0.2")
+
 juce_generate_juce_header(Brioche)
+juce_generate_juce_header(BriocheTest)
 
 set_target_properties(Brioche PROPERTIES CXX_STANDARD 20)
+set_target_properties(BriocheTest PROPERTIES CXX_STANDARD 20)
+
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
 file(GLOB_RECURSE GlobalSources
@@ -168,9 +175,11 @@ create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURC
 create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-target_sources(Brioche PRIVATE ${ToolsSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources} ${GlobalSources})
+set(BriochesSources ${ToolsSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
+target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources})
+target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
-target_compile_definitions(Brioche PRIVATE
+set(BriochesDefinitions
     DONT_SET_USING_JUCE_NAMESPACE=1
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
@@ -178,6 +187,9 @@ target_compile_definitions(Brioche PRIVATE
     JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_USE_CURL=0
     JUCE_WEB_BROWSER=0)
+
+target_compile_definitions(Brioche PRIVATE ${BriochesDefinitions})
+target_compile_definitions(BriocheTest PRIVATE ${BriochesDefinitions})
 
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
@@ -208,3 +220,19 @@ target_link_libraries(Brioche PRIVATE
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
+
+target_link_libraries(BriocheTest PRIVATE
+    vamp
+    BriocheData
+    juce::juce_gui_extra
+    juce::juce_audio_formats
+    juce::juce_audio_devices
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags)
+
+enable_testing()
+add_test(NAME AllTest COMMAND BriocheTest)
