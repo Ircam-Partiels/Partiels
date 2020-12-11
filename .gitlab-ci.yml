@@ -42,7 +42,7 @@ Build::Windows:
     - cmake --build . --config Release
   artifacts:
     paths:
-      - $CI_PROJECT_DIR\release\Analyse_artefacts\Release\Brioche.exe
+      - $CI_PROJECT_DIR\release\Brioche_artefacts\Release\Brioche.exe
     expire_in: 1 week
 
 Build::Linux:
@@ -58,7 +58,7 @@ Build::Linux:
     - cmake --build . -j 3
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/release/Analyse_artefacts/Release/Brioche
+      - $CI_PROJECT_DIR/release/Brioche_artefacts/Release/Brioche
     expire_in: 1 week
 
 Deploy::Windows:
@@ -69,7 +69,7 @@ Deploy::Windows:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR\release\Analyse_artefacts\Release
+    - cd $CI_PROJECT_DIR\release\Brioche_artefacts\Release
     - tar.exe -a -c -f Brioche-v$CI_COMMIT_TAG-Windows-10.zip Brioche.exe
     - cp Brioche-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Brioche\Alpha
 
@@ -81,7 +81,7 @@ Deploy::Linux:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR/release/Analyse_artefacts/
+    - cd $CI_PROJECT_DIR/release/Brioche_artefacts/
     - mkdir Bioche-v$CI_COMMIT_TAG && cd Bioche-v$CI_COMMIT_TAG
     - cp ../Release/Brioche Bioche
     - cp ../../../BinaryData/Icons/icon.png icon.png

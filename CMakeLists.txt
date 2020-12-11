@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(Analyse VERSION 0.0.2 LANGUAGES C CXX)
+project(Brioche VERSION 0.0.2 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 include(vamp.cmake)
 
-juce_add_gui_app(Analyse
+juce_add_gui_app(Brioche
     PRODUCT_NAME                        "Brioche"
     VERSION                             "0.0.2"
     BUNDLE_ID                           com.ircam.analyse
@@ -19,14 +19,14 @@ juce_add_gui_app(Analyse
     NEEDS_STORE_KIT                     FALSE)
     #HARDENED_RUNTIME_ENABLED)
 
-juce_generate_juce_header(Analyse)
+juce_generate_juce_header(Brioche)
 
-set_target_properties(Analyse PROPERTIES CXX_STANDARD 20)
+set_target_properties(Brioche PROPERTIES CXX_STANDARD 20)
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
 file(GLOB_RECURSE GlobalSources
     ${SOURCES_DIRECTORY}/Main.cpp
-    ${CMAKE_CACHEFILE_DIR}/Analyse_artefacts/JuceLibraryCode/JuceHeader.h)
+    ${CMAKE_CACHEFILE_DIR}/Brioche_artefacts/JuceLibraryCode/JuceHeader.h)
 
 file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlMisc.h
@@ -158,19 +158,19 @@ endif()
     target_sources(${TARGET} PRIVATE ${SUB_SOURCES})
 endfunction()
 
-create_module_group(Analyse "Modules\\juce_core" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_core")
-create_module_group(Analyse "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_graphics")
-create_module_group(Analyse "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
-create_module_group(Analyse "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
-create_module_group(Analyse "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
-create_module_group(Analyse "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
-create_module_group(Analyse "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
-create_module_group(Analyse "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
-create_module_group(Analyse "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
+create_module_group(Brioche "Modules\\juce_core" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_core")
+create_module_group(Brioche "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_graphics")
+create_module_group(Brioche "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
+create_module_group(Brioche "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
+create_module_group(Brioche "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
+create_module_group(Brioche "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
+create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
+create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
+create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-target_sources(Analyse PRIVATE ${ToolsSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources} ${GlobalSources})
+target_sources(Brioche PRIVATE ${ToolsSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources} ${GlobalSources})
 
-target_compile_definitions(Analyse PRIVATE
+target_compile_definitions(Brioche PRIVATE
     DONT_SET_USING_JUCE_NAMESPACE=1
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
@@ -197,11 +197,11 @@ file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg
     ${BINARYDATA_DIRECTORY}/Translations/Fr.txt)
 
-juce_add_binary_data(AnalyseData SOURCES ${BinaryDataSources})
+juce_add_binary_data(BriocheData SOURCES ${BinaryDataSources})
 
-target_link_libraries(Analyse PRIVATE
+target_link_libraries(Brioche PRIVATE
     vamp
-    AnalyseData
+    BriocheData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
