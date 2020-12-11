@@ -576,7 +576,7 @@ namespace Model
                         }
                     }, notification);
                 }
-                // Called after the notification to ensure that listeners of the sub accesso
+                // Called after the notification to ensure that listeners of the sub accessors
                 // can be created created and attached to the sub accessor
                 (*it)->mListeners.setMutex(&mListeners.getMutex());
             }
