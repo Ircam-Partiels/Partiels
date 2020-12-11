@@ -57,8 +57,6 @@ public:
         
         beginTest("unique_ptr");
         {
-            juce::XmlElement xml("Test");
-            XmlParser::toXml(xml, "int", 1);
         }
         
         beginTest("vector map");
@@ -70,14 +68,10 @@ public:
         
         beginTest("file");
         {
-            juce::XmlElement xml("Test");
-            XmlParser::toXml(xml, "int", 1);
         }
         
         beginTest("range");
         {
-            juce::XmlElement xml("Test");
-            XmlParser::toXml(xml, "int", 1);
         }
     }
 };
