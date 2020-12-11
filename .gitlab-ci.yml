@@ -88,4 +88,4 @@ Deploy::Linux:
     - cp ../../../BinaryData/Misc/Brioche.desktop Brioche.desktop
     - cd ..
     - tar -a -c -f Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.zip Bioche-v$CI_COMMIT_TAG
-    - cp Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.zip ~/Nextcloud/Brioche/Alpha
+    - cp Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.zip /home/pierre/Nextcloud/Brioche/Alpha
