@@ -37,20 +37,14 @@ file(GLOB ToolsSources
     ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.cpp
     ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.h
     ${SOURCES_DIRECTORY}/Tools/AnlModel.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlModel.h
-    ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlColouredPanel.h
-    ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlPropertyLayout.h
-    ${SOURCES_DIRECTORY}/Tools/AnlTooltip.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlTooltip.h)
+    ${SOURCES_DIRECTORY}/Tools/AnlModel.h)
 
 file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlLayout.h
     ${SOURCES_DIRECTORY}/Layout/AnlColouredPanel.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlColouredPanel.h
+    ${SOURCES_DIRECTORY}/Layout/AnlTooltip.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlTooltip.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.cpp

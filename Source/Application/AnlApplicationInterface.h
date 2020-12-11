@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlApplicationCommandTarget.h"
-#include "../Tools/AnlTooltip.h"
 #include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
