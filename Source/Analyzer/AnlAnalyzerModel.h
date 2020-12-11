@@ -24,7 +24,28 @@ namespace Analyzer
         results
     };
     
-    using Result = Vamp::Plugin::Feature;
+    struct Result
+    : public Vamp::Plugin::Feature
+    {
+        using Vamp::Plugin::Feature::Feature;
+        
+        Result(Feature const& feature)
+        : Vamp::Plugin::Feature(feature)
+        {
+        }
+        
+        bool operator==(Result const& other) const
+        {
+            return hasTimestamp == other.hasTimestamp &&
+            timestamp == other.timestamp &&
+            hasDuration == other.hasDuration &&
+            duration == other.duration &&
+            values.size() == other.values.size() &&
+            std::equal(values.cbegin(), values.cend(), other.values.cbegin()) &&
+            label == other.label;
+        }
+    };
+    
     using ColorMap = tinycolormap::ColormapType;
     
     using Container = Model::Container
