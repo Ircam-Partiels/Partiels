@@ -225,8 +225,10 @@ namespace Model
             auto backup = std::shared_ptr<sub_accessor_type>(accessors[index].release());
             anlWeakAssert(backup != nullptr);
             accessors.erase(accessors.begin() + static_cast<long>(index));
-            // Detach the mutex that has been attached during insertion
-            backup->mListeners.setMutex(nullptr);
+            
+            // Detaches the mutex that prevent recurvise changes
+            backup->setLock(nullptr);
+            
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
             {
                 mListeners.notify([this](Listener& listener) mutable
@@ -260,6 +262,14 @@ namespace Model
             using value_type = typename element_type::value_type;
             if constexpr(std::is_same<value_type, T>::value)
             {
+                auto& lock = getLock();
+                auto const canAccess = lock.exchange(false);
+                anlStrongAssert(canAccess == true);
+                if(!canAccess)
+                {
+                    return;
+                }
+                
                 auto& lvalue = std::get<static_cast<size_t>(type)>(mData).value;
                 if(isEquivalentTo(lvalue, value) == false)
                 {
@@ -280,6 +290,7 @@ namespace Model
                         }, notification);
                     }
                 }
+                lock.store(true);
             }
             else
             {
@@ -515,6 +526,9 @@ namespace Model
         {
             if(mListeners.add(listener))
             {
+                auto& lock = getLock();
+                auto const isLocked = lock.exchange(false);
+                
                 detail::for_each(mData, [&](auto& d)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -531,6 +545,8 @@ namespace Model
                         }, notification);
                     }
                 });
+                
+                lock.store(isLocked);
             }
         }
         
@@ -561,6 +577,9 @@ namespace Model
             auto it = accessors.insert(accessors.begin() + index, std::move(accessor));
             if(it != accessors.end())
             {
+                // Attaches the mutex to prevent recursive changes
+                (*it)->setLock(&getLock());
+                
                 if(onUpdated != nullptr)
                 {
                     onUpdated(type, notification);
@@ -576,14 +595,21 @@ namespace Model
                         }
                     }, notification);
                 }
-                // Called after the notification to ensure that listeners of the sub accessors
-                // can be created created and attached to the sub accessor
-                (*it)->mListeners.setMutex(&mListeners.getMutex());
             }
             return true;
         }
         
     private:
+        
+        void setLock(std::atomic<bool>* lock)
+        {
+            mSharedLock = lock;
+        }
+        
+        std::atomic<bool>& getLock()
+        {
+            return mSharedLock == nullptr ? mLock : *mSharedLock;
+        }
         
         // This is a for_each mechanism for std::tuple
         struct detail
@@ -662,6 +688,9 @@ namespace Model
         
         container_type mData;
         Notifier<Listener> mListeners;
+        
+        std::atomic<bool> mLock {true};
+        std::atomic<bool>* mSharedLock = nullptr;
         
         template<class, class> friend class Accessor;
         

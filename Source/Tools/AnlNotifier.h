@@ -4,30 +4,9 @@
 
 ANALYSE_FILE_BEGIN
 
-class SharedMutexBase
-{
-public:
-    
-    void setMutex(std::mutex* mutex)
-    {
-        mSharedMutex = mutex;
-    }
-    
-    std::mutex& getMutex()
-    {
-        return mSharedMutex == nullptr ? mMutex : *mSharedMutex;
-    }
-    
-private:
-    
-    std::mutex mMutex;
-    std::mutex* mSharedMutex = nullptr;
-};
-
 template<class listener_t>
 class Notifier
-: public SharedMutexBase
-, private juce::AsyncUpdater
+: private juce::AsyncUpdater
 {
 public:
     
@@ -62,7 +41,6 @@ public:
             std::unique_lock<std::mutex> listenerLock(mListenerMutex);
             for(auto* listener : mListeners)
             {
-                std::unique_lock<std::mutex> notifyingLock(getMutex());
                 method(*listener);
             }
         }
