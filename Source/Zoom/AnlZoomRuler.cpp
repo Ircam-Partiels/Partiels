@@ -378,7 +378,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
             g.drawVerticalLine(static_cast<int>(std::floor(position)) + 1, static_cast<float>(height) - tickLengh, static_cast<float>(height));
         }
 
-        if(isPrimaryTick && position < size + 1.f)
+        if(isPrimaryTick && position < static_cast<float>(size + 1))
         {
             g.setColour(findColour(textColourId));
             
@@ -394,7 +394,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
             }
             else
             {
-                g.drawSingleLineText(valueText, static_cast<int>(position + textPadding), height - 1, juce::Justification::left);
+                g.drawSingleLineText(valueText, static_cast<int>(std::ceil(position)) + textPadding, height - 1, juce::Justification::left);
             }
         }
     }
