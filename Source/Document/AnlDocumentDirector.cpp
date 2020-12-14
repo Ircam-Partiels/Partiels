@@ -160,6 +160,28 @@ void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
         {
             case Analyzer::AttrType::key:
             case Analyzer::AttrType::feature:
+            {
+                auto pcsr = Analyzer::createProcessor(acsr, 48000.0, AlertType::silent);
+                if(pcsr != nullptr)
+                {
+                    auto const feature = acsr.getAttr<Analyzer::AttrType::feature>();
+                    auto const dstr = pcsr->getOutputDescriptors();
+                    if(dstr.size() > feature)
+                    {
+                        auto& zoomAcsr = acsr.getAccessor<Analyzer::AttrType::zoom>(0);
+                        if(dstr[feature].hasKnownExtents)
+                        {
+                            juce::Range<double> const range(dstr[feature].minValue, dstr[feature].maxValue);
+                            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+                        }
+                        if(dstr[feature].isQuantized)
+                        {
+                            auto const quantification = dstr[feature].quantizeStep;
+                            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(quantification, NotificationType::synchronous);
+                        }
+                    }
+                }
+            }
             case Analyzer::AttrType::parameters:
             {
                 std::thread thd([&]() mutable
