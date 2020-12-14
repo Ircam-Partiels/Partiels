@@ -129,7 +129,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     {
                         if(auto* comboxBox = dynamic_cast<Layout::PropertyComboBox*>(property.second.get()))
                         {
-                            comboxBox->entry.setSelectedId(static_cast<int>(parameter->second), juce::NotificationType::dontSendNotification);
+                            comboxBox->entry.setSelectedItemIndex(static_cast<int>(parameter->second), juce::NotificationType::dontSendNotification);
                         }
                         else if(auto* label = dynamic_cast<Layout::PropertyLabel*>(property.second.get()))
                         {
@@ -147,6 +147,12 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             {
                 mColourMap.entry.setSelectedItemIndex(static_cast<int>(acsr.getAttr<AttrType::colourMap>()));
             }
+                break;
+            case zoom:
+                break;
+            case colour:
+                break;
+            case results:
                 break;
         }
     };
