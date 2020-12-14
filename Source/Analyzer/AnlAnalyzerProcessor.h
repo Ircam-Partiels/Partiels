@@ -23,6 +23,9 @@ namespace Analyzer
     private:
         size_t mWindowSize = 512;
         size_t mWindowOverlapping = 4;
+        std::string mIdentifierWindowType;
+        std::string mIdentifierWindowSize;
+        std::string mIdentifierWindowOverlapping;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };
     

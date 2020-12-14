@@ -11,6 +11,22 @@ ANALYSE_FILE_BEGIN
 Analyzer::Processor::Processor(Vamp::Plugin* plugin)
 : Vamp::HostExt::PluginWrapper(plugin)
 {
+    auto const& descriptors = m_plugin->getParameterDescriptors();
+    auto getNextIdentifier = [&](std::string const& prepend)
+    {
+        int index = 0;
+        while(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
+        {
+            return descriptor.identifier == prepend + std::to_string(index);
+        }))
+        {
+            ++index;
+        }
+        return prepend + std::to_string(index);
+    };
+    mIdentifierWindowType = getNextIdentifier("windowType");
+    mIdentifierWindowSize = getNextIdentifier("windowSize");
+    mIdentifierWindowOverlapping = getNextIdentifier("windowOverlapping");
 }
 
 size_t Analyzer::Processor::getWindowSize() const
@@ -39,8 +55,7 @@ Analyzer::Processor::ParameterList Analyzer::Processor::getParameterDescriptors(
         if(wrapper->getWrapper<PluginBufferingAdapter>() == nullptr)
         {
             Vamp::Plugin::ParameterDescriptor descriptor;
-            JUCE_COMPILER_WARNING("ensure the identifier is unique")
-            descriptor.identifier = "z3";
+            descriptor.identifier = mIdentifierWindowOverlapping;
             descriptor.name = "Window Overlapping";
             descriptor.description = "The window overlapping used to perform the FFT";
             descriptor.unit = "x";
@@ -58,8 +73,7 @@ Analyzer::Processor::ParameterList Analyzer::Processor::getParameterDescriptors(
 
         {
             Vamp::Plugin::ParameterDescriptor descriptor;
-            JUCE_COMPILER_WARNING("ensure the identifier is unique")
-            descriptor.identifier = "z2";
+            descriptor.identifier = mIdentifierWindowSize;
             descriptor.name = "Window Size";
             descriptor.description = "The window size used to perform the FFT";
             descriptor.unit = "samples";
@@ -76,8 +90,7 @@ Analyzer::Processor::ParameterList Analyzer::Processor::getParameterDescriptors(
         }
         {
             Vamp::Plugin::ParameterDescriptor descriptor;
-            JUCE_COMPILER_WARNING("ensure the identifier is unique")
-            descriptor.identifier = "z1";
+            descriptor.identifier = mIdentifierWindowType;
             descriptor.name = "Window Type";
             descriptor.description = "The window type used to perform the FFT";
             descriptor.unit = "";
@@ -106,15 +119,15 @@ float Analyzer::Processor::getParameter(std::string identifier) const
     
     if(auto* adapter = wrapper->getWrapper<PluginInputDomainAdapter>())
     {
-        if(identifier == "z1")
+        if(identifier == mIdentifierWindowType)
         {
             return static_cast<float>(adapter->getWindowType());
         }
-        if(identifier == "z2")
+        if(identifier == mIdentifierWindowSize)
         {
             return std::log(static_cast<float>(mWindowSize)) / std::log(2.0f) - 3.f;
         }
-        if(identifier == "z3")
+        if(identifier == mIdentifierWindowOverlapping)
         {
             anlWeakAssert(wrapper->getWrapper<PluginBufferingAdapter>() == nullptr);
             if(wrapper->getWrapper<PluginBufferingAdapter>() != nullptr)
@@ -137,19 +150,20 @@ void Analyzer::Processor::setParameter(std::string identifier, float value)
     {
         if(auto* adapter = wrapper->getWrapper<PluginInputDomainAdapter>())
         {
-            if(identifier == "z1")
+            if(identifier == mIdentifierWindowType)
             {
-                adapter->setWindowType(static_cast<Vamp::HostExt::PluginInputDomainAdapter::WindowType>(std::floor(value)));
+                using WindowType = Vamp::HostExt::PluginInputDomainAdapter::WindowType;
+                adapter->setWindowType(static_cast<WindowType>(std::floor(value)));
                 return;
             }
-            if(identifier == "z2")
+            if(identifier == mIdentifierWindowSize)
             {
                 anlWeakAssert(value >= 0.0f && value <= 13.0f);
                 value = std::min(std::max(0.0f, value), 13.0f);
                 mWindowSize = static_cast<size_t>(std::floor(std::pow(2.0f, (value + 3.f))));
                 return;
             }
-            if(identifier == "z3")
+            if(identifier == mIdentifierWindowOverlapping)
             {
                 anlWeakAssert(value >= 0.0f && value <= 8.0f);
                 value = std::min(std::max(0.0f, value), 8.0f);
