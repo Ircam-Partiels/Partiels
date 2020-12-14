@@ -498,7 +498,7 @@ namespace Model
                         if constexpr((element_type::flags & AttrFlag::container) != 0)
                         {
                             auto const acsrs = getAccessors<attr_type>();
-                            result = acsrs.size() != d.accessors.size() || std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
+                            result = acsrs.size() == d.accessors.size() && std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
                             {
                                 return ctnr != nullptr && acsr.get().isEquivalentTo(ctnr->getContainer());
                             });
