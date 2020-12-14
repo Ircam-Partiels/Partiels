@@ -41,8 +41,8 @@ void Document::Director::addAnalysis(AlertType alertType)
             if(alertType == AlertType::window)
             {
                 auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-                auto const title = juce::translate("Analysis cannot be created");
-                auto const message = juce::translate("The analysis ANNM cannot be inserted into the document.").replace("ANNM", name);
+                auto const title = juce::translate("Analysis cannot be created!");
+                auto const message = juce::translate("The analysis \"ANLNAME\" cannot be inserted into the document.").replace("ANLNAME", name);
                 juce::AlertWindow::showMessageBox(icon, title, message);
             }
             return;
@@ -101,10 +101,9 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
                 zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
                 
-                auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
-                for(auto& anlAcsr : anlAcsrs)
+                for(size_t i = 0; i < mAnalyzers.size(); ++i)
                 {
-                    anlAcsr.get().onUpdated(Analyzer::AttrType::key, notification);
+                    mAnalyzers[i]->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
                 }
             }
                 break;
@@ -129,154 +128,15 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             case analyzers:
             {
                 auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
-                for(auto& anlAcsr : anlAcsrs)
+                for(size_t i = mAnalyzers.size(); i < anlAcsrs.size(); ++i)
                 {
-                    JUCE_COMPILER_WARNING("Remove onUpdate");
-                    setupAnalyzer(anlAcsr);
+                    mAnalyzers.push_back(std::make_unique<Analyzer::Director>(anlAcsrs[i]));
+                    mAnalyzers[i]->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
                 }
             }
                 break;
         }
     };
-}
-
-void Document::Director::setupAnalyzer(Analyzer::Accessor& acsr)
-{
-    auto processor = Analyzer::createProcessor(acsr, 48000.0, AlertType::silent);
-    if(processor != nullptr)
-    {
-        auto parameters = acsr.getAttr<Analyzer::AttrType::parameters>();
-        auto const descriptors = processor->getParameterDescriptors();
-        for(auto const& descriptor : descriptors)
-        {
-            parameters[descriptor.identifier] = processor->getParameter(descriptor.identifier);
-        }
-        acsr.setAttr<Analyzer::AttrType::parameters>(parameters, NotificationType::synchronous);
-    }
-    
-    acsr.onUpdated = [&](Analyzer::AttrType anlAttr, NotificationType notification)
-    {
-        switch (anlAttr)
-        {
-            case Analyzer::AttrType::key:
-            case Analyzer::AttrType::feature:
-            {
-                auto pcsr = Analyzer::createProcessor(acsr, 48000.0, AlertType::silent);
-                if(pcsr != nullptr)
-                {
-                    auto const feature = acsr.getAttr<Analyzer::AttrType::feature>();
-                    auto const dstr = pcsr->getOutputDescriptors();
-                    if(dstr.size() > feature)
-                    {
-                        auto& zoomAcsr = acsr.getAccessor<Analyzer::AttrType::zoom>(0);
-                        if(dstr[feature].hasKnownExtents)
-                        {
-                            juce::Range<double> const range(dstr[feature].minValue, dstr[feature].maxValue);
-                            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
-                        }
-                        if(dstr[feature].isQuantized)
-                        {
-                            auto const quantification = dstr[feature].quantizeStep;
-                            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(quantification, NotificationType::synchronous);
-                        }
-                    }
-                }
-            }
-            case Analyzer::AttrType::parameters:
-            {
-                std::thread thd([&]() mutable
-                {
-                    auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-                    if(reader == nullptr)
-                    {
-                        triggerAsyncUpdate();
-                        return;
-                    }
-                    
-                    auto results = Analyzer::performAnalysis(acsr, *reader.get());
-                    if(results.empty())
-                    {
-                        triggerAsyncUpdate();
-                        return;
-                    }
-                    
-                    auto getZoomState = [&]() -> std::pair<double, Zoom::Range>
-                    {
-                        auto const numDimension = results.front().values.size() + 1;
-                        if(numDimension == 1)
-                        {
-                            return {1.0, {0.0, 1.0}};
-                        }
-                        else if(numDimension == 2)
-                        {
-                            auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                            {
-                                return lhs.values[0] < rhs.values[0];
-                            });
-                            return {std::numeric_limits<double>::epsilon(), {static_cast<double>(pair.first->values[0]), static_cast<double>(pair.second->values[0])}};
-                        }
-                        else
-                        {
-                            auto rit = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                            {
-                                return lhs.values.size() < rhs.values.size();
-                            });
-                            return {1.0, {0.0, static_cast<double>(rit->values.size())}};
-                        }
-                    };
-                    
-                    auto const zoomState = getZoomState();
-                    
-                    auto ret = std::make_shared<results_container>(zoomState.first, zoomState.second, std::move(results));
-                    
-                    std::unique_lock<std::mutex> lock(mMutex);
-                    auto it = std::find_if(mProcesses.begin(), mProcesses.end(), [](auto const& process)
-                    {
-                        return std::get<0>(process).get_id() == std::this_thread::get_id();
-                    });
-                    anlWeakAssert(it != mProcesses.end());
-                    std::get<2>(*it) = ret;
-
-                    triggerAsyncUpdate();
-                });
-                
-                std::unique_lock<std::mutex> lock(mMutex);
-                mProcesses.push_back({std::move(thd), acsr, nullptr, notification});
-            }
-                break;
-            case Analyzer::AttrType::zoom:
-            case Analyzer::AttrType::name:
-            case Analyzer::AttrType::colour:
-            case Analyzer::AttrType::colourMap:
-            case Analyzer::AttrType::results:
-                break;
-        }
-    };
-}
-
-void Document::Director::handleAsyncUpdate()
-{
-    JUCE_COMPILER_WARNING("Improve")
-    auto it = std::remove_if(mProcesses.begin(), mProcesses.end(), [](auto const& process)
-    {
-        return std::get<0>(process).joinable();
-    });
-    for(auto end = it; end != mProcesses.end(); ++end)
-    {
-        std::get<0>(*end).join();
-        if(std::get<2>(*end) != nullptr)
-        {
-            auto const notification = std::get<3>(*end);
-            auto& anlAcsr = std::get<1>(*end).get();
-            auto& zoomAcsr = anlAcsr.getAccessor<Analyzer::AttrType::zoom>(0);
-            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<2>(*end)->range, notification);
-            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<2>(*end)->minimumLength, notification);
-            
-            anlAcsr.setAttr<Analyzer::AttrType::results>(std::get<2>(*end)->results, notification);
-        }
-    }
-    std::unique_lock<std::mutex> lock(mMutex);
-    mProcesses.erase(it, mProcesses.end());
 }
 
 ANALYSE_FILE_END

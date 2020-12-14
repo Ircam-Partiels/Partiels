@@ -64,6 +64,7 @@ namespace Document
                     , {""}
                     , {0}
                     , {{}}
+                    , {Analyzer::ZoomMode::results}
                     , {zoomCtnr}
                     , {juce::Colours::black}
                     , {Analyzer::ColorMap::Inferno}

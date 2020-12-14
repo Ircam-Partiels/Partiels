@@ -4,24 +4,39 @@
 #include "../Tools/AnlBroadcaster.h"
 #include "../Tools/AnlAtomicManager.h"
 #include "../Zoom/AnlZoomModel.h"
+#include "../../tinycolormap/include/tinycolormap.hpp"
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginWrapper.h>
-#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
+    enum class ZoomMode
+    {
+          plugin
+        , results
+        , custom
+    };
+    
     enum AttrType : size_t
     {
-        key,
-        name,
-        feature,
-        parameters,
-        zoom,
-        colour,
-        colourMap,
-        results
+          key
+        , name
+        , feature
+        , parameters
+        , zoomMode
+        , zoom
+        , colour
+        , colourMap
+        , results
+    };
+    
+    enum class SignalType
+    {
+          analysisBegin
+        , analysisUpdated
+        , analysisEnd
     };
     
     struct Result
@@ -34,7 +49,7 @@ namespace Analyzer
         {
         }
         
-        bool operator==(Result const& other) const
+        inline bool operator==(Result const& other) const
         {
             return hasTimestamp == other.hasTimestamp &&
             timestamp == other.timestamp &&
@@ -53,6 +68,7 @@ namespace Analyzer
     , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
+    , Model::Attr<AttrType::zoomMode, ZoomMode, Model::AttrFlag::basic>
     , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
@@ -61,6 +77,7 @@ namespace Analyzer
 
     class Accessor
     : public Model::Accessor<Accessor, Container>
+    , public Broadcaster<Accessor, SignalType>
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;

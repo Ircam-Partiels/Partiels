@@ -12,6 +12,7 @@
 #include <atomic>
 #include <memory>
 #include <thread>
+#include <future>
 #include <functional>
 #include <type_traits>
 #include <tuple>
