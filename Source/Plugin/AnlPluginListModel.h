@@ -19,7 +19,7 @@ namespace PluginList
         bool operator!=(Description const&) const;
     };
     
-    enum AttrType : size_t
+    enum class AttrType : size_t
     {
         descriptions,
         sortColumn,

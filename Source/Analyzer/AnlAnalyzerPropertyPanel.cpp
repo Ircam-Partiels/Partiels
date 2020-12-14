@@ -148,11 +148,11 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mColourMap.entry.setSelectedItemIndex(static_cast<int>(acsr.getAttr<AttrType::colourMap>()));
             }
                 break;
-            case zoom:
+            case AttrType::zoom:
                 break;
-            case colour:
+            case AttrType::colour:
                 break;
-            case results:
+            case AttrType::results:
                 break;
         }
     };

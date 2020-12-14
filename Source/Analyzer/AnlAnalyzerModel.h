@@ -19,7 +19,7 @@ namespace Analyzer
         , custom
     };
     
-    enum AttrType : size_t
+    enum class AttrType : size_t
     {
           key
         , name

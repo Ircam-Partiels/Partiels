@@ -10,7 +10,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    enum AttrType : size_t
+    enum class AttrType : size_t
     {
         file,
         isLooping,

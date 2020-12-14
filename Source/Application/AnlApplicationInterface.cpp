@@ -57,14 +57,14 @@ Application::Interface::Interface()
                 }
             }
                 break;
-            case Document::isLooping:
-            case Document::gain:
-            case Document::isPlaybackStarted:
-            case Document::playheadPosition:
-            case Document::timeZoom:
-            case Document::layout:
-            case Document::layoutHorizontal:
-            case Document::analyzers:
+            case Document::AttrType::isLooping:
+            case Document::AttrType::gain:
+            case Document::AttrType::isPlaybackStarted:
+            case Document::AttrType::playheadPosition:
+            case Document::AttrType::timeZoom:
+            case Document::AttrType::layout:
+            case Document::AttrType::layoutHorizontal:
+            case Document::AttrType::analyzers:
                 break;
         }
     };

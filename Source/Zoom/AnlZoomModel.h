@@ -9,7 +9,7 @@ namespace Zoom
 {
     using Range = juce::Range<double>;
     
-    enum AttrType : size_t
+    enum class AttrType : size_t
     {
         globalRange,
         minimumLength,

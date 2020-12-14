@@ -86,7 +86,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
     {
         switch (attribute)
         {
-            case file:
+            case AttrType::file:
             {
                 auto reader = createAudioFormatReader(acsr, mAudioFormatManager, AlertType::window);
                 if(reader == nullptr)
@@ -107,10 +107,10 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 }
             }
                 break;
-            case isLooping:
-            case gain:
-            case isPlaybackStarted:
-            case playheadPosition:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+            case AttrType::playheadPosition:
             {
                 auto const time = acsr.getAttr<AttrType::playheadPosition>();
                 auto& zoomAcsr = acsr.getAccessor<AttrType::timeZoom>(0);
@@ -121,11 +121,11 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 }
             }
                 break;
-            case timeZoom:
-            case layout:
-            case layoutHorizontal:
+            case AttrType::timeZoom:
+            case AttrType::layout:
+            case AttrType::layoutHorizontal:
                 break;
-            case analyzers:
+            case AttrType::analyzers:
             {
                 auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
                 for(size_t i = mAnalyzers.size(); i < anlAcsrs.size(); ++i)
