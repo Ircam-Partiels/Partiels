@@ -276,8 +276,11 @@ namespace Model
                     setValue<value_type>(lvalue, value);
                     if(onUpdated != nullptr)
                     {
+                        lock.store(true);
                         onUpdated(type, notification);
+                        lock.store(false);
                     }
+                    
                     if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
                         mListeners.notify([=, this](Listener& listener)
