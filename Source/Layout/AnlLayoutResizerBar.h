@@ -14,14 +14,14 @@ namespace Layout
         
         enum ColourIds : int
         {
-            activeColourId = 0x2005300,
-            inactiveColourId = 0x2005301
+              activeColourId = 0x2005300
+            , inactiveColourId = 0x2005301
         };
         
         enum Orientation
         {
-            vertical,
-            horizontal
+              vertical
+            , horizontal
         };
         
         ResizerBar(Orientation orientation);

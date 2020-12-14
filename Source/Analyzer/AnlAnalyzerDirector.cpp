@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 Analyzer::Director::Director(Accessor& accessor)
 : mAccessor(accessor)
 {
-    accessor.onUpdated = [&](AttrType anlAttr, NotificationType notification)
+    accessor.onAttrUpdated = [&](AttrType anlAttr, NotificationType notification)
     {
         switch (anlAttr)
         {
@@ -31,12 +31,12 @@ Analyzer::Director::Director(Accessor& accessor)
                 break;
         }
     };
-    accessor.onUpdated(AttrType::key, NotificationType::synchronous);
+    accessor.onAttrUpdated(AttrType::key, NotificationType::synchronous);
 }
 
 Analyzer::Director::~Director()
 {
-    mAccessor.onUpdated = nullptr;
+    mAccessor.onAttrUpdated = nullptr;
 }
 
 void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)

@@ -8,7 +8,7 @@ Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExten
 , mAccessor(accessor)
 {
     mSavedStateAccessor.fromContainer(mAccessor.getContainer(), NotificationType::synchronous);
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();

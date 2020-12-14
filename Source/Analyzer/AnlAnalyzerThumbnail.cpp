@@ -38,7 +38,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     mPropertiesButton.setTooltip(juce::translate("Analysis properties"));
     setupImage(mPropertiesButton, juce::ImageCache::getFromMemory(BinaryData::reglages_png, BinaryData::reglages_pngSize));
     
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)

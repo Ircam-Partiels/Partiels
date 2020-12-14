@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 Document::Playhead::Playhead(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch (attribute)
@@ -27,7 +27,7 @@ Document::Playhead::Playhead(Accessor& accessor)
         }
     };
     
-    mZoomListener.onChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)

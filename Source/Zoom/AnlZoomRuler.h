@@ -13,17 +13,17 @@ namespace Zoom
         
         enum ColourIds : int
         {
-            backgroundColourId = 0x2001000,
-            tickColourId = 0x2001001,
-            textColourId = 0x2001002,
-            anchorColourId = 0x2001003,
-            selectionColourId = 0x2001004
+              backgroundColourId = 0x2001000
+            , tickColourId = 0x2001001
+            , textColourId = 0x2001002
+            , anchorColourId = 0x2001003
+            , selectionColourId = 0x2001004
         };
         
         enum Orientation : bool
         {
-            vertical,
-            horizontal
+              vertical
+            , horizontal
         };
         
         Ruler(Accessor& accessor, Orientation orientation, size_t primaryTickInterval = 3, double tickReferenceValue = 0.0, double tickPowerInterval = 2.0, double divisionFactor = 1.0, double maxStringWidth = 25.0);
@@ -93,9 +93,9 @@ namespace Zoom
         
         enum class NavigationMode
         {
-            zoom,
-            translate,
-            select
+              zoom
+            , translate
+            , select
         };
         
         Accessor& mAccessor;

@@ -14,8 +14,8 @@ public:
     {
         enum class State : bool
         {
-            Active = false,
-            Deleted = true
+              Active = false
+            , Deleted = true
         };
         
         class Deleter

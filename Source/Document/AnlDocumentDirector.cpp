@@ -16,7 +16,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 
 Document::Director::~Director()
 {
-    mAccessor.onUpdated = nullptr;
+    mAccessor.onAttrUpdated = nullptr;
 }
 
 void Document::Director::addAnalysis(AlertType alertType)
@@ -82,7 +82,7 @@ void Document::Director::addAnalysis(AlertType alertType)
 
 void Document::Director::setupDocument(Document::Accessor& acsr)
 {
-    acsr.onUpdated = [&](AttrType attribute, NotificationType notification)
+    acsr.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
     {
         switch (attribute)
         {

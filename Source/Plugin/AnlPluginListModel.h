@@ -21,18 +21,18 @@ namespace PluginList
     
     enum class AttrType : size_t
     {
-        descriptions,
-        sortColumn,
-        sortIsFowards
+          descriptions
+        , sortColumn
+        , sortIsFowards
     };
     
     enum ColumnType
     {
-        Name = 1,
-        Maker = 2,
-        Api = 3,
-        Category = 4,
-        Details = 5
+          Name = 1
+        , Maker = 2
+        , Api = 3
+        , Category = 4
+        , Details = 5
     };
     
     using Container = Model::Container

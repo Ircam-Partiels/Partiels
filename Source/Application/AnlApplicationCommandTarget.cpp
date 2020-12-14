@@ -40,7 +40,7 @@ void Application::CommandTarget::showUnsupportedAction()
 
 Application::CommandTarget::CommandTarget()
 {
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -360,15 +360,16 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             fileBased.setFile({});
-            Instance::get().getDocumentAccessor().fromContainer({
-                {juce::File{}}
+            Instance::get().getDocumentAccessor().fromContainer(
+            {
+                  {juce::File{}}
                 , {false}
                 , {1.0}
                 , {false}
                 , {0.0}
-                , {}
-                , {}
                 , {144}
+                , {}
+                , {}
                 , {}
             }, NotificationType::synchronous);
             Instance::get().openFile(fc.getResult());

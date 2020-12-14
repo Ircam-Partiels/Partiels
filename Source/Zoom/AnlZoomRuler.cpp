@@ -11,7 +11,7 @@ Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTi
     setTickReferenceValue(tickReferenceValue);
     setTickPowerInterval(tickPowerInterval, divisionFactor);
     
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();

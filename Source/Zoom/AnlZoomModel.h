@@ -11,16 +11,16 @@ namespace Zoom
     
     enum class AttrType : size_t
     {
-        globalRange,
-        minimumLength,
-        visibleRange
+          globalRange
+        , minimumLength
+        , visibleRange
     };
     
     enum class SignalType
     {
-        moveAnchorBegin,
-        moveAnchorEnd,
-        moveAnchorPerform
+          moveAnchorBegin
+        , moveAnchorEnd
+        , moveAnchorPerform
     };
     
     using Container = Model::Container

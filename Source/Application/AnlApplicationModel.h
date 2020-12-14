@@ -10,9 +10,9 @@ namespace Application
     
     enum class AttrType : size_t
     {
-        windowState,
-        recentlyOpenedFilesList,
-        currentDocumentFile
+          windowState
+        , recentlyOpenedFilesList
+        , currentDocumentFile
     };
     
     using Container = Model::Container

@@ -12,15 +12,15 @@ namespace Document
 {
     enum class AttrType : size_t
     {
-        file,
-        isLooping,
-        gain,
-        isPlaybackStarted,
-        playheadPosition,
-        timeZoom,
-        layout,
-        layoutHorizontal,
-        analyzers
+          file
+        , isLooping
+        , gain
+        , isPlaybackStarted
+        , playheadPosition
+        , layoutHorizontal
+        , timeZoom
+        , layout
+        , analyzers
     };
     
     using Container = Model::Container
@@ -29,9 +29,10 @@ namespace Document
     , Model::Attr<AttrType::gain, double, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
+    , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::basic>
+    
     , Model::Acsr<AttrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Acsr<AttrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::basic>
     , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
@@ -65,10 +66,10 @@ namespace Document
                     , {0}
                     , {{}}
                     , {Analyzer::ZoomMode::results}
-                    , {zoomCtnr}
                     , {juce::Colours::black}
                     , {Analyzer::ColorMap::Inferno}
-                    ,  {}
+                    , {}
+                    , {zoomCtnr}
                 };
                 
                 auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);

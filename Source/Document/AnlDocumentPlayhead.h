@@ -13,8 +13,8 @@ namespace Document
         
         enum ColourIds : int
         {
-            backgroundColourId = 0x2000410,
-            playheadColourId = 0x2000411
+              backgroundColourId = 0x2000410
+            , playheadColourId = 0x2000411
         };
         
         Playhead(Accessor& accessor);

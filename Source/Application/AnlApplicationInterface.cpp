@@ -34,7 +34,7 @@ Application::Interface::Interface()
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
     
-    mDocumentListener.onChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
+    mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
         switch(attribute)
         {

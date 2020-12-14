@@ -83,7 +83,7 @@ Layout::StrechableContainer::Section::Section(Accessor& acessor, Orientation ori
 : mAccessor(acessor)
 , mOrientation(orientation)
 {
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {
@@ -125,7 +125,7 @@ Layout::StrechableContainer::Section::Orientation Layout::StrechableContainer::S
 
 void Layout::StrechableContainer::Section::setContent(size_t index, juce::Component* content, int minimumSize)
 {
-    mListener.onChanged(mAccessor, AttrType::sizes);
+    mListener.onAttrChanged(mAccessor, AttrType::sizes);
     //anlWeakAssert(index < mHolders.size() && mHolders[index] != nullptr);
     if(index < mHolders.size() && mHolders[index] != nullptr)
     {

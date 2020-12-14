@@ -8,7 +8,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
 , mFileBasedDocument(fileBasedDocument)
 {
     using Position = Layout::PropertyPanelBase::Positioning;
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {

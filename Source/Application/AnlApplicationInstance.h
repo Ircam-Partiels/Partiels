@@ -57,15 +57,16 @@ namespace Application
         Accessor mApplicationAccessor {mApplicationContainer};
         PluginList::Container mPluginListContainer;
         PluginList::Accessor mPluginListAccessor {mPluginListContainer};
-        Document::Container mDocumentContainer {
+        Document::Container mDocumentContainer
+        {
               {juce::File{}}
             , {false}
             , {1.0}
             , {false}
             , {0.0}
-            , {}
-            , {}
             , {144}
+            , {}
+            , {}
             , {}
         };
         Document::Accessor mDocumentAccessor {mDocumentContainer};

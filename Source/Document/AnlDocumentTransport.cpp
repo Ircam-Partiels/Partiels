@@ -10,7 +10,7 @@ Document::Transport::Transport(Accessor& accessor)
         button.setImages(false, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
     };
     
-    mListener.onChanged = [&, setupImage](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&, setupImage](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {

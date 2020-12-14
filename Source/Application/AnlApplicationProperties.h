@@ -25,9 +25,9 @@ namespace Application
         
         enum class PropertyType
         {
-            Application = 0,
-            PluginList = 1,
-            AudioSetup = 2
+              Application = 0
+            , PluginList = 1
+            , AudioSetup = 2
         };
         
         static juce::File getFile(juce::StringRef const& fileName);

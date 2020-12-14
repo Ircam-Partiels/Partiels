@@ -119,7 +119,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         auto getLastPosition = [&]() -> juce::int64
         {

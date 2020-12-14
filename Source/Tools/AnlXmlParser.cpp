@@ -21,8 +21,7 @@ auto XmlParser::fromXml<juce::Range<double>>(juce::XmlElement const& xml, juce::
 {
     anlWeakAssert(xml.hasAttribute(attributeName+"::start"));
     anlWeakAssert(xml.hasAttribute(attributeName+"::end"));
-    return {xml.getDoubleAttribute(attributeName+"::start", defaultValue.getStart()),
-            xml.getDoubleAttribute(attributeName+"::end", defaultValue.getEnd())};
+    return {xml.getDoubleAttribute(attributeName+"::start", defaultValue.getStart()),            xml.getDoubleAttribute(attributeName+"::end", defaultValue.getEnd())};
 }
 
 

@@ -10,7 +10,7 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
     mScrollBar.setAutoHide(false);
     addAndMakeVisible(mScrollBar);
     
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {

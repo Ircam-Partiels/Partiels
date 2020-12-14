@@ -26,10 +26,10 @@ namespace Analyzer
         , feature
         , parameters
         , zoomMode
-        , zoom
         , colour
         , colourMap
         , results
+        , zoom
     };
     
     enum class SignalType
@@ -69,10 +69,14 @@ namespace Analyzer
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::AttrFlag::basic>
-    , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
     , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
+    , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    >;
+    
+    using Acsr = Model::Container
+    < Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     >;
 
     class Accessor

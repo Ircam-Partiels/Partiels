@@ -14,8 +14,8 @@ namespace Zoom
         
         enum Orientation : bool
         {
-            vertical,
-            horizontal
+              vertical
+            , horizontal
         };
         
         ScrollBar(Accessor& accessor, Orientation orientation, bool isInversed = false);

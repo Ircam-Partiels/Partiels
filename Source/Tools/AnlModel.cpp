@@ -44,13 +44,13 @@ public:
         // Declare the name (type) of the attributes of the data model
         enum AttrType : size_t
         {
-            attr0,
-            attr1,
-            attr2,
-            attr3,
-            attr4,
-            attr5,
-            attr6
+              attr0
+            , attr1
+            , attr2
+            , attr3
+            , attr4
+            , attr5
+            , attr6
         };
         
         // Declare the data model container
@@ -178,7 +178,7 @@ public:
             std::array<bool, magic_enum::enum_count<AttrType>()> notifications;
             
             ModelLtnr ltnr;
-            ltnr.onChanged = [&](ModelAcsr const& acsr, AttrType attribute)
+            ltnr.onAttrChanged = [&](ModelAcsr const& acsr, AttrType attribute)
             {
                 juce::ignoreUnused(acsr);
                 notifications[magic_enum::enum_integer(attribute)] = true;

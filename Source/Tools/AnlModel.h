@@ -11,12 +11,12 @@ namespace Model
 {
     enum AttrFlag
     {
-        ignored = 0 << 0,
-        notifying = 1 << 0,
-        saveable = 1 << 1,
-        comparable = 1 << 2,
-        basic = notifying | saveable | comparable,
-        container = 1 << 3 // private
+          ignored = 0 << 0
+        , notifying = 1 << 0
+        , saveable = 1 << 1
+        , comparable = 1 << 2
+        , basic = notifying | saveable | comparable
+        , container = 1 << 3 // private
     };
     
     static constexpr int resizable = 0;
@@ -112,8 +112,21 @@ namespace Model
     template <class ..._Tp>
     using Container = std::tuple<_Tp...>;
     
+    enum class default_enum
+    {
+        unknow
+    };
+    
+    using default_attr_container = Container
+    < Acsr<default_enum::unknow, void, Model::AttrFlag::ignored, 0>
+    >;
+    
+    using default_acsr_container = Container
+    < Acsr<default_enum::unknow, default_attr_container, Model::AttrFlag::ignored, 0>
+    >;
+    
     //! @brief The accessor a container
-    template<class parent_t, class container_t>
+    template<class parent_t, class container_t, class accessor_t = default_acsr_container>
     class Accessor
     {
     public:
@@ -229,14 +242,18 @@ namespace Model
             // Detaches the mutex that prevent recurvise changes
             backup->setLock(nullptr);
             
+            if(onAcsrErased != nullptr)
+            {
+                onAcsrErased(type, index, notification);
+            }
             if constexpr((element_type::flags & AttrFlag::notifying) != 0)
             {
-                mListeners.notify([this](Listener& listener) mutable
+                mListeners.notify([=, this](Listener& listener) mutable
                 {
-                    anlWeakAssert(listener.onChanged != nullptr);
-                    if(listener.onChanged != nullptr)
+                    anlWeakAssert(listener.onAccessorInserted != nullptr);
+                    if(listener.onAccessorInserted != nullptr)
                     {
-                        listener.onChanged(*static_cast<parent_t const*>(this), type);
+                        listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, index);
                     }
                 }, notification);
             }
@@ -274,10 +291,10 @@ namespace Model
                 if(isEquivalentTo(lvalue, value) == false)
                 {
                     setValue<value_type>(lvalue, value);
-                    if(onUpdated != nullptr)
+                    if(onAttrUpdated != nullptr)
                     {
                         lock.store(true);
-                        onUpdated(type, notification);
+                        onAttrUpdated(type, notification);
                         lock.store(false);
                     }
                     
@@ -285,10 +302,10 @@ namespace Model
                     {
                         mListeners.notify([=, this](Listener& listener)
                         {
-                            anlWeakAssert(listener.onChanged != nullptr);
-                            if(listener.onChanged != nullptr)
+                            anlWeakAssert(listener.onAttrChanged != nullptr);
+                            if(listener.onAttrChanged != nullptr)
                             {
-                                listener.onChanged(*static_cast<parent_t const*>(this), type);
+                                listener.onAttrChanged(*static_cast<parent_t const*>(this), type);
                             }
                         }, notification);
                     }
@@ -522,7 +539,9 @@ namespace Model
             Listener() = default;
             virtual ~Listener() = default;
             
-            std::function<void(parent_t const&, enum_type type)> onChanged = nullptr;
+            std::function<void(parent_t const&, enum_type type)> onAttrChanged = nullptr;
+            std::function<void(parent_t const&, enum_type type, size_t)> onAccessorInserted = nullptr;
+            std::function<void(parent_t const&, enum_type type, size_t)> onAccessorErased = nullptr;
         };
         
         void addListener(Listener& listener, NotificationType const notification)
@@ -535,17 +554,36 @@ namespace Model
                 detail::for_each(mData, [&](auto& d)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
+                    
                     if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                     {
-                        mListeners.notify([this, ptr = &listener](Listener& ltnr)
+                        auto constexpr attr_type = element_type::type;
+                        if constexpr((element_type::flags & AttrFlag::container) != 0)
                         {
-                            anlWeakAssert(ltnr.onChanged != nullptr);
-                            if(&ltnr == ptr && ltnr.onChanged != nullptr)
+                            auto const acsrs = getAccessors<attr_type>();
+                            for(size_t index = 0; index < acsrs.size(); ++index)
                             {
-                                auto constexpr attr_type = element_type::type;
-                                ltnr.onChanged(*static_cast<parent_t const*>(this), attr_type);
+                                mListeners.notify([this, index, ptr = &listener](Listener& ltnr)
+                                {
+                                    anlWeakAssert(ltnr.onAccessorInserted != nullptr);
+                                    if(&ltnr == ptr && ltnr.onAccessorInserted != nullptr)
+                                    {
+                                        ltnr.onAccessorInserted(*static_cast<parent_t const*>(this), attr_type, index);
+                                    }
+                                }, notification);
                             }
-                        }, notification);
+                        }
+                        else
+                        {
+                            mListeners.notify([this, ptr = &listener](Listener& ltnr)
+                            {
+                                anlWeakAssert(ltnr.onAttrChanged != nullptr);
+                                if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
+                                {
+                                    ltnr.onAttrChanged(*static_cast<parent_t const*>(this), attr_type);
+                                }
+                            }, notification);
+                        }
                     }
                 });
                 
@@ -558,7 +596,9 @@ namespace Model
             mListeners.remove(listener);
         }
         
-        std::function<void(enum_type type, NotificationType notification)> onUpdated = nullptr;
+        std::function<void(enum_type type, NotificationType notification)> onAttrUpdated = nullptr;
+        std::function<void(enum_type type, size_t index, NotificationType notification)> onAcsrInserted = nullptr;
+        std::function<void(enum_type type, size_t index, NotificationType notification)> onAcsrErased = nullptr;
         
     protected:
         
@@ -583,18 +623,18 @@ namespace Model
                 // Attaches the mutex to prevent recursive changes
                 (*it)->setLock(&getLock());
                 
-                if(onUpdated != nullptr)
+                if(onAcsrInserted != nullptr)
                 {
-                    onUpdated(type, notification);
+                    onAcsrInserted(type, static_cast<size_t>(index), notification);
                 }
                 if constexpr((element_type::flags & AttrFlag::notifying) != 0)
                 {
-                    mListeners.notify([=, this](Listener& listener)
+                    mListeners.notify([index, this](Listener& listener)
                     {
-                        anlWeakAssert(listener.onChanged != nullptr);
-                        if(listener.onChanged != nullptr)
+                        anlWeakAssert(listener.onAccessorInserted != nullptr);
+                        if(listener.onAccessorInserted != nullptr)
                         {
-                            listener.onChanged(*static_cast<parent_t const*>(this), type);
+                            listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, static_cast<size_t>(index));
                         }
                     }, notification);
                 }
@@ -695,7 +735,7 @@ namespace Model
         std::atomic<bool> mLock {true};
         std::atomic<bool>* mSharedLock = nullptr;
         
-        template<class, class> friend class Accessor;
+        template<class, class, class> friend class Accessor;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Accessor)
     };

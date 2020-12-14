@@ -33,14 +33,14 @@ namespace Layout
             
             enum ColourIds : int
             {
-                resizerActiveColourId = 0x2005300,
-                resizerInactiveColourId = 0x2005301
+                  resizerActiveColourId = 0x2005300
+                , resizerInactiveColourId = 0x2005301
             };
             
-            enum Orientation
+            enum Orientation : bool
             {
-                vertical,
-                horizontal
+                  vertical
+                , horizontal
             };
             
             Section(Accessor& acessor, Orientation = Orientation::vertical);

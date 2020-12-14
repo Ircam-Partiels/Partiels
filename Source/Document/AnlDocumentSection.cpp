@@ -89,7 +89,7 @@ Document::Section::Section(Accessor& accessor)
         return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, seconds, ms);
     });
     
-    mListener.onChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
