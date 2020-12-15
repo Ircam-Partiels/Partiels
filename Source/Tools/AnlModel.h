@@ -536,8 +536,7 @@ namespace Model
                         {
                             if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
                             {
-                                auto constexpr attr_type = element_type::type;
-                                ltnr.onAttrChanged(*static_cast<parent_t const*>(this), attr_type);
+                                ltnr.onAttrChanged(*static_cast<parent_t const*>(this), element_type::type);
                             }
                         }, notification);
                     }
@@ -548,16 +547,14 @@ namespace Model
                     using element_type = typename std::remove_reference<decltype(d)>::type;
                     if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
-                        auto constexpr acsr_type = element_type::type;
-                        auto const acsrs = getAccessors<acsr_type>();
+                        auto const acsrs = getAccessors<element_type::type>();
                         for(size_t index = 0; index < acsrs.size(); ++index)
                         {
                             mListeners.notify([this, index, ptr = &listener](Listener& ltnr)
                             {
                                 if(&ltnr == ptr && ltnr.onAccessorInserted != nullptr)
                                 {
-                                    auto constexpr acsr_type = element_type::type;
-                                    ltnr.onAccessorInserted(*static_cast<parent_t const*>(this), acsr_type, index);
+                                    ltnr.onAccessorInserted(*static_cast<parent_t const*>(this), element_type::type, index);
                                 }
                             }, notification);
                         }
