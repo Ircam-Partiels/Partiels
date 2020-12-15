@@ -137,6 +137,17 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             }
             auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
             {
+                Zoom::Range range;
+                for(auto const& result : results)
+                {
+                    auto const& values = result.values;
+                    auto const pair = std::minmax_element(values.cbegin(), values.cend());
+                    if(pair.first != values.cend() && pair.second != values.cend())
+                    {
+                        
+                    }
+                }
+                
                 auto const numDimension = results.front().values.size() + 1;
                 if(numDimension == 1)
                 {
@@ -145,7 +156,7 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
                 else if(numDimension == 2)
                 {
                     auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                                                    {
+                    {
                         return lhs.values[0] < rhs.values[0];
                     });
                     return {{static_cast<double>(pair.first->values[0]), static_cast<double>(pair.second->values[0])}, std::numeric_limits<double>::epsilon()};
@@ -153,7 +164,7 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
                 else
                 {
                     auto rit = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                                                {
+                    {
                         return lhs.values.size() < rhs.values.size();
                     });
                     return {{0.0, static_cast<double>(rit->values.size())}, 1.0};

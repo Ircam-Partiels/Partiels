@@ -137,24 +137,30 @@ Document::Section::Section(Accessor& accessor)
                     {
                         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
                     };
-                }
-                mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
-                
-                for(size_t i = index; i < mContents.size(); ++i)
-                {
-                    mContents[i]->content.onRemove = [this, i]()
+                    
+                    container->content.onRemove = [this, ptr = container.get()]()
                     {
-                        auto const& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(i);
-                        auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-                        auto const title = juce::translate("Remove Analysis");
-                        auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsr.getAttr<Analyzer::AttrType::name>());
-                        if(juce::AlertWindow::showOkCancelBox(icon, title, message))
+                        auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
+                        for(size_t i = 0; i < anlAcsrs.size(); ++i)
                         {
-                            mAccessor.eraseAccessor<AcsrType::analyzers>(i, NotificationType::synchronous);
+                            if(&(anlAcsrs[i].get()) == &ptr->accessor)
+                            {
+                                auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+                                auto const title = juce::translate("Remove Analysis");
+                                auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsrs[i].get().getAttr<Analyzer::AttrType::name>());
+                                if(juce::AlertWindow::showOkCancelBox(icon, title, message))
+                                {
+                                    mAccessor.eraseAccessor<AcsrType::analyzers>(i, NotificationType::synchronous);
+                                }
+                                
+                                return;
+                            }
                         }
                     };
                 }
+                mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
                 
+
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {
                     mContainer.setContent(i, &(mContents[i]->content), 100);

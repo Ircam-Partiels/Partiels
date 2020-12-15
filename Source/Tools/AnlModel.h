@@ -214,9 +214,9 @@ namespace Model
             {
                 mListeners.notify([=, this](Listener& listener) mutable
                 {
-                    if(listener.onAccessorInserted != nullptr)
+                    if(listener.onAccessorErased != nullptr)
                     {
-                        listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, index);
+                        listener.onAccessorErased(*static_cast<parent_t const*>(this), type, index);
                     }
                 }, notification);
             }

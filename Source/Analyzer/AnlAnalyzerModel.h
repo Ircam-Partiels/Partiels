@@ -38,9 +38,7 @@ namespace Analyzer
     
     enum class SignalType
     {
-          analysisBegin
-        , analysisUpdated
-        , analysisEnd
+          analysisRunning
     };
     
     struct Result
