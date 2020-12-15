@@ -70,10 +70,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
             case AttrType::playheadPosition:
-            case AttrType::timeZoom:
-            case AttrType::layout:
             case AttrType::layoutHorizontal:
-            case AttrType::analyzers:
                 break;
 }
         changeListenerCallback(&mFileBasedDocument);

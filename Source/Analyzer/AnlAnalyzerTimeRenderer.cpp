@@ -62,14 +62,14 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AttrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::TimeRenderer::~TimeRenderer()
 {
     mZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessor<AttrType::zoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -90,7 +90,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
         return;
     }
     
-    auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
     auto const globalValueRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     
@@ -126,7 +126,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
     {
         auto const clip = g.getClipBounds();
         g.setColour(mAccessor.getAttr<AttrType::colour>());
-        auto const valueRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        auto const valueRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto valueToPixel = [&](float const value)
         {
             auto const ratio = 1.0f - (value - valueRange.getStart()) / valueRange.getLength();
@@ -157,7 +157,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
     {
         auto image = mImage;
         
-        auto const vRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        auto const vRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         
         auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - vRange.getEnd(), globalValueRange.getEnd() - vRange.getStart());
@@ -207,7 +207,7 @@ void Analyzer::TimeRenderer::mouseMove(juce::MouseEvent const& event)
     }
     else
     {
-        auto const valueRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        auto const valueRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         for(size_t i = 0; i < results.size(); i++)
         {
             if(results[i].timestamp >= rtr)

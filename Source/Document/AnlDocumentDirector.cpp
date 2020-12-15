@@ -36,7 +36,7 @@ void Document::Director::addAnalysis(AlertType alertType)
         }
         
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        if(!mAccessor.insertAccessor<Document::AttrType::analyzers>(-1, NotificationType::synchronous))
+        if(!mAccessor.insertAccessor<Document::AcsrType::analyzers>(-1, NotificationType::synchronous))
         {
             if(alertType == AlertType::window)
             {
@@ -48,7 +48,7 @@ void Document::Director::addAnalysis(AlertType alertType)
             return;
         }
 
-        auto& anlAcsr = mAccessor.getAccessors<Document::AttrType::analyzers>().back().get();
+        auto& anlAcsr = mAccessor.getAccessors<Document::AcsrType::analyzers>().back().get();
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::name>(name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
@@ -96,7 +96,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 auto const sampleRate = reader->sampleRate;
                 auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
                 
-                auto& zoomAcsr = acsr.getAccessor<AttrType::timeZoom>(0);
+                auto& zoomAcsr = acsr.getAccessor<AcsrType::timeZoom>(0);
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
                 zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
                 zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
@@ -113,7 +113,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             case AttrType::playheadPosition:
             {
                 auto const time = acsr.getAttr<AttrType::playheadPosition>();
-                auto& zoomAcsr = acsr.getAccessor<AttrType::timeZoom>(0);
+                auto& zoomAcsr = acsr.getAccessor<AcsrType::timeZoom>(0);
                 auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                 if(!range.contains(time))
                 {
@@ -121,13 +121,18 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 }
             }
                 break;
-            case AttrType::timeZoom:
-            case AttrType::layout:
             case AttrType::layoutHorizontal:
                 break;
-            case AttrType::analyzers:
+        }
+    };
+    
+    acsr.onAcsrInserted = [&](AcsrType attribute, size_t index, NotificationType notification)
+    {
+        switch (attribute)
+        {
+            case AcsrType::analyzers:
             {
-                auto anlAcsrs = acsr.getAccessors<AttrType::analyzers>();
+                auto anlAcsrs = acsr.getAccessors<AcsrType::analyzers>();
                 for(size_t i = mAnalyzers.size(); i < anlAcsrs.size(); ++i)
                 {
                     mAnalyzers.push_back(std::make_unique<Analyzer::Director>(anlAcsrs[i]));

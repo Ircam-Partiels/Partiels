@@ -23,7 +23,6 @@ Analyzer::Director::Director(Accessor& accessor)
                 updateZoomRange(notification);
             }
                 break;
-            case AttrType::zoom:
             case AttrType::name:
             case AttrType::colour:
             case AttrType::colourMap:
@@ -122,7 +121,7 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
                 auto const feature = mAccessor.getAttr<AttrType::feature>();
                 anlStrongAssert(instance->hasZoomInfo(feature));
                 auto const info = instance->getZoomInfo(feature);
-                auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
                 
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
                 zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
@@ -162,7 +161,7 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             };
             
             auto const info = getZoomInfo();
-            auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
+            auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
             
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
             zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);

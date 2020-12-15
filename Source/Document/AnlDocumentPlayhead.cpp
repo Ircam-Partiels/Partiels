@@ -19,10 +19,7 @@ Document::Playhead::Playhead(Accessor& accessor)
             case AttrType::isPlaybackStarted:
             case AttrType::isLooping:
             case AttrType::file:
-            case AttrType::timeZoom:
-            case AttrType::layout:
             case AttrType::layoutHorizontal:
-            case AttrType::analyzers:
                 break;
         }
     };
@@ -44,12 +41,12 @@ Document::Playhead::Playhead(Accessor& accessor)
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AttrType::timeZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::timeZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Document::Playhead::~Playhead()
 {
-    mAccessor.getAccessor<AttrType::timeZoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::timeZoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -57,7 +54,7 @@ void Document::Playhead::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId, true));
     auto const time = mAccessor.getAttr<AttrType::playheadPosition>();
-    auto const range = mAccessor.getAccessor<AttrType::timeZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+    auto const range = mAccessor.getAccessor<AcsrType::timeZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
     if(range.isEmpty())
     {
         return;

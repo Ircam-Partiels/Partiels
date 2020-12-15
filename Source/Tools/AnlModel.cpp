@@ -131,7 +131,7 @@ public:
             ModelAcsr acsr1(ctnr1);
             ModelCtnr ctnr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
             ModelAcsr acsr2(ctnr2);
-            acsr1.fromContainer(acsr2.getContainer(), NotificationType::synchronous);
+            acsr1.copyFrom(acsr2, NotificationType::synchronous);
             expectEquals(acsr1.getAttr<AttrType::attr0>(), acsr2.getAttr<AttrType::attr0>());
             expectNotEquals(acsr1.getAttr<AttrType::attr1>(), acsr2.getAttr<AttrType::attr1>());
             expectEquals(acsr1.getAttr<AttrType::attr2>(), acsr2.getAttr<AttrType::attr2>());
@@ -166,11 +166,11 @@ public:
             ModelAcsr acsr1(ctnr1);
             ModelCtnr ctnr2({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
             ModelAcsr acsr2(ctnr2);
-            expect(acsr1.isEquivalentTo(acsr2.getContainer()) == false);
-            expect(acsr2.isEquivalentTo(acsr1.getContainer()) == false);
-            acsr1.fromContainer(acsr2.getContainer(), NotificationType::synchronous);
-            expect(acsr1.isEquivalentTo(acsr2.getContainer()) == true);
-            expect(acsr2.isEquivalentTo(acsr1.getContainer()) == true);
+            expect(acsr1.isEquivalentTo(acsr2) == false);
+            expect(acsr2.isEquivalentTo(acsr1) == false);
+            acsr1.copyFrom(acsr2, NotificationType::synchronous);
+            expect(acsr1.isEquivalentTo(acsr2) == true);
+            expect(acsr2.isEquivalentTo(acsr1) == true);
         }
         
         beginTest("accessor listener");

@@ -53,23 +53,18 @@ namespace Application
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;
         
-        Container mApplicationContainer;
-        Accessor mApplicationAccessor {mApplicationContainer};
-        PluginList::Container mPluginListContainer;
-        PluginList::Accessor mPluginListAccessor {mPluginListContainer};
-        Document::Container mDocumentContainer
+        Accessor mApplicationAccessor;
+        PluginList::Accessor mPluginListAccessor;
+        Document::Accessor mDocumentAccessor {
+        Document::AttrContainer
         {
-              {juce::File{}}
+            {juce::File{}}
             , {false}
             , {1.0}
             , {false}
             , {0.0}
             , {144}
-            , {}
-            , {}
-            , {}
-        };
-        Document::Accessor mDocumentAccessor {mDocumentContainer};
+        }};
         Document::Director mDocumentDirector {mDocumentAccessor, mPluginListAccessor, mAudioFormatManager};
         Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};
         

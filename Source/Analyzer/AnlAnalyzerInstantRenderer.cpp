@@ -63,14 +63,14 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AttrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::InstantRenderer::~InstantRenderer()
 {
     mZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessor<AttrType::zoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -81,7 +81,7 @@ void Analyzer::InstantRenderer::resized()
 
 void Analyzer::InstantRenderer::paint(juce::Graphics& g)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AttrType::zoom>(0);
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     if(visibleRange.isEmpty())
     {
@@ -156,7 +156,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
         auto const width = getWidth();
         auto const height = getHeight();
         
-        auto const globalValueRange = mAccessor.getAccessor<AttrType::zoom>(0).getAttr<Zoom::AttrType::globalRange>();
+        auto const globalValueRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::globalRange>();
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         
         auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - visibleRange.getEnd(), globalValueRange.getEnd() - visibleRange.getStart());

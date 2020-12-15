@@ -61,10 +61,7 @@ Application::Interface::Interface()
             case Document::AttrType::gain:
             case Document::AttrType::isPlaybackStarted:
             case Document::AttrType::playheadPosition:
-            case Document::AttrType::timeZoom:
-            case Document::AttrType::layout:
             case Document::AttrType::layoutHorizontal:
-            case Document::AttrType::analyzers:
                 break;
         }
     };

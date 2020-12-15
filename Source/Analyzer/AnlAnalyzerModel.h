@@ -29,7 +29,11 @@ namespace Analyzer
         , colour
         , colourMap
         , results
-        , zoom
+    };
+    
+    enum class AcsrType : size_t
+    {
+          zoom
     };
     
     enum class SignalType
@@ -63,7 +67,7 @@ namespace Analyzer
     
     using ColorMap = tinycolormap::ColormapType;
     
-    using Container = Model::Container
+    using AttrContainer = Model::Container
     < Model::Attr<AttrType::key, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
     , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
@@ -72,29 +76,28 @@ namespace Analyzer
     , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
     , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
-    , Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     >;
     
-    using Acsr = Model::Container
-    < Model::Acsr<AttrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    using AcsrContainer = Model::Container
+    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
     >;
 
     class Accessor
-    : public Model::Accessor<Accessor, Container>
+    : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
     , public Broadcaster<Accessor, SignalType>
     {
     public:
-        using Model::Accessor<Accessor, Container>::Accessor;
+        using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
-        template <enum_type type>
+        template <acsr_enum_type type>
         bool insertAccessor(long index, NotificationType notification)
         {
-            if constexpr(type == AttrType::zoom)
+            if constexpr(type == AcsrType::zoom)
             {
                 auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
                 auto constexpr max = std::numeric_limits<double>::max() / 100.0;
                 auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                static const Zoom::Container ctnr
+                static const Zoom::AttrContainer ctnr
                 {
                       {{min, max}}
                     , {epsilon}
@@ -102,11 +105,11 @@ namespace Analyzer
                 };
                 
                 auto accessor = std::make_unique<Zoom::Accessor>(ctnr);
-                return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::zoom>(index, std::move(accessor), notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<AcsrType::zoom>(index, std::move(accessor), notification);
             }
             else
             {
-                return Model::Accessor<Accessor, Container>::insertAccessor<type>(index, notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
             }
         }
     };

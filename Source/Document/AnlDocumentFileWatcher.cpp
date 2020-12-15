@@ -26,10 +26,7 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
             case AttrType::playheadPosition:
-            case AttrType::timeZoom:
-            case AttrType::layout:
             case AttrType::layoutHorizontal:
-            case AttrType::analyzers:
                 break;
         }
     };

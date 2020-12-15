@@ -18,48 +18,44 @@ namespace Document
         , isPlaybackStarted
         , playheadPosition
         , layoutHorizontal
-        , timeZoom
+    };
+    
+    enum class AcsrType : size_t
+    {
+          timeZoom
         , layout
         , analyzers
     };
     
-    using Container = Model::Container
+    using AttrContainer = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::AttrFlag::basic>
     , Model::Attr<AttrType::isLooping, bool, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
     , Model::Attr<AttrType::gain, double, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
     , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::basic>
+    >;
     
-    , Model::Acsr<AttrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Acsr<AttrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Acsr<AttrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
+    using AcsrContainer = Model::Container
+    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    , Model::Acsr<AcsrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
+    , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
     >;
     
     //! @todo Check if the zoom state is well initialized
     //! @todo Use a default gain to 1
     class Accessor
-    : public Model::Accessor<Accessor, Container>
+    : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
     {
     public:
-        using Model::Accessor<Accessor, Container>::Accessor;
+        using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
-        template <enum_type type>
+        template <acsr_enum_type type>
         bool insertAccessor(long index, NotificationType notification)
         {
-            if constexpr(type == AttrType::analyzers)
+            if constexpr(type == AcsrType::analyzers)
             {
-                auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
-                auto constexpr max = std::numeric_limits<double>::max() / 100.0;
-                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                static const Zoom::Container zoomCtnr
-                {
-                      {{min, max}}
-                    , {epsilon}
-                    , {{min, max}}
-                };
-                
-                static const Analyzer::Container ctnr
+                static const Analyzer::AttrContainer ctnr
                 {
                       {""}
                     , {""}
@@ -69,15 +65,14 @@ namespace Document
                     , {juce::Colours::black}
                     , {Analyzer::ColorMap::Inferno}
                     , {}
-                    , {zoomCtnr}
                 };
                 
                 auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);
-                return Model::Accessor<Accessor, Container>::insertAccessor<AttrType::analyzers>(index, std::move(accessor), notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::move(accessor), notification);
             }
             else
             {
-                return Model::Accessor<Accessor, Container>::insertAccessor<type>(index, notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
             }
         }
     };

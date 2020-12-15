@@ -18,7 +18,7 @@ Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& ti
     
     mRuler.onDoubleClick = [&]()
     {
-        auto& valueZoomAcsr = mAccessor.getAccessor<Analyzer::AttrType::zoom>(0);
+        auto& valueZoomAcsr = mAccessor.getAccessor<Analyzer::AcsrType::zoom>(0);
         auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
@@ -93,13 +93,42 @@ Document::Section::Section(Accessor& accessor)
     {
         switch (attribute)
         {
-            case AttrType::analyzers:
+            case AttrType::file:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+                break;
+            case AttrType::playheadPosition:
             {
-                JUCE_COMPILER_WARNING("fix deletion and recursive approach")
-                
-                auto const& anlAcsrs = mAccessor.getAccessors<AttrType::analyzers>();
-                auto& timeZoomAcsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
-                auto& layoutAcsr = mAccessor.getAccessor<AttrType::layout>(0);
+                auto const time = acsr.getAttr<AttrType::playheadPosition>();
+                for(size_t i = 0; i < mContents.size(); ++i)
+                {
+                    mContents[i]->content.setTime(time);
+                }
+            };
+                break;
+            case AttrType::layoutHorizontal:
+            {
+                resized();
+                auto const pos = acsr.getAttr<AttrType::layoutHorizontal>();
+                for(size_t i = 0; i < mContents.size(); ++i)
+                {
+                    mContents[i]->content.setThumbnailSize(pos);
+                }
+            }
+                break;
+        }
+    };
+    
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    {
+        switch(attribute)
+        {
+            case AcsrType::analyzers:
+            {
+                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
+                auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+                auto& layoutAcsr = mAccessor.getAccessor<AcsrType::layout>(0);
                 auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
                 
                 for(size_t i = 0; i < mContents.size() && i < sizes.size(); ++i)
@@ -108,70 +137,33 @@ Document::Section::Section(Accessor& accessor)
                 }
                 
                 layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, NotificationType::synchronous);
-                auto it = mContents.begin();
-                while (it != mContents.end())
+                auto container = std::make_unique<Container>(anlAcsr, timeZoomAcsr);
+                anlStrongAssert(container != nullptr);
+                if(container != nullptr)
                 {
-                    if(std::none_of(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
+                    container->content.onThumbnailResized = [&](int size)
                     {
-                        return &((*it)->accessor) == &(anlAcsr.get());
-                    }))
+                        mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
+                    };
+                    if(index >= sizes.size())
                     {
-                        auto const distance = std::distance(mContents.begin(), it);
-                        if(sizes.size() > static_cast<size_t>(distance))
-                        {
-                            sizes.erase(sizes.begin() + distance);
-                        }
-                        it = mContents.erase(it);
+                        sizes.push_back(100);
                     }
-                    else
-                    {
-                        ++it;
-                    }
+                    
+                    mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
                 }
                 
-                for(size_t i = mContents.size(); i < anlAcsrs.size(); ++i)
-                {
-                    auto container = std::make_unique<Container>(anlAcsrs[i], timeZoomAcsr);
-                    anlWeakAssert(container != nullptr);
-                    if(container != nullptr)
-                    {
-                        container->content.onThumbnailResized = [&](int size)
-                        {
-                            mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
-                        };
-                
-                        mContents.push_back(std::move(container));
-                        if(i >= sizes.size())
-                        {
-                            sizes.push_back(100);
-                        }
-                    }
-                }
-                
-                std::sort(mContents.begin(), mContents.end(), [&](auto const& lhs, auto const& rhs)
-                {
-                    auto lhsIt = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
-                    {
-                        return &(lhs->accessor) == &(anlAcsr.get());
-                    });
-                    auto rhsIt = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const anlAcsr)
-                    {
-                        return &(rhs->accessor) == &(anlAcsr.get());
-                    });
-                    return lhsIt < rhsIt;
-                });
-                
-                for(size_t i = 0; i < mContents.size(); ++i)
+                for(size_t i = index; i < mContents.size(); ++i)
                 {
                     mContents[i]->content.onRemove = [this, i]()
                     {
-                        auto const& anlAcsr = mAccessor.getAccessor<AttrType::analyzers>(i);
+                        auto const& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(i);
                         auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
                         auto const title = juce::translate("Remove Analysis");
                         auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsr.getAttr<Analyzer::AttrType::name>());
                         if(juce::AlertWindow::showOkCancelBox(icon, title, message))
                         {
-                            mAccessor.eraseAccessor<AttrType::analyzers>(i, NotificationType::synchronous);                            
+                            mAccessor.eraseAccessor<AcsrType::analyzers>(i, NotificationType::synchronous);
                         }
                     };
                 }
@@ -190,40 +182,16 @@ Document::Section::Section(Accessor& accessor)
                 }
             }
                 break;
-            case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-                break;
-            case AttrType::playheadPosition:
-            {
-                auto const time = acsr.getAttr<AttrType::playheadPosition>();
-                for(size_t i = 0; i < mContents.size(); ++i)
-                {
-                    mContents[i]->content.setTime(time);
-                }
-            };
-                break;
-            case AttrType::timeZoom:
-                break;
-            case AttrType::layoutHorizontal:
-            {
-                resized();
-                auto const pos = acsr.getAttr<AttrType::layoutHorizontal>();
-                for(size_t i = 0; i < mContents.size(); ++i)
-                {
-                    mContents[i]->content.setThumbnailSize(pos);
-                }
-            }
-                break;
-            case AttrType::layout:
+                
+            default:
                 break;
         }
+        
     };
     
     mZoomTimeRuler.onDoubleClick = [&]()
     {
-        auto& acsr = mAccessor.getAccessor<AttrType::timeZoom>(0);
+        auto& acsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     

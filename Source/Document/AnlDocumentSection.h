@@ -58,7 +58,7 @@ namespace Document
             
             Analyzer::Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
-            Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AttrType::zoom>(0)};
+            Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AcsrType::zoom>(0)};
             
             Analyzer::Thumbnail mThumbnail {mAccessor};
             Analyzer::InstantRenderer mInstantRenderer {mAccessor, mTimeZoomAccessor};
@@ -84,11 +84,11 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
+        Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         Playhead mPlayhead {mAccessor};
         std::vector<std::unique_ptr<Container>> mContents;
-        Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AttrType::layout>(0)};
-        Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AttrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
+        Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AcsrType::layout>(0)};
+        Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)
     };

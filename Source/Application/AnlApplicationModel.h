@@ -15,20 +15,19 @@ namespace Application
         , currentDocumentFile
     };
     
-    using Container = Model::Container
+    using AttrContainer = Model::Container
     < Model::Attr<AttrType::windowState, juce::String, AttrFlag::basic>
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, AttrFlag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, AttrFlag::basic>
     >;
     
     class Accessor
-    : public Model::Accessor<Accessor, Container>
+    : public Model::Accessor<Accessor, AttrContainer>
     {
     public:
-        using Model::Accessor<Accessor, Container>::Accessor;
-        using enum_type = Model::Accessor<Accessor, Container>::enum_type;
+        using Model::Accessor<Accessor, AttrContainer>::Accessor;
         
-        template <enum_type type, typename value_v>
+        template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
             if constexpr(type == AttrType::recentlyOpenedFilesList)
@@ -44,11 +43,11 @@ namespace Application
                     return copy;
                 };
                 
-                Anl::Model::Accessor<Accessor, Container>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+                Anl::Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
             }
             else
             {
-                Model::Accessor<Accessor, Container>::setAttr<type, value_v>(value, notification);
+                Model::Accessor<Accessor, AttrContainer>::setAttr<type, value_v>(value, notification);
             }
         }
     };

@@ -163,7 +163,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::DocumentSaveTemplate:
         {
             result.setInfo(juce::translate("Save Template..."), juce::translate("Save as a template"), "Application", 0);
-            result.setActive(!docAcsr.getAccessors<Document::AttrType::analyzers>().empty());
+            result.setActive(!docAcsr.getAccessors<Document::AcsrType::analyzers>().empty());
         }
             break;
             
@@ -213,7 +213,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(!docAcsr.getAccessors<Document::AttrType::analyzers>().empty());
+            result.setActive(!docAcsr.getAccessors<Document::AcsrType::analyzers>().empty());
         }
             break;
         case CommandIDs::AnalysisProperties:
@@ -305,7 +305,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             
         case CommandIDs::ZoomIn:
         {
-            auto const& zoomAcsr = docAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            auto const& zoomAcsr = docAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
             result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
@@ -313,7 +313,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             break;
         case CommandIDs::ZoomOut:
         {
-            auto const& zoomAcsr = docAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            auto const& zoomAcsr = docAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
             result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
@@ -360,7 +360,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             fileBased.setFile({});
-            Instance::get().getDocumentAccessor().fromContainer(
+            Instance::get().getDocumentAccessor().copyFrom(
+            Document::AttrContainer
             {
                   {juce::File{}}
                 , {false}
@@ -368,9 +369,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 , {false}
                 , {0.0}
                 , {144}
-                , {}
-                , {}
-                , {}
             }, NotificationType::synchronous);
             Instance::get().openFile(fc.getResult());
             
@@ -477,7 +475,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::ZoomIn:
         {
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            auto& zoomAcsr = documentAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            auto& zoomAcsr = documentAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / -100.0), NotificationType::synchronous);
@@ -486,7 +484,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::ZoomOut:
         {
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            auto& zoomAcsr = documentAcsr.getAccessor<Document::AttrType::timeZoom>(0);
+            auto& zoomAcsr = documentAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / 100.0), NotificationType::synchronous);
