@@ -335,65 +335,16 @@ std::unique_ptr<Analyzer::Processor> Analyzer::createProcessor(Accessor const& a
         return nullptr;
     }
     
-    auto processor = std::make_unique<Processor>(pluginInstance.release());
-    if(processor != nullptr)
+    if(pluginInstance->getOutputDescriptors().empty())
     {
-        processor->setParameters(accessor.getAttr<AttrType::parameters>());
-    }
-    return processor;
-}
-
-std::vector<Analyzer::Result> Analyzer::performAnalysis(Accessor const& accessor, juce::AudioFormatReader& audioFormatReader)
-{
-    auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
-    auto const lengthInSamples = audioFormatReader.lengthInSamples;
-    auto const sampleRate = audioFormatReader.sampleRate;
-    auto const featureIndex = accessor.getAttr<AttrType::feature>();
-    auto instance = createProcessor(accessor, sampleRate, AlertType::window);
-    if(instance == nullptr)
-    {
-        return {};
-    }
-    
-    auto const windowSize = instance->getWindowSize();
-    auto const stepSize = instance->getStepSize();
-
-    std::vector<Analyzer::Result> results;
-    
-    juce::AudioBuffer<float> buffer(numChannels, static_cast<int>(windowSize));
-    if(!instance->initialise(static_cast<size_t>(numChannels), stepSize, windowSize))
-    {
-        anlWeakAssert(false && "wrong initialization");
-        return results;
-    }
-    for(juce::int64 timeStamp = 0; timeStamp < lengthInSamples; timeStamp += stepSize)
-    {
-        auto const remaininSamples = std::min(lengthInSamples - timeStamp, static_cast<juce::int64>(windowSize));
-        audioFormatReader.read(buffer.getArrayOfWritePointers(), numChannels, timeStamp, static_cast<int>(remaininSamples));
-        auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(timeStamp), static_cast<unsigned int>(sampleRate));
-        auto result = instance->process(buffer.getArrayOfReadPointers(), rt);
-        auto it = result.find(static_cast<int>(featureIndex));
-        if(it != result.end())
+        if(alertType == AlertType::window)
         {
-            for(auto& that : it->second)
-            {
-                if(!that.hasTimestamp)
-                {
-                    that.hasDuration = true;
-                    that.timestamp = rt;
-                }
-            }
-            results.insert(results.end(), it->second.begin(), it->second.end());
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNNAME cannot be loaded because there is no analysis available.").replace("PLGNNAME", pluginInstance->getName()));
         }
-    }
-    auto result = instance->getRemainingFeatures();
-    auto it = result.find(static_cast<int>(featureIndex));
-    if(it != result.end())
-    {
-        results.insert(results.end(), it->second.cbegin(), it->second.cend());
+        return nullptr;
     }
     
-    return results;
+    return std::make_unique<Processor>(pluginInstance.release());
 }
 
 ANALYSE_FILE_END

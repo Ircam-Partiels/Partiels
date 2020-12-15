@@ -66,12 +66,27 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         if(instance != nullptr)
         {
             mAccessor.setAttr<AttrType::parameters>(instance->getParameters(), notification);
-            auto const feature = mAccessor.getAttr<AttrType::feature>();
-            if(!instance->hasZoomInfo(feature) && mAccessor.getAttr<AttrType::zoomMode>() == ZoomMode::plugin)
+            
+            // Sanitize the feature
             {
-                mAccessor.setAttr<AttrType::zoomMode>(ZoomMode::results, notification);
+                auto const descriptors = instance->getOutputDescriptors();
+                anlStrongAssert(!descriptors.empty());
+                if(!descriptors.empty() && mAccessor.getAttr<AttrType::feature>() >= descriptors.size())
+                {
+                    mAccessor.setAttr<AttrType::feature>(descriptors.size() - 1, notification);
+                }
+                auto const feature = mAccessor.getAttr<AttrType::feature>();
+                mAccessor.outputDescriptor = descriptors.size() > feature ? descriptors[feature] : OutputDescriptor{};
             }
-            JUCE_COMPILER_WARNING("sanitize feature");
+            
+            // Sanitize the zoom mode
+            {
+                auto const feature = mAccessor.getAttr<AttrType::feature>();
+                if(!instance->hasZoomInfo(feature) && mAccessor.getAttr<AttrType::zoomMode>() == ZoomMode::plugin)
+                {
+                    mAccessor.setAttr<AttrType::zoomMode>(ZoomMode::results, notification);
+                }
+            }
         }
         mProcessorManager.setInstance(instance);
     }
@@ -137,43 +152,22 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             }
             auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
             {
-                Zoom::Range range;
+                juce::Range<double> range;
                 for(auto const& result : results)
                 {
                     auto const& values = result.values;
                     auto const pair = std::minmax_element(values.cbegin(), values.cend());
                     if(pair.first != values.cend() && pair.second != values.cend())
                     {
-                        
+                        juce::Range<double> const newRange {static_cast<double>(*pair.first), static_cast<double>(*pair.second)};
+                        range = range.isEmpty() ? newRange : range.getUnionWith(newRange);
                     }
                 }
-                
-                auto const numDimension = results.front().values.size() + 1;
-                if(numDimension == 1)
-                {
-                    return {{0.0, 1.0}, 1.0};
-                }
-                else if(numDimension == 2)
-                {
-                    auto pair = std::minmax_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                    {
-                        return lhs.values[0] < rhs.values[0];
-                    });
-                    return {{static_cast<double>(pair.first->values[0]), static_cast<double>(pair.second->values[0])}, std::numeric_limits<double>::epsilon()};
-                }
-                else
-                {
-                    auto rit = std::max_element(results.cbegin(), results.cend(), [](auto const& lhs, auto const& rhs)
-                    {
-                        return lhs.values.size() < rhs.values.size();
-                    });
-                    return {{0.0, static_cast<double>(rit->values.size())}, 1.0};
-                }
+                return range.isEmpty() ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, std::numeric_limits<double>::epsilon());
             };
             
             auto const info = getZoomInfo();
             auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
-            
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
             zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
         }

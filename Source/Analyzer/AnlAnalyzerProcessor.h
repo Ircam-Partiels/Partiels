@@ -45,8 +45,7 @@ namespace Analyzer
     };
     
     std::unique_ptr<Processor> createProcessor(Accessor const& accessor, double sampleRate, AlertType alertType);
-    
-    std::vector<Analyzer::Result> performAnalysis(Accessor const& accessor, juce::AudioFormatReader& audioFormatReader);
+
 }
 
 ANALYSE_FILE_END

@@ -63,6 +63,7 @@ namespace Analyzer
         }
     };
     
+    using OutputDescriptor = Vamp::Plugin::OutputDescriptor;
     using ColorMap = tinycolormap::ColormapType;
     
     using AttrContainer = Model::Container
@@ -110,6 +111,8 @@ namespace Analyzer
                 return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
             }
         }
+        
+        OutputDescriptor outputDescriptor;
     };
 }
 
