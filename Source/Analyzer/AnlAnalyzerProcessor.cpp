@@ -281,7 +281,7 @@ bool Analyzer::Processor::performNextAudioBlock(std::vector<Analyzer::Result>& r
     auto const remaininSamples = std::min(lengthInSamples - position, static_cast<juce::int64>(windowSize));
     
     mAudioFormatReader->read(writePointers, numChannels, position, static_cast<int>(remaininSamples));
-    auto const rt = Vamp::RealTime::frame2RealTime(position, static_cast<unsigned int>(sampleRate));
+    auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));
     
     auto result = process(readPointers, rt);
     auto it = result.find(static_cast<int>(feature));
@@ -325,7 +325,7 @@ std::unique_ptr<Analyzer::Processor> Analyzer::createProcessor(Accessor const& a
         return nullptr;
     }
     
-    auto pluginInstance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), static_cast<int>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+    auto pluginInstance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
     if(pluginInstance == nullptr)
     {
         if(alertType == AlertType::window)
@@ -370,7 +370,7 @@ std::vector<Analyzer::Result> Analyzer::performAnalysis(Accessor const& accessor
     {
         auto const remaininSamples = std::min(lengthInSamples - timeStamp, static_cast<juce::int64>(windowSize));
         audioFormatReader.read(buffer.getArrayOfWritePointers(), numChannels, timeStamp, static_cast<int>(remaininSamples));
-        auto const rt = Vamp::RealTime::frame2RealTime(timeStamp, static_cast<unsigned int>(sampleRate));
+        auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(timeStamp), static_cast<unsigned int>(sampleRate));
         auto result = instance->process(buffer.getArrayOfReadPointers(), rt);
         auto it = result.find(static_cast<int>(featureIndex));
         if(it != result.end())
