@@ -13,6 +13,16 @@ Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExten
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    {
+        juce::ignoreUnused(acsr, attribute, index);
+        triggerAsyncUpdate();
+    };
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    {
+        juce::ignoreUnused(acsr, attribute, index);
+        triggerAsyncUpdate();
+    };
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mSavedStateAccessor.addListener(mListener, NotificationType::synchronous);
 }
