@@ -16,7 +16,7 @@ namespace Layout
         };
         
         using Container = Model::Container
-        < Model::Attr<AttrType::sizes, std::vector<int>, Model::AttrFlag::basic>
+        < Model::Attr<AttrType::sizes, std::vector<int>, Model::Flag::basic>
         >;
         
         class Accessor

@@ -24,9 +24,9 @@ namespace Zoom
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::globalRange, Range, Model::AttrFlag::notifying>
-    , Model::Attr<AttrType::minimumLength, double, Model::AttrFlag::notifying>
-    , Model::Attr<AttrType::visibleRange, Range, Model::AttrFlag::basic>
+    < Model::Attr<AttrType::globalRange, Range, Model::Flag::notifying>
+    , Model::Attr<AttrType::minimumLength, double, Model::Flag::notifying>
+    , Model::Attr<AttrType::visibleRange, Range, Model::Flag::basic>
     >;
     
     class Accessor

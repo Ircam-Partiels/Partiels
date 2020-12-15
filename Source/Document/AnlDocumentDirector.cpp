@@ -101,9 +101,12 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
                 zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
                 
-                for(size_t i = 0; i < mAnalyzers.size(); ++i)
+                for(auto const& anl : mAnalyzers)
                 {
-                    mAnalyzers[i]->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+                    if(anl != nullptr)
+                    {
+                        anl->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+                    }
                 }
             }
                 break;
@@ -132,13 +135,48 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
         {
             case AcsrType::analyzers:
             {
-                auto anlAcsrs = acsr.getAccessors<AcsrType::analyzers>();
-                for(size_t i = mAnalyzers.size(); i < anlAcsrs.size(); ++i)
+                anlStrongAssert(index <= mAnalyzers.size());
+                auto& anlAcsr = acsr.getAccessor<AcsrType::analyzers>(index);
+                auto director = std::make_unique<Analyzer::Director>(anlAcsr);
+                anlStrongAssert(director != nullptr);
+                if(director != nullptr)
                 {
-                    mAnalyzers.push_back(std::make_unique<Analyzer::Director>(anlAcsrs[i]));
-                    mAnalyzers[i]->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+                    director->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+                }
+                mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
+                
+                auto& layoutAcsr = acsr.getAccessor<AcsrType::layout>(0);
+                auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
+                if(sizes.size() < mAnalyzers.size())
+                {
+                    sizes.insert(sizes.begin() + static_cast<long>(index), 100);
+                    layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, notification);
                 }
             }
+                break;
+            case AcsrType::timeZoom:
+            case AcsrType::layout:
+                break;
+        }
+    };
+    
+    acsr.onAcsrErased = [&](AcsrType attribute, size_t index, NotificationType notification)
+    {
+        switch (attribute)
+        {
+            case AcsrType::analyzers:
+            {
+                anlStrongAssert(index < mAnalyzers.size());
+                mAnalyzers.erase(mAnalyzers.begin() + static_cast<long>(index));
+                
+                auto& layoutAcsr = acsr.getAccessor<AcsrType::layout>(0);
+                auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
+                sizes.erase(sizes.begin() + static_cast<long>(index));
+                layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, notification);
+            }
+                break;
+            case AcsrType::timeZoom:
+            case AcsrType::layout:
                 break;
         }
     };

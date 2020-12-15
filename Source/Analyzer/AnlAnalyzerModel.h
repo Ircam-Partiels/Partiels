@@ -68,18 +68,18 @@ namespace Analyzer
     using ColorMap = tinycolormap::ColormapType;
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::key, juce::String, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::name, juce::String, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::feature, size_t, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::zoomMode, ZoomMode, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::colour, juce::Colour, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::colourMap, ColorMap, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::results, std::vector<Result>, Model::AttrFlag::notifying>
+    < Model::Attr<AttrType::key, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::feature, size_t, Model::Flag::basic>
+    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::Flag::basic>
+    , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
+    , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
+    , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
+    , Model::Attr<AttrType::results, std::vector<Result>, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
+    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable, 1>
     >;
 
     class Accessor

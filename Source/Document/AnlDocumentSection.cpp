@@ -77,7 +77,7 @@ Document::Section::Section(Accessor& accessor)
     mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
     mZoomTimeRuler.setMaximumStringWidth(70.0);
     mZoomTimeRuler.setValueAsStringMethod([](double value)
-                                          {
+    {
         auto time = value;
         auto const hours = static_cast<int>(std::floor(time / 3600.0));
         time -= static_cast<double>(hours) * 3600.0;
@@ -128,15 +128,7 @@ Document::Section::Section(Accessor& accessor)
             {
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
                 auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
-                auto& layoutAcsr = mAccessor.getAccessor<AcsrType::layout>(0);
-                auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
                 
-                for(size_t i = 0; i < mContents.size() && i < sizes.size(); ++i)
-                {
-                    mContainer.setContent(i, nullptr, 100);
-                }
-                
-                layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, NotificationType::synchronous);
                 auto container = std::make_unique<Container>(anlAcsr, timeZoomAcsr);
                 anlStrongAssert(container != nullptr);
                 if(container != nullptr)
@@ -145,13 +137,8 @@ Document::Section::Section(Accessor& accessor)
                     {
                         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
                     };
-                    if(index >= sizes.size())
-                    {
-                        sizes.push_back(100);
-                    }
-                    
-                    mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
                 }
+                mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
                 
                 for(size_t i = index; i < mContents.size(); ++i)
                 {
@@ -168,8 +155,6 @@ Document::Section::Section(Accessor& accessor)
                     };
                 }
                 
-                layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, NotificationType::synchronous);
-                
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {
                     mContainer.setContent(i, &(mContents[i]->content), 100);
@@ -180,6 +165,27 @@ Document::Section::Section(Accessor& accessor)
                 {
                     mContents[i]->content.setThumbnailSize(pos);
                 }
+            }
+                break;
+                
+            default:
+                break;
+        }
+        
+    };
+    
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    {
+        switch(attribute)
+        {
+            case AcsrType::analyzers:
+            {
+                mContents.erase(mContents.begin() + static_cast<long>(index));
+                for(size_t i = 0; i < mContents.size(); ++i)
+                {
+                    mContainer.setContent(i, &(mContents[i]->content), 100);
+                }
+                resized();
             }
                 break;
                 

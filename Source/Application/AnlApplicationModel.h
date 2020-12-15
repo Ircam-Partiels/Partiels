@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    using AttrFlag = Model::AttrFlag;
+    using Flag = Model::Flag;
     
     enum class AttrType : size_t
     {
@@ -16,9 +16,9 @@ namespace Application
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::windowState, juce::String, AttrFlag::basic>
-    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, AttrFlag::basic>
-    , Model::Attr<AttrType::currentDocumentFile, juce::File, AttrFlag::basic>
+    < Model::Attr<AttrType::windowState, juce::String, Flag::basic>
+    , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
+    , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
     >;
     
     class Accessor

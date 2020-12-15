@@ -55,13 +55,13 @@ public:
         
         // Declare the data model container
         using ModelCtnr = Model::Container
-        < Model::Attr<AttrType::attr0, int, Model::AttrFlag::basic>
-        , Model::Attr<AttrType::attr1, int, Model::AttrFlag::notifying>
-        , Model::Attr<AttrType::attr2, float, Model::AttrFlag::saveable>
-        , Model::Attr<AttrType::attr3, std::vector<int>, Model::AttrFlag::ignored>
-        , Model::Attr<AttrType::attr4, std::string, Model::AttrFlag::notifying>
-        , Model::Attr<AttrType::attr5, std::vector<double>, Model::AttrFlag::saveable | Model::AttrFlag::comparable>
-        , Model::Attr<AttrType::attr6, DummyAttr, Model::AttrFlag::basic>
+        < Model::Attr<AttrType::attr0, int, Model::Flag::basic>
+        , Model::Attr<AttrType::attr1, int, Model::Flag::notifying>
+        , Model::Attr<AttrType::attr2, float, Model::Flag::saveable>
+        , Model::Attr<AttrType::attr3, std::vector<int>, Model::Flag::ignored>
+        , Model::Attr<AttrType::attr4, std::string, Model::Flag::notifying>
+        , Model::Attr<AttrType::attr5, std::vector<double>, Model::Flag::saveable | Model::Flag::comparable>
+        , Model::Attr<AttrType::attr6, DummyAttr, Model::Flag::basic>
         >;
         
         // Declare the data model accessor
@@ -76,11 +76,11 @@ public:
         
         beginTest("attribute flags");
         {
-            expect(magic_enum::enum_integer(Model::AttrFlag::ignored) == 0);
-            expect(magic_enum::enum_integer(Model::AttrFlag::notifying) == 1);
-            expect(magic_enum::enum_integer(Model::AttrFlag::saveable) == 2);
-            expect(magic_enum::enum_integer(Model::AttrFlag::comparable) == 4);
-            expect(magic_enum::enum_integer(Model::AttrFlag::basic) == 7);
+            expect(magic_enum::enum_integer(Model::Flag::ignored) == 0);
+            expect(magic_enum::enum_integer(Model::Flag::notifying) == 1);
+            expect(magic_enum::enum_integer(Model::Flag::saveable) == 2);
+            expect(magic_enum::enum_integer(Model::Flag::comparable) == 4);
+            expect(magic_enum::enum_integer(Model::Flag::basic) == 7);
         }
         
         beginTest("accessor default constructor");

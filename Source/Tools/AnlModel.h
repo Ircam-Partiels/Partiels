@@ -9,7 +9,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Model
 {
-    enum AttrFlag
+    enum Flag
     {
           ignored = 0 << 0
         , notifying = 1 << 0
@@ -18,7 +18,7 @@ namespace Model
         , basic = notifying | saveable | comparable
     };
     
-    static constexpr int resizable = 0;
+    static constexpr size_t resizable = 0;
     
     //! @brief The private implementation of an attribute
     template<typename enum_t, enum_t index_v, typename value_t, int flags_v>
@@ -72,7 +72,7 @@ namespace Model
 //        struct accessor_type {};
 //        struct attr_container_type {};
         enum enum_type : size_t {};
-        static int constexpr flags = AttrFlag::ignored;
+        static int constexpr flags = Flag::ignored;
     };
     using default_empty_container = Container<default_empty_accessor>;
     
@@ -186,6 +186,14 @@ namespace Model
         template <acsr_enum_type type>
         void eraseAccessor(size_t index, NotificationType const notification)
         {
+            auto& lock = getLock();
+            auto const canAccess = lock.exchange(false);
+            anlStrongAssert(canAccess == true);
+            if(!canAccess)
+            {
+                return;
+            }
+            
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             
             using sub_accessor_type = typename element_type::accessor_type;
@@ -196,14 +204,13 @@ namespace Model
             anlWeakAssert(backup != nullptr);
             accessors.erase(accessors.begin() + static_cast<long>(index));
             
-            // Detaches the mutex that prevent recurvise changes
-            backup->setLock(nullptr);
-            
             if(onAcsrErased != nullptr)
             {
+                lock.store(true);
                 onAcsrErased(type, index, notification);
+                lock.store(false);
             }
-            if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+            if constexpr((element_type::flags & Flag::notifying) != 0)
             {
                 mListeners.notify([=, this](Listener& listener) mutable
                 {
@@ -213,6 +220,10 @@ namespace Model
                     }
                 }, notification);
             }
+            
+            // Detaches the mutex that prevent recurvise changes
+            backup->setLock(nullptr);
+            lock = true;
         }
         
         //! @brief Gets an attribute from the container
@@ -251,7 +262,7 @@ namespace Model
                         lock.store(false);
                     }
                     
-                    if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+                    if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
                         mListeners.notify([=, this](Listener& listener)
                         {
@@ -294,7 +305,7 @@ namespace Model
             detail::for_each(mAttributes, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
                     static auto const enumname = std::string(magic_enum::enum_name(attr_type));
@@ -305,7 +316,7 @@ namespace Model
             detail::for_each(mAccessors, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr acsr_type = element_type::type;
                     static auto const enumname = std::string(magic_enum::enum_name(acsr_type));
@@ -337,7 +348,7 @@ namespace Model
             detail::for_each(mAttributes, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
@@ -348,7 +359,7 @@ namespace Model
             detail::for_each(mAccessors, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr acsr_type = element_type::type;
                     auto const enumname = std::string(magic_enum::enum_name(acsr_type));
@@ -407,7 +418,7 @@ namespace Model
             detail::for_each(accessor.mAttributes, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
                     static_cast<parent_t*>(this)->template setAttr<attr_type>(d.value, notification);
@@ -417,7 +428,7 @@ namespace Model
             detail::for_each(accessor.mAccessors, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & AttrFlag::saveable) != 0)
+                if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr acsr_type = element_type::type;
                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
@@ -474,7 +485,7 @@ namespace Model
                 if(result)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
-                    if constexpr((element_type::flags & AttrFlag::comparable) != 0)
+                    if constexpr((element_type::flags & Flag::comparable) != 0)
                     {
                         auto constexpr attr_type = element_type::type;
                         result = isEquivalentTo(getAttr<attr_type>(), d.value);
@@ -487,7 +498,7 @@ namespace Model
                 if(result)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
-                    if constexpr((element_type::flags & AttrFlag::comparable) != 0)
+                    if constexpr((element_type::flags & Flag::comparable) != 0)
                     {
                         auto constexpr acsr_type = element_type::type;
                         auto const acsrs = getAccessors<acsr_type>();
@@ -516,13 +527,10 @@ namespace Model
         {
             if(mListeners.add(listener))
             {
-                auto& lock = getLock();
-                auto const isLocked = lock.exchange(false);
-                
                 detail::for_each(mAttributes, [&](auto& d)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
-                    if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+                    if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
                         auto constexpr attr_type = element_type::type;
                         mListeners.notify([this, ptr = &listener](Listener& ltnr)
@@ -538,7 +546,7 @@ namespace Model
                 detail::for_each(mAccessors, [&](auto& d)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
-                    if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+                    if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
                         auto constexpr acsr_type = element_type::type;
                         auto const acsrs = getAccessors<acsr_type>();
@@ -554,8 +562,6 @@ namespace Model
                         }
                     }
                 });
-                
-                lock.store(isLocked);
             }
         }
         
@@ -574,11 +580,20 @@ namespace Model
         template <acsr_enum_type type>
         bool insertAccessor(long index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
         {
+            auto& lock = getLock();
+            auto const canAccess = lock.exchange(false);
+            anlStrongAssert(canAccess == true);
+            if(!canAccess)
+            {
+                return false;
+            }
+            
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             
             anlStrongAssert(accessor != nullptr);
             if(accessor == nullptr)
             {
+                lock = true;
                 return false;
             }
             
@@ -592,9 +607,11 @@ namespace Model
                 
                 if(onAcsrInserted != nullptr)
                 {
+                    lock.store(true);
                     onAcsrInserted(type, static_cast<size_t>(index), notification);
+                    lock.store(false);
                 }
-                if constexpr((element_type::flags & AttrFlag::notifying) != 0)
+                if constexpr((element_type::flags & Flag::notifying) != 0)
                 {
                     mListeners.notify([index, this](Listener& listener)
                     {
@@ -605,6 +622,7 @@ namespace Model
                     }, notification);
                 }
             }
+            lock = true;
             return true;
         }
         

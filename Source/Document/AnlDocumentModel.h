@@ -28,18 +28,18 @@ namespace Document
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::file, juce::File, Model::AttrFlag::basic>
-    , Model::Attr<AttrType::isLooping, bool, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
-    , Model::Attr<AttrType::gain, double, Model::AttrFlag::notifying | Model::AttrFlag::saveable>
-    , Model::Attr<AttrType::isPlaybackStarted, bool, Model::AttrFlag::notifying>
-    , Model::Attr<AttrType::playheadPosition, double, Model::AttrFlag::notifying>
-    , Model::Attr<AttrType::layoutHorizontal, int, Model::AttrFlag::basic>
+    < Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::isLooping, bool, Model::Flag::notifying | Model::Flag::saveable>
+    , Model::Attr<AttrType::gain, double, Model::Flag::notifying | Model::Flag::saveable>
+    , Model::Attr<AttrType::isPlaybackStarted, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::playheadPosition, double, Model::Flag::notifying>
+    , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Acsr<AcsrType::layout, Layout::StrechableContainer::Accessor, Model::AttrFlag::saveable, 1>
-    , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::AttrFlag::basic, Model::resizable>
+    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::saveable, 1>
+    , Model::Acsr<AcsrType::layout, Layout::StrechableContainer::Accessor, Model::Flag::saveable, 1>
+    , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::Flag::basic, Model::resizable>
     >;
     
     //! @todo Check if the zoom state is well initialized
