@@ -3,13 +3,8 @@
 #include "AnlDocumentModel.h"
 
 #include "../Layout/AnlLayout.h"
-#include "../Zoom/AnlZoomRuler.h"
-#include "../Zoom/AnlZoomScrollBar.h"
 #include "../Plugin/AnlPluginListTable.h"
-#include "../Analyzer/AnlAnalyzerThumbnail.h"
-#include "../Analyzer/AnlAnalyzerTimeRenderer.h"
-#include "../Analyzer/AnlAnalyzerInstantRenderer.h"
-#include "../Analyzer/AnlAnalyzerProcessor.h"
+#include "../Analyzer/AnlAnalyzerSection.h"
 #include "AnlDocumentPlayhead.h"
 
 ANALYSE_FILE_BEGIN
@@ -24,7 +19,6 @@ namespace Document
         enum ColourIds : int
         {
               backgroundColourId = 0x2000400
-            , sectionColourId = 0x2000401
         };
         
         Section(Accessor& accessor);
@@ -36,54 +30,23 @@ namespace Document
         
     private:
         
-        class Content
-        : public juce::Component
-        {
-        public:
-            
-            Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr);
-            ~Content() override = default;
-            
-            std::function<void(void)> onAnalyse = nullptr;
-            std::function<void(void)> onRemove = nullptr;
-            std::function<void(int)> onThumbnailResized = nullptr;
-            
-            void setTime(double time);
-            void setThumbnailSize(int size);
-            
-            // juce::Component
-            void resized() override;
-            void paint(juce::Graphics& g) override;
-        private:
-            
-            Analyzer::Accessor& mAccessor;
-            Zoom::Accessor& mTimeZoomAccessor;
-            Zoom::Accessor& mValueZoomAccessor {mAccessor.getAccessor<Analyzer::AcsrType::zoom>(0)};
-            
-            Analyzer::Thumbnail mThumbnail {mAccessor};
-            Analyzer::InstantRenderer mInstantRenderer {mAccessor, mTimeZoomAccessor};
-            Zoom::Ruler mRuler {mValueZoomAccessor, Zoom::Ruler::Orientation::vertical};
-            Layout::ResizerBar mResizerBar {Layout::ResizerBar::Orientation::vertical};
-            Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
-            Zoom::ScrollBar mScrollbar {mValueZoomAccessor, Zoom::ScrollBar::Orientation::vertical, true};
-        };
-        
         struct Container
         {
         public:
-            Container(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr)
-            : content(acsr, timeZoomAcsr)
+            Container(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr, juce::Component& separator)
+            : content(acsr, timeZoomAcsr, separator)
             , accessor(acsr)
             {
             }
             
-            Content content;
+            Analyzer::Section content;
             Analyzer::Accessor& accessor;
         };
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
+        Layout::ResizerBar mResizerBar {Layout::ResizerBar::Orientation::vertical};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         Playhead mPlayhead {mAccessor};
         std::vector<std::unique_ptr<Container>> mContents;

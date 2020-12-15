@@ -17,6 +17,8 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 Document::Director::~Director()
 {
     mAccessor.onAttrUpdated = nullptr;
+    mAccessor.onAccessorInserted = nullptr;
+    mAccessor.onAccessorErased = nullptr;
 }
 
 void Document::Director::addAnalysis(AlertType alertType)
@@ -36,7 +38,8 @@ void Document::Director::addAnalysis(AlertType alertType)
         }
         
         auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
-        if(!mAccessor.insertAccessor<Document::AcsrType::analyzers>(-1, NotificationType::synchronous))
+        auto const index = mAccessor.getNumAccessors<AcsrType::analyzers>();
+        if(!mAccessor.insertAccessor<AcsrType::analyzers>(index, NotificationType::synchronous))
         {
             if(alertType == AlertType::window)
             {
@@ -129,9 +132,9 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
         }
     };
     
-    acsr.onAcsrInserted = [&](AcsrType attribute, size_t index, NotificationType notification)
+    acsr.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
     {
-        switch (attribute)
+        switch (type)
         {
             case AcsrType::analyzers:
             {
@@ -160,9 +163,9 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
         }
     };
     
-    acsr.onAcsrErased = [&](AcsrType attribute, size_t index, NotificationType notification)
+    acsr.onAccessorErased = [&](AcsrType type, size_t index, NotificationType notification)
     {
-        switch (attribute)
+        switch (type)
         {
             case AcsrType::analyzers:
             {

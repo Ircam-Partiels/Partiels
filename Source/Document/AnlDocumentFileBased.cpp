@@ -13,14 +13,14 @@ Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExten
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr, attribute, index);
+        juce::ignoreUnused(acsr, type, index);
         triggerAsyncUpdate();
     };
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr, attribute, index);
+        juce::ignoreUnused(acsr, type, index);
         triggerAsyncUpdate();
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);

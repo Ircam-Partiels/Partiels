@@ -4,71 +4,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::Content::Content(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr)
-: mAccessor(acsr)
-, mTimeZoomAccessor(timeZoomAcsr)
-{
-    mThumbnail.onRemove = [&]()
-    {
-        if(onRemove != nullptr)
-        {
-            onRemove();
-        }
-    };
-    
-    mRuler.onDoubleClick = [&]()
-    {
-        auto& valueZoomAcsr = mAccessor.getAccessor<Analyzer::AcsrType::zoom>(0);
-        auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-    };
-    
-    mResizerBar.onMoved = [&](int position)
-    {
-        if(onThumbnailResized != nullptr)
-        {
-            onThumbnailResized(position + 4);
-        }
-    };
-    
-    addAndMakeVisible(mThumbnail);
-    addAndMakeVisible(mInstantRenderer);
-    addAndMakeVisible(mResizerBar);
-    addAndMakeVisible(mTimeRenderer);
-    addAndMakeVisible(mRuler);
-    addAndMakeVisible(mScrollbar);
-    setSize(80, 100);
-}
-
-void Document::Section::Content::setTime(double time)
-{
-    mInstantRenderer.setTime(time);
-}
-
-void Document::Section::Content::setThumbnailSize(int size)
-{
-    mResizerBar.setTopLeftPosition(size - 4, 0);
-    resized();
-}
-
-void Document::Section::Content::resized()
-{
-    auto bounds = getLocalBounds();
-    auto const resizerPos = mResizerBar.getX();
-    mScrollbar.setBounds(bounds.removeFromRight(8));
-    mRuler.setBounds(bounds.removeFromRight(16));
-    
-    mThumbnail.setBounds(bounds.removeFromLeft(24));
-    mInstantRenderer.setBounds(bounds.removeFromLeft(resizerPos - bounds.getX()));
-    mResizerBar.setBounds(bounds.removeFromLeft(4));
-    mTimeRenderer.setBounds(bounds);
-}
-
-void Document::Section::Content::paint(juce::Graphics& g)
-{
-    g.fillAll(findColour(ColourIds::sectionColourId, true));
-}
-
 Document::Section::Section(Accessor& accessor)
 : mAccessor(accessor)
 {
@@ -110,34 +45,28 @@ Document::Section::Section(Accessor& accessor)
             case AttrType::layoutHorizontal:
             {
                 resized();
-                auto const pos = acsr.getAttr<AttrType::layoutHorizontal>();
-                for(size_t i = 0; i < mContents.size(); ++i)
-                {
-                    mContents[i]->content.setThumbnailSize(pos);
-                }
             }
                 break;
         }
     };
     
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
-        switch(attribute)
+        juce::ignoreUnused(acsr);
+        switch(type)
         {
+            case AcsrType::timeZoom:
+            case AcsrType::layout:
+                break;
             case AcsrType::analyzers:
             {
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
                 auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 
-                auto container = std::make_unique<Container>(anlAcsr, timeZoomAcsr);
+                auto container = std::make_unique<Container>(anlAcsr, timeZoomAcsr, mResizerBar);
                 anlStrongAssert(container != nullptr);
                 if(container != nullptr)
                 {
-                    container->content.onThumbnailResized = [&](int size)
-                    {
-                        mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
-                    };
-                    
                     container->content.onRemove = [this, ptr = container.get()]()
                     {
                         auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
@@ -166,11 +95,6 @@ Document::Section::Section(Accessor& accessor)
                     mContainer.setContent(i, &(mContents[i]->content), 100);
                 }
                 resized();
-                auto const pos = acsr.getAttr<AttrType::layoutHorizontal>();
-                for(size_t i = 0; i < mContents.size(); ++i)
-                {
-                    mContents[i]->content.setThumbnailSize(pos);
-                }
             }
                 break;
                 
@@ -180,10 +104,14 @@ Document::Section::Section(Accessor& accessor)
         
     };
     
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType attribute, size_t index)
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
-        switch(attribute)
+        juce::ignoreUnused(acsr);
+        switch(type)
         {
+            case AcsrType::timeZoom:
+            case AcsrType::layout:
+                break;
             case AcsrType::analyzers:
             {
                 mContents.erase(mContents.begin() + static_cast<long>(index));
@@ -207,6 +135,11 @@ Document::Section::Section(Accessor& accessor)
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     
+    mResizerBar.onMoved = [&](int size)
+    {
+        mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
+    };
+    
     mPlayhead.setInterceptsMouseClicks(false, false);
     
     setSize(480, 200);
@@ -214,11 +147,13 @@ Document::Section::Section(Accessor& accessor)
     addAndMakeVisible(mContainer);
     addAndMakeVisible(mZoomTimeScrollBar);
     addAndMakeVisible(mPlayhead);
+    addAndMakeVisible(mResizerBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::Section::~Section()
 {
+    mContents.clear();
     mAccessor.removeListener(mListener);
 }
 
@@ -226,9 +161,10 @@ void Document::Section::resized()
 {
     auto bounds = getLocalBounds();
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
-    auto const right = getWidth() - 24;
+    auto const right = getWidth() - 32;
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
+    mResizerBar.setBounds(left - 2, bounds.getY(), 2, bounds.getHeight());
     mContainer.setBounds(bounds);
     mPlayhead.setBounds(bounds.withLeft(left).withRight(right));
 }

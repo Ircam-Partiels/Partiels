@@ -55,6 +55,35 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
         }
     };
     
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::zoom:
+            {
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(index);
+                zoomAcsr.addListener(mZoomListener, NotificationType::synchronous);
+                mZoomAccessors.insert(mZoomAccessors.begin() + static_cast<long>(index), zoomAcsr);
+            }
+                break;
+        }
+    };
+    
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::zoom:
+            {
+                mZoomAccessors[index].get().removeListener(mZoomListener);
+                mZoomAccessors.erase(mZoomAccessors.begin() + static_cast<long>(index));
+            }
+                break;
+        }
+    };
+    
     mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
@@ -62,12 +91,15 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::TimeRenderer::~TimeRenderer()
 {
+    for(auto& zoomAcsr : mZoomAccessors)
+    {
+        zoomAcsr.get().removeListener(mZoomListener);
+    }
     mZoomAccessor.removeListener(mZoomListener);
     mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);

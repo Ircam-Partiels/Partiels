@@ -20,10 +20,13 @@ namespace Analyzer
         void mouseMove(juce::MouseEvent const& event) override;
         void mouseEnter(juce::MouseEvent const& event) override;
         void mouseExit(juce::MouseEvent const& event) override;
+        
     private:
+        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         Zoom::Accessor& mZoomAccessor;
+        std::vector<std::reference_wrapper<Zoom::Accessor>> mZoomAccessors;
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
         juce::Image mImage;

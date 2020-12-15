@@ -33,7 +33,7 @@ namespace Analyzer
     
     enum class AcsrType : size_t
     {
-          zoom
+           zoom
     };
     
     enum class SignalType
@@ -78,7 +78,7 @@ namespace Analyzer
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable, 1>
+    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, Model::resizable>
     >;
 
     class Accessor
@@ -89,30 +89,38 @@ namespace Analyzer
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
         template <acsr_enum_type type>
-        bool insertAccessor(long index, NotificationType notification)
+        bool insertAccessor(size_t index, NotificationType notification)
         {
             if constexpr(type == AcsrType::zoom)
             {
-                auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
-                auto constexpr max = std::numeric_limits<double>::max() / 100.0;
-                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                static const Zoom::AttrContainer ctnr
+                if(index == 0)
                 {
-                      {{min, max}}
-                    , {epsilon}
-                    , {{min, max}}
-                };
-                
-                auto accessor = std::make_unique<Zoom::Accessor>(ctnr);
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<AcsrType::zoom>(index, std::move(accessor), notification);
+                    auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
+                    auto constexpr max = std::numeric_limits<double>::max() / 100.0;
+                    auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+                    static const Zoom::AttrContainer ctnr
+                    {
+                          {{min, max}}
+                        , {epsilon}
+                        , {{min, max}}
+                    };
+                    
+                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(ctnr), notification);
+                }
+                else if(index == 1)
+                {
+                    static const Zoom::AttrContainer ctnr
+                    {
+                          {{0.0, 1.0}}
+                        , {1.0}
+                        , {{0.0, 1.0}}
+                    };
+                    
+                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(ctnr), notification);
+                }
             }
-            else
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
-            }
+            return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
-        
-        OutputDescriptor outputDescriptor;
     };
 }
 

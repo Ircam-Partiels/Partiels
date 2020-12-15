@@ -51,7 +51,7 @@ namespace Document
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
         template <acsr_enum_type type>
-        bool insertAccessor(long index, NotificationType notification)
+        bool insertAccessor(size_t index, NotificationType notification)
         {
             if constexpr(type == AcsrType::analyzers)
             {
@@ -67,13 +67,9 @@ namespace Document
                     , {}
                 };
                 
-                auto accessor = std::make_unique<Analyzer::Accessor>(ctnr);
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::move(accessor), notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Analyzer::Accessor>(ctnr), notification);
             }
-            else
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
-            }
+            return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
     };
 }

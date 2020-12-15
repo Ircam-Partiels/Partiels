@@ -91,7 +91,9 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerTimeRenderer.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerTimeRenderer.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h)
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.h)
 
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h

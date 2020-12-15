@@ -56,6 +56,35 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
         }
     };
     
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::zoom:
+            {
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(index);
+                zoomAcsr.addListener(mZoomListener, NotificationType::synchronous);
+                mZoomAccessors.insert(mZoomAccessors.begin() + static_cast<long>(index), zoomAcsr);
+            }
+                break;
+        }
+    };
+    
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::zoom:
+            {
+                mZoomAccessors[index].get().removeListener(mZoomListener);
+                mZoomAccessors.erase(mZoomAccessors.begin() + static_cast<long>(index));
+            }
+                break;
+        }
+    };
+    
     mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
@@ -63,12 +92,15 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::zoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::InstantRenderer::~InstantRenderer()
 {
+    for(auto& zoomAcsr : mZoomAccessors)
+    {
+        zoomAcsr.get().removeListener(mZoomListener);
+    }
     mZoomAccessor.removeListener(mZoomListener);
     mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
@@ -121,36 +153,6 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
     }
     else if(results.cbegin()->values.size() > 1)
     {
-//        auto const bounds = getLocalBounds();
-//        auto const dheight = static_cast<double>(bounds.getHeight());
-//        auto const cellLenght = visibleRange.getLength();
-//
-//        auto const maxElements = static_cast<int>(it->values.size());
-//        auto const ratio = (it->values.size() * 0.25);
-//        auto const colorMap = mAccessor.getAttr<AttrType::colourMap>();
-//        auto valueToColour = [&](float const value)
-//        {
-//            auto const color = tinycolormap::GetColor(static_cast<double>(value) / ratio, colorMap);
-//            return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
-//        };
-//
-//        auto const width = bounds.getWidth();
-//        auto const height = bounds.getHeight();
-//        auto pixelToCell = [&](int i)
-//        {
-//            return (1.0 - (static_cast<double>(i) / dheight)) * cellLenght + visibleRange.getStart();
-//        };
-//
-//        for(int i = 0; i < height - 1; ++i)
-//        {
-//            auto const cell = static_cast<int>(std::floor(pixelToCell(i)));
-//            auto const next = std::min(std::max(static_cast<int>(std::ceil(pixelToCell(i+1))), maxElements - 1), cell + 1);
-//            auto sum = std::accumulate(it->values.cbegin()+cell, it->values.cbegin()+next, 0.0f);
-//            sum /= static_cast<float>(next - cell);
-//            g.setColour(valueToColour(it->values[static_cast<size_t>(cell)]));
-//            g.fillRect(0, i, width, 1);
-//        }
-        
         auto image = mImage;
         
         auto const width = getWidth();

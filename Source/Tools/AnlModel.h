@@ -77,6 +77,7 @@ namespace Model
     using default_empty_container = Container<default_empty_accessor>;
     
     //! @brief The accessor a container
+    //! @todo Check insertion of non resizable accessors
     template<class parent_t, class attr_container_t, class acsr_container_t = default_empty_container>
     class Accessor
     {
@@ -106,7 +107,7 @@ namespace Model
                     auto constexpr size_flags = element_type::size_flags;
                     for(size_t index = 0; index < size_flags; ++index)
                     {
-                        if(!static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(static_cast<long>(index), NotificationType::synchronous))
+                        if(!static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, NotificationType::synchronous))
                         {
                             anlStrongAssert(false && "allocation failed");
                         }
@@ -116,7 +117,28 @@ namespace Model
         }
         
         //! @brief The destructor
-        ~Accessor() = default;
+        ~Accessor()
+        {
+            if constexpr(std::is_same<acsr_container_type, default_empty_container>::value == false)
+            {
+                detail::for_each(mAccessors, [&](auto const& d)
+                {
+                    using element_type = typename std::remove_reference<decltype(d)>::type;
+                    auto constexpr acsr_type = element_type::type;
+                    while(getNumAccessors<acsr_type>() > 0)
+                    {
+                        eraseAccessor<acsr_type>(getNumAccessors<acsr_type>() - 1, NotificationType::synchronous);
+                    }
+                });
+            }
+        }
+        
+        //! @brief Gets an accessor of a container
+        template <acsr_enum_type type>
+        auto getNumAccessors() const noexcept
+        {
+            return std::get<static_cast<size_t>(type)>(mAccessors).accessors.size();
+        }
 
         //! @brief Gets all the accessors of a container
         template <acsr_enum_type type>
@@ -175,7 +197,7 @@ namespace Model
         
         //! @brief Inserts a new accessor in the container
         template <acsr_enum_type type>
-        bool insertAccessor(long index, NotificationType const notification)
+        bool insertAccessor(size_t index, NotificationType const notification)
         {
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             using sub_accessor_type = typename element_type::accessor_type;
@@ -197,17 +219,17 @@ namespace Model
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             
             using sub_accessor_type = typename element_type::accessor_type;
-            static_assert(element_type::size_flags == 0, "container is not resizable");
             
             auto& accessors = std::get<static_cast<size_t>(type)>(mAccessors).accessors;
             auto backup = std::shared_ptr<sub_accessor_type>(accessors[index].release());
             anlWeakAssert(backup != nullptr);
+            
             accessors.erase(accessors.begin() + static_cast<long>(index));
             
-            if(onAcsrErased != nullptr)
+            if(onAccessorErased != nullptr)
             {
                 lock.store(true);
-                onAcsrErased(type, index, notification);
+                onAccessorErased(type, index, notification);
                 lock.store(false);
             }
             if constexpr((element_type::flags & Flag::notifying) != 0)
@@ -395,7 +417,7 @@ namespace Model
                         while(childs.size() > accessors.size())
                         {
                             auto const index = accessors.size();
-                            if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(static_cast<long>(index), notification))
+                            if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, notification))
                             {
                                 if(accessors[index] != nullptr)
                                 {
@@ -457,7 +479,7 @@ namespace Model
                             anlStrongAssert(d.accessors[index] != nullptr);
                             if(d.accessors[index] != nullptr)
                             {
-                                if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(static_cast<long>(index), notification))
+                                if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, notification))
                                 {
                                     if(accessors[index] != nullptr)
                                     {
@@ -569,14 +591,14 @@ namespace Model
         }
         
         std::function<void(attr_enum_type type, NotificationType notification)> onAttrUpdated = nullptr;
-        std::function<void(acsr_enum_type type, size_t index, NotificationType notification)> onAcsrInserted = nullptr;
-        std::function<void(acsr_enum_type type, size_t index, NotificationType notification)> onAcsrErased = nullptr;
+        std::function<void(acsr_enum_type type, size_t index, NotificationType notification)> onAccessorInserted = nullptr;
+        std::function<void(acsr_enum_type type, size_t index, NotificationType notification)> onAccessorErased = nullptr;
         
     protected:
         
         //! @brief Inserts a new accessor in the container
         template <acsr_enum_type type>
-        bool insertAccessor(long index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
+        bool insertAccessor(size_t index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
         {
             auto& lock = getLock();
             auto const canAccess = lock.exchange(false);
@@ -596,17 +618,16 @@ namespace Model
             }
             
             auto& accessors = std::get<static_cast<size_t>(type)>(mAccessors).accessors;
-            index = index < 0 ? static_cast<long>(accessors.size()) : std::max(index, static_cast<long>(accessors.size()));
-            auto it = accessors.insert(accessors.begin() + index, std::move(accessor));
+            auto it = accessors.insert(accessors.begin() + static_cast<long>(index), std::move(accessor));
             if(it != accessors.end())
             {
                 // Attaches the mutex to prevent recursive changes
                 (*it)->setLock(&getLock());
                 
-                if(onAcsrInserted != nullptr)
+                if(onAccessorInserted != nullptr)
                 {
                     lock.store(true);
-                    onAcsrInserted(type, static_cast<size_t>(index), notification);
+                    onAccessorInserted(type, index, notification);
                     lock.store(false);
                 }
                 if constexpr((element_type::flags & Flag::notifying) != 0)
@@ -615,7 +636,7 @@ namespace Model
                     {
                         if(listener.onAccessorInserted != nullptr)
                         {
-                            listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, static_cast<size_t>(index));
+                            listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, index);
                         }
                     }, notification);
                 }

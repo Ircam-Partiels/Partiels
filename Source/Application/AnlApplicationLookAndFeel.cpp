@@ -27,8 +27,8 @@ Application::LookAndFeel::LookAndFeel()
     
     setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
     setColour(Analyzer::Thumbnail::textColourId, textColour);
+    setColour(Analyzer::Section::sectionColourId, juce::Colours::black);
     
-    setColour(Document::Section::sectionColourId, juce::Colours::black);
     setColour(Document::Section::backgroundColourId, backgroundColour);
     
     setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);

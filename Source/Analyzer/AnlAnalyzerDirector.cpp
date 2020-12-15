@@ -36,6 +36,8 @@ Analyzer::Director::Director(Accessor& accessor)
 Analyzer::Director::~Director()
 {
     mAccessor.onAttrUpdated = nullptr;
+    mAccessor.onAccessorInserted = nullptr;
+    mAccessor.onAccessorErased = nullptr;
 }
 
 void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -66,22 +68,35 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         if(instance != nullptr)
         {
             mAccessor.setAttr<AttrType::parameters>(instance->getParameters(), notification);
+            auto const descriptors = instance->getOutputDescriptors();
             
             // Sanitize the feature
             {
-                auto const descriptors = instance->getOutputDescriptors();
                 anlStrongAssert(!descriptors.empty());
                 if(!descriptors.empty() && mAccessor.getAttr<AttrType::feature>() >= descriptors.size())
                 {
                     mAccessor.setAttr<AttrType::feature>(descriptors.size() - 1, notification);
                 }
-                auto const feature = mAccessor.getAttr<AttrType::feature>();
-                mAccessor.outputDescriptor = descriptors.size() > feature ? descriptors[feature] : OutputDescriptor{};
             }
             
-            // Sanitize the zoom mode
+            // Sanitize the zooms
             {
                 auto const feature = mAccessor.getAttr<AttrType::feature>();
+                auto const descriptor = descriptors.size() > feature ? descriptors[feature] : OutputDescriptor{};
+                if(descriptor.hasFixedBinCount)
+                {
+                    auto const numZoomAcsrs = std::min(descriptor.binCount, 2ul);
+                    while (mAccessor.getNumAccessors<AcsrType::zoom>() < numZoomAcsrs)
+                    {
+                        mAccessor.insertAccessor<AcsrType::zoom>(mAccessor.getNumAccessors<AcsrType::zoom>(), notification);
+                    }
+                    while(mAccessor.getNumAccessors<AcsrType::zoom>() > numZoomAcsrs)
+                    {
+                        auto const index = mAccessor.getNumAccessors<AcsrType::zoom>() - 1;
+                        mAccessor.eraseAccessor<AcsrType::zoom>(index, notification);
+                    }
+                }
+                
                 if(!instance->hasZoomInfo(feature) && mAccessor.getAttr<AttrType::zoomMode>() == ZoomMode::plugin)
                 {
                     mAccessor.setAttr<AttrType::zoomMode>(ZoomMode::results, notification);
@@ -126,6 +141,10 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
 
 void Analyzer::Director::updateZoomRange(NotificationType const notification)
 {
+    if(mAccessor.getNumAccessors<AcsrType::zoom>() == 0)
+    {
+        return;
+    }
     switch(mAccessor.getAttr<AttrType::zoomMode>())
     {
         case ZoomMode::plugin:
@@ -152,18 +171,20 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             }
             auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
             {
-                juce::Range<double> range;
+                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+                Zoom::Range range;
                 for(auto const& result : results)
                 {
                     auto const& values = result.values;
                     auto const pair = std::minmax_element(values.cbegin(), values.cend());
                     if(pair.first != values.cend() && pair.second != values.cend())
                     {
-                        juce::Range<double> const newRange {static_cast<double>(*pair.first), static_cast<double>(*pair.second)};
-                        range = range.isEmpty() ? newRange : range.getUnionWith(newRange);
+                        auto const start = static_cast<double>(*pair.first);
+                        auto const end = std::max(static_cast<double>(*pair.second), start + epsilon);
+                        range = range.isEmpty() ? Zoom::Range{start, end} : range.getUnionWith({start, end});
                     }
                 }
-                return range.isEmpty() ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, std::numeric_limits<double>::epsilon());
+                return range.isEmpty() ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
             };
             
             auto const info = getZoomInfo();
