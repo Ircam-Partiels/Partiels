@@ -69,8 +69,6 @@ namespace Model
     // Private
     struct default_empty_accessor
     {
-//        struct accessor_type {};
-//        struct attr_container_type {};
         enum enum_type : size_t {};
         static int constexpr flags = Flag::ignored;
     };
