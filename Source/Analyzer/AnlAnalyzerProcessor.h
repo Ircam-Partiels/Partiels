@@ -41,11 +41,11 @@ namespace Analyzer
         std::string mIdentifierWindowType;
         std::string mIdentifierWindowSize;
         std::string mIdentifierWindowOverlapping;
+        
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };
     
     std::unique_ptr<Processor> createProcessor(Accessor const& accessor, double sampleRate, AlertType alertType);
-
 }
 
 ANALYSE_FILE_END

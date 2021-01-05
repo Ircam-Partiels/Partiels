@@ -17,17 +17,16 @@ namespace Analyzer
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
-        
-        void setTime(double time);
+
     private:
         Accessor& mAccessor;
         Zoom::Accessor& mZoomAccessor;
         std::vector<std::reference_wrapper<Zoom::Accessor>> mZoomAccessors;
         Accessor::Listener mListener;
+        Accessor::Receiver mReceiver;
+        
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
-        double mTime = 0.0;
-        juce::Image mImage;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InstantRenderer)
     };

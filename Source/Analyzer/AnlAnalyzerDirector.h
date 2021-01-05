@@ -18,23 +18,28 @@ namespace Analyzer
         
     private:
         
-        void createProcessor(NotificationType const notification);
+        void sanitizeProcessor(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
+        void runRendering(NotificationType const notification);
         void updateZoomRange(NotificationType const notification);
         
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
         
-        enum class AnalysisState
+        enum class ProcessState
         {
               available
-            , abort
-            , run
+            , aborted
+            , running
+            , ended
         };
         
         Accessor& mAccessor;
-        std::atomic<AnalysisState> mState {AnalysisState::available};
-        std::future<std::tuple<std::vector<Analyzer::Result>, NotificationType>> mFuture;
+        std::atomic<ProcessState> mAnalysisState {ProcessState::available};
+        std::future<std::tuple<std::vector<Analyzer::Result>, NotificationType>> mAnalysisProcess;
+        
+        std::atomic<ProcessState> mRenderingState {ProcessState::available};
+        std::future<std::tuple<juce::Image, NotificationType>> mRenderingProcess;
         
         AtomicManager<Processor> mProcessorManager;
         AtomicManager<juce::AudioFormatReader> mAudioFormatReaderManager;

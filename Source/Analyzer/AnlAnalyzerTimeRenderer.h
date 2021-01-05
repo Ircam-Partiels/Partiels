@@ -25,11 +25,12 @@ namespace Analyzer
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        Accessor::Receiver mReceiver;
+        
         Zoom::Accessor& mZoomAccessor;
         std::vector<std::reference_wrapper<Zoom::Accessor>> mZoomAccessors;
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
-        juce::Image mImage;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeRenderer)
     };

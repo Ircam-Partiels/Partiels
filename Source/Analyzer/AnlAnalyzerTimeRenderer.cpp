@@ -12,45 +12,11 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
+    
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        if(attribute == AttrType::colour)
+        if(attribute == AttrType::colour || attribute == AttrType::results || attribute == AttrType::colourMap)
         {
-            repaint();
-        }
-        else if(attribute == AttrType::results || attribute == AttrType::colourMap)
-        {
-            auto const& results = acsr.getAttr<AttrType::results>();
-            if(results.empty())
-            {
-                repaint();
-                return;
-            }
-        
-            if(results.front().values.size() > 1)
-            {
-                auto const witdh = static_cast<int>(results.size());
-                auto const height = static_cast<int>(results.front().values.size());
-                mImage = juce::Image(juce::Image::PixelFormat::ARGB, witdh, height, false);
-                auto image = mImage;
-                juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
-                
-                auto valueToColour = [&](float const value)
-                {
-                    auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), acsr.getAttr<AttrType::colourMap>());
-                    return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
-                };
-                
-                for(int i = 0; i < witdh; ++i)
-                {
-                    for(int j = 0; j < height; ++j)
-                    {
-                        auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
-                        data.setPixelColour(i, height - 1 - j, colour);
-                    }
-                }
-            }
-            
             repaint();
         }
     };
@@ -84,12 +50,29 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
         }
     };
     
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    {
+        juce::ignoreUnused(acsr, value);
+        switch(signal)
+        {
+            case SignalType::analyse:
+            case SignalType::time:
+                break;
+            case SignalType::image:
+            {
+                repaint();
+            }
+                break;
+        }
+    };
+    
     mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
     };
     
+    mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
@@ -103,6 +86,7 @@ Analyzer::TimeRenderer::~TimeRenderer()
     mZoomAccessor.removeListener(mZoomListener);
     mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
+    mAccessor.removeReceiver(mReceiver);
 }
 
 void Analyzer::TimeRenderer::resized()
@@ -187,23 +171,27 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
     }
     else
     {
-        auto image = mImage;
+        auto image = mAccessor.getImage();
+        if(image == nullptr || image->isNull())
+        {
+            return;
+        }
         
         auto const vRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         
         auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - vRange.getEnd(), globalValueRange.getEnd() - vRange.getStart());
         
-        auto const deltaX = static_cast<float>(timeRange.getStart() / globalTimeRange.getLength() * static_cast<double>(image.getWidth()));
-        auto const deltaY = static_cast<float>(valueRange.getStart() / globalValueRange.getLength() * static_cast<double>(image.getHeight()));
+        auto const deltaX = static_cast<float>(timeRange.getStart() / globalTimeRange.getLength() * static_cast<double>(image->getWidth()));
+        auto const deltaY = static_cast<float>(valueRange.getStart() / globalValueRange.getLength() * static_cast<double>(image->getHeight()));
         
-        auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image.getWidth()));
-        auto const scaleY = static_cast<float>(globalValueRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
+        auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image->getWidth()));
+        auto const scaleY = static_cast<float>(globalValueRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image->getHeight()));
         
         auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
         
         g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-        g.drawImageTransformed(image, transform);
+        g.drawImageTransformed(*image.get(), transform);
     }
 }
 

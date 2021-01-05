@@ -28,7 +28,7 @@ namespace Analyzer
         
         Layout::PropertyLabel mPluginName {juce::translate("Plugin"), juce::translate("The name of the analyzer")};
         Layout::PropertyComboBox mFeatures {juce::translate("Feature"), juce::translate("The active feature of the analyzer")};
-        Layout::PropertyTitle mAnalysisParameters {juce::translate("Analysis Parameters"), juce::translate("The analysis parameters of the pluganalyzerin")};
+        Layout::PropertyTitle mAnalysisParameters {juce::translate("Analysis Parameters"), juce::translate("The analysis parameters of the analyzer")};
         std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mProperties;
         
         Layout::PropertyTitle mGraphicalParameters {juce::translate("Graphical Parameters"), juce::translate("The graphical parameters of the analyzer")};

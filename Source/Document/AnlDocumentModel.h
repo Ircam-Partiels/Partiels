@@ -42,35 +42,12 @@ namespace Document
     , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::Flag::basic, Model::resizable>
     >;
     
-    //! @todo Check if the zoom state is well initialized
     //! @todo Use a default gain to 1
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
-        
-        template <acsr_enum_type type>
-        bool insertAccessor(size_t index, NotificationType notification)
-        {
-            if constexpr(type == AcsrType::analyzers)
-            {
-                static const Analyzer::AttrContainer ctnr
-                {
-                      {""}
-                    , {""}
-                    , {0}
-                    , {{}}
-                    , {Analyzer::ZoomMode::plugin}
-                    , {juce::Colours::black}
-                    , {Analyzer::ColorMap::Inferno}
-                    , {}
-                };
-                
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Analyzer::Accessor>(ctnr), notification);
-            }
-            return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
-        }
     };
 }
 

@@ -1,23 +1,48 @@
-#include "AnlAnalyzerInstantRenderer.h"
-#include "AnlAnalyzerProcessor.h"
-#include "../Tools/AnlMisc.h"
-#include "../../tinycolormap/include/tinycolormap.hpp"
+#include "AnlAnalyzerRendererFrame.h"
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor)
+Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccessor)
 : mAccessor(accessor)
 , mZoomAccessor(zoomAccessor)
 {
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
+    
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        if(attribute == AttrType::colour || attribute == AttrType::results || attribute == AttrType::colourMap)
+        switch(attribute)
         {
-            repaint();
+            case AttrType::key:
+            case AttrType::name:
+            case AttrType::feature:
+            case AttrType::parameters:
+            case AttrType::zoomMode:
+            case AttrType::colourMap:
+                break;
+            case AttrType::colour:
+            case AttrType::results:
+            {
+                repaint();
+            }
+                break;
+        }
+    };
+    
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    {
+        juce::ignoreUnused(acsr, value);
+        switch(signal)
+        {
+            case SignalType::analyse:
+            case SignalType::time:
+            case SignalType::image:
+            {
+                repaint();
+            }
+                break;
         }
     };
     
@@ -50,21 +75,6 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
         }
     };
     
-    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
-    {
-        juce::ignoreUnused(acsr, value);
-        switch(signal)
-        {
-            case SignalType::analyse:
-            case SignalType::time:
-            case SignalType::image:
-            {
-                repaint();
-            }
-                break;
-        }
-    };
-    
     mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
@@ -76,7 +86,7 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
-Analyzer::InstantRenderer::~InstantRenderer()
+Analyzer::Renderer::Frame::~Frame()
 {
     for(auto& zoomAcsr : mZoomAccessors)
     {
@@ -88,12 +98,12 @@ Analyzer::InstantRenderer::~InstantRenderer()
     mAccessor.removeReceiver(mReceiver);
 }
 
-void Analyzer::InstantRenderer::resized()
+void Analyzer::Renderer::Frame::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
 }
 
-void Analyzer::InstantRenderer::paint(juce::Graphics& g)
+void Analyzer::Renderer::Frame::paint(juce::Graphics& g)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -108,14 +118,13 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
         return;
     }
     
-    auto const time = mAccessor.getTime();
+    auto const realTime = Vamp::RealTime::fromSeconds(0.0);
     
     if(results.cbegin()->values.size() == 1)
     {
-        auto const realTime = Vamp::RealTime::fromSeconds(time);
-        auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& t)
+        auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& time)
         {
-            return result.timestamp < t;
+            return result.timestamp < time;
         });
         if(it == results.cend())
         {
@@ -137,7 +146,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
     else if(results.cbegin()->values.size() > 1)
     {
         auto image = mAccessor.getImage();
-        if(image == nullptr)
+        if(image == nullptr && image->isValid())
         {
             return;
         }
@@ -150,7 +159,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
         
         auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - visibleRange.getEnd(), globalValueRange.getEnd() - visibleRange.getStart());
         
-        auto const deltaX = static_cast<float>(time / globalTimeRange.getLength() * static_cast<double>(image->getWidth()));
+        auto const deltaX = static_cast<float>(0.0 / globalTimeRange.getLength() * static_cast<double>(image->getWidth()));
         auto const deltaY = static_cast<float>(valueRange.getStart() / globalValueRange.getLength() * static_cast<double>(image->getHeight()));
         
         auto const scaleX = static_cast<float>(static_cast<double>(width) * static_cast<double>(image->getWidth()));

@@ -12,13 +12,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    enum class ZoomMode
-    {
-          plugin
-        , results
-        , custom
-    };
-    
     enum class AttrType : size_t
     {
           key
@@ -28,7 +21,9 @@ namespace Analyzer
         , zoomMode
         , colour
         , colourMap
+        , resultsType
         , results
+        , warnings
     };
     
     enum class AcsrType : size_t
@@ -36,9 +31,33 @@ namespace Analyzer
            zoom
     };
     
+    enum class ZoomMode
+    {
+          plugin    //! The zoom is based on the plugin informations
+        , results   //! The zoom is based on the results dimension
+        , custom    //! The zoom is defined by the user
+    };
+    
     enum class SignalType
     {
-          analysisRunning
+          analyse
+        , image
+        , time
+    };
+    
+    enum class ResultsType
+    {
+          undefined //! The results are undefined (might not be supported)
+        , points    //! The results are time points
+        , segments  //! The results are segments
+        , matrix    //! The results is a matrix
+    };
+    
+    enum class WarningType
+    {
+          feature
+        , zoomMode
+        , resultType
     };
     
     struct Result
@@ -74,7 +93,9 @@ namespace Analyzer
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
+    , Model::Attr<AttrType::resultsType, ResultsType, Model::Flag::notifying>
     , Model::Attr<AttrType::results, std::vector<Result>, Model::Flag::notifying>
+    , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -88,6 +109,20 @@ namespace Analyzer
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
+        Accessor()
+        : Accessor(AttrContainer(  {""}
+                                 , {""}
+                                 , {0}
+                                 , {{}}
+                                 , {ZoomMode::plugin}
+                                 , {juce::Colours::black}
+                                 , {ColorMap::Inferno}
+                                 , {ResultsType::undefined}
+                                 , {}
+                                 , {}))
+        {
+        }
+        
         template <acsr_enum_type type>
         bool insertAccessor(size_t index, NotificationType notification)
         {
@@ -98,29 +133,25 @@ namespace Analyzer
                     auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
                     auto constexpr max = std::numeric_limits<double>::max() / 100.0;
                     auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                    static const Zoom::AttrContainer ctnr
-                    {
-                          {{min, max}}
-                        , {epsilon}
-                        , {{min, max}}
-                    };
-                    
-                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(ctnr), notification);
+                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{min, max}, epsilon), notification);
                 }
                 else if(index == 1)
                 {
-                    static const Zoom::AttrContainer ctnr
-                    {
-                          {{0.0, 1.0}}
-                        , {1.0}
-                        , {{0.0, 1.0}}
-                    };
-                    
-                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(ctnr), notification);
+                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, 1.0}, 1.0), notification);
                 }
             }
             return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
+        
+        std::shared_ptr<juce::Image const> getImage() const;
+        void setImage(std::shared_ptr<juce::Image> image, NotificationType notification);
+        
+        double getTime() const;
+        void setTime(double time, NotificationType notification);
+    private:
+            
+        AtomicManager<juce::Image> mImageManager;
+        std::atomic<double> mTime;
     };
 }
 

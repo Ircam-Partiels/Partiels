@@ -78,7 +78,7 @@ Analyzer::Section::~Section()
 
 void Analyzer::Section::setTime(double time)
 {
-    mInstantRenderer.setTime(time);
+    mAccessor.setTime(time, NotificationType::synchronous);
 }
 
 void Analyzer::Section::resized()
