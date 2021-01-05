@@ -54,6 +54,11 @@ namespace Zoom
             }
         }
         
+        void sendSignal(SignalType signal, juce::var value, NotificationType const notification)
+        {
+            Broadcaster<Accessor, SignalType>::sendSignal(signal, value, notification);
+        }
+        
     private:
         static Range sanitize(Range const& visible, Range const& global, double minLength);
     };

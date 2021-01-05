@@ -31,6 +31,8 @@ public:
         mReceivers.remove(listener);
     }
     
+protected:
+    
     void sendSignal(Signal signal, juce::var value, NotificationType const notification)
     {
         mReceivers.notify([=, this](Receiver& listener)
