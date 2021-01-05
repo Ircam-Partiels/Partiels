@@ -35,7 +35,7 @@ std::map<juce::String, PluginList::Description> PluginList::Scanner::getPluginDe
     {
         Description description;
         auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(defaultSampleRate)));
-        if (plugin != nullptr)
+        if(plugin != nullptr)
         {
             description.name = plugin->getName();
             description.maker = plugin->getMaker();
