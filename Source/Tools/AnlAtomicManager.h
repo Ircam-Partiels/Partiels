@@ -24,7 +24,7 @@ public:
 #endif
     }
     
-    std::shared_ptr<T> const getInstance() const
+    std::shared_ptr<const T> getInstance() const
     {
 #if __cpp_lib_atomic_shared_ptr
         return mInstance.load();
