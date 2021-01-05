@@ -35,6 +35,11 @@ namespace Zoom
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
+
+        Accessor(Range const& range, double const epsilon)
+        : Accessor(AttrContainer({range}, {epsilon}, {range}))
+        {
+        }
         
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
