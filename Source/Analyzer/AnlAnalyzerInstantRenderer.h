@@ -26,8 +26,6 @@ namespace Analyzer
         
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InstantRenderer)
     };
 }
 

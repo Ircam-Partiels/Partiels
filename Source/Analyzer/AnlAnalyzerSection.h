@@ -49,8 +49,6 @@ namespace Analyzer
         
         std::unique_ptr<Zoom::Ruler> mRuler;
         std::unique_ptr<Zoom::ScrollBar> mScrollbar;
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)
     };
 }
 

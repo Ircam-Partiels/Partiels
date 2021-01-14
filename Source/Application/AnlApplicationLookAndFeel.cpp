@@ -15,7 +15,11 @@ Application::LookAndFeel::LookAndFeel()
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
     setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
 
+    setColour(Layout::PropertySection::ColourIds::headerBackgroundColourId, backgroundColour);
+    setColour(Layout::PropertySection::ColourIds::headerTitleColourId, textColour);
+    setColour(Layout::PropertySection::ColourIds::headerButtonColourId, textColour);
     setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
+
     setColour(Layout::StrechableContainer::Section::resizerActiveColourId, rulerColour.brighter());
     setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, backgroundColour.darker());
     
@@ -57,6 +61,53 @@ Application::LookAndFeel::LookAndFeel()
     
     // juce::AlertWindow
     setColour(juce::AlertWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+}
+
+int Application::LookAndFeel::getSeparatorHeight(Layout::PropertySection const& section) const
+{
+    juce::ignoreUnused(section);
+    return 2;
+}
+
+int Application::LookAndFeel::getHeaderHeight(Layout::PropertySection const& section) const
+{
+    juce::ignoreUnused(section);
+    return 20;
+}
+
+juce::Font Application::LookAndFeel::getHeaderFont(Layout::PropertySection const& section, int headerHeight) const
+{
+     juce::ignoreUnused(section);
+    return juce::Font(static_cast<float>(headerHeight - 2));
+}
+
+void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, Layout::PropertySection const& section, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
+{
+    auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
+    g.setColour(section.findColour(Layout::PropertySection::headerBackgroundColourId).darker(contrast));
+    g.fillRect(area);
+}
+
+void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, Layout::PropertySection const& section, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const
+{
+    juce::ignoreUnused(isMouseDown, isMouseOver);
+    auto const bounds = area.reduced(4).toFloat();
+    juce::Path path;
+    path.addTriangle(bounds.getTopLeft(), bounds.getTopRight(), {bounds.getCentreX(), bounds.getBottom() - 2});
+    auto const rotation = static_cast<float>(1.0 - sizeRatio) * juce::MathConstants<float>::pi / 2.0f;
+    path.applyTransform(juce::AffineTransform::rotation(rotation, bounds.getCentre().getX(), bounds.getCentre().getY()));
+    path.closeSubPath();
+    
+    g.setColour(section.findColour(Layout::PropertySection::headerButtonColourId, true));
+    g.fillPath(path);
+}
+
+void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, Layout::PropertySection const& section, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const
+{
+    juce::ignoreUnused(isMouseDown, isMouseOver);
+    g.setFont(font);
+    g.setColour(section.findColour(Layout::PropertySection::headerTitleColourId, true));
+    g.drawFittedText(section.getTitle(), area.withTrimmedLeft(5), juce::Justification::centredLeft, 1, 1.0f);
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()

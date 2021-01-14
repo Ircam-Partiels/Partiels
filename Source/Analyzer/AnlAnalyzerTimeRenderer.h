@@ -30,8 +30,6 @@ namespace Analyzer
         Zoom::Accessor& mZoomAccessor;
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeRenderer)
     };
 }
 

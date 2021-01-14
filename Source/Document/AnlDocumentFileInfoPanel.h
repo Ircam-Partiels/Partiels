@@ -42,9 +42,7 @@ namespace Document
         
         std::vector<std::unique_ptr<Layout::PropertyLabel>> mMetaDataPanels;
         
-        Layout::PropertySection mPropertySection;
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileInfoPanel)
+        Layout::PropertySection mPropertySection {"", false};
     };
 }
 

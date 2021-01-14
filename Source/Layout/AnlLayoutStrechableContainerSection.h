@@ -96,8 +96,6 @@ namespace Layout
             juce::Viewport mViewport;
             juce::Component mInnerContainer;
             std::vector<std::unique_ptr<Holder>> mHolders;
-            
-            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)
         };
     }
 }

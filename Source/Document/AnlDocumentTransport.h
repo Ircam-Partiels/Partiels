@@ -25,8 +25,6 @@ namespace Document
         
         juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
         juce::Slider mVolumeSlider {juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Transport)
     };
 }
 

@@ -7,14 +7,13 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
 , mAudioFormatManager(audioFormatManager)
 , mFileBasedDocument(fileBasedDocument)
 {
-    using Position = Layout::PropertyPanelBase::Positioning;
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
             case AttrType::file:
             {
-                mPropertySection.setPanels({}, Position::left);
+                mPropertySection.setPanels({});
                 
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
@@ -62,7 +61,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                         mMetaDataPanels.push_back(std::move(property));
                     }
                 }
-                mPropertySection.setPanels(panels, Position::left);
+                mPropertySection.setPanels(panels);
                 resized();
             }
                 break;

@@ -2,9 +2,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Layout::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip, Positioning p)
-: positioning(p)
-, content(std::move(c))
+Layout::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip)
+: content(std::move(c))
 {
     title.setText(name + ":", juce::NotificationType::dontSendNotification);
     title.setTooltip(tooltip);
@@ -32,24 +31,14 @@ void Layout::PropertyPanelBase::resized()
     auto const bdSize = titleLookAndFeel.getLabelBorderSize(title);
     
     auto bounds = getLocalBounds();
-    auto const isLeft = positioning == Positioning::left;
-    if(isLeft)
-    {
-        auto const textWidth = font.getStringWidth(title.getText());
-        auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
-        title.setBounds(bounds.removeFromLeft(textSize));
-    }
-    else
-    {
-        auto const textHeight = static_cast<int>(std::ceil(font.getHeight()));
-        auto const textSize = textHeight + bdSize.getTop() + bdSize.getBottom();
-        title.setBounds(bounds.removeFromTop(textSize));
-    }
+    auto const textWidth = font.getStringWidth(title.getText());
+    auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
+    title.setBounds(bounds.removeFromLeft(textSize));
     if(content != nullptr)
     {
         content->setBounds(bounds);
     }
-    title.setJustificationType(isLeft ? juce::Justification::centredLeft : juce::Justification::centredTop);
+    title.setJustificationType(juce::Justification::centredLeft);
 }
 
 Layout::PropertyTitle::PropertyTitle(juce::String const& name, juce::String const& tooltip)

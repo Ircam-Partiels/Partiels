@@ -30,8 +30,6 @@ namespace Analyzer
             Zoom::Accessor::Listener mZoomListener;
             juce::Label mInformation;
             juce::Image mImage;
-            
-            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Frame)
         };
     }
 }

@@ -13,16 +13,9 @@ namespace Layout
     {
     public:
         
-        enum Positioning
-        {
-            left = false, //!< The label postion is at the left of component
-            top = true //!< The label postion is on top of the component
-        };
-        
         juce::Label title;
-        Positioning positioning;
         
-        PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip = {}, Positioning p = Positioning::left);
+        PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip = {});
         ~PropertyPanelBase() override = default;
         
         // juce::Component

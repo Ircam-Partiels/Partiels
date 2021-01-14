@@ -9,7 +9,6 @@ namespace Analyzer
 {
     class PropertyPanel
     : public juce::Component
-    , private juce::ChangeListener
     {
     public:
         
@@ -20,14 +19,28 @@ namespace Analyzer
         void resized() override;
     private:
         
-        // juce::ChangeListener
-        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+        
+        class ColourSelector
+        : public juce::ColourSelector
+        , private juce::ChangeListener
+        {
+        public:
+            ColourSelector();
+            ~ColourSelector() override;
+            
+            std::function<void(juce::Colour const& colour)> onColourChanged = nullptr;
+        private:
+            // juce::ChangeListener
+            void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+        };
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Layout::PropertyLabel mPluginName {juce::translate("Plugin"), juce::translate("The name of the analyzer")};
+        Layout::PropertyLabel mAnalyzerName {juce::translate("Name"), juce::translate("The name of the analyzer")};
+        Layout::PropertyLabel mPluginName {juce::translate("Plugin"), juce::translate("The name of the plugin")};
         Layout::PropertyComboBox mFeatures {juce::translate("Feature"), juce::translate("The active feature of the analyzer")};
+        
         Layout::PropertyTitle mAnalysisParameters {juce::translate("Analysis Parameters"), juce::translate("The analysis parameters of the analyzer")};
         std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mProperties;
         
@@ -35,11 +48,7 @@ namespace Analyzer
         Layout::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
         Layout::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
         
-        Layout::PropertySection mPropertySection;
-    
-        juce::ColourSelector mColourSelector;
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PropertyPanel)
+        Layout::PropertySection mPropertySection {"PARAMETERS", true};
     };
 }
 

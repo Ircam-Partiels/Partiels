@@ -32,8 +32,6 @@ namespace Document
         Accessor::Listener mListener;
         juce::File mLastFile;
         Accessor mSavedStateAccessor;
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileBased)
     };
 }
 

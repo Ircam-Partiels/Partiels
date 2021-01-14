@@ -52,8 +52,6 @@ namespace Document
         std::vector<std::unique_ptr<Container>> mContents;
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AcsrType::layout>(0)};
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
-        
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Section)
     };
 }
 

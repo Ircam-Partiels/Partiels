@@ -220,7 +220,8 @@ void Analyzer::Director::runRendering(NotificationType const notification)
             return std::make_tuple(juce::Image(), notification);
         }
         
-        anlWeakAssert(results.front().values.size() == binCounts);
+        JUCE_COMPILER_WARNING("TOO ADD")
+        //anlWeakAssert(results.front().values.size() == binCounts);
         
         auto const witdh = static_cast<int>(results.size());
         auto const height = static_cast<int>(binCounts);

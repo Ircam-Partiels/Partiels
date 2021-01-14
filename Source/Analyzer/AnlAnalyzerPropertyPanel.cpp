@@ -4,6 +4,26 @@
 
 ANALYSE_FILE_BEGIN
 
+Analyzer::PropertyPanel::ColourSelector::ColourSelector()
+{
+    addChangeListener(this);
+}
+
+Analyzer::PropertyPanel::ColourSelector::~ColourSelector()
+{
+    removeChangeListener(this);
+}
+
+void Analyzer::PropertyPanel::ColourSelector::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    juce::ignoreUnused(source);
+    anlWeakAssert(source == this);
+    if(onColourChanged != nullptr)
+    {
+        onColourChanged(getCurrentColour());
+    }
+}
+
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 {
@@ -14,7 +34,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         {
             case AttrType::key:
             {
-                mPropertySection.setPanels({}, Layout::PropertyPanelBase::left);
+                mPropertySection.setPanels({});
                 mProperties.clear();
                 
                 auto instance = createProcessor(acsr, 44100.0, AlertType::silent);
@@ -110,7 +130,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 
-                mPropertySection.setPanels(panels, Layout::PropertyPanelBase::left);
+                mPropertySection.setPanels(panels);
                 setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
                 resized();
             }
@@ -155,6 +175,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         }
     };
     
+    mAnalyzerName.entry.setEnabled(true);
     mPluginName.entry.setEnabled(false);
     mFeatures.callback = [&](juce::ComboBox const& entry)
     {
@@ -163,8 +184,14 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     
     mColour.callback = [&](juce::TextButton const&)
     {
-        mColourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
-        juce::DialogWindow::showModalDialog("Set Colour", &mColourSelector, this, juce::Colours::black, true);
+        ColourSelector colourSelector;
+        colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
+        colourSelector.setSize(400, 300);
+        colourSelector.onColourChanged = [&](juce::Colour const& colour)
+        {
+            mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
+        };
+        juce::DialogWindow::showModalDialog("Set Colour", &colourSelector, this, juce::Colours::black, true);
     };
     mColourMap.callback = [&](juce::ComboBox const& entry)
     {
@@ -176,8 +203,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     
     addAndMakeVisible(mPropertySection);
     setSize(300, 200);
-    mColourSelector.setSize(400, 300);
-    mColourSelector.addChangeListener(this);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -189,13 +214,6 @@ Analyzer::PropertyPanel::~PropertyPanel()
 void Analyzer::PropertyPanel::resized()
 {
     mPropertySection.setBounds(getLocalBounds());
-}
-
-void Analyzer::PropertyPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
-{
-    juce::ignoreUnused(source);
-    anlWeakAssert(source == &mColourSelector);
-    mAccessor.setAttr<AttrType::colour>(mColourSelector.getCurrentColour(), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

@@ -8,32 +8,67 @@ namespace Layout
 {
     class PropertySection
     : public juce::Component
+    , private juce::Timer
     {
     public:
         
         enum ColourIds : int
         {
-            separatorColourId = 0x2000100
+              headerBackgroundColourId = 0x2000100
+            , headerTitleColourId
+            , headerButtonColourId
+            , separatorColourId
         };
         
         using PanelRef = std::reference_wrapper<PropertyPanelBase>;
-        using Positioning = PropertyPanelBase::Positioning;
         
-        PropertySection();
+        PropertySection(juce::String const& title, bool resizeOnClick);
         ~PropertySection() override = default;
+        
+        juce::String getTitle() const;
+        void setPanels(std::vector<PanelRef> const& panels);
+        void setOpen(bool isOpen, bool shouldAnimate = false);
+        
+        std::function<void(void)> onResized = nullptr;
         
         // juce::Component
         void resized() override;
         
-        void setPanels(std::vector<PanelRef> const& panels, Positioning position);
+        struct LookAndFeelMethods
+        {
+            virtual ~LookAndFeelMethods() = default;
+            
+            virtual int getSeparatorHeight(PropertySection const& section) const = 0;
+            virtual int getHeaderHeight(PropertySection const& section) const = 0;
+            virtual juce::Font getHeaderFont(PropertySection const& section, int headerHeight) const = 0;
+            virtual void drawHeaderBackground(juce::Graphics& g, PropertySection const& section, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const = 0;
+            virtual void drawHeaderButton(juce::Graphics& g, PropertySection const& section, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const = 0;
+            virtual void drawHeaderTitle(juce::Graphics& g, PropertySection const& section, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const = 0;
+        };
         
     private:
+        
+        // juce::Timer
+        void timerCallback() override;
+        
+        class Header
+        : public juce::Component
+        {
+        public:
+            Header() = default;
+            ~Header() override = default;
+            
+            std::function<void(void)> onClicked = nullptr;
+            
+            // juce::Component
+            void paint(juce::Graphics& g) override;
+            void mouseDown(juce::MouseEvent const& event) override;
+        };
         
         class Separator
         : public juce::Component
         {
         public:
-            
             Separator() = default;
             ~Separator() override = default;
             
@@ -46,17 +81,18 @@ namespace Layout
             Container(PanelRef ref)
             : panel(ref)
             {
-                
             }
             
             PanelRef panel;
             Separator separator;
         };
         
-        juce::Component mContent;
-        juce::Viewport mViewport;
+        Header mHeader;
+        juce::String const mTitle;
         std::vector<std::unique_ptr<Container>> mContainers;
-        Positioning mPositioning = Positioning::left;
+        float mSizeRatio = 1.0f;
+        bool mOpened = true;
+        int mContentsSize = 0;
     };
 }
 
