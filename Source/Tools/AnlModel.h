@@ -365,17 +365,6 @@ namespace Model
                 return;
             }
             
-            detail::for_each(mAttributes, [&](auto& d)
-            {
-                using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & Flag::saveable) != 0)
-                {
-                    auto constexpr attr_type = element_type::type;
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    static_cast<parent_t*>(this)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
-                }
-            });
-            
             detail::for_each(mAccessors, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -430,21 +419,22 @@ namespace Model
                     }
                 }
             });
-        }
-        
-        //! @brief Copy the content from another container
-        void copyFrom(Accessor const& accessor, NotificationType const notification)
-        {
-            detail::for_each(accessor.mAttributes, [&](auto const& d)
+            
+            detail::for_each(mAttributes, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
                 if constexpr((element_type::flags & Flag::saveable) != 0)
                 {
                     auto constexpr attr_type = element_type::type;
-                    static_cast<parent_t*>(this)->template setAttr<attr_type>(d.value, notification);
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                    static_cast<parent_t*>(this)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
                 }
             });
-            
+        }
+        
+        //! @brief Copy the content from another container
+        void copyFrom(Accessor const& accessor, NotificationType const notification)
+        {
             detail::for_each(accessor.mAccessors, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -494,6 +484,16 @@ namespace Model
                     
                 }
             });
+            
+            detail::for_each(accessor.mAttributes, [&](auto const& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr attr_type = element_type::type;
+                    static_cast<parent_t*>(this)->template setAttr<attr_type>(d.value, notification);
+                }
+            });
         }
         
         //! @brief Compare the content with accessor
@@ -538,30 +538,15 @@ namespace Model
             Listener() = default;
             virtual ~Listener() = default;
             
-            std::function<void(parent_t const&, attr_enum_type type)> onAttrChanged = nullptr;
-            std::function<void(parent_t const&, acsr_enum_type type, size_t)> onAccessorInserted = nullptr;
-            std::function<void(parent_t const&, acsr_enum_type type, size_t)> onAccessorErased = nullptr;
+            std::function<void(parent_t const&, attr_enum_type)> onAttrChanged = nullptr;
+            std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInserted = nullptr;
+            std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErased = nullptr;
         };
         
         void addListener(Listener& listener, NotificationType const notification)
         {
             if(mListeners.add(listener))
             {
-                detail::for_each(mAttributes, [&](auto& d)
-                {
-                    using element_type = typename std::remove_reference<decltype(d)>::type;
-                    if constexpr((element_type::flags & Flag::notifying) != 0)
-                    {
-                        mListeners.notify([this, ptr = &listener](Listener& ltnr)
-                        {
-                            if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
-                            {
-                                ltnr.onAttrChanged(*static_cast<parent_t const*>(this), element_type::type);
-                            }
-                        }, notification);
-                    }
-                });
-                
                 detail::for_each(mAccessors, [&](auto& d)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -578,6 +563,21 @@ namespace Model
                                 }
                             }, notification);
                         }
+                    }
+                });
+                
+                detail::for_each(mAttributes, [&](auto& d)
+                {
+                    using element_type = typename std::remove_reference<decltype(d)>::type;
+                    if constexpr((element_type::flags & Flag::notifying) != 0)
+                    {
+                        mListeners.notify([this, ptr = &listener](Listener& ltnr)
+                        {
+                            if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
+                            {
+                                ltnr.onAttrChanged(*static_cast<parent_t const*>(this), element_type::type);
+                            }
+                        }, notification);
                     }
                 });
             }
