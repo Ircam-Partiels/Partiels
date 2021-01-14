@@ -76,7 +76,7 @@ void Application::Properties::saveToFile(PropertyType type)
         }
     };
     
-    switch (type)
+    switch(type)
     {
         case PropertyType::Application:
         {
@@ -103,7 +103,7 @@ void Application::Properties::saveToFile(PropertyType type)
 void Application::Properties::loadFromFile(PropertyType type)
 {
     anlStrongAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
-    switch (type)
+    switch(type)
     {
         case PropertyType::Application:
         {

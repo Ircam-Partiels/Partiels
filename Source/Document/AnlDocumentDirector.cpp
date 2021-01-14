@@ -134,7 +134,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
     
     acsr.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
     {
-        switch (type)
+        switch(type)
         {
             case AcsrType::analyzers:
             {
@@ -165,7 +165,7 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
     
     acsr.onAccessorErased = [&](AcsrType type, size_t index, NotificationType notification)
     {
-        switch (type)
+        switch(type)
         {
             case AcsrType::analyzers:
             {
