@@ -106,7 +106,7 @@ void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
     {
         warnings[WarningType::resultType] = juce::translate("The type of results is undefined by the plugin and might not be supported!");
     }
-    auto const numDimension = descriptor.hasFixedBinCount ? std::min(descriptor.binCount, 2ul) + 1 : 0;
+    auto const numDimension = descriptor.hasFixedBinCount ? std::min(descriptor.binCount, 2_z) + 1 : 0;
     mAccessor.setAttr<AttrType::resultsType>(static_cast<ResultsType>(numDimension), notification);
     
     // Ensures that the range of results returned for this feature is valid
@@ -124,7 +124,7 @@ void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
     
     // Updates the zoom range of the bins based on the dimensions of the results
     auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(0.0, std::max(static_cast<double>(std::max(descriptor.binCount, 1ul)), 1.0)), notification);
+    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(0.0, std::max(static_cast<double>(std::max(descriptor.binCount, 1_z)), 1.0)), notification);
     
     JUCE_COMPILER_WARNING("to clean");
     updateZoomRange(notification);
