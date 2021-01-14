@@ -28,7 +28,8 @@ namespace Analyzer
     
     enum class AcsrType : size_t
     {
-           zoom
+          valueZoom
+        , binZoom
     };
     
     enum class ZoomMode
@@ -47,10 +48,10 @@ namespace Analyzer
     
     enum class ResultsType
     {
-          undefined //! The results are undefined (might not be supported)
-        , points    //! The results are time points
-        , segments  //! The results are segments
-        , matrix    //! The results is a matrix
+          undefined = 0 //! The results are undefined (might not be supported)
+        , points        //! The results are time points
+        , segments      //! The results are segments
+        , matrix        //! The results is a matrix
     };
     
     enum class WarningType
@@ -99,7 +100,8 @@ namespace Analyzer
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, Model::resizable>
+    < Model::Acsr<AcsrType::valueZoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    , Model::Acsr<AcsrType::binZoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     >;
 
     class Accessor
@@ -126,19 +128,16 @@ namespace Analyzer
         template <acsr_enum_type type>
         bool insertAccessor(size_t index, NotificationType notification)
         {
-            if constexpr(type == AcsrType::zoom)
+            if constexpr(type == AcsrType::valueZoom)
             {
-                if(index == 0)
-                {
-                    auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
-                    auto constexpr max = std::numeric_limits<double>::max() / 100.0;
-                    auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{min, max}, epsilon), notification);
-                }
-                else if(index == 1)
-                {
-                    return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, 1.0}, 1.0), notification);
-                }
+                auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
+                auto constexpr max = std::numeric_limits<double>::max() / 100.0;
+                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{min, max}, epsilon), notification);
+            }
+            else if constexpr(type == AcsrType::binZoom)
+            {
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, 1.0), notification);
             }
             return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }

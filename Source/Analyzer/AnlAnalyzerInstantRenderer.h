@@ -21,7 +21,6 @@ namespace Analyzer
     private:
         Accessor& mAccessor;
         Zoom::Accessor& mZoomAccessor;
-        std::vector<std::reference_wrapper<Zoom::Accessor>> mZoomAccessors;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
         

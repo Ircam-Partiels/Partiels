@@ -21,35 +21,6 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
         }
     };
     
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr);
-        switch(type)
-        {
-            case AcsrType::zoom:
-            {
-                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(index);
-                zoomAcsr.addListener(mZoomListener, NotificationType::synchronous);
-                mZoomAccessors.insert(mZoomAccessors.begin() + static_cast<long>(index), zoomAcsr);
-            }
-                break;
-        }
-    };
-    
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr);
-        switch(type)
-        {
-            case AcsrType::zoom:
-            {
-                mZoomAccessors[index].get().removeListener(mZoomListener);
-                mZoomAccessors.erase(mZoomAccessors.begin() + static_cast<long>(index));
-            }
-                break;
-        }
-    };
-    
     mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
         juce::ignoreUnused(acsr, value);
@@ -73,17 +44,16 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
     
     mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::InstantRenderer::~InstantRenderer()
 {
-    for(auto& zoomAcsr : mZoomAccessors)
-    {
-        zoomAcsr.get().removeListener(mZoomListener);
-    }
     mZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
     mAccessor.removeReceiver(mReceiver);
 }
@@ -95,7 +65,7 @@ void Analyzer::InstantRenderer::resized()
 
 void Analyzer::InstantRenderer::paint(juce::Graphics& g)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     if(visibleRange.isEmpty())
     {
@@ -145,7 +115,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
         auto const width = getWidth();
         auto const height = getHeight();
         
-        auto const globalValueRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::globalRange>();
+        auto const globalValueRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::globalRange>();
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         
         auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - visibleRange.getEnd(), globalValueRange.getEnd() - visibleRange.getStart());

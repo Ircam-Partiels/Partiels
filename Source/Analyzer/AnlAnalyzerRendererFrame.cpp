@@ -46,16 +46,42 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
         }
     };
     
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         juce::ignoreUnused(acsr);
         switch(type)
         {
-            case AcsrType::zoom:
+            case AttrType::key:
+            case AttrType::name:
+            case AttrType::feature:
+            case AttrType::parameters:
+            case AttrType::zoomMode:
+            case AttrType::colour:
+            case AttrType::colourMap:
+            case AttrType::resultsType:
+            case AttrType::results:
+            case AttrType::warnings:
+                break;
+        }
+    };
+    
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr, type, index);
+        switch(type)
+        {
+            case AcsrType::valueZoom:
             {
-                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(index);
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(index);
                 zoomAcsr.addListener(mZoomListener, NotificationType::synchronous);
-                mZoomAccessors.insert(mZoomAccessors.begin() + static_cast<long>(index), zoomAcsr);
+                mZoomAccessors.insert(mZoomAccessors.begin() + static_cast<long>(0), zoomAcsr);
+            }
+                break;
+            case AcsrType::binZoom:
+            {
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(index);
+                zoomAcsr.addListener(mZoomListener, NotificationType::synchronous);
+                mZoomAccessors.insert(mZoomAccessors.begin() + static_cast<long>(1), zoomAcsr);
             }
                 break;
         }
@@ -66,10 +92,16 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
         juce::ignoreUnused(acsr);
         switch(type)
         {
-            case AcsrType::zoom:
+            case AcsrType::valueZoom:
             {
-                mZoomAccessors[index].get().removeListener(mZoomListener);
-                mZoomAccessors.erase(mZoomAccessors.begin() + static_cast<long>(index));
+                mZoomAccessors[0].get().removeListener(mZoomListener);
+                mZoomAccessors.erase(mZoomAccessors.begin());
+            }
+                break;
+            case AcsrType::binZoom:
+            {
+                mZoomAccessors[1].get().removeListener(mZoomListener);
+                mZoomAccessors.erase(mZoomAccessors.begin()+1);
             }
                 break;
         }
@@ -93,7 +125,6 @@ Analyzer::Renderer::Frame::~Frame()
         zoomAcsr.get().removeListener(mZoomListener);
     }
     mZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessor<AcsrType::zoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
     mAccessor.removeReceiver(mReceiver);
 }
@@ -105,71 +136,7 @@ void Analyzer::Renderer::Frame::resized()
 
 void Analyzer::Renderer::Frame::paint(juce::Graphics& g)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(0);
-    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    if(visibleRange.isEmpty())
-    {
-        return;
-    }
     
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    if(results.empty())
-    {
-        return;
-    }
-    
-    auto const realTime = Vamp::RealTime::fromSeconds(0.0);
-    
-    if(results.cbegin()->values.size() == 1)
-    {
-        auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& time)
-        {
-            return result.timestamp < time;
-        });
-        if(it == results.cend())
-        {
-            return;
-        }
-        
-        auto const value = (it->values[0]  - visibleRange.getStart()) / visibleRange.getLength();
-        auto const bounds = getLocalBounds();
-        auto const position = static_cast<int>((1.0 - value) * static_cast<double>(bounds.getHeight()));
-        auto const area = bounds.withTop(position).toFloat();
-        
-        auto const colour = mAccessor.getAttr<AttrType::colour>();
-        g.setColour(colour.withAlpha(0.2f));
-        g.fillRect(area);
-        
-        g.setColour(colour);
-        g.fillRect(area.withHeight(1.0f));
-    }
-    else if(results.cbegin()->values.size() > 1)
-    {
-        auto image = mAccessor.getImage();
-        if(image == nullptr && image->isValid())
-        {
-            return;
-        }
-        
-        auto const width = getWidth();
-        auto const height = getHeight();
-        
-        auto const globalValueRange = mAccessor.getAccessor<AcsrType::zoom>(0).getAttr<Zoom::AttrType::globalRange>();
-        auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
-        
-        auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - visibleRange.getEnd(), globalValueRange.getEnd() - visibleRange.getStart());
-        
-        auto const deltaX = static_cast<float>(0.0 / globalTimeRange.getLength() * static_cast<double>(image->getWidth()));
-        auto const deltaY = static_cast<float>(valueRange.getStart() / globalValueRange.getLength() * static_cast<double>(image->getHeight()));
-        
-        auto const scaleX = static_cast<float>(static_cast<double>(width) * static_cast<double>(image->getWidth()));
-        auto const scaleY = static_cast<float>(globalValueRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image->getHeight()));
-        
-        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
-        
-        g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-        g.drawImageTransformed(*image.get(), transform);
-    }
 }
 
 ANALYSE_FILE_END

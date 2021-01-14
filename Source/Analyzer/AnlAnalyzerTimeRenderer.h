@@ -28,7 +28,6 @@ namespace Analyzer
         Accessor::Receiver mReceiver;
         
         Zoom::Accessor& mZoomAccessor;
-        std::vector<std::reference_wrapper<Zoom::Accessor>> mZoomAccessors;
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
         

@@ -15,48 +15,76 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
         }
     };
     
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
-        juce::ignoreUnused(acsr);
-        switch (type)
+        switch(type)
         {
-            case AcsrType::zoom:
+            case AttrType::key:
+            case AttrType::name:
+            case AttrType::feature:
+            case AttrType::parameters:
+            case AttrType::zoomMode:
+            case AttrType::colour:
+            case AttrType::colourMap:
+                break;
+            case AttrType::resultsType:
             {
                 mScrollbar.reset();
                 mRuler.reset();
-                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::zoom>(index);
-                mScrollbar = std::make_unique<Zoom::ScrollBar>(zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true);
-                if(mScrollbar != nullptr)
+                
+                auto const resultsType = acsr.getAttr<AttrType::resultsType>();
+                switch (resultsType)
                 {
-                    addAndMakeVisible(mScrollbar.get());
-                }
-                mRuler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
-                if(mRuler != nullptr)
-                {
-                    addAndMakeVisible(mRuler.get());
-                    mRuler->onDoubleClick = [&]()
+                    case ResultsType::undefined:
+                    case ResultsType::points:
+                        break;
+                    case ResultsType::segments:
                     {
-                        auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-                        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-                    };
+                        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+                        mScrollbar = std::make_unique<Zoom::ScrollBar>(zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true);
+                        if(mScrollbar != nullptr)
+                        {
+                            addAndMakeVisible(mScrollbar.get());
+                        }
+                        mRuler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
+                        if(mRuler != nullptr)
+                        {
+                            addAndMakeVisible(mRuler.get());
+                            mRuler->onDoubleClick = [&]()
+                            {
+                                auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+                                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                            };
+                        }
+                        resized();
+                    }
+                        break;
+                    case ResultsType::matrix:
+                    {
+                        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+                        mScrollbar = std::make_unique<Zoom::ScrollBar>(zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true);
+                        if(mScrollbar != nullptr)
+                        {
+                            addAndMakeVisible(mScrollbar.get());
+                        }
+                        mRuler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
+                        if(mRuler != nullptr)
+                        {
+                            addAndMakeVisible(mRuler.get());
+                            mRuler->onDoubleClick = [&]()
+                            {
+                                auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+                                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                            };
+                        }
+                        resized();
+                    }
+                        break;
                 }
-                resized();
             }
                 break;
-        }
-    };
-    
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        switch (type)
-        {
-            case AcsrType::zoom:
-            {
-                if(index > 0)
-                {
-                    mListener.onAccessorInserted(acsr, type, index-1);
-                }
-            }
+            case AttrType::results:
+            case AttrType::warnings:
                 break;
         }
     };
