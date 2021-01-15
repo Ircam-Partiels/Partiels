@@ -8,13 +8,14 @@ namespace Layout
 {
     class PropertySection
     : public juce::Component
+    , public juce::SettableTooltipClient
     , private juce::Timer
     {
     public:
         
         enum ColourIds : int
         {
-              headerBackgroundColourId = 0x2000100
+              headerBackgroundColourId = 0x2000200
             , headerTitleColourId
             , headerButtonColourId
             , separatorColourId
@@ -22,7 +23,7 @@ namespace Layout
         
         using PanelRef = std::reference_wrapper<PropertyPanelBase>;
         
-        PropertySection(juce::String const& title, bool resizeOnClick);
+        PropertySection(juce::String const& title, bool resizeOnClick, juce::String const& tooltip = "");
         ~PropertySection() override = default;
         
         juce::String getTitle() const;

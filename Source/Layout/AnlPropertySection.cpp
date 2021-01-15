@@ -34,7 +34,7 @@ void Layout::PropertySection::Separator::paint(juce::Graphics& g)
     g.fillAll(findColour(ColourIds::separatorColourId, true));
 }
 
-Layout::PropertySection::PropertySection(juce::String const& title, bool resizeOnClick)
+Layout::PropertySection::PropertySection(juce::String const& title, bool resizeOnClick, juce::String const& tooltip)
 : mTitle(title)
 {
     mHeader.onClicked = [&]()
@@ -45,6 +45,7 @@ Layout::PropertySection::PropertySection(juce::String const& title, bool resizeO
     mHeader.setRepaintsOnMouseActivity(resizeOnClick);
     mHeader.setInterceptsMouseClicks(resizeOnClick, resizeOnClick);
     addChildComponent(mHeader);
+    setTooltip(tooltip);
     setOpen(true, false);
 }
 

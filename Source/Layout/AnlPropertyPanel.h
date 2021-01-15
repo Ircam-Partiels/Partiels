@@ -29,6 +29,12 @@ namespace Layout
     : public PropertyPanelBase
     {
     public:
+        enum ColourIds : int
+        {
+              backgroundColourId = 0x2000100
+            , textColourId
+        };
+        
         static_assert(std::is_base_of<juce::Component, entry_t>::value, "Entry should inherit from juce::Component");
         using entry_type = entry_t;
         using callback_type = std::function<void(entry_type const&)>;
@@ -44,7 +50,6 @@ namespace Layout
         }
         
         ~PropertyPanel() override = default;
-        
     };
     
     class PropertyTitle
