@@ -20,7 +20,7 @@ namespace PluginList
         // juce::Component
         void resized() override;
         
-        std::function<void(juce::String)> onPluginSelected = nullptr;
+        std::function<void(juce::String key, size_t feature)> onPluginSelected = nullptr;
         
     private:
         
@@ -35,9 +35,19 @@ namespace PluginList
         void cellDoubleClicked (int rowNumber, int columnId, juce::MouseEvent const& e) override;
         void sortOrderChanged(int newSortColumnId, bool isForwards) override;
         
+        struct FeatureDescription
+        : public Description
+        {
+            FeatureDescription(juce::String k, Description const& description, size_t index);
+            ~FeatureDescription() = default;
+            
+            juce::String key;
+            size_t feature;
+        };
+        
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        std::vector<std::pair<juce::String, Description>> mFilteredList;
+        std::vector<FeatureDescription> mFilteredList;
         juce::TableListBox mPluginTable;
         juce::TextButton mClearButton;
         juce::TextButton mScanButton;

@@ -14,6 +14,19 @@ countries: fr be mc ch lu
 "The plugin PLGNKEY cannot be loaded because the plugin container cannot be allocated." = "Le plugin PLGNKEY ne peut chargé car le containeur de plugin ne peut être alloué."
 
 "Analysis cannot be created!" = "L'analyse ne peut être créée !"
-"The analysis \"ANLNAME\" cannot be inserted into the document." = "L'analyse \"ANLNAME\" ne peut être ajoutée au document."
+"The analysis \"ANLNAME: FTRNAME\" cannot be inserted into the document."" = "L'analyse \"ANLNAME : FTRNAME\" ne peut être ajoutée au document."
 "Analysis cannot be performed!" = "L'analyse ne peut pas être effectuée !
 "The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\"." = "L'analyse \"ANLNAME\" ne peut pas être effectuée en raison d'une incompatibilité avec le plugin. Veuillez vous assurer que les paramètres d'analyse (tels que la fonctionnalité, la fréquence d'échantillonnage, la taille de la fenêtre, le facteur de chevauchement) sont cohérents et compatibles avec le plugin \"PLGKEY\"."
+
+# Analyzer Property Panel
+"Name" = "Nom"
+"The name of the analyzer" = "The nom de l'analyseur"
+"Plugin" = "Plugiciel"
+"The name of the plugin" = "The nom du plugiciel"
+"Feature" = "Fonction"
+"The active feature of the analyzer" = "La fonction active de l'analyseur"
+"Unknown" = "Inconnu"
+"PROCESSOR" = "PROCESSEUR"
+"The processor parameters of the analyzer" = "Les paramètres du processeur de l'analyseur"
+"GRAPHICAL" = "GRAPHIQUE"
+"The graphical parameters of the analyzer" = "Les paramètres graphiques de l'analyseur"

@@ -29,7 +29,7 @@ void Document::Director::addAnalysis(AlertType alertType)
         mModalWindow = nullptr;
     }
     
-    mPluginListTable.onPluginSelected = [this, alertType](juce::String key)
+    mPluginListTable.onPluginSelected = [this, alertType](juce::String key, size_t feature)
     {
         if(mModalWindow != nullptr)
         {
@@ -37,7 +37,10 @@ void Document::Director::addAnalysis(AlertType alertType)
             mModalWindow = nullptr;
         }
         
-        auto const name = PluginList::Scanner::getPluginDescriptions()[key].name;
+        auto const description = PluginList::Scanner::getPluginDescriptions()[key];
+        auto const name = description.name;
+        anlStrongAssert(feature < description.features.size());
+        auto const ftrname = feature < description.features.size() ? description.features[feature] : juce::String();
         auto const index = mAccessor.getNumAccessors<AcsrType::analyzers>();
         if(!mAccessor.insertAccessor<AcsrType::analyzers>(index, NotificationType::synchronous))
         {
@@ -45,7 +48,7 @@ void Document::Director::addAnalysis(AlertType alertType)
             {
                 auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
                 auto const title = juce::translate("Analysis cannot be created!");
-                auto const message = juce::translate("The analysis \"ANLNAME\" cannot be inserted into the document.").replace("ANLNAME", name);
+                auto const message = juce::translate("The analysis \"ANLNAME: FTRNAME\" cannot be inserted into the document.").replace("ANLNAME", name).replace("FTRNAME", ftrname);
                 juce::AlertWindow::showMessageBox(icon, title, message);
             }
             return;
@@ -53,6 +56,7 @@ void Document::Director::addAnalysis(AlertType alertType)
 
         auto& anlAcsr = mAccessor.getAccessors<Document::AcsrType::analyzers>().back().get();
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
+        anlAcsr.setAttr<Analyzer::AttrType::feature>(feature, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::name>(name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::ColorMap::Inferno, NotificationType::synchronous);
