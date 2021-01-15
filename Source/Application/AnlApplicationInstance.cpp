@@ -4,6 +4,11 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::Instance::LocalisedStringsMapper::LocalisedStringsMapper()
+{
+    juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
+}
+
 juce::String const Application::Instance::getApplicationName()
 {
     return ProjectInfo::projectName;
@@ -25,8 +30,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
     juce::ignoreUnused(commandLine);
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
     juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
-    
-    juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
     
     mAudioFormatManager.registerBasicFormats();
     mWindow = std::make_unique<Window>();

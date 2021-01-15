@@ -49,6 +49,13 @@ namespace Application
 
     private:
         
+        struct LocalisedStringsMapper
+        {
+            LocalisedStringsMapper();
+            ~LocalisedStringsMapper() = default;
+        };
+        
+        LocalisedStringsMapper mLocalisedStringsMapper;
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;
