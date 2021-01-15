@@ -30,12 +30,12 @@ PluginList::Table::Table(Accessor& accessor)
     
     using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mPluginTable.getHeader();
-    header.addColumn(juce::translate("Name"), ColumnType::Name, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortedForwards);
-    header.addColumn(juce::translate("Feature"), ColumnType::Feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortedForwards);
-    header.addColumn(juce::translate("Manufacturer"), ColumnType::Maker, 150, 100, 300);
-    header.addColumn(juce::translate("Api"), ColumnType::Api, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
-    header.addColumn(juce::translate("Category"), ColumnType::Category, 80, 100, 200);
+    header.addColumn(juce::translate("Plugin"), ColumnType::Plugin, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
+    header.addColumn(juce::translate("Feature"), ColumnType::Feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
     header.addColumn(juce::translate("Description"), ColumnType::Details, 240, 100, 500, ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Manufacturer"), ColumnType::Maker, 150, 100, 300);
+    header.addColumn(juce::translate("Category"), ColumnType::Category, 80, 100, 200);
+    header.addColumn(juce::translate("Api"), ColumnType::Api, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
     
     addAndMakeVisible(mClearButton);
     mClearButton.setClickingTogglesState(false);
@@ -116,6 +116,7 @@ void PluginList::Table::updateContent()
 {
     auto const& descriptions = mAccessor.getAttr<AttrType::descriptions>();
     
+    mFilteredList.clear();
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
     for(auto const& description : descriptions)
     {
@@ -131,45 +132,50 @@ void PluginList::Table::updateContent()
     }
         
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
-//    switch (mAccessor.getAttr<AttrType::sortColumn>())
-//    {
-//        case ColumnType::Name:
-//        {
-//            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-//            {
-//                return (lhs.name > rhs.name) == isForwards;
-//            });
-//        }
-//            break;
-//        case ColumnType::Feature:
-//        {
-//            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-//            {
-//                JUCE_COMPILER_WARNING("to do")
-//                return (lhs.name > rhs.name) == isForwards;
-//            });
-//        }
-//            break;
-//        case ColumnType::Maker:
-//        {
-//            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-//            {
-//                return (lhs.maker > rhs.maker) == isForwards;
-//            });
-//        }
-//            break;
-//        case ColumnType::Category:
-//        {
-//            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-//            {
-//                return (lhs.name > rhs.name) == isForwards;
-//            });
-//        }
-//            break;
-//        case ColumnType::Api:
-//        case ColumnType::Details:
-//            break;
-//    }
+    switch (mAccessor.getAttr<AttrType::sortColumn>())
+    {
+        case ColumnType::Plugin:
+        {
+            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
+            {
+                auto const lhsName = lhs.name + (lhs.feature < lhs.features.size() ? lhs.features[lhs.feature] : "");
+                auto const rhsName = rhs.name + (rhs.feature < rhs.features.size() ? rhs.features[rhs.feature] : "");
+                return isForwards ? (lhsName > rhsName) : (lhsName < rhsName);
+            });
+        }
+            break;
+        case ColumnType::Feature:
+        {
+            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
+            {
+                auto const lhsFeature = lhs.feature < lhs.features.size() ? lhs.features[lhs.feature] : "";
+                auto const rhsFeature = rhs.feature < rhs.features.size() ? rhs.features[rhs.feature] : "";
+                return isForwards ? (lhsFeature > rhsFeature) : (lhsFeature < rhsFeature);
+            });
+        }
+            break;
+        case ColumnType::Maker:
+        {
+            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
+            {
+                return isForwards ? (lhs.maker > rhs.maker) : (lhs.maker < rhs.maker);
+            });
+        }
+            break;
+        case ColumnType::Category:
+        {
+            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
+            {
+                auto const lhsCategories = std::accumulate(lhs.categories.cbegin(), lhs.categories.cend(), juce::String());
+                auto const rhsCategories = std::accumulate(rhs.categories.cbegin(), rhs.categories.cend(), juce::String());
+                return isForwards ? (lhsCategories > rhsCategories) : (lhsCategories < rhsCategories);
+            });
+        }
+            break;
+        case ColumnType::Api:
+        case ColumnType::Details:
+            break;
+    }
     
     mPluginTable.getHeader().reSortTable();
     mPluginTable.updateContent();
@@ -203,7 +209,7 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     {
         switch (columnId)
         {
-            case ColumnType::Name:
+            case ColumnType::Plugin:
                 return description.name;
             case ColumnType::Feature:
                 return static_cast<size_t>(feature) < description.features.size() ? description.features[static_cast<size_t>(feature)] : "";
@@ -220,7 +226,7 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     };
     
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
-    g.setColour(columnId == ColumnType::Name ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
+    g.setColour(columnId == ColumnType::Plugin ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
     g.setFont(juce::Font(static_cast<float>(height) * 0.7f, juce::Font::bold));
     g.drawFittedText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, 1, 1.f);
 }

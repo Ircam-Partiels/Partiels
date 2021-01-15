@@ -30,3 +30,17 @@ countries: fr be mc ch lu
 "The processor parameters of the analyzer" = "Les paramètres du processeur de l'analyseur"
 "GRAPHICAL" = "GRAPHIQUE"
 "The graphical parameters of the analyzer" = "Les paramètres graphiques de l'analyseur"
+
+#################################
+# Plugin List Table
+"Clear" = "Effacer"
+"Scan" = "Lister"
+"Filter..." = "Filtrer..."
+"Cannot get the plugin loader" = "Impossible d'obtenir le chargeur de plugiciels"
+
+"Plugin" = "Plugiciel"
+"Feature" = "Fonction"
+"Manufacturer" = "Fabricant"
+"Api" = "Api"
+"Category" = "Catégorie"
+"Description" = "Description"

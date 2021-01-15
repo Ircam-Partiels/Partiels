@@ -29,7 +29,7 @@ namespace PluginList
     
     enum ColumnType
     {
-          Name = 1
+          Plugin = 1
         , Feature
         , Maker
         , Api
