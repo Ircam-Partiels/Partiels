@@ -39,9 +39,9 @@ std::map<juce::String, PluginList::Description> PluginList::Scanner::getPluginDe
         {
             description.name = plugin->getName();
             auto const descriptors = plugin->getOutputDescriptors();
-            for(auto const& descriptor : descriptors)
+            for(size_t i = 0; i < descriptors.size(); ++i)
             {
-                description.features.push_back(descriptor.name);
+                description.features[i] = descriptors[i].name;
             }
             description.maker = plugin->getMaker();
             description.api = plugin->getVampApiVersion();

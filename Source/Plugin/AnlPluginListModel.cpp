@@ -40,7 +40,8 @@ void XmlParser::toXml<PluginList::Description>(juce::XmlElement& xml, juce::Iden
             anlWeakAssert(subchild != nullptr);
             if(subchild != nullptr)
             {
-                subchild->setAttribute("feature", feature);
+                subchild->setAttribute("index", juce::String(static_cast<juce::int64>(feature.first)));
+                subchild->setAttribute("name", feature.second);
                 child->addChildElement(subchild.release());
             }
         }
@@ -77,10 +78,12 @@ auto XmlParser::fromXml<PluginList::Description>(juce::XmlElement const& xml, ju
     }
     for(auto* subchild = child->getChildByName("feature"); subchild != nullptr; subchild = subchild->getNextElementWithTagName("feature"))
     {
-        anlWeakAssert(subchild->hasAttribute("feature"));
-        if(subchild->hasAttribute("feature"))
+        anlWeakAssert(subchild->hasAttribute("index"));
+        anlWeakAssert(subchild->hasAttribute("name"));
+        if(subchild->hasAttribute("index"))
         {
-            value.features.push_back(subchild->getStringAttribute("feature"));
+            auto const index = static_cast<size_t>(subchild->getStringAttribute("index").getLargeIntValue());
+            value.features[index] = subchild->getStringAttribute("name");
         }
     }
     return value;

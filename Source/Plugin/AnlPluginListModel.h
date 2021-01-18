@@ -9,12 +9,12 @@ namespace PluginList
 {
     struct Description
     {
-        juce::String name {};                   //!< The name of the plugin
-        std::vector<juce::String> features;     //!< The features of the plugin
-        juce::String maker {};                  //!< The maker of the plugin
-        unsigned int api {0};                   //!< The API version used by the plugin
-        std::set<juce::String> categories;      //!< The categories of the plugin
-        juce::String details;                   //!< Further information about the plugin
+        juce::String name {};                       //!< The name of the plugin
+        std::map<size_t, juce::String> features;    //!< The features of the plugin
+        juce::String maker {};                      //!< The maker of the plugin
+        unsigned int api {0};                       //!< The API version used by the plugin
+        std::set<juce::String> categories;          //!< The categories of the plugin
+        juce::String details;                       //!< Further information about the plugin
         
         bool operator==(Description const&) const;
         bool operator!=(Description const&) const;

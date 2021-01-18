@@ -24,17 +24,17 @@ PluginList::Table::Table(Accessor& accessor)
     
     addAndMakeVisible(mPluginTable);
     mPluginTable.setHeaderHeight(28);
-    mPluginTable.setRowHeight(26);
+    mPluginTable.setRowHeight(22);
     mPluginTable.setMultipleSelectionEnabled(true);
     mPluginTable.setModel(this);
     
     using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mPluginTable.getHeader();
-    header.addColumn(juce::translate("Plugin"), ColumnType::Plugin, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
+    header.addColumn(juce::translate("Plugin"), ColumnType::Plugin, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
     header.addColumn(juce::translate("Feature"), ColumnType::Feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
-    header.addColumn(juce::translate("Description"), ColumnType::Details, 240, 100, 500, ColumnFlags::notSortable);
-    header.addColumn(juce::translate("Manufacturer"), ColumnType::Maker, 150, 100, 300);
-    header.addColumn(juce::translate("Category"), ColumnType::Category, 80, 100, 200);
+    header.addColumn(juce::translate("Description"), ColumnType::Details, 200, 100, 500, ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Manufacturer"), ColumnType::Maker, 120, 100, 300);
+    header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 100, 200);
     header.addColumn(juce::translate("Api"), ColumnType::Api, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
     
     addAndMakeVisible(mClearButton);
@@ -121,25 +121,25 @@ void PluginList::Table::updateContent()
     for(auto const& description : descriptions)
     {
         auto const pluginName = (description.second.name + description.second.maker).removeCharacters(" ");
-        for(size_t feature = 0; feature < description.second.features.size(); ++feature)
+        for(auto const& feature : description.second.features)
         {
-            auto const filterName = pluginName + description.second.features[feature].removeCharacters(" ");
+            auto const filterName = pluginName + feature.second.removeCharacters(" ");
             if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
             {
-                mFilteredList.emplace_back(description.first, description.second, feature);
+                mFilteredList.emplace_back(description.first, description.second, feature.first);
             }
         }
     }
         
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
-    switch (mAccessor.getAttr<AttrType::sortColumn>())
+    switch(mAccessor.getAttr<AttrType::sortColumn>())
     {
         case ColumnType::Plugin:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                auto const lhsName = lhs.name + (lhs.feature < lhs.features.size() ? lhs.features[lhs.feature] : "");
-                auto const rhsName = rhs.name + (rhs.feature < rhs.features.size() ? rhs.features[rhs.feature] : "");
+                auto const lhsName = lhs.name + (lhs.features.count(lhs.feature) > 0 ? lhs.features.at(lhs.feature) : "");
+                auto const rhsName = rhs.name + (rhs.features.count(lhs.feature) > 0 ? rhs.features.at(rhs.feature) : "");
                 return isForwards ? (lhsName > rhsName) : (lhsName < rhsName);
             });
         }
@@ -148,8 +148,8 @@ void PluginList::Table::updateContent()
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                auto const lhsFeature = lhs.feature < lhs.features.size() ? lhs.features[lhs.feature] : "";
-                auto const rhsFeature = rhs.feature < rhs.features.size() ? rhs.features[rhs.feature] : "";
+                auto const lhsFeature = lhs.features.count(lhs.feature) > 0 ? lhs.features.at(lhs.feature) : "";
+                auto const rhsFeature = rhs.features.count(lhs.feature) > 0 ? rhs.features.at(rhs.feature) : "";
                 return isForwards ? (lhsFeature > rhsFeature) : (lhsFeature < rhsFeature);
             });
         }
@@ -207,12 +207,12 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     auto const feature = description.feature;
     auto getText = [&]() -> juce::String
     {
-        switch (columnId)
+        switch(columnId)
         {
             case ColumnType::Plugin:
                 return description.name;
             case ColumnType::Feature:
-                return static_cast<size_t>(feature) < description.features.size() ? description.features[static_cast<size_t>(feature)] : "";
+                return description.features.count(feature) ? description.features.at(feature) : "";
             case ColumnType::Maker:
                 return description.maker;
             case ColumnType::Api:
@@ -226,7 +226,7 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     };
     
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
-    g.setColour(columnId == ColumnType::Plugin ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
+    g.setColour(columnId == ColumnType::Plugin || columnId == ColumnType::Feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
     g.setFont(juce::Font(static_cast<float>(height) * 0.7f, juce::Font::bold));
     g.drawFittedText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, 1, 1.f);
 }
@@ -234,35 +234,25 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
 void PluginList::Table::deleteKeyPressed(int lastRowSelected)
 {
     juce::ignoreUnused(lastRowSelected);
-    
     auto const selectedRows = mPluginTable.getSelectedRows();
     mPluginTable.deselectAllRows();
     
     auto descriptions = mAccessor.getAttr<AttrType::descriptions>();
-    auto const numSelectedRows = selectedRows.size();
-    for (int i = 0; i < numSelectedRows; ++i)
+    for(int i = 0; i < selectedRows.size(); ++i)
     {
         auto const index = selectedRows[i];
-        anlStrongAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
+        anlWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
         if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
         {
-            auto const key = mFilteredList[static_cast<size_t>(index)].key;
-            auto const feature = mFilteredList[static_cast<size_t>(index)].feature;
-            anlStrongAssert(descriptions.count(key) > 0_z && feature < descriptions.at(key).features.size());
-            if(descriptions.count(key) > 0_z && feature < descriptions.at(key).features.size())
-            {
-                if(descriptions.at(key).features.size() == 1)
-                {
-                    descriptions.erase(key);
-                }
-                else
-                {
-                    descriptions[key].features.erase(descriptions[key].features.begin() + static_cast<long>(feature));
-                }
-            }
-            
+            auto const& element = mFilteredList[static_cast<size_t>(index)];
+            descriptions[element.key].features.erase(element.feature);
         }
     }
+    
+    std::erase_if(descriptions, [](auto const& description)
+    {
+        return description.second.features.empty();
+    });
     mAccessor.setAttr<AttrType::descriptions>(descriptions, NotificationType::synchronous);
 }
 
