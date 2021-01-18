@@ -41,11 +41,14 @@ Application::LookAndFeel::LookAndFeel()
     // juce::ResizableWindow
     setColour(juce::ResizableWindow::ColourIds::backgroundColourId, backgroundColour.darker());
     
+    // juce::AlertWindow
+    setColour(juce::AlertWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+    
     // juce::TextButton
     setColour(juce::TextButton::ColourIds::buttonColourId, backgroundColour);
     setColour(juce::TextButton::ColourIds::buttonOnColourId, backgroundColour.brighter());
     
-    // juce::TextButton
+    // juce::Slider
     setColour(juce::Slider::ColourIds::backgroundColourId, backgroundColour);
     setColour(juce::Slider::ColourIds::thumbColourId, thumbColour);
     
@@ -59,8 +62,16 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::ScrollBar::ColourIds::backgroundColourId, backgroundColour.darker());
     setColour(juce::ScrollBar::ColourIds::thumbColourId, thumbColour);
     
-    // juce::AlertWindow
-    setColour(juce::AlertWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+    // juce::ListBox
+    setColour(juce::ListBox::ColourIds::backgroundColourId, backgroundColour);
+    setColour(juce::ListBox::ColourIds::outlineColourId, backgroundColour.darker());
+    setColour(juce::ListBox::ColourIds::textColourId, textColour);
+
+    // juce::TableHeaderComponent
+    setColour(juce::TableHeaderComponent::ColourIds::textColourId, textColour);
+    setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, backgroundColour);
+    setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, backgroundColour.darker());
+    setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, backgroundColour.brighter());
 }
 
 int Application::LookAndFeel::getSeparatorHeight(Layout::PropertySection const& section) const
