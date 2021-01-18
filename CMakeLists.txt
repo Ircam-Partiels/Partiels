@@ -30,6 +30,7 @@ set_target_properties(Brioche PROPERTIES CXX_STANDARD 20)
 set_target_properties(BriocheTest PROPERTIES CXX_STANDARD 20)
 
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
+set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 
 file(GLOB_RECURSE GlobalSources
     ${SOURCES_DIRECTORY}/Main.cpp
@@ -136,6 +137,10 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.h)
 
+file(GLOB TranslationsSources
+    ${BINARYDATA_DIRECTORY}/Translations/Fr/Fr.txt
+    ${BINARYDATA_DIRECTORY}/Translations/Fr/PluginList.txt)
+
 source_group("Global" FILES ${GlobalSources})
 source_group("Tools" FILES ${ToolsSources})
 source_group("Layout" FILES ${LayoutSources})
@@ -144,6 +149,7 @@ source_group("Application" FILES ${ApplicationSources})
 source_group("Document" FILES ${DocumentSources})
 source_group("Analyzer" FILES ${AnalyzerSources})
 source_group("Plugin" FILES ${PluginSources})
+source_group("Translations" FILES ${TranslationsSources})
 
 function(create_module_group TARGET GROUP_PATH MODULE_PATH)
 
@@ -185,7 +191,7 @@ create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE
 create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
 set(BriochesSources ${ToolsSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
-target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources})
+target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources} ${TranslationsSources})
 target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
 set(BriochesDefinitions
@@ -200,7 +206,6 @@ set(BriochesDefinitions
 target_compile_definitions(Brioche PRIVATE ${BriochesDefinitions})
 target_compile_definitions(BriocheTest PRIVATE ${BriochesDefinitions})
 
-set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/icon.png
     ${BINARYDATA_DIRECTORY}/Icons/alert.png
@@ -215,10 +220,9 @@ file(GLOB BinaryDataSources
     ${BINARYDATA_DIRECTORY}/Icons/editer.png
     ${BINARYDATA_DIRECTORY}/Icons/naviguer.png
     ${BINARYDATA_DIRECTORY}/Icons/reglages.png
-    ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg
-    ${BINARYDATA_DIRECTORY}/Translations/Fr.txt)
+    ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)
 
-juce_add_binary_data(BriocheData SOURCES ${BinaryDataSources})
+juce_add_binary_data(BriocheData SOURCES ${BinaryDataSources} ${TranslationsSources})
 
 target_link_libraries(Brioche PRIVATE
     vamp
