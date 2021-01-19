@@ -4,9 +4,8 @@
 #include "../Tools/AnlBroadcaster.h"
 #include "../Tools/AnlAtomicManager.h"
 #include "../Zoom/AnlZoomModel.h"
+#include "../Plugin/AnlPluginModel.h"
 #include "../../tinycolormap/include/tinycolormap.hpp"
-#include <vamp-hostsdk/PluginHostAdapter.h>
-#include <vamp-hostsdk/PluginWrapper.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -61,33 +60,10 @@ namespace Analyzer
         , resultType
     };
     
-    struct Result
-    : public Vamp::Plugin::Feature
-    {
-        using Vamp::Plugin::Feature::Feature;
-        
-        Result(Feature const& feature)
-        : Vamp::Plugin::Feature(feature)
-        {
-        }
-        
-        inline bool operator==(Result const& other) const
-        {
-            return hasTimestamp == other.hasTimestamp &&
-            timestamp == other.timestamp &&
-            hasDuration == other.hasDuration &&
-            duration == other.duration &&
-            values.size() == other.values.size() &&
-            std::equal(values.cbegin(), values.cend(), other.values.cbegin()) &&
-            label == other.label;
-        }
-    };
-    
-    using OutputDescriptor = Vamp::Plugin::OutputDescriptor;
     using ColorMap = tinycolormap::ColormapType;
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::key, juce::String, Model::Flag::basic>
+    < Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::feature, size_t, Model::Flag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::Flag::basic>
@@ -95,7 +71,7 @@ namespace Analyzer
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
     , Model::Attr<AttrType::resultsType, ResultsType, Model::Flag::notifying>
-    , Model::Attr<AttrType::results, std::vector<Result>, Model::Flag::notifying>
+    , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
     >;
     
