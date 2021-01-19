@@ -8,8 +8,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Processor::Processor(Vamp::Plugin* plugin)
+Analyzer::Processor::Processor(Vamp::Plugin* plugin, size_t feature)
 : Vamp::HostExt::PluginWrapper(plugin)
+, mFeature(feature)
 {
     auto const& descriptors = m_plugin->getParameterDescriptors();
     auto getNextIdentifier = [&](std::string const& prepend)
@@ -222,15 +223,8 @@ std::tuple<Zoom::Range, double> Analyzer::Processor::getZoomInfo(size_t const fe
     return std::make_tuple(Zoom::Range{descriptor.minValue, descriptor.maxValue}, descriptor.isQuantized ? descriptor.quantizeStep : 0.0);
 }
 
-bool Analyzer::Processor::prepareForAnalysis(size_t const feature, juce::AudioFormatReader& audioFormatReader)
+bool Analyzer::Processor::prepareForAnalysis(juce::AudioFormatReader& audioFormatReader)
 {
-    auto const descriptors = getOutputDescriptors();
-    anlWeakAssert(feature < descriptors.size());
-    if(feature >= descriptors.size())
-    {
-        return false;
-    }
-    
     auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
     auto const windowSize = getWindowSize();
     auto const stepSize = getStepSize();
@@ -242,12 +236,11 @@ bool Analyzer::Processor::prepareForAnalysis(size_t const feature, juce::AudioFo
     mBuffer.setSize(numChannels, static_cast<int>(windowSize));
     mPosition = 0;
     
-    mFeature = feature;
     mAudioFormatReader = &audioFormatReader;
     return true;
 }
 
-bool Analyzer::Processor::performNextAudioBlock(std::vector<Analyzer::Result>& results)
+bool Analyzer::Processor::performNextAudioBlock(std::vector<Result>& results)
 {
     anlStrongAssert(mAudioFormatReader != nullptr);
     anlStrongAssert(mFeature < getOutputDescriptors().size());
@@ -305,8 +298,8 @@ std::unique_ptr<Analyzer::Processor> Analyzer::createProcessor(Accessor const& a
     using namespace Vamp;
     using namespace Vamp::HostExt;
     
-    auto const pluginKey = accessor.getAttr<AttrType::key>();
-    if(pluginKey.isEmpty())
+    auto const key = accessor.getAttr<AttrType::key>();
+    if(key.identifier.empty() || key.feature.empty())
     {
         return nullptr;
     }
@@ -314,37 +307,53 @@ std::unique_ptr<Analyzer::Processor> Analyzer::createProcessor(Accessor const& a
     anlWeakAssert(pluginLoader != nullptr);
     
     using AlertIconType = juce::AlertWindow::AlertIconType;
-    auto const errorMessage = juce::translate("Plugin cannot be loaded!");
+    auto const errorTitle = juce::translate("Plugin cannot be loaded!");
+    auto const errorMessage =  juce::translate("The plugin \"PLGNKEY: FTRKEY\" cannot be loaded: ").replace("PLGNKEY", key.identifier).replace("FTRKEY", key.feature);
     
     if(pluginLoader == nullptr)
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin manager is not available.").replace("PLGNKEY", pluginKey));
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate(" Plugin manager is not available") + ".");
         }
         return nullptr;
     }
     
-    auto pluginInstance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey.toStdString(), static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
-    if(pluginInstance == nullptr)
+    std::unique_ptr<Vamp::Plugin> instance;
+    try
+    {
+        instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+    }
+    catch(std::runtime_error& e)
+    {
+        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate(e.what()) + ".");
+        return nullptr;
+    }
+    
+    if(instance == nullptr)
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNKEY cannot be loaded because the plugin key is invalid.").replace("PLGNKEY", pluginKey));
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Unknown reason") + ".");
         }
         return nullptr;
     }
     
-    if(pluginInstance->getOutputDescriptors().empty())
+    auto const outputs = instance->getOutputDescriptors();
+    auto const feature = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
+    {
+        return output.identifier == key.feature;
+    });
+    if(feature == outputs.cend())
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The plugin PLGNNAME cannot be loaded because there is no analysis available.").replace("PLGNNAME", pluginInstance->getName()));
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, errorTitle, errorMessage + juce::translate("Invalid feature key") + ".");
         }
         return nullptr;
     }
     
-    return std::make_unique<Processor>(pluginInstance.release());
+    return std::make_unique<Processor>(instance.release(), std::distance(outputs.cbegin(), feature));
 }
 
 ANALYSE_FILE_END

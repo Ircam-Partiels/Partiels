@@ -10,7 +10,9 @@ namespace Analyzer
     : public Vamp::HostExt::PluginWrapper
     {
     public:
-        Processor(Vamp::Plugin* plugin);
+        using Result = Anl::Plugin::Result;
+        
+        Processor(Vamp::Plugin* plugin, size_t feature);
         ~Processor() override = default;
         
         // Vamp::PluginBase
@@ -24,8 +26,8 @@ namespace Analyzer
         bool hasZoomInfo(size_t const feature) const;
         std::tuple<Zoom::Range, double> getZoomInfo(size_t const feature) const;
         
-        bool prepareForAnalysis(size_t const feature, juce::AudioFormatReader& audioFormatReader);
-        bool performNextAudioBlock(std::vector<Analyzer::Result>& results);
+        bool prepareForAnalysis(juce::AudioFormatReader& audioFormatReader);
+        bool performNextAudioBlock(std::vector<Result>& results);
         
         size_t getWindowSize() const;
         size_t getStepSize() const;
@@ -33,7 +35,7 @@ namespace Analyzer
         
         juce::int64 mPosition {0};
         juce::AudioBuffer<float> mBuffer;
-        size_t mFeature;
+        size_t const mFeature;
         juce::AudioFormatReader* mAudioFormatReader;
         
         size_t mWindowSize = 512;
