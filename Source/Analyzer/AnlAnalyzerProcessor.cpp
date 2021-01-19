@@ -299,16 +299,31 @@ std::unique_ptr<Analyzer::Processor> Analyzer::createProcessor(Accessor const& a
     using namespace Vamp::HostExt;
     
     auto const key = accessor.getAttr<AttrType::key>();
-    if(key.identifier.empty() || key.feature.empty())
-    {
-        return nullptr;
-    }
-    auto* pluginLoader = PluginLoader::getInstance();
-    anlWeakAssert(pluginLoader != nullptr);
     
     using AlertIconType = juce::AlertWindow::AlertIconType;
     auto const errorTitle = juce::translate("Plugin cannot be loaded!");
     auto const errorMessage =  juce::translate("The plugin \"PLGNKEY: FTRKEY\" cannot be loaded: ").replace("PLGNKEY", key.identifier).replace("FTRKEY", key.feature);
+
+    if(key.identifier.empty())
+    {
+        if(alertType == AlertType::window)
+        {
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Key is not defined") + ".");
+        }
+        return nullptr;
+    }
+    
+    if(key.feature.empty())
+    {
+        if(alertType == AlertType::window)
+        {
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate(" Feature is not defined") + ".");
+        }
+        return nullptr;
+    }
+    
+    auto* pluginLoader = PluginLoader::getInstance();
+    anlWeakAssert(pluginLoader != nullptr);
     
     if(pluginLoader == nullptr)
     {
@@ -348,7 +363,7 @@ std::unique_ptr<Analyzer::Processor> Analyzer::createProcessor(Accessor const& a
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, errorTitle, errorMessage + juce::translate("Invalid feature key") + ".");
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, errorTitle, errorMessage + juce::translate("Invalid feature") + ".");
         }
         return nullptr;
     }

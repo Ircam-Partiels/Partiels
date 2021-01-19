@@ -4,14 +4,15 @@ countries: fr be mc ch lu
 # Processor
 "Plugin cannot be loaded!" = "Le plugiciel ne peut être chargé!"
 "The plugin \"PLGNKEY: FTRKEY\" cannot be loaded:" = "Le plugiciel \"PLGNKEY : FTRKEY\" ne peut chargé :"
+"Key is not defined" = "la clef n\'est pas définie"
+"Feature is not defined" = "la fonction n\'est pas définie"
 "Plugin manager is not available" = "le gestionnaire de plugiciels n\'est pas disponible"
 "Invalid plugin key" = "la clef du plugiciel n\'est pas valide"
 "No library found in Vamp path for plugin" = "aucune bibliothèque n'a été trouvée dans le chemin d'accès Vamp pour le plugiciel"
 "No vampGetPluginDescriptor function found in library" = "aucune fonction vampGetPluginDescriptor n'a été trouvée dans la bibliothèque"
 "Plugin not found in library" = "le plugiciel est introuvable dans la bibliothèque"
 "Unknown reason" = "la cause est inconnue"
-"Invalid feature key" = "la clé de fonction n'est pas valide""
-
+"Invalid feature" = "la fonction n'est pas valide""
 
 "Analysis cannot be performed!" = "L'analyse ne peut pas être effectuée !
 "The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\"." = "L'analyse \"ANLNAME\" ne peut pas être effectuée en raison d'une incompatibilité avec le plugin. Veuillez vous assurer que les paramètres d'analyse (tels que la fonctionnalité, la fréquence d'échantillonnage, la taille de la fenêtre, le facteur de chevauchement) sont cohérents et compatibles avec le plugin \"PLGKEY\"."
