@@ -6,7 +6,14 @@ ANALYSE_FILE_BEGIN
 
 Application::Instance::LocalisedStringsMapper::LocalisedStringsMapper()
 {
-    juce::LocalisedStrings::setCurrentMappings(new juce::LocalisedStrings(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false));
+    auto ls = std::make_unique<juce::LocalisedStrings>(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false);
+    if(ls != nullptr)
+    {
+        ls->addStrings({juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false});
+        ls->addStrings({juce::String::createStringFromData(BinaryData::PluginList_txt, BinaryData::PluginList_txtSize), false});
+        ls->addStrings({juce::String::createStringFromData(BinaryData::Analyzer_txt, BinaryData::Analyzer_txtSize), false});
+    }
+    juce::LocalisedStrings::setCurrentMappings(ls.release());
 }
 
 juce::String const Application::Instance::getApplicationName()
