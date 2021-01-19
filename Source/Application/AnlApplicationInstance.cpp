@@ -10,7 +10,7 @@ Application::Instance::LocalisedStringsMapper::LocalisedStringsMapper()
     if(ls != nullptr)
     {
         ls->addStrings({juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false});
-        ls->addStrings({juce::String::createStringFromData(BinaryData::PluginList_txt, BinaryData::PluginList_txtSize), false});
+        ls->addStrings({juce::String::createStringFromData(BinaryData::Plugin_txt, BinaryData::Plugin_txtSize), false});
         ls->addStrings({juce::String::createStringFromData(BinaryData::Analyzer_txt, BinaryData::Analyzer_txtSize), false});
     }
     juce::LocalisedStrings::setCurrentMappings(ls.release());
