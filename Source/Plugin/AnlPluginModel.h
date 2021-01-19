@@ -7,7 +7,7 @@
 
 ANALYSE_FILE_BEGIN
 
-struct Plugin
+namespace Plugin
 {
     struct Key
     {
@@ -39,8 +39,8 @@ struct Plugin
         {
         }
 
-        bool operator==(Output const& rhd) const;
-        inline bool operator!=(Output const& rhd) const
+        bool operator==(Output const& rhd) const  noexcept;
+        inline bool operator!=(Output const& rhd) const  noexcept
         {
             return !(*this == rhd);
         }
@@ -55,8 +55,8 @@ struct Plugin
         {
         }
 
-        bool operator==(Parameter const& rhd) const;
-        inline bool operator!=(Parameter const& rhd) const
+        bool operator==(Parameter const& rhd) const noexcept;
+        inline bool operator!=(Parameter const& rhd) const noexcept
         {
             return !(*this == rhd);
         }
@@ -82,7 +82,7 @@ struct Plugin
             label == other.label;
         }
         
-        inline bool operator!=(Parameter const& rhd) const
+        inline bool operator!=(Result const& rhd) const noexcept
         {
             return !(*this == rhd);
         }
@@ -111,7 +111,7 @@ struct Plugin
             return !(*this == rhd);
         }
     };
-};
+}
 
 namespace XmlParser
 {

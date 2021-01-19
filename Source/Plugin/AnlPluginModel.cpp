@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-bool Plugin::Output::operator==(Output const& rhd) const
+bool Plugin::Output::operator==(Output const& rhd) const noexcept
 {
     return identifier == rhd.identifier &&
     name == rhd.name &&
@@ -22,7 +22,7 @@ bool Plugin::Output::operator==(Output const& rhd) const
     hasDuration == rhd.hasDuration;
 }
 
-bool Plugin::Parameter::operator==(Parameter const& rhd) const
+bool Plugin::Parameter::operator==(Parameter const& rhd) const noexcept
 {
     return identifier == rhd.identifier &&
     name == rhd.name &&
