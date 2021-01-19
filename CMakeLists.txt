@@ -71,6 +71,8 @@ file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.h)
 
 file(GLOB PluginSources
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.cpp

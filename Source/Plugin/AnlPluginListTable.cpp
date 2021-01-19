@@ -4,13 +4,6 @@
 
 ANALYSE_FILE_BEGIN
 
-PluginList::Table::FeatureDescription::FeatureDescription(juce::String k, Description const& description, size_t index)
-: Description(description)
-, key(k)
-, feature(index)
-{
-}
-
 PluginList::Table::Table(Accessor& accessor)
 : mAccessor(accessor)
 , mClearButton(juce::translate("Clear"))
@@ -30,8 +23,8 @@ PluginList::Table::Table(Accessor& accessor)
     
     using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mPluginTable.getHeader();
-    header.addColumn(juce::translate("Plugin"), ColumnType::Plugin, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
-    header.addColumn(juce::translate("Feature"), ColumnType::Feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
+    header.addColumn(juce::translate("Name"), ColumnType::Name, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
+    header.addColumn(juce::translate("Specification"), ColumnType::Specification, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
     header.addColumn(juce::translate("Description"), ColumnType::Details, 200, 100, 500, ColumnFlags::notSortable);
     header.addColumn(juce::translate("Manufacturer"), ColumnType::Maker, 120, 100, 300);
     header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 100, 200);
@@ -41,7 +34,7 @@ PluginList::Table::Table(Accessor& accessor)
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
     {
-        mAccessor.setAttr<AttrType::descriptions>(std::map<juce::String, Description>{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::plugins>(decltype(mAccessor.getAttr<AttrType::plugins>()){}, NotificationType::synchronous);
     };
     
     addAndMakeVisible(mScanButton);
@@ -62,7 +55,7 @@ PluginList::Table::Table(Accessor& accessor)
             return {};
         };
         
-        mAccessor.setAttr<AttrType::descriptions>(getNewList(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::plugins>(getNewList(), NotificationType::synchronous);
     };
     
     addAndMakeVisible(mSearchField);
@@ -114,43 +107,35 @@ void PluginList::Table::resized()
 
 void PluginList::Table::updateContent()
 {
-    auto const& descriptions = mAccessor.getAttr<AttrType::descriptions>();
+    auto const& descriptions = mAccessor.getAttr<AttrType::plugins>();
     
     mFilteredList.clear();
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
     for(auto const& description : descriptions)
     {
-        auto const pluginName = (description.second.name + description.second.maker).removeCharacters(" ");
-        for(auto const& feature : description.second.features)
+        auto const filterName = (description.second.name + description.second.specification + description.second.maker).removeCharacters(" ");
+        if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
         {
-            auto const filterName = pluginName + feature.second.removeCharacters(" ");
-            if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
-            {
-                mFilteredList.emplace_back(description.first, description.second, feature.first);
-            }
+            mFilteredList.push_back(description);
         }
     }
         
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
     switch(mAccessor.getAttr<AttrType::sortColumn>())
     {
-        case ColumnType::Plugin:
+        case ColumnType::Name:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                auto const lhsName = lhs.name + (lhs.features.count(lhs.feature) > 0 ? lhs.features.at(lhs.feature) : "");
-                auto const rhsName = rhs.name + (rhs.features.count(lhs.feature) > 0 ? rhs.features.at(rhs.feature) : "");
-                return isForwards ? (lhsName > rhsName) : (lhsName < rhsName);
+                return isForwards ? (lhs.second.name + lhs.second.specification > rhs.second.name + rhs.second.specification) : (lhs.second.name + lhs.second.specification < rhs.second.name + rhs.second.specification);
             });
         }
             break;
-        case ColumnType::Feature:
+        case ColumnType::Specification:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                auto const lhsFeature = lhs.features.count(lhs.feature) > 0 ? lhs.features.at(lhs.feature) : "";
-                auto const rhsFeature = rhs.features.count(lhs.feature) > 0 ? rhs.features.at(rhs.feature) : "";
-                return isForwards ? (lhsFeature > rhsFeature) : (lhsFeature < rhsFeature);
+                return isForwards ? (lhs.second.specification > rhs.second.specification) : (lhs.second.specification < rhs.second.specification);
             });
         }
             break;
@@ -158,7 +143,7 @@ void PluginList::Table::updateContent()
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                return isForwards ? (lhs.maker > rhs.maker) : (lhs.maker < rhs.maker);
+                return isForwards ? (lhs.second.maker > rhs.second.maker) : (lhs.second.maker < rhs.second.maker);
             });
         }
             break;
@@ -166,8 +151,8 @@ void PluginList::Table::updateContent()
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                auto const lhsCategories = std::accumulate(lhs.categories.cbegin(), lhs.categories.cend(), juce::String());
-                auto const rhsCategories = std::accumulate(rhs.categories.cbegin(), rhs.categories.cend(), juce::String());
+                auto const lhsCategories = std::accumulate(lhs.second.categories.cbegin(), lhs.second.categories.cend(), juce::String());
+                auto const rhsCategories = std::accumulate(rhs.second.categories.cbegin(), rhs.second.categories.cend(), juce::String());
                 return isForwards ? (lhsCategories > rhsCategories) : (lhsCategories < rhsCategories);
             });
         }
@@ -203,16 +188,15 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
         return;
     }
     auto const index = static_cast<size_t>(row);
-    auto const& description = mFilteredList[index];
-    auto const feature = description.feature;
+    auto const& description = mFilteredList[index].second;
     auto getText = [&]() -> juce::String
     {
         switch(columnId)
         {
-            case ColumnType::Plugin:
+            case ColumnType::Name:
                 return description.name;
-            case ColumnType::Feature:
-                return description.features.count(feature) ? description.features.at(feature) : "";
+            case ColumnType::Specification:
+                return description.specification;
             case ColumnType::Maker:
                 return description.maker;
             case ColumnType::Api:
@@ -226,7 +210,7 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     };
     
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
-    g.setColour(columnId == ColumnType::Plugin || columnId == ColumnType::Feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
+    g.setColour(columnId == ColumnType::Name || columnId == ColumnType::Specification ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
     g.setFont(juce::Font(static_cast<float>(height) * 0.7f, juce::Font::bold));
     g.drawFittedText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, 1, 1.f);
 }
@@ -237,23 +221,19 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
     auto const selectedRows = mPluginTable.getSelectedRows();
     mPluginTable.deselectAllRows();
     
-    auto descriptions = mAccessor.getAttr<AttrType::descriptions>();
+    auto plugins = mAccessor.getAttr<AttrType::plugins>();
     for(int i = 0; i < selectedRows.size(); ++i)
     {
         auto const index = selectedRows[i];
         anlWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
         if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
         {
-            auto const& element = mFilteredList[static_cast<size_t>(index)];
-            descriptions[element.key].features.erase(element.feature);
+            auto const key = mFilteredList[static_cast<size_t>(index)].first;
+            plugins.erase(key);
         }
     }
     
-    std::erase_if(descriptions, [](auto const& description)
-    {
-        return description.second.features.empty();
-    });
-    mAccessor.setAttr<AttrType::descriptions>(descriptions, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::plugins>(plugins, NotificationType::synchronous);
 }
 
 void PluginList::Table::returnKeyPressed(int lastRowSelected)
@@ -262,17 +242,9 @@ void PluginList::Table::returnKeyPressed(int lastRowSelected)
     {
         return;
     }
-    auto const index = static_cast<size_t>(lastRowSelected);
-    auto const key = mFilteredList[index].key;
-    auto const feature = mFilteredList[index].feature;
-    anlStrongAssert(feature < mFilteredList[index].features.size());
-    if(feature >= mFilteredList[index].features.size())
-    {
-        return;
-    }
     if(onPluginSelected != nullptr)
     {
-        onPluginSelected(key, feature);
+        onPluginSelected(mFilteredList[static_cast<size_t>(lastRowSelected)].first, mFilteredList[static_cast<size_t>(lastRowSelected)].second);
     }
 }
 

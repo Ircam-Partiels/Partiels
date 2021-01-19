@@ -5,19 +5,7 @@
 
 ANALYSE_FILE_BEGIN
 
-std::set<std::string> PluginList::Scanner::getPluginKeys()
-{
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlWeakAssert(pluginLoader != nullptr);
-    if(pluginLoader == nullptr)
-    {
-        throw std::runtime_error("Cannot get the plugin loader");
-    }
-    auto keys = pluginLoader->listPlugins();
-    return {keys.cbegin(), keys.cend()};
-}
-
-std::map<juce::String, PluginList::Description> PluginList::Scanner::getPluginDescriptions(double defaultSampleRate)
+std::map<Plugin::Key, Plugin::Description> PluginList::Scanner::getPluginDescriptions(double defaultSampleRate)
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;
@@ -29,27 +17,28 @@ std::map<juce::String, PluginList::Description> PluginList::Scanner::getPluginDe
         throw std::runtime_error("Cannot get the plugin loader");
     }
     
-    std::map<juce::String, Description> descriptions;
-    auto const keys = getPluginKeys();
+    std::map<Plugin::Key, Plugin::Description> descriptions;
+    auto const keys = pluginLoader->listPlugins();
     for(auto const& key : keys)
     {
-        Description description;
         auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(defaultSampleRate)));
         if(plugin != nullptr)
         {
-            description.name = plugin->getName();
-            auto const descriptors = plugin->getOutputDescriptors();
-            for(size_t i = 0; i < descriptors.size(); ++i)
-            {
-                description.features[i] = descriptors[i].name;
-            }
-            description.maker = plugin->getMaker();
-            description.api = plugin->getVampApiVersion();
+            Plugin::Description common;
+            common.name = plugin->getName();
+            common.maker = plugin->getMaker();
+            common.api = plugin->getVampApiVersion();
             auto const categories = pluginLoader->getPluginCategory(key);
-            description.categories = {categories.cbegin(), categories.cend()};
-            description.details = plugin->getDescription();
+            common.categories = {categories.cbegin(), categories.cend()};
+            common.details = plugin->getDescription();
+            auto const outputs = plugin->getOutputDescriptors();
+            for(size_t feature = 0; feature < outputs.size(); ++feature)
+            {
+                Plugin::Description description(common);
+                description.specification = outputs[feature].name;
+                descriptions[{key, outputs[feature].identifier}] = description;
+            }
         }
-        descriptions[key] = description;
     }
     return descriptions;
 }
