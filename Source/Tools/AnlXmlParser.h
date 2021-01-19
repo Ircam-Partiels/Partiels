@@ -33,7 +33,7 @@ namespace XmlParser
         {
             toXml(xml, attributeName, static_cast<typename std::underlying_type<T>::type>(value));
         }
-        else if constexpr(is_specialization<T, std::vector>::value)
+        else if constexpr(is_specialization<T, std::vector>::value || is_specialization<T, std::set>::value)
         {
             for(auto const& element : value)
             {
@@ -103,10 +103,12 @@ namespace XmlParser
         }
         else if constexpr(std::is_same<T, juce::String>::value)
         {
+            anlWeakAssert(xml.hasAttribute(attributeName));
             return xml.getStringAttribute(attributeName, defaultValue);
         }
         else if constexpr(std::is_same<T, juce::Colour>::value)
         {
+            anlWeakAssert(xml.hasAttribute(attributeName));
             return juce::Colour::fromString(xml.getStringAttribute(attributeName, defaultValue.toString()));
         }
         else if constexpr(std::is_same<T, float>::value)
@@ -116,30 +118,32 @@ namespace XmlParser
         }
         else if constexpr(std::is_enum<T>::value)
         {
+            anlWeakAssert(xml.hasAttribute(attributeName));
             return static_cast<T>(fromXml(xml, attributeName, static_cast<typename std::underlying_type<T>::type>(defaultValue)));
         }
         else if constexpr(is_specialization<T, std::vector>::value)
         {
-            T result {defaultValue};
+            T result;
             using value_type = typename T::value_type;
-            size_t index = 0;
             for(auto* child = xml.getChildByName(attributeName); child != nullptr; child = child->getNextElementWithTagName(attributeName))
             {
-                if(index < result.size())
-                {
-                    result[index] = fromXml(*child, "value", result[index]);
-                }
-                else
-                {
-                    result.push_back(fromXml(*child, "value", value_type{}));
-                }
-                ++index;
+                result.push_back(fromXml(*child, "value", value_type{}));
+            }
+            return result;
+        }
+        else if constexpr(is_specialization<T, std::set>::value)
+        {
+            T result;
+            using value_type = typename T::value_type;
+            for(auto* child = xml.getChildByName(attributeName); child != nullptr; child = child->getNextElementWithTagName(attributeName))
+            {
+                result.insert(fromXml(*child, "value", value_type{}));
             }
             return result;
         }
         else if constexpr(is_specialization<T, std::map>::value)
         {
-            T result {defaultValue};
+            T result;
             using key_type = typename T::key_type;
             for(auto* child = xml.getChildByName(attributeName); child != nullptr; child = child->getNextElementWithTagName(attributeName))
             {
@@ -160,10 +164,15 @@ namespace XmlParser
         }
         else
         {
-            T value {defaultValue};
-            std::stringstream stream(xml.getStringAttribute("attributeName").toRawUTF8());
-            stream >> value;
-            return value;
+            anlWeakAssert(xml.hasAttribute(attributeName));
+            if(xml.hasAttribute(attributeName))
+            {
+                T value;
+                std::stringstream stream(xml.getStringAttribute(attributeName).toRawUTF8());
+                stream >> value;
+                return value;
+            }
+            return defaultValue;
         }
     }
     
