@@ -132,6 +132,12 @@ void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
 
 void Analyzer::Director::runAnalysis(NotificationType const notification)
 {
+    std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
+    anlStrongAssert(lock.owns_lock());
+    if(!lock.owns_lock())
+    {
+        return;
+    }
     if(mAnalysisProcess.valid())
     {
         mAnalysisState = ProcessState::aborted;

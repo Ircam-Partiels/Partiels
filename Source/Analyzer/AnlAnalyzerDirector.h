@@ -38,6 +38,7 @@ namespace Analyzer
         Accessor& mAccessor;
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::tuple<std::vector<Analyzer::Result>, NotificationType>> mAnalysisProcess;
+        std::mutex mAnalysisMutex;
         
         std::atomic<ProcessState> mRenderingState {ProcessState::available};
         std::future<std::tuple<juce::Image, NotificationType>> mRenderingProcess;
