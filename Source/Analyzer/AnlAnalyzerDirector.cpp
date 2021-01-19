@@ -178,6 +178,8 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     
     mAnalysisProcess = std::async([=, this]() -> std::tuple<std::vector<Analyzer::Result>, NotificationType>
     {
+        juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
+        
         auto expected = ProcessState::available;
         if(!mAnalysisState.compare_exchange_weak(expected, ProcessState::running))
         {
@@ -219,6 +221,7 @@ void Analyzer::Director::runRendering(NotificationType const notification)
     auto const binCounts = static_cast<size_t>(mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::globalRange>().getEnd());
     mRenderingProcess = std::async([=, this]() -> std::tuple<juce::Image, NotificationType>
     {
+        juce::Thread::setCurrentThreadName("Analyzer::Director::runRendering");
         auto expected = ProcessState::available;
         if(!mRenderingState.compare_exchange_weak(expected, ProcessState::running))
         {
