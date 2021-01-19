@@ -117,7 +117,7 @@ void Layout::PropertySection::setOpen(bool isOpen, bool shouldAnimate)
     mOpened = isOpen;
     if(!isTimerRunning() && shouldAnimate)
     {
-        startTimer(50);
+        startTimer(20);
     }
     else if(!shouldAnimate)
     {
@@ -132,7 +132,10 @@ void Layout::PropertySection::setOpen(bool isOpen, bool shouldAnimate)
         }
         mSizeRatio = newRatio;
         auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(mContentsSize) * mSizeRatio));
-        setSize(getWidth(), contentSize + (mHeader.isVisible() ? mHeader.getHeight() : 0));
+        auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
+        anlWeakAssert(lookAndFeel != nullptr);
+        auto const headerHeight = lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20;
+        setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
     }
 }
 
@@ -146,8 +149,10 @@ void Layout::PropertySection::timerCallback()
     }
     mHeader.repaint();
     auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(mContentsSize) * mSizeRatio));
-    setSize(getWidth(), contentSize + (mHeader.isVisible() ? mHeader.getHeight() : 0));
+    auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(lookAndFeel != nullptr);
+    auto const headerHeight = lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20;
+    setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
 }
-
 
 ANALYSE_FILE_END
