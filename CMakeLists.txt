@@ -139,7 +139,8 @@ file(GLOB ApplicationSources
 
 file(GLOB TranslationsSources
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Fr.txt
-    ${BINARYDATA_DIRECTORY}/Translations/Fr/PluginList.txt)
+    ${BINARYDATA_DIRECTORY}/Translations/Fr/Plugin.txt
+    ${BINARYDATA_DIRECTORY}/Translations/Fr/Analyzer.txt)
 
 source_group("Global" FILES ${GlobalSources})
 source_group("Tools" FILES ${ToolsSources})

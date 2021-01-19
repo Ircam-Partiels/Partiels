@@ -1,20 +1,23 @@
 language: French
 countries: fr be mc ch lu
 
-"Save" = "Sauvegarder"
-"Discard changes" = "Ignorer les changements"
-"Cancel" = "Annuler"
-
-"Closing document..." = "Quitter le document..."
-"Do you want to save the changes to \"DCNM\"?"= "Voulez-vous sauvegarder les changements de \"DCNM\"?"
-
 "Plugin cannot be loaded!" = "Le plugin ne peut être chargé!"
 "The plugin PLGNKEY cannot be loaded because the plugin manager is not available." = "Le plugin PLGNKEY ne peut chargé car le gestionnaire de plugins n\'est pas disponible."
 "The plugin PLGNKEY cannot be loaded because the plugin key is invalid." = "Le plugin PLGNKEY ne peut chargé car le clef du plugin n\'est pas valide."
 "The plugin PLGNKEY cannot be loaded because the plugin container cannot be allocated." = "Le plugin PLGNKEY ne peut chargé car le containeur de plugin ne peut être alloué."
 
-"Analysis cannot be created!" = "L'analyse ne peut être créée !"
-"The analysis \"ANLNAME: FTRNAME\" cannot be inserted into the document."" = "L'analyse \"ANLNAME : FTRNAME\" ne peut être ajoutée au document."
 "Analysis cannot be performed!" = "L'analyse ne peut pas être effectuée !
 "The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\"." = "L'analyse \"ANLNAME\" ne peut pas être effectuée en raison d'une incompatibilité avec le plugin. Veuillez vous assurer que les paramètres d'analyse (tels que la fonctionnalité, la fréquence d'échantillonnage, la taille de la fenêtre, le facteur de chevauchement) sont cohérents et compatibles avec le plugin \"PLGKEY\"."
 
+# Property Panel
+"Name" = "Nom"
+"The name of the analyzer" = "The nom de l'analyseur"
+"Plugin" = "Plugiciel"
+"The name of the plugin" = "The nom du plugiciel"
+"Specification" = "Spécification"
+"The specification of the analyzer" = "La spécification de l'analyseur"
+"Unknown" = "Inconnu"
+"PROCESSOR" = "PROCESSEUR"
+"The processor parameters of the analyzer" = "Les paramètres du processeur de l'analyseur"
+"GRAPHICAL" = "GRAPHIQUE"
+"The graphical parameters of the analyzer" = "Les paramètres graphiques de l'analyseur"
