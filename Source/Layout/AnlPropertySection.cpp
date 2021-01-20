@@ -61,6 +61,7 @@ void Layout::PropertySection::resized()
         mHeader.setBounds(bounds.removeFromTop(lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20));
     }
     
+    mContentsSize = 0;
     auto const separatorSize = lookAndFeel != nullptr ? lookAndFeel->getSeparatorHeight(*this) : 2;
     for(auto& container : mContainers)
     {
@@ -71,9 +72,9 @@ void Layout::PropertySection::resized()
             auto const containerSize = panel.get().getHeight();
             panel.get().setBounds(bounds.removeFromTop(containerSize));
             container.get()->separator.setBounds(bounds.removeFromTop(separatorSize));
+            mContentsSize += containerSize + separatorSize;
         }
     }
-    mContentsSize = bounds.getY() - separatorSize;
     
     if(onResized != nullptr)
     {
@@ -109,6 +110,7 @@ void Layout::PropertySection::setPanels(std::vector<PanelRef> const& panels)
             mContainers.push_back(std::move(container));
         }
     }
+    setOpen(mOpened, isTimerRunning());
     resized();
 }
 
