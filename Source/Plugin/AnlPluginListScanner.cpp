@@ -35,7 +35,7 @@ std::map<Plugin::Key, Plugin::Description> PluginList::Scanner::getPluginDescrip
             for(size_t feature = 0; feature < outputs.size(); ++feature)
             {
                 Plugin::Description description(common);
-                description.specification = outputs[feature].name;
+                description.specialization = outputs[feature].name;
                 descriptions[{key, outputs[feature].identifier}] = description;
             }
         }

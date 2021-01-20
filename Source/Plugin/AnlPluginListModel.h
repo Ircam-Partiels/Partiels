@@ -17,7 +17,7 @@ namespace PluginList
     enum ColumnType
     {
           Name = 1
-        , Specification
+        , Specialization
         , Maker
         , Api
         , Category

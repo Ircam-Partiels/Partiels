@@ -91,7 +91,7 @@ namespace Plugin
     struct Description
     {
         juce::String name {};               //!< The name of the plugin
-        juce::String specification {};      //!< The feature specification of the plugin
+        juce::String specialization {};      //!< The feature specialization of the plugin
         juce::String maker {};              //!< The maker of the plugin
         unsigned int api {0};               //!< The API version used by the plugin
         std::set<juce::String> categories;  //!< The categories of the plugin

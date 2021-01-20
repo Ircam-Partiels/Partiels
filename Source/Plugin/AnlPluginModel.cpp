@@ -128,7 +128,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
     if(child != nullptr)
     {
         toXml(*child, "name", value.name);
-        toXml(*child, "specification", value.specification);
+        toXml(*child, "specialization", value.specialization);
         toXml(*child, "maker", value.maker);
         toXml(*child, "api", value.api);
         toXml(*child, "details", value.details);
@@ -149,7 +149,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     }
     Plugin::Description value;
     value.name = fromXml(*child, "name", defaultValue.name);
-    value.specification = fromXml(*child, "specification", defaultValue.specification);
+    value.specialization = fromXml(*child, "specialization", defaultValue.specialization);
     value.maker = fromXml(*child, "maker", defaultValue.maker);
     value.api = fromXml(*child, "api", defaultValue.api);
     value.details = fromXml(*child, "details", defaultValue.details);
