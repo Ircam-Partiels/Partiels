@@ -8,8 +8,8 @@ countries: fr be mc ch lu
 "Cannot get the plugin loader" = "Impossible d'obtenir le chargeur de plugiciels"
 
 "Name" = "Nom"
-"Specialization" = "Spécification"
-"Manufacturer" = "Fabricant"
-"Api" = "Api"
+"Specialization" = "Spécialisation"
+"Maker" = "Fabricant"
+"Version" = "Version"
 "Category" = "Catégorie"
 "Description" = "Description"

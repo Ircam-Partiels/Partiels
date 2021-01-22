@@ -1,9 +1,11 @@
 language: French
 countries: fr be mc ch lu
 
+###########################
 # Processor
+###########################
 "Plugin cannot be loaded!" = "Le plugiciel ne peut être chargé!"
-"The plugin \"PLGNKEY: FTRKEY\" cannot be loaded:" = "Le plugiciel \"PLGNKEY : FTRKEY\" ne peut chargé :"
+"The plugin \"PLGNKEY: FTRKEY\" cannot be loaded: " = "Le plugiciel \"PLGNKEY : FTRKEY\" ne peut chargé :"
 "Key is not defined" = "la clef n\'est pas définie"
 "Feature is not defined" = "la fonction n\'est pas définie"
 "Plugin manager is not available" = "le gestionnaire de plugiciels n\'est pas disponible"
@@ -12,12 +14,11 @@ countries: fr be mc ch lu
 "No vampGetPluginDescriptor function found in library" = "aucune fonction vampGetPluginDescriptor n'a été trouvée dans la bibliothèque"
 "Plugin not found in library" = "le plugiciel est introuvable dans la bibliothèque"
 "Unknown reason" = "la cause est inconnue"
-"Invalid feature" = "la fonction n'est pas valide""
+"Invalid feature" = "la fonction n'est pas valide"
 
-"Analysis cannot be performed!" = "L'analyse ne peut pas être effectuée !
-"The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\"." = "L'analyse \"ANLNAME\" ne peut pas être effectuée en raison d'une incompatibilité avec le plugin. Veuillez vous assurer que les paramètres d'analyse (tels que la fonctionnalité, la fréquence d'échantillonnage, la taille de la fenêtre, le facteur de chevauchement) sont cohérents et compatibles avec le plugin \"PLGKEY\"."
-
+###########################
 # Property Panel
+###########################
 "PROCESSOR" = "PROCESSEUR"
 "The processor parameters of the analyzer" = "Les paramètres du processeur de l'analyseur"
 "GRAPHICAL" = "GRAPHIQUE"
@@ -28,3 +29,17 @@ countries: fr be mc ch lu
 "The name of the plugin" = "Le nom du plugiciel"
 "Specialization" = "Spécialisation"
 "The specialization of the plugin" = "La spécialisation du plugiciel"
+"Maker" = "Fabricant"
+"The maker of the plugin" = "Le fabricant du plugiciel"
+"Version" = "Version"
+"The version of the plugin" = "La version du plugiciel"
+"Category" = "Catégorie"
+"The category of the plugin" = "La catégorie du plugiciel"
+"Details" = "Détails"
+"The details of the plugin" = "Les détails du plugiciel"
+
+###########################
+
+"Analysis cannot be performed!" = "L'analyse ne peut pas être effectuée !
+"The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\"." = "L'analyse \"ANLNAME\" ne peut pas être effectuée en raison d'une incompatibilité avec le plugin. Veuillez vous assurer que les paramètres d'analyse (tels que la fonctionnalité, la fréquence d'échantillonnage, la taille de la fenêtre, le facteur de chevauchement) sont cohérents et compatibles avec le plugin \"PLGKEY\"."
+
