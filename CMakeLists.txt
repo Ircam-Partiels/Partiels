@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(Brioche VERSION 0.0.2 LANGUAGES C CXX)
+project(Brioche VERSION 0.0.3 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 include(vamp.cmake)
 
 juce_add_gui_app(Brioche
     PRODUCT_NAME                        "Brioche"
-    VERSION                             "0.0.2"
+    VERSION                             "0.0.3"
     BUNDLE_ID                           com.ircam.analyse
     COMPANY_COPYRIGHT                   "Copyright 2020 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
@@ -16,12 +16,13 @@ juce_add_gui_app(Brioche
     DOCUMENT_EXTENSIONS                 brioche
     NEEDS_CURL                          FALSE
     NEEDS_WEB_BROWSER                   FALSE
-    NEEDS_STORE_KIT                     FALSE)
-    #HARDENED_RUNTIME_ENABLED)
+    NEEDS_STORE_KIT                     FALSE
+    HARDENED_RUNTIME_ENABLED            true
+    HARDENED_RUNTIME_OPTIONS           "com.apple.security.cs.disable-library-validation")
 
 juce_add_console_app(BriocheTest
     PRODUCT_NAME                        "BriocheTest"
-    VERSION                             "0.0.2")
+    VERSION                             "0.0.3")
 
 juce_generate_juce_header(Brioche)
 juce_generate_juce_header(BriocheTest)
