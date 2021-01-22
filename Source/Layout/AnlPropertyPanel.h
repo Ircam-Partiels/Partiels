@@ -79,6 +79,17 @@ namespace Layout
         ~PropertyLabel() override = default;
     };
     
+    class PropertyText
+    : public PropertyLabel
+    {
+    public:
+        PropertyText(juce::String const& name, juce::String const& tooltip = {}, juce::String const& text = {}, callback_type fn = nullptr);
+        ~PropertyText() override = default;
+        
+        // juce::Component
+        void resized() override;
+    };
+    
     class PropertyComboBox
     : public PropertyPanel<juce::ComboBox>
     {

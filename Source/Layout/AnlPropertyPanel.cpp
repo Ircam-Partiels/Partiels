@@ -75,6 +75,14 @@ Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String cons
     entry.setText(text, juce::NotificationType::dontSendNotification);
     entry.setJustificationType(juce::Justification::right);
     entry.setMinimumHorizontalScale(1.0f);
+    entry.onEditorShow = [&]()
+    {
+        if(auto* editor = entry.getCurrentTextEditor())
+        {
+            editor->setJustification(entry.getJustificationType());
+            editor->setBorder(entry.getBorderSize());
+        }
+    };
     entry.onTextChange = [&]()
     {
         if(callback != nullptr)
@@ -82,6 +90,26 @@ Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String cons
             callback(entry);
         }
     };
+}
+
+Layout::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
+: Layout::PropertyLabel(name, tooltip, text, fn)
+{
+    entry.setJustificationType(juce::Justification::centredLeft);
+    setSize(200, 48);
+}
+
+void Layout::PropertyText::PropertyText::resized()
+{
+    auto& titleLookAndFeel = title.getLookAndFeel();
+    auto const font = titleLookAndFeel.getLabelFont(title);
+    auto const bdSize = titleLookAndFeel.getLabelBorderSize(title);
+    
+    auto bounds = getLocalBounds();
+    auto const textHeight = static_cast<int>(std::ceil(font.getHeight())) + bdSize.getTop() + bdSize.getBottom();
+    title.setBounds(bounds.removeFromTop(textHeight));
+    title.setJustificationType(juce::Justification::centredLeft);
+    entry.setBounds(bounds);
 }
 
 Layout::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::String const& tooltip, juce::StringArray const& items, size_t index, callback_type fn)
