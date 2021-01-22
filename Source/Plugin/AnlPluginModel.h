@@ -91,18 +91,18 @@ namespace Plugin
     struct Description
     {
         juce::String name {};               //!< The name of the plugin
-        juce::String specialization {};      //!< The feature specialization of the plugin
+        juce::String specialization {};     //!< The feature specialization of the plugin
         juce::String maker {};              //!< The maker of the plugin
-        unsigned int api {0};               //!< The API version used by the plugin
-        std::set<juce::String> categories;  //!< The categories of the plugin
+        unsigned int version {0};           //!< The version of the plugin
+        juce::String category;              //!< The category of the plugin
         juce::String details;               //!< Further information about the plugin
         
         inline bool operator==(Description const& rhd) const noexcept
         {
             return name == rhd.name &&
             maker == rhd.maker &&
-            api == rhd.api &&
-            categories == rhd.categories &&
+            version == rhd.version &&
+            category == rhd.category &&
             details == rhd.details;
         }
         

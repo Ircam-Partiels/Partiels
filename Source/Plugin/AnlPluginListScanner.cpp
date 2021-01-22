@@ -27,9 +27,9 @@ std::map<Plugin::Key, Plugin::Description> PluginList::Scanner::getPluginDescrip
             Plugin::Description common;
             common.name = plugin->getName();
             common.maker = plugin->getMaker();
-            common.api = plugin->getVampApiVersion();
+            common.version = static_cast<unsigned int>(plugin->getPluginVersion());
             auto const categories = pluginLoader->getPluginCategory(key);
-            common.categories = {categories.cbegin(), categories.cend()};
+            common.category = categories.empty() ? "": categories.front();
             common.details = plugin->getDescription();
             auto const outputs = plugin->getOutputDescriptors();
             for(size_t feature = 0; feature < outputs.size(); ++feature)

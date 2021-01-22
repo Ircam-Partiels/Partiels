@@ -26,9 +26,9 @@ PluginList::Table::Table(Accessor& accessor)
     header.addColumn(juce::translate("Name"), ColumnType::Name, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
     header.addColumn(juce::translate("Specialization"), ColumnType::Specialization, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
     header.addColumn(juce::translate("Description"), ColumnType::Details, 200, 100, 500, ColumnFlags::notSortable);
-    header.addColumn(juce::translate("Manufacturer"), ColumnType::Maker, 120, 100, 300);
+    header.addColumn(juce::translate("Maker"), ColumnType::Maker, 120, 100, 300);
     header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 100, 200);
-    header.addColumn(juce::translate("Api"), ColumnType::Api, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Version"), ColumnType::Version, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
     
     addAndMakeVisible(mClearButton);
     mClearButton.setClickingTogglesState(false);
@@ -151,13 +151,11 @@ void PluginList::Table::updateContent()
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
             {
-                auto const lhsCategories = std::accumulate(lhs.second.categories.cbegin(), lhs.second.categories.cend(), juce::String());
-                auto const rhsCategories = std::accumulate(rhs.second.categories.cbegin(), rhs.second.categories.cend(), juce::String());
-                return isForwards ? (lhsCategories > rhsCategories) : (lhsCategories < rhsCategories);
+                return isForwards ? (lhs.second.category > rhs.second.category) : (lhs.second.category < rhs.second.category);
             });
         }
             break;
-        case ColumnType::Api:
+        case ColumnType::Version:
         case ColumnType::Details:
             break;
     }
@@ -199,12 +197,12 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
                 return description.specialization;
             case ColumnType::Maker:
                 return description.maker;
-            case ColumnType::Api:
-                return juce::String(description.api);
+            case ColumnType::Version:
+                return juce::String(description.version);
             case ColumnType::Details:
                 return description.details;
             case ColumnType::Category:
-                return description.categories.empty() ? "-" : *(description.categories.begin());
+                return description.category.isEmpty() ? "-" : description.category;
         }
         return "";
     };

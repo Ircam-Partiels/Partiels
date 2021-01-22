@@ -19,7 +19,7 @@ namespace PluginList
           Name = 1
         , Specialization
         , Maker
-        , Api
+        , Version
         , Category
         , Details
     };
