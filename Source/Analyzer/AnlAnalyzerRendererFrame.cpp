@@ -17,7 +17,6 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
         {
             case AttrType::key:
             case AttrType::name:
-            case AttrType::feature:
             case AttrType::parameters:
             case AttrType::zoomMode:
             case AttrType::colourMap:
@@ -53,7 +52,6 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
         {
             case AttrType::key:
             case AttrType::name:
-            case AttrType::feature:
             case AttrType::parameters:
             case AttrType::zoomMode:
             case AttrType::colour:

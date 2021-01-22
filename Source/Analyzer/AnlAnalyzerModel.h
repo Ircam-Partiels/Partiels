@@ -14,8 +14,9 @@ namespace Analyzer
     enum class AttrType : size_t
     {
           key
+        , description
+        , output
         , name
-        , feature
         , parameters
         , zoomMode
         , colour
@@ -64,8 +65,9 @@ namespace Analyzer
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
+    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
+    , Model::Attr<AttrType::output, Plugin::Output, Model::Flag::notifying>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
-    , Model::Attr<AttrType::feature, size_t, Model::Flag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::Flag::basic>
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
@@ -88,9 +90,10 @@ namespace Analyzer
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
         Accessor()
-        : Accessor(AttrContainer(  {""}
+        : Accessor(AttrContainer(  {}
+                                 , {}
+                                 , {}
                                  , {""}
-                                 , {0}
                                  , {{}}
                                  , {ZoomMode::plugin}
                                  , {juce::Colours::black}
@@ -102,7 +105,7 @@ namespace Analyzer
         }
         
         template <acsr_enum_type type>
-        bool insertAccessor(size_t index, NotificationType notification)
+        bool insertAccessor(size_t index, NotificationType const notification)
         {
             if constexpr(type == AcsrType::valueZoom)
             {

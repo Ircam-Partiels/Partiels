@@ -33,175 +33,46 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::key:
-            {
-                mPropertySection.setPanels({});
-                mProperties.clear();
-                
-                auto instance = createProcessor(acsr, 44100.0, AlertType::silent);
-                if(instance == nullptr)
-                {
-                    resized();
-                    return;
-                }
-                
-                mPluginName.entry.setText(instance->getName(), juce::NotificationType::dontSendNotification);
-                auto const selectedFeature = acsr.getAttr<AttrType::feature>();
-                auto const outputDescriptors = instance->getOutputDescriptors();
-                anlWeakAssert(outputDescriptors.size() > selectedFeature);
-                int itemId = 0;
-                mPluginName.entry.setEnabled(outputDescriptors.size() > 1);
-                mFeatures.entry.clear();
-                for(auto const& descriptor : outputDescriptors)
-                {
-                    mFeatures.entry.addItem(descriptor.name, ++itemId);
-                }
-                mFeatures.entry.setSelectedItemIndex(static_cast<int>(selectedFeature));
-
-                auto createParameterEntry = [&](Processor::ParameterDescriptor const& descriptor) -> std::unique_ptr<Layout::PropertyPanelBase>
-                {
-                    auto const uid = descriptor.identifier;
-                    if(descriptor.isQuantized && !descriptor.valueNames.empty())
-                    {
-                        juce::StringArray names;
-                        for(auto const& name : descriptor.valueNames)
-                        {
-                            names.add(name + descriptor.unit);
-                        }
-                        auto property = std::make_unique<Layout::PropertyComboBox>(descriptor.name, descriptor.description, names, 0, [&, uid](juce::ComboBox const& entry)
-                        {
-                            auto parameters = mAccessor.getAttr<AttrType::parameters>();
-                            parameters[uid] = static_cast<float>(entry.getSelectedItemIndex());
-                            mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
-                        });
-                        return property;
-                    }
-                    
-                    auto property = std::make_unique<Layout::PropertyLabel>(descriptor.name, descriptor.description, "", [&, uid = descriptor.identifier](juce::Label const& entry)
-                    {
-                        JUCE_COMPILER_WARNING("limit the value");
-                        auto parameters = mAccessor.getAttr<AttrType::parameters>();
-                        parameters[uid] = entry.getText().getFloatValue();
-                        mAccessor.setAttr<AttrType::parameters>(parameters, NotificationType::synchronous);
-                    });
-                    
-                    property->entry.onEditorShow = [rawProperty = property.get()]()
-                    {
-                        if(auto* textEditor = rawProperty->entry.getCurrentTextEditor())
-                        {
-                            textEditor->setKeyboardType(juce::TextInputTarget::VirtualKeyboardType::decimalKeyboard);
-                            textEditor->setInputRestrictions(0, "0123456789.");
-                        }
-                    };
-                    return property;
-                };
-                
-                auto const parameterDescriptors = instance->getParameterDescriptors();
-                for(auto const& descriptor : parameterDescriptors)
-                {
-                    auto property = createParameterEntry(descriptor);
-                    if(property != nullptr)
-                    {
-                        mProperties[descriptor.identifier] = std::move(property);
-                    }
-                }
-                
-                std::vector<Layout::PropertySection::PanelRef> panels;
-                panels.push_back(mPluginName);
-                panels.push_back(mFeatures);
-                if(!mProperties.empty())
-                {
-                    panels.push_back(mAnalysisParameters);
-                    for(auto const& property : mProperties)
-                    {
-                        panels.push_back(*property.second.get());
-                    }
-                }
-                panels.push_back(mGraphicalParameters);
-                if(selectedFeature < outputDescriptors.size())
-                {
-                    auto const& outputDescriptor = outputDescriptors[selectedFeature];
-                    if(outputDescriptor.binCount > 1)
-                    {
-                        panels.push_back(mColourMap);
-                    }
-                    else
-                    {
-                        panels.push_back(mColour);
-                    }
-                }
-                
-                mPropertySection.setPanels(panels);
-                setSize(300, std::min(600, static_cast<int>(panels.size()) * 30));
-                resized();
-            }
-            case AttrType::feature:
                 break;
             case AttrType::name:
+            {
+                mNameProperty.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+            }
                 break;
+            case AttrType::description:
+            {
+                updatePluginProperties();
+            }
             case AttrType::parameters:
-            {
-                auto const parameters = acsr.getAttr<AttrType::parameters>();
-                for(auto& property : mProperties)
-                {
-                    auto const uid = property.first;
-                    auto const parameter = parameters.find(uid);
-                    if(parameter != parameters.cend())
-                    {
-                        if(auto* comboxBox = dynamic_cast<Layout::PropertyComboBox*>(property.second.get()))
-                        {
-                            comboxBox->entry.setSelectedItemIndex(static_cast<int>(parameter->second), juce::NotificationType::dontSendNotification);
-                        }
-                        else if(auto* label = dynamic_cast<Layout::PropertyLabel*>(property.second.get()))
-                        {
-                            label->entry.setText(juce::String(parameter->second, 2), juce::NotificationType::dontSendNotification);
-                        }
-                        else
-                        {
-                            anlWeakAssert(false && "Unsupported layout");
-                        }
-                    }
-                }
-            }
-                break;
-            case AttrType::colourMap:
-            {
-                mColourMap.entry.setSelectedItemIndex(static_cast<int>(acsr.getAttr<AttrType::colourMap>()));
-            }
-                break;
+            case AttrType::zoomMode:
             case AttrType::colour:
-                break;
+            case AttrType::colourMap:
+            case AttrType::resultsType:
             case AttrType::results:
+            case AttrType::warnings:
                 break;
         }
     };
     
-    mAnalyzerName.entry.setEnabled(true);
-    mPluginName.entry.setEnabled(false);
-    mFeatures.callback = [&](juce::ComboBox const& entry)
+    mNameProperty.callback = [&](juce::Label const& l)
     {
-        mAccessor.setAttr<AttrType::feature>(static_cast<size_t>(entry.getSelectedItemIndex()), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::name>(l.getText(), NotificationType::synchronous);
     };
+    mNameProperty.entry.setEditable(true, true);
     
-    mColour.callback = [&](juce::TextButton const&)
+    auto onResized = [&]()
     {
-        ColourSelector colourSelector;
-        colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
-        colourSelector.setSize(400, 300);
-        colourSelector.onColourChanged = [&](juce::Colour const& colour)
-        {
-            mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
-        };
-        juce::DialogWindow::showModalDialog("Set Colour", &colourSelector, this, juce::Colours::black, true);
+        setSize(getWidth(), std::max(mPluginSection.getBottom(), 120) + 2);
+        resized();
     };
-    mColourMap.callback = [&](juce::ComboBox const& entry)
-    {
-        mAccessor.setAttr<AttrType::colourMap>(static_cast<ColorMap>(entry.getSelectedItemIndex()), NotificationType::synchronous);
-    };
-    
-    mColourMap.entry.clear();
-    mColourMap.entry.addItemList({"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, 1);
-    
-    addAndMakeVisible(mPropertySection);
+    mProcessorSection.onResized = onResized;
+    mGraphicalSection.onResized = onResized;
+    mPluginSection.onResized = onResized;
+    addAndMakeVisible(mNameProperty);
+    addAndMakeVisible(mProcessorSection);
+    addAndMakeVisible(mGraphicalSection);
+    addAndMakeVisible(mPluginSection);
+
     setSize(300, 200);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
@@ -213,7 +84,58 @@ Analyzer::PropertyPanel::~PropertyPanel()
 
 void Analyzer::PropertyPanel::resized()
 {
-    mPropertySection.setBounds(getLocalBounds());
+    auto bound = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+    mNameProperty.setBounds(bound.removeFromTop(mNameProperty.getHeight()));
+    mProcessorSection.setBounds(bound.removeFromTop(mProcessorSection.getHeight()));
+    mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
+    mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
+    setSize(bound.getWidth(), std::max(bound.getY(), 120) + 2);
+}
+
+void Analyzer::PropertyPanel::updateProcessorProperties()
+{
+    
+}
+
+void Analyzer::PropertyPanel::updateGraphicalProperties()
+{
+    auto const output = mAccessor.getAttr<AttrType::output>();
+}
+
+void Analyzer::PropertyPanel::updatePluginProperties()
+{
+    mPluginProperties.clear();
+    auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
+    {
+        auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
+        if(property != nullptr)
+        {
+            property->entry.setEditable(false, false);
+        }
+        return property;
+    };
+    auto const description = mAccessor.getAttr<AttrType::description>();
+    mPluginProperties.push_back(createProperty("Name", "The name of the plugin", description.name));
+    mPluginProperties.push_back(createProperty("Specialization", "The specialization of the plugin", description.specialization));
+    auto property = std::make_unique<Layout::PropertyText>(juce::translate("Details"), juce::translate("The details of the plugin"), description.details);
+    if(property != nullptr)
+    {
+        property->entry.setEditable(false, false);
+    }
+    
+    mPluginProperties.push_back(std::move(property));
+    
+    mPluginProperties.push_back(createProperty("Maker", "The maker of the plugin", description.maker));
+    mPluginProperties.push_back(createProperty("Version", "The version of the plugin", juce::String(description.version)));
+    mPluginProperties.push_back(createProperty("Category", "The category of the plugin", description.category.isEmpty() ? "-" : description.category));
+    
+    
+    std::vector<Layout::PropertySection::PanelRef> panels;
+    for(auto const& property : mPluginProperties)
+    {
+        panels.push_back(*property.get());
+    }
+    mPluginSection.setPanels(panels);
 }
 
 ANALYSE_FILE_END

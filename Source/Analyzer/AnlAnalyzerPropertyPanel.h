@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
+#include "AnlAnalyzerProcessor.h"
 #include "../Layout/AnlLayout.h"
 
 ANALYSE_FILE_BEGIN
@@ -19,6 +20,9 @@ namespace Analyzer
         void resized() override;
     private:
         
+        void updateProcessorProperties();
+        void updateGraphicalProperties();
+        void updatePluginProperties();
         
         class ColourSelector
         : public juce::ColourSelector
@@ -37,18 +41,22 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Layout::PropertyLabel mAnalyzerName {juce::translate("Name"), juce::translate("The name of the analyzer")};
-        Layout::PropertyLabel mPluginName {juce::translate("Plugin"), juce::translate("The name of the plugin")};
-        Layout::PropertyComboBox mFeatures {juce::translate("Feature"), juce::translate("The active feature of the analyzer")};
+        Layout::PropertyLabel mNameProperty {juce::translate("Name"), juce::translate("The name of the analyzer")};
         
-        Layout::PropertyTitle mAnalysisParameters {juce::translate("Analysis Parameters"), juce::translate("The analysis parameters of the analyzer")};
-        std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mProperties;
+        Layout::PropertySection mProcessorSection {juce::translate("PROCESSOR"), true,
+            juce::translate("The processor parameters of the analyzer")};
+        std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mProcessorProperties;
         
-        Layout::PropertyTitle mGraphicalParameters {juce::translate("Graphical Parameters"), juce::translate("The graphical parameters of the analyzer")};
+        Layout::PropertySection mGraphicalSection {juce::translate("GRAPHICAL"), true,
+            juce::translate("The graphical parameters of the analyzer")};
+        std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
+        
+        Layout::PropertySection mPluginSection {juce::translate("PLUGIN"), true,
+            juce::translate("The plugin information")};
+        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mPluginProperties;
+        
         Layout::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
         Layout::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
-        
-        Layout::PropertySection mPropertySection {"PARAMETERS", true};
     };
 }
 

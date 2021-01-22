@@ -7,32 +7,32 @@ ANALYSE_FILE_BEGIN
 namespace Analyzer
 {
     class Processor
-    : public Vamp::HostExt::PluginWrapper
     {
     public:
         using Result = Anl::Plugin::Result;
+        using Description = Anl::Plugin::Description;
+        using Parameter = Anl::Plugin::Parameter;
+        using Output = Anl::Plugin::Output;
         
-        Processor(Vamp::Plugin* plugin, size_t feature);
-        ~Processor() override = default;
+        static std::unique_ptr<Processor> create(Accessor const& accessor, double sampleRate, AlertType alertType);
         
-        // Vamp::PluginBase
-        ParameterList getParameterDescriptors() const override;
-        float getParameter(std::string identifier) const override;
-        void setParameter(std::string identifier, float value) override;
+        ~Processor() = default;
         
-        std::map<juce::String, double> getParameters() const;
-        void setParameters(std::map<juce::String, double> const& parameters);
+        double getSampleRate() const;
+        std::vector<juce::String, Parameter> getParameters() const;
+        Description getDescription() const;
+        Output getOutput() const;
         
-        bool hasZoomInfo(size_t const feature) const;
-        std::tuple<Zoom::Range, double> getZoomInfo(size_t const feature) const;
+        void setParameterValues(std::map<juce::String, double> const& parameters);
         
         bool prepareForAnalysis(juce::AudioFormatReader& audioFormatReader);
         bool performNextAudioBlock(std::vector<Result>& results);
-        
-        size_t getWindowSize() const;
-        size_t getStepSize() const;
+
     private:
         
+        Processor(std::unique_ptr<Vamp::Plugin> plugin, size_t feature);
+        
+        std::unique_ptr<Vamp::Plugin> mPlugin;
         juce::int64 mPosition {0};
         juce::AudioBuffer<float> mBuffer;
         size_t const mFeature;
@@ -46,8 +46,6 @@ namespace Analyzer
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };
-    
-    std::unique_ptr<Processor> createProcessor(Accessor const& accessor, double sampleRate, AlertType alertType);
 }
 
 ANALYSE_FILE_END

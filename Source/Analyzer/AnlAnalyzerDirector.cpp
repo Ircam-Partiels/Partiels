@@ -1,6 +1,9 @@
 #include "AnlAnalyzerDirector.h"
 #include "AnlAnalyzerProcessor.h"
 #include "AnlAnalyzerPropertyPanel.h"
+
+#include "../Plugin/AnlPluginListScanner.h"
+
 #include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
@@ -13,15 +16,40 @@ Analyzer::Director::Director(Accessor& accessor)
         switch (anlAttr)
         {
             case AttrType::key:
-            case AttrType::feature:
+            {
+                auto const key = mAccessor.getAttr<AttrType::key>();
+                auto const descriptions = PluginList::Scanner::getPluginDescriptions();
+                if(descriptions.count(key))
+                {
+                    mAccessor.setAttr<AttrType::description>(descriptions.at(key), notification);
+                }
+                updateProcessor(notification);
+                auto processor = mProcessorManager.getInstance();
+                if(processor != nullptr)
+                {
+                    processor->setParameterValues(mAccessor.getAttr<AttrType::parameters>());
+                }
+                runAnalysis(notification);
+            }
+                break;
             case AttrType::parameters:
             {
+                auto processor = mProcessorManager.getInstance();
+                if(processor != nullptr)
+                {
+                    processor->setParameterValues(mAccessor.getAttr<AttrType::parameters>());
+                }
                 runAnalysis(notification);
             }
                 break;
             case AttrType::zoomMode:
             {
                 updateZoomRange(notification);
+            }
+                break;
+            case AttrType::description:
+            {
+                
             }
                 break;
             case AttrType::name:
@@ -66,7 +94,34 @@ Analyzer::Director::~Director()
 void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
     mAudioFormatReaderManager.setInstance(std::shared_ptr<juce::AudioFormatReader>(audioFormatReader.release()));
+    updateProcessor(notification);
     runAnalysis(notification);
+}
+
+void Analyzer::Director::updateProcessor(NotificationType const notification)
+{
+    auto reader = mAudioFormatReaderManager.getInstance();
+    if(reader == nullptr)
+    {
+        return;
+    }
+    
+    auto const sampleRate = reader->sampleRate;
+    auto instance = mProcessorManager.getInstance();
+    if(instance == nullptr ||
+       std::abs(instance->getSampleRate() - sampleRate) > std::numeric_limits<double>::epsilon())
+    {
+        instance = std::shared_ptr<Processor>(Analyzer::Processor::create(mAccessor, sampleRate,  AlertType::window).release());
+        mProcessorManager.setInstance(instance);
+    }
+    
+    if(instance == nullptr)
+    {
+        return;
+    }
+    
+    instance->setParameterValues(mAccessor.getAttr<AttrType::parameters>());
+    sanitizeProcessor(notification);
 }
 
 void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
@@ -78,55 +133,39 @@ void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
         mAccessor.setAttr<AttrType::warnings>(warnings, notification);
         return;
     }
-    mAccessor.setAttr<AttrType::parameters>(processor->getParameters(), notification);
     
-    auto const descriptors = processor->getOutputDescriptors();
-    anlWeakAssert(!descriptors.empty());
-    
-    // Ensures that the selected feature is consistent with the plugin
-    auto const feature = mAccessor.getAttr<AttrType::feature>();
-    if(descriptors.empty())
-    {
-        warnings[WarningType::feature] = juce::translate("The plugin doesn't have any feature or the feature is not supported!");
-        mAccessor.setAttr<AttrType::warnings>(warnings, notification);
-        return;
-    }
-    else if(feature >= descriptors.size())
-    {
-        warnings[WarningType::feature] = juce::translate("The selected feature FTRINDEX is not supported by the plugin!").replace("FTRINDEX", juce::String(feature));
-        mAccessor.setAttr<AttrType::warnings>(warnings, notification);
-        return;
-    }
-    
-    auto const descriptor = descriptors[feature];
-    
-    // Ensures that the type of results returned for this feature is valid
-    anlWeakAssert(descriptor.hasFixedBinCount);
-    if(!descriptor.hasFixedBinCount)
-    {
-        warnings[WarningType::resultType] = juce::translate("The type of results is undefined by the plugin and might not be supported!");
-    }
-    auto const numDimension = descriptor.hasFixedBinCount ? std::min(descriptor.binCount, 2_z) + 1 : 0;
-    mAccessor.setAttr<AttrType::resultsType>(static_cast<ResultsType>(numDimension), notification);
-    
-    // Ensures that the range of results returned for this feature is valid
-    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(descriptor.isQuantized ? descriptor.quantizeStep : std::numeric_limits<double>::epsilon(), notification);
-    if(!descriptor.hasKnownExtents)
-    {
-        warnings[WarningType::zoomMode] = juce::translate("The type of zoom...");
-        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()), notification);
-    }
-    else
-    {
-        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(static_cast<double>(descriptor.minValue), static_cast<double>(descriptor.maxValue)), notification);
-    }
-    
-    // Updates the zoom range of the bins based on the dimensions of the results
-    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(0.0, std::max(static_cast<double>(std::max(descriptor.binCount, 1_z)), 1.0)), notification);
-    
-    JUCE_COMPILER_WARNING("to clean");
+//    auto const descriptors = processor->getOutputDescriptors();
+//    anlWeakAssert(!descriptors.empty());
+//    
+//    JUCE_COMPILER_WARNING("to fix feature")
+//    auto const descriptor = descriptors[0];
+//    
+//    // Ensures that the type of results returned for this feature is valid
+//    anlWeakAssert(descriptor.hasFixedBinCount);
+//    if(!descriptor.hasFixedBinCount)
+//    {
+//        warnings[WarningType::resultType] = juce::translate("The type of results is undefined by the plugin and might not be supported!");
+//    }
+//    auto const numDimension = descriptor.hasFixedBinCount ? std::min(descriptor.binCount, 2_z) + 1 : 0;
+//    mAccessor.setAttr<AttrType::resultsType>(static_cast<ResultsType>(numDimension), notification);
+//    
+//    // Ensures that the range of results returned for this feature is valid
+//    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+//    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(descriptor.isQuantized ? descriptor.quantizeStep : std::numeric_limits<double>::epsilon(), notification);
+//    if(!descriptor.hasKnownExtents)
+//    {
+//        warnings[WarningType::zoomMode] = juce::translate("The type of zoom...");
+//        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()), notification);
+//    }
+//    else
+//    {
+//        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(static_cast<double>(descriptor.minValue), static_cast<double>(descriptor.maxValue)), notification);
+//    }
+//    
+//    // Updates the zoom range of the bins based on the dimensions of the results
+//    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+//    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(0.0, std::max(static_cast<double>(std::max(descriptor.binCount, 1_z)), 1.0)), notification);
+//    
     updateZoomRange(notification);
 }
 
@@ -145,38 +184,28 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     }
     mAnalysisState = ProcessState::available;
     
+    auto instance = mProcessorManager.getInstance();
+    if(instance == nullptr)
+    {
+        return;
+    }
+
     auto reader = mAudioFormatReaderManager.getInstance();
     if(reader == nullptr)
     {
         return;
     }
     
-    auto instance = mProcessorManager.getInstance();
-    if(instance == nullptr || std::abs(instance->getInputSampleRate() - reader->sampleRate) > std::numeric_limits<double>::epsilon())
-    {
-        instance = std::shared_ptr<Processor>(Analyzer::createProcessor(mAccessor, reader->sampleRate, AlertType::window).release());
-        mProcessorManager.setInstance(instance);
-    }
-    
-    if(instance == nullptr)
-    {
-        return;
-    }
-    instance->setParameters(mAccessor.getAttr<AttrType::parameters>());
-    sanitizeProcessor(notification);
-    
-    auto const feature = mAccessor.getAttr<AttrType::feature>();
-    instance->setParameters(mAccessor.getAttr<AttrType::parameters>());
-    if(!instance->prepareForAnalysis(feature, *reader.get()))
+    if(!instance->prepareForAnalysis(*reader.get()))
     {
         using AlertIconType = juce::AlertWindow::AlertIconType;
         auto const errorMessage = juce::translate("Analysis cannot be performed!");
         
-        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\".").replace("ANLNAME", mAccessor.getAttr<AttrType::name>()).replace("PLGKEY", mAccessor.getAttr<AttrType::key>()));
+        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\".").replace("ANLNAME", mAccessor.getAttr<AttrType::name>()).replace("PLGKEY", mAccessor.getAttr<AttrType::key>().identifier));
         return;
     }
     
-    mAnalysisProcess = std::async([=, this]() -> std::tuple<std::vector<Analyzer::Result>, NotificationType>
+    mAnalysisProcess = std::async([=, this]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
         
@@ -184,10 +213,10 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         if(!mAnalysisState.compare_exchange_weak(expected, ProcessState::running))
         {
             triggerAsyncUpdate();
-            return std::make_tuple(std::vector<Analyzer::Result>{}, notification);
+            return std::make_tuple(std::vector<Plugin::Result>{}, notification);
         }
 
-        std::vector<Analyzer::Result> results;
+        std::vector<Plugin::Result> results;
         while(mAnalysisState.load() != ProcessState::aborted && instance->performNextAudioBlock(results))
         {
         }
@@ -198,7 +227,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
             return std::make_tuple(std::move(results), notification);
         }
         triggerAsyncUpdate();
-        return std::make_tuple(std::vector<Analyzer::Result>{}, notification);
+        return std::make_tuple(std::vector<Plugin::Result>{}, notification);
     });
 }
 
@@ -219,6 +248,15 @@ void Analyzer::Director::runRendering(NotificationType const notification)
     
     auto const colourMap = mAccessor.getAttr<AttrType::colourMap>();
     auto const binCounts = static_cast<size_t>(mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::globalRange>().getEnd());
+    
+    auto const witdh = static_cast<int>(results.size());
+    auto const height = static_cast<int>(binCounts);
+    anlWeakAssert(witdh > 0 && height > 0);
+    if(witdh < 0 || height < 0)
+    {
+        return;
+    }
+    
     mRenderingProcess = std::async([=, this]() -> std::tuple<juce::Image, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runRendering");
@@ -232,8 +270,7 @@ void Analyzer::Director::runRendering(NotificationType const notification)
         JUCE_COMPILER_WARNING("TOO ADD")
         //anlWeakAssert(results.front().values.size() == binCounts);
         
-        auto const witdh = static_cast<int>(results.size());
-        auto const height = static_cast<int>(binCounts);
+        
         auto const yadv = static_cast<double>(results.front().values.size()) / static_cast<double>(height);
     
         auto image = juce::Image(juce::Image::PixelFormat::ARGB, witdh, height, false);
@@ -269,8 +306,8 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
 {
     switch(mAccessor.getAttr<AttrType::zoomMode>())
     {
+        case ZoomMode::custom:
         case ZoomMode::plugin:
-            break;
         case ZoomMode::results:
         {
             auto const& results = mAccessor.getAttr<AttrType::results>();
@@ -301,8 +338,6 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
             zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
         }
-            break;
-        case ZoomMode::custom:
             break;
     }
 }

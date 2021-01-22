@@ -18,6 +18,7 @@ namespace Analyzer
         
     private:
         
+        void updateProcessor(NotificationType const notification);
         void sanitizeProcessor(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
         void runRendering(NotificationType const notification);
@@ -37,7 +38,7 @@ namespace Analyzer
         
         Accessor& mAccessor;
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
-        std::future<std::tuple<std::vector<Analyzer::Result>, NotificationType>> mAnalysisProcess;
+        std::future<std::tuple<std::vector<Plugin::Result>, NotificationType>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
         
         std::atomic<ProcessState> mRenderingState {ProcessState::available};

@@ -21,7 +21,6 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
         {
             case AttrType::key:
             case AttrType::name:
-            case AttrType::feature:
             case AttrType::parameters:
             case AttrType::zoomMode:
             case AttrType::colour:
