@@ -9,6 +9,7 @@ namespace Layout
     class PropertySection
     : public juce::Component
     , public juce::SettableTooltipClient
+    , private juce::ComponentListener
     , private juce::Timer
     {
     public:
@@ -49,6 +50,9 @@ namespace Layout
         
     private:
         
+        // juce::ComponentListener
+        void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
+        
         // juce::Timer
         void timerCallback() override;
         
@@ -79,12 +83,10 @@ namespace Layout
         
         struct Container
         {
-            Container(PanelRef ref)
-            : panel(ref)
-            {
-            }
+            Container(PanelRef ref);
+            ~Container() = default;
             
-            PanelRef panel;
+            juce::Component::SafePointer<PropertyPanelBase> panel;
             Separator separator;
         };
         
@@ -93,7 +95,6 @@ namespace Layout
         std::vector<std::unique_ptr<Container>> mContainers;
         float mSizeRatio = 1.0f;
         bool mOpened = true;
-        int mContentsSize = 0;
     };
 }
 

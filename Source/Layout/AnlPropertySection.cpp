@@ -34,6 +34,11 @@ void Layout::PropertySection::Separator::paint(juce::Graphics& g)
     g.fillAll(findColour(ColourIds::separatorColourId, true));
 }
 
+Layout::PropertySection::Container::Container(PanelRef ref)
+: panel(&(ref.get()))
+{
+}
+
 Layout::PropertySection::PropertySection(juce::String const& title, bool resizeOnClick, juce::String const& tooltip)
 : mTitle(title)
 {
@@ -54,25 +59,26 @@ void Layout::PropertySection::resized()
     auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
     anlWeakAssert(lookAndFeel != nullptr);
     
-    auto constexpr maxSize = std::numeric_limits<int>::max();
-    auto bounds = getLocalBounds().withHeight(maxSize);
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     if(mHeader.isVisible())
     {
         mHeader.setBounds(bounds.removeFromTop(lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20));
     }
     
-    mContentsSize = 0;
     auto const separatorSize = lookAndFeel != nullptr ? lookAndFeel->getSeparatorHeight(*this) : 2;
     for(auto& container : mContainers)
     {
         anlStrongAssert(container != nullptr);
         if(container != nullptr)
         {
-            auto const panel = container.get()->panel;
-            auto const containerSize = panel.get().getHeight();
-            panel.get().setBounds(bounds.removeFromTop(containerSize));
-            container.get()->separator.setBounds(bounds.removeFromTop(separatorSize));
-            mContentsSize += containerSize + separatorSize;
+            auto const panel = container.get()->panel.getComponent();
+            anlWeakAssert(panel != nullptr);
+            if(panel != nullptr)
+            {
+                auto const containerSize = panel->getHeight();
+                panel->setBounds(bounds.removeFromTop(containerSize));
+                container.get()->separator.setBounds(bounds.removeFromTop(separatorSize));
+            }
         }
     }
     
@@ -93,7 +99,13 @@ void Layout::PropertySection::setPanels(std::vector<PanelRef> const& panels)
     {
         if(container != nullptr)
         {
-            removeChildComponent(&(container->panel.get()));
+            removeChildComponent(&(container.get()->separator));
+            auto const panel = container.get()->panel.getComponent();
+            if(panel != nullptr)
+            {
+                panel->removeComponentListener(this);
+                removeChildComponent(panel);
+            }
         }
     }
     
@@ -105,12 +117,13 @@ void Layout::PropertySection::setPanels(std::vector<PanelRef> const& panels)
         anlStrongAssert(container != nullptr);
         if(container != nullptr)
         {
+            panel.get().addComponentListener(this);
             addAndMakeVisible(container.get()->panel);
             addAndMakeVisible(container.get()->separator);
             mContainers.push_back(std::move(container));
         }
     }
-    setOpen(mOpened, isTimerRunning());
+    componentMovedOrResized(*this, false, true);
     resized();
 }
 
@@ -133,9 +146,35 @@ void Layout::PropertySection::setOpen(bool isOpen, bool shouldAnimate)
             mHeader.repaint();
         }
         mSizeRatio = newRatio;
-        auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(mContentsSize) * mSizeRatio));
+        componentMovedOrResized(*this, false, true);
+    }
+}
+
+void Layout::PropertySection::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
+{
+    juce::ignoreUnused(component, wasMoved);
+    if(wasResized)
+    {
         auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
         anlWeakAssert(lookAndFeel != nullptr);
+        
+        auto const separatorSize = lookAndFeel != nullptr ? lookAndFeel->getSeparatorHeight(*this) : 2;
+        auto const fullSize = std::accumulate(mContainers.cbegin(), mContainers.cend(), 0, [separatorSize](int value, auto const& container)
+        {
+            anlStrongAssert(container != nullptr);
+            if(container != nullptr)
+            {
+                auto const panel = container.get()->panel.getComponent();
+                anlStrongAssert(panel != nullptr);
+                if(panel != nullptr)
+                {
+                    return value + panel->getHeight() + separatorSize;
+                }
+            }
+            return value;
+        });
+        
+        auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(fullSize) * mSizeRatio));
         auto const headerHeight = lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20;
         setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
     }
@@ -150,11 +189,7 @@ void Layout::PropertySection::timerCallback()
         stopTimer();
     }
     mHeader.repaint();
-    auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(mContentsSize) * mSizeRatio));
-    auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(lookAndFeel != nullptr);
-    auto const headerHeight = lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20;
-    setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
+    componentMovedOrResized(*this, false, true);
 }
 
 ANALYSE_FILE_END
