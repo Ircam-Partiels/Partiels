@@ -4,11 +4,13 @@
 #include "../Tools/AnlModel.h"
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginWrapper.h>
+#include <vamp-hostsdk/PluginInputDomainAdapter.h>
 
 ANALYSE_FILE_BEGIN
 
 namespace Plugin
 {
+    using InputDomain = Vamp::Plugin::InputDomain;
     struct Key
     {
         std::string identifier; //!< The identifier of the plugin
@@ -16,7 +18,7 @@ namespace Plugin
         
         inline bool operator<(Key const& rhd) const noexcept
         {
-            return identifier < rhd.identifier || feature < rhd.feature;
+            return identifier < rhd.identifier && feature < rhd.feature;
         }
         
         inline bool operator==(Key const& rhd) const noexcept
@@ -50,7 +52,7 @@ namespace Plugin
     : public Vamp::Plugin::ParameterDescriptor
     {
         using Vamp::Plugin::ParameterDescriptor::ParameterDescriptor;
-        Parameter(Vamp::Plugin::ParameterDescriptor& d)
+        Parameter(Vamp::Plugin::ParameterDescriptor const& d)
         : Vamp::Plugin::ParameterDescriptor(d)
         {
         }
@@ -90,20 +92,30 @@ namespace Plugin
     
     struct Description
     {
-        juce::String name {};               //!< The name of the plugin
-        juce::String specialization {};     //!< The feature specialization of the plugin
-        juce::String maker {};              //!< The maker of the plugin
-        unsigned int version {0};           //!< The version of the plugin
-        juce::String category;              //!< The category of the plugin
-        juce::String details;               //!< Further information about the plugin
+        juce::String name {};                               //!< The name of the plugin
+        juce::String specialization {};                     //!< The feature specialization of the plugin
+        InputDomain inputDomain {InputDomain::TimeDomain};  //!< The input domain of the plugin
+        juce::String maker {};                              //!< The maker of the plugin
+        unsigned int version {0};                           //!< The version of the plugin
+        juce::String category {};                           //!< The category of the plugin
+        juce::String details {};                            //!< Further information about the plugin
         
+        size_t defaultBlockSize {512};                      //!< The default block size (or window size)
+        size_t defaultStepSize {512};                       //!< The default step size
+        std::vector<Parameter> parameters {};               //!< The parameters of the plugin
+
         inline bool operator==(Description const& rhd) const noexcept
         {
             return name == rhd.name &&
+            specialization == rhd.specialization &&
+            inputDomain == rhd.inputDomain &&
             maker == rhd.maker &&
             version == rhd.version &&
             category == rhd.category &&
-            details == rhd.details;
+            details == rhd.details &&
+            defaultBlockSize == rhd.defaultBlockSize &&
+            defaultStepSize == rhd.defaultStepSize &&
+            parameters == rhd.parameters;
         }
         
         inline bool operator!=(Description const& rhd) const noexcept
