@@ -19,26 +19,25 @@ Analyzer::Director::Director(Accessor& accessor)
             {
                 auto const key = mAccessor.getAttr<AttrType::key>();
                 auto const descriptions = PluginList::Scanner::getPluginDescriptions();
-                if(descriptions.count(key))
+                anlWeakAssert(key == Plugin::Key{} || descriptions.count(key) > 0);
+                if(descriptions.count(key) > 0)
                 {
                     mAccessor.setAttr<AttrType::description>(descriptions.at(key), notification);
                 }
-                updateProcessor(notification);
-                auto processor = mProcessorManager.getInstance();
-                if(processor != nullptr)
+                else if(key != Plugin::Key{})
                 {
-                    processor->setParameterValues(mAccessor.getAttr<AttrType::parameters>());
+                    std::cout << "looking: " << key.identifier << " " << key.feature << ":\n";
+                    for(auto const& description : descriptions)
+                    {
+                        std::cout << description.first.identifier << " " << description.first.feature << "\n";
+                    }
                 }
+                updateProcessor(notification);
                 runAnalysis(notification);
             }
                 break;
             case AttrType::parameters:
             {
-                auto processor = mProcessorManager.getInstance();
-                if(processor != nullptr)
-                {
-                    processor->setParameterValues(mAccessor.getAttr<AttrType::parameters>());
-                }
                 runAnalysis(notification);
             }
                 break;
@@ -119,8 +118,7 @@ void Analyzer::Director::updateProcessor(NotificationType const notification)
     {
         return;
     }
-    
-    instance->setParameterValues(mAccessor.getAttr<AttrType::parameters>());
+
     sanitizeProcessor(notification);
 }
 
@@ -196,7 +194,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         return;
     }
     
-    if(!instance->prepareForAnalysis(*reader.get()))
+    if(!instance->prepareForAnalysis(*reader.get(), mAccessor.getAttr<AttrType::parameters>()))
     {
         using AlertIconType = juce::AlertWindow::AlertIconType;
         auto const errorMessage = juce::translate("Analysis cannot be performed!");
@@ -247,10 +245,9 @@ void Analyzer::Director::runRendering(NotificationType const notification)
     }
     
     auto const colourMap = mAccessor.getAttr<AttrType::colourMap>();
-    auto const binCounts = static_cast<size_t>(mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::globalRange>().getEnd());
     
     auto const witdh = static_cast<int>(results.size());
-    auto const height = static_cast<int>(binCounts);
+    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
     anlWeakAssert(witdh > 0 && height > 0);
     if(witdh < 0 || height < 0)
     {
@@ -267,12 +264,6 @@ void Analyzer::Director::runRendering(NotificationType const notification)
             return std::make_tuple(juce::Image(), notification);
         }
         
-        JUCE_COMPILER_WARNING("TOO ADD")
-        //anlWeakAssert(results.front().values.size() == binCounts);
-        
-        
-        auto const yadv = static_cast<double>(results.front().values.size()) / static_cast<double>(height);
-    
         auto image = juce::Image(juce::Image::PixelFormat::ARGB, witdh, height, false);
         juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
         
@@ -284,9 +275,9 @@ void Analyzer::Director::runRendering(NotificationType const notification)
         
         for(int i = 0; i < witdh && mRenderingState.load() != ProcessState::aborted; ++i)
         {
-            for(int j = 0; j < height; ++j)
+            for(int j = 0; j < height && mRenderingState.load() != ProcessState::aborted; ++j)
             {
-                auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(static_cast<double>(j) * yadv)]);
+                auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
                 data.setPixelColour(i, height - 1 - j, colour);
             }
         }
@@ -334,9 +325,13 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             };
             
             auto const info = getZoomInfo();
-            auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
-            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+            auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
+            valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+            
+            auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+            binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(results[0].values.size())}, notification);
+            binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
         }
             break;
     }

@@ -23,9 +23,7 @@ namespace Analyzer
         Description getDescription() const;
         Output getOutput() const;
         
-        void setParameterValues(std::map<juce::String, double> const& parameters);
-        
-        bool prepareForAnalysis(juce::AudioFormatReader& audioFormatReader);
+        bool prepareForAnalysis(juce::AudioFormatReader& audioFormatReader, std::map<juce::String, double> const& parameters);
         bool performNextAudioBlock(std::vector<Result>& results);
 
     private:

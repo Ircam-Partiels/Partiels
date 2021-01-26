@@ -4,7 +4,6 @@
 #include <vamp-hostsdk/PluginWrapper.h>
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginInputDomainAdapter.h>
-#include <vamp-hostsdk/PluginBufferingAdapter.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -194,16 +193,18 @@ Analyzer::Processor::Description Analyzer::Processor::getDescription() const
 //    return parameters;
 //}
 
-void Analyzer::Processor::setParameterValues(std::map<juce::String, double> const& parameters)
+bool Analyzer::Processor::prepareForAnalysis(juce::AudioFormatReader& audioFormatReader, std::map<juce::String, double> const& parameters)
 {
-    anlStrongAssert(mPlugin != nullptr);
+    auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
+    auto const windowSize = mWindowSize;
+    auto const stepSize = windowSize / mWindowOverlapping;
+    
     if(mPlugin == nullptr)
     {
-        return;
+        return false;
     }
     
     using PluginInputDomainAdapter = Vamp::HostExt::PluginInputDomainAdapter;
-    using PluginBufferingAdapter = Vamp::HostExt::PluginBufferingAdapter;
     auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(mPlugin.get());
     
     auto setParameterValue = [&](std::string identifier, float value)
@@ -229,11 +230,6 @@ void Analyzer::Processor::setParameterValues(std::map<juce::String, double> cons
                 {
                     anlWeakAssert(value >= 0.0f && value <= 8.0f);
                     value = std::min(std::max(0.0f, value), 8.0f);
-                    anlWeakAssert(adapter->getWrapper<PluginBufferingAdapter>() == nullptr);
-                    if(adapter->getWrapper<PluginBufferingAdapter>() != nullptr)
-                    {
-                        return;
-                    }
                     mWindowOverlapping = static_cast<size_t>(std::floor(std::pow(2.0f, (value))));
                     return;
                 }
@@ -245,18 +241,6 @@ void Analyzer::Processor::setParameterValues(std::map<juce::String, double> cons
     for(auto const& parameter : parameters)
     {
         setParameterValue(parameter.first.toStdString(), static_cast<float>(parameter.second));
-    }
-}
-
-bool Analyzer::Processor::prepareForAnalysis(juce::AudioFormatReader& audioFormatReader)
-{
-    auto const numChannels = static_cast<int>(audioFormatReader.numChannels);
-    auto const windowSize = mWindowSize;
-    auto const stepSize = windowSize / mWindowOverlapping;
-    
-    if(mPlugin == nullptr)
-    {
-        return false;
     }
     
     if(!mPlugin->initialise(static_cast<size_t>(numChannels), stepSize, windowSize))

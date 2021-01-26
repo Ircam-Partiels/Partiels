@@ -41,6 +41,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
             case AttrType::description:
             {
+                updateProcessorProperties();
                 updatePluginProperties();
             }
             case AttrType::parameters:
@@ -62,7 +63,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     
     auto onResized = [&]()
     {
-        setSize(getWidth(), std::max(mPluginSection.getBottom(), 120) + 2);
         resized();
     };
     mProcessorSection.onResized = onResized;
@@ -94,17 +94,6 @@ void Analyzer::PropertyPanel::resized()
 
 void Analyzer::PropertyPanel::updateProcessorProperties()
 {
-    
-}
-
-void Analyzer::PropertyPanel::updateGraphicalProperties()
-{
-    auto const output = mAccessor.getAttr<AttrType::output>();
-}
-
-void Analyzer::PropertyPanel::updatePluginProperties()
-{
-    mPluginProperties.clear();
     auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
     {
         auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
@@ -114,6 +103,52 @@ void Analyzer::PropertyPanel::updatePluginProperties()
         }
         return property;
     };
+    
+    mProcessorProperties.clear();
+    auto const description = mAccessor.getAttr<AttrType::description>();
+    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+    {
+        mProcessorProperties.push_back(createProperty("Window Type", "The window type", "Hanning"));
+        mProcessorProperties.push_back(createProperty("Window Size", "The window size", "512 (samples)"));
+        mProcessorProperties.push_back(createProperty("Window Overlapping", "The window overlapping", "4x"));
+    }
+    else
+    {
+        mProcessorProperties.push_back(createProperty("Block Size", "The block size", "512 (samples)"));
+        mProcessorProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
+    }
+    
+    for(auto const& parameter : description.parameters)
+    {
+        mProcessorProperties.push_back(createProperty(parameter.name, parameter.description, juce::String(parameter.defaultValue)));
+    }
+    
+    std::vector<Layout::PropertySection::PanelRef> panels;
+    for(auto const& property : mProcessorProperties)
+    {
+        panels.push_back(*property.get());
+    }
+    mProcessorSection.setPanels(panels);
+}
+
+void Analyzer::PropertyPanel::updateGraphicalProperties()
+{
+    auto const output = mAccessor.getAttr<AttrType::output>();
+}
+
+void Analyzer::PropertyPanel::updatePluginProperties()
+{
+    auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
+    {
+        auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
+        if(property != nullptr)
+        {
+            property->entry.setEditable(false, false);
+        }
+        return property;
+    };
+    
+    mPluginProperties.clear();
     auto const description = mAccessor.getAttr<AttrType::description>();
     mPluginProperties.push_back(createProperty("Name", "The name of the plugin", description.name));
     mPluginProperties.push_back(createProperty("Specialization", "The specialization of the plugin", description.specialization));
@@ -128,7 +163,6 @@ void Analyzer::PropertyPanel::updatePluginProperties()
     mPluginProperties.push_back(createProperty("Maker", "The maker of the plugin", description.maker));
     mPluginProperties.push_back(createProperty("Version", "The version of the plugin", juce::String(description.version)));
     mPluginProperties.push_back(createProperty("Category", "The category of the plugin", description.category.isEmpty() ? "-" : description.category));
-    
     
     std::vector<Layout::PropertySection::PanelRef> panels;
     for(auto const& property : mPluginProperties)

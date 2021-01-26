@@ -72,6 +72,8 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, backgroundColour);
     setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, backgroundColour.darker());
     setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, backgroundColour.brighter());
+    
+    // TODO: LookAndFeel_V2::drawTableHeaderColumn (colour arrow)
 }
 
 int Application::LookAndFeel::getSeparatorHeight(Layout::PropertySection const& section) const

@@ -45,11 +45,11 @@ namespace Analyzer
         
         Layout::PropertySection mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
-        std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mProcessorProperties;
+        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mProcessorProperties;
         
         Layout::PropertySection mGraphicalSection {juce::translate("GRAPHICAL"), true,
             juce::translate("The graphical parameters of the analyzer")};
-        std::map<juce::String, std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
+        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
         
         Layout::PropertySection mPluginSection {juce::translate("PLUGIN"), true,
             juce::translate("The plugin information")};
