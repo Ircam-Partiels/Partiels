@@ -15,7 +15,6 @@ namespace Analyzer
     {
           key
         , description
-        , output
         , name
         , parameters
         , zoomMode
@@ -65,8 +64,7 @@ namespace Analyzer
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
-    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
-    , Model::Attr<AttrType::output, Plugin::Output, Model::Flag::notifying>
+    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::Flag::basic>
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
@@ -91,7 +89,6 @@ namespace Analyzer
         
         Accessor()
         : Accessor(AttrContainer(  {}
-                                 , {}
                                  , {}
                                  , {""}
                                  , {{}}

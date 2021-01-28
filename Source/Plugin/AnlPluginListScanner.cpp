@@ -5,7 +5,7 @@
 
 ANALYSE_FILE_BEGIN
 
-std::map<Plugin::Key, Plugin::Description> PluginList::Scanner::getPluginDescriptions(double defaultSampleRate)
+std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, AlertType const alertType)
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;
@@ -14,47 +14,99 @@ std::map<Plugin::Key, Plugin::Description> PluginList::Scanner::getPluginDescrip
     anlWeakAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
-        throw std::runtime_error("Cannot get the plugin loader");
+        if(alertType == AlertType::window)
+        {
+            using AlertIconType = juce::AlertWindow::AlertIconType;
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Cannot get the plugin loader."));
+        }
+        return {};
     }
     
-    std::map<Plugin::Key, Plugin::Description> descriptions;
-    auto const keys = pluginLoader->listPlugins();
-    for(auto const& key : keys)
+    std::set<Plugin::Key> keys;
+    auto const pluginKeys = pluginLoader->listPlugins();
+    for(auto const& pluginKey : pluginKeys)
     {
-        auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(defaultSampleRate), PluginLoader::ADAPT_ALL_SAFE));
+        auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(pluginKey, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
         if(plugin != nullptr)
         {
-            Plugin::Description common;
-            common.name = plugin->getName();
-            common.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
-            if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin.get()))
-            {
-                common.inputDomain = wrapper->getWrapper<PluginInputDomainAdapter>() != nullptr ? Vamp::Plugin::InputDomain::FrequencyDomain : Vamp::Plugin::InputDomain::TimeDomain;
-            }
-            
-            common.maker = plugin->getMaker();
-            common.version = static_cast<unsigned int>(plugin->getPluginVersion());
-            auto const categories = pluginLoader->getPluginCategory(key);
-            common.category = categories.empty() ? "": categories.front();
-            common.details = plugin->getDescription();
-        
-            auto const blockSize = plugin->getPreferredBlockSize();
-            common.defaultBlockSize = blockSize > 0 ? blockSize : 512;
-            auto const stepSize = plugin->getPreferredStepSize();
-            common.defaultStepSize = stepSize > 0 ? stepSize : blockSize;
-            auto const parameters = plugin->getParameterDescriptors();
-            common.parameters.insert(common.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-            
             auto const outputs = plugin->getOutputDescriptors();
             for(size_t feature = 0; feature < outputs.size(); ++feature)
             {
-                Plugin::Description description(common);
-                description.specialization = outputs[feature].name;
-                descriptions[{key, outputs[feature].identifier}] = description;
+                if(!keys.insert({pluginKey, outputs[feature].identifier}).second)
+                {
+                    anlWeakAssert(false);
+                }
             }
         }
     }
-    return descriptions;
+    return keys;
+}
+
+Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const& key, double sampleRate, AlertType const alertType)
+{
+    using namespace Vamp;
+    using namespace Vamp::HostExt;
+    
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlWeakAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        if(alertType == AlertType::window)
+        {
+            using AlertIconType = juce::AlertWindow::AlertIconType;
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Cannot get the plugin loader."));
+        }
+        return {};
+    }
+    
+    auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+    if(plugin == nullptr)
+    {
+        if(alertType == AlertType::window)
+        {
+            using AlertIconType = juce::AlertWindow::AlertIconType;
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Plugin \"PLGKEY\" cannot be found.").replace("PLGKEY", key.identifier));
+        }
+        return {};
+    }
+    
+    auto const outputs = plugin->getOutputDescriptors();
+    for(size_t feature = 0; feature < outputs.size(); ++feature)
+    {
+        if(outputs[feature].identifier == key.feature)
+        {
+            Plugin::Description description;
+            description.name = plugin->getName();
+            description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
+            if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin.get()))
+            {
+                description.inputDomain = wrapper->getWrapper<PluginInputDomainAdapter>() != nullptr ? Vamp::Plugin::InputDomain::FrequencyDomain : Vamp::Plugin::InputDomain::TimeDomain;
+            }
+            
+            description.maker = plugin->getMaker();
+            description.version = static_cast<unsigned int>(plugin->getPluginVersion());
+            auto const categories = pluginLoader->getPluginCategory(key.identifier);
+            description.category = categories.empty() ? "": categories.front();
+            description.details = plugin->getDescription();
+            
+            auto const blockSize = plugin->getPreferredBlockSize();
+            description.defaultBlockSize = blockSize > 0 ? blockSize : 512;
+            auto const stepSize = plugin->getPreferredStepSize();
+            description.defaultStepSize = stepSize > 0 ? stepSize : blockSize;
+            auto const parameters = plugin->getParameterDescriptors();
+            description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
+            
+            description.output = outputs[feature];
+            return description;
+        }
+    }
+    
+    if(alertType == AlertType::window)
+    {
+        using AlertIconType = juce::AlertWindow::AlertIconType;
+        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Feature \"FTRID\" of plugin \"PLGKEY\" cannot be found.").replace("FTRID", key.feature).replace("PLGKEY", key.identifier));
+    }
+    return {};
 }
 
 ANALYSE_FILE_END

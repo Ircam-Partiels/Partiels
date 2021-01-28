@@ -44,7 +44,7 @@ void Document::Director::addAnalysis(AlertType alertType)
             {
                 auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
                 auto const title = juce::translate("Analysis cannot be created!");
-                auto const message = juce::translate("The analysis \"PLGNAME: SPECNAME\" cannot be inserted into the document.").replace("PLGNAME", description.name).replace("SPECNAME", description.specialization);
+                auto const message = juce::translate("The analysis \"PLGNAME: SPECNAME\" cannot be inserted into the document.").replace("PLGNAME", description.name).replace("SPECNAME", description.output.name);
                 juce::AlertWindow::showMessageBox(icon, title, message);
             }
             return;

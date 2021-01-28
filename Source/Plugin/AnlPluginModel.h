@@ -18,7 +18,7 @@ namespace Plugin
         
         inline bool operator<(Key const& rhd) const noexcept
         {
-            return identifier < rhd.identifier && feature < rhd.feature;
+            return (identifier + feature) < (rhd.identifier + rhd.feature);
         }
         
         inline bool operator==(Key const& rhd) const noexcept
@@ -93,7 +93,6 @@ namespace Plugin
     struct Description
     {
         juce::String name {};                               //!< The name of the plugin
-        juce::String specialization {};                     //!< The feature specialization of the plugin
         InputDomain inputDomain {InputDomain::TimeDomain};  //!< The input domain of the plugin
         juce::String maker {};                              //!< The maker of the plugin
         unsigned int version {0};                           //!< The version of the plugin
@@ -103,11 +102,11 @@ namespace Plugin
         size_t defaultBlockSize {512};                      //!< The default block size (or window size)
         size_t defaultStepSize {512};                       //!< The default step size
         std::vector<Parameter> parameters {};               //!< The parameters of the plugin
+        Output output {};                                   //!< The output of the plugin
 
         inline bool operator==(Description const& rhd) const noexcept
         {
             return name == rhd.name &&
-            specialization == rhd.specialization &&
             inputDomain == rhd.inputDomain &&
             maker == rhd.maker &&
             version == rhd.version &&
@@ -115,7 +114,8 @@ namespace Plugin
             details == rhd.details &&
             defaultBlockSize == rhd.defaultBlockSize &&
             defaultStepSize == rhd.defaultStepSize &&
-            parameters == rhd.parameters;
+            parameters == rhd.parameters &&
+            output == rhd.output;
         }
         
         inline bool operator!=(Description const& rhd) const noexcept
@@ -133,6 +133,13 @@ namespace XmlParser
     template<>
     auto fromXml<Plugin::Key>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Key const& defaultValue)
     -> Plugin::Key;
+    
+    template<>
+    void toXml<Plugin::Parameter>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Parameter const& value);
+    
+    template<>
+    auto fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Parameter const& defaultValue)
+    -> Plugin::Parameter;
     
     template<>
     void toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Output const& value);

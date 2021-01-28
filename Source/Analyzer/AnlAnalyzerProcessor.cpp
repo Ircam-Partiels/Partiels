@@ -70,7 +70,7 @@ Analyzer::Processor::Description Analyzer::Processor::getDescription() const
     anlStrongAssert(outputs.size() > mFeature);
     if(outputs.size() > mFeature)
     {
-        description.specialization = outputs[mFeature].name;
+        description.output = outputs[mFeature];
     }
     return description;
 }
@@ -309,6 +309,7 @@ bool Analyzer::Processor::performNextAudioBlock(std::vector<Result>& results)
 
 std::unique_ptr<Analyzer::Processor> Analyzer::Processor::create(Accessor const& accessor, double sampleRate, AlertType alertType)
 {
+    JUCE_COMPILER_WARNING("Move this to plugin")
     using namespace Vamp;
     using namespace Vamp::HostExt;
     

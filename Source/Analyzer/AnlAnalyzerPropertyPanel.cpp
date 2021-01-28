@@ -133,7 +133,17 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
 
 void Analyzer::PropertyPanel::updateGraphicalProperties()
 {
-    auto const output = mAccessor.getAttr<AttrType::output>();
+    auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
+    {
+        auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
+        if(property != nullptr)
+        {
+            property->entry.setEditable(false, false);
+        }
+        return property;
+    };
+    
+    auto const description = mAccessor.getAttr<AttrType::description>();
 }
 
 void Analyzer::PropertyPanel::updatePluginProperties()
@@ -151,7 +161,7 @@ void Analyzer::PropertyPanel::updatePluginProperties()
     mPluginProperties.clear();
     auto const description = mAccessor.getAttr<AttrType::description>();
     mPluginProperties.push_back(createProperty("Name", "The name of the plugin", description.name));
-    mPluginProperties.push_back(createProperty("Specialization", "The specialization of the plugin", description.specialization));
+    mPluginProperties.push_back(createProperty("Feature", "The feature of the plugin", description.output.name));
     auto property = std::make_unique<Layout::PropertyText>(juce::translate("Details"), juce::translate("The details of the plugin"), description.details);
     if(property != nullptr)
     {

@@ -9,7 +9,7 @@ namespace PluginList
 {
     enum class AttrType : size_t
     {
-          plugins
+          keys
         , sortColumn
         , sortIsFowards
     };
@@ -17,7 +17,7 @@ namespace PluginList
     enum ColumnType
     {
           Name = 1
-        , Specialization
+        , Feature
         , Maker
         , Version
         , Category
@@ -25,7 +25,7 @@ namespace PluginList
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::plugins, std::map<Plugin::Key, Plugin::Description>, Model::Flag::basic>
+    < Model::Attr<AttrType::keys, std::set<Plugin::Key>, Model::Flag::basic>
     , Model::Attr<AttrType::sortColumn, ColumnType, Model::Flag::basic>
     , Model::Attr<AttrType::sortIsFowards, bool, Model::Flag::basic>
     >;

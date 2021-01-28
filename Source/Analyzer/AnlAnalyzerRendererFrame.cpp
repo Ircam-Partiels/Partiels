@@ -45,24 +45,6 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
         }
     };
     
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
-    {
-        juce::ignoreUnused(acsr);
-        switch(type)
-        {
-            case AttrType::key:
-            case AttrType::name:
-            case AttrType::parameters:
-            case AttrType::zoomMode:
-            case AttrType::colour:
-            case AttrType::colourMap:
-            case AttrType::resultsType:
-            case AttrType::results:
-            case AttrType::warnings:
-                break;
-        }
-    };
-    
     mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr, type, index);
@@ -87,7 +69,7 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
     
     mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
+        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::valueZoom:

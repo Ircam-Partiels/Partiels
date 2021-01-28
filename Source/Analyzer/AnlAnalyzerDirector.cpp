@@ -18,18 +18,14 @@ Analyzer::Director::Director(Accessor& accessor)
             case AttrType::key:
             {
                 auto const key = mAccessor.getAttr<AttrType::key>();
-                auto const descriptions = PluginList::Scanner::getPluginDescriptions();
-                anlWeakAssert(key == Plugin::Key{} || descriptions.count(key) > 0);
-                if(descriptions.count(key) > 0)
+                if(key != Plugin::Key{})
                 {
-                    mAccessor.setAttr<AttrType::description>(descriptions.at(key), notification);
-                }
-                else if(key != Plugin::Key{})
-                {
-                    std::cout << "looking: " << key.identifier << " " << key.feature << ":\n";
-                    for(auto const& description : descriptions)
+                    auto const descriptions = PluginList::Scanner::getPluginDescription(key, 48000.0, AlertType::window);
+                    anlWeakAssert(descriptions != Plugin::Description{});
+                    if(descriptions != Plugin::Description{} && descriptions != mAccessor.getAttr<AttrType::description>())
                     {
-                        std::cout << description.first.identifier << " " << description.first.feature << "\n";
+                        JUCE_COMPILER_WARNING("ALert Window - New descriptin");
+                        mAccessor.setAttr<AttrType::description>(descriptions, notification);
                     }
                 }
                 updateProcessor(notification);

@@ -66,6 +66,51 @@ auto XmlParser::fromXml<Plugin::Key>(juce::XmlElement const& xml, juce::Identifi
 }
 
 template<>
+void XmlParser::toXml<Plugin::Parameter>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Parameter const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        toXml(*child, "identifier", value.identifier);
+        toXml(*child, "name", value.name);
+        toXml(*child, "description", value.description);
+        toXml(*child, "unit", value.unit);
+        toXml(*child, "minValue", value.minValue);
+        toXml(*child, "maxValue", value.maxValue);
+        toXml(*child, "defaultValue", value.defaultValue);
+        toXml(*child, "isQuantized", value.isQuantized);
+        toXml(*child, "quantizeStep", value.quantizeStep);
+        toXml(*child, "valueNames", value.valueNames);
+        xml.addChildElement(child.release());
+    }
+}
+
+template<>
+auto XmlParser::fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Parameter const& defaultValue)
+-> Plugin::Parameter
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    Plugin::Parameter value;
+    value.identifier = fromXml(*child, "identifier", defaultValue.identifier);
+    value.name = fromXml(*child, "name", defaultValue.name);
+    value.description = fromXml(*child, "description", defaultValue.description);
+    value.unit = fromXml(*child, "unit", defaultValue.unit);
+    value.minValue = fromXml(*child, "minValue", defaultValue.minValue);
+    value.maxValue = fromXml(*child, "maxValue", defaultValue.maxValue);
+    value.defaultValue = fromXml(*child, "defaultValue", defaultValue.defaultValue);
+    value.isQuantized = fromXml(*child, "isQuantized", defaultValue.isQuantized);
+    value.quantizeStep = fromXml(*child, "quantizeStep", defaultValue.quantizeStep);
+    value.valueNames = fromXml(*child, "valueNames", defaultValue.valueNames);
+    return value;
+}
+
+template<>
 void XmlParser::toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Output const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -128,11 +173,15 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
     if(child != nullptr)
     {
         toXml(*child, "name", value.name);
-        toXml(*child, "specialization", value.specialization);
+        toXml(*child, "inputDomain", value.inputDomain);
         toXml(*child, "maker", value.maker);
         toXml(*child, "version", value.version);
-        toXml(*child, "details", value.details);
         toXml(*child, "category", value.category);
+        toXml(*child, "details", value.details);
+        toXml(*child, "defaultBlockSize", value.defaultBlockSize);
+        toXml(*child, "defaultStepSize", value.defaultStepSize);
+        toXml(*child, "parameters", value.parameters);
+        toXml(*child, "output", value.output);
         xml.addChildElement(child.release());
     }
 }
@@ -149,11 +198,15 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     }
     Plugin::Description value;
     value.name = fromXml(*child, "name", defaultValue.name);
-    value.specialization = fromXml(*child, "specialization", defaultValue.specialization);
+    value.inputDomain = fromXml(*child, "inputDomain", defaultValue.inputDomain);
     value.maker = fromXml(*child, "maker", defaultValue.maker);
     value.version = fromXml(*child, "version", defaultValue.version);
-    value.details = fromXml(*child, "details", defaultValue.details);
     value.category = fromXml(*child, "category", defaultValue.category);
+    value.details = fromXml(*child, "details", defaultValue.details);
+    value.defaultBlockSize = fromXml(*child, "defaultBlockSize", defaultValue.defaultBlockSize);
+    value.defaultStepSize = fromXml(*child, "defaultStepSize", defaultValue.defaultStepSize);
+    value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
+    value.output = fromXml(*child, "output", defaultValue.output);
     return value;
 }
 
