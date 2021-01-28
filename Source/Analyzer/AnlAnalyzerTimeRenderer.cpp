@@ -1,7 +1,4 @@
 #include "AnlAnalyzerTimeRenderer.h"
-#include "AnlAnalyzerProcessor.h"
-#include "../Tools/AnlMisc.h"
-#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 

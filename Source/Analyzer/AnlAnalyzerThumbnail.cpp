@@ -49,7 +49,8 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             }
                 break;
             case AttrType::key:
-            case AttrType::parameters:
+            case AttrType::description:
+            case AttrType::state:
             case AttrType::zoomMode:
             case AttrType::colour:
             case AttrType::colourMap:

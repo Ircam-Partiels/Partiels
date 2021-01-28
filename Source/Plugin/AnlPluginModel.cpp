@@ -210,4 +210,37 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     return value;
 }
 
+template<>
+void XmlParser::toXml<Plugin::State>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::State const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        toXml(*child, "blockSize", value.blockSize);
+        toXml(*child, "stepSize", value.stepSize);
+        toXml(*child, "windowType", value.windowType);
+        toXml(*child, "parameters", value.parameters);
+        xml.addChildElement(child.release());
+    }
+}
+
+template<>
+auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::State const& defaultValue)
+-> Plugin::State
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    Plugin::State value;
+    value.blockSize = fromXml(*child, "blockSize", defaultValue.blockSize);
+    value.stepSize = fromXml(*child, "stepSize", defaultValue.stepSize);
+    value.windowType = fromXml(*child, "windowType", defaultValue.windowType);
+    value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
+    return value;
+}
+
 ANALYSE_FILE_END

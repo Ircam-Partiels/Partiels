@@ -11,6 +11,11 @@ ANALYSE_FILE_BEGIN
 namespace Plugin
 {
     using InputDomain = Vamp::Plugin::InputDomain;
+    using WindowType = Vamp::HostExt::PluginInputDomainAdapter::WindowType;
+    
+    //! @brief The unique key that corresponds to a specific feature of a specific plugin
+    //! @details A plugin is not only defined by a unique identifer to a library but also to
+    //! to one of the features of the library.
     struct Key
     {
         std::string identifier; //!< The identifier of the plugin
@@ -32,6 +37,9 @@ namespace Plugin
         }
     };
     
+    //! @brief The description of the output of a plugin
+    //! @details The structure describes the results returned by a plugin and how to interprete
+    //! them but it doesn't contain any effective result returned by the plugin.
     struct Output
     : public Vamp::Plugin::OutputDescriptor
     {
@@ -48,6 +56,10 @@ namespace Plugin
         }
     };
     
+    //! @brief The description of a parameter of a plugin
+    //! @details The structure describes the parameters accepted by a plugin and how to
+    //! represent and control them but it doesn't contain any effective value of the state of the
+    //! the plugin.
     struct Parameter
     : public Vamp::Plugin::ParameterDescriptor
     {
@@ -64,32 +76,9 @@ namespace Plugin
         }
     };
     
-    struct Result
-    : public Vamp::Plugin::Feature
-    {
-        using Vamp::Plugin::Feature::Feature;
-        Result(Feature const& feature)
-        : Vamp::Plugin::Feature(feature)
-        {
-        }
-        
-        inline bool operator==(Result const& other) const noexcept
-        {
-            return hasTimestamp == other.hasTimestamp &&
-            timestamp == other.timestamp &&
-            hasDuration == other.hasDuration &&
-            duration == other.duration &&
-            values.size() == other.values.size() &&
-            std::equal(values.cbegin(), values.cend(), other.values.cbegin()) &&
-            label == other.label;
-        }
-        
-        inline bool operator!=(Result const& rhd) const noexcept
-        {
-            return !(*this == rhd);
-        }
-    };
-    
+    //! @brief The full description of a plugin
+    //! @details The structure contains all the informations to represent and to describe how to control
+    //! a plugin but it doesn't contain any control data or any result.
     struct Description
     {
         juce::String name {};                               //!< The name of the plugin
@@ -103,7 +92,7 @@ namespace Plugin
         size_t defaultStepSize {512};                       //!< The default step size
         std::vector<Parameter> parameters {};               //!< The parameters of the plugin
         Output output {};                                   //!< The output of the plugin
-
+        
         inline bool operator==(Description const& rhd) const noexcept
         {
             return name == rhd.name &&
@@ -119,6 +108,57 @@ namespace Plugin
         }
         
         inline bool operator!=(Description const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+    
+    //! @brief The result a plugin
+    //! @details The type of data returned by a plugin. 
+    struct Result
+    : public Vamp::Plugin::Feature
+    {
+        using Vamp::Plugin::Feature::Feature;
+        Result(Feature const& feature)
+        : Vamp::Plugin::Feature(feature)
+        {
+        }
+        
+        inline bool operator==(Result const& rhd) const noexcept
+        {
+            return hasTimestamp == rhd.hasTimestamp &&
+            timestamp == rhd.timestamp &&
+            hasDuration == rhd.hasDuration &&
+            duration == rhd.duration &&
+            values.size() == rhd.values.size() &&
+            std::equal(values.cbegin(), values.cend(), rhd.values.cbegin()) &&
+            label == rhd.label;
+        }
+        
+        inline bool operator!=(Result const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+    
+    //! @brief The state of a plugin
+    //! @details The type of data returned by a plugin.
+    struct State
+    {
+        size_t blockSize {512};                             //!< The default block size (or window size for frequency domain plugins)
+        size_t stepSize {512};                              //!< The default step size
+        WindowType windowType {WindowType::HanningWindow};  //!< The window type for frequency domain plugins
+        std::map<std::string, float> parameters {};         //!< The values of the parameters of the plugin
+        
+        inline bool operator==(State const& rhd) const noexcept
+        {
+            return blockSize == rhd.blockSize &&
+            stepSize == rhd.stepSize &&
+            windowType == rhd.windowType &&
+            parameters == rhd.parameters;
+        }
+        
+        inline bool operator!=(State const& rhd) const noexcept
         {
             return !(*this == rhd);
         }
@@ -154,6 +194,13 @@ namespace XmlParser
     template<>
     auto fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Description const& defaultValue)
     -> Plugin::Description;
+    
+    template<>
+    void toXml<Plugin::State>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::State const& value);
+    
+    template<>
+    auto fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::State const& defaultValue)
+    -> Plugin::State;
 }
 
 ANALYSE_FILE_END

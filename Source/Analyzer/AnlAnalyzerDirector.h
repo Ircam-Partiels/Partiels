@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
-#include "AnlAnalyzerProcessor.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -18,8 +17,6 @@ namespace Analyzer
         
     private:
         
-        void updateProcessor(NotificationType const notification);
-        void sanitizeProcessor(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
         void runRendering(NotificationType const notification);
         void updateFromResults(NotificationType const notification);
@@ -43,9 +40,7 @@ namespace Analyzer
         
         std::atomic<ProcessState> mRenderingState {ProcessState::available};
         std::future<std::tuple<juce::Image, NotificationType>> mRenderingProcess;
-        
-        AtomicManager<Processor> mProcessorManager;
-        AtomicManager<juce::AudioFormatReader> mAudioFormatReaderManager;
+        std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

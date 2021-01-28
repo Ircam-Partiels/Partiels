@@ -5,7 +5,6 @@
 #include "AnlAnalyzerThumbnail.h"
 #include "AnlAnalyzerTimeRenderer.h"
 #include "AnlAnalyzerInstantRenderer.h"
-#include "AnlAnalyzerProcessor.h"
 
 ANALYSE_FILE_BEGIN
 

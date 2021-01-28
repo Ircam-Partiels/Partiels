@@ -15,9 +15,10 @@ Analyzer::Renderer::Frame::Frame(Accessor& accessor, Zoom::Accessor& zoomAccesso
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case AttrType::key:
             case AttrType::name:
-            case AttrType::parameters:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
             case AttrType::zoomMode:
             case AttrType::colourMap:
                 break;

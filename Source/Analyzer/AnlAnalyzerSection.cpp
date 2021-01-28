@@ -19,9 +19,10 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     {
         switch(type)
         {
-            case AttrType::key:
             case AttrType::name:
-            case AttrType::parameters:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
             case AttrType::zoomMode:
             case AttrType::colour:
             case AttrType::colourMap:

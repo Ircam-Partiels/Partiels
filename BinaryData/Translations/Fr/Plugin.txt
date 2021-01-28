@@ -1,7 +1,9 @@
 language: French
 countries: fr be mc ch lu
 
+###########################
 # Plugin List Table
+###########################
 "Clear" = "Effacer"
 "Scan" = "Lister"
 "Filter..." = "Filtrer..."
@@ -16,3 +18,19 @@ countries: fr be mc ch lu
 "Version" = "Version"
 "Category" = "Catégorie"
 "Description" = "Description"
+
+###########################
+# Processor
+###########################
+"Plugin cannot be loaded!" = "Le plugiciel ne peut être chargé!"
+"The plugin \"PLGNKEY: FTRKEY\" cannot be loaded: " = "Le plugiciel \"PLGNKEY : FTRKEY\" ne peut chargé :"
+"Key is not defined" = "la clef n\'est pas définie"
+"Feature is not defined" = "la fonction n\'est pas définie"
+"Plugin manager is not available" = "le gestionnaire de plugiciels n\'est pas disponible"
+"Invalid plugin key" = "la clef du plugiciel n\'est pas valide"
+"No library found in Vamp path for plugin" = "aucune bibliothèque n'a été trouvée dans le chemin d'accès Vamp pour le plugiciel"
+"No vampGetPluginDescriptor function found in library" = "aucune fonction vampGetPluginDescriptor n'a été trouvée dans la bibliothèque"
+"Plugin not found in library" = "le plugiciel est introuvable dans la bibliothèque"
+"Unknown reason" = "la cause est inconnue"
+"Invalid feature" = "la fonction n'est pas valide"
+"Initialization failed, either the number of channels, the step size or the block size might not be supported" = "l'initialisation a échoué, le nombre de canaux, la taille de pas ou la taille de bloc peuvent ne pas être pris en charge "

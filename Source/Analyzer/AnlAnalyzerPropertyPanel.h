@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
-#include "AnlAnalyzerProcessor.h"
 #include "../Layout/AnlLayout.h"
 
 ANALYSE_FILE_BEGIN

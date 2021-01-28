@@ -1,7 +1,6 @@
 #include "AnlDocumentDirector.h"
 #include "AnlDocumentAudioReader.h"
 #include "../Plugin/AnlPluginListScanner.h"
-#include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Analyzer/AnlAnalyzerPropertyPanel.h"
 
 ANALYSE_FILE_BEGIN
@@ -51,9 +50,9 @@ void Document::Director::addAnalysis(AlertType alertType)
         }
 
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
+        anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::description>(description, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::ColorMap::Inferno, NotificationType::synchronous);
         

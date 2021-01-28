@@ -1,7 +1,6 @@
 
 #include "AnlPluginListScanner.h"
 #include <vamp-hostsdk/PluginLoader.h>
-#include <vamp-hostsdk/PluginHostAdapter.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +9,7 @@ std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, Aler
     using namespace Vamp;
     using namespace Vamp::HostExt;
     
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    auto* pluginLoader = PluginLoader::getInstance();
     anlWeakAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
@@ -47,7 +46,7 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
     using namespace Vamp;
     using namespace Vamp::HostExt;
     
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    auto* pluginLoader = PluginLoader::getInstance();
     anlWeakAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {

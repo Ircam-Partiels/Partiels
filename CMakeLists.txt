@@ -74,6 +74,8 @@ file(GLOB ZoomSources
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.h
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginProcessor.cpp
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginProcessor.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.cpp

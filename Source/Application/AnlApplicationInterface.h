@@ -1,13 +1,10 @@
 #pragma once
 
 #include "AnlApplicationCommandTarget.h"
-#include "../Analyzer/AnlAnalyzerProcessor.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentSection.h"
-#include "../Zoom/AnlZoomScrollBar.h"
-#include "../Zoom/AnlZoomRuler.h"
 
 ANALYSE_FILE_BEGIN
 

@@ -13,10 +13,10 @@ namespace Analyzer
 {
     enum class AttrType : size_t
     {
-          key
+          name
+        , key
         , description
-        , name
-        , parameters
+        , state
         , zoomMode
         , colour
         , colourMap
@@ -63,10 +63,10 @@ namespace Analyzer
     using ColorMap = tinycolormap::ColormapType;
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
+    < Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
-    , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
-    , Model::Attr<AttrType::parameters, std::map<juce::String, double>, Model::Flag::basic>
+    , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
@@ -88,10 +88,10 @@ namespace Analyzer
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
         Accessor()
-        : Accessor(AttrContainer(  {}
+        : Accessor(AttrContainer(  {""}
                                  , {}
-                                 , {""}
-                                 , {{}}
+                                 , {}
+                                 , {}
                                  , {ZoomMode::plugin}
                                  , {juce::Colours::black}
                                  , {ColorMap::Inferno}

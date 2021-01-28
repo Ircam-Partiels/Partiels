@@ -1,6 +1,4 @@
 #include "AnlAnalyzerPropertyPanel.h"
-#include "AnlAnalyzerProcessor.h"
-#include <vamp-hostsdk/PluginLoader.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -32,19 +30,20 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case AttrType::key:
-                break;
             case AttrType::name:
             {
                 mNameProperty.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
             }
+                break;
+                
+            case AttrType::key:
                 break;
             case AttrType::description:
             {
                 updateProcessorProperties();
                 updatePluginProperties();
             }
-            case AttrType::parameters:
+            case AttrType::state:
             case AttrType::zoomMode:
             case AttrType::colour:
             case AttrType::colourMap:
@@ -143,7 +142,7 @@ void Analyzer::PropertyPanel::updateGraphicalProperties()
         return property;
     };
     
-    auto const description = mAccessor.getAttr<AttrType::description>();
+    auto const output = mAccessor.getAttr<AttrType::description>().output;
 }
 
 void Analyzer::PropertyPanel::updatePluginProperties()

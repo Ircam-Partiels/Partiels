@@ -1,9 +1,10 @@
 #include "AnlAnalyzerDirector.h"
-#include "AnlAnalyzerProcessor.h"
 #include "AnlAnalyzerPropertyPanel.h"
 
+#include "../Plugin/AnlPluginProcessor.h"
 #include "../Plugin/AnlPluginListScanner.h"
 
+JUCE_COMPILER_WARNING("check this")
 #include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
@@ -17,22 +18,10 @@ Analyzer::Director::Director(Accessor& accessor)
         {
             case AttrType::key:
             {
-                auto const key = mAccessor.getAttr<AttrType::key>();
-                if(key != Plugin::Key{})
-                {
-                    auto const descriptions = PluginList::Scanner::getPluginDescription(key, 48000.0, AlertType::window);
-                    anlWeakAssert(descriptions != Plugin::Description{});
-                    if(descriptions != Plugin::Description{} && descriptions != mAccessor.getAttr<AttrType::description>())
-                    {
-                        JUCE_COMPILER_WARNING("ALert Window - New descriptin");
-                        mAccessor.setAttr<AttrType::description>(descriptions, notification);
-                    }
-                }
-                updateProcessor(notification);
                 runAnalysis(notification);
             }
                 break;
-            case AttrType::parameters:
+            case AttrType::state:
             {
                 runAnalysis(notification);
             }
@@ -88,46 +77,27 @@ Analyzer::Director::~Director()
 
 void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
-    mAudioFormatReaderManager.setInstance(std::shared_ptr<juce::AudioFormatReader>(audioFormatReader.release()));
-    updateProcessor(notification);
+    anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReaderManager);
+    if(audioFormatReader == mAudioFormatReaderManager)
+    {
+        return;
+    }
+    
+    std::unique_lock<std::mutex> lock(mAnalysisMutex);
+    if(mAnalysisProcess.valid())
+    {
+        mAnalysisState = ProcessState::aborted;
+        mAnalysisProcess.get();
+    }
+    mAnalysisState = ProcessState::available;
+    mAudioFormatReaderManager = std::move(audioFormatReader);
+    lock.unlock();
+    
     runAnalysis(notification);
 }
 
-void Analyzer::Director::updateProcessor(NotificationType const notification)
-{
-    auto reader = mAudioFormatReaderManager.getInstance();
-    if(reader == nullptr)
-    {
-        return;
-    }
-    
-    auto const sampleRate = reader->sampleRate;
-    auto instance = mProcessorManager.getInstance();
-    if(instance == nullptr ||
-       std::abs(instance->getSampleRate() - sampleRate) > std::numeric_limits<double>::epsilon())
-    {
-        instance = std::shared_ptr<Processor>(Analyzer::Processor::create(mAccessor, sampleRate,  AlertType::window).release());
-        mProcessorManager.setInstance(instance);
-    }
-    
-    if(instance == nullptr)
-    {
-        return;
-    }
-
-    sanitizeProcessor(notification);
-}
-
-void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
-{
-    auto processor = mProcessorManager.getInstance();
-    std::map<WarningType, juce::String> warnings;
-    if(processor == nullptr)
-    {
-        mAccessor.setAttr<AttrType::warnings>(warnings, notification);
-        return;
-    }
-    
+//void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
+//{
 //    auto const descriptors = processor->getOutputDescriptors();
 //    anlWeakAssert(!descriptors.empty());
 //    
@@ -159,9 +129,7 @@ void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
 //    // Updates the zoom range of the bins based on the dimensions of the results
 //    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
 //    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(0.0, std::max(static_cast<double>(std::max(descriptor.binCount, 1_z)), 1.0)), notification);
-//    
-    updateZoomRange(notification);
-}
+//}
 
 void Analyzer::Director::runAnalysis(NotificationType const notification)
 {
@@ -178,28 +146,40 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     }
     mAnalysisState = ProcessState::available;
     
-    auto instance = mProcessorManager.getInstance();
-    if(instance == nullptr)
-    {
-        return;
-    }
-
-    auto reader = mAudioFormatReaderManager.getInstance();
+    auto* reader = mAudioFormatReaderManager.get();
     if(reader == nullptr)
     {
         return;
     }
     
-    if(!instance->prepareForAnalysis(*reader.get(), mAccessor.getAttr<AttrType::parameters>()))
+    auto const key = mAccessor.getAttr<AttrType::key>();
+    if(key == Plugin::Key{})
     {
-        using AlertIconType = juce::AlertWindow::AlertIconType;
-        auto const errorMessage = juce::translate("Analysis cannot be performed!");
-        
-        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\".").replace("ANLNAME", mAccessor.getAttr<AttrType::name>()).replace("PLGKEY", mAccessor.getAttr<AttrType::key>().identifier));
         return;
     }
     
-    mAnalysisProcess = std::async([=, this]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
+    auto const state = mAccessor.getAttr<AttrType::state>();
+    auto processor = Plugin::Processor::create(key, state, *reader, AlertType::window);
+    if(processor == nullptr)
+    {
+        mAccessor.setAttr<AttrType::warnings>(std::map<WarningType, juce::String>{}, notification);
+        return;
+    }
+    
+    auto const descriptions = PluginList::Scanner::getPluginDescription(key, 48000.0, AlertType::window);
+    anlWeakAssert(descriptions != Plugin::Description{});
+    if(descriptions != Plugin::Description{} && descriptions != mAccessor.getAttr<AttrType::description>())
+    {
+        if(mAccessor.getAttr<AttrType::description>() != Plugin::Description{})
+        {
+            JUCE_COMPILER_WARNING("ALert Window - New descriptin or key with description initialization");
+        }
+        mAccessor.setAttr<AttrType::description>(descriptions, notification);
+    }
+    
+    updateZoomRange(notification);
+
+    mAnalysisProcess = std::async([=, this, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
         
@@ -211,7 +191,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         }
 
         std::vector<Plugin::Result> results;
-        while(mAnalysisState.load() != ProcessState::aborted && instance->performNextAudioBlock(results))
+        while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(results))
         {
         }
         expected = ProcessState::running;

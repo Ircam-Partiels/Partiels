@@ -1,7 +1,4 @@
 #include "AnlAnalyzerInstantRenderer.h"
-#include "AnlAnalyzerProcessor.h"
-#include "../Tools/AnlMisc.h"
-#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
@@ -107,7 +104,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
     else if(results.cbegin()->values.size() > 1)
     {
         auto image = mAccessor.getImage();
-        if(image == nullptr)
+        if(image == nullptr || !image->isValid())
         {
             return;
         }
