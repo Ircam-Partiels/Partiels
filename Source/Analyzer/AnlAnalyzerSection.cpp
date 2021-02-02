@@ -43,7 +43,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
                 break;
             case AttrType::results:
             {
-                auto const& results = mAccessor.getAttr<AttrType::results>();
+                auto const& results = acsr.getAttr<AttrType::results>();
                 auto const numDimensions = results.empty() ? 0_z : results.front().values.size();
                 switch(numDimensions)
                 {

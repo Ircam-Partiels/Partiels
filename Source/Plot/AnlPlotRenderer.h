@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Plot
 {
-    
     class Renderer
     {
         

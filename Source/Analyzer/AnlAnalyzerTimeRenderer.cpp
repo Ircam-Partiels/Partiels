@@ -72,9 +72,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
     {
         return;
     }
-    
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const globalValueRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+
     auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     
     auto const realTimeRange = juce::Range<Vamp::RealTime>{Vamp::RealTime::fromSeconds(timeRange.getStart()), Vamp::RealTime::fromSeconds(timeRange.getEnd())};
@@ -144,16 +142,19 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
             return;
         }
         
-        auto const vRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+        auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        
         auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         
-        auto const valueRange = juce::Range<double>(globalValueRange.getEnd() - vRange.getEnd(), globalValueRange.getEnd() - vRange.getStart());
+        auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
         
         auto const deltaX = static_cast<float>(timeRange.getStart() / globalTimeRange.getLength() * static_cast<double>(image->getWidth()));
-        auto const deltaY = static_cast<float>(valueRange.getStart() / globalValueRange.getLength() * static_cast<double>(image->getHeight()));
+        auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image->getHeight()));
         
         auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image->getWidth()));
-        auto const scaleY = static_cast<float>(globalValueRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image->getHeight()));
+        auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image->getHeight()));
         
         auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
         
