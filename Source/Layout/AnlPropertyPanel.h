@@ -94,8 +94,16 @@ namespace Layout
     : public PropertyPanel<juce::ComboBox>
     {
     public:
-        PropertyComboBox(juce::String const& text, juce::String const& tooltip = {}, juce::StringArray const& items = {}, size_t index = 0, callback_type fn = nullptr);
+        PropertyComboBox(juce::String const& name, juce::String const& tooltip = {}, juce::StringArray const& items = {}, size_t index = 0, callback_type fn = nullptr);
         ~PropertyComboBox() override = default;
+    };
+    
+    class PropertySlider
+    : public PropertyPanel<juce::Slider>
+    {
+    public:
+        PropertySlider(juce::String const& name, juce::String const& tooltip = {}, juce::Range<double> const& range = {}, double const interval = 0.0, juce::String const& textValueSuffix = {}, double const value = 0.0, callback_type fn = nullptr);
+        ~PropertySlider() override = default;
     };
 }
 

@@ -46,7 +46,6 @@ Analyzer::Director::Director(Accessor& accessor)
                 break;
             case AttrType::results:
             {
-                updateFromResults(notification);
                 updateZoomRange(notification);
                 runRendering(notification);
             }
@@ -311,42 +310,6 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
         }
             break;
     }
-}
-
-void Analyzer::Director::updateFromResults(NotificationType const notification)
-{
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    if(results.empty())
-    {
-        return;
-    }
-    
-    auto getResultsType = [&]()
-    {
-        if(results.empty())
-        {
-            return ResultsType::undefined;
-        }
-        if(results[0].values.empty())
-        {
-            return ResultsType::points;
-        }
-        if(results[0].values.size() == 1)
-        {
-            return ResultsType::segments;
-        }
-        return ResultsType::matrix;
-    };
-    
-    auto warnings = mAccessor.getAttr<AttrType::warnings>();
-    auto const previousResultsType = mAccessor.getAttr<AttrType::resultsType>();
-    auto const newResultsType = getResultsType();
-    mAccessor.setAttr<AttrType::resultsType>(newResultsType, notification);
-    if(previousResultsType != ResultsType::undefined && previousResultsType != newResultsType)
-    {
-        warnings[WarningType::resultType] = juce::translate("The results returned by the plugin are incompatible with the plugin description of the feature.");
-    }
-    mAccessor.setAttr<AttrType::warnings>(warnings, notification);
 }
 
 void Analyzer::Director::handleAsyncUpdate()

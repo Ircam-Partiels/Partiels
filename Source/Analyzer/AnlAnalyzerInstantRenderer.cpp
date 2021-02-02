@@ -1,4 +1,5 @@
 #include "AnlAnalyzerInstantRenderer.h"
+#include "../Plot/AnlPlotRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -63,45 +64,14 @@ void Analyzer::InstantRenderer::resized()
 void Analyzer::InstantRenderer::paint(juce::Graphics& g)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    if(visibleRange.isEmpty())
-    {
-        return;
-    }
-    
+    auto const& visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const& colour = mAccessor.getAttr<AttrType::colour>();
+    auto const& description = mAccessor.getAttr<AttrType::description>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
-    if(results.empty())
-    {
-        return;
-    }
-    
     auto const time = mAccessor.getTime();
+    Plot::Renderer::paint(g, getLocalBounds(), colour, description.output, results, visibleRange, time);
     
-    if(results.cbegin()->values.size() == 1)
-    {
-        auto const realTime = Vamp::RealTime::fromSeconds(time);
-        auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& t)
-        {
-            return result.timestamp < t;
-        });
-        if(it == results.cend())
-        {
-            return;
-        }
-        
-        auto const value = (it->values[0]  - visibleRange.getStart()) / visibleRange.getLength();
-        auto const bounds = getLocalBounds();
-        auto const position = static_cast<int>((1.0 - value) * static_cast<double>(bounds.getHeight()));
-        auto const area = bounds.withTop(position).toFloat();
-        
-        auto const colour = mAccessor.getAttr<AttrType::colour>();
-        g.setColour(colour.withAlpha(0.2f));
-        g.fillRect(area);
-        
-        g.setColour(colour);
-        g.fillRect(area.withHeight(1.0f));
-    }
-    else if(results.cbegin()->values.size() > 1)
+    if(!results.empty() && results.cbegin()->values.size() > 1)
     {
         auto image = mAccessor.getImage();
         if(image == nullptr || !image->isValid())

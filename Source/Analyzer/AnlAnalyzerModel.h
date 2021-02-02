@@ -17,10 +17,11 @@ namespace Analyzer
         , key
         , description
         , state
+        
         , zoomMode
         , colour
         , colourMap
-        , resultsType
+        
         , results
         , warnings
     };
@@ -45,14 +46,6 @@ namespace Analyzer
         , time
     };
     
-    enum class ResultsType
-    {
-          undefined = 0 //! The results are undefined (might not be supported)
-        , points        //! The results are time points
-        , segments      //! The results are segments
-        , matrix        //! The results is a matrix
-    };
-    
     enum class WarningType
     {
           feature
@@ -67,10 +60,11 @@ namespace Analyzer
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
+    
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
     , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
-    , Model::Attr<AttrType::resultsType, ResultsType, Model::Flag::notifying>
+    
     , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
     >;
@@ -95,7 +89,6 @@ namespace Analyzer
                                  , {ZoomMode::plugin}
                                  , {juce::Colours::black}
                                  , {ColorMap::Inferno}
-                                 , {ResultsType::undefined}
                                  , {}
                                  , {}))
         {

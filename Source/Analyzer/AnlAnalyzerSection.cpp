@@ -7,6 +7,20 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
 , mTimeZoomAccessor(timeZoomAcsr)
 , mSeparator(separator)
 {
+    mValueRuler.onDoubleClick = [&]()
+    {
+        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+    };
+    
+    mBinRuler.onDoubleClick = [&]()
+    {
+        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+        auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+    };
+    
     mThumbnail.onRemove = [&]()
     {
         if(onRemove != nullptr)
@@ -27,68 +41,51 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
             case AttrType::colour:
             case AttrType::colourMap:
                 break;
-            case AttrType::resultsType:
+            case AttrType::results:
             {
-                mScrollbar.reset();
-                mRuler.reset();
-                
-                auto const resultsType = acsr.getAttr<AttrType::resultsType>();
-                switch (resultsType)
+                auto const& results = mAccessor.getAttr<AttrType::results>();
+                auto const numDimensions = results.empty() ? 0_z : results.front().values.size();
+                switch(numDimensions)
                 {
-                    case ResultsType::undefined:
-                    case ResultsType::points:
-                        break;
-                    case ResultsType::segments:
+                    case 0_z:
                     {
-                        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-                        mScrollbar = std::make_unique<Zoom::ScrollBar>(zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true);
-                        if(mScrollbar != nullptr)
-                        {
-                            addAndMakeVisible(mScrollbar.get());
-                        }
-                        mRuler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
-                        if(mRuler != nullptr)
-                        {
-                            addAndMakeVisible(mRuler.get());
-                            mRuler->onDoubleClick = [&]()
-                            {
-                                auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-                                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-                            };
-                        }
-                        resized();
+                        mBinRuler.setVisible(false);
+                        mBinScrollBar.setVisible(false);
+                        
+                        mValueRuler.setVisible(true);
+                        mValueScrollBar.setVisible(true);
                     }
                         break;
-                    case ResultsType::matrix:
+                    case 1_z:
                     {
-                        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-                        mScrollbar = std::make_unique<Zoom::ScrollBar>(zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true);
-                        if(mScrollbar != nullptr)
-                        {
-                            addAndMakeVisible(mScrollbar.get());
-                        }
-                        mRuler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
-                        if(mRuler != nullptr)
-                        {
-                            addAndMakeVisible(mRuler.get());
-                            mRuler->onDoubleClick = [&]()
-                            {
-                                auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-                                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-                            };
-                        }
-                        resized();
+                        mBinRuler.setVisible(false);
+                        mBinScrollBar.setVisible(false);
+                        
+                        mValueRuler.setVisible(true);
+                        mValueScrollBar.setVisible(true);
+                    }
+                        break;
+                    default:
+                    {
+                        mBinRuler.setVisible(true);
+                        mBinScrollBar.setVisible(true);
+                        
+                        mValueRuler.setVisible(false);
+                        mValueScrollBar.setVisible(false);
                     }
                         break;
                 }
             }
                 break;
-            case AttrType::results:
             case AttrType::warnings:
                 break;
         }
     };
     
+    addChildComponent(mValueRuler);
+    addChildComponent(mValueScrollBar);
+    addChildComponent(mBinRuler);
+    addChildComponent(mBinScrollBar);
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mInstantRenderer);
     addAndMakeVisible(mTimeRenderer);
@@ -121,15 +118,11 @@ void Analyzer::Section::resized()
     
     auto rightSide = bounds.removeFromRight(rightSize);
     auto const scrollbarBounds = rightSide.removeFromRight(8);
-    if(mScrollbar != nullptr)
-    {
-        mScrollbar->setBounds(scrollbarBounds);
-    }
+    mValueScrollBar.setBounds(scrollbarBounds);
+    mBinScrollBar.setBounds(scrollbarBounds);
     auto const rulerBounds = rightSide.removeFromRight(16);
-    if(mRuler != nullptr)
-    {
-        mRuler->setBounds(rulerBounds);
-    }
+    mValueRuler.setBounds(rulerBounds);
+    mBinRuler.setBounds(rulerBounds);
     mTimeRenderer.setBounds(rightSide);
 }
 

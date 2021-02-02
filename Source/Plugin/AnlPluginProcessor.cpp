@@ -15,6 +15,10 @@ Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::un
 bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
 {
     anlStrongAssert(mPlugin != nullptr);
+    if(mPlugin == nullptr)
+    {
+        return false;
+    }
 
     auto const feature = mFeature;
     auto const numChannels = static_cast<int>(mAudioFormatReader.numChannels);

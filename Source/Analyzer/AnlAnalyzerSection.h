@@ -46,8 +46,10 @@ namespace Analyzer
         Analyzer::InstantRenderer mInstantRenderer {mAccessor, mTimeZoomAccessor};
         Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
         
-        std::unique_ptr<Zoom::Ruler> mRuler;
-        std::unique_ptr<Zoom::ScrollBar> mScrollbar;
+        Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mBinRuler  {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mBinScrollBar {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
     };
 }
 

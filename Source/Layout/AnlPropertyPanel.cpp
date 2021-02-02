@@ -75,11 +75,13 @@ Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String cons
     entry.setText(text, juce::NotificationType::dontSendNotification);
     entry.setJustificationType(juce::Justification::right);
     entry.setMinimumHorizontalScale(1.0f);
+    entry.setBorderSize({});
     entry.onEditorShow = [&]()
     {
         if(auto* editor = entry.getCurrentTextEditor())
         {
             editor->setJustification(entry.getJustificationType());
+            editor->setIndents(0, 0);
             editor->setBorder(entry.getBorderSize());
         }
     };
@@ -120,6 +122,22 @@ Layout::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::Strin
     entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
     entry.setJustificationType(juce::Justification::centredRight);
     entry.onChange = [&]()
+    {
+        if(callback != nullptr)
+        {
+            callback(entry);
+        }
+    };
+}
+
+Layout::PropertySlider::PropertySlider(juce::String const& name, juce::String const& tooltip, juce::Range<double> const& range, double interval, juce::String const& textValueSuffix, double value, callback_type fn)
+: Layout::PropertyPanel<juce::Slider>(name, tooltip, fn)
+{
+    entry.setTooltip(tooltip);
+    entry.setRange(range, interval);
+    entry.setValue(value, juce::NotificationType::dontSendNotification);
+    entry.setTextValueSuffix(textValueSuffix),
+    entry.onValueChange = [&]()
     {
         if(callback != nullptr)
         {

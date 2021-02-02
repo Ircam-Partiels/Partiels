@@ -41,13 +41,13 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::description:
             {
                 updateProcessorProperties();
+                updateGraphicalProperties();
                 updatePluginProperties();
             }
             case AttrType::state:
             case AttrType::zoomMode:
             case AttrType::colour:
             case AttrType::colourMap:
-            case AttrType::resultsType:
             case AttrType::results:
             case AttrType::warnings:
                 break;
@@ -117,9 +117,55 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
         mProcessorProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
     }
     
+    auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
+    {
+        enum class PropertyType
+        {
+              comboBox
+            , slider
+        };
+        
+        auto const setValue = [=, this](float value)
+        {
+            auto state = mAccessor.getAttr<AttrType::state>();
+            anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
+            state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
+            mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
+        };
+        
+        auto const propertyType = parameter.valueNames.empty() ? PropertyType::slider : PropertyType::comboBox;
+        switch(propertyType)
+        {
+            case PropertyType::comboBox:
+            {
+                juce::StringArray array;
+                auto const& names = parameter.valueNames;
+                for(auto const& name : names)
+                {
+                    array.add(name);
+                }
+                
+                return std::make_unique<Layout::PropertyComboBox>(juce::translate(parameter.name), juce::translate(parameter.description), array, 0, [=](juce::ComboBox const& entry)
+                {
+                    setValue(static_cast<float>(entry.getSelectedItemIndex()));
+                });
+            }
+                break;
+            case PropertyType::slider:
+            {
+                return std::make_unique<Layout::PropertySlider>(juce::translate(parameter.name), juce::translate(parameter.description), juce::Range<double>{static_cast<double>(parameter.minValue), static_cast<double>(parameter.maxValue)}, parameter.isQuantized ? parameter.quantizeStep : 0.0, parameter.unit, 0.0, [=](juce::Slider const& entry)
+                {
+                    setValue(static_cast<float>(entry.getValue()));
+                });
+            }
+                break;
+        }
+        return nullptr;
+    };
+    
     for(auto const& parameter : description.parameters)
     {
-        mProcessorProperties.push_back(createProperty(parameter.name, parameter.description, juce::String(parameter.defaultValue)));
+        mProcessorProperties.push_back(createParameterProperty(parameter));
     }
     
     std::vector<Layout::PropertySection::PanelRef> panels;
@@ -142,7 +188,18 @@ void Analyzer::PropertyPanel::updateGraphicalProperties()
         return property;
     };
     
+    mGraphicalProperties.clear();
     auto const output = mAccessor.getAttr<AttrType::description>().output;
+    mGraphicalProperties.push_back(createProperty("Color", "Color", "Color"));
+    mGraphicalProperties.push_back(createProperty("Range Mode", "Range Mode", "Range Mode"));
+    mGraphicalProperties.push_back(createProperty("Range", "Value Range", "Value Range"));
+    
+    std::vector<Layout::PropertySection::PanelRef> panels;
+    for(auto const& property : mGraphicalProperties)
+    {
+        panels.push_back(*property.get());
+    }
+    mGraphicalSection.setPanels(panels);
 }
 
 void Analyzer::PropertyPanel::updatePluginProperties()
@@ -161,17 +218,21 @@ void Analyzer::PropertyPanel::updatePluginProperties()
     auto const description = mAccessor.getAttr<AttrType::description>();
     mPluginProperties.push_back(createProperty("Name", "The name of the plugin", description.name));
     mPluginProperties.push_back(createProperty("Feature", "The feature of the plugin", description.output.name));
-    auto property = std::make_unique<Layout::PropertyText>(juce::translate("Details"), juce::translate("The details of the plugin"), description.details);
-    if(property != nullptr)
     {
-        property->entry.setEditable(false, false);
+        auto property = std::make_unique<Layout::PropertyText>(juce::translate("Details"), juce::translate("The details of the plugin"), description.details + " - " + description.output.description);
+        if(property != nullptr)
+        {
+            property->entry.setEditable(false, false);
+        }
+        mPluginProperties.push_back(std::move(property));
     }
-    
-    mPluginProperties.push_back(std::move(property));
     
     mPluginProperties.push_back(createProperty("Maker", "The maker of the plugin", description.maker));
     mPluginProperties.push_back(createProperty("Version", "The version of the plugin", juce::String(description.version)));
-    mPluginProperties.push_back(createProperty("Category", "The category of the plugin", description.category.isEmpty() ? "-" : description.category));
+    if(!description.category.isEmpty())
+    {
+        mPluginProperties.push_back(createProperty("Category", "The category of the plugin", description.category.isEmpty() ? "-" : description.category));
+    }
     
     std::vector<Layout::PropertySection::PanelRef> panels;
     for(auto const& property : mPluginProperties)
