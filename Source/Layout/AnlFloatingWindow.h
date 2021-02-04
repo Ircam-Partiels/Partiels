@@ -39,8 +39,6 @@ private:
     // juce::FocusChangeListener
     void globalFocusChanged(juce::Component* focusedComponent) override;
 #endif
-    
-    juce::ComponentBoundsConstrainer mBoundsConstrainer;
 };
 
 ANALYSE_FILE_END

@@ -36,6 +36,9 @@ namespace Application
         
         // juce::TableHeaderComponent::LookAndFeelMethods
         void drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComponent& header, juce::String const& columnName, int columnId, int width, int height, bool isMouseOver, bool isMouseDown, int columnFlags) override;
+        
+        // juce::DocumentWindow::LookAndFeelMethods
+        juce::Button* createDocumentWindowButton(int buttonType) override;
     };
 }
 

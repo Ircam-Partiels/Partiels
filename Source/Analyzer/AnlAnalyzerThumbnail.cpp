@@ -7,6 +7,7 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
 {
     auto setupImage = [](juce::ImageButton& button, juce::Image image)
     {
+        JUCE_COMPILER_WARNING("use a global approach");
         button.setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
     };
     

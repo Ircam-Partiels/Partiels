@@ -224,5 +224,23 @@ void Application::LookAndFeel::drawTableHeaderColumn(juce::Graphics& g, juce::Ta
     g.drawFittedText(columnName, area, juce::Justification::centredLeft, 1);
 }
 
+juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonType)
+{
+    using TitleBarButtons = juce::DocumentWindow::TitleBarButtons;
+    if(buttonType == TitleBarButtons::closeButton)
+    {
+        auto button = std::make_unique<juce::ImageButton>();
+        anlWeakAssert(button != nullptr);
+        if(button != nullptr)
+        {
+            JUCE_COMPILER_WARNING("use a global approach");
+            auto const image = juce::ImageCache::getFromMemory(BinaryData::annuler_png, BinaryData::annuler_pngSize);
+            button->setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
+        }
+        return button.release();
+    }
+    return LookAndFeel_V4::createDocumentWindowButton(buttonType);
+}
+
 ANALYSE_FILE_END
 

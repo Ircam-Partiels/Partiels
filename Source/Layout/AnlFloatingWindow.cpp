@@ -10,9 +10,6 @@ FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersC
 #else
     juce::Desktop::getInstance().addFocusChangeListener(this);
 #endif
-    setResizable(true, false);
-    mBoundsConstrainer.setMinimumOnscreenAmounts(0, 40, 40, 40);
-    setConstrainer(&mBoundsConstrainer);
 }
 
 void FloatingWindow::closeButtonPressed()

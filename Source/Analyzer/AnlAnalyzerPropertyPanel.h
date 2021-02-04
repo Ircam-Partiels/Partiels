@@ -61,6 +61,8 @@ namespace Analyzer
         Layout::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
         
         
+        juce::Viewport mViewport;
+        juce::ComponentBoundsConstrainer mBoundsConstrainer;
         FloatingWindow mFloatingWindow {"Properties"};
     };
 }

@@ -25,6 +25,8 @@ namespace Analyzer
         , results
         , warnings
         , processing
+        
+        , display
     };
     
     enum class AcsrType : size_t
@@ -66,8 +68,10 @@ namespace Analyzer
     , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
     
     , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
-    , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying | Model::Flag::comparable>
-    , Model::Attr<AttrType::processing, bool, Model::Flag::notifying | Model::Flag::comparable>
+    , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
+    , Model::Attr<AttrType::processing, bool, Model::Flag::notifying>
+    
+    , Model::Attr<AttrType::display, juce::String, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -92,7 +96,8 @@ namespace Analyzer
                                  , {ColorMap::Inferno}
                                  , {}
                                  , {}
-                                 , {false}))
+                                 , {false}
+                                 , {""}))
         {
         }
         

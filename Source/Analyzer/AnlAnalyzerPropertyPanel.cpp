@@ -109,9 +109,22 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     addAndMakeVisible(mGraphicalSection);
     addAndMakeVisible(mPluginSection);
     
+    setSize(300, 400);
+    mViewport.setSize(300 + mViewport.getVerticalScrollBar().getWidth(), 400);
+    mViewport.setScrollBarsShown(true, false, true, false);
+    mViewport.setViewedComponent(this, false);
+    mFloatingWindow.setContentNonOwned(&mViewport, true);
+    mFloatingWindow.setResizable(true, false);
+    mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMinimumHeight(120);
+    mBoundsConstrainer.setMinimumOnscreenAmounts(0, 40, 40, 40);
+    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
+    mFloatingWindow.onChanged = [&]()
+    {
+        mAccessor.setAttr<AttrType::display>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
+    };
     
-    setSize(300, 200);
-    mFloatingWindow.setContentNonOwned(this, true);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -127,7 +140,7 @@ void Analyzer::PropertyPanel::resized()
     mProcessorSection.setBounds(bound.removeFromTop(mProcessorSection.getHeight()));
     mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
     mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
-    setSize(bound.getWidth(), std::max(bound.getY(), 120) + 2);
+    setSize(300, std::max(bound.getY(), 120) + 2);
 }
 
 void Analyzer::PropertyPanel::updateProcessorProperties()
@@ -301,6 +314,23 @@ void Analyzer::PropertyPanel::updatePluginProperties()
 
 void Analyzer::PropertyPanel::show()
 {
+    auto const& displayInfo = mAccessor.getAttr<AttrType::display>();
+    if(displayInfo.isEmpty())
+    {
+        auto const& desktop = juce::Desktop::getInstance();
+        auto const mousePosition = desktop.getMainMouseSource().getScreenPosition().toInt();
+        auto const* display = desktop.getDisplays().getDisplayForPoint(mousePosition);
+        anlStrongAssert(display != nullptr);
+        if(display != nullptr)
+        {
+            auto const bounds = display->userArea.withSizeKeepingCentre(mFloatingWindow.getWidth(), mFloatingWindow.getHeight());
+            mFloatingWindow.setBounds(bounds);
+        }
+    }
+    else
+    {
+        mFloatingWindow.restoreWindowStateFromString(displayInfo);
+    }
     mFloatingWindow.setVisible(true);
 }
 
