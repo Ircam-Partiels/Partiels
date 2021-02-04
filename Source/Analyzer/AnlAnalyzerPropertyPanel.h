@@ -44,16 +44,16 @@ namespace Analyzer
         
         Layout::PropertyLabel mNameProperty {juce::translate("Name"), juce::translate("The name of the analyzer")};
         
-        Layout::PropertySection mProcessorSection {juce::translate("PROCESSOR"), true,
+        ConcertinaPanel mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
         std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mDefaultProperties;
         std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
         
-        Layout::PropertySection mGraphicalSection {juce::translate("GRAPHICAL"), true,
+        ConcertinaPanel mGraphicalSection {juce::translate("GRAPHICAL"), true,
             juce::translate("The graphical parameters of the analyzer")};
         std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
         
-        Layout::PropertySection mPluginSection {juce::translate("PLUGIN"), true,
+        ConcertinaPanel mPluginSection {juce::translate("PLUGIN"), true,
             juce::translate("The plugin information")};
         std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mPluginProperties;
         

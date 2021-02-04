@@ -145,14 +145,22 @@ void Analyzer::PropertyPanel::resized()
 
 void Analyzer::PropertyPanel::updateProcessorProperties()
 {
-    auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
+    class NumberProperty
+    : public Layout::PropertyPanel<NumberField>
     {
-        auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
-        if(property != nullptr)
+    public:
+        NumberProperty(juce::String const& name, juce::String const& tooltip, size_t numDecimals)
+        : Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
         {
-            property->entry.setEditable(false, false);
+            entry.setJustificationType(juce::Justification::centredRight);
+            entry.setNumDecimalsDisplayed(numDecimals);
         }
-        return property;
+        
+        ~NumberProperty() override = default;
+    };
+    auto createProperty = [](juce::String const& name, juce::String const& tootip)
+    {
+        return std::make_unique<NumberProperty>(juce::translate(name), juce::translate(tootip), 0);
     };
  
     auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
@@ -213,7 +221,7 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
             mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
         }));
         
-        mDefaultProperties.push_back(createProperty("Window Overlapping", "The window overlapping", "512 (samples)"));
+        mDefaultProperties.push_back(createProperty("Window Overlapping", "The window overlapping"));
         
         mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), juce::StringArray{"1x", "2x", "4x", "8x", "16x", "32x", "64x"}, 0, [=](juce::ComboBox const& entry)
         {
@@ -224,8 +232,8 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
     }
     else
     {
-        mDefaultProperties.push_back(createProperty("Block Size", "The block size", "512 (samples)"));
-        mDefaultProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
+        mDefaultProperties.push_back(createProperty("Block Size", "The block size"));
+        mDefaultProperties.push_back(createProperty("Step Size", "The step size"));
     }
     
     mParameterProperties.clear();
@@ -234,16 +242,16 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
         mParameterProperties[parameter.identifier] = createParameterProperty(parameter);
     }
     
-    std::vector<Layout::PropertySection::PanelRef> panels;
+    std::vector<ConcertinaPanel::ComponentRef> components;
     for(auto const& property : mDefaultProperties)
     {
-        panels.push_back(*property.get());
+        components.push_back(*property.get());
     }
     for(auto const& property : mParameterProperties)
     {
-        panels.push_back(*property.second.get());
+        components.push_back(*property.second.get());
     }
-    mProcessorSection.setPanels(panels);
+    mProcessorSection.setComponents(components);
 }
 
 void Analyzer::PropertyPanel::updateGraphicalProperties()
@@ -264,12 +272,12 @@ void Analyzer::PropertyPanel::updateGraphicalProperties()
     mGraphicalProperties.push_back(createProperty("Range Mode", "Range Mode", "Range Mode"));
     mGraphicalProperties.push_back(createProperty("Range", "Value Range", "Value Range"));
     
-    std::vector<Layout::PropertySection::PanelRef> panels;
+    std::vector<ConcertinaPanel::ComponentRef> components;
     for(auto const& property : mGraphicalProperties)
     {
-        panels.push_back(*property.get());
+        components.push_back(*property.get());
     }
-    mGraphicalSection.setPanels(panels);
+    mGraphicalSection.setComponents(components);
 }
 
 void Analyzer::PropertyPanel::updatePluginProperties()
@@ -304,12 +312,12 @@ void Analyzer::PropertyPanel::updatePluginProperties()
         mPluginProperties.push_back(createProperty("Category", "The category of the plugin", description.category.isEmpty() ? "-" : description.category));
     }
     
-    std::vector<Layout::PropertySection::PanelRef> panels;
+    std::vector<ConcertinaPanel::ComponentRef> components;
     for(auto const& property : mPluginProperties)
     {
-        panels.push_back(*property.get());
+        components.push_back(*property.get());
     }
-    mPluginSection.setPanels(panels);
+    mPluginSection.setComponents(components);
 }
 
 void Analyzer::PropertyPanel::show()

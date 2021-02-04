@@ -54,10 +54,12 @@ file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlColouredPanel.h
     ${SOURCES_DIRECTORY}/Layout/AnlTooltip.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlTooltip.h
+    ${SOURCES_DIRECTORY}/Layout/AnlNumberField.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlNumberField.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.h
+    ${SOURCES_DIRECTORY}/Layout/AnlConcertinaPanel.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlConcertinaPanel.h
 if(APPLE)
     ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.mm
 endif()

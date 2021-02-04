@@ -42,7 +42,7 @@ namespace Document
         
         std::vector<std::unique_ptr<Layout::PropertyLabel>> mMetaDataPanels;
         
-        Layout::PropertySection mPropertySection {"", false};
+        ConcertinaPanel mConcertinaPanel {"", false};
     };
 }
 

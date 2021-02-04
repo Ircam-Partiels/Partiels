@@ -13,7 +13,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         {
             case AttrType::file:
             {
-                mPropertySection.setPanels({});
+                mConcertinaPanel.setComponents({});
                 
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
@@ -45,7 +45,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<Layout::PropertySection::PanelRef> panels {mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
+                std::vector<ConcertinaPanel::ComponentRef> panels {mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
                 
                 for(auto const& key : metadataValues.getAllKeys())
                 {
@@ -61,7 +61,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                         mMetaDataPanels.push_back(std::move(property));
                     }
                 }
-                mPropertySection.setPanels(panels);
+                mConcertinaPanel.setComponents(panels);
                 resized();
             }
                 break;
@@ -75,7 +75,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         changeListenerCallback(&mFileBasedDocument);
     };
     
-    addAndMakeVisible(mPropertySection);
+    addAndMakeVisible(mConcertinaPanel);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mFileBasedDocument.addChangeListener(this);
     changeListenerCallback(&mFileBasedDocument);
@@ -89,7 +89,7 @@ Document::FileInfoPanel::~FileInfoPanel()
 
 void Document::FileInfoPanel::resized()
 {
-    mPropertySection.setBounds(getLocalBounds());
+    mConcertinaPanel.setBounds(getLocalBounds());
 }
 
 void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* source)

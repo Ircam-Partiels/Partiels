@@ -16,10 +16,10 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
     setColour(FloatingWindow::ColourIds::backgroundColourId, backgroundColour.darker());
 
-    setColour(Layout::PropertySection::ColourIds::headerBackgroundColourId, backgroundColour);
-    setColour(Layout::PropertySection::ColourIds::headerTitleColourId, textColour);
-    setColour(Layout::PropertySection::ColourIds::headerButtonColourId, textColour);
-    setColour(Layout::PropertySection::ColourIds::separatorColourId, juce::Colours::transparentBlack);
+    setColour(ConcertinaPanel::ColourIds::headerBackgroundColourId, backgroundColour);
+    setColour(ConcertinaPanel::ColourIds::headerTitleColourId, textColour);
+    setColour(ConcertinaPanel::ColourIds::headerButtonColourId, textColour);
+    setColour(ConcertinaPanel::ColourIds::separatorColourId, juce::Colours::transparentBlack);
 
     setColour(Layout::StrechableContainer::Section::resizerActiveColourId, rulerColour.brighter());
     setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, backgroundColour.darker());
@@ -79,32 +79,32 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, backgroundColour.brighter());
 }
 
-int Application::LookAndFeel::getSeparatorHeight(Layout::PropertySection const& section) const
+int Application::LookAndFeel::getSeparatorHeight(ConcertinaPanel const& panel) const
 {
-    juce::ignoreUnused(section);
+    juce::ignoreUnused(panel);
     return 2;
 }
 
-int Application::LookAndFeel::getHeaderHeight(Layout::PropertySection const& section) const
+int Application::LookAndFeel::getHeaderHeight(ConcertinaPanel const& panel) const
 {
-    juce::ignoreUnused(section);
+    juce::ignoreUnused(panel);
     return 20;
 }
 
-juce::Font Application::LookAndFeel::getHeaderFont(Layout::PropertySection const& section, int headerHeight) const
+juce::Font Application::LookAndFeel::getHeaderFont(ConcertinaPanel const& panel, int headerHeight) const
 {
-     juce::ignoreUnused(section);
+     juce::ignoreUnused(panel);
     return juce::Font(static_cast<float>(headerHeight - 2));
 }
 
-void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, Layout::PropertySection const& section, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
+void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
 {
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
-    g.setColour(section.findColour(Layout::PropertySection::headerBackgroundColourId).darker(contrast));
+    g.setColour(panel.findColour(ConcertinaPanel::headerBackgroundColourId).darker(contrast));
     g.fillRect(area);
 }
 
-void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, Layout::PropertySection const& section, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const
+void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const
 {
     juce::ignoreUnused(isMouseDown, isMouseOver);
     auto const bounds = area.reduced(4).toFloat();
@@ -114,16 +114,16 @@ void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, Layout::Prope
     path.applyTransform(juce::AffineTransform::rotation(rotation, bounds.getCentre().getX(), bounds.getCentre().getY()));
     path.closeSubPath();
     
-    g.setColour(section.findColour(Layout::PropertySection::headerButtonColourId, true));
+    g.setColour(panel.findColour(ConcertinaPanel::headerButtonColourId, true));
     g.fillPath(path);
 }
 
-void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, Layout::PropertySection const& section, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const
+void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const
 {
     juce::ignoreUnused(isMouseDown, isMouseOver);
     g.setFont(font);
-    g.setColour(section.findColour(Layout::PropertySection::headerTitleColourId, true));
-    g.drawFittedText(section.getTitle(), area.withTrimmedLeft(5), juce::Justification::centredLeft, 1, 1.0f);
+    g.setColour(panel.findColour(ConcertinaPanel::headerTitleColourId, true));
+    g.drawFittedText(panel.getTitle(), area.withTrimmedLeft(5), juce::Justification::centredLeft, 1, 1.0f);
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
