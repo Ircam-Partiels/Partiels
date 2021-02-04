@@ -24,7 +24,6 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
         juce::ignoreUnused(acsr, value);
         switch(signal)
         {
-            case SignalType::analyse:
             case SignalType::time:
             case SignalType::image:
             {

@@ -13,7 +13,8 @@ Application::LookAndFeel::LookAndFeel()
     auto const thumbColour = juce::Colours::white;
     
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
-    setColour(Tools::ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
+    setColour(ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
+    setColour(FloatingWindow::ColourIds::backgroundColourId, backgroundColour.darker());
 
     setColour(Layout::PropertySection::ColourIds::headerBackgroundColourId, backgroundColour);
     setColour(Layout::PropertySection::ColourIds::headerTitleColourId, textColour);
@@ -37,6 +38,10 @@ Application::LookAndFeel::LookAndFeel()
     
     setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Document::Playhead::playheadColourId, thumbColour);
+    
+    auto& colourScheme = getCurrentColourScheme();
+    colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, backgroundColour.darker());
+    colourScheme.setUIColour(ColourScheme::UIColour::widgetBackground, backgroundColour.darker());
     
     // juce::ResizableWindow
     setColour(juce::ResizableWindow::ColourIds::backgroundColourId, backgroundColour.darker());
@@ -72,8 +77,6 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, backgroundColour);
     setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, backgroundColour.darker());
     setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, backgroundColour.brighter());
-    
-    // TODO: LookAndFeel_V2::drawTableHeaderColumn (colour arrow)
 }
 
 int Application::LookAndFeel::getSeparatorHeight(Layout::PropertySection const& section) const
@@ -193,6 +196,32 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
 int Application::LookAndFeel::getAlertWindowButtonHeight()
 {
     return 36;
+}
+
+void Application::LookAndFeel::drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComponent& header, juce::String const& columnName, int columnId, int width, int height, bool isMouseOver, bool isMouseDown, int columnFlags)
+{
+    juce::ignoreUnused(columnId);
+    if(isMouseDown)
+    {
+        g.fillAll(header.findColour(juce::TableHeaderComponent::highlightColourId));
+    }
+    else if(isMouseOver)
+    {
+        g.fillAll(header.findColour(juce::TableHeaderComponent::highlightColourId).withMultipliedAlpha (0.625f));
+    }
+    
+    g.setColour(header.findColour(juce::TableHeaderComponent::textColourId));
+    auto area = juce::Rectangle<int>(width, height).reduced(4, 0);
+    using ColumnPropertyFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
+    if ((columnFlags & (ColumnPropertyFlags::sortedForwards | ColumnPropertyFlags::sortedBackwards)) != 0)
+    {
+        juce::Path sortArrow;
+        sortArrow.addTriangle(0.0f, 0.0f, 0.5f, (columnFlags & ColumnPropertyFlags::sortedForwards) != 0 ? -0.8f : 0.8f, 1.0f, 0.0f);
+        g.fillPath(sortArrow, sortArrow.getTransformToScaleToFit(area.removeFromRight(height / 2).reduced(2).toFloat(), true));
+    }
+
+    g.setFont(juce::Font(static_cast<float>(height) * 0.5f, juce::Font::bold));
+    g.drawFittedText(columnName, area, juce::Justification::centredLeft, 1);
 }
 
 ANALYSE_FILE_END

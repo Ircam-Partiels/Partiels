@@ -58,6 +58,11 @@ file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertySection.h
+if(APPLE)
+    ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.mm
+endif()
+    ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.cpp
+    ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.h
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.h
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.cpp

@@ -24,6 +24,7 @@ namespace Analyzer
         
         , results
         , warnings
+        , processing
     };
     
     enum class AcsrType : size_t
@@ -41,8 +42,7 @@ namespace Analyzer
     
     enum class SignalType
     {
-          analyse
-        , image
+          image
         , time
     };
     
@@ -66,7 +66,8 @@ namespace Analyzer
     , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
     
     , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
-    , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
+    , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying | Model::Flag::comparable>
+    , Model::Attr<AttrType::processing, bool, Model::Flag::notifying | Model::Flag::comparable>
     >;
     
     using AcsrContainer = Model::Container
@@ -90,7 +91,8 @@ namespace Analyzer
                                  , {juce::Colours::black}
                                  , {ColorMap::Inferno}
                                  , {}
-                                 , {}))
+                                 , {}
+                                 , {false}))
         {
         }
         

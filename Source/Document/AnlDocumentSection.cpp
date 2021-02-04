@@ -88,7 +88,6 @@ Document::Section::Section(Accessor& accessor)
                     };
                 }
                 mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
-                
 
                 for(size_t i = 0; i < mContents.size(); ++i)
                 {

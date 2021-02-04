@@ -178,6 +178,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     
     updateZoomRange(notification);
 
+    mAccessor.setAttr<AttrType::processing>(true, notification);
     mAnalysisProcess = std::async([=, this, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
@@ -321,6 +322,7 @@ void Analyzer::Director::handleAsyncUpdate()
         {
             auto const result = mAnalysisProcess.get();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
+            mAccessor.setAttr<AttrType::processing>(false, std::get<1>(result));
         }
         else if(expected == ProcessState::aborted)
         {

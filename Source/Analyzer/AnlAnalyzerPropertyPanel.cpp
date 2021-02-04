@@ -33,6 +33,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::name:
             {
                 mNameProperty.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                mFloatingWindow.setName(juce::translate("ANLNAME Properties").replace("ANLNAME", acsr.getAttr<AttrType::name>()).toUpperCase());
             }
                 break;
                 
@@ -45,6 +46,41 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 updatePluginProperties();
             }
             case AttrType::state:
+            {
+//                auto const description = mAccessor.getAttr<AttrType::description>();
+//                auto const state = mAccessor.getAttr<AttrType::state>();
+//                if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+//                {
+//                    juce::StringArray const windowNames {"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"};
+//                    mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), windowNames, 0, [=](juce::ComboBox const& entry)
+//                                                                                            {
+//                        auto state = mAccessor.getAttr<AttrType::state>();
+//                        state.windowType = static_cast<Plugin::WindowType>(entry.getSelectedItemIndex());
+//                        mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
+//                    }));
+//
+//                    mDefaultProperties.push_back(createProperty("Window Overlapping", "The window overlapping", "512 (samples)"));
+//
+//                    mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), juce::StringArray{"1x", "2x", "4x", "8x", "16x", "32x", "64x"}, 0, [=](juce::ComboBox const& entry)
+//                                                                                            {
+//                        auto state = mAccessor.getAttr<AttrType::state>();
+//                        state.stepSize = std::max(state.blockSize / static_cast<size_t>(entry.getSelectedItemIndex()), 1_z);
+//                        mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
+//                    }));
+//                }
+//                else
+//                {
+//                    anlWeakAssert(mDefaultProperties.size() == 2);
+//                    if(mDefaultProperties.size() >= 1 && mDefaultProperties[0] != nullptr)
+//                    {
+//                        static_cast<Layout::PropertyLabel*>(mDefaultProperties[0].get())->entry.setText(<#const String &newText#>, juce::NotificationType::dontSendNotification);
+//                    }
+//                    mDefaultProperties.push_back(createProperty("Block Size", "The block size", "512 (samples)"));
+//                    mDefaultProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
+//                }
+                
+            }
+                break;
             case AttrType::zoomMode:
             case AttrType::colour:
             case AttrType::colourMap:
@@ -67,12 +103,15 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mProcessorSection.onResized = onResized;
     mGraphicalSection.onResized = onResized;
     mPluginSection.onResized = onResized;
+    
     addAndMakeVisible(mNameProperty);
     addAndMakeVisible(mProcessorSection);
     addAndMakeVisible(mGraphicalSection);
     addAndMakeVisible(mPluginSection);
-
+    
+    
     setSize(300, 200);
+    mFloatingWindow.setContentNonOwned(this, true);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -102,21 +141,7 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
         }
         return property;
     };
-    
-    mProcessorProperties.clear();
-    auto const description = mAccessor.getAttr<AttrType::description>();
-    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
-    {
-        mProcessorProperties.push_back(createProperty("Window Type", "The window type", "Hanning"));
-        mProcessorProperties.push_back(createProperty("Window Size", "The window size", "512 (samples)"));
-        mProcessorProperties.push_back(createProperty("Window Overlapping", "The window overlapping", "4x"));
-    }
-    else
-    {
-        mProcessorProperties.push_back(createProperty("Block Size", "The block size", "512 (samples)"));
-        mProcessorProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
-    }
-    
+ 
     auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
     {
         enum class PropertyType
@@ -163,15 +188,47 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
         return nullptr;
     };
     
+    mDefaultProperties.clear();
+    auto const description = mAccessor.getAttr<AttrType::description>();
+    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+    {
+        juce::StringArray const windowNames {"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"};
+        mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), windowNames, 0, [=](juce::ComboBox const& entry)
+        {
+            auto state = mAccessor.getAttr<AttrType::state>();
+            state.windowType = static_cast<Plugin::WindowType>(entry.getSelectedItemIndex());
+            mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
+        }));
+        
+        mDefaultProperties.push_back(createProperty("Window Overlapping", "The window overlapping", "512 (samples)"));
+        
+        mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), juce::StringArray{"1x", "2x", "4x", "8x", "16x", "32x", "64x"}, 0, [=](juce::ComboBox const& entry)
+        {
+            auto state = mAccessor.getAttr<AttrType::state>();
+            state.stepSize = std::max(state.blockSize / static_cast<size_t>(entry.getSelectedItemIndex()), 1_z);
+            mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
+        }));
+    }
+    else
+    {
+        mDefaultProperties.push_back(createProperty("Block Size", "The block size", "512 (samples)"));
+        mDefaultProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
+    }
+    
+    mParameterProperties.clear();
     for(auto const& parameter : description.parameters)
     {
-        mProcessorProperties.push_back(createParameterProperty(parameter));
+        mParameterProperties[parameter.identifier] = createParameterProperty(parameter);
     }
     
     std::vector<Layout::PropertySection::PanelRef> panels;
-    for(auto const& property : mProcessorProperties)
+    for(auto const& property : mDefaultProperties)
     {
         panels.push_back(*property.get());
+    }
+    for(auto const& property : mParameterProperties)
+    {
+        panels.push_back(*property.second.get());
     }
     mProcessorSection.setPanels(panels);
 }
@@ -240,6 +297,11 @@ void Analyzer::PropertyPanel::updatePluginProperties()
         panels.push_back(*property.get());
     }
     mPluginSection.setPanels(panels);
+}
+
+void Analyzer::PropertyPanel::show()
+{
+    mFloatingWindow.setVisible(true);
 }
 
 ANALYSE_FILE_END

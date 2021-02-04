@@ -33,6 +33,9 @@ namespace Application
         // juce::AlertWindow::LookAndFeelMethods
         void drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, juce::Rectangle<int> const& textArea, juce::TextLayout& textLayout) override;
         int getAlertWindowButtonHeight() override;
+        
+        // juce::TableHeaderComponent::LookAndFeelMethods
+        void drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComponent& header, juce::String const& columnName, int columnId, int width, int height, bool isMouseOver, bool isMouseDown, int columnFlags) override;
     };
 }
 

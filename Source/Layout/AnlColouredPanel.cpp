@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-void Tools::ColouredPanel::ColouredPanel::paint(juce::Graphics& g)
+void ColouredPanel::ColouredPanel::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId, true));
 }

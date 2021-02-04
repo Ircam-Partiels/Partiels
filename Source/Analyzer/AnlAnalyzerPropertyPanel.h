@@ -17,6 +17,8 @@ namespace Analyzer
         
         // juce::Component
         void resized() override;
+        
+        void show();
     private:
         
         void updateProcessorProperties();
@@ -44,7 +46,8 @@ namespace Analyzer
         
         Layout::PropertySection mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
-        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mProcessorProperties;
+        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mDefaultProperties;
+        std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
         
         Layout::PropertySection mGraphicalSection {juce::translate("GRAPHICAL"), true,
             juce::translate("The graphical parameters of the analyzer")};
@@ -56,6 +59,9 @@ namespace Analyzer
         
         Layout::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
         Layout::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
+        
+        
+        FloatingWindow mFloatingWindow {"Properties"};
     };
 }
 

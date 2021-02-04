@@ -16,6 +16,18 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
         {
             repaint();
         }
+        else if(attribute == AttrType::processing)
+        {
+            if(acsr.getAttr<AttrType::processing>())
+            {
+                mInformation.setVisible(true);
+                mInformation.setText("processing...", juce::NotificationType::dontSendNotification);
+            }
+            else
+            {
+                mInformation.setText("", juce::NotificationType::dontSendNotification);
+            }
+        }
     };
     
     mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
@@ -23,7 +35,6 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAcc
         juce::ignoreUnused(acsr, value);
         switch(signal)
         {
-            case SignalType::analyse:
             case SignalType::time:
                 break;
             case SignalType::image:
