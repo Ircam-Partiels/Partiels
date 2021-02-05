@@ -133,20 +133,4 @@ Layout::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::Strin
     };
 }
 
-Layout::PropertySlider::PropertySlider(juce::String const& name, juce::String const& tooltip, juce::Range<double> const& range, double interval, juce::String const& textValueSuffix, double value, callback_type fn)
-: Layout::PropertyPanel<juce::Slider>(name, tooltip, fn)
-{
-    entry.setTooltip(tooltip);
-    entry.setRange(range, interval);
-    entry.setValue(value, juce::NotificationType::dontSendNotification);
-    entry.setTextValueSuffix(textValueSuffix),
-    entry.onValueChange = [&]()
-    {
-        if(callback != nullptr)
-        {
-            callback(entry);
-        }
-    };
-}
-
 ANALYSE_FILE_END
