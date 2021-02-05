@@ -2,32 +2,12 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::PropertyPanel::PropertyInt::PropertyInt(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<int> const& range, std::function<void(int)> fn)
+Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
 : Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
 {
-    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, juce::NotificationType::dontSendNotification);
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval), juce::NotificationType::dontSendNotification);
     entry.setTooltip(juce::translate(tooltip));
     entry.setJustificationType(juce::Justification::centredRight);
-    entry.setNumDecimalsDisplayed(0_z);
-    entry.setNumDecimalsEdited(0_z);
-    entry.setTextValueSuffix(suffix);
-    entry.onValueChanged = [=](double value)
-    {
-        if(fn != nullptr)
-        {
-            fn(static_cast<int>(std::ceil(value)));
-        }
-    };
-}
-
-Analyzer::PropertyPanel::PropertyFloat::PropertyFloat(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, std::function<void(float)> fn, size_t numDecimals)
-: Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
-{
-    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, juce::NotificationType::dontSendNotification);
-    entry.setTooltip(juce::translate(tooltip));
-    entry.setJustificationType(juce::Justification::centredRight);
-    entry.setNumDecimalsDisplayed(numDecimals);
-    entry.setNumDecimalsEdited(8);
     entry.setTextValueSuffix(suffix);
     entry.onValueChanged = [=](double value)
     {
@@ -75,19 +55,19 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     state.stepSize = state.blockSize / overlapping;
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyWindowOverlapping("Window Overlapping", "The window overlapping", "x", std::vector<std::string>{"1", "2", "4", "8", "16", "32", "64"}, [=](size_t index)
+, mPropertyWindowOverlapping("Window Overlapping", "The window overlapping", "x", std::vector<std::string>{}, [=](size_t index)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyBlockSize("Block Size", "The block size", "samples", juce::Range<int>{1, 65536}, [=](int value)
+, mPropertyBlockSize("Block Size", "The block size", "samples", {1.0f, 65536.0f}, 1.0f, [=](float value)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.blockSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyStepSize("Step Size", "The step size", "samples", juce::Range<int>{1, 65536}, [=](int value)
+, mPropertyStepSize("Step Size", "The step size", "samples", {1.0f, 65536.0f}, 1.0f, [=](float value)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.stepSize = static_cast<size_t>(value);
@@ -122,13 +102,13 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
                 {
                     mPropertyWindowType.entry.setSelectedItemIndex(static_cast<int>(state.windowType), silent);
-                    mPropertyWindowSize.entry.setSelectedId(static_cast<int>(std::log(state.blockSize) / std::log(2)), silent);
+                    mPropertyWindowSize.entry.setSelectedItemIndex(static_cast<int>(std::log(state.blockSize) / std::log(2)), silent);
                     mPropertyWindowOverlapping.entry.clear(silent);
-                    int itemId = 0;
                     for(size_t i = 1; i <= state.blockSize; i *= 2)
                     {
-                        mPropertyWindowOverlapping.entry.addItem(juce::String(static_cast<int>(i)), ++itemId);
+                        mPropertyWindowOverlapping.entry.addItem(juce::String(static_cast<int>(i)), static_cast<int>(i));
                     }
+                    mPropertyWindowSize.entry.setSelectedId(static_cast<int>(state.stepSize), silent);
                 }
                 else
                 {
@@ -206,8 +186,7 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
     {
         enum class PropertyType
         {
-              integer
-            , floating
+              number
             , list
         };
         
@@ -225,11 +204,7 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
             {
                 return PropertyType::list;
             }
-            else if(parameter.isQuantized && (parameter.quantizeStep - std::ceil(parameter.quantizeStep)) < std::numeric_limits<float>::epsilon())
-            {
-                return PropertyType::integer;
-            }
-            return PropertyType::floating;
+            return PropertyType::number;
         };
         
         switch(getPropertyType())
@@ -242,21 +217,11 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
                 });
             }
                 break;
-            case PropertyType::floating:
+            case PropertyType::number:
             {
-                JUCE_COMPILER_WARNING("improve quantization management")
-                return std::make_unique<PropertyFloat>(parameter.name, parameter.description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, [=](float value)
+                return std::make_unique<PropertyNumber>(parameter.name, parameter.description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
                 {
                     setPararmeterValue(value);
-                });
-            }
-                break;
-            case PropertyType::integer:
-            {
-                JUCE_COMPILER_WARNING("improve quantization management")
-                return std::make_unique<PropertyInt>(parameter.name, parameter.description, parameter.unit, juce::Range<int>{static_cast<int>(parameter.minValue), static_cast<int>(parameter.maxValue)}, [=](int value)
-                {
-                    setPararmeterValue(static_cast<float>(value));
                 });
             }
                 break;

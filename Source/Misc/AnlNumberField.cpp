@@ -13,7 +13,7 @@ NumberField::NumberField()
     {
         if(auto* editor = mLabel.getCurrentTextEditor())
         {
-            editor->clear();
+            editor->setText("", false);
             auto const font = mLabel.getFont();
             editor->setFont(font);
             editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
@@ -21,7 +21,7 @@ NumberField::NumberField()
             editor->setBorder(mLabel.getBorderSize());
             editor->setInputFilter(this, false);
             editor->setMultiLine(false);
-            editor->setText(juce::String(mValue, static_cast<int>(mNumEditedDecimals)));
+            editor->setText(juce::String(mValue, mNumEditedDecimals), false);
             editor->moveCaretToTop(false);
             editor->moveCaretToEnd(true);
         }
@@ -41,7 +41,8 @@ void NumberField::setValue(double value, juce::NotificationType const notificati
         value = std::round((value - mRange.getStart()) / mInterval) * mInterval + mRange.getStart();
     }
     value = mRange.clipValue(value);
-    mLabel.setText(juce::String(value, static_cast<int>(mNumDisplayedDecimals)) + mSuffix, juce::NotificationType::dontSendNotification);
+    auto const numDecimals = mNumDisplayedDecimals >= 0 ? mNumDisplayedDecimals : (mNumEditedDecimals > 0 ? 2 : 0 );
+    mLabel.setText(juce::String(value, numDecimals) + mSuffix, juce::NotificationType::dontSendNotification);
     if(std::abs(value - mValue) > std::numeric_limits<double>::epsilon())
     {
         mValue = value;
@@ -85,12 +86,14 @@ void NumberField::setRange(juce::Range<double> const& range, double interval, ju
         {
             if(interval <= 0.0)
             {
-                return 8_z;
+                return 8;
             }
-            auto numDecimals = 0_z;
-            while(std::abs(interval - std::ceil(interval)) > std::numeric_limits<double>::epsilon() && numDecimals < 8)
+            auto numDecimals = 0;
+            auto startRange = range.getStart();
+            while((std::fmod(interval, 1.0) > std::numeric_limits<double>::epsilon() || std::fmod(startRange, 1.0) > std::numeric_limits<double>::epsilon()) && numDecimals < 8)
             {
                 interval *= 10.0;
+                startRange *= 10.0;
                 ++numDecimals;
             }
             return numDecimals;
@@ -101,7 +104,7 @@ void NumberField::setRange(juce::Range<double> const& range, double interval, ju
             mNumEditedDecimals = numDecimals;
             if(auto* editor = mLabel.getCurrentTextEditor())
             {
-                editor->setText(juce::String(mValue, static_cast<int>(mNumEditedDecimals)));
+                editor->setText(juce::String(mValue, mNumEditedDecimals));
             }
         }
     }
@@ -131,8 +134,9 @@ juce::String NumberField::getTextValueSuffix() const
     return mSuffix;
 }
 
-void NumberField::setNumDecimalsDisplayed(size_t numDecimals)
+void NumberField::setNumDecimalsDisplayed(int numDecimals)
 {
+    numDecimals = std::max(numDecimals, -1);
     if(mNumDisplayedDecimals != numDecimals)
     {
         mNumDisplayedDecimals = numDecimals;
@@ -140,7 +144,7 @@ void NumberField::setNumDecimalsDisplayed(size_t numDecimals)
     }
 }
 
-size_t NumberField::getNumDecimalsDisplayed() const
+int NumberField::getNumDecimalsDisplayed() const
 {
     return mNumDisplayedDecimals;
 }
@@ -158,7 +162,7 @@ juce::Justification NumberField::getJustificationType() const
 juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String const& newInput)
 {
     juce::ignoreUnused(editor);
-    if(mNumEditedDecimals == 0)
+    if(mNumEditedDecimals < 0)
     {
         if(!newInput.containsOnly("-0123456789"))
         {
@@ -166,17 +170,11 @@ juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String c
         }
         return newInput.retainCharacters("-0123456789");
     }
-    auto const point = newInput.indexOfIgnoreCase(".");
-    auto const numDecimals = point >= 0 ? newInput.length() - point : 0;
-    if(!newInput.containsOnly("-0123456789.") || static_cast<size_t>(numDecimals) > mNumEditedDecimals)
+    if(!newInput.containsOnly("-0123456789."))
     {
         getLookAndFeel().playAlertSound();
     }
-    if(point >= 0)
-    {
-        return newInput.substring(0, point + static_cast<int>(mNumEditedDecimals)).retainCharacters("-0123456789");
-    }
-    return newInput.retainCharacters("-0123456789");
+    return newInput.retainCharacters("-0123456789.");
 }
 
 void NumberField::resized()

@@ -26,8 +26,8 @@ public:
     void setTextValueSuffix(juce::String const& suffix);
     juce::String getTextValueSuffix() const;
     
-    void setNumDecimalsDisplayed(size_t numDecimals);
-    size_t getNumDecimalsDisplayed() const;
+    void setNumDecimalsDisplayed(int numDecimals);
+    int getNumDecimalsDisplayed() const;
     
     void setJustificationType(juce::Justification newJustification);
     juce::Justification getJustificationType() const;
@@ -49,8 +49,8 @@ private:
     juce::String mSuffix;
     juce::Range<double> mRange = {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()};
     double mInterval = 0.0;
-    size_t mNumDisplayedDecimals = 0_z;
-    size_t mNumEditedDecimals = 0_z;
+    int mNumDisplayedDecimals = -1;
+    int mNumEditedDecimals = 0;
     double mValue;
 };
 

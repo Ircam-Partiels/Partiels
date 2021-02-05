@@ -28,22 +28,14 @@ namespace Analyzer
         
         using PropertyLabel = Layout::PropertyLabel;
         
-        class PropertyInt
+        class PropertyNumber
         : public Layout::PropertyPanel<NumberField>
         {
         public:
-            PropertyInt(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<int> const& range, std::function<void(int)> fn);
-            ~PropertyInt() override = default;
+            PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
+            ~PropertyNumber() override = default;
         };
-        
-        class PropertyFloat
-        : public Layout::PropertyPanel<NumberField>
-        {
-        public:
-            PropertyFloat(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, std::function<void(float)> fn, size_t numDecimals = 2);
-            ~PropertyFloat() override = default;
-        };
-        
+
         class PropertyList
         : public Layout::PropertyPanel<juce::ComboBox>
         {
@@ -60,8 +52,8 @@ namespace Analyzer
         PropertyList mPropertyWindowType;
         PropertyList mPropertyWindowSize;
         PropertyList mPropertyWindowOverlapping;
-        PropertyInt mPropertyBlockSize;
-        PropertyInt mPropertyStepSize;
+        PropertyNumber mPropertyBlockSize;
+        PropertyNumber mPropertyStepSize;
         
         ConcertinaPanel mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
