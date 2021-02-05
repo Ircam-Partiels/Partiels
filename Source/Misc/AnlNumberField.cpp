@@ -142,23 +142,23 @@ juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String c
     juce::ignoreUnused(editor);
     if(mNumEditedDecimals == 0)
     {
-        if(!newInput.containsOnly("0123456789"))
+        if(!newInput.containsOnly("-0123456789"))
         {
             getLookAndFeel().playAlertSound();
         }
-        return newInput.retainCharacters("0123456789");
+        return newInput.retainCharacters("-0123456789");
     }
     auto const point = newInput.indexOfIgnoreCase(".");
     auto const numDecimals = point >= 0 ? newInput.length() - point : 0;
-    if(!newInput.containsOnly("0123456789.") || static_cast<size_t>(numDecimals) > mNumEditedDecimals)
+    if(!newInput.containsOnly("-0123456789.") || static_cast<size_t>(numDecimals) > mNumEditedDecimals)
     {
         getLookAndFeel().playAlertSound();
     }
     if(point >= 0)
     {
-        return newInput.substring(0, point + static_cast<int>(mNumEditedDecimals)).retainCharacters("0123456789");
+        return newInput.substring(0, point + static_cast<int>(mNumEditedDecimals)).retainCharacters("-0123456789");
     }
-    return newInput.retainCharacters("0123456789");
+    return newInput.retainCharacters("-0123456789");
 }
 
 void NumberField::resized()
