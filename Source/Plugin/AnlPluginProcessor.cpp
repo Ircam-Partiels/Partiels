@@ -156,7 +156,8 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         instance->setParameter(parameter.first, parameter.second);
     }
     
-    if(!instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
+    anlStrongAssert(state.blockSize > 0 && state.stepSize > 0);
+    if(state.blockSize <= 0 || state.stepSize <= 0 || !instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
     {
         if(alertType == AlertType::window)
         {
