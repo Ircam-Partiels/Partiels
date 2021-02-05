@@ -117,4 +117,20 @@ void Layout::PropertyText::PropertyText::resized()
     entry.setBounds(bounds);
 }
 
+Layout::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::String const& tooltip, juce::StringArray const& items, size_t index, callback_type fn)
+: Layout::PropertyPanel<juce::ComboBox>(name, tooltip, fn)
+{
+    entry.setTooltip(tooltip);
+    entry.addItemList(items, 1);
+    entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.onChange = [&]()
+    {
+        if(callback != nullptr)
+        {
+            callback(entry);
+        }
+    };
+}
+
 ANALYSE_FILE_END

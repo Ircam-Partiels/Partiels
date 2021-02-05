@@ -22,11 +22,24 @@ namespace Analyzer
         void show();
     private:
         
-        void updateProcessorProperties();
         void updateGraphicalProperties();
         void updatePluginProperties();
         
-        using PropertyLabel = Layout::PropertyLabel;
+        class PropertyText
+        : public Layout::PropertyPanel<juce::Label>
+        {
+        public:
+            PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn);
+            ~PropertyText() override = default;
+        };
+        
+        class PropertyLabel
+        : public PropertyText
+        {
+        public:
+            PropertyLabel(juce::String const& name, juce::String const& tooltip);
+            ~PropertyLabel() override = default;
+        };
         
         class PropertyNumber
         : public Layout::PropertyPanel<NumberField>
@@ -47,7 +60,7 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        PropertyLabel mPropertyName {juce::translate("Name"), juce::translate("The name of the analyzer")};
+        PropertyText mPropertyName;
         
         PropertyList mPropertyWindowType;
         PropertyList mPropertyWindowSize;

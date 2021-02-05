@@ -2,6 +2,41 @@
 
 ANALYSE_FILE_BEGIN
 
+Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
+: Layout::PropertyPanel<juce::Label>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setRepaintsOnMouseActivity(true);
+    entry.setEditable(true);
+    entry.setTooltip(tooltip);
+    entry.setJustificationType(juce::Justification::right);
+    entry.setMinimumHorizontalScale(1.0f);
+    entry.setBorderSize({});
+    entry.onEditorShow = [&]()
+    {
+        if(auto* editor = entry.getCurrentTextEditor())
+        {
+            auto const font = entry.getFont();
+            editor->setFont(font);
+            editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())) - 1);
+            editor->setBorder(entry.getBorderSize());
+            editor->setJustification(entry.getJustificationType());
+        }
+    };
+    entry.onTextChange = [&]()
+    {
+        if(fn != nullptr)
+        {
+            fn(entry.getText());
+        }
+    };
+}
+
+Analyzer::PropertyPanel::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip)
+: PropertyText(name, tooltip, nullptr)
+{
+    entry.setEditable(false, false);
+}
+
 Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
 : Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
 {
@@ -41,13 +76,17 @@ Analyzer::PropertyPanel::PropertyList::PropertyList(juce::String const& name, ju
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 
-, mPropertyWindowType("Window Type", "The window type", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [=](size_t index)
+, mPropertyName("Name", "The name of the analyzer", [&](juce::String text)
+{
+    mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
+})
+, mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [=](size_t index)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.windowType = static_cast<Plugin::WindowType>(index);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyWindowSize("Window Size", "The window size", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [=](size_t index)
+, mPropertyWindowSize("Window Size", "The window size of the FFT.", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [&](size_t index)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     auto const overlapping = state.blockSize / state.stepSize;
@@ -55,19 +94,19 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     state.stepSize = state.blockSize / overlapping;
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyWindowOverlapping("Window Overlapping", "The window overlapping", "x", std::vector<std::string>{}, [=](size_t index)
+, mPropertyWindowOverlapping("Window Overlapping", "The window overlapping of the FFT.", "x", std::vector<std::string>{}, [&](size_t index)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyBlockSize("Block Size", "The block size", "samples", {1.0f, 65536.0f}, 1.0f, [=](float value)
+, mPropertyBlockSize("Block Size", "The block size used by the analyzer. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.blockSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyStepSize("Step Size", "The step size", "samples", {1.0f, 65536.0f}, 1.0f, [=](float value)
+, mPropertyStepSize("Step Size", "The step size used by the analyzer. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.stepSize = static_cast<size_t>(value);
@@ -81,8 +120,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         {
             case AttrType::name:
             {
-                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
-                mFloatingWindow.setName(juce::translate("ANLNAME Properties").replace("ANLNAME", acsr.getAttr<AttrType::name>()).toUpperCase());
+                auto constexpr silent = juce::NotificationType::dontSendNotification;
+                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), silent);
+                mFloatingWindow.setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
             }
                 break;
                 
@@ -90,7 +130,58 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
             case AttrType::description:
             {
-                updateProcessorProperties();
+                auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
+                {
+                    auto const setPararmeterValue = [=, this](float value)
+                    {
+                        auto state = mAccessor.getAttr<AttrType::state>();
+                        anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
+                        state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
+                        mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+                    };
+                    
+                    if(parameter.valueNames.empty())
+                    {
+                        auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
+                        return std::make_unique<PropertyNumber>(parameter.name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
+                        {
+                            setPararmeterValue(value);
+                        });
+                    }
+                    return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
+                    {
+                        setPararmeterValue(static_cast<float>(index));
+                    });
+                };
+                
+                auto const description = mAccessor.getAttr<AttrType::description>();
+                std::vector<ConcertinaPanel::ComponentRef> components;
+                
+                // Processor Part
+                if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+                {
+                    components.push_back(mPropertyWindowType);
+                    components.push_back(mPropertyWindowSize);
+                    components.push_back(mPropertyWindowOverlapping);
+                }
+                else
+                {
+                    components.push_back(mPropertyBlockSize);
+                    components.push_back(mPropertyStepSize);
+                }
+                
+                mParameterProperties.clear();
+                for(auto const& parameter : description.parameters)
+                {
+                    mParameterProperties[parameter.identifier] = createParameterProperty(parameter);
+                }
+                
+                for(auto const& property : mParameterProperties)
+                {
+                    components.push_back(*property.second.get());
+                }
+                mProcessorSection.setComponents(components);
+                
                 updateGraphicalProperties();
                 updatePluginProperties();
             }
@@ -101,21 +192,41 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 auto constexpr silent = juce::NotificationType::dontSendNotification;
                 if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
                 {
-                    mPropertyWindowType.entry.setSelectedItemIndex(static_cast<int>(state.windowType), silent);
-                    mPropertyWindowSize.entry.setSelectedItemIndex(static_cast<int>(std::log(state.blockSize) / std::log(2)), silent);
+                    mPropertyWindowType.entry.setSelectedId(static_cast<int>(state.windowType) + 1, silent);
+                    auto const windowSizeIndex = static_cast<int>(std::log(state.blockSize) / std::log(2)) - 2;
+                    mPropertyWindowSize.entry.setSelectedId(windowSizeIndex, silent);
                     mPropertyWindowOverlapping.entry.clear(silent);
-                    for(size_t i = 1; i <= state.blockSize; i *= 2)
+                    for(int i = 1; static_cast<size_t>(i) <= state.blockSize; i *= 2)
                     {
-                        mPropertyWindowOverlapping.entry.addItem(juce::String(static_cast<int>(i)), static_cast<int>(i));
+                        mPropertyWindowOverlapping.entry.addItem(juce::String(i), static_cast<int>(state.blockSize) / i);
                     }
-                    mPropertyWindowSize.entry.setSelectedId(static_cast<int>(state.stepSize), silent);
+                    mPropertyWindowOverlapping.entry.setSelectedId(static_cast<int>(state.stepSize), silent);
                 }
                 else
                 {
                     mPropertyBlockSize.entry.setValue(static_cast<double>(state.blockSize), silent);
                     mPropertyStepSize.entry.setValue(static_cast<double>(state.stepSize), silent);
                 }
-                
+                for(auto const& parameter : state.parameters)
+                {
+                    auto it = mParameterProperties.find(parameter.first);
+                    anlStrongAssert(it != mParameterProperties.end());
+                    if(it != mParameterProperties.end() && it->second != nullptr)
+                    {
+                        if(auto* propertyList = dynamic_cast<PropertyList*>(it->second.get()))
+                        {
+                            propertyList->entry.setSelectedItemIndex(static_cast<int>(parameter.second), silent);
+                        }
+                        else if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(it->second.get()))
+                        {
+                            propertyNumber->entry.setValue(static_cast<float>(parameter.second), silent);
+                        }
+                        else
+                        {
+                            anlStrongAssert(false && "property unsupported");
+                        }
+                    }
+                }
             }
                 break;
             case AttrType::zoomMode:
@@ -126,12 +237,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
         }
     };
-    
-    mPropertyName.callback = [&](juce::Label const& l)
-    {
-        mAccessor.setAttr<AttrType::name>(l.getText(), NotificationType::synchronous);
-    };
-    mPropertyName.entry.setEditable(true, true);
     
     auto onResized = [&]()
     {
@@ -178,81 +283,6 @@ void Analyzer::PropertyPanel::resized()
     mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
     mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
     setSize(300, std::max(bound.getY(), 120) + 2);
-}
-
-void Analyzer::PropertyPanel::updateProcessorProperties()
-{
-    auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
-    {
-        enum class PropertyType
-        {
-              number
-            , list
-        };
-        
-        auto const setPararmeterValue = [=, this](float value)
-        {
-            auto state = mAccessor.getAttr<AttrType::state>();
-            anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
-            state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
-            mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-        };
-        
-        auto getPropertyType = [&]
-        {
-            if(!parameter.valueNames.empty())
-            {
-                return PropertyType::list;
-            }
-            return PropertyType::number;
-        };
-        
-        switch(getPropertyType())
-        {
-            case PropertyType::list:
-            {
-                return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
-                {
-                    setPararmeterValue(static_cast<float>(index));
-                });
-            }
-                break;
-            case PropertyType::number:
-            {
-                return std::make_unique<PropertyNumber>(parameter.name, parameter.description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
-                {
-                    setPararmeterValue(value);
-                });
-            }
-                break;
-        }
-        return nullptr;
-    };
-    
-    mParameterProperties.clear();
-    auto const description = mAccessor.getAttr<AttrType::description>();
-    for(auto const& parameter : description.parameters)
-    {
-        mParameterProperties[parameter.identifier] = createParameterProperty(parameter);
-    }
-    
-    std::vector<ConcertinaPanel::ComponentRef> components;
-    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
-    {
-        components.push_back(mPropertyWindowType);
-        components.push_back(mPropertyWindowSize);
-        components.push_back(mPropertyWindowOverlapping);
-    }
-    else
-    {
-        components.push_back(mPropertyBlockSize);
-        components.push_back(mPropertyStepSize);
-    }
-    for(auto const& property : mParameterProperties)
-    {
-        components.push_back(*property.second.get());
-    }
-    mProcessorSection.setComponents(components);
 }
 
 void Analyzer::PropertyPanel::updateGraphicalProperties()

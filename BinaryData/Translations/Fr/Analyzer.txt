@@ -1,11 +1,10 @@
 language: French
 countries: fr be mc ch lu
 
-
-
 ###########################
 # Property Panel
 ###########################
+"ANLNAME PROPERTIES" = "PROPRIÉTÉS DE ANLNAME"
 "PROCESSOR" = "PROCESSEUR"
 "The processor parameters of the analyzer" = "Les paramètres du processeur de l'analyseur"
 "GRAPHICAL" = "GRAPHIQUE"
