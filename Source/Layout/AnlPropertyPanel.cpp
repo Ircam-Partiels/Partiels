@@ -70,6 +70,7 @@ void Layout::PropertyTextButton::resized()
 Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
 : Layout::PropertyPanel<juce::Label>(name, tooltip, fn)
 {
+    entry.setRepaintsOnMouseActivity(true);
     entry.setEditable(true);
     entry.setTooltip(tooltip);
     entry.setText(text, juce::NotificationType::dontSendNotification);
@@ -82,7 +83,7 @@ Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String cons
         {
             auto const font = entry.getFont();
             editor->setFont(font);
-            editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
+            editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())) - 1);
             editor->setBorder(entry.getBorderSize());
             editor->setJustification(entry.getJustificationType());
         }

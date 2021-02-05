@@ -5,6 +5,7 @@ ANALYSE_FILE_BEGIN
 
 NumberField::NumberField()
 {
+    mLabel.setRepaintsOnMouseActivity(true);
     mLabel.setEditable(true);
     mLabel.setMinimumHorizontalScale(1.0f);
     mLabel.setBorderSize({});

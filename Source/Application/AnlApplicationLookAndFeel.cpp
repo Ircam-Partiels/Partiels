@@ -254,5 +254,35 @@ juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonTyp
     return LookAndFeel_V4::createDocumentWindowButton(buttonType);
 }
 
+void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
+{
+    g.fillAll(label.findColour(juce::Label::backgroundColourId));
+    if(!label.isBeingEdited())
+    {
+        auto const isEditable = (label.isEnabled() && label.isEditable());
+        auto const alpha = label.isEnabled() ? 1.0f : 0.5f;
+        auto const contrast = (isEditable && label.isMouseOverOrDragging()) ? 0.1f : 0.0f;
+        auto const textColour = label.findColour(juce::Label::textColourId);
+        g.setColour(isEditable && label.isMouseOver() ? textColour.contrasting(contrast) : textColour.withMultipliedAlpha(alpha));
+        
+        auto const font = getLabelFont(label);
+        g.setFont(font);
+        
+        auto const caretWidth = isEditable ? 3 : 0;
+        auto const textArea = getLabelBorderSize(label).subtractedFrom(label.getLocalBounds()).withTrimmedRight(caretWidth);
+        
+        g.drawFittedText(label.getText(), textArea, label.getJustificationType(), std::max(1, static_cast<int>(std::ceil(static_cast<float>(textArea.getHeight()) / font.getHeight()))), label.getMinimumHorizontalScale());
+        
+        g.setColour(label.findColour(juce::Label::outlineColourId).withMultipliedAlpha(alpha));
+    }
+    else if(label.isEnabled())
+    {
+        g.setColour(label.findColour(juce::Label::outlineColourId));
+    }
+    
+    g.drawRect(label.getLocalBounds());
+}
+
+
 ANALYSE_FILE_END
 

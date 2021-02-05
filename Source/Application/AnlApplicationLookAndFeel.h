@@ -39,6 +39,9 @@ namespace Application
         
         // juce::DocumentWindow::LookAndFeelMethods
         juce::Button* createDocumentWindowButton(int buttonType) override;
+        
+        // juce::Label::LookAndFeelMethods
+        void drawLabel(juce::Graphics& g, juce::Label& label) override;
     };
 }
 
