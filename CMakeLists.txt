@@ -54,6 +54,8 @@ endif()
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.h
     ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.h
+    ${SOURCES_DIRECTORY}/Misc/AnlColourSelector.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlColourSelector.h
     ${SOURCES_DIRECTORY}/Misc/AnlTooltip.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlTooltip.h
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.cpp
