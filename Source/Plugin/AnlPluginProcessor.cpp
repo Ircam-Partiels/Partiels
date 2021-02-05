@@ -26,6 +26,11 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     auto const sampleRate = mAudioFormatReader.sampleRate;
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
+    anlStrongAssert(blockSize > 0 && stepSize > 0);
+    if(blockSize <= 0 || stepSize <= 0)
+    {
+        return false;
+    }
     
     auto** writePointers = mBuffer.getArrayOfWritePointers();
     auto const* const* readPointers = mBuffer.getArrayOfReadPointers();
