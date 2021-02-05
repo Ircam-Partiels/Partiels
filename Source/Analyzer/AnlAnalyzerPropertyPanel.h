@@ -22,9 +22,6 @@ namespace Analyzer
         void show();
     private:
         
-        void updateGraphicalProperties();
-        void updatePluginProperties();
-        
         class PropertyText
         : public Layout::PropertyPanel<juce::Label>
         {
@@ -67,6 +64,17 @@ namespace Analyzer
         PropertyList mPropertyWindowOverlapping;
         PropertyNumber mPropertyBlockSize;
         PropertyNumber mPropertyStepSize;
+        std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
+        
+        juce::TextButton mPropertyColourSelector {juce::translate("Color"), juce::translate("The current color")};
+        PropertyList mPropertyColourMap;
+        
+        PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};
+        PropertyLabel mPropertyPluginFeature {"Feature", "The feature of the plugin"};
+        PropertyLabel mPropertyPluginMaker {"Maker", "The maker of the plugin"};
+        PropertyLabel mPropertyPluginVersion {"Version", "The version of the plugin"};
+        PropertyLabel mPropertyPluginCategory {"Category", "The category of the plugin"};
+        juce::TextEditor mPropertyPluginDetails;
         
         ConcertinaPanel mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
@@ -74,14 +82,6 @@ namespace Analyzer
             juce::translate("The graphical parameters of the analyzer")};
         ConcertinaPanel mPluginSection {juce::translate("PLUGIN"), true,
             juce::translate("The plugin information")};
-        
-        std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
-        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
-        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mPluginProperties;
-        
-        Layout::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
-        Layout::PropertyComboBox mColourMap {juce::translate("Color Map"), juce::translate("The current color map")};
-        
         
         juce::Viewport mViewport;
         juce::ComponentBoundsConstrainer mBoundsConstrainer;

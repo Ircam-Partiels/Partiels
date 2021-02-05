@@ -112,15 +112,20 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     state.stepSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
+
+, mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{}, [&](size_t index)
+{
+   
+})
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
+        auto constexpr silent = juce::NotificationType::dontSendNotification;
         switch(attribute)
         {
             case AttrType::name:
             {
-                auto constexpr silent = juce::NotificationType::dontSendNotification;
                 mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), silent);
                 mFloatingWindow.setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
             }
@@ -130,9 +135,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
             case AttrType::description:
             {
-                auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
+                auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
                 {
-                    auto const setPararmeterValue = [=, this](float value)
+                    auto const setValue = [=, this](float value)
                     {
                         auto state = mAccessor.getAttr<AttrType::state>();
                         anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
@@ -145,12 +150,12 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                         auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
                         return std::make_unique<PropertyNumber>(parameter.name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
                         {
-                            setPararmeterValue(value);
+                            setValue(value);
                         });
                     }
                     return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
                     {
-                        setPararmeterValue(static_cast<float>(index));
+                        setValue(static_cast<float>(index));
                     });
                 };
                 
@@ -173,23 +178,31 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mParameterProperties.clear();
                 for(auto const& parameter : description.parameters)
                 {
-                    mParameterProperties[parameter.identifier] = createParameterProperty(parameter);
+                    mParameterProperties[parameter.identifier] = createProperty(parameter);
                 }
-                
                 for(auto const& property : mParameterProperties)
                 {
                     components.push_back(*property.second.get());
                 }
                 mProcessorSection.setComponents(components);
+                components.clear();
                 
-                updateGraphicalProperties();
-                updatePluginProperties();
+                // Graphical Part
+                auto const output = description.output;
+                // 
+                
+                // Plugin Information Part
+                mPropertyPluginName.entry.setText(description.name, silent);
+                mPropertyPluginFeature.entry.setText(description.output.name, silent);
+                mPropertyPluginMaker.entry.setText(description.maker, silent);
+                mPropertyPluginVersion.entry.setText(juce::String(description.version), silent);
+                mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, silent);
+                mPropertyPluginDetails.setText(description.details + " - " + description.output.description, silent);
             }
             case AttrType::state:
             {
                 auto const description = mAccessor.getAttr<AttrType::description>();
                 auto const state = mAccessor.getAttr<AttrType::state>();
-                auto constexpr silent = juce::NotificationType::dontSendNotification;
                 if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
                 {
                     mPropertyWindowType.entry.setSelectedId(static_cast<int>(state.windowType) + 1, silent);
@@ -246,6 +259,22 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mGraphicalSection.onResized = onResized;
     mPluginSection.onResized = onResized;
     
+    mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
+    mPropertyPluginDetails.setSize(300, 48);
+    mPropertyPluginDetails.setJustification(juce::Justification::horizontallyJustified);
+    mPropertyPluginDetails.setMultiLine(true);
+    mPropertyPluginDetails.setReadOnly(true);
+    mPropertyPluginDetails.setScrollbarsShown(true);
+    mPluginSection.setComponents(
+    {
+          mPropertyPluginName
+        , mPropertyPluginFeature
+        , mPropertyPluginMaker
+        , mPropertyPluginVersion
+        , mPropertyPluginCategory
+        , mPropertyPluginDetails
+    });
+    
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mProcessorSection);
     addAndMakeVisible(mGraphicalSection);
@@ -283,72 +312,6 @@ void Analyzer::PropertyPanel::resized()
     mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
     mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
     setSize(300, std::max(bound.getY(), 120) + 2);
-}
-
-void Analyzer::PropertyPanel::updateGraphicalProperties()
-{
-    auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
-    {
-        auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
-        if(property != nullptr)
-        {
-            property->entry.setEditable(false, false);
-        }
-        return property;
-    };
-    
-    mGraphicalProperties.clear();
-    auto const output = mAccessor.getAttr<AttrType::description>().output;
-    mGraphicalProperties.push_back(createProperty("Color", "Color", "Color"));
-    mGraphicalProperties.push_back(createProperty("Range Mode", "Range Mode", "Range Mode"));
-    mGraphicalProperties.push_back(createProperty("Range", "Value Range", "Value Range"));
-    
-    std::vector<ConcertinaPanel::ComponentRef> components;
-    for(auto const& property : mGraphicalProperties)
-    {
-        components.push_back(*property.get());
-    }
-    mGraphicalSection.setComponents(components);
-}
-
-void Analyzer::PropertyPanel::updatePluginProperties()
-{
-    auto createProperty = [](juce::String const& name, juce::String const& tootip, juce::String const& text)
-    {
-        auto property = std::make_unique<Layout::PropertyLabel>(juce::translate(name), juce::translate(tootip), juce::translate(text));
-        if(property != nullptr)
-        {
-            property->entry.setEditable(false, false);
-        }
-        return property;
-    };
-    
-    mPluginProperties.clear();
-    auto const description = mAccessor.getAttr<AttrType::description>();
-    mPluginProperties.push_back(createProperty("Name", "The name of the plugin", description.name));
-    mPluginProperties.push_back(createProperty("Feature", "The feature of the plugin", description.output.name));
-    {
-        auto property = std::make_unique<Layout::PropertyText>(juce::translate("Details"), juce::translate("The details of the plugin"), description.details + " - " + description.output.description);
-        if(property != nullptr)
-        {
-            property->entry.setEditable(false, false);
-        }
-        mPluginProperties.push_back(std::move(property));
-    }
-    
-    mPluginProperties.push_back(createProperty("Maker", "The maker of the plugin", description.maker));
-    mPluginProperties.push_back(createProperty("Version", "The version of the plugin", juce::String(description.version)));
-    if(!description.category.isEmpty())
-    {
-        mPluginProperties.push_back(createProperty("Category", "The category of the plugin", description.category.isEmpty() ? "-" : description.category));
-    }
-    
-    std::vector<ConcertinaPanel::ComponentRef> components;
-    for(auto const& property : mPluginProperties)
-    {
-        components.push_back(*property.get());
-    }
-    mPluginSection.setComponents(components);
 }
 
 void Analyzer::PropertyPanel::show()
