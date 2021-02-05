@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Tools/AnlModel.h"
-#include "../Tools/AnlBroadcaster.h"
-#include "../Tools/AnlAtomicManager.h"
+#include "../Misc/AnlModel.h"
+#include "../Misc/AnlBroadcaster.h"
+#include "../Misc/AnlAtomicManager.h"
 #include "../Zoom/AnlZoomModel.h"
 #include "../Plugin/AnlPluginModel.h"
 #include "../../tinycolormap/include/tinycolormap.hpp"

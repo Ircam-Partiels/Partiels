@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Tools/AnlMisc.h"
-#include "../Tools/AnlModel.h"
+#include "../Misc/AnlBasics.h"
+#include "../Misc/AnlModel.h"
 
 ANALYSE_FILE_BEGIN
 

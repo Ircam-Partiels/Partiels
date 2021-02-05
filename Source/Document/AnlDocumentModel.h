@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../Tools/AnlModel.h"
+#include "../Misc/AnlModel.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
 #include "../Zoom/AnlZoomModel.h"
 #include "../Layout/AnlLayoutStrechableContainerSection.h"
-#include "../Tools/AnlBroadcaster.h"
+#include "../Misc/AnlBroadcaster.h"
 
 ANALYSE_FILE_BEGIN
 

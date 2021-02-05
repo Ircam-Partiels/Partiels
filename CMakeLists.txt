@@ -37,34 +37,36 @@ file(GLOB_RECURSE GlobalSources
     ${SOURCES_DIRECTORY}/Main.cpp
     ${CMAKE_CACHEFILE_DIR}/Brioche_artefacts/JuceLibraryCode/JuceHeader.h)
 
-file(GLOB ToolsSources
-    ${SOURCES_DIRECTORY}/Tools/AnlMisc.h
-    ${SOURCES_DIRECTORY}/Tools/AnlNotifier.h
-    ${SOURCES_DIRECTORY}/Tools/AnlBroadcaster.h
-    ${SOURCES_DIRECTORY}/Tools/AnlAtomicManager.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlAtomicManager.h
-    ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlXmlParser.h
-    ${SOURCES_DIRECTORY}/Tools/AnlModel.cpp
-    ${SOURCES_DIRECTORY}/Tools/AnlModel.h)
+file(GLOB MiscSources
+    ${SOURCES_DIRECTORY}/Misc/AnlBasics.h
+    ${SOURCES_DIRECTORY}/Misc/AnlNotifier.h
+    ${SOURCES_DIRECTORY}/Misc/AnlBroadcaster.h
+    ${SOURCES_DIRECTORY}/Misc/AnlAtomicManager.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlAtomicManager.h
+    ${SOURCES_DIRECTORY}/Misc/AnlXmlParser.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlXmlParser.h
+    ${SOURCES_DIRECTORY}/Misc/AnlModel.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlModel.h
+if(APPLE)
+    ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.mm
+endif()
+    ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.h
+    ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.h
+    ${SOURCES_DIRECTORY}/Misc/AnlTooltip.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlTooltip.h
+    ${SOURCES_DIRECTORY}/Misc/AnlNumberField.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlNumberField.h
+    ${SOURCES_DIRECTORY}/Misc/AnlConcertinaPanel.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlConcertinaPanel.h
+    ${SOURCES_DIRECTORY}/Misc/AnlMisc.h
+    )
 
 file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlLayout.h
-    ${SOURCES_DIRECTORY}/Layout/AnlColouredPanel.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlColouredPanel.h
-    ${SOURCES_DIRECTORY}/Layout/AnlTooltip.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlTooltip.h
-    ${SOURCES_DIRECTORY}/Layout/AnlNumberField.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlNumberField.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Layout/AnlConcertinaPanel.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlConcertinaPanel.h
-if(APPLE)
-    ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.mm
-endif()
-    ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlFloatingWindow.h
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.cpp
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.h
     ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.cpp
@@ -155,7 +157,7 @@ file(GLOB TranslationsSources
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Analyzer.txt)
 
 source_group("Global" FILES ${GlobalSources})
-source_group("Tools" FILES ${ToolsSources})
+source_group("Misc" FILES ${MiscSources})
 source_group("Layout" FILES ${LayoutSources})
 source_group("Zoom" FILES ${ZoomSources})
 source_group("Application" FILES ${ApplicationSources})
@@ -204,7 +206,7 @@ create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURC
 create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-set(BriochesSources ${ToolsSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${PlotSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
+set(BriochesSources ${MiscSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${PlotSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources} ${TranslationsSources})
 target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
 

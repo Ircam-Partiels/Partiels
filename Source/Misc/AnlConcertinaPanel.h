@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlPropertyPanel.h"
+#include "AnlBasics.h"
 
 ANALYSE_FILE_BEGIN
 

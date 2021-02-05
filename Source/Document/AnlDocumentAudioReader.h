@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
-#include "../Tools/AnlAtomicManager.h"
+#include "../Misc/AnlAtomicManager.h"
 
 ANALYSE_FILE_BEGIN
 

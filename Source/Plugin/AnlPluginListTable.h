@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tools/AnlMisc.h"
+#include "../Misc/AnlBasics.h"
 #include "AnlPluginListModel.h"
 
 ANALYSE_FILE_BEGIN
