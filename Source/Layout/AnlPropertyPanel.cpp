@@ -80,9 +80,11 @@ Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String cons
     {
         if(auto* editor = entry.getCurrentTextEditor())
         {
-            editor->setJustification(entry.getJustificationType());
-            editor->setIndents(0, 0);
+            auto const font = entry.getFont();
+            editor->setFont(font);
+            editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
             editor->setBorder(entry.getBorderSize());
+            editor->setJustification(entry.getJustificationType());
         }
     };
     entry.onTextChange = [&]()

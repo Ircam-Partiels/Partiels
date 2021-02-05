@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 
 Application::LookAndFeel::LookAndFeel()
 {
+    JUCE_COMPILER_WARNING("Use a colour scheme")
     auto const backgroundColour = juce::Colours::grey.darker();
     auto const rulerColour = juce::Colours::grey;
     auto const textColour = juce::Colours::white;
@@ -77,6 +78,17 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, backgroundColour);
     setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, backgroundColour.darker());
     setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, backgroundColour.brighter());
+    
+    // juce::TextEditor
+    setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
+    setColour(juce::TextEditor::ColourIds::textColourId, textColour);
+    setColour(juce::TextEditor::ColourIds::highlightColourId, textColour.withAlpha(0.2f));
+    setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
+    setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
+    setColour(juce::TextEditor::ColourIds::shadowColourId, juce::Colours::transparentBlack);
+    
+    // juce::CaretComponent
+    setColour(juce::CaretComponent::ColourIds::caretColourId, textColour);
 }
 
 int Application::LookAndFeel::getSeparatorHeight(ConcertinaPanel const& panel) const

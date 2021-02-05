@@ -12,10 +12,14 @@ NumberField::NumberField()
     {
         if(auto* editor = mLabel.getCurrentTextEditor())
         {
+            editor->clear();
+            auto const font = mLabel.getFont();
+            editor->setFont(font);
+            editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
             editor->setJustification(mLabel.getJustificationType());
-            editor->setIndents(0, 0);
             editor->setBorder(mLabel.getBorderSize());
             editor->setInputFilter(this, false);
+            editor->setMultiLine(false);
             editor->setText(juce::String(mValue, static_cast<int>(mNumEditedDecimals)));
         }
     };
