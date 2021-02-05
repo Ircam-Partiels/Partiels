@@ -284,8 +284,8 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
             }
             auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
             {
-                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
                 Zoom::Range range;
+                bool initialized = false;
                 for(auto const& result : results)
                 {
                     auto const& values = result.values;
@@ -293,11 +293,13 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
                     if(pair.first != values.cend() && pair.second != values.cend())
                     {
                         auto const start = static_cast<double>(*pair.first);
-                        auto const end = std::max(static_cast<double>(*pair.second), start + epsilon);
-                        range = range.isEmpty() ? Zoom::Range{start, end} : range.getUnionWith({start, end});
+                        auto const end = static_cast<double>(*pair.second);
+                        range = !initialized ? Zoom::Range{start, end} : range.getUnionWith({start, end});
+                        initialized = true;
                     }
                 }
-                return range.isEmpty() ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
+                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+                return !initialized ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
             };
             
             auto const info = getZoomInfo();
