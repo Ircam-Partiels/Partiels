@@ -165,4 +165,10 @@ void NumberField::resized()
     mLabel.setBounds(getLocalBounds());
 }
 
+void NumberField::setTooltip(juce::String const& newTooltip)
+{
+    juce::SettableTooltipClient::setTooltip(newTooltip);
+    mLabel.setTooltip(newTooltip);
+}
+
 ANALYSE_FILE_END

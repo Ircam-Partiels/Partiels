@@ -39,6 +39,9 @@ public:
     // juce::Component
     void resized() override;
     
+    // juce::SettableTooltipClient
+    void setTooltip(juce::String const& newTooltip) override;
+    
 private:
     
     // juce::TextEditor::InputFilter
