@@ -22,14 +22,13 @@ NumberField::NumberField()
             editor->setInputFilter(this, false);
             editor->setMultiLine(false);
             editor->setText(juce::String(mValue, static_cast<int>(mNumEditedDecimals)));
+            editor->moveCaretToTop(false);
+            editor->moveCaretToEnd(true);
         }
     };
     mLabel.onTextChange = [&]()
     {
-        if(onValueChanged != nullptr)
-        {
-            onValueChanged(getValue());
-        }
+        setValue(mLabel.getText().getDoubleValue(), juce::NotificationType::sendNotificationSync);
     };
     
     addAndMakeVisible(mLabel);
