@@ -19,17 +19,15 @@ public:
     void setValue(double value, juce::NotificationType const notification);
     double getValue() const;
     
-    void setRange(juce::Range<double> const& range, juce::NotificationType const notification);
+    void setRange(juce::Range<double> const& range, double newInterval, juce::NotificationType const notification);
     juce::Range<double> getRange() const;
+    double getInterval() const;
 
     void setTextValueSuffix(juce::String const& suffix);
     juce::String getTextValueSuffix() const;
     
     void setNumDecimalsDisplayed(size_t numDecimals);
     size_t getNumDecimalsDisplayed() const;
-    
-    void setNumDecimalsEdited(size_t numDecimals);
-    size_t getNumDecimalsEdited() const;
     
     void setJustificationType(juce::Justification newJustification);
     juce::Justification getJustificationType() const;
@@ -50,6 +48,7 @@ private:
     juce::Label mLabel;
     juce::String mSuffix;
     juce::Range<double> mRange = {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()};
+    double mInterval = 0.0;
     size_t mNumDisplayedDecimals = 0_z;
     size_t mNumEditedDecimals = 0_z;
     double mValue;

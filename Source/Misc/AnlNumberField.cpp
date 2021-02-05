@@ -36,11 +36,15 @@ NumberField::NumberField()
 
 void NumberField::setValue(double value, juce::NotificationType const notification)
 {
-    auto const newValue = mRange.clipValue(value);
-    mLabel.setText(juce::String(newValue, static_cast<int>(mNumDisplayedDecimals)) + mSuffix, juce::NotificationType::dontSendNotification);
-    if(std::abs(newValue - mValue) > std::numeric_limits<double>::epsilon())
+    if(mInterval > 0.0)
     {
-        mValue = newValue;
+        value = std::round((value - mRange.getStart()) / mInterval) * mInterval + mRange.getStart();
+    }
+    value = mRange.clipValue(value);
+    mLabel.setText(juce::String(value, static_cast<int>(mNumDisplayedDecimals)) + mSuffix, juce::NotificationType::dontSendNotification);
+    if(std::abs(value - mValue) > std::numeric_limits<double>::epsilon())
+    {
+        mValue = value;
         if(notification == juce::NotificationType::sendNotification || notification == juce::NotificationType::sendNotificationSync)
         {
             if(onValueChanged != nullptr)
@@ -67,18 +71,50 @@ double NumberField::getValue() const
     return mValue;
 }
 
-void NumberField::setRange(juce::Range<double> const& range, juce::NotificationType const notification)
+void NumberField::setRange(juce::Range<double> const& range, double interval, juce::NotificationType const notification)
 {
-    if(range != mRange)
+    anlWeakAssert(interval >= 0.0);
+    interval = std::max(0.0, interval);
+    if(range != mRange || std::abs(interval - mInterval) > std::numeric_limits<double>::epsilon())
     {
         mRange = range;
+        mInterval = interval;
         setValue(mValue, notification);
+        
+        auto getNumDecimals = [&]()
+        {
+            if(interval <= 0.0)
+            {
+                return 8_z;
+            }
+            auto numDecimals = 0_z;
+            while(std::abs(interval - std::ceil(interval)) > std::numeric_limits<double>::epsilon() && numDecimals < 8)
+            {
+                interval *= 10.0;
+                ++numDecimals;
+            }
+            return numDecimals;
+        };
+        auto numDecimals = getNumDecimals();
+        if(mNumEditedDecimals != numDecimals)
+        {
+            mNumEditedDecimals = numDecimals;
+            if(auto* editor = mLabel.getCurrentTextEditor())
+            {
+                editor->setText(juce::String(mValue, static_cast<int>(mNumEditedDecimals)));
+            }
+        }
     }
 }
 
 juce::Range<double> NumberField::getRange() const
 {
     return mRange;
+}
+
+double NumberField::getInterval() const
+{
+    return mInterval;
 }
 
 void NumberField::setTextValueSuffix(juce::String const& suffix)
@@ -107,23 +143,6 @@ void NumberField::setNumDecimalsDisplayed(size_t numDecimals)
 size_t NumberField::getNumDecimalsDisplayed() const
 {
     return mNumDisplayedDecimals;
-}
-
-void NumberField::setNumDecimalsEdited(size_t numDecimals)
-{
-    mNumEditedDecimals = numDecimals;
-    if(mNumEditedDecimals != numDecimals)
-    {
-        if(auto* editor = mLabel.getCurrentTextEditor())
-        {
-            editor->setText(juce::String(mValue, static_cast<int>(mNumEditedDecimals)));
-        }
-    }
-}
-
-size_t NumberField::getNumDecimalsEdited() const
-{
-    return mNumEditedDecimals;
 }
 
 void NumberField::setJustificationType(juce::Justification newJustification)
