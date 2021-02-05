@@ -55,7 +55,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
         {
             if(!that.hasTimestamp)
             {
-                that.hasDuration = true;
+                that.hasTimestamp = true;
                 that.timestamp = rt;
             }
         }
