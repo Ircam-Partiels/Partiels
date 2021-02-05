@@ -52,50 +52,12 @@ namespace Layout
         ~PropertyPanel() override = default;
     };
     
-    class PropertyTitle
-    : public PropertyPanel<juce::Component>
-    {
-    public:
-        PropertyTitle(juce::String const& name, juce::String const& tooltip = {});
-        ~PropertyTitle() override = default;
-    };
-    
-    class PropertyTextButton
-    : public PropertyPanel<juce::TextButton>
-    {
-    public:
-        PropertyTextButton(juce::String const& name, juce::String const& tooltip = {}, callback_type fn = nullptr);
-        ~PropertyTextButton() override = default;
-        
-        // juce::Component
-        void resized() override;
-    };
-    
     class PropertyLabel
     : public PropertyPanel<juce::Label>
     {
     public:
         PropertyLabel(juce::String const& name, juce::String const& tooltip = {}, juce::String const& text = {}, callback_type fn = nullptr);
         ~PropertyLabel() override = default;
-    };
-    
-    class PropertyText
-    : public PropertyLabel
-    {
-    public:
-        PropertyText(juce::String const& name, juce::String const& tooltip = {}, juce::String const& text = {}, callback_type fn = nullptr);
-        ~PropertyText() override = default;
-        
-        // juce::Component
-        void resized() override;
-    };
-    
-    class PropertyComboBox
-    : public PropertyPanel<juce::ComboBox>
-    {
-    public:
-        PropertyComboBox(juce::String const& name, juce::String const& tooltip = {}, juce::StringArray const& items = {}, size_t index = 0, callback_type fn = nullptr);
-        ~PropertyComboBox() override = default;
     };
 }
 

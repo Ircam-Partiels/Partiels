@@ -41,32 +41,6 @@ void Layout::PropertyPanelBase::resized()
     title.setJustificationType(juce::Justification::centredLeft);
 }
 
-Layout::PropertyTitle::PropertyTitle(juce::String const& name, juce::String const& tooltip)
-: Layout::PropertyPanel<juce::Component>(name, tooltip, nullptr)
-{
-    title.setFont(title.getFont().boldened());
-}
-
-Layout::PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, callback_type fn)
-: Layout::PropertyPanel<juce::TextButton>(name, tooltip, fn)
-{
-    title.setVisible(false);
-    entry.setButtonText(name);
-    entry.setTooltip(tooltip);
-    entry.onClick = [&]()
-    {
-        if(callback != nullptr)
-        {
-            callback(entry);
-        }
-    };
-}
-
-void Layout::PropertyTextButton::resized()
-{
-    entry.setBounds(getLocalBounds());
-}
-
 Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
 : Layout::PropertyPanel<juce::Label>(name, tooltip, fn)
 {
@@ -89,42 +63,6 @@ Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String cons
         }
     };
     entry.onTextChange = [&]()
-    {
-        if(callback != nullptr)
-        {
-            callback(entry);
-        }
-    };
-}
-
-Layout::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
-: Layout::PropertyLabel(name, tooltip, text, fn)
-{
-    entry.setJustificationType(juce::Justification::centredLeft);
-    setSize(200, 48);
-}
-
-void Layout::PropertyText::PropertyText::resized()
-{
-    auto& titleLookAndFeel = title.getLookAndFeel();
-    auto const font = titleLookAndFeel.getLabelFont(title);
-    auto const bdSize = titleLookAndFeel.getLabelBorderSize(title);
-    
-    auto bounds = getLocalBounds();
-    auto const textHeight = static_cast<int>(std::ceil(font.getHeight())) + bdSize.getTop() + bdSize.getBottom();
-    title.setBounds(bounds.removeFromTop(textHeight));
-    title.setJustificationType(juce::Justification::centredLeft);
-    entry.setBounds(bounds);
-}
-
-Layout::PropertyComboBox::PropertyComboBox(juce::String const& name, juce::String const& tooltip, juce::StringArray const& items, size_t index, callback_type fn)
-: Layout::PropertyPanel<juce::ComboBox>(name, tooltip, fn)
-{
-    entry.setTooltip(tooltip);
-    entry.addItemList(items, 1);
-    entry.setSelectedItemIndex(static_cast<int>(index), juce::NotificationType::dontSendNotification);
-    entry.setJustificationType(juce::Justification::centredRight);
-    entry.onChange = [&]()
     {
         if(callback != nullptr)
         {
