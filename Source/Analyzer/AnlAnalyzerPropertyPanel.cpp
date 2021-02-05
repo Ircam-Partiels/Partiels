@@ -2,28 +2,97 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::PropertyPanel::ColourSelector::ColourSelector()
+Analyzer::PropertyPanel::PropertyInt::PropertyInt(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<int> const& range, std::function<void(int)> fn)
+: Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
 {
-    addChangeListener(this);
-}
-
-Analyzer::PropertyPanel::ColourSelector::~ColourSelector()
-{
-    removeChangeListener(this);
-}
-
-void Analyzer::PropertyPanel::ColourSelector::changeListenerCallback(juce::ChangeBroadcaster* source)
-{
-    juce::ignoreUnused(source);
-    anlWeakAssert(source == this);
-    if(onColourChanged != nullptr)
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, juce::NotificationType::dontSendNotification);
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.setNumDecimalsDisplayed(0_z);
+    entry.setNumDecimalsEdited(0_z);
+    entry.setTextValueSuffix(suffix);
+    entry.onValueChanged = [=](double value)
     {
-        onColourChanged(getCurrentColour());
+        if(fn != nullptr)
+        {
+            fn(static_cast<int>(std::ceil(value)));
+        }
+    };
+}
+
+Analyzer::PropertyPanel::PropertyFloat::PropertyFloat(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, std::function<void(float)> fn, size_t numDecimals)
+: Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, juce::NotificationType::dontSendNotification);
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.setNumDecimalsDisplayed(numDecimals);
+    entry.setNumDecimalsEdited(8);
+    entry.setTextValueSuffix(suffix);
+    entry.onValueChanged = [=](double value)
+    {
+        if(fn != nullptr)
+        {
+            fn(static_cast<float>(value));
+        }
+    };
+}
+
+Analyzer::PropertyPanel::PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
+: Layout::PropertyPanel<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setTooltip(tooltip);
+    juce::StringArray items;
+    for(auto const& value : values)
+    {
+        items.add(juce::String(value)+suffix);
     }
+    entry.addItemList(items, 1);
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.onChange = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(entry.getSelectedItemIndex() > 0 ? static_cast<size_t>(entry.getSelectedItemIndex()) : 0_z);
+        }
+    };
 }
 
 Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
+
+, mPropertyWindowType("Window Type", "The window type", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [=](size_t index)
+{
+    auto state = mAccessor.getAttr<AttrType::state>();
+    state.windowType = static_cast<Plugin::WindowType>(index);
+    mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+})
+, mPropertyWindowSize("Window Size", "The window size", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [=](size_t index)
+{
+    auto state = mAccessor.getAttr<AttrType::state>();
+    auto const overlapping = state.blockSize / state.stepSize;
+    state.blockSize = static_cast<size_t>(std::pow(2.0, static_cast<int>(index) + 3));
+    state.stepSize = state.blockSize / overlapping;
+    mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+})
+, mPropertyWindowOverlapping("Window Overlapping", "The window overlapping", "x", std::vector<std::string>{"1", "2", "4", "8", "16", "32", "64"}, [=](size_t index)
+{
+    auto state = mAccessor.getAttr<AttrType::state>();
+    state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
+    mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+})
+, mPropertyBlockSize("Block Size", "The block size", "samples", juce::Range<int>{1, 65536}, [=](int value)
+{
+    auto state = mAccessor.getAttr<AttrType::state>();
+    state.blockSize = static_cast<size_t>(value);
+    mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+})
+, mPropertyStepSize("Step Size", "The step size", "samples", juce::Range<int>{1, 65536}, [=](int value)
+{
+    auto state = mAccessor.getAttr<AttrType::state>();
+    state.stepSize = static_cast<size_t>(value);
+    mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+})
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -32,7 +101,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         {
             case AttrType::name:
             {
-                mNameProperty.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
                 mFloatingWindow.setName(juce::translate("ANLNAME Properties").replace("ANLNAME", acsr.getAttr<AttrType::name>()).toUpperCase());
             }
                 break;
@@ -47,37 +116,25 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
             case AttrType::state:
             {
-//                auto const description = mAccessor.getAttr<AttrType::description>();
-//                auto const state = mAccessor.getAttr<AttrType::state>();
-//                if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
-//                {
-//                    juce::StringArray const windowNames {"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"};
-//                    mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), windowNames, 0, [=](juce::ComboBox const& entry)
-//                                                                                            {
-//                        auto state = mAccessor.getAttr<AttrType::state>();
-//                        state.windowType = static_cast<Plugin::WindowType>(entry.getSelectedItemIndex());
-//                        mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
-//                    }));
-//
-//                    mDefaultProperties.push_back(createProperty("Window Overlapping", "The window overlapping", "512 (samples)"));
-//
-//                    mDefaultProperties.push_back(std::make_unique<Layout::PropertyComboBox>(juce::translate("Window Type"), juce::translate("The window type"), juce::StringArray{"1x", "2x", "4x", "8x", "16x", "32x", "64x"}, 0, [=](juce::ComboBox const& entry)
-//                                                                                            {
-//                        auto state = mAccessor.getAttr<AttrType::state>();
-//                        state.stepSize = std::max(state.blockSize / static_cast<size_t>(entry.getSelectedItemIndex()), 1_z);
-//                        mAccessor.setAttr<AttrType::state>(state, NotificationType::asynchronous);
-//                    }));
-//                }
-//                else
-//                {
-//                    anlWeakAssert(mDefaultProperties.size() == 2);
-//                    if(mDefaultProperties.size() >= 1 && mDefaultProperties[0] != nullptr)
-//                    {
-//                        static_cast<Layout::PropertyLabel*>(mDefaultProperties[0].get())->entry.setText(<#const String &newText#>, juce::NotificationType::dontSendNotification);
-//                    }
-//                    mDefaultProperties.push_back(createProperty("Block Size", "The block size", "512 (samples)"));
-//                    mDefaultProperties.push_back(createProperty("Step Size", "The step size", "512 (samples)"));
-//                }
+                auto const description = mAccessor.getAttr<AttrType::description>();
+                auto const state = mAccessor.getAttr<AttrType::state>();
+                auto constexpr silent = juce::NotificationType::dontSendNotification;
+                if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+                {
+                    mPropertyWindowType.entry.setSelectedItemIndex(static_cast<int>(state.windowType), silent);
+                    mPropertyWindowSize.entry.setSelectedId(static_cast<int>(std::log(state.blockSize) / std::log(2)), silent);
+                    mPropertyWindowOverlapping.entry.clear(silent);
+                    int itemId = 0;
+                    for(size_t i = 1; i <= state.blockSize; i *= 2)
+                    {
+                        mPropertyWindowOverlapping.entry.addItem(juce::String(static_cast<int>(i)), ++itemId);
+                    }
+                }
+                else
+                {
+                    mPropertyBlockSize.entry.setValue(static_cast<double>(state.blockSize), silent);
+                    mPropertyStepSize.entry.setValue(static_cast<double>(state.stepSize), silent);
+                }
                 
             }
                 break;
@@ -90,11 +147,11 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         }
     };
     
-    mNameProperty.callback = [&](juce::Label const& l)
+    mPropertyName.callback = [&](juce::Label const& l)
     {
         mAccessor.setAttr<AttrType::name>(l.getText(), NotificationType::synchronous);
     };
-    mNameProperty.entry.setEditable(true, true);
+    mPropertyName.entry.setEditable(true, true);
     
     auto onResized = [&]()
     {
@@ -104,7 +161,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mGraphicalSection.onResized = onResized;
     mPluginSection.onResized = onResized;
     
-    addAndMakeVisible(mNameProperty);
+    addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mProcessorSection);
     addAndMakeVisible(mGraphicalSection);
     addAndMakeVisible(mPluginSection);
@@ -136,7 +193,7 @@ Analyzer::PropertyPanel::~PropertyPanel()
 void Analyzer::PropertyPanel::resized()
 {
     auto bound = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    mNameProperty.setBounds(bound.removeFromTop(mNameProperty.getHeight()));
+    mPropertyName.setBounds(bound.removeFromTop(mPropertyName.getHeight()));
     mProcessorSection.setBounds(bound.removeFromTop(mProcessorSection.getHeight()));
     mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
     mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
@@ -145,83 +202,6 @@ void Analyzer::PropertyPanel::resized()
 
 void Analyzer::PropertyPanel::updateProcessorProperties()
 {
-    class PropertyInt
-    : public Layout::PropertyPanel<NumberField>
-    {
-    public:
-        PropertyInt(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<int> const& range, std::function<void(int)> fn)
-        : Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
-        {
-            entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, juce::NotificationType::dontSendNotification);
-            entry.setTooltip(juce::translate(tooltip));
-            entry.setJustificationType(juce::Justification::centredRight);
-            entry.setNumDecimalsDisplayed(0_z);
-            entry.setNumDecimalsEdited(0_z);
-            entry.setTextValueSuffix(suffix);
-            entry.onValueChanged = [=](double value)
-            {
-                if(fn != nullptr)
-                {
-                    fn(static_cast<int>(std::ceil(value)));
-                }
-            };
-        }
-        
-        ~PropertyInt() override = default;
-    };
-    
-    class PropertyFloat
-    : public Layout::PropertyPanel<NumberField>
-    {
-    public:
-        PropertyFloat(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, std::function<void(float)> fn, size_t numDecimals = 2)
-        : Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
-        {
-            entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, juce::NotificationType::dontSendNotification);
-            entry.setTooltip(juce::translate(tooltip));
-            entry.setJustificationType(juce::Justification::centredRight);
-            entry.setNumDecimalsDisplayed(numDecimals);
-            entry.setNumDecimalsEdited(8);
-            entry.setTextValueSuffix(suffix);
-            entry.onValueChanged = [=](double value)
-            {
-                if(fn != nullptr)
-                {
-                    fn(static_cast<float>(value));
-                }
-            };
-        }
-        
-        ~PropertyFloat() override = default;
-    };
-    
-    class PropertyList
-    : public Layout::PropertyPanel<juce::ComboBox>
-    {
-    public:
-        PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
-        : Layout::PropertyPanel<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
-        {
-            entry.setTooltip(tooltip);
-            juce::StringArray items;
-            for(auto const& value : values)
-            {
-                items.add(juce::String(value)+suffix);
-            }
-            entry.addItemList(items, 1);
-            entry.setJustificationType(juce::Justification::centredRight);
-            entry.onChange = [=, this]()
-            {
-                if(fn != nullptr)
-                {
-                    fn(entry.getSelectedItemIndex() > 0 ? static_cast<size_t>(entry.getSelectedItemIndex()) : 0_z);
-                }
-            };
-        }
-        
-        ~PropertyList() override = default;
-    };
- 
     auto createParameterProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
     {
         enum class PropertyType
@@ -284,57 +264,24 @@ void Analyzer::PropertyPanel::updateProcessorProperties()
         return nullptr;
     };
     
-    mDefaultProperties.clear();
-    auto const description = mAccessor.getAttr<AttrType::description>();
-    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
-    {
-        mDefaultProperties.push_back(std::make_unique<PropertyList>("Window Type", "The window type", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [=](size_t index)
-        {
-            auto state = mAccessor.getAttr<AttrType::state>();
-            state.windowType = static_cast<Plugin::WindowType>(index);
-            mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-        }));
-        mDefaultProperties.push_back(std::make_unique<PropertyList>("Window Size", "The window size", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [=](size_t index)
-        {
-            auto state = mAccessor.getAttr<AttrType::state>();
-            auto const overlapping = state.blockSize / state.stepSize;
-            state.blockSize = static_cast<size_t>(std::pow(2.0, static_cast<int>(index) + 3));
-            state.stepSize = state.blockSize / overlapping;
-            mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-        }));
-        mDefaultProperties.push_back(std::make_unique<PropertyList>("Window Overlapping", "The window overlapping", "x", std::vector<std::string>{"1", "2", "4", "8", "16", "32", "64"}, [=](size_t index)
-        {
-            auto state = mAccessor.getAttr<AttrType::state>();
-            state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
-            mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-        }));
-    }
-    else
-    {
-        mDefaultProperties.push_back(std::make_unique<PropertyInt>("Block Size", "The block size", "samples", juce::Range<int>{1, 65536}, [=](int value)
-        {
-            auto state = mAccessor.getAttr<AttrType::state>();
-            state.blockSize = static_cast<size_t>(value);
-            mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-        }));
-        mDefaultProperties.push_back(std::make_unique<PropertyInt>("Step Size", "The step size", "samples", juce::Range<int>{1, 65536}, [=](int value)
-        {
-            auto state = mAccessor.getAttr<AttrType::state>();
-            state.stepSize = static_cast<size_t>(value);
-            mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-        }));
-    }
-    
     mParameterProperties.clear();
+    auto const description = mAccessor.getAttr<AttrType::description>();
     for(auto const& parameter : description.parameters)
     {
         mParameterProperties[parameter.identifier] = createParameterProperty(parameter);
     }
     
     std::vector<ConcertinaPanel::ComponentRef> components;
-    for(auto const& property : mDefaultProperties)
+    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
     {
-        components.push_back(*property.get());
+        components.push_back(mPropertyWindowType);
+        components.push_back(mPropertyWindowSize);
+        components.push_back(mPropertyWindowOverlapping);
+    }
+    else
+    {
+        components.push_back(mPropertyBlockSize);
+        components.push_back(mPropertyStepSize);
     }
     for(auto const& property : mParameterProperties)
     {

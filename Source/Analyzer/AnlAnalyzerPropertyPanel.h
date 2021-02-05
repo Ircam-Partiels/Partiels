@@ -26,36 +26,52 @@ namespace Analyzer
         void updateGraphicalProperties();
         void updatePluginProperties();
         
-        class ColourSelector
-        : public juce::ColourSelector
-        , private juce::ChangeListener
+        using PropertyLabel = Layout::PropertyLabel;
+        
+        class PropertyInt
+        : public Layout::PropertyPanel<NumberField>
         {
         public:
-            ColourSelector();
-            ~ColourSelector() override;
-            
-            std::function<void(juce::Colour const& colour)> onColourChanged = nullptr;
-        private:
-            // juce::ChangeListener
-            void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+            PropertyInt(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<int> const& range, std::function<void(int)> fn);
+            ~PropertyInt() override = default;
+        };
+        
+        class PropertyFloat
+        : public Layout::PropertyPanel<NumberField>
+        {
+        public:
+            PropertyFloat(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, std::function<void(float)> fn, size_t numDecimals = 2);
+            ~PropertyFloat() override = default;
+        };
+        
+        class PropertyList
+        : public Layout::PropertyPanel<juce::ComboBox>
+        {
+        public:
+            PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn);
+            ~PropertyList() override = default;
         };
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Layout::PropertyLabel mNameProperty {juce::translate("Name"), juce::translate("The name of the analyzer")};
+        PropertyLabel mPropertyName {juce::translate("Name"), juce::translate("The name of the analyzer")};
+        
+        PropertyList mPropertyWindowType;
+        PropertyList mPropertyWindowSize;
+        PropertyList mPropertyWindowOverlapping;
+        PropertyInt mPropertyBlockSize;
+        PropertyInt mPropertyStepSize;
         
         ConcertinaPanel mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
-        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mDefaultProperties;
-        std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
-        
         ConcertinaPanel mGraphicalSection {juce::translate("GRAPHICAL"), true,
             juce::translate("The graphical parameters of the analyzer")};
-        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
-        
         ConcertinaPanel mPluginSection {juce::translate("PLUGIN"), true,
             juce::translate("The plugin information")};
+        
+        std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
+        std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mGraphicalProperties;
         std::vector<std::unique_ptr<Layout::PropertyPanelBase>> mPluginProperties;
         
         Layout::PropertyTextButton mColour {juce::translate("Color"), juce::translate("The current color")};
