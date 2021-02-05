@@ -4,6 +4,7 @@
 #include "AnlBasics.h"
 #include "AnlBroadcaster.h"
 #include "AnlColouredPanel.h"
+#include "AnlColourSelector.h"
 #include "AnlConcertinaPanel.h"
 #include "AnlFloatingWindow.h"
 #include "AnlModel.h"
