@@ -89,14 +89,6 @@ namespace Layout
         // juce::Component
         void resized() override;
     };
-    
-    class PropertyComboBox
-    : public PropertyPanel<juce::ComboBox>
-    {
-    public:
-        PropertyComboBox(juce::String const& name, juce::String const& tooltip = {}, juce::StringArray const& items = {}, size_t index = 0, callback_type fn = nullptr);
-        ~PropertyComboBox() override = default;
-    };
 }
 
 ANALYSE_FILE_END
