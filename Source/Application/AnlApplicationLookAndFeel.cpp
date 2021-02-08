@@ -89,6 +89,13 @@ Application::LookAndFeel::LookAndFeel()
     
     // juce::CaretComponent
     setColour(juce::CaretComponent::ColourIds::caretColourId, textColour);
+    
+    // juce::PopupMenu
+    setColour(juce::PopupMenu::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(juce::PopupMenu::ColourIds::textColourId, textColour);
+    setColour(juce::PopupMenu::ColourIds::headerTextColourId, textColour);
+    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, backgroundColour);
+    setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, textColour);
 }
 
 int Application::LookAndFeel::getSeparatorHeight(ConcertinaPanel const& panel) const
@@ -252,6 +259,26 @@ juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonTyp
         return button.release();
     }
     return LookAndFeel_V4::createDocumentWindowButton(buttonType);
+}
+
+void Application::LookAndFeel::positionDocumentWindowButtons(juce::DocumentWindow& window, int titleBarX, int titleBarY, int titleBarW, int titleBarH, juce::Button* minimiseButton, juce::Button* maximiseButton, juce::Button* closeButton, bool positionTitleBarButtonsOnLeft)
+{
+    juce::ignoreUnused(window);
+    auto constexpr buttonOffset = 4;
+    auto const buttonHeight = titleBarH - 2 * buttonOffset;
+    auto const buttonWidth = static_cast<int>(std::floor(buttonHeight * 1.2));
+    auto bounds = juce::Rectangle<int>(titleBarX + buttonOffset, titleBarY + buttonOffset, titleBarW - 2 * buttonOffset, buttonHeight);
+
+    auto placeButton = [&](juce::Button* button)
+    {
+        if(button != nullptr)
+        {
+            button->setBounds(positionTitleBarButtonsOnLeft ? bounds.removeFromLeft(buttonWidth) : bounds.removeFromRight(buttonWidth));
+        }
+    };
+    placeButton(closeButton);
+    placeButton(positionTitleBarButtonsOnLeft ? maximiseButton : minimiseButton);
+    placeButton(positionTitleBarButtonsOnLeft ? minimiseButton : maximiseButton);
 }
 
 void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
