@@ -25,33 +25,26 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Tools
+namespace Logger
 {
-    namespace Logger
+    inline void writeToLog(const char* level, const char* domain, const char* functionName, int line, juce::String const& message)
     {
-        inline void writeToLog(const char* level, const char* domain, const char* functionName, int line, juce::String const& message)
-        {
-            juce::Logger::writeToLog(juce::String("[") + level + "]" +
-                                     "[" + domain + "]" +
-                                     "[" + functionName + ":" + juce::String(line) + "] " +
-                                     message);
-        }
+        juce::Logger::writeToLog(juce::String("[") + level + "]" + "[" + domain + "]" + "[" + functionName + ":" + juce::String(line) + "] " + message);
     }
 }
 
-namespace Tools
+namespace Format
 {
-    inline juce::String secondsToString(double time)
+    inline juce::String secondsToString(double time, std::array<juce::StringRef, 4> const separators = {"h", "m", "s", "ms"})
     {
-        JUCE_COMPILER_WARNING("use put_time?")
-        auto const hours = static_cast<int>(std::floor(time / 3600.0));
-        time -= static_cast<double>(hours) * 3600.0;
-        auto const minutes = static_cast<int>(std::floor(time / 60.0));
-        time -= static_cast<double>(minutes) * 60.0;
-        auto const seconds = static_cast<int>(std::floor(time));
-        time -= static_cast<double>(seconds);
+        auto const h = static_cast<int>(std::floor(time / 3600.0));
+        time -= static_cast<double>(h) * 3600.0;
+        auto const m = static_cast<int>(std::floor(time / 60.0));
+        time -= static_cast<double>(m) * 60.0;
+        auto const s = static_cast<int>(std::floor(time));
+        time -= static_cast<double>(s);
         auto const ms = static_cast<int>(std::floor(time * 1000.0));
-        return juce::String::formatted("%02dh %02dm %02ds %03dms", hours, minutes, seconds, ms);
+        return juce::String::formatted("%02d" + separators[0] + "%02d" + separators[1] + "%02d" + separators[2] + "%03d" + separators[3], h, m, s, ms);
     }
 }
 
@@ -70,8 +63,8 @@ enum class AlertType : bool
 ANALYSE_FILE_END
 
 #ifdef JUCE_DEBUG
-#define anlDebug(domain, message) Anl::Tools::Logger::writeToLog("Debug", domain, __FUNCTION__, __LINE__, message)
-#define anlError(domain, message) Anl::Tools::Logger::writeToLog("Error", domain, __FUNCTION__, __LINE__, message)
+#define anlDebug(domain, message) Anl::Logger::writeToLog("Debug", domain, __FUNCTION__, __LINE__, message)
+#define anlError(domain, message) Anl::Logger::writeToLog("Error", domain, __FUNCTION__, __LINE__, message)
 #else
 #define anlDebug(domain, message)
 #define anlError(domain, message)

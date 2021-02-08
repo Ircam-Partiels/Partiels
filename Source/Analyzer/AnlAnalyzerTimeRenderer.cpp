@@ -188,7 +188,7 @@ void Analyzer::TimeRenderer::mouseMove(juce::MouseEvent const& event)
     auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
     auto const rtr = Vamp::RealTime::fromSeconds(time);
-    text += Tools::secondsToString(time) + "\n";
+    text += Format::secondsToString(time) + "\n";
     if(results.front().values.empty())
     {
         

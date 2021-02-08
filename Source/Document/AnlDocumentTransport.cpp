@@ -30,7 +30,7 @@ Document::Transport::Transport(Accessor& accessor)
             case AttrType::playheadPosition:
             {
                 auto const time = acsr.getAttr<AttrType::playheadPosition>();
-                mPlayPositionInHMSms.setText(Tools::secondsToString(time), juce::NotificationType::dontSendNotification);
+                mPlayPositionInHMSms.setText(Format::secondsToString(time), juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::isLooping:

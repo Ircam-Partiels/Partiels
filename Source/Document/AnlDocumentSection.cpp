@@ -13,16 +13,7 @@ Document::Section::Section(Accessor& accessor)
     mZoomTimeRuler.setMaximumStringWidth(70.0);
     mZoomTimeRuler.setValueAsStringMethod([](double value)
     {
-        auto time = value;
-        auto const hours = static_cast<int>(std::floor(time / 3600.0));
-        time -= static_cast<double>(hours) * 3600.0;
-        auto const minutes = static_cast<int>(std::floor(time / 60.0));
-        time -= static_cast<double>(minutes) * 60.0;
-        auto const seconds = static_cast<int>(std::floor(time));
-        time -= static_cast<double>(seconds);
-        auto const ms = static_cast<int>(std::floor(time * 1000.0));
-        JUCE_COMPILER_WARNING("change this approach")
-        return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, seconds, ms);
+        return Format::secondsToString(value, {":", ":", ":", ":"});
     });
     
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
