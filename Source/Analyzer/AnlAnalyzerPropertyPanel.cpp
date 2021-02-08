@@ -19,7 +19,7 @@ Analyzer::PropertyPanel::PropertyTextButton::PropertyTextButton(juce::String con
 
 void Analyzer::PropertyPanel::PropertyTextButton::resized()
 {
-    entry.setBounds(getLocalBounds());
+    entry.setBounds(getLocalBounds().reduced(32, 2));
 }
 
 Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
@@ -312,7 +312,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     });
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
-    mPropertyPluginDetails.setSize(300, 48);
+    mPropertyPluginDetails.setSize(sInnerWidth, 48);
     mPropertyPluginDetails.setJustification(juce::Justification::horizontallyJustified);
     mPropertyPluginDetails.setMultiLine(true);
     mPropertyPluginDetails.setReadOnly(true);
@@ -332,8 +332,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     addAndMakeVisible(mGraphicalSection);
     addAndMakeVisible(mPluginSection);
     
-    setSize(300, 400);
-    mViewport.setSize(300 + mViewport.getVerticalScrollBar().getWidth(), 400);
+    setSize(sInnerWidth, 400);
+    mViewport.setSize(sInnerWidth + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
     mViewport.setScrollBarsShown(true, false, true, false);
     mViewport.setViewedComponent(this, false);
     mFloatingWindow.setContentNonOwned(&mViewport, true);
@@ -364,7 +364,7 @@ void Analyzer::PropertyPanel::resized()
     mProcessorSection.setBounds(bound.removeFromTop(mProcessorSection.getHeight()));
     mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
     mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
-    setSize(300, std::max(bound.getY(), 120) + 2);
+    setSize(sInnerWidth, std::max(bound.getY(), 120) + 2);
 }
 
 void Analyzer::PropertyPanel::show()

@@ -98,6 +98,7 @@ namespace Analyzer
         juce::Viewport mViewport;
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         FloatingWindow mFloatingWindow {"Properties"};
+        static auto constexpr sInnerWidth = 300;
     };
 }
 
