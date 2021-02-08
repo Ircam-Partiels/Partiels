@@ -58,14 +58,11 @@ namespace Plot
         {
             if constexpr(type == AcsrType::valueZoom)
             {
-                auto constexpr min = std::numeric_limits<double>::lowest()  / 100.0;
-                auto constexpr max = std::numeric_limits<double>::max() / 100.0;
-                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{min, max}, epsilon), notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{Zoom::lowest(), Zoom::max()}, Zoom::epsilon()), notification);
             }
             else if constexpr(type == AcsrType::binZoom)
             {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, 1.0), notification);
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, Zoom::max()}, 1.0), notification);
             }
             return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }

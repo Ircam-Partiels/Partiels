@@ -163,6 +163,20 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
     acsr.setAttr<Plot::AttrType::colourMap>(static_cast<Plot::ColourMap>(index), NotificationType::synchronous);
 })
+, mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
+{
+    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withStart(static_cast<double>(value));
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+})
+, mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
+{
+    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+})
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -236,8 +250,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 
                 // Graphical Part
                 auto const output = description.output;
-                // 
-                
+                mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
+                mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
+
                 // Plugin Information Part
                 mPropertyPluginName.entry.setText(description.name, silent);
                 mPropertyPluginFeature.entry.setText(description.output.name, silent);
@@ -290,9 +305,70 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
                 break;
             case AttrType::results:
+            {
+                auto const description = mAccessor.getAttr<AttrType::description>();
+                auto const& results = mAccessor.getAttr<AttrType::results>();
+                if(results.empty())
+                {
+                    break;
+                }
+                auto const output = description.output;
+                auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();
+                auto getPropertyColour = [&]() -> juce::Component&
+                {
+                    if(numDimensions > 1)
+                    {
+                        return mPropertyColourMap;
+                    }
+                    return mPropertyColourSelector;
+                };
+                
+                mGraphicalSection.setComponents(
+                {
+                      getPropertyColour()
+                    , mPropertyValueRangeMin
+                    , mPropertyValueRangeMax
+                });
+            }
+                break;
             case AttrType::warnings:
             case AttrType::time:
             case AttrType::processing:
+                break;
+        }
+    };
+    
+    mValueZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            {
+                auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
+                mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
+                mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
+            }
+                break;
+            case Zoom::AttrType::minimumLength:
+                break;
+            case Zoom::AttrType::visibleRange:
+                break;
+        }
+    };
+    
+    mBinZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            {
+                auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
+                
+            }
+                break;
+            case Zoom::AttrType::minimumLength:
+                break;
+            case Zoom::AttrType::visibleRange:
                 break;
         }
     };
@@ -304,12 +380,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mProcessorSection.onResized = onResized;
     mGraphicalSection.onResized = onResized;
     mPluginSection.onResized = onResized;
-    
-    mGraphicalSection.setComponents(
-    {
-          mPropertyColourSelector
-        , mPropertyColourMap
-    });
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);
@@ -349,12 +419,18 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         acsr.setAttr<Plot::AttrType::propertyState>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
     };
     
+    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
+    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Analyzer::PropertyPanel::~PropertyPanel()
 {
     mAccessor.removeListener(mListener);
+    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).removeListener(mBinZoomListener);
+    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
 }
 
 void Analyzer::PropertyPanel::resized()

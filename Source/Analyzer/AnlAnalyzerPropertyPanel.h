@@ -67,6 +67,8 @@ namespace Analyzer
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        Zoom::Accessor::Listener mValueZoomListener;
+        Zoom::Accessor::Listener mBinZoomListener;
         
         PropertyText mPropertyName;
         
@@ -80,6 +82,8 @@ namespace Analyzer
         
         PropertyTextButton mPropertyColourSelector;
         PropertyList mPropertyColourMap;
+        PropertyNumber mPropertyValueRangeMin;
+        PropertyNumber mPropertyValueRangeMax;
         
         PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};
         PropertyLabel mPropertyPluginFeature {"Feature", "The feature of the plugin"};

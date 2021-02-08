@@ -38,6 +38,15 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& t
         repaint();
     };
     
+    mPlotListener.onAttrChanged = [&](Plot::Accessor const& acsr, Plot::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        if(attribute == Plot::AttrType::colourPlain || attribute == Plot::AttrType::colourMap)
+        {
+            repaint();
+        }
+    };
+    
     mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);

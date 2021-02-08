@@ -9,6 +9,21 @@ namespace Zoom
 {
     using Range = juce::Range<double>;
     
+    static auto constexpr lowest()
+    {
+        return static_cast<double>(std::numeric_limits<float>::lowest());
+    }
+    
+    static auto constexpr max()
+    {
+        return static_cast<double>(std::numeric_limits<float>::max());
+    }
+    
+    static auto constexpr epsilon()
+    {
+        return static_cast<double>(std::numeric_limits<float>::epsilon());
+    }
+    
     enum class AttrType : size_t
     {
           globalRange
@@ -35,9 +50,9 @@ namespace Zoom
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
-
-        Accessor(Range const& range, double const epsilon)
-        : Accessor(AttrContainer({range}, {epsilon}, {range}))
+        
+        Accessor(Range const range = {lowest(), max()}, double const length = epsilon())
+        : Accessor(AttrContainer({range}, {length}, {range}))
         {
         }
         
