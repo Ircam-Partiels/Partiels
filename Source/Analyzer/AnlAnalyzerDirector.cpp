@@ -4,8 +4,6 @@
 #include "../Plugin/AnlPluginProcessor.h"
 #include "../Plugin/AnlPluginListScanner.h"
 
-JUCE_COMPILER_WARNING("check this")
-#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
@@ -131,16 +129,13 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         return;
     }
     
-    auto const descriptions = PluginList::Scanner::getPluginDescription(key, 48000.0, AlertType::window);
+    auto const descriptions = PluginList::Scanner::getPluginDescription(key, reader->sampleRate, AlertType::window);
     anlWeakAssert(descriptions != Plugin::Description{});
-    if(descriptions != Plugin::Description{} && descriptions != mAccessor.getAttr<AttrType::description>())
+    if(descriptions == Plugin::Description{})
     {
-        if(mAccessor.getAttr<AttrType::description>() != Plugin::Description{})
-        {
-            JUCE_COMPILER_WARNING("ALert Window - New descriptin or key with description initialization");
-        }
-        mAccessor.setAttr<AttrType::description>(descriptions, notification);
+        return;
     }
+    mAccessor.setAttr<AttrType::description>(descriptions, notification);
     
     updateZoomRange(notification);
 
