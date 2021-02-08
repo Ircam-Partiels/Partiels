@@ -365,6 +365,17 @@ namespace Model
                 return;
             }
             
+            detail::for_each(mAttributes, [&](auto& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr attr_type = element_type::type;
+                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                    static_cast<parent_t*>(this)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
+                }
+            });
+            
             detail::for_each(mAccessors, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -417,17 +428,6 @@ namespace Model
                             }
                         }
                     }
-                }
-            });
-            
-            detail::for_each(mAttributes, [&](auto& d)
-            {
-                using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & Flag::saveable) != 0)
-                {
-                    auto constexpr attr_type = element_type::type;
-                    auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                    static_cast<parent_t*>(this)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
                 }
             });
         }
