@@ -435,6 +435,16 @@ namespace Model
         //! @brief Copy the content from another container
         void copyFrom(Accessor const& accessor, NotificationType const notification)
         {
+            detail::for_each(accessor.mAttributes, [&](auto const& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr attr_type = element_type::type;
+                    static_cast<parent_t*>(this)->template setAttr<attr_type>(d.value, notification);
+                }
+            });
+            
             detail::for_each(accessor.mAccessors, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -482,16 +492,6 @@ namespace Model
                         }
                     }
                     
-                }
-            });
-            
-            detail::for_each(accessor.mAttributes, [&](auto const& d)
-            {
-                using element_type = typename std::remove_reference<decltype(d)>::type;
-                if constexpr((element_type::flags & Flag::saveable) != 0)
-                {
-                    auto constexpr attr_type = element_type::type;
-                    static_cast<parent_t*>(this)->template setAttr<attr_type>(d.value, notification);
                 }
             });
         }
