@@ -21,7 +21,17 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
         }
         return nullptr;
     }
-    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
+    auto inputStream = file.createInputStream();
+    if(inputStream == nullptr)
+    {
+        if(alertType == AlertType::window)
+        {
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The input stream the file extension FLNALE cannot be created.").replace("FLNALE", file.getFileName()));
+        }
+        return nullptr;
+    }
+    
+    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(inputStream.release(), true));
     if(audioFormatReader == nullptr)
     {
         if(alertType == AlertType::window)
