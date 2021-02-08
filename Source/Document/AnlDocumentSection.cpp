@@ -21,6 +21,7 @@ Document::Section::Section(Accessor& accessor)
         auto const seconds = static_cast<int>(std::floor(time));
         time -= static_cast<double>(seconds);
         auto const ms = static_cast<int>(std::floor(time * 1000.0));
+        JUCE_COMPILER_WARNING("change this approach")
         return juce::String::formatted("%02d:%02d:%02d:%03d", hours, minutes, seconds, ms);
     });
     

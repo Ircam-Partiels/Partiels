@@ -79,7 +79,11 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
             description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
             if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin.get()))
             {
-                description.inputDomain = wrapper->getWrapper<PluginInputDomainAdapter>() != nullptr ? Vamp::Plugin::InputDomain::FrequencyDomain : Vamp::Plugin::InputDomain::TimeDomain;
+                if(auto* inputDomainAdapter = wrapper->getWrapper<PluginInputDomainAdapter>())
+                {
+                    description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
+                    description.defaultState.windowType = inputDomainAdapter->getWindowType();
+                }
             }
             
             description.maker = plugin->getMaker();
@@ -89,11 +93,15 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
             description.details = plugin->getDescription();
             
             auto const blockSize = plugin->getPreferredBlockSize();
-            description.defaultBlockSize = blockSize > 0 ? blockSize : 512;
+            description.defaultState.blockSize = blockSize > 0 ? blockSize : 512;
             auto const stepSize = plugin->getPreferredStepSize();
-            description.defaultStepSize = stepSize > 0 ? stepSize : blockSize;
+            description.defaultState.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
             auto const parameters = plugin->getParameterDescriptors();
             description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
+            for(auto const& parameter : parameters)
+            {
+                description.defaultState.parameters[parameter.identifier] = parameter.defaultValue;
+            }
             
             description.output = outputs[feature];
             return description;

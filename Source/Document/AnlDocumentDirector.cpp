@@ -53,14 +53,9 @@ void Document::Director::addAnalysis(AlertType alertType)
         anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::description>(description, NotificationType::synchronous);
+        anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::ColorMap::Inferno, NotificationType::synchronous);
-        
-        Analyzer::PropertyPanel panel(anlAcsr);
-        auto const title = juce::translate("Analyzer Properties");
-        auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
-        auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
-        juce::DialogWindow::showModalDialog(title, &panel, nullptr, bgColor, true, false, false);
+        anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::CoulorMap::Inferno, NotificationType::synchronous);
     };
     
     auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -139,12 +134,8 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             {
                 anlStrongAssert(index <= mAnalyzers.size());
                 auto& anlAcsr = acsr.getAccessor<AcsrType::analyzers>(index);
-                auto director = std::make_unique<Analyzer::Director>(anlAcsr);
+                auto director = std::make_unique<Analyzer::Director>(anlAcsr, createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent));
                 anlStrongAssert(director != nullptr);
-                if(director != nullptr)
-                {
-                    director->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
-                }
                 mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
                 
                 auto& layoutAcsr = acsr.getAccessor<AcsrType::layout>(0);
