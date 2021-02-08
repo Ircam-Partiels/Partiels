@@ -547,6 +547,21 @@ namespace Model
         {
             if(mListeners.add(listener))
             {
+                detail::for_each(mAttributes, [&](auto& d)
+                {
+                    using element_type = typename std::remove_reference<decltype(d)>::type;
+                    if constexpr((element_type::flags & Flag::notifying) != 0)
+                    {
+                        mListeners.notify([this, ptr = &listener](Listener& ltnr)
+                                          {
+                            if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
+                            {
+                                ltnr.onAttrChanged(*static_cast<parent_t const*>(this), element_type::type);
+                            }
+                        }, notification);
+                    }
+                });
+                
                 detail::for_each(mAccessors, [&](auto& d)
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -563,21 +578,6 @@ namespace Model
                                 }
                             }, notification);
                         }
-                    }
-                });
-                
-                detail::for_each(mAttributes, [&](auto& d)
-                {
-                    using element_type = typename std::remove_reference<decltype(d)>::type;
-                    if constexpr((element_type::flags & Flag::notifying) != 0)
-                    {
-                        mListeners.notify([this, ptr = &listener](Listener& ltnr)
-                        {
-                            if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
-                            {
-                                ltnr.onAttrChanged(*static_cast<parent_t const*>(this), element_type::type);
-                            }
-                        }, notification);
                     }
                 });
             }
