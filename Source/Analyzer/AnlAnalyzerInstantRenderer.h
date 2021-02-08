@@ -11,7 +11,7 @@ namespace Analyzer
     : public juce::Component
     {
     public:
-        InstantRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor);
+        InstantRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~InstantRenderer() override;
         
         // juce::Component
@@ -20,10 +20,11 @@ namespace Analyzer
 
     private:
         Accessor& mAccessor;
-        Zoom::Accessor& mZoomAccessor;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
+        Plot::Accessor::Listener mPlotListener;
         
+        Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
     };

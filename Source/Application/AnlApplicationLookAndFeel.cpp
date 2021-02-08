@@ -22,6 +22,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ConcertinaPanel::ColourIds::headerButtonColourId, textColour);
     setColour(ConcertinaPanel::ColourIds::separatorColourId, juce::Colours::transparentBlack);
 
+    setColour(LoadingCircle::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
+    setColour(LoadingCircle::ColourIds::foregroundColourId, rulerColour);
+    
     setColour(Layout::StrechableContainer::Section::resizerActiveColourId, rulerColour.brighter());
     setColour(Layout::StrechableContainer::Section::resizerInactiveColourId, backgroundColour.darker());
     
@@ -32,7 +35,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::selectionColourId, thumbColour);
     
     setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
+    setColour(Analyzer::Thumbnail::borderColourId, backgroundColour);
     setColour(Analyzer::Thumbnail::textColourId, textColour);
+    
     setColour(Analyzer::Section::sectionColourId, juce::Colours::black);
     
     setColour(Document::Section::backgroundColourId, backgroundColour);

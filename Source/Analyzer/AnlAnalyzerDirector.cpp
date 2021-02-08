@@ -15,6 +15,8 @@ Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioForm
     {
         switch (anlAttr)
         {
+            case AttrType::name:
+                break;
             case AttrType::key:
             {
                 runAnalysis(notification);
@@ -25,24 +27,9 @@ Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioForm
                 runAnalysis(notification);
             }
                 break;
-            case AttrType::zoomMode:
-            {
-                updateZoomRange(notification);
-            }
-                break;
             case AttrType::description:
-            {
-                
-            }
                 break;
-            case AttrType::name:
-            case AttrType::colour:
-                break;
-            case AttrType::colourMap:
-            {
-                runRendering(notification);
-            }
-                break;
+            
             case AttrType::results:
             {
                 updateZoomRange(notification);
@@ -136,10 +123,8 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         return;
     }
     mAccessor.setAttr<AttrType::description>(descriptions, notification);
-    
-    updateZoomRange(notification);
-
     mAccessor.setAttr<AttrType::processing>(true, notification);
+    
     mAnalysisProcess = std::async([=, this, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
@@ -181,7 +166,7 @@ void Analyzer::Director::runRendering(NotificationType const notification)
         return;
     }
     
-    auto const colourMap = mAccessor.getAttr<AttrType::colourMap>();
+    auto const colourMap = mAccessor.getAccessor<AcsrType::plot>(0).getAttr<Plot::AttrType::colourMap>();
     
     auto const witdh = static_cast<int>(results.size());
     auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
@@ -232,48 +217,40 @@ void Analyzer::Director::runRendering(NotificationType const notification)
 
 void Analyzer::Director::updateZoomRange(NotificationType const notification)
 {
-    switch(mAccessor.getAttr<AttrType::zoomMode>())
+    auto& plotAscr = mAccessor.getAccessor<AcsrType::plot>(0);
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    if(results.empty())
     {
-        case ZoomMode::custom:
-        case ZoomMode::plugin:
-        case ZoomMode::results:
-        {
-            auto const& results = mAccessor.getAttr<AttrType::results>();
-            if(results.empty())
-            {
-                return;
-            }
-            auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
-            {
-                Zoom::Range range;
-                bool initialized = false;
-                for(auto const& result : results)
-                {
-                    auto const& values = result.values;
-                    auto const pair = std::minmax_element(values.cbegin(), values.cend());
-                    if(pair.first != values.cend() && pair.second != values.cend())
-                    {
-                        auto const start = static_cast<double>(*pair.first);
-                        auto const end = static_cast<double>(*pair.second);
-                        range = !initialized ? Zoom::Range{start, end} : range.getUnionWith({start, end});
-                        initialized = true;
-                    }
-                }
-                auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-                return !initialized ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
-            };
-            
-            auto const info = getZoomInfo();
-            auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
-            valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
-            
-            auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-            binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(results[0].values.size())}, notification);
-            binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
-        }
-            break;
+        return;
     }
+    auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
+    {
+        Zoom::Range range;
+        bool initialized = false;
+        for(auto const& result : results)
+        {
+            auto const& values = result.values;
+            auto const pair = std::minmax_element(values.cbegin(), values.cend());
+            if(pair.first != values.cend() && pair.second != values.cend())
+            {
+                auto const start = static_cast<double>(*pair.first);
+                auto const end = static_cast<double>(*pair.second);
+                range = !initialized ? Zoom::Range{start, end} : range.getUnionWith({start, end});
+                initialized = true;
+            }
+        }
+        auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
+        return !initialized ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
+    };
+    
+    auto const info = getZoomInfo();
+    auto& valueZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
+    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+    
+    auto& binZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::binZoom>(0);
+    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(results[0].values.size())}, notification);
+    binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
 }
 
 void Analyzer::Director::handleAsyncUpdate()

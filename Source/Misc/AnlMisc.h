@@ -10,5 +10,6 @@
 #include "AnlModel.h"
 #include "AnlNotifier.h"
 #include "AnlNumberField.h"
+#include "AnlLoadingCircle.h"
 #include "AnlTooltip.h"
 #include "AnlXmlParser.h"

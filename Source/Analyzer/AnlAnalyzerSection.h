@@ -26,8 +26,6 @@ namespace Analyzer
         
         std::function<void(void)> onRemove = nullptr;
         
-        void setTime(double time);
-        
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
@@ -38,6 +36,7 @@ namespace Analyzer
         void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
         
         Analyzer::Accessor& mAccessor;
+        Plot::Accessor& mPlotAccessor {mAccessor.getAccessor<AcsrType::plot>(0)};
         Zoom::Accessor& mTimeZoomAccessor;
         juce::Component& mSeparator;
         Analyzer::Accessor::Listener mListener;
@@ -46,10 +45,10 @@ namespace Analyzer
         Analyzer::InstantRenderer mInstantRenderer {mAccessor, mTimeZoomAccessor};
         Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
         
-        Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
-        Zoom::Ruler mBinRuler  {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mBinScrollBar {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mValueRuler {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mValueScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mBinRuler  {mPlotAccessor.getAccessor<Plot::AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mBinScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
     };
 }
 

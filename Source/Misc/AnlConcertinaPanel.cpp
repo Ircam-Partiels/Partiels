@@ -164,11 +164,11 @@ void ConcertinaPanel::componentMovedOrResized(juce::Component& component, bool w
             anlStrongAssert(container != nullptr);
             if(container != nullptr)
             {
-                auto const component = container.get()->component.getComponent();
-                anlStrongAssert(component != nullptr);
-                if(component != nullptr)
+                auto const content = container.get()->component.getComponent();
+                anlStrongAssert(content != nullptr);
+                if(content != nullptr)
                 {
-                    return value + component->getHeight() + separatorSize;
+                    return value + content->getHeight() + separatorSize;
                 }
             }
             return value;

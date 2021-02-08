@@ -24,15 +24,7 @@ Document::Section::Section(Accessor& accessor)
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
-                break;
             case AttrType::playheadPosition:
-            {
-                auto const time = acsr.getAttr<AttrType::playheadPosition>();
-                for(size_t i = 0; i < mContents.size(); ++i)
-                {
-                    mContents[i]->content.setTime(time);
-                }
-            };
                 break;
             case AttrType::layoutHorizontal:
             {

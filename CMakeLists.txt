@@ -62,6 +62,8 @@ endif()
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.h
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaPanel.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaPanel.h
+    ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.h
     ${SOURCES_DIRECTORY}/Misc/AnlMisc.h
     )
 
@@ -95,6 +97,8 @@ file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
 
 file(GLOB PlotSources
+    ${SOURCES_DIRECTORY}/Plot/AnlPlotModel.cpp
+    ${SOURCES_DIRECTORY}/Plot/AnlPlotModel.h
     ${SOURCES_DIRECTORY}/Plot/AnlPlotRenderer.cpp
     ${SOURCES_DIRECTORY}/Plot/AnlPlotRenderer.h)
 
@@ -224,20 +228,8 @@ set(BriochesDefinitions
 target_compile_definitions(Brioche PRIVATE ${BriochesDefinitions})
 target_compile_definitions(BriocheTest PRIVATE ${BriochesDefinitions})
 
-file(GLOB BinaryDataSources
-    ${BINARYDATA_DIRECTORY}/Icons/icon.png
-    ${BINARYDATA_DIRECTORY}/Icons/alert.png
-    ${BINARYDATA_DIRECTORY}/Icons/information.png
-    ${BINARYDATA_DIRECTORY}/Icons/jouer.png
-    ${BINARYDATA_DIRECTORY}/Icons/pause.png
-    ${BINARYDATA_DIRECTORY}/Icons/precedent.png
-    ${BINARYDATA_DIRECTORY}/Icons/repeter.png
-    ${BINARYDATA_DIRECTORY}/Icons/question.png
-    ${BINARYDATA_DIRECTORY}/Icons/annuler.png
-    ${BINARYDATA_DIRECTORY}/Icons/chercher.png
-    ${BINARYDATA_DIRECTORY}/Icons/editer.png
-    ${BINARYDATA_DIRECTORY}/Icons/naviguer.png
-    ${BINARYDATA_DIRECTORY}/Icons/reglages.png
+file(GLOB
+    BinaryDataSources ${BINARYDATA_DIRECTORY}/Icons/*.png
     ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)
 
 juce_add_binary_data(BriocheData SOURCES ${BinaryDataSources} ${TranslationsSources})

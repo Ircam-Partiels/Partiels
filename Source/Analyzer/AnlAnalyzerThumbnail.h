@@ -14,7 +14,8 @@ namespace Analyzer
         enum ColourIds : int
         {
               backgroundColourId = 0x2000330
-            , textColourId = 0x2000331
+            , borderColourId
+            , textColourId
         };
         
         Thumbnail(Accessor& accessor);
@@ -27,11 +28,14 @@ namespace Analyzer
         std::function<void(void)> onRemove = nullptr;
         
     private:
+        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         PropertyPanel mPropertyPanel {mAccessor};
-        juce::ImageButton mRemoveButton;
         juce::ImageButton mPropertiesButton;
+        juce::ImageButton mEffectButton;
+        juce::ImageButton mRemoveButton;
+        LoadingCircle mProcessingButton;
     };
 }
 

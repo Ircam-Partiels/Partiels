@@ -54,8 +54,6 @@ void Document::Director::addAnalysis(AlertType alertType)
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::description>(description, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::colour>(juce::Colours::blue, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::colourMap>(Analyzer::CoulorMap::Inferno, NotificationType::synchronous);
     };
     
     auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -113,6 +111,12 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             case AttrType::playheadPosition:
             {
                 auto const time = acsr.getAttr<AttrType::playheadPosition>();
+                auto const numAnlAcsrs = acsr.getNumAccessors<AcsrType::analyzers>();
+                for(size_t i = 0; i < numAnlAcsrs; ++i)
+                {
+                    auto& anlAcsr  = acsr.getAccessor<AcsrType::analyzers>(i);
+                    anlAcsr.setAttr<Analyzer::AttrType::time>(time, notification);
+                }
                 auto& zoomAcsr = acsr.getAccessor<AcsrType::timeZoom>(0);
                 auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                 if(!range.contains(time))

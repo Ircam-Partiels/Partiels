@@ -27,6 +27,7 @@ void Layout::StrechableContainer::Section::Holder::ResizerBar::mouseDown(juce::M
     juce::ignoreUnused(event);
     auto const isVertical = mOwner.mOwner.mOrientation == Orientation::vertical;
     mSavedSize = isVertical ? mOwner.getHeight() : mOwner.getWidth();
+    event.source.enableUnboundedMouseMovement(true);
 }
 
 void Layout::StrechableContainer::Section::Holder::ResizerBar::mouseDrag(juce::MouseEvent const& event)

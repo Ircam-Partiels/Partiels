@@ -9,14 +9,16 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
 {
     mValueRuler.onDoubleClick = [&]()
     {
-        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+        auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0);
         auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
     
     mBinRuler.onDoubleClick = [&]()
     {
-        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+        auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+        auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0);
         auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
@@ -37,9 +39,6 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
-            case AttrType::zoomMode:
-            case AttrType::colour:
-            case AttrType::colourMap:
                 break;
             case AttrType::results:
             {
@@ -99,11 +98,6 @@ Analyzer::Section::~Section()
 {
     mAccessor.removeListener(mListener);
     mSeparator.removeComponentListener(this);
-}
-
-void Analyzer::Section::setTime(double time)
-{
-    mAccessor.setTime(time, NotificationType::synchronous);
 }
 
 void Analyzer::Section::resized()

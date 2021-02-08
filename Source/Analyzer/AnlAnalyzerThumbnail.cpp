@@ -11,8 +11,11 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         button.setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
     };
     
-    addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mPropertiesButton);
+    addAndMakeVisible(mEffectButton);
+    addAndMakeVisible(mRemoveButton);
+    addAndMakeVisible(mProcessingButton);
+    
     mRemoveButton.onClick = [&]()
     {
         if(onRemove != nullptr)
@@ -30,9 +33,14 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     mPropertiesButton.setTooltip(juce::translate("Analysis properties"));
     setupImage(mPropertiesButton, juce::ImageCache::getFromMemory(BinaryData::reglages_png, BinaryData::reglages_pngSize));
     
+    mEffectButton.onClick = [&]()
+    {
+    };
+    mEffectButton.setTooltip(juce::translate("Effects"));
+    setupImage(mEffectButton, juce::ImageCache::getFromMemory(BinaryData::star_png, BinaryData::star_pngSize));
+    
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::name:
@@ -40,14 +48,19 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
                 repaint();
             }
                 break;
+            case AttrType::processing:
+            {
+                mProcessingButton.setActive(acsr.getAttr<AttrType::processing>());
+            }
+                break;
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
-            case AttrType::zoomMode:
-            case AttrType::colour:
-            case AttrType::colourMap:
             case AttrType::results:
+            case AttrType::warnings:
+            case AttrType::time:
                 break;
+                
 }
     };
 
@@ -64,30 +77,30 @@ void Analyzer::Thumbnail::resized()
     auto bounds = getLocalBounds();
     auto constexpr separator = 2;
     auto const width = bounds.getWidth() - separator;
-    bounds.removeFromBottom(width);
-    mRemoveButton.setBounds(bounds.removeFromBottom(width).reduced(separator));
-    mPropertiesButton.setBounds(bounds.removeFromBottom(width).reduced(separator));
+    mPropertiesButton.setBounds(bounds.removeFromTop(width).reduced(separator));
+    mEffectButton.setBounds(bounds.removeFromTop(width).reduced(separator));
+    mRemoveButton.setBounds(bounds.removeFromTop(width).reduced(separator));
+    mProcessingButton.setBounds(bounds.removeFromTop(width).reduced(separator));
 }
 
 void Analyzer::Thumbnail::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
     
+    g.setColour(findColour(ColourIds::borderColourId));
+    g.drawRoundedRectangle(getLocalBounds().reduced(1).toFloat(), 4.0f, 1.0f);
+    
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
     
     auto const width = getWidth();
     auto const height = getHeight();
-    auto const font = g.getCurrentFont();
-    auto const size = (height - separator) - 3 * width;
+    auto const bottom = height - 2 * separator;
+    auto const size = bottom - 4 * width;
     
-    g.setColour(juce::Colours::grey);
-    g.fillRoundedRectangle(getLocalBounds().removeFromBottom(width - separator).reduced(separator).toFloat(), 4.0f);
     g.setColour(findColour(ColourIds::textColourId));
-    
-    auto const title = mAccessor.getAttr<AttrType::name>();
-    g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, size));
-    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, size, size, width, juce::Justification::centredLeft, 1, 1.0f);
+    g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
+    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
 }
 
 ANALYSE_FILE_END

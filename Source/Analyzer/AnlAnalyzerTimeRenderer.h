@@ -1,7 +1,6 @@
 #pragma once
 
-#include "AnlAnalyzerPropertyPanel.h"
-#include "../Zoom/AnlZoomModel.h"
+#include "AnlAnalyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -11,7 +10,7 @@ namespace Analyzer
     : public juce::Component
     {
     public:        
-        TimeRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor);
+        TimeRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~TimeRenderer() override;
         
         // juce::Component
@@ -26,9 +25,11 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
+        Plot::Accessor::Listener mPlotListener;
         
-        Zoom::Accessor& mZoomAccessor;
+        Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mZoomListener;
+        
         juce::Label mInformation;
     };
 }

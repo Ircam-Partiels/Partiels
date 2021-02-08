@@ -162,19 +162,6 @@ namespace Plugin
             return !(*this == rhd);
         }
     };
-    
-    using CoulorMap = tinycolormap::ColormapType;
-    
-    struct Display
-    {
-        int height = 20;
-        juce::Colour colour = juce::Colours::aliceblue;
-        CoulorMap colorMap = CoulorMap::Inferno;
-        Zoom::Accessor valueZoom;
-        Zoom::Accessor binZoom;
-        bool propertyVisible = false;
-        juce::String propertyState;
-    };
 }
 
 namespace XmlParser

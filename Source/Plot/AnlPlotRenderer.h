@@ -1,7 +1,7 @@
 #pragma once
 
+#include "AnlPlotModel.h"
 #include "../Plugin/AnlPluginModel.h"
-#include "../Zoom/AnlZoomModel.h"
 
 ANALYSE_FILE_BEGIN
 

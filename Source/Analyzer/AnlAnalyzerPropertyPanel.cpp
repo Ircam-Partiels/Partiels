@@ -140,12 +140,14 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                           
 , mPropertyColourSelector("Color", "The current color", [&]()
 {
+    auto const& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
     ColourSelector colourSelector;
     colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
+    colourSelector.setCurrentColour(plotAcsr.getAttr<Plot::AttrType::colourPlain>(), juce::NotificationType::dontSendNotification);
     colourSelector.onColourChanged = [&](juce::Colour const& colour)
     {
-        mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
+        auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
+        acsr.setAttr<Plot::AttrType::colourPlain>(colour, NotificationType::synchronous);
     };
     juce::DialogWindow::LaunchOptions options;
     options.dialogTitle = juce::translate("Select the color of the curve");
@@ -158,7 +160,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 })
 , mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
 {
-    mAccessor.setAttr<AttrType::colourMap>(static_cast<CoulorMap>(index), NotificationType::synchronous);
+    auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    acsr.setAttr<Plot::AttrType::colourMap>(static_cast<Plot::ColourMap>(index), NotificationType::synchronous);
 })
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -286,11 +289,10 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
             }
                 break;
-            case AttrType::zoomMode:
-            case AttrType::colour:
-            case AttrType::colourMap:
             case AttrType::results:
             case AttrType::warnings:
+            case AttrType::time:
+            case AttrType::processing:
                 break;
         }
     };
@@ -343,7 +345,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
     mFloatingWindow.onChanged = [&]()
     {
-        mAccessor.setAttr<AttrType::display>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
+        auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
+        acsr.setAttr<Plot::AttrType::propertyState>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -366,7 +369,8 @@ void Analyzer::PropertyPanel::resized()
 
 void Analyzer::PropertyPanel::show()
 {
-    auto const& displayInfo = mAccessor.getAttr<AttrType::display>();
+    auto const& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    auto const& displayInfo = acsr.getAttr<Plot::AttrType::propertyState>();
     if(displayInfo.isEmpty())
     {
         auto const& desktop = juce::Desktop::getInstance();

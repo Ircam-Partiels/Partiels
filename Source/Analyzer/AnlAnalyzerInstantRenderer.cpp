@@ -3,9 +3,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& zoomAccessor)
+Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
-, mZoomAccessor(zoomAccessor)
+, mTimeZoomAccessor(timeZoomAccessor)
 {
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
@@ -13,7 +13,7 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        if(attribute == AttrType::colour || attribute == AttrType::results || attribute == AttrType::colourMap)
+        if(attribute == AttrType::results || attribute == AttrType::time)
         {
             repaint();
         }
@@ -24,7 +24,6 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
         juce::ignoreUnused(acsr, value);
         switch(signal)
         {
-            case SignalType::time:
             case SignalType::image:
             {
                 repaint();
@@ -41,16 +40,20 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& z
     
     mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    plotAcsr.addListener(mPlotListener, NotificationType::synchronous);
+    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::InstantRenderer::~InstantRenderer()
 {
-    mZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mZoomListener);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mZoomListener);
+    mTimeZoomAccessor.removeListener(mZoomListener);
+    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
+    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).removeListener(mZoomListener);
+    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+    plotAcsr.removeListener(mPlotListener);
     mAccessor.removeListener(mListener);
     mAccessor.removeReceiver(mReceiver);
 }
@@ -62,12 +65,13 @@ void Analyzer::InstantRenderer::resized()
 
 void Analyzer::InstantRenderer::paint(juce::Graphics& g)
 {
-    auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto const& plotAscr = mAccessor.getAccessor<AcsrType::plot>(0);
+    auto const& valueZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colour = mAccessor.getAttr<AttrType::colour>();
+    auto const& colour = plotAscr.getAttr<Plot::AttrType::colourPlain>();
     auto const& description = mAccessor.getAttr<AttrType::description>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
-    auto const time = mAccessor.getTime();
+    auto const time = mAccessor.getAttr<AttrType::time>();
     Plot::Renderer::paint(g, getLocalBounds(), colour, description.output, results, visibleValueRange, time);
     
     if(!results.empty() && results.cbegin()->values.size() > 1)
@@ -81,11 +85,11 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
         auto const width = getWidth();
         auto const height = getHeight();
         
-        auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+        auto const& binZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::binZoom>(0);
         auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
         auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         
-        auto const globalTimeRange = mZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
+        auto const globalTimeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
         
         auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
         

@@ -136,7 +136,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, errorTitle, errorMessage + juce::translate("Invalid feature") + ".");
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Invalid feature") + ".");
         }
         return nullptr;
     }
@@ -156,12 +156,12 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         instance->setParameter(parameter.first, parameter.second);
     }
     
-    anlStrongAssert(state.blockSize > 0 && state.stepSize > 0);
+    anlWeakAssert(state.blockSize > 0 && state.stepSize > 0);
     if(state.blockSize <= 0 || state.stepSize <= 0 || !instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, errorTitle, errorMessage + juce::translate("Initialization failed, either the number of channels, the step size or the block size might not be supported") + ".");
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Initialization failed, either the number of channels, the step size or the block size might not be supported") + ".");
         }
         return nullptr;
     }
