@@ -22,6 +22,17 @@ namespace Analyzer
         void show();
     private:
         
+        class PropertyTextButton
+        : public Layout::PropertyPanel<juce::TextButton>
+        {
+        public:
+            PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn);
+            ~PropertyTextButton() override = default;
+            
+            // juce::Component
+            void resized() override;
+        };
+        
         class PropertyText
         : public Layout::PropertyPanel<juce::Label>
         {
@@ -65,8 +76,9 @@ namespace Analyzer
         PropertyNumber mPropertyBlockSize;
         PropertyNumber mPropertyStepSize;
         std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
+        PropertyTextButton mPropertyResetProcessor;
         
-        juce::TextButton mPropertyColourSelector {juce::translate("Color"), juce::translate("The current color")};
+        PropertyTextButton mPropertyColourSelector;
         PropertyList mPropertyColourMap;
         
         PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};

@@ -4,6 +4,7 @@
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginWrapper.h>
 #include <vamp-hostsdk/PluginInputDomainAdapter.h>
+#include "../../tinycolormap/include/tinycolormap.hpp"
 
 ANALYSE_FILE_BEGIN
 
@@ -75,6 +76,29 @@ namespace Plugin
         }
     };
     
+    //! @brief The state of a plugin
+    //! @details The type of data returned by a plugin.
+    struct State
+    {
+        size_t blockSize {512};                             //!< The default block size (or window size for frequency domain plugins)
+        size_t stepSize {512};                              //!< The default step size
+        WindowType windowType {WindowType::HanningWindow};  //!< The window type for frequency domain plugins
+        std::map<std::string, float> parameters {};         //!< The values of the parameters of the plugin
+        
+        inline bool operator==(State const& rhd) const noexcept
+        {
+            return blockSize == rhd.blockSize &&
+            stepSize == rhd.stepSize &&
+            windowType == rhd.windowType &&
+            parameters == rhd.parameters;
+        }
+        
+        inline bool operator!=(State const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+    
     //! @brief The full description of a plugin
     //! @details The structure contains all the informations to represent and to describe how to control
     //! a plugin but it doesn't contain any control data or any result.
@@ -87,8 +111,7 @@ namespace Plugin
         juce::String category {};                           //!< The category of the plugin
         juce::String details {};                            //!< Further information about the plugin
         
-        size_t defaultBlockSize {512};                      //!< The default block size (or window size)
-        size_t defaultStepSize {512};                       //!< The default step size
+        State defaultState;                                 //!< The default state of the plugin
         std::vector<Parameter> parameters {};               //!< The parameters of the plugin
         Output output {};                                   //!< The output of the plugin
         
@@ -100,8 +123,7 @@ namespace Plugin
             version == rhd.version &&
             category == rhd.category &&
             details == rhd.details &&
-            defaultBlockSize == rhd.defaultBlockSize &&
-            defaultStepSize == rhd.defaultStepSize &&
+            defaultState == rhd.defaultState &&
             parameters == rhd.parameters &&
             output == rhd.output;
         }
@@ -140,27 +162,17 @@ namespace Plugin
         }
     };
     
-    //! @brief The state of a plugin
-    //! @details The type of data returned by a plugin.
-    struct State
+    using CoulorMap = tinycolormap::ColormapType;
+    
+    struct Display
     {
-        size_t blockSize {512};                             //!< The default block size (or window size for frequency domain plugins)
-        size_t stepSize {512};                              //!< The default step size
-        WindowType windowType {WindowType::HanningWindow};  //!< The window type for frequency domain plugins
-        std::map<std::string, float> parameters {};         //!< The values of the parameters of the plugin
-        
-        inline bool operator==(State const& rhd) const noexcept
-        {
-            return blockSize == rhd.blockSize &&
-            stepSize == rhd.stepSize &&
-            windowType == rhd.windowType &&
-            parameters == rhd.parameters;
-        }
-        
-        inline bool operator!=(State const& rhd) const noexcept
-        {
-            return !(*this == rhd);
-        }
+        int height = 20;
+        juce::Colour colour = juce::Colours::aliceblue;
+        CoulorMap colorMap = CoulorMap::Inferno;
+        Zoom::Accessor valueZoom;
+        Zoom::Accessor binZoom;
+        bool propertyVisible = false;
+        juce::String propertyState;
     };
 }
 

@@ -9,8 +9,9 @@ JUCE_COMPILER_WARNING("check this")
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Director::Director(Accessor& accessor)
+Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
+, mAudioFormatReaderManager(std::move(audioFormatReader))
 {
     accessor.onAttrUpdated = [&](AttrType anlAttr, NotificationType notification)
     {
@@ -94,41 +95,6 @@ void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatR
     
     runAnalysis(notification);
 }
-
-//void Analyzer::Director::sanitizeProcessor(NotificationType const notification)
-//{
-//    auto const descriptors = processor->getOutputDescriptors();
-//    anlWeakAssert(!descriptors.empty());
-//    
-//    JUCE_COMPILER_WARNING("to fix feature")
-//    auto const descriptor = descriptors[0];
-//    
-//    // Ensures that the type of results returned for this feature is valid
-//    anlWeakAssert(descriptor.hasFixedBinCount);
-//    if(!descriptor.hasFixedBinCount)
-//    {
-//        warnings[WarningType::resultType] = juce::translate("The type of results is undefined by the plugin and might not be supported!");
-//    }
-//    auto const numDimension = descriptor.hasFixedBinCount ? std::min(descriptor.binCount, 2_z) + 1 : 0;
-//    mAccessor.setAttr<AttrType::resultsType>(static_cast<ResultsType>(numDimension), notification);
-//    
-//    // Ensures that the range of results returned for this feature is valid
-//    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-//    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(descriptor.isQuantized ? descriptor.quantizeStep : std::numeric_limits<double>::epsilon(), notification);
-//    if(!descriptor.hasKnownExtents)
-//    {
-//        warnings[WarningType::zoomMode] = juce::translate("The type of zoom...");
-//        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()), notification);
-//    }
-//    else
-//    {
-//        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(static_cast<double>(descriptor.minValue), static_cast<double>(descriptor.maxValue)), notification);
-//    }
-//    
-//    // Updates the zoom range of the bins based on the dimensions of the results
-//    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-//    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range(0.0, std::max(static_cast<double>(std::max(descriptor.binCount, 1_z)), 1.0)), notification);
-//}
 
 void Analyzer::Director::runAnalysis(NotificationType const notification)
 {

@@ -55,7 +55,18 @@ namespace Analyzer
         , resultType
     };
     
-    using ColorMap = tinycolormap::ColormapType;
+    using CoulorMap = tinycolormap::ColormapType;
+    
+    struct Display
+    {
+        int height = 20;
+        juce::Colour colour = juce::Colours::aliceblue;
+        CoulorMap colorMap = CoulorMap::Inferno;
+        Zoom::Accessor valueZoom;
+        Zoom::Accessor binZoom;
+        bool propertyVisible = false;
+        juce::String propertyState;
+    };
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
@@ -65,7 +76,7 @@ namespace Analyzer
     
     , Model::Attr<AttrType::zoomMode, ZoomMode, Model::Flag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
-    , Model::Attr<AttrType::colourMap, ColorMap, Model::Flag::basic>
+    , Model::Attr<AttrType::colourMap, CoulorMap, Model::Flag::basic>
     
     , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
@@ -93,7 +104,7 @@ namespace Analyzer
                                  , {}
                                  , {ZoomMode::plugin}
                                  , {juce::Colours::black}
-                                 , {ColorMap::Inferno}
+                                 , {CoulorMap::Inferno}
                                  , {}
                                  , {}
                                  , {false}

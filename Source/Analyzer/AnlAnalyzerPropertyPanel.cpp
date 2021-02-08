@@ -2,6 +2,26 @@
 
 ANALYSE_FILE_BEGIN
 
+Analyzer::PropertyPanel::PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn)
+: Layout::PropertyPanel<juce::TextButton>(juce::translate(name), juce::translate(tooltip), nullptr)
+{
+    title.setVisible(false);
+    entry.setButtonText(name);
+    entry.setTooltip(tooltip);
+    entry.onClick = [=]()
+    {
+        if(fn != nullptr)
+        {
+            fn();
+        }
+    };
+}
+
+void Analyzer::PropertyPanel::PropertyTextButton::resized()
+{
+    entry.setBounds(getLocalBounds());
+}
+
 Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
 : Layout::PropertyPanel<juce::Label>(juce::translate(name), juce::translate(tooltip))
 {
@@ -80,6 +100,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 {
     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
 })
+
 , mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [=](size_t index)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
@@ -112,10 +133,32 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     state.stepSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-
-, mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{}, [&](size_t index)
+, mPropertyResetProcessor("Reset", "Reset processor to the default state", [&]()
 {
-   
+    mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
+})
+                          
+, mPropertyColourSelector("Color", "The current color", [&]()
+{
+    ColourSelector colourSelector;
+    colourSelector.setSize(400, 300);
+    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
+    colourSelector.onColourChanged = [&](juce::Colour const& colour)
+    {
+        mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
+    };
+    juce::DialogWindow::LaunchOptions options;
+    options.dialogTitle = juce::translate("Select the color of the curve");
+    options.content.setNonOwned(&colourSelector);
+    options.componentToCentreAround = this;
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = false;
+    options.runModal();
+})
+, mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
+{
+    mAccessor.setAttr<AttrType::colourMap>(static_cast<CoulorMap>(index), NotificationType::synchronous);
 })
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -184,6 +227,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 {
                     components.push_back(*property.second.get());
                 }
+                components.push_back(mPropertyResetProcessor);
                 mProcessorSection.setComponents(components);
                 components.clear();
                 
@@ -211,7 +255,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     mPropertyWindowOverlapping.entry.clear(silent);
                     for(int i = 1; static_cast<size_t>(i) <= state.blockSize; i *= 2)
                     {
-                        mPropertyWindowOverlapping.entry.addItem(juce::String(i), static_cast<int>(state.blockSize) / i);
+                        mPropertyWindowOverlapping.entry.addItem(juce::String(i) + "x", static_cast<int>(state.blockSize) / i);
                     }
                     mPropertyWindowOverlapping.entry.setSelectedId(static_cast<int>(state.stepSize), silent);
                 }
@@ -258,6 +302,12 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mProcessorSection.onResized = onResized;
     mGraphicalSection.onResized = onResized;
     mPluginSection.onResized = onResized;
+    
+    mGraphicalSection.setComponents(
+    {
+          mPropertyColourSelector
+        , mPropertyColourMap
+    });
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(300, 48);

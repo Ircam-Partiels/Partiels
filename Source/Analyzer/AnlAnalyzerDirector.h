@@ -10,7 +10,7 @@ namespace Analyzer
     : private juce::AsyncUpdater
     {
     public:
-        Director(Accessor& accessor);
+        Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
         ~Director() override;
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);

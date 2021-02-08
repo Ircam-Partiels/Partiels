@@ -178,8 +178,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
         toXml(*child, "version", value.version);
         toXml(*child, "category", value.category);
         toXml(*child, "details", value.details);
-        toXml(*child, "defaultBlockSize", value.defaultBlockSize);
-        toXml(*child, "defaultStepSize", value.defaultStepSize);
+        toXml(*child, "defaultState", value.defaultState);
         toXml(*child, "parameters", value.parameters);
         toXml(*child, "output", value.output);
         xml.addChildElement(child.release());
@@ -203,8 +202,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.version = fromXml(*child, "version", defaultValue.version);
     value.category = fromXml(*child, "category", defaultValue.category);
     value.details = fromXml(*child, "details", defaultValue.details);
-    value.defaultBlockSize = fromXml(*child, "defaultBlockSize", defaultValue.defaultBlockSize);
-    value.defaultStepSize = fromXml(*child, "defaultStepSize", defaultValue.defaultStepSize);
+    value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
     return value;

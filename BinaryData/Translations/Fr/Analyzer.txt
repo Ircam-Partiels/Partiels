@@ -24,8 +24,9 @@ countries: fr be mc ch lu
 "Details" = "Détails"
 "The details of the plugin" = "Les détails du plugiciel"
 
+"Select the color of the curve" = "Sélectionnez la couleur de la courbe"
+
 ###########################
 
 "Analysis cannot be performed!" = "L'analyse ne peut pas être effectuée !
 "The analysis \"ANLNAME\" cannot be performed due to incompatibility with the plugin. Please, ensure that the analysis parameters (such as the feature, the sample rate, the window size, the factor overlapping)  are consistent and compatible with the plugin \"PLGKEY\"." = "L'analyse \"ANLNAME\" ne peut pas être effectuée en raison d'une incompatibilité avec le plugin. Veuillez vous assurer que les paramètres d'analyse (tels que la fonctionnalité, la fréquence d'échantillonnage, la taille de la fenêtre, le facteur de chevauchement) sont cohérents et compatibles avec le plugin \"PLGKEY\"."
-
