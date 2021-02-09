@@ -47,9 +47,6 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlXmlParser.h
     ${SOURCES_DIRECTORY}/Misc/AnlModel.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlModel.h
-if(APPLE)
-    ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.mm
-endif()
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.h
     ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.cpp
@@ -66,6 +63,10 @@ endif()
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.h
     ${SOURCES_DIRECTORY}/Misc/AnlMisc.h
     )
+
+if(APPLE)
+file(GLOB MiscSources ${MiscSources} ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.mm)
+endif()
 
 file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlLayout.h
