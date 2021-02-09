@@ -87,8 +87,6 @@ file(GLOB ZoomSources
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.h
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginExporter.cpp
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginExporter.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginProcessor.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginProcessor.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListModel.cpp
@@ -109,6 +107,8 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerDirector.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerDirector.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerExporter.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerExporter.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.cpp

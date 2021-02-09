@@ -143,4 +143,39 @@ void Plot::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds
     }
 }
 
+juce::Image Plot::Renderer::createImage(std::vector<Plugin::Result> const& results, ColourMap const& colourMap, std::function<bool(void)> predicate)
+{
+    if(results.empty())
+    {
+        return {};
+    }
+    
+    auto const width = static_cast<int>(results.size());
+    auto const height = static_cast<int>(results.front().values.size());
+    anlWeakAssert(width > 0 && height > 0);
+    if(width <= 0 || height <= 0)
+    {
+        return {};
+    }
+    
+    auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
+    juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
+    
+    auto valueToColour = [&](float const value)
+    {
+        auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), colourMap);
+        return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+    };
+    
+    for(int i = 0; i < width && predicate(); ++i)
+    {
+        for(int j = 0; j < height && predicate(); ++j)
+        {
+            auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
+            data.setPixelColour(i, height - 1 - j, colour);
+        }
+    }
+    return predicate() ? image : juce::Image();
+}
+
 ANALYSE_FILE_END

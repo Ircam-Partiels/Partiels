@@ -1,5 +1,5 @@
 #include "AnlAnalyzerThumbnail.h"
-#include "../Plugin/AnlPluginExporter.h"
+#include "AnlAnalyzerExporter.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -45,72 +45,19 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
         juce::PopupMenu menu;
         menu.addItem(juce::translate("Export as template..."), true, false, [this]()
         {
-            juce::FileChooser fc(juce::translate("Export as template..."), {}, "*.briochetpl");
-            if(!fc.browseForFileToSave(true))
-            {
-                return;
-            }
-
-            auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-            auto const title = juce::translate("Export as template failed!");
-            auto xml = mAccessor.toXml("Analyzer");
-            if(xml == nullptr)
-            {
-                auto const message = juce::translate("The analyzer ANLNAME can not be exported as a template because the analyzer cannot be parsed to XML.").replace("FLNM", mAccessor.getAttr<AttrType::name>());
-                juce::AlertWindow::showMessageBox(icon, title, message);
-                return;
-            }
-            
-            auto const file = fc.getResult();
-            if(!xml->writeTo(file))
-            {
-                auto const message = juce::translate("The analyzer ANLNAME can not be exported as a template because the file cannot FLNAME cannot be written.").replace("FLNM", mAccessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
-                juce::AlertWindow::showMessageBox(icon, title, message);
-            }
+            Exporter::toTemplate(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as image", canBeExported, false, []()
+        menu.addItem("Export as image", canBeExported, false, [this]()
         {
-            
+            Exporter::toImage(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as CSV...", canBeExported, false, [&]()
+        menu.addItem("Export as CSV...", canBeExported, false, [this]()
         {
-            juce::FileChooser fc(juce::translate("Export as CVS..."), {}, "*.csv");
-            if(!fc.browseForFileToSave(true))
-            {
-                return;
-            }
-            
-            juce::TemporaryFile temp(fc.getResult());
-            juce::FileOutputStream stream(temp.getFile());
-            Plugin::Exporter::toCsv(stream, results);
-            
-            auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-            auto const title = juce::translate("Export as CSV failed!");
-            if(!temp.overwriteTargetFileWithTemporary())
-            {
-                auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", mAccessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-                juce::AlertWindow::showMessageBox(icon, title, message);
-            }
+            Exporter::toCsv(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as XML...", canBeExported, false, [&]()
+        menu.addItem("Export as XML...", canBeExported, false, [this]()
         {
-            juce::FileChooser fc(juce::translate("Export as XML..."), {}, "*.xml");
-            if(!fc.browseForFileToSave(true))
-            {
-                return;
-            }
-            
-            juce::TemporaryFile temp(fc.getResult());
-            juce::FileOutputStream stream(temp.getFile());
-            Plugin::Exporter::toXml(stream, results);
-            
-            auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-            auto const title = juce::translate("Export as XML failed!");
-            if(!temp.overwriteTargetFileWithTemporary())
-            {
-                auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", mAccessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-                juce::AlertWindow::showMessageBox(icon, title, message);
-            }
+            Exporter::toXml(mAccessor, AlertType::window);
         });
         menu.showAt(&mExportButton);
         // Force to repaint to update the state

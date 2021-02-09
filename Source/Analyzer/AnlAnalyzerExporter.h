@@ -1,0 +1,23 @@
+#pragma once
+
+#include "AnlAnalyzerModel.h"
+
+ANALYSE_FILE_BEGIN
+
+namespace Analyzer
+{
+    class Exporter
+    {
+    public:
+        
+        static void toTemplate(Accessor const& accessor, AlertType const alertType);
+        
+        static void toImage(Accessor const& accessor, AlertType const alertType);
+        
+        static void toCsv(Accessor const& accessor, AlertType const alertType);
+        
+        static void toXml(Accessor const& accessor, AlertType const alertType);
+    };
+}
+
+ANALYSE_FILE_END

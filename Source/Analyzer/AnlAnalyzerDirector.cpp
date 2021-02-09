@@ -3,6 +3,7 @@
 
 #include "../Plugin/AnlPluginProcessor.h"
 #include "../Plugin/AnlPluginListScanner.h"
+#include "../Plot/AnlPlotRenderer.h"
 
 
 ANALYSE_FILE_BEGIN
@@ -186,24 +187,11 @@ void Analyzer::Director::runRendering(NotificationType const notification)
             return std::make_tuple(juce::Image(), notification);
         }
         
-        auto image = juce::Image(juce::Image::PixelFormat::ARGB, witdh, height, false);
-        juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
-        
-        auto valueToColour = [&](float const value)
+        auto image = Plot::Renderer::createImage(results, colourMap, [this]()
         {
-            auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), colourMap);
-            return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
-        };
-        
-        for(int i = 0; i < witdh && mRenderingState.load() != ProcessState::aborted; ++i)
-        {
-            for(int j = 0; j < height && mRenderingState.load() != ProcessState::aborted; ++j)
-            {
-                auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
-                data.setPixelColour(i, height - 1 - j, colour);
-            }
-        }
-        
+            return mRenderingState.load() != ProcessState::aborted;
+        });
+    
         expected = ProcessState::running;
         if(mRenderingState.compare_exchange_weak(expected, ProcessState::ended))
         {
