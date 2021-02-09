@@ -50,6 +50,7 @@ void Document::Director::addAnalysis(AlertType alertType)
         }
 
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
+        anlAcsr.setAttr<Analyzer::AttrType::identifier>(juce::Uuid().toString(), NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
         anlAcsr.setAttr<Analyzer::AttrType::description>(description, NotificationType::synchronous);

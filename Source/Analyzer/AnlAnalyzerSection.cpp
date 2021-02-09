@@ -107,7 +107,7 @@ void Analyzer::Section::resized()
     auto const rightSize = getWidth() - leftSize - mSeparator.getWidth();
     
     auto leftSide = bounds.removeFromLeft(leftSize);
-    mThumbnail.setBounds(leftSide.removeFromLeft(24));
+    mThumbnail.setBounds(leftSide.removeFromLeft(48));
     mInstantRenderer.setBounds(leftSide);
     
     auto rightSide = bounds.removeFromRight(rightSize);

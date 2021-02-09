@@ -13,7 +13,8 @@ namespace Analyzer
 {
     enum class AttrType : size_t
     {
-          name
+          identifier
+        , name
         , key
         , description
         , state
@@ -42,7 +43,8 @@ namespace Analyzer
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
+    < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
@@ -66,6 +68,7 @@ namespace Analyzer
         
         Accessor()
         : Accessor(AttrContainer(  {""}
+                                 , {""}
                                  , {}
                                  , {}
                                  , {}

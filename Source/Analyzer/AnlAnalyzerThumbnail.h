@@ -33,9 +33,9 @@ namespace Analyzer
         Accessor::Listener mListener;
         PropertyPanel mPropertyPanel {mAccessor};
         juce::ImageButton mPropertiesButton;
-        juce::ImageButton mEffectButton;
-        juce::ImageButton mRemoveButton;
+        juce::ImageButton mExportButton;
         LoadingCircle mProcessingButton;
+        juce::ImageButton mRemoveButton;
     };
 }
 

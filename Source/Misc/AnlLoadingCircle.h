@@ -6,6 +6,7 @@ ANALYSE_FILE_BEGIN
 
 class LoadingCircle
 : public juce::Component
+, public juce::SettableTooltipClient
 , private juce::Timer
 {
 public:

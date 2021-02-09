@@ -6,6 +6,7 @@ LoadingCircle::LoadingCircle()
 : mImageProcessing(juce::ImageCache::getFromMemory(BinaryData::chargement_png, BinaryData::chargement_pngSize))
 , mImageReady(juce::ImageCache::getFromMemory(BinaryData::checked_png, BinaryData::checked_pngSize))
 {
+    setInterceptsMouseClicks(true, true);
 }
 
 void LoadingCircle::paint(juce::Graphics& g)
