@@ -1,36 +1,37 @@
-#include "AnlLayoutResizerBar.h"
+#include "AnlResizerBar.h"
 
 ANALYSE_FILE_BEGIN
 
-Layout::ResizerBar::ResizerBar(Orientation const orientation, juce::Range<int> const range)
+ResizerBar::ResizerBar(Orientation const orientation, juce::Range<int> const range)
 : mOrientation(orientation)
 , mRange(range)
 {
     setRepaintsOnMouseActivity(true);
 }
 
-void Layout::ResizerBar::paint(juce::Graphics& g)
+void ResizerBar::paint(juce::Graphics& g)
 {
     auto const isVertical = mOrientation == Orientation::vertical;
     setMouseCursor(isVertical ? juce::MouseCursor::LeftRightResizeCursor : juce::MouseCursor::UpDownResizeCursor);
     if(isMouseOverOrDragging())
     {
-        g.fillAll(findColour(ColourIds::activeColourId));
+        g.setColour(findColour(ColourIds::activeColourId));
     }
     else
     {
-        g.fillAll(findColour(ColourIds::inactiveColourId));
+        g.setColour(findColour(ColourIds::inactiveColourId));
     }
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
 }
 
-void Layout::ResizerBar::mouseDown(juce::MouseEvent const& event)
+void ResizerBar::mouseDown(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     auto const isVertical = mOrientation == Orientation::vertical;
     mSavedPosition = isVertical ? getX() : getY();
 }
 
-void Layout::ResizerBar::mouseDrag(juce::MouseEvent const& event)
+void ResizerBar::mouseDrag(juce::MouseEvent const& event)
 {
     auto const isVertical = mOrientation == Orientation::vertical;
     auto const offset = isVertical ? event.getDistanceFromDragStartX() : event.getDistanceFromDragStartY();

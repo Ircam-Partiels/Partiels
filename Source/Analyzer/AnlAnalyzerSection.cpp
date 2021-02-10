@@ -88,6 +88,8 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mSnapshot);
     addAndMakeVisible(mTimeRenderer);
+    addAndMakeVisible(mResizerBarLeft);
+    addAndMakeVisible(mResizerBarRight);
     setSize(80, 100);
     
     mSeparator.addComponentListener(this);
@@ -106,19 +108,31 @@ void Analyzer::Section::resized()
     auto const leftSize = mSeparator.getScreenX() - getScreenX();
     auto const rightSize = getWidth() - leftSize - mSeparator.getWidth();
     
-    auto leftSide = bounds.removeFromLeft(leftSize);
-    mThumbnail.setBounds(leftSide.removeFromLeft(48));
-    leftSide.removeFromLeft(1);
-    mSnapshot.setBounds(leftSide);
+    // Resizers
+    {
+        auto resizersBounds = bounds.removeFromBottom(4);
+        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(leftSize));
+        mResizerBarRight.setBounds(resizersBounds.removeFromRight(rightSize));
+    }
     
-    auto rightSide = bounds.removeFromRight(rightSize);
-    auto const scrollbarBounds = rightSide.removeFromRight(8);
-    mValueScrollBar.setBounds(scrollbarBounds);
-    mBinScrollBar.setBounds(scrollbarBounds);
-    auto const rulerBounds = rightSide.removeFromRight(16);
-    mValueRuler.setBounds(rulerBounds);
-    mBinRuler.setBounds(rulerBounds);
-    mTimeRenderer.setBounds(rightSide);
+    // Thumbnail and Snapshot
+    {
+        auto leftSide = bounds.removeFromLeft(leftSize);
+        mThumbnail.setBounds(leftSide.removeFromLeft(48));
+        mSnapshot.setBounds(leftSide.withTrimmedLeft(1));
+    }
+    
+    // Renderer, rulers and scrollbars
+    {
+        auto rightSide = bounds.removeFromRight(rightSize);
+        auto const scrollbarBounds = rightSide.removeFromRight(8).reduced(0, 2);
+        mValueScrollBar.setBounds(scrollbarBounds);
+        mBinScrollBar.setBounds(scrollbarBounds);
+        auto const rulerBounds = rightSide.removeFromRight(16).reduced(0, 2);
+        mValueRuler.setBounds(rulerBounds);
+        mBinRuler.setBounds(rulerBounds);
+        mTimeRenderer.setBounds(rightSide);
+    }
 }
 
 void Analyzer::Section::paint(juce::Graphics& g)

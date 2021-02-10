@@ -45,10 +45,11 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Layout::ResizerBar mResizerBar {Layout::ResizerBar::Orientation::vertical, {50, 300}};
+        ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         std::vector<std::unique_ptr<Container>> mContents;
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AcsrType::layout>(0)};
+        ConcertinaPanel mConcertinalPanel {"", false};
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
     };
 }

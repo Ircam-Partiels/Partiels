@@ -49,6 +49,9 @@ namespace Analyzer
         Zoom::ScrollBar mValueScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
         Zoom::Ruler mBinRuler  {mPlotAccessor.getAccessor<Plot::AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mBinScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        
+        ResizerBar mResizerBarLeft {ResizerBar::Orientation::horizontal, {50, 2000}};
+        ResizerBar mResizerBarRight {ResizerBar::Orientation::horizontal, {50, 2000}};
     };
 }
 
