@@ -24,7 +24,7 @@ namespace Analyzer
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
         ~Section() override;
         
-        std::function<void(void)> onRemove = nullptr;
+        std::function<void(Accessor&)> onRemove = nullptr;
         
         // juce::Component
         void resized() override;
@@ -35,15 +35,16 @@ namespace Analyzer
         // juce::ComponentListener
         void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
         
-        Analyzer::Accessor& mAccessor;
+        Accessor& mAccessor;
         Plot::Accessor& mPlotAccessor {mAccessor.getAccessor<AcsrType::plot>(0)};
         Zoom::Accessor& mTimeZoomAccessor;
         juce::Component& mSeparator;
-        Analyzer::Accessor::Listener mListener;
+        Accessor::Listener mListener;
+        Plot::Accessor::Listener mPlotListener;
         
-        Analyzer::Thumbnail mThumbnail {mAccessor};
-        Analyzer::Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
-        Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
+        Thumbnail mThumbnail {mAccessor};
+        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
+        TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
         
         Zoom::Ruler mValueRuler {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mValueScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};

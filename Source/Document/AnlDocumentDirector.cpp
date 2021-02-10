@@ -142,18 +142,9 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
                 auto director = std::make_unique<Analyzer::Director>(anlAcsr, createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent));
                 anlStrongAssert(director != nullptr);
                 mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
-                
-                auto& layoutAcsr = acsr.getAccessor<AcsrType::layout>(0);
-                auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
-                if(sizes.size() < mAnalyzers.size())
-                {
-                    sizes.insert(sizes.begin() + static_cast<long>(index), 100);
-                    layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, notification);
-                }
             }
                 break;
             case AcsrType::timeZoom:
-            case AcsrType::layout:
                 break;
         }
     };
@@ -166,15 +157,9 @@ void Document::Director::setupDocument(Document::Accessor& acsr)
             {
                 anlStrongAssert(index < mAnalyzers.size());
                 mAnalyzers.erase(mAnalyzers.begin() + static_cast<long>(index));
-                
-                auto& layoutAcsr = acsr.getAccessor<AcsrType::layout>(0);
-                auto sizes = layoutAcsr.getAttr<Layout::StrechableContainer::AttrType::sizes>();
-                sizes.erase(sizes.begin() + static_cast<long>(index));
-                layoutAcsr.setAttr<Layout::StrechableContainer::AttrType::sizes>(sizes, notification);
             }
                 break;
             case AcsrType::timeZoom:
-            case AcsrType::layout:
                 break;
         }
     };

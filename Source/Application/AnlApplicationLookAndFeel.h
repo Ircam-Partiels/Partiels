@@ -17,7 +17,6 @@ namespace Application
         ~LookAndFeel() override = default;
         
         // ConcertinaPanel::LookAndFeelMethods
-        int getSeparatorHeight(ConcertinaPanel const& panel) const override;
         juce::Font getHeaderFont(ConcertinaPanel const& panel, int headerHeight) const override;
         int getHeaderHeight(ConcertinaPanel const& panel) const override;
         void drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const override;

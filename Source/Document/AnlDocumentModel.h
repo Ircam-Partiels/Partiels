@@ -23,7 +23,6 @@ namespace Document
     enum class AcsrType : size_t
     {
           timeZoom
-        , layout
         , analyzers
     };
     
@@ -38,7 +37,6 @@ namespace Document
     
     using AcsrContainer = Model::Container
     < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::saveable, 1>
-    , Model::Acsr<AcsrType::layout, Layout::StrechableContainer::Accessor, Model::Flag::saveable, 1>
     , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::Flag::basic, Model::resizable>
     >;
     

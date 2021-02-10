@@ -435,12 +435,12 @@ Analyzer::PropertyPanel::~PropertyPanel()
 
 void Analyzer::PropertyPanel::resized()
 {
-    auto bound = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    mPropertyName.setBounds(bound.removeFromTop(mPropertyName.getHeight()));
-    mProcessorSection.setBounds(bound.removeFromTop(mProcessorSection.getHeight()));
-    mGraphicalSection.setBounds(bound.removeFromTop(mGraphicalSection.getHeight()));
-    mPluginSection.setBounds(bound.removeFromTop(mPluginSection.getHeight()));
-    setSize(sInnerWidth, std::max(bound.getY(), 120) + 2);
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+    mPropertyName.setBounds(bounds.removeFromTop(mPropertyName.getHeight()));
+    mProcessorSection.setBounds(bounds.removeFromTop(mProcessorSection.getHeight()));
+    mGraphicalSection.setBounds(bounds.removeFromTop(mGraphicalSection.getHeight()));
+    mPluginSection.setBounds(bounds.removeFromTop(mPluginSection.getHeight()));
+    setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
 }
 
 void Analyzer::PropertyPanel::show()

@@ -29,16 +29,6 @@ void ConcertinaPanel::Header::mouseDown(juce::MouseEvent const& event)
     }
 }
 
-void ConcertinaPanel::Separator::paint(juce::Graphics& g)
-{
-    g.fillAll(findColour(ColourIds::separatorColourId, true));
-}
-
-ConcertinaPanel::Container::Container(ComponentRef ref)
-: component(&(ref.get()))
-{
-}
-
 ConcertinaPanel::ConcertinaPanel(juce::String const& title, bool resizeOnClick, juce::String const& tooltip)
 : mTitle(title)
 {
@@ -65,20 +55,13 @@ void ConcertinaPanel::resized()
         mHeader.setBounds(bounds.removeFromTop(lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20));
     }
     
-    auto const separatorSize = lookAndFeel != nullptr ? lookAndFeel->getSeparatorHeight(*this) : 2;
-    for(auto& container : mContainers)
+    for(auto& content : mContents)
     {
-        anlStrongAssert(container != nullptr);
-        if(container != nullptr)
+        anlWeakAssert(content != nullptr);
+        if(content != nullptr)
         {
-            auto const component = container.get()->component.getComponent();
-            anlWeakAssert(component != nullptr);
-            if(component != nullptr)
-            {
-                auto const containerSize = component->getHeight();
-                component->setBounds(bounds.removeFromTop(containerSize));
-                container.get()->separator.setBounds(bounds.removeFromTop(separatorSize));
-            }
+            auto const containerSize = content->getHeight();
+            content->setBounds(bounds.removeFromTop(containerSize));
         }
     }
     
@@ -95,33 +78,22 @@ juce::String ConcertinaPanel::getTitle() const
 
 void ConcertinaPanel::setComponents(std::vector<ComponentRef> const& components)
 {
-    for(auto& container : mContainers)
+    for(auto& content : mContents)
     {
-        if(container != nullptr)
+        if(content != nullptr)
         {
-            removeChildComponent(&(container.get()->separator));
-            auto const component = container.get()->component.getComponent();
-            if(component != nullptr)
-            {
-                component->removeComponentListener(this);
-                removeChildComponent(component);
-            }
+            content->removeComponentListener(this);
+            removeChildComponent(content);
         }
     }
     
-    mContainers.clear();
-    mContainers.reserve(components.size());
-    for(auto component : components)
+    mContents.clear();
+    mContents.reserve(components.size());
+    for(auto content : components)
     {
-        auto container = std::make_unique<Container>(component);
-        anlStrongAssert(container != nullptr);
-        if(container != nullptr)
-        {
-            component.get().addComponentListener(this);
-            addAndMakeVisible(container.get()->component);
-            addAndMakeVisible(container.get()->separator);
-            mContainers.push_back(std::move(container));
-        }
+        content.get().addComponentListener(this);
+        addAndMakeVisible(content.get());
+        mContents.emplace_back(&content.get());
     }
     componentMovedOrResized(*this, false, true);
     resized();
@@ -158,18 +130,12 @@ void ConcertinaPanel::componentMovedOrResized(juce::Component& component, bool w
         auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
         anlWeakAssert(lookAndFeel != nullptr);
         
-        auto const separatorSize = lookAndFeel != nullptr ? lookAndFeel->getSeparatorHeight(*this) : 2;
-        auto const fullSize = std::accumulate(mContainers.cbegin(), mContainers.cend(), 0, [separatorSize](int value, auto const& container)
+        auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
         {
-            anlStrongAssert(container != nullptr);
-            if(container != nullptr)
+            anlWeakAssert(content != nullptr);
+            if(content != nullptr)
             {
-                auto const content = container.get()->component.getComponent();
-                anlStrongAssert(content != nullptr);
-                if(content != nullptr)
-                {
-                    return value + content->getHeight() + separatorSize;
-                }
+                return value + content->getHeight();
             }
             return value;
         });

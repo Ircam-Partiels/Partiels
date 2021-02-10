@@ -24,7 +24,6 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ConcertinaPanel::ColourIds::headerBorderColourId, backgroundColour);
     setColour(ConcertinaPanel::ColourIds::headerTitleColourId, textColour);
     setColour(ConcertinaPanel::ColourIds::headerButtonColourId, textColour);
-    setColour(ConcertinaPanel::ColourIds::separatorColourId, juce::Colours::transparentBlack);
 
     setColour(LoadingCircle::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(LoadingCircle::ColourIds::foregroundColourId, rulerColour);
@@ -50,7 +49,7 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Analyzer::TimeRenderer::textColourId, textColour);
     setColour(Analyzer::Section::sectionColourId, backgroundColour.darker());
     
-    setColour(Document::Section::backgroundColourId, backgroundColour);
+    setColour(Document::Section::backgroundColourId, backgroundColour.darker());
     
     auto& colourScheme = getCurrentColourScheme();
     colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, backgroundColour.darker());
@@ -113,12 +112,6 @@ Application::LookAndFeel::LookAndFeel()
     setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
 }
 
-int Application::LookAndFeel::getSeparatorHeight(ConcertinaPanel const& panel) const
-{
-    juce::ignoreUnused(panel);
-    return 2;
-}
-
 int Application::LookAndFeel::getHeaderHeight(ConcertinaPanel const& panel) const
 {
     juce::ignoreUnused(panel);
@@ -133,7 +126,7 @@ juce::Font Application::LookAndFeel::getHeaderFont(ConcertinaPanel const& panel,
 
 void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
 {
-    auto constexpr corner = 2.0f;
+    auto constexpr corner = 4.0f;
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
     g.setColour(panel.findColour(ConcertinaPanel::headerBackgroundColourId).brighter(contrast));
     g.fillRoundedRectangle(area.toFloat(), corner);

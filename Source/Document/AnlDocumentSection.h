@@ -29,27 +29,14 @@ namespace Document
         
     private:
         
-        struct Container
-        {
-        public:
-            Container(Analyzer::Accessor& acsr, Zoom::Accessor& timeZoomAcsr, juce::Component& separator)
-            : content(acsr, timeZoomAcsr, separator)
-            , accessor(acsr)
-            {
-            }
-            
-            Analyzer::Section content;
-            Analyzer::Accessor& accessor;
-        };
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
-        std::vector<std::unique_ptr<Container>> mContents;
-        Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AcsrType::layout>(0)};
+        std::vector<std::unique_ptr<Analyzer::Section>> mSections;
         ConcertinaPanel mConcertinalPanel {"", false};
+        juce::Viewport mViewport;
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
     };
 }

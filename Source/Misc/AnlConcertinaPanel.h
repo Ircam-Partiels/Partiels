@@ -18,7 +18,6 @@ public:
         , headerBorderColourId
         , headerTitleColourId
         , headerButtonColourId
-        , separatorColourId
     };
     
     using ComponentRef = std::reference_wrapper<juce::Component>;
@@ -39,7 +38,6 @@ public:
     {
         virtual ~LookAndFeelMethods() = default;
         
-        virtual int getSeparatorHeight(ConcertinaPanel const& section) const = 0;
         virtual int getHeaderHeight(ConcertinaPanel const& section) const = 0;
         virtual juce::Font getHeaderFont(ConcertinaPanel const& section, int headerHeight) const = 0;
         virtual void drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& section, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const = 0;
@@ -69,29 +67,9 @@ private:
         void mouseDown(juce::MouseEvent const& event) override;
     };
     
-    class Separator
-    : public juce::Component
-    {
-    public:
-        Separator() = default;
-        ~Separator() override = default;
-        
-        // juce::Component
-        void paint(juce::Graphics& g) override;
-    };
-    
-    struct Container
-    {
-        Container(ComponentRef ref);
-        ~Container() = default;
-        
-        juce::Component::SafePointer<juce::Component> component;
-        Separator separator;
-    };
-    
     Header mHeader;
     juce::String const mTitle;
-    std::vector<std::unique_ptr<Container>> mContainers;
+    std::vector<juce::Component::SafePointer<juce::Component>> mContents;
     float mSizeRatio = 1.0f;
     bool mOpened = true;
 };

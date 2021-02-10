@@ -27,7 +27,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     {
         if(onRemove != nullptr)
         {
-            onRemove();
+            onRemove(mAccessor);
         }
     };
     
@@ -81,6 +81,28 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
         }
     };
     
+    mPlotListener.onAttrChanged = [&](Plot::Accessor const& acsr, Plot::AttrType const attribute)
+    {
+        switch(attribute)
+        {
+            case Plot::AttrType::height:
+            {
+                setSize(getWidth(), acsr.getAttr<Plot::AttrType::height>() + 4);
+            }
+                break;
+                
+            default:
+                break;
+        }
+    };
+    
+    auto onResizerMoved = [&](int size)
+    {
+        mPlotAccessor.setAttr<Plot::AttrType::height>(size, NotificationType::synchronous);
+    };
+    mResizerBarLeft.onMoved = onResizerMoved;
+    mResizerBarRight.onMoved = onResizerMoved;
+    
     addChildComponent(mValueRuler);
     addChildComponent(mValueScrollBar);
     addChildComponent(mBinRuler);
@@ -94,10 +116,12 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     
     mSeparator.addComponentListener(this);
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mPlotAccessor.addListener(mPlotListener, NotificationType::synchronous);
 }
 
 Analyzer::Section::~Section()
 {
+    mPlotAccessor.removeListener(mPlotListener);
     mAccessor.removeListener(mListener);
     mSeparator.removeComponentListener(this);
 }
@@ -110,9 +134,9 @@ void Analyzer::Section::resized()
     
     // Resizers
     {
-        auto resizersBounds = bounds.removeFromBottom(4);
-        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(leftSize));
-        mResizerBarRight.setBounds(resizersBounds.removeFromRight(rightSize));
+        auto resizersBounds = bounds.removeFromBottom(2);
+        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(leftSize).reduced(4, 0));
+        mResizerBarRight.setBounds(resizersBounds.removeFromRight(rightSize).reduced(4, 0));
     }
     
     // Thumbnail and Snapshot
@@ -125,10 +149,10 @@ void Analyzer::Section::resized()
     // Renderer, rulers and scrollbars
     {
         auto rightSide = bounds.removeFromRight(rightSize);
-        auto const scrollbarBounds = rightSide.removeFromRight(8).reduced(0, 2);
+        auto const scrollbarBounds = rightSide.removeFromRight(8).reduced(0, 4);
         mValueScrollBar.setBounds(scrollbarBounds);
         mBinScrollBar.setBounds(scrollbarBounds);
-        auto const rulerBounds = rightSide.removeFromRight(16).reduced(0, 2);
+        auto const rulerBounds = rightSide.removeFromRight(16).reduced(0, 4);
         mValueRuler.setBounds(rulerBounds);
         mBinRuler.setBounds(rulerBounds);
         mTimeRenderer.setBounds(rightSide);

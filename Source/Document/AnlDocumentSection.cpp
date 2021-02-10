@@ -40,44 +40,44 @@ Document::Section::Section(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
-            case AcsrType::layout:
                 break;
             case AcsrType::analyzers:
             {
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
                 auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 
-                auto container = std::make_unique<Container>(anlAcsr, timeZoomAcsr, mResizerBar);
-                anlStrongAssert(container != nullptr);
-                if(container != nullptr)
+                auto newSection = std::make_unique<Analyzer::Section>(anlAcsr, timeZoomAcsr, mResizerBar);
+                anlStrongAssert(newSection != nullptr);
+                if(newSection != nullptr)
                 {
-                    container->content.onRemove = [this, ptr = container.get()]()
+                    newSection->onRemove = [this](Analyzer::Accessor& lhs)
                     {
                         auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
-                        for(size_t i = 0; i < anlAcsrs.size(); ++i)
+                        auto it = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const& rhs)
                         {
-                            if(&(anlAcsrs[i].get()) == &ptr->accessor)
+                            return &lhs == &rhs.get();
+                        });
+                        anlWeakAssert(it != anlAcsrs.cend());
+                        if(it != anlAcsrs.cend())
+                        {
+                            auto const currentIndex = static_cast<size_t>(std::distance(anlAcsrs.cbegin(), it));
+                            auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+                            auto const title = juce::translate("Remove Analysis");
+                            auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsrs[currentIndex].get().getAttr<Analyzer::AttrType::name>());
+                            if(juce::AlertWindow::showOkCancelBox(icon, title, message))
                             {
-                                auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-                                auto const title = juce::translate("Remove Analysis");
-                                auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsrs[i].get().getAttr<Analyzer::AttrType::name>());
-                                if(juce::AlertWindow::showOkCancelBox(icon, title, message))
-                                {
-                                    mAccessor.eraseAccessor<AcsrType::analyzers>(i, NotificationType::synchronous);
-                                }
-                                
-                                return;
+                                mAccessor.eraseAccessor<AcsrType::analyzers>(currentIndex, NotificationType::synchronous);
                             }
                         }
                     };
+                    mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 }
-                mContents.insert(mContents.begin() + static_cast<long>(index), std::move(container));
-
-                for(size_t i = 0; i < mContents.size(); ++i)
+                std::vector<ConcertinaPanel::ComponentRef> components;
+                for(auto const& section : mSections)
                 {
-                    mContainer.setContent(i, &(mContents[i]->content), 100);
+                    components.push_back(*section.get());
                 }
-                resized();
+                mConcertinalPanel.setComponents(components);
             }
                 break;
                 
@@ -93,16 +93,16 @@ Document::Section::Section(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
-            case AcsrType::layout:
                 break;
             case AcsrType::analyzers:
             {
-                mContents.erase(mContents.begin() + static_cast<long>(index));
-                for(size_t i = 0; i < mContents.size(); ++i)
+                mSections.erase(mSections.begin() + static_cast<long>(index));
+                std::vector<ConcertinaPanel::ComponentRef> components;
+                for(auto const& section : mSections)
                 {
-                    mContainer.setContent(i, &(mContents[i]->content), 100);
+                    components.push_back(*section.get());
                 }
-                resized();
+                mConcertinalPanel.setComponents(components);
             }
                 break;
                 
@@ -123,9 +123,17 @@ Document::Section::Section(Accessor& accessor)
         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
     };
     
+    mConcertinalPanel.onResized = [&]()
+    {
+        mViewport.autoScroll(0, mConcertinalPanel.getMouseXYRelative().getY(), -10, 10);
+        resized();
+    };
+    mViewport.setViewedComponent(&mConcertinalPanel, false);
+    mViewport.setScrollBarsShown(true, false, true, false);
+    
     setSize(480, 200);
     addAndMakeVisible(mZoomTimeRuler);
-    addAndMakeVisible(mContainer);
+    addAndMakeVisible(mViewport);
     addAndMakeVisible(mZoomTimeScrollBar);
     addAndMakeVisible(mResizerBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -133,7 +141,6 @@ Document::Section::Section(Accessor& accessor)
 
 Document::Section::~Section()
 {
-    mContents.clear();
     mAccessor.removeListener(mListener);
 }
 
@@ -144,8 +151,9 @@ void Document::Section::resized()
     auto const right = getWidth() - 32;
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
-    mResizerBar.setBounds(left - 2, bounds.getY(), 2, bounds.getHeight());
-    mContainer.setBounds(bounds);
+    mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mConcertinalPanel.getHeight() - 4);
+    mConcertinalPanel.setBounds(bounds.withHeight(mConcertinalPanel.getHeight()));
+    mViewport.setBounds(bounds);
 }
 
 void Document::Section::paint(juce::Graphics& g)
