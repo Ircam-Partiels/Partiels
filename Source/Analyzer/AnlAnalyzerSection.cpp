@@ -86,7 +86,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     addChildComponent(mBinRuler);
     addChildComponent(mBinScrollBar);
     addAndMakeVisible(mThumbnail);
-    addAndMakeVisible(mInstantRenderer);
+    addAndMakeVisible(mSnapshot);
     addAndMakeVisible(mTimeRenderer);
     setSize(80, 100);
     
@@ -108,7 +108,8 @@ void Analyzer::Section::resized()
     
     auto leftSide = bounds.removeFromLeft(leftSize);
     mThumbnail.setBounds(leftSide.removeFromLeft(48));
-    mInstantRenderer.setBounds(leftSide);
+    leftSide.removeFromLeft(1);
+    mSnapshot.setBounds(leftSide);
     
     auto rightSide = bounds.removeFromRight(rightSize);
     auto const scrollbarBounds = rightSide.removeFromRight(8);

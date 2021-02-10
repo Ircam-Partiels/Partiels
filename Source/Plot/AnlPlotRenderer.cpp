@@ -4,6 +4,8 @@ ANALYSE_FILE_BEGIN
 
 void Plot::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& colour, Plugin::Output const& output, std::vector<Plugin::Result> const& results, Zoom::Range const& valueRange, double time)
 {
+    g.setColour(juce::Colours::black);
+    g.fillRect(bounds);
     if(results.empty() || bounds.isEmpty() || valueRange.isEmpty())
     {
         return;
@@ -63,7 +65,8 @@ void Plot::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds
             
             if(it != results.cend())
             {
-                g.fillAll(colour);
+                g.setColour(colour);
+                g.fillRect(bounds);
             }
         }
             break;

@@ -116,8 +116,8 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerInstantRenderer.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerInstantRenderer.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSnapshot.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSnapshot.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerTimeRenderer.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerTimeRenderer.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp

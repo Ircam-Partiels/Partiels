@@ -78,7 +78,7 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mPlaybackButton);
     addAndMakeVisible(mLoopButton);
     
-    mPlayPositionInHMSms.setJustificationType(juce::Justification::centredLeft);
+    mPlayPositionInHMSms.setJustificationType(juce::Justification::horizontallyJustified);
     mPlayPositionInHMSms.setMinimumHorizontalScale(1.0f);
     addAndMakeVisible(mPlayPositionInHMSms);
     
@@ -102,7 +102,7 @@ void Document::Transport::resized()
     mLoopButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
     mVolumeSlider.setBounds(bounds.removeFromBottom(20));
     mPlayPositionInHMSms.setBounds(bounds);
-    mPlayPositionInHMSms.setFont(mPlayPositionInHMSms.getFont().withHeight(static_cast<float>(height)).withHorizontalScale(1.0f));
+    mPlayPositionInHMSms.setFont(mPlayPositionInHMSms.getFont().withHeight(static_cast<float>(height)).withHorizontalScale(1.0f).withExtraKerningFactor(0.025f));
 }
 
 void Document::Transport::lookAndFeelChanged()

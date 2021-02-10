@@ -4,7 +4,7 @@
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "AnlAnalyzerThumbnail.h"
 #include "AnlAnalyzerTimeRenderer.h"
-#include "AnlAnalyzerInstantRenderer.h"
+#include "AnlAnalyzerSnapshot.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -42,7 +42,7 @@ namespace Analyzer
         Analyzer::Accessor::Listener mListener;
         
         Analyzer::Thumbnail mThumbnail {mAccessor};
-        Analyzer::InstantRenderer mInstantRenderer {mAccessor, mTimeZoomAccessor};
+        Analyzer::Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         Analyzer::TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
         
         Zoom::Ruler mValueRuler {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};

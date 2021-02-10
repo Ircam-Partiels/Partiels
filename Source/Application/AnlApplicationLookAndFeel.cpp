@@ -41,8 +41,10 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
     setColour(Analyzer::Thumbnail::borderColourId, backgroundColour);
     setColour(Analyzer::Thumbnail::textColourId, textColour);
-    
-    setColour(Analyzer::Section::sectionColourId, juce::Colours::black);
+    setColour(Analyzer::Snapshot::backgroundColourId, backgroundColour.darker());
+    setColour(Analyzer::Snapshot::borderColourId, backgroundColour);
+    setColour(Analyzer::Snapshot::textColourId, textColour);
+    setColour(Analyzer::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour);
     
@@ -164,6 +166,7 @@ void Application::LookAndFeel::setButtonIcon(juce::ImageButton& button, IconMana
 {
     auto const icon = IconManager::getIcon(type);
     auto const colour = juce::Colours::grey;
+    JUCE_COMPILER_WARNING("Use a colour scheme")
     button.setImages(false, true, true, icon, 1.0f, colour, icon, 0.8f, colour.brighter(), icon, 0.8f, colour.brighter());
 }
 

@@ -7,12 +7,20 @@ ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    class InstantRenderer
+    class Snapshot
     : public juce::Component
     {
     public:
-        InstantRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
-        ~InstantRenderer() override;
+        
+        enum ColourIds : int
+        {
+              backgroundColourId = 0x20005300
+            , borderColourId
+            , textColourId
+        };
+        
+        Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
+        ~Snapshot() override;
         
         // juce::Component
         void resized() override;

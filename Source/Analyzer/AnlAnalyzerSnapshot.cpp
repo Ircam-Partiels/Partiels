@@ -1,9 +1,9 @@
-#include "AnlAnalyzerInstantRenderer.h"
+#include "AnlAnalyzerSnapshot.h"
 #include "../Plot/AnlPlotRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
 {
@@ -56,7 +56,7 @@ Analyzer::InstantRenderer::InstantRenderer(Accessor& accessor, Zoom::Accessor& t
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
-Analyzer::InstantRenderer::~InstantRenderer()
+Analyzer::Snapshot::~Snapshot()
 {
     mTimeZoomAccessor.removeListener(mZoomListener);
     auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
@@ -67,13 +67,23 @@ Analyzer::InstantRenderer::~InstantRenderer()
     mAccessor.removeReceiver(mReceiver);
 }
 
-void Analyzer::InstantRenderer::resized()
+void Analyzer::Snapshot::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
 }
 
-void Analyzer::InstantRenderer::paint(juce::Graphics& g)
+void Analyzer::Snapshot::paint(juce::Graphics& g)
 {
+    g.fillAll(findColour(ColourIds::backgroundColourId));
+    auto const bounds = getLocalBounds().reduced(2);
+    juce::Path path;
+    path.addRoundedRectangle(bounds.expanded(1), 4.0f);
+    g.setColour(findColour(ColourIds::borderColourId));
+    g.strokePath(path, juce::PathStrokeType(1.0f));
+    path.clear();
+    path.addRoundedRectangle(bounds, 4.0f);
+    g.reduceClipRegion(path);
+    
     auto const& plotAscr = mAccessor.getAccessor<AcsrType::plot>(0);
     auto const& valueZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -81,7 +91,7 @@ void Analyzer::InstantRenderer::paint(juce::Graphics& g)
     auto const& description = mAccessor.getAttr<AttrType::description>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const time = mAccessor.getAttr<AttrType::time>();
-    Plot::Renderer::paint(g, getLocalBounds(), colour, description.output, results, visibleValueRange, time);
+    Plot::Renderer::paint(g, bounds, colour, description.output, results, visibleValueRange, time);
     
     if(!results.empty() && results.cbegin()->values.size() > 1)
     {
