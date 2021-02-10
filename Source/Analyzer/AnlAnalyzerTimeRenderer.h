@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
+#include "../Zoom/AnlZoomPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -37,6 +38,7 @@ namespace Analyzer
         
         Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mZoomListener;
+        Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
         
         juce::Label mInformation;
     };

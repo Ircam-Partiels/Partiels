@@ -9,12 +9,17 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& timeZoo
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
+    addAndMakeVisible(mZoomPlayhead);
     
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         if(attribute == AttrType::results)
         {
             repaint();
+        }
+        else if(attribute == AttrType::time)
+        {
+            mZoomPlayhead.setPosition(acsr.getAttr<AttrType::time>());
         }
         else if(attribute == AttrType::processing)
         {
@@ -81,6 +86,7 @@ Analyzer::TimeRenderer::~TimeRenderer()
 void Analyzer::TimeRenderer::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
+    mZoomPlayhead.setBounds(getLocalBounds().reduced(2));
 }
 
 void Analyzer::TimeRenderer::paint(juce::Graphics& g)

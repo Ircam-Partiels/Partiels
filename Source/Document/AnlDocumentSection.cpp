@@ -123,13 +123,10 @@ Document::Section::Section(Accessor& accessor)
         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
     };
     
-    mPlayhead.setInterceptsMouseClicks(false, false);
-    
     setSize(480, 200);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mContainer);
     addAndMakeVisible(mZoomTimeScrollBar);
-    addAndMakeVisible(mPlayhead);
     addAndMakeVisible(mResizerBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
@@ -149,7 +146,6 @@ void Document::Section::resized()
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
     mResizerBar.setBounds(left - 2, bounds.getY(), 2, bounds.getHeight());
     mContainer.setBounds(bounds);
-    mPlayhead.setBounds(bounds.withLeft(left).withRight(right));
 }
 
 void Document::Section::paint(juce::Graphics& g)

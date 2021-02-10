@@ -37,6 +37,7 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::textColourId, textColour);
     setColour(Zoom::Ruler::anchorColourId, thumbColour);
     setColour(Zoom::Ruler::selectionColourId, thumbColour);
+    setColour(Zoom::Playhead::playheadColourId, thumbColour);
     
     setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
     setColour(Analyzer::Thumbnail::borderColourId, backgroundColour);
@@ -50,9 +51,6 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Analyzer::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour);
-    
-    setColour(Document::Playhead::backgroundColourId, juce::Colours::transparentBlack);
-    setColour(Document::Playhead::playheadColourId, thumbColour);
     
     auto& colourScheme = getCurrentColourScheme();
     colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, backgroundColour.darker());

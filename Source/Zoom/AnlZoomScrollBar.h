@@ -22,8 +22,7 @@ namespace Zoom
         ~ScrollBar() override;
         
         // juce::Component
-        void resized() override;
-        
+        void resized() override;        
     private:
         
         // juce::ScrollBar::Listener

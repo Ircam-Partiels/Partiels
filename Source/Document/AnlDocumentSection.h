@@ -5,7 +5,6 @@
 #include "../Layout/AnlLayout.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Analyzer/AnlAnalyzerSection.h"
-#include "AnlDocumentPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -48,7 +47,6 @@ namespace Document
         
         Layout::ResizerBar mResizerBar {Layout::ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
-        Playhead mPlayhead {mAccessor};
         std::vector<std::unique_ptr<Container>> mContents;
         Layout::StrechableContainer::Section mContainer {mAccessor.getAccessor<AcsrType::layout>(0)};
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
