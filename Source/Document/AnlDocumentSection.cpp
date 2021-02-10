@@ -13,12 +13,12 @@ Document::Section::Section(Accessor& accessor)
     mZoomTimeRuler.setMaximumStringWidth(70.0);
     mZoomTimeRuler.setValueAsStringMethod([](double value)
     {
-        return Format::secondsToString(value, {":", ":", ":", ":"});
+        return Format::secondsToString(value, {":", ":", ":", ""});
     });
     
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        switch (attribute)
+        switch(attribute)
         {
             case AttrType::file:
             case AttrType::isLooping:
