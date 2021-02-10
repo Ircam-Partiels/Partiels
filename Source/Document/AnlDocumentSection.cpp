@@ -146,14 +146,17 @@ Document::Section::~Section()
 
 void Document::Section::resized()
 {
-    auto bounds = getLocalBounds();
+    auto const scrollbarWidth = mViewport.getScrollBarThickness();
+    auto bounds = getLocalBounds().withTrimmedRight(scrollbarWidth);
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
-    auto const right = getWidth() - 32;
+    auto const right = bounds.getWidth() - 32;
+    
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
+    
     mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mConcertinalPanel.getHeight() - 4);
     mConcertinalPanel.setBounds(bounds.withHeight(mConcertinalPanel.getHeight()));
-    mViewport.setBounds(bounds);
+    mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
 }
 
 void Document::Section::paint(juce::Graphics& g)
