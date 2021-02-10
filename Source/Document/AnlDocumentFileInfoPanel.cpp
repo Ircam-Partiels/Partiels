@@ -75,7 +75,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         changeListenerCallback(&mFileBasedDocument);
     };
     
-    addAndMakeVisible(mConcertinaPanel);
+    mViewport.setViewedComponent(&mConcertinaPanel, false);
+    addAndMakeVisible(mViewport);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mFileBasedDocument.addChangeListener(this);
     changeListenerCallback(&mFileBasedDocument);
@@ -89,7 +90,9 @@ Document::FileInfoPanel::~FileInfoPanel()
 
 void Document::FileInfoPanel::resized()
 {
-    mConcertinaPanel.setBounds(getLocalBounds());
+    auto const scrollbarThickness = mViewport.getScrollBarThickness();
+    mConcertinaPanel.setBounds(getLocalBounds().withHeight(mConcertinaPanel.getHeight()).withTrimmedRight(scrollbarThickness));
+    mViewport.setBounds(getLocalBounds());
 }
 
 void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
