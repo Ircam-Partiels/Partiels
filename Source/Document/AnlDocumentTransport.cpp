@@ -95,13 +95,14 @@ void Document::Transport::resized()
 {
     auto bounds = getLocalBounds();
     auto const height = bounds.getHeight() / 4;
-    auto const width = bounds.getWidth() / 3;
+    auto const width = std::min(bounds.getWidth() / 3, height * 2);
     auto topBounds = bounds.removeFromTop(height * 2);
     mRewindButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
     mPlaybackButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
     mLoopButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
-    mPlayPositionInHMSms.setBounds(bounds.removeFromTop(height));
-    mVolumeSlider.setBounds(bounds);
+    mVolumeSlider.setBounds(bounds.removeFromBottom(20));
+    mPlayPositionInHMSms.setBounds(bounds);
+    mPlayPositionInHMSms.setFont(mPlayPositionInHMSms.getFont().withHeight(static_cast<float>(height)).withHorizontalScale(1.0f));
 }
 
 void Document::Transport::lookAndFeelChanged()

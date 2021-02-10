@@ -21,7 +21,8 @@ namespace Application
         
         // juce::Component
         void resized() override;
-
+        void lookAndFeelChanged() override;
+        void parentHierarchyChanged() override;
     private:
         
         Document::Accessor::Listener mDocumentListener;

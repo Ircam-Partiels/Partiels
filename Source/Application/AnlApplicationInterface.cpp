@@ -20,14 +20,6 @@ Application::Interface::Interface()
     mInspect.setTooltip(juce::translate("Inspect"));
     mEdit.setTooltip(juce::translate("Edit"));
     
-    auto setupImage = [](juce::ImageButton& button, juce::Image image)
-    {
-        button.setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
-    };
-    setupImage(mNavigate, IconManager::getIcon(IconManager::IconType::navigate));
-    setupImage(mInspect, IconManager::getIcon(IconManager::IconType::search));
-    setupImage(mEdit, IconManager::getIcon(IconManager::IconType::edit));
-    
     mLoad.onClick = []()
     {
         using CommandIDs = CommandTarget::CommandIDs;
@@ -82,7 +74,7 @@ void Application::Interface::resized()
     
     auto header = bounds.removeFromTop(82);
     mDocumentFileInfoPanel.setBounds(header.removeFromRight(320));
-    mDocumentTransport.setBounds(header.removeFromLeft(140));
+    mDocumentTransport.setBounds(header.removeFromLeft(180));
     auto buttons = header.withSizeKeepingCentre(120, 32);
     mNavigate.setBounds(buttons.removeFromLeft(32));
     buttons.removeFromLeft(12);
@@ -94,6 +86,23 @@ void Application::Interface::resized()
     mDocumentSection.setBounds(bounds);
     
     mLoad.setBounds(bounds.withSizeKeepingCentre(200, 32));
+}
+
+void Application::Interface::lookAndFeelChanged()
+{
+    auto* lookAndFeel = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(lookAndFeel != nullptr);
+    if(lookAndFeel != nullptr)
+    {
+        lookAndFeel->setButtonIcon(mNavigate, IconManager::IconType::navigate);
+        lookAndFeel->setButtonIcon(mInspect, IconManager::IconType::search);
+        lookAndFeel->setButtonIcon(mEdit, IconManager::IconType::edit);
+    }
+}
+
+void Application::Interface::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
 }
 
 ANALYSE_FILE_END
