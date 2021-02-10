@@ -9,7 +9,15 @@ namespace Analyzer
     class TimeRenderer
     : public juce::Component
     {
-    public:        
+    public:
+        
+        enum ColourIds : int
+        {
+              backgroundColourId = 0x20005400
+            , borderColourId
+            , textColourId
+        };
+        
         TimeRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~TimeRenderer() override;
         

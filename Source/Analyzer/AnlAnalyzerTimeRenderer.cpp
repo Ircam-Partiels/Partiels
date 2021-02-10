@@ -85,7 +85,18 @@ void Analyzer::TimeRenderer::resized()
 
 void Analyzer::TimeRenderer::paint(juce::Graphics& g)
 {
-    auto const bounds = getLocalBounds();
+    g.fillAll(findColour(ColourIds::backgroundColourId));
+    auto const bounds = getLocalBounds().reduced(2);
+    juce::Path path;
+    path.addRoundedRectangle(bounds.expanded(1), 4.0f);
+    g.setColour(findColour(ColourIds::borderColourId));
+    g.strokePath(path, juce::PathStrokeType(1.0f));
+    path.clear();
+    path.addRoundedRectangle(bounds, 4.0f);
+    g.reduceClipRegion(path);
+    
+    g.fillAll(juce::Colours::black);
+
     auto const width = bounds.getWidth();
     auto const height = bounds.getHeight();
     

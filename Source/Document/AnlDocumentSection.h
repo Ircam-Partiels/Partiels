@@ -46,7 +46,7 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Layout::ResizerBar mResizerBar {Layout::ResizerBar::Orientation::vertical};
+        Layout::ResizerBar mResizerBar {Layout::ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         Playhead mPlayhead {mAccessor};
         std::vector<std::unique_ptr<Container>> mContents;

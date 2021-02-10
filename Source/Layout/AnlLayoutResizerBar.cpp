@@ -2,8 +2,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Layout::ResizerBar::ResizerBar(Orientation orientation)
+Layout::ResizerBar::ResizerBar(Orientation const orientation, juce::Range<int> const range)
 : mOrientation(orientation)
+, mRange(range)
 {
     setRepaintsOnMouseActivity(true);
 }
@@ -33,7 +34,7 @@ void Layout::ResizerBar::mouseDrag(juce::MouseEvent const& event)
 {
     auto const isVertical = mOrientation == Orientation::vertical;
     auto const offset = isVertical ? event.getDistanceFromDragStartX() : event.getDistanceFromDragStartY();
-    auto const newPosition = mSavedPosition + offset;
+    auto const newPosition = mRange.isEmpty() ? mSavedPosition + offset : mRange.clipValue(mSavedPosition + offset);
     setTopLeftPosition(isVertical ? newPosition : getX(), !isVertical ? newPosition : getY());
     if(onMoved != nullptr)
     {

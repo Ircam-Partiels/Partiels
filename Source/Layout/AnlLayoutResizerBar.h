@@ -23,7 +23,7 @@ namespace Layout
             , horizontal
         };
         
-        ResizerBar(Orientation orientation);
+        ResizerBar(Orientation const orientation, juce::Range<int> const range = {});
         ~ResizerBar() override = default;
         
         void paint(juce::Graphics& g) override;
@@ -33,6 +33,7 @@ namespace Layout
         std::function<void(int)> onMoved = nullptr;
     private:
         Orientation const mOrientation;
+        juce::Range<int> const mRange;
         int mSavedPosition;
     };
 }
