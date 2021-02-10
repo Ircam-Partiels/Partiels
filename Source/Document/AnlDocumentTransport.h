@@ -13,7 +13,10 @@ namespace Document
         Transport(Accessor& accessor);
         ~Transport() override;
         
+        // juce::Component
         void resized() override;
+        void lookAndFeelChanged() override;
+        void parentHierarchyChanged() override;
     private:
         
         Accessor& mAccessor;

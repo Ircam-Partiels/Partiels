@@ -160,6 +160,13 @@ void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, ConcertinaPane
     g.drawFittedText(panel.getTitle(), area.reduced(1).withTrimmedLeft(3), juce::Justification::centredLeft, 1, 1.0f);
 }
 
+void Application::LookAndFeel::setButtonIcon(juce::ImageButton& button, IconManager::IconType const type)
+{
+    auto const icon = IconManager::getIcon(type);
+    auto const colour = juce::Colours::grey;
+    button.setImages(false, true, true, icon, 1.0f, colour, icon, 0.8f, colour.brighter(), icon, 0.8f, colour.brighter());
+}
+
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
 {
     return false;
@@ -267,9 +274,7 @@ juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonTyp
         anlWeakAssert(button != nullptr);
         if(button != nullptr)
         {
-            JUCE_COMPILER_WARNING("use a global approach");
-            auto const image = IconManager::getIcon(IconManager::IconType::cancel);
-            button->setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
+            setButtonIcon(*button.get(), IconManager::IconType::cancel);
         }
         return button.release();
     }

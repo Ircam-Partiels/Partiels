@@ -32,6 +32,7 @@ public:
     struct LookAndFeelMethods
     {
         virtual ~LookAndFeelMethods() = default;
+        virtual void setButtonIcon(juce::ImageButton& button, IconType const type) = 0;
     };
 };
 

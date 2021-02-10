@@ -6,23 +6,14 @@ ANALYSE_FILE_BEGIN
 Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
-    auto setupImage = [](juce::ImageButton& button, juce::Image image)
-    {
-        JUCE_COMPILER_WARNING("use a global approach");
-        button.setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
-    };
-    
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mExportButton);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mProcessingButton);
     
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
-    setupImage(mPropertiesButton, IconManager::getIcon(IconManager::IconType::properties));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
-    setupImage(mExportButton, IconManager::getIcon(IconManager::IconType::share));
     mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
-    setupImage(mRemoveButton, IconManager::getIcon(IconManager::IconType::cancel));
     
     mRemoveButton.onClick = [&]()
     {
@@ -128,6 +119,23 @@ void Analyzer::Thumbnail::paint(juce::Graphics& g)
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
+}
+
+void Analyzer::Thumbnail::lookAndFeelChanged()
+{
+    auto* lookAndFeel = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(lookAndFeel != nullptr);
+    if(lookAndFeel != nullptr)
+    {
+        lookAndFeel->setButtonIcon(mExportButton, IconManager::IconType::share);
+        lookAndFeel->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
+        lookAndFeel->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
+    }
+}
+
+void Analyzer::Thumbnail::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
 }
 
 ANALYSE_FILE_END

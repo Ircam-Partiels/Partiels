@@ -24,6 +24,8 @@ namespace Analyzer
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
+        void lookAndFeelChanged() override;
+        void parentHierarchyChanged() override;
         
         std::function<void(void)> onRemove = nullptr;
         

@@ -5,13 +5,7 @@ ANALYSE_FILE_BEGIN
 Document::Transport::Transport(Accessor& accessor)
 : mAccessor(accessor)
 {
-    auto setupImage = [](juce::ImageButton& button, juce::Image image)
-    {
-        JUCE_COMPILER_WARNING("clean that")
-        button.setImages(false, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
-    };
-    
-    mListener.onAttrChanged = [&, setupImage](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch (attribute)
         {
@@ -24,8 +18,8 @@ Document::Transport::Transport(Accessor& accessor)
             case AttrType::isPlaybackStarted:
             {
                 auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
-                setupImage(mPlaybackButton, state ? IconManager::getIcon(IconManager::IconType::pause) : IconManager::getIcon(IconManager::IconType::play));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                lookAndFeelChanged();
             }
                 break;
             case AttrType::playheadPosition:
@@ -59,7 +53,6 @@ Document::Transport::Transport(Accessor& accessor)
             mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
         }
     };
-    setupImage(mRewindButton, IconManager::getIcon(IconManager::IconType::rewind));
     
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
@@ -72,7 +65,6 @@ Document::Transport::Transport(Accessor& accessor)
     {
         mAccessor.setAttr<AttrType::isLooping>(mLoopButton.getToggleState(), NotificationType::synchronous);
     };
-    setupImage(mLoopButton, IconManager::getIcon(IconManager::IconType::loop));
     
     mVolumeSlider.setRange(-90.0, 12.0);
     mVolumeSlider.setDoubleClickReturnValue(true, 0.0);
@@ -110,6 +102,24 @@ void Document::Transport::resized()
     mLoopButton.setBounds(topBounds.removeFromLeft(width).reduced(4));
     mPlayPositionInHMSms.setBounds(bounds.removeFromTop(height));
     mVolumeSlider.setBounds(bounds);
+}
+
+void Document::Transport::lookAndFeelChanged()
+{
+    auto* lookAndFeel = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(lookAndFeel != nullptr);
+    if(lookAndFeel != nullptr)
+    {
+        lookAndFeel->setButtonIcon(mRewindButton, IconManager::IconType::rewind);
+        lookAndFeel->setButtonIcon(mLoopButton, IconManager::IconType::loop);
+        auto const state = mAccessor.getAttr<AttrType::isPlaybackStarted>();
+        lookAndFeel->setButtonIcon(mPlaybackButton, state ? IconManager::IconType::pause : IconManager::IconType::play);
+    }
+}
+
+void Document::Transport::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
 }
 
 ANALYSE_FILE_END
