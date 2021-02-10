@@ -1,20 +1,7 @@
 #include "AnlApplicationInstance.h"
-
-#include "../Misc/AnlModel.h"
+#include <TranslationsData.h>
 
 ANALYSE_FILE_BEGIN
-
-Application::Instance::LocalisedStringsMapper::LocalisedStringsMapper()
-{
-    auto ls = std::make_unique<juce::LocalisedStrings>(juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false);
-    if(ls != nullptr)
-    {
-        ls->addStrings({juce::String::createStringFromData(BinaryData::Fr_txt, BinaryData::Fr_txtSize), false});
-        ls->addStrings({juce::String::createStringFromData(BinaryData::Plugin_txt, BinaryData::Plugin_txtSize), false});
-        ls->addStrings({juce::String::createStringFromData(BinaryData::Analyzer_txt, BinaryData::Analyzer_txtSize), false});
-    }
-    juce::LocalisedStrings::setCurrentMappings(ls.release());
-}
 
 juce::String const Application::Instance::getApplicationName()
 {

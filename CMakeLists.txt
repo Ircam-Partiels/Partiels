@@ -47,6 +47,8 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlXmlParser.h
     ${SOURCES_DIRECTORY}/Misc/AnlModel.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlModel.h
+    ${SOURCES_DIRECTORY}/Misc/AnlIconManager.h
+    ${SOURCES_DIRECTORY}/Misc/AnlIconManager.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.h
     ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.cpp
@@ -153,8 +155,12 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationFontManager.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationFontManager.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationTranslationManager.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationTranslationManager.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.cpp
@@ -231,15 +237,24 @@ set(BriochesDefinitions
 target_compile_definitions(Brioche PRIVATE ${BriochesDefinitions})
 target_compile_definitions(BriocheTest PRIVATE ${BriochesDefinitions})
 
-file(GLOB
-    BinaryDataSources ${BINARYDATA_DIRECTORY}/Icons/*.png
-    ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)
+file(GLOB ImagesDataSources ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)
+juce_add_binary_data(ImagesData HEADER_NAME "ImagesData.h" NAMESPACE ImagesData SOURCES ${ImagesDataSources})
 
-juce_add_binary_data(BriocheData SOURCES ${BinaryDataSources} ${TranslationsSources})
+file(GLOB IconsDataSources ${BINARYDATA_DIRECTORY}/Icons/*.png)
+juce_add_binary_data(IconsData HEADER_NAME "IconsData.h" NAMESPACE IconsData SOURCES ${IconsDataSources})
+
+file(GLOB TranslationsDataSources ${TranslationsSources})
+juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
+
+file(GLOB FontsDataSources ${BINARYDATA_DIRECTORY}/Fonts/*.otf)
+juce_add_binary_data(FontsData HEADER_NAME "FontsData.h" NAMESPACE FontsData SOURCES ${FontsDataSources})
 
 target_link_libraries(Brioche PRIVATE
     vamp
-    BriocheData
+    ImagesData
+    IconsData
+    FontsData
+    TranslationsData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
@@ -249,7 +264,10 @@ target_link_libraries(Brioche PRIVATE
 
 target_link_libraries(BriocheTest PRIVATE
     vamp
-    BriocheData
+    ImagesData
+    IconsData
+    FontsData
+    TranslationsData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices

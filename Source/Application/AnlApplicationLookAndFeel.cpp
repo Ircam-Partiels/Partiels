@@ -1,4 +1,5 @@
 #include "AnlApplicationLookAndFeel.h"
+#include "AnlApplicationFontManager.h"
 #include "../Layout/AnlLayout.h"
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Document/AnlDocumentSection.h"
@@ -7,6 +8,8 @@ ANALYSE_FILE_BEGIN
 
 Application::LookAndFeel::LookAndFeel()
 {
+    static FontManager fontManager;
+    
     JUCE_COMPILER_WARNING("Use a colour scheme")
     auto const backgroundColour = juce::Colours::grey.darker();
     auto const rulerColour = juce::Colours::grey;
@@ -102,6 +105,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::PopupMenu::ColourIds::headerTextColourId, textColour);
     setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, backgroundColour);
     setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, textColour);
+    
+    setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());
+    setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
 }
 
 int Application::LookAndFeel::getSeparatorHeight(ConcertinaPanel const& panel) const
@@ -202,14 +208,14 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
 
     auto getIcon = [&]()
     {
-        switch (alert.getAlertType())
+        switch(alert.getAlertType())
         {
             case juce::AlertWindow::QuestionIcon:
-                return juce::ImageCache::getFromMemory(BinaryData::question_png, BinaryData::question_pngSize);
+                return IconManager::getIcon(IconManager::IconType::question);
             case juce::AlertWindow::WarningIcon:
-                return juce::ImageCache::getFromMemory(BinaryData::alert_png, BinaryData::alert_pngSize);
+                return IconManager::getIcon(IconManager::IconType::alert);
             case juce::AlertWindow::InfoIcon:
-                return juce::ImageCache::getFromMemory(BinaryData::information_png, BinaryData::information_pngSize);
+                return IconManager::getIcon(IconManager::IconType::information);
             case juce::AlertWindow::NoIcon:
                 return juce::Image();
         }
@@ -262,7 +268,7 @@ juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonTyp
         if(button != nullptr)
         {
             JUCE_COMPILER_WARNING("use a global approach");
-            auto const image = juce::ImageCache::getFromMemory(BinaryData::annuler_png, BinaryData::annuler_pngSize);
+            auto const image = IconManager::getIcon(IconManager::IconType::cancel);
             button->setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
         }
         return button.release();
@@ -319,6 +325,4 @@ void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
     g.drawRect(label.getLocalBounds());
 }
 
-
 ANALYSE_FILE_END
-

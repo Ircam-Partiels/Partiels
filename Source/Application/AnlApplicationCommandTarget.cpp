@@ -1,12 +1,13 @@
 #include "AnlApplicationCommandTarget.h"
 #include "AnlApplicationInstance.h"
+#include <ImagesData.h>
 
 ANALYSE_FILE_BEGIN
 
 void Application::CommandTarget::showUnsupportedAction()
 {
     juce::ImageComponent imageComponent;
-    auto const image = juce::ImageCache::getFromMemory(BinaryData::MagicWord_jpeg, BinaryData::MagicWord_jpegSize);
+    auto const image = juce::ImageCache::getFromMemory(ImagesData::MagicWord_jpeg, ImagesData::MagicWord_jpegSize);
     imageComponent.setImage(image);
     imageComponent.setImagePlacement(juce::RectanglePlacement::fillDestination);
     imageComponent.setSize(image.getWidth() / 2, image.getHeight() / 2);

@@ -24,9 +24,9 @@ Application::Interface::Interface()
     {
         button.setImages(true, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
     };
-    setupImage(mNavigate, juce::ImageCache::getFromMemory(BinaryData::naviguer_png, BinaryData::naviguer_pngSize));
-    setupImage(mInspect, juce::ImageCache::getFromMemory(BinaryData::chercher_png, BinaryData::chercher_pngSize));
-    setupImage(mEdit, juce::ImageCache::getFromMemory(BinaryData::editer_png, BinaryData::editer_pngSize));
+    setupImage(mNavigate, IconManager::getIcon(IconManager::IconType::navigate));
+    setupImage(mInspect, IconManager::getIcon(IconManager::IconType::search));
+    setupImage(mEdit, IconManager::getIcon(IconManager::IconType::edit));
     
     mLoad.onClick = []()
     {

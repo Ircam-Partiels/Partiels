@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Misc/AnlModel.h"
+#include "../Misc/AnlMisc.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
 #include "../Zoom/AnlZoomModel.h"
 #include "../Layout/AnlLayoutStrechableContainerSection.h"

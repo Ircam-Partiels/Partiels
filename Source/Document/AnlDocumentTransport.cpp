@@ -7,6 +7,7 @@ Document::Transport::Transport(Accessor& accessor)
 {
     auto setupImage = [](juce::ImageButton& button, juce::Image image)
     {
+        JUCE_COMPILER_WARNING("clean that")
         button.setImages(false, true, true, image, 1.0f, juce::Colours::grey, image, 0.8f, juce::Colours::grey.brighter(), image, 0.8f, juce::Colours::grey.brighter());
     };
     
@@ -23,7 +24,7 @@ Document::Transport::Transport(Accessor& accessor)
             case AttrType::isPlaybackStarted:
             {
                 auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
-                setupImage(mPlaybackButton, state ? juce::ImageCache::getFromMemory(BinaryData::pause_png, BinaryData::pause_pngSize) : juce::ImageCache::getFromMemory(BinaryData::jouer_png, BinaryData::jouer_pngSize));
+                setupImage(mPlaybackButton, state ? IconManager::getIcon(IconManager::IconType::pause) : IconManager::getIcon(IconManager::IconType::play));
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
             }
                 break;
@@ -58,7 +59,7 @@ Document::Transport::Transport(Accessor& accessor)
             mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
         }
     };
-    setupImage(mRewindButton, juce::ImageCache::getFromMemory(BinaryData::precedent_png, BinaryData::precedent_pngSize));
+    setupImage(mRewindButton, IconManager::getIcon(IconManager::IconType::rewind));
     
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
@@ -71,7 +72,7 @@ Document::Transport::Transport(Accessor& accessor)
     {
         mAccessor.setAttr<AttrType::isLooping>(mLoopButton.getToggleState(), NotificationType::synchronous);
     };
-    setupImage(mLoopButton, juce::ImageCache::getFromMemory(BinaryData::repeter_png, BinaryData::repeter_pngSize));
+    setupImage(mLoopButton, IconManager::getIcon(IconManager::IconType::loop));
     
     mVolumeSlider.setRange(-90.0, 12.0);
     mVolumeSlider.setDoubleClickReturnValue(true, 0.0);
@@ -86,6 +87,7 @@ Document::Transport::Transport(Accessor& accessor)
     addAndMakeVisible(mLoopButton);
     
     mPlayPositionInHMSms.setJustificationType(juce::Justification::centredLeft);
+    mPlayPositionInHMSms.setMinimumHorizontalScale(1.0f);
     addAndMakeVisible(mPlayPositionInHMSms);
     
     addAndMakeVisible(mVolumeSlider);

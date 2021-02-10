@@ -4,6 +4,7 @@
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationWindow.h"
 #include "AnlApplicationLookAndFeel.h"
+#include "AnlApplicationTranslationManager.h"
 #include "AnlApplicationProperties.h"
 #include "AnlApplicationAudioReader.h"
 
@@ -49,13 +50,7 @@ namespace Application
 
     private:
         
-        struct LocalisedStringsMapper
-        {
-            LocalisedStringsMapper();
-            ~LocalisedStringsMapper() = default;
-        };
-        
-        LocalisedStringsMapper mLocalisedStringsMapper;
+        TranslationManager mTranslationManager;
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;

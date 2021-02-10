@@ -1,10 +1,11 @@
 #include "AnlLoadingCircle.h"
+#include "AnlIconManager.h"
 
 ANALYSE_FILE_BEGIN
 
 LoadingCircle::LoadingCircle()
-: mImageProcessing(juce::ImageCache::getFromMemory(BinaryData::chargement_png, BinaryData::chargement_pngSize))
-, mImageReady(juce::ImageCache::getFromMemory(BinaryData::checked_png, BinaryData::checked_pngSize))
+: mImageProcessing(IconManager::getIcon(IconManager::IconType::loading))
+, mImageReady(IconManager::getIcon(IconManager::IconType::checked))
 {
     setInterceptsMouseClicks(true, true);
 }

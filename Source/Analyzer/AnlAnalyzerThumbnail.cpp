@@ -18,11 +18,11 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mProcessingButton);
     
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
-    setupImage(mPropertiesButton, juce::ImageCache::getFromMemory(BinaryData::reglages_png, BinaryData::reglages_pngSize));
+    setupImage(mPropertiesButton, IconManager::getIcon(IconManager::IconType::properties));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
-    setupImage(mExportButton, juce::ImageCache::getFromMemory(BinaryData::share_png, BinaryData::share_pngSize));
+    setupImage(mExportButton, IconManager::getIcon(IconManager::IconType::share));
     mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
-    setupImage(mRemoveButton, juce::ImageCache::getFromMemory(BinaryData::annuler_png, BinaryData::annuler_pngSize));
+    setupImage(mRemoveButton, IconManager::getIcon(IconManager::IconType::cancel));
     
     mRemoveButton.onClick = [&]()
     {
