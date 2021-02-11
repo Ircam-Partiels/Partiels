@@ -75,11 +75,7 @@ endif()
 file(GLOB LayoutSources
     ${SOURCES_DIRECTORY}/Layout/AnlLayout.h
     ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlLayoutResizerBar.h
-    ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlLayoutStrechableContainerSection.h)
+    ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h)
 
 file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomModel.cpp

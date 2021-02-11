@@ -3,7 +3,6 @@
 #include "../Misc/AnlMisc.h"
 #include "../Analyzer/AnlAnalyzerModel.h"
 #include "../Zoom/AnlZoomModel.h"
-#include "../Layout/AnlLayoutStrechableContainerSection.h"
 #include "../Misc/AnlBroadcaster.h"
 
 ANALYSE_FILE_BEGIN

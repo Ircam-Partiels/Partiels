@@ -20,6 +20,7 @@ Application::Interface::Interface()
     mInspect.setTooltip(juce::translate("Inspect"));
     mEdit.setTooltip(juce::translate("Edit"));
     
+    JUCE_COMPILER_WARNING("FileDragAndDropTarget");
     mLoad.onClick = []()
     {
         using CommandIDs = CommandTarget::CommandIDs;
