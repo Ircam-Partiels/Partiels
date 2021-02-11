@@ -1,6 +1,5 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationFontManager.h"
-#include "../Layout/AnlLayout.h"
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Document/AnlDocumentSection.h"
 

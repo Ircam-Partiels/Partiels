@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
-#include "../Layout/AnlLayout.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -26,7 +25,7 @@ namespace Application
         // IconManager::LookAndFeelMethods
         void setButtonIcon(juce::ImageButton& button, IconManager::IconType const type) override;
         
-        // ScrollBar::LookAndFeelMethods
+        // juce::ScrollBar::LookAndFeelMethods
         bool areScrollbarButtonsVisible() override;
         void drawScrollbar(juce::Graphics& g, juce::ScrollBar& scrollbar, int x, int y, int width, int height, bool isScrollbarVertical, int thumbStartPosition, int thumbSize, bool isMouseOver, bool isMouseDown) override;
         

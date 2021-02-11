@@ -59,6 +59,8 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlTooltip.h
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.h
+    ${SOURCES_DIRECTORY}/Misc/AnlPropertyPanel.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlPropertyPanel.h
     ${SOURCES_DIRECTORY}/Misc/AnlResizerBar.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlResizerBar.h
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaTable.cpp
@@ -71,11 +73,6 @@ file(GLOB MiscSources
 if(APPLE)
 file(GLOB MiscSources ${MiscSources} ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.mm)
 endif()
-
-file(GLOB LayoutSources
-    ${SOURCES_DIRECTORY}/Layout/AnlLayout.h
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.cpp
-    ${SOURCES_DIRECTORY}/Layout/AnlPropertyPanel.h)
 
 file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomModel.cpp
@@ -173,7 +170,6 @@ file(GLOB TranslationsSources
 
 source_group("Global" FILES ${GlobalSources})
 source_group("Misc" FILES ${MiscSources})
-source_group("Layout" FILES ${LayoutSources})
 source_group("Zoom" FILES ${ZoomSources})
 source_group("Application" FILES ${ApplicationSources})
 source_group("Document" FILES ${DocumentSources})
@@ -221,7 +217,7 @@ create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURC
 create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-set(BriochesSources ${MiscSources} ${LayoutSources} ${ZoomSources} ${PluginSources} ${PlotSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
+set(BriochesSources ${MiscSources} ${ZoomSources} ${PluginSources} ${PlotSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources} ${TranslationsSources})
 target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
