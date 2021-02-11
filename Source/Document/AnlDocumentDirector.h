@@ -19,8 +19,6 @@ namespace Document
         
     private:
         
-        void setupDocument(Document::Accessor& acsr);
-        
         Accessor& mAccessor;
         juce::AudioFormatManager const& mAudioFormatManager;
         PluginList::Table mPluginListTable;

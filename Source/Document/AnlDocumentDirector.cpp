@@ -10,7 +10,102 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginAccessor)
 {
-    setupDocument(mAccessor);
+    mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
+    {
+        switch(attribute)
+        {
+            case AttrType::file:
+            {
+                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                if(reader == nullptr)
+                {
+                    return;
+                }
+                auto const sampleRate = reader->sampleRate;
+                auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
+                
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
+                
+                for(auto const& anl : mAnalyzers)
+                {
+                    if(anl != nullptr)
+                    {
+                        anl->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+                    }
+                }
+            }
+                break;
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+            case AttrType::playheadPosition:
+            {
+                auto const time = mAccessor.getAttr<AttrType::playheadPosition>();
+                auto const numAnlAcsrs = mAccessor.getNumAccessors<AcsrType::analyzers>();
+                for(size_t i = 0; i < numAnlAcsrs; ++i)
+                {
+                    auto& anlAcsr  = mAccessor.getAccessor<AcsrType::analyzers>(i);
+                    anlAcsr.setAttr<Analyzer::AttrType::time>(time, notification);
+                }
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+                auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                if(!range.contains(time))
+                {
+                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
+                }
+            }
+                break;
+            case AttrType::layoutHorizontal:
+                break;
+        }
+    };
+    
+    mAccessor.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
+    {
+        juce::ignoreUnused(notification);
+        switch(type)
+        {
+            case AcsrType::analyzers:
+            {
+                anlStrongAssert(index <= mAnalyzers.size());
+                if(index > mAnalyzers.size())
+                {
+                    return;
+                }
+                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
+                auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
+                auto director = std::make_unique<Analyzer::Director>(anlAcsr, std::move(audioFormatReader));
+                anlStrongAssert(director != nullptr);
+                mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
+            }
+                break;
+            case AcsrType::timeZoom:
+                break;
+        }
+    };
+    
+    mAccessor.onAccessorErased = [&](AcsrType type, size_t index, NotificationType notification)
+    {
+        juce::ignoreUnused(notification);
+        switch(type)
+        {
+            case AcsrType::analyzers:
+            {
+                anlStrongAssert(index < mAnalyzers.size());
+                if(index >= mAnalyzers.size())
+                {
+                    return;
+                }
+                mAnalyzers.erase(mAnalyzers.begin() + static_cast<long>(index));
+            }
+                break;
+            case AcsrType::timeZoom:
+                break;
+        }
+    };
 }
 
 Document::Director::~Director()
@@ -48,14 +143,16 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
             }
             return;
         }
+        
+        auto const identifier = juce::Uuid().toString();
 
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
-        auto const identifier = juce::Uuid().toString();
         anlAcsr.setAttr<Analyzer::AttrType::identifier>(identifier, notification);
         anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, notification);
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, notification);
         anlAcsr.setAttr<Analyzer::AttrType::description>(description, notification);
         anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, notification);
+        
         auto layout = mAccessor.getAttr<AttrType::layout>();
         layout.push_back(identifier);
         mAccessor.setAttr<AttrType::layout>(layout, notification);
@@ -107,95 +204,6 @@ void Document::Director::removeAnalysis(juce::String const identifier, Notificat
     mAccessor.setAttr<AttrType::layout>(layout, notification);
     auto const index = static_cast<size_t>(std::distance(anlAcsrs.cbegin(), it));
     mAccessor.eraseAccessor<AcsrType::analyzers>(index, notification);
-}
-
-void Document::Director::setupDocument(Document::Accessor& acsr)
-{
-    acsr.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
-    {
-        switch (attribute)
-        {
-            case AttrType::file:
-            {
-                auto reader = createAudioFormatReader(acsr, mAudioFormatManager, AlertType::window);
-                if(reader == nullptr)
-                {
-                    return;
-                }
-                auto const sampleRate = reader->sampleRate;
-                auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
-                
-                auto& zoomAcsr = acsr.getAccessor<AcsrType::timeZoom>(0);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
-                
-                for(auto const& anl : mAnalyzers)
-                {
-                    if(anl != nullptr)
-                    {
-                        anl->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
-                    }
-                }
-            }
-                break;
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-            case AttrType::playheadPosition:
-            {
-                auto const time = acsr.getAttr<AttrType::playheadPosition>();
-                auto const numAnlAcsrs = acsr.getNumAccessors<AcsrType::analyzers>();
-                for(size_t i = 0; i < numAnlAcsrs; ++i)
-                {
-                    auto& anlAcsr  = acsr.getAccessor<AcsrType::analyzers>(i);
-                    anlAcsr.setAttr<Analyzer::AttrType::time>(time, notification);
-                }
-                auto& zoomAcsr = acsr.getAccessor<AcsrType::timeZoom>(0);
-                auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                if(!range.contains(time))
-                {
-                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
-                }
-            }
-                break;
-            case AttrType::layoutHorizontal:
-                break;
-        }
-    };
-    
-    acsr.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
-    {
-        switch(type)
-        {
-            case AcsrType::analyzers:
-            {
-                anlStrongAssert(index <= mAnalyzers.size());
-                auto& anlAcsr = acsr.getAccessor<AcsrType::analyzers>(index);
-                auto director = std::make_unique<Analyzer::Director>(anlAcsr, createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent));
-                anlStrongAssert(director != nullptr);
-                mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
-            }
-                break;
-            case AcsrType::timeZoom:
-                break;
-        }
-    };
-    
-    acsr.onAccessorErased = [&](AcsrType type, size_t index, NotificationType notification)
-    {
-        switch(type)
-        {
-            case AcsrType::analyzers:
-            {
-                anlStrongAssert(index < mAnalyzers.size());
-                mAnalyzers.erase(mAnalyzers.begin() + static_cast<long>(index));
-            }
-                break;
-            case AcsrType::timeZoom:
-                break;
-        }
-    };
 }
 
 ANALYSE_FILE_END
