@@ -4,6 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
+//! @todo check if we should ke facultative header (draggable table)
 class ConcertinaTable
 : public juce::Component
 , public juce::SettableTooltipClient

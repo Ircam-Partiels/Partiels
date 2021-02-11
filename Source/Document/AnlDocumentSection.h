@@ -9,6 +9,7 @@ namespace Document
 {
     class Section
     : public juce::Component
+    , public juce::DragAndDropContainer
     {
     public:
         
@@ -34,7 +35,7 @@ namespace Document
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         std::vector<std::unique_ptr<Analyzer::Section>> mSections;
-        ConcertinaTable mConcertinalPanel {"", false};
+        DraggableTable mDraggableTable;
         juce::Viewport mViewport;
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
     };

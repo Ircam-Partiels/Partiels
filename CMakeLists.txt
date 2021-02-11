@@ -65,6 +65,8 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlResizerBar.h
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaTable.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaTable.h
+    ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.h
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.h
     ${SOURCES_DIRECTORY}/Misc/AnlMisc.h

@@ -24,6 +24,7 @@ namespace Analyzer
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
         ~Section() override;
         
+        juce::String getIdentifier() const { return mAccessor.getAttr<AttrType::identifier>(); }
         std::function<void(juce::String const& identifier)> onRemove = nullptr;
         
         // juce::Component

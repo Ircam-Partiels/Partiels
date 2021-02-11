@@ -142,4 +142,36 @@ void Analyzer::Thumbnail::parentHierarchyChanged()
     lookAndFeelChanged();
 }
 
+void Analyzer::Thumbnail::colourChanged()
+{
+    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
+}
+
+void Analyzer::Thumbnail::mouseDrag(juce::MouseEvent const& event)
+{
+    auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
+    anlWeakAssert(dragContainer != nullptr);
+    if(dragContainer != nullptr && !dragContainer->isDragAndDropActive())
+    {
+        auto description = std::make_unique<juce::DynamicObject>();
+        anlWeakAssert(description != nullptr);
+        if(description != nullptr)
+        {
+            JUCE_COMPILER_WARNING("clean this");
+            auto* parent = getParentComponent();
+            juce::Image snapshot(juce::Image::ARGB, parent->getWidth(), parent->getHeight(), true);
+            juce::Graphics g(snapshot);
+            g.beginTransparencyLayer(0.6f);
+            parent->paintEntireComponent(g, false);
+            g.endTransparencyLayer();
+            
+            auto const p = -event.getMouseDownPosition();
+            
+            description->setProperty("type", "DraggableTable::Content");
+            description->setProperty("offset", p.getY());
+            dragContainer->startDragging(description.release(), parent, snapshot, true, &p, &event.source);
+        }
+    }
+}
+
 ANALYSE_FILE_END

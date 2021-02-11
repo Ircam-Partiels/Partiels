@@ -16,7 +16,28 @@ Document::Section::Section(Accessor& accessor)
         return Format::secondsToString(value, {":", ":", ":", ""});
     });
     
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    auto updateComponents = [&]()
+    {
+        std::vector<ConcertinaTable::ComponentRef> components;
+        components.reserve(mSections.size());
+        auto const& layout = mAccessor.getAttr<AttrType::layout>();
+        for(auto const& identifier : layout)
+        {
+            auto it = std::find_if(mSections.cbegin(), mSections.cend(), [&](auto const& section)
+            {
+                return section->getIdentifier() == identifier;
+            });
+            anlWeakAssert(it != mSections.cend());
+            if(it != mSections.cend())
+            {
+                components.push_back(*it->get());
+            }
+        }
+        mDraggableTable.setComponents(components);
+        resized();
+    };
+    
+    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {
@@ -31,10 +52,15 @@ Document::Section::Section(Accessor& accessor)
                 resized();
             }
                 break;
+            case AttrType::layout:
+            {
+                updateComponents();
+            }
+                break;
         }
     };
     
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [=](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
         switch(type)
@@ -59,12 +85,7 @@ Document::Section::Section(Accessor& accessor)
                     };
                     mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 }
-                std::vector<ConcertinaTable::ComponentRef> components;
-                for(auto const& section : mSections)
-                {
-                    components.push_back(*section.get());
-                }
-                mConcertinalPanel.setComponents(components);
+                updateComponents();
             }
                 break;
                 
@@ -74,7 +95,7 @@ Document::Section::Section(Accessor& accessor)
         
     };
     
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [=](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
         switch(type)
@@ -84,12 +105,7 @@ Document::Section::Section(Accessor& accessor)
             case AcsrType::analyzers:
             {
                 mSections.erase(mSections.begin() + static_cast<long>(index));
-                std::vector<ConcertinaTable::ComponentRef> components;
-                for(auto const& section : mSections)
-                {
-                    components.push_back(*section.get());
-                }
-                mConcertinalPanel.setComponents(components);
+                updateComponents();
             }
                 break;
                 
@@ -110,15 +126,16 @@ Document::Section::Section(Accessor& accessor)
         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
     };
     
-    mConcertinalPanel.onResized = [&]()
+    mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
     {
-        if(mViewport.autoScroll(0, mConcertinalPanel.getMouseXYRelative().getY(), -10, 10))
-        {
-            beginDragAutoRepeat(10);
-        }
-        resized();
+        auto layout = mAccessor.getAttr<AttrType::layout>();
+        auto const identifier = layout[previousIndex];
+        std::erase(layout, identifier);
+        layout.insert(layout.begin() + nextIndex, identifier);
+        mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
-    mViewport.setViewedComponent(&mConcertinalPanel, false);
+
+    mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
     setSize(480, 200);
@@ -144,8 +161,8 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
     
-    mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mConcertinalPanel.getHeight() - 4);
-    mConcertinalPanel.setBounds(bounds.withHeight(mConcertinalPanel.getHeight()));
+    mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
+    mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
 }
 

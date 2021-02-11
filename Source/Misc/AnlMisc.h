@@ -6,6 +6,7 @@
 #include "AnlColouredPanel.h"
 #include "AnlColourSelector.h"
 #include "AnlConcertinaTable.h"
+#include "AnlDraggableTable.h"
 #include "AnlFloatingWindow.h"
 #include "AnlIconManager.h"
 #include "AnlLoadingCircle.h"
