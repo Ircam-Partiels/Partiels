@@ -22,7 +22,7 @@ namespace Analyzer
     private:
         
         class PropertyTextButton
-        : public Layout::PropertyPanel<juce::TextButton>
+        : public PropertyComponent<juce::TextButton>
         {
         public:
             PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn);
@@ -33,7 +33,7 @@ namespace Analyzer
         };
         
         class PropertyText
-        : public Layout::PropertyPanel<juce::Label>
+        : public PropertyComponent<juce::Label>
         {
         public:
             PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn);
@@ -49,7 +49,7 @@ namespace Analyzer
         };
         
         class PropertyNumber
-        : public Layout::PropertyPanel<NumberField>
+        : public PropertyComponent<NumberField>
         {
         public:
             PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
@@ -57,7 +57,7 @@ namespace Analyzer
         };
 
         class PropertyList
-        : public Layout::PropertyPanel<juce::ComboBox>
+        : public PropertyComponent<juce::ComboBox>
         {
         public:
             PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn);
@@ -76,7 +76,7 @@ namespace Analyzer
         PropertyList mPropertyWindowOverlapping;
         PropertyNumber mPropertyBlockSize;
         PropertyNumber mPropertyStepSize;
-        std::map<std::string, std::unique_ptr<Layout::PropertyPanelBase>> mParameterProperties;
+        std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyTextButton mPropertyResetProcessor;
         
         PropertyTextButton mPropertyColourSelector;

@@ -59,8 +59,8 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlTooltip.h
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.h
-    ${SOURCES_DIRECTORY}/Misc/AnlPropertyPanel.cpp
-    ${SOURCES_DIRECTORY}/Misc/AnlPropertyPanel.h
+    ${SOURCES_DIRECTORY}/Misc/AnlPropertyComponent.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlPropertyComponent.h
     ${SOURCES_DIRECTORY}/Misc/AnlResizerBar.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlResizerBar.h
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaTable.cpp

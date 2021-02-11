@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Analyzer::PropertyPanel::PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn)
-: Layout::PropertyPanel<juce::TextButton>(juce::translate(name), juce::translate(tooltip), nullptr)
+: PropertyComponent<juce::TextButton>(juce::translate(name), juce::translate(tooltip), nullptr)
 {
     title.setVisible(false);
     entry.setButtonText(name);
@@ -23,7 +23,7 @@ void Analyzer::PropertyPanel::PropertyTextButton::resized()
 }
 
 Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
-: Layout::PropertyPanel<juce::Label>(juce::translate(name), juce::translate(tooltip))
+: PropertyComponent<juce::Label>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setRepaintsOnMouseActivity(true);
     entry.setEditable(true);
@@ -58,7 +58,7 @@ Analyzer::PropertyPanel::PropertyLabel::PropertyLabel(juce::String const& name, 
 }
 
 Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
-: Layout::PropertyPanel<NumberField>(juce::translate(name), juce::translate(tooltip))
+: PropertyComponent<NumberField>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval), juce::NotificationType::dontSendNotification);
     entry.setTooltip(juce::translate(tooltip));
@@ -74,7 +74,7 @@ Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name
 }
 
 Analyzer::PropertyPanel::PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
-: Layout::PropertyPanel<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
+: PropertyComponent<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setTooltip(tooltip);
     juce::StringArray items;
@@ -195,7 +195,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
             case AttrType::description:
             {
-                auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<Layout::PropertyPanelBase>
+                auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<juce::Component>
                 {
                     auto const setValue = [=, this](float value)
                     {

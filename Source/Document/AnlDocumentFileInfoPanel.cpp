@@ -50,7 +50,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
-                    auto property = std::make_unique<Layout::PropertyLabel>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
+                    auto property = std::make_unique<PropertyLabel>(key, juce::translate("Metadata MDNM of the audio file").replace("MDNM", key));
                     anlStrongAssert(property != nullptr);
                     if(property != nullptr)
                     {

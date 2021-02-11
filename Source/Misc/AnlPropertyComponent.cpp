@@ -1,8 +1,8 @@
-#include "AnlPropertyPanel.h"
+#include "AnlPropertyComponent.h"
 
 ANALYSE_FILE_BEGIN
 
-Layout::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip)
+PropertyComponentBase::PropertyComponentBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip)
 : content(std::move(c))
 {
     title.setText(name + ":", juce::NotificationType::dontSendNotification);
@@ -23,7 +23,7 @@ Layout::PropertyPanelBase::PropertyPanelBase(std::unique_ptr<juce::Component> c,
     setSize(200, 24);
 }
 
-void Layout::PropertyPanelBase::resized()
+void PropertyComponentBase::resized()
 {
     auto& titleLookAndFeel = title.getLookAndFeel();
     auto const minimumHorizontalScale = title.getMinimumHorizontalScale();
@@ -41,8 +41,8 @@ void Layout::PropertyPanelBase::resized()
     title.setJustificationType(juce::Justification::centredLeft);
 }
 
-Layout::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
-: Layout::PropertyPanel<juce::Label>(name, tooltip, fn)
+PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
+: PropertyComponent<juce::Label>(name, tooltip, fn)
 {
     entry.setRepaintsOnMouseActivity(true);
     entry.setEditable(true);
