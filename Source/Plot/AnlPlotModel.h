@@ -45,7 +45,7 @@ namespace Plot
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
         Accessor()
-        : Accessor(AttrContainer(  {20}
+        : Accessor(AttrContainer(  {80}
                                  , {juce::Colours::aliceblue}
                                  , {ColourMap::Inferno}
                                  , {}
