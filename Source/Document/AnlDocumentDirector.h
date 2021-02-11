@@ -14,7 +14,8 @@ namespace Document
         Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager);
         ~Director();
         
-        void addAnalysis(AlertType alertType);
+        void addAnalysis(AlertType const alertType, NotificationType const notification);
+        void removeAnalysis(juce::String const identifier, NotificationType const notification);
         
     private:
         

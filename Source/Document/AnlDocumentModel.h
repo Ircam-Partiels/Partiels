@@ -18,6 +18,7 @@ namespace Document
         , isPlaybackStarted
         , playheadPosition
         , layoutHorizontal
+        , layout
     };
     
     enum class AcsrType : size_t
@@ -33,6 +34,7 @@ namespace Document
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::Flag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::Flag::notifying>
     , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
+    , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -46,6 +48,17 @@ namespace Document
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
+        
+        Accessor()
+        : Accessor(AttrContainer(  {juce::File{}}
+                                 , {false}
+                                 , {1.0}
+                                 , {false}
+                                 , {0.0}
+                                 , {144}
+                                 , {}))
+        {
+        }
     };
 }
 

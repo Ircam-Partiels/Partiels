@@ -27,7 +27,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     {
         if(onRemove != nullptr)
         {
-            onRemove(mAccessor);
+            onRemove(mAccessor.getAttr<AttrType::identifier>());
         }
     };
     

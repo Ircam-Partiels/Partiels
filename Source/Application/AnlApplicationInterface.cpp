@@ -26,6 +26,12 @@ Application::Interface::Interface()
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
     
+    mDocumentSection.onRemoveAnalyzer = [](juce::String const& identifier)
+    {
+        auto& documentDir = Instance::get().getDocumentDirector();
+        documentDir.removeAnalysis(identifier, NotificationType::synchronous);
+    };
+    
     mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
         switch(attribute)

@@ -95,9 +95,13 @@ void Analyzer::Thumbnail::resized()
     auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
+    mRemoveButton.setVisible(bounds.getHeight() >= size);
     mRemoveButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mProcessingButton.setVisible(bounds.getHeight() >= size);
     mProcessingButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mExportButton.setVisible(bounds.getHeight() >= size);
     mExportButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mPropertiesButton.setVisible(bounds.getHeight() >= size);
     mPropertiesButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
 }
 

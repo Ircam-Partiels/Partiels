@@ -20,7 +20,7 @@ Document::Director::~Director()
     mAccessor.onAccessorErased = nullptr;
 }
 
-void Document::Director::addAnalysis(AlertType alertType)
+void Document::Director::addAnalysis(AlertType const alertType, NotificationType const notification)
 {
     if(mModalWindow != nullptr)
     {
@@ -28,7 +28,7 @@ void Document::Director::addAnalysis(AlertType alertType)
         mModalWindow = nullptr;
     }
     
-    mPluginListTable.onPluginSelected = [this, alertType](Plugin::Key const& key, Plugin::Description const& description)
+    mPluginListTable.onPluginSelected = [this, alertType, notification](Plugin::Key const& key, Plugin::Description const& description)
     {
         if(mModalWindow != nullptr)
         {
@@ -37,7 +37,7 @@ void Document::Director::addAnalysis(AlertType alertType)
         }
         
         auto const index = mAccessor.getNumAccessors<AcsrType::analyzers>();
-        if(!mAccessor.insertAccessor<AcsrType::analyzers>(index, NotificationType::synchronous))
+        if(!mAccessor.insertAccessor<AcsrType::analyzers>(index, notification))
         {
             if(alertType == AlertType::window)
             {
@@ -50,11 +50,15 @@ void Document::Director::addAnalysis(AlertType alertType)
         }
 
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
-        anlAcsr.setAttr<Analyzer::AttrType::identifier>(juce::Uuid().toString(), NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::key>(key, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::description>(description, NotificationType::synchronous);
-        anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, NotificationType::synchronous);
+        auto const identifier = juce::Uuid().toString();
+        anlAcsr.setAttr<Analyzer::AttrType::identifier>(identifier, notification);
+        anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, notification);
+        anlAcsr.setAttr<Analyzer::AttrType::key>(key, notification);
+        anlAcsr.setAttr<Analyzer::AttrType::description>(description, notification);
+        anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, notification);
+        auto layout = mAccessor.getAttr<AttrType::layout>();
+        layout.push_back(identifier);
+        mAccessor.setAttr<AttrType::layout>(layout, notification);
     };
     
     auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -74,6 +78,35 @@ void Document::Director::addAnalysis(AlertType alertType)
     {
         mModalWindow->runModalLoop();
     }
+}
+
+void Document::Director::removeAnalysis(juce::String const identifier, NotificationType const notification)
+{
+    auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
+    auto const it = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](Analyzer::Accessor const& acsr)
+    {
+        return acsr.getAttr<Analyzer::AttrType::identifier>() == identifier;
+    });
+    anlWeakAssert(it != anlAcsrs.cend());
+    if(it == anlAcsrs.cend())
+    {
+        return;
+    }
+    
+    
+    auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+    auto const title = juce::translate("Remove Analysis");
+    auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Analyzer::AttrType::name>());
+    if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+    {
+        return;
+    }
+        
+    auto layout = mAccessor.getAttr<AttrType::layout>();
+    std::erase(layout, identifier);
+    mAccessor.setAttr<AttrType::layout>(layout, notification);
+    auto const index = static_cast<size_t>(std::distance(anlAcsrs.cbegin(), it));
+    mAccessor.eraseAccessor<AcsrType::analyzers>(index, notification);
 }
 
 void Document::Director::setupDocument(Document::Accessor& acsr)

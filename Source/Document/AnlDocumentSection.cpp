@@ -50,24 +50,11 @@ Document::Section::Section(Accessor& accessor)
                 anlStrongAssert(newSection != nullptr);
                 if(newSection != nullptr)
                 {
-                    newSection->onRemove = [this](Analyzer::Accessor& lhs)
+                    newSection->onRemove = [this](juce::String const identifier)
                     {
-                        auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
-                        auto it = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](auto const& rhs)
+                        if(onRemoveAnalyzer != nullptr)
                         {
-                            return &lhs == &rhs.get();
-                        });
-                        anlWeakAssert(it != anlAcsrs.cend());
-                        if(it != anlAcsrs.cend())
-                        {
-                            auto const currentIndex = static_cast<size_t>(std::distance(anlAcsrs.cbegin(), it));
-                            auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-                            auto const title = juce::translate("Remove Analysis");
-                            auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", anlAcsrs[currentIndex].get().getAttr<Analyzer::AttrType::name>());
-                            if(juce::AlertWindow::showOkCancelBox(icon, title, message))
-                            {
-                                mAccessor.eraseAccessor<AcsrType::analyzers>(currentIndex, NotificationType::synchronous);
-                            }
+                            onRemoveAnalyzer(identifier);
                         }
                     };
                     mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));

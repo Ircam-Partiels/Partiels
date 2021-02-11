@@ -6,6 +6,7 @@
 
 ANALYSE_FILE_BEGIN
 
+//! @todo All the plot should go back to the analyzer
 namespace Plot
 {
     using ColourMap = tinycolormap::ColormapType;

@@ -24,7 +24,7 @@ namespace Analyzer
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
         ~Section() override;
         
-        std::function<void(Accessor&)> onRemove = nullptr;
+        std::function<void(juce::String const& identifier)> onRemove = nullptr;
         
         // juce::Component
         void resized() override;

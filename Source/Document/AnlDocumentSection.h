@@ -23,6 +23,8 @@ namespace Document
         Section(Accessor& accessor);
         ~Section() override;
         
+        std::function<void(juce::String const& identifier)> onRemoveAnalyzer = nullptr;
+        
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;

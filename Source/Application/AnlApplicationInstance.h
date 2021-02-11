@@ -60,12 +60,13 @@ namespace Application
         Document::Accessor mDocumentAccessor {
         Document::AttrContainer
         {
-            {juce::File{}}
+              {juce::File{}}
             , {false}
             , {1.0}
             , {false}
             , {0.0}
             , {144}
+            , {}
         }};
         Document::Director mDocumentDirector {mDocumentAccessor, mPluginListAccessor, mAudioFormatManager};
         Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};

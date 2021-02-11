@@ -370,11 +370,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 , {false}
                 , {0.0}
                 , {144}
+                , {}
             }, NotificationType::synchronous);
             Instance::get().openFile(fc.getResult());
             
             auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.addAnalysis(AlertType::window);
+            documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::DocumentOpenRecent:
@@ -416,7 +417,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::AnalysisNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.addAnalysis(AlertType::window);
+            documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::AnalysisSave:
