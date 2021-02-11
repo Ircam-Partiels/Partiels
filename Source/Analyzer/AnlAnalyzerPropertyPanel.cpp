@@ -220,7 +220,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 };
                 
                 auto const description = mAccessor.getAttr<AttrType::description>();
-                std::vector<ConcertinaPanel::ComponentRef> components;
+                std::vector<ConcertinaTable::ComponentRef> components;
                 
                 // Processor Part
                 if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)

@@ -9,19 +9,19 @@ namespace Application
 {
     class LookAndFeel
     : public juce::LookAndFeel_V4
-    , public ConcertinaPanel::LookAndFeelMethods
+    , public ConcertinaTable::LookAndFeelMethods
     , public IconManager::LookAndFeelMethods
     {
     public:
         LookAndFeel();
         ~LookAndFeel() override = default;
         
-        // ConcertinaPanel::LookAndFeelMethods
-        juce::Font getHeaderFont(ConcertinaPanel const& panel, int headerHeight) const override;
-        int getHeaderHeight(ConcertinaPanel const& panel) const override;
-        void drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const override;
-        void drawHeaderButton(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const override;
-        void drawHeaderTitle(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const override;
+        // ConcertinaTable::LookAndFeelMethods
+        juce::Font getHeaderFont(ConcertinaTable const& panel, int headerHeight) const override;
+        int getHeaderHeight(ConcertinaTable const& panel) const override;
+        void drawHeaderBackground(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const override;
+        void drawHeaderButton(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const override;
+        void drawHeaderTitle(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const override;
         
         // IconManager::LookAndFeelMethods
         void setButtonIcon(juce::ImageButton& button, IconManager::IconType const type) override;

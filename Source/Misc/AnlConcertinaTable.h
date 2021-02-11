@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-class ConcertinaPanel
+class ConcertinaTable
 : public juce::Component
 , public juce::SettableTooltipClient
 , private juce::ComponentListener
@@ -22,8 +22,8 @@ public:
     
     using ComponentRef = std::reference_wrapper<juce::Component>;
     
-    ConcertinaPanel(juce::String const& title, bool resizeOnClick, juce::String const& tooltip = "");
-    ~ConcertinaPanel() override = default;
+    ConcertinaTable(juce::String const& title, bool resizeOnClick, juce::String const& tooltip = "");
+    ~ConcertinaTable() override = default;
     
     juce::String getTitle() const;
     void setComponents(std::vector<ComponentRef> const& component);
@@ -38,11 +38,11 @@ public:
     {
         virtual ~LookAndFeelMethods() = default;
         
-        virtual int getHeaderHeight(ConcertinaPanel const& section) const = 0;
-        virtual juce::Font getHeaderFont(ConcertinaPanel const& section, int headerHeight) const = 0;
-        virtual void drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& section, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const = 0;
-        virtual void drawHeaderButton(juce::Graphics& g, ConcertinaPanel const& section, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const = 0;
-        virtual void drawHeaderTitle(juce::Graphics& g, ConcertinaPanel const& section, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const = 0;
+        virtual int getHeaderHeight(ConcertinaTable const& section) const = 0;
+        virtual juce::Font getHeaderFont(ConcertinaTable const& section, int headerHeight) const = 0;
+        virtual void drawHeaderBackground(juce::Graphics& g, ConcertinaTable const& section, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const = 0;
+        virtual void drawHeaderButton(juce::Graphics& g, ConcertinaTable const& section, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const = 0;
+        virtual void drawHeaderTitle(juce::Graphics& g, ConcertinaTable const& section, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const = 0;
     };
     
 private:

@@ -13,7 +13,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         {
             case AttrType::file:
             {
-                mConcertinaPanel.setComponents({});
+                mConcertinaTable.setComponents({});
                 
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
@@ -45,7 +45,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<ConcertinaPanel::ComponentRef> panels {mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
+                std::vector<ConcertinaTable::ComponentRef> panels {mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
                 
                 for(auto const& key : metadataValues.getAllKeys())
                 {
@@ -61,7 +61,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                         mMetaDataPanels.push_back(std::move(property));
                     }
                 }
-                mConcertinaPanel.setComponents(panels);
+                mConcertinaTable.setComponents(panels);
                 resized();
             }
                 break;
@@ -75,7 +75,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
         changeListenerCallback(&mFileBasedDocument);
     };
     
-    mViewport.setViewedComponent(&mConcertinaPanel, false);
+    mViewport.setViewedComponent(&mConcertinaTable, false);
     addAndMakeVisible(mViewport);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mFileBasedDocument.addChangeListener(this);
@@ -91,7 +91,7 @@ Document::FileInfoPanel::~FileInfoPanel()
 void Document::FileInfoPanel::resized()
 {
     auto const scrollbarThickness = mViewport.getScrollBarThickness();
-    mConcertinaPanel.setBounds(getLocalBounds().withHeight(mConcertinaPanel.getHeight()).withTrimmedRight(scrollbarThickness));
+    mConcertinaTable.setBounds(getLocalBounds().withHeight(mConcertinaTable.getHeight()).withTrimmedRight(scrollbarThickness));
     mViewport.setBounds(getLocalBounds());
 }
 

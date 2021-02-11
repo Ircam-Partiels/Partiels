@@ -20,10 +20,10 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
     setColour(FloatingWindow::ColourIds::backgroundColourId, backgroundColour.darker());
 
-    setColour(ConcertinaPanel::ColourIds::headerBackgroundColourId, juce::Colours::transparentBlack);
-    setColour(ConcertinaPanel::ColourIds::headerBorderColourId, backgroundColour);
-    setColour(ConcertinaPanel::ColourIds::headerTitleColourId, textColour);
-    setColour(ConcertinaPanel::ColourIds::headerButtonColourId, textColour);
+    setColour(ConcertinaTable::ColourIds::headerBackgroundColourId, juce::Colours::transparentBlack);
+    setColour(ConcertinaTable::ColourIds::headerBorderColourId, backgroundColour);
+    setColour(ConcertinaTable::ColourIds::headerTitleColourId, textColour);
+    setColour(ConcertinaTable::ColourIds::headerButtonColourId, textColour);
 
     setColour(LoadingCircle::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(LoadingCircle::ColourIds::foregroundColourId, rulerColour);
@@ -112,29 +112,29 @@ Application::LookAndFeel::LookAndFeel()
     setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
 }
 
-int Application::LookAndFeel::getHeaderHeight(ConcertinaPanel const& panel) const
+int Application::LookAndFeel::getHeaderHeight(ConcertinaTable const& panel) const
 {
     juce::ignoreUnused(panel);
     return 22;
 }
 
-juce::Font Application::LookAndFeel::getHeaderFont(ConcertinaPanel const& panel, int headerHeight) const
+juce::Font Application::LookAndFeel::getHeaderFont(ConcertinaTable const& panel, int headerHeight) const
 {
      juce::ignoreUnused(panel);
     return juce::Font(static_cast<float>(headerHeight - 4));
 }
 
-void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
+void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
 {
     auto constexpr corner = 4.0f;
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
-    g.setColour(panel.findColour(ConcertinaPanel::headerBackgroundColourId).brighter(contrast));
+    g.setColour(panel.findColour(ConcertinaTable::headerBackgroundColourId).brighter(contrast));
     g.fillRoundedRectangle(area.toFloat(), corner);
-    g.setColour(panel.findColour(ConcertinaPanel::headerBorderColourId).brighter(contrast));
+    g.setColour(panel.findColour(ConcertinaTable::headerBorderColourId).brighter(contrast));
     g.drawRoundedRectangle(area.reduced(1).toFloat(), corner, 1.0f);
 }
 
-void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const
+void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, float sizeRatio, bool isMouseDown, bool isMouseOver) const
 {
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
     auto const bounds = area.reduced(5).toFloat();
@@ -144,15 +144,15 @@ void Application::LookAndFeel::drawHeaderButton(juce::Graphics& g, ConcertinaPan
     path.applyTransform(juce::AffineTransform::rotation(rotation, bounds.getCentre().getX(), bounds.getCentre().getY()));
     path.closeSubPath();
     
-    g.setColour(panel.findColour(ConcertinaPanel::headerButtonColourId).brighter(contrast));
+    g.setColour(panel.findColour(ConcertinaTable::headerButtonColourId).brighter(contrast));
     g.fillPath(path);
 }
 
-void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, ConcertinaPanel const& panel, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const
+void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, juce::Font font, bool isMouseDown, bool isMouseOver) const
 {
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
     g.setFont(font);
-    g.setColour(panel.findColour(ConcertinaPanel::headerTitleColourId).brighter(contrast));
+    g.setColour(panel.findColour(ConcertinaTable::headerTitleColourId).brighter(contrast));
     g.drawFittedText(panel.getTitle(), area.reduced(1).withTrimmedLeft(3), juce::Justification::centredLeft, 1, 1.0f);
 }
 

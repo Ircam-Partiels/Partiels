@@ -59,7 +59,7 @@ Document::Section::Section(Accessor& accessor)
                     };
                     mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 }
-                std::vector<ConcertinaPanel::ComponentRef> components;
+                std::vector<ConcertinaTable::ComponentRef> components;
                 for(auto const& section : mSections)
                 {
                     components.push_back(*section.get());
@@ -84,7 +84,7 @@ Document::Section::Section(Accessor& accessor)
             case AcsrType::analyzers:
             {
                 mSections.erase(mSections.begin() + static_cast<long>(index));
-                std::vector<ConcertinaPanel::ComponentRef> components;
+                std::vector<ConcertinaTable::ComponentRef> components;
                 for(auto const& section : mSections)
                 {
                     components.push_back(*section.get());
@@ -112,7 +112,10 @@ Document::Section::Section(Accessor& accessor)
     
     mConcertinalPanel.onResized = [&]()
     {
-        mViewport.autoScroll(0, mConcertinalPanel.getMouseXYRelative().getY(), -10, 10);
+        if(mViewport.autoScroll(0, mConcertinalPanel.getMouseXYRelative().getY(), -10, 10))
+        {
+            beginDragAutoRepeat(10);
+        }
         resized();
     };
     mViewport.setViewedComponent(&mConcertinalPanel, false);

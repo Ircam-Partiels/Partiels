@@ -92,11 +92,11 @@ namespace Analyzer
         PropertyLabel mPropertyPluginCategory {"Category", "The category of the plugin"};
         juce::TextEditor mPropertyPluginDetails;
         
-        ConcertinaPanel mProcessorSection {juce::translate("PROCESSOR"), true,
+        ConcertinaTable mProcessorSection {juce::translate("PROCESSOR"), true,
             juce::translate("The processor parameters of the analyzer")};
-        ConcertinaPanel mGraphicalSection {juce::translate("GRAPHICAL"), true,
+        ConcertinaTable mGraphicalSection {juce::translate("GRAPHICAL"), true,
             juce::translate("The graphical parameters of the analyzer")};
-        ConcertinaPanel mPluginSection {juce::translate("PLUGIN"), true,
+        ConcertinaTable mPluginSection {juce::translate("PLUGIN"), true,
             juce::translate("The plugin information")};
         
         juce::Viewport mViewport;

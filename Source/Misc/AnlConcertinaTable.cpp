@@ -1,8 +1,8 @@
-#include "AnlConcertinaPanel.h"
+#include "AnlConcertinaTable.h"
 
 ANALYSE_FILE_BEGIN
 
-void ConcertinaPanel::Header::paint(juce::Graphics& g)
+void ConcertinaTable::Header::paint(juce::Graphics& g)
 {
     auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
     anlWeakAssert(lookAndFeel != nullptr);
@@ -14,14 +14,14 @@ void ConcertinaPanel::Header::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto const isMouseDown = isMouseButtonDown();
     auto const isMouseOver = juce::Component::isMouseOver();
-    auto const& section = *static_cast<ConcertinaPanel*>(getParentComponent());
+    auto const& section = *static_cast<ConcertinaTable*>(getParentComponent());
     auto const font = lookAndFeel->getHeaderFont(section, getHeight());
     lookAndFeel->drawHeaderBackground(g, section, bounds, isMouseDown, isMouseOver);
     lookAndFeel->drawHeaderButton(g, section, bounds.removeFromRight(getHeight()), section.mSizeRatio, isMouseDown, isMouseOver);
     lookAndFeel->drawHeaderTitle(g, section, bounds, font, isMouseDown, isMouseOver);
 }
 
-void ConcertinaPanel::Header::mouseDown(juce::MouseEvent const& event)
+void ConcertinaTable::Header::mouseDown(juce::MouseEvent const& event)
 {
     if(event.mods.isLeftButtonDown() && onClicked != nullptr)
     {
@@ -29,7 +29,7 @@ void ConcertinaPanel::Header::mouseDown(juce::MouseEvent const& event)
     }
 }
 
-ConcertinaPanel::ConcertinaPanel(juce::String const& title, bool resizeOnClick, juce::String const& tooltip)
+ConcertinaTable::ConcertinaTable(juce::String const& title, bool resizeOnClick, juce::String const& tooltip)
 : mTitle(title)
 {
     mHeader.onClicked = [&]()
@@ -44,7 +44,7 @@ ConcertinaPanel::ConcertinaPanel(juce::String const& title, bool resizeOnClick, 
     setOpen(true, false);
 }
 
-void ConcertinaPanel::resized()
+void ConcertinaTable::resized()
 {
     auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
     anlWeakAssert(lookAndFeel != nullptr);
@@ -71,12 +71,12 @@ void ConcertinaPanel::resized()
     }
 }
 
-juce::String ConcertinaPanel::getTitle() const
+juce::String ConcertinaTable::getTitle() const
 {
     return mTitle;
 }
 
-void ConcertinaPanel::setComponents(std::vector<ComponentRef> const& components)
+void ConcertinaTable::setComponents(std::vector<ComponentRef> const& components)
 {
     for(auto& content : mContents)
     {
@@ -99,7 +99,7 @@ void ConcertinaPanel::setComponents(std::vector<ComponentRef> const& components)
     resized();
 }
 
-void ConcertinaPanel::setOpen(bool isOpen, bool shouldAnimate)
+void ConcertinaTable::setOpen(bool isOpen, bool shouldAnimate)
 {
     mOpened = isOpen;
     if(!isTimerRunning() && shouldAnimate)
@@ -122,7 +122,7 @@ void ConcertinaPanel::setOpen(bool isOpen, bool shouldAnimate)
     }
 }
 
-void ConcertinaPanel::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
+void ConcertinaTable::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
 {
     juce::ignoreUnused(component, wasMoved);
     if(wasResized)
@@ -146,7 +146,7 @@ void ConcertinaPanel::componentMovedOrResized(juce::Component& component, bool w
     }
 }
 
-void ConcertinaPanel::timerCallback()
+void ConcertinaTable::timerCallback()
 {
     auto constexpr increment = 0.1f;
     mSizeRatio = std::max(std::min(mSizeRatio + (mOpened ? increment : -increment), 1.0f), 0.0f);

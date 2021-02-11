@@ -43,7 +43,7 @@ namespace Document
         
         std::vector<std::unique_ptr<Layout::PropertyLabel>> mMetaDataPanels;
         
-        ConcertinaPanel mConcertinaPanel {"", false};
+        ConcertinaTable mConcertinaTable {"", false};
         juce::Viewport mViewport;
     };
 }

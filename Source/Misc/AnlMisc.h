@@ -5,7 +5,7 @@
 #include "AnlBroadcaster.h"
 #include "AnlColouredPanel.h"
 #include "AnlColourSelector.h"
-#include "AnlConcertinaPanel.h"
+#include "AnlConcertinaTable.h"
 #include "AnlFloatingWindow.h"
 #include "AnlIconManager.h"
 #include "AnlLoadingCircle.h"
