@@ -25,7 +25,7 @@ std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, Aler
     {
         try
         {
-            auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+            return std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
         }
         catch(std::exception const& e)
         {
@@ -33,6 +33,14 @@ std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, Aler
             {
                 using AlertIconType = juce::AlertWindow::AlertIconType;
                 juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate(e.what()));
+            }
+        }
+        catch(...)
+        {
+            if(alertType == AlertType::window)
+            {
+                using AlertIconType = juce::AlertWindow::AlertIconType;
+                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Unknown reason"));
             }
         }
         return nullptr;
@@ -86,6 +94,15 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
         {
             using AlertIconType = juce::AlertWindow::AlertIconType;
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugins failed!"), juce::translate(e.what()));
+        }
+        return {};
+    }
+    catch(...)
+    {
+        if(alertType == AlertType::window)
+        {
+            using AlertIconType = juce::AlertWindow::AlertIconType;
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugins failed!"), juce::translate("Unknown reason"));
         }
         return {};
     }
