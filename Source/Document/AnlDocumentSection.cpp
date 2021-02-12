@@ -134,6 +134,12 @@ Document::Section::Section(Accessor& accessor)
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
 
+    mBoundsListener.onComponentResized = [&](juce::Component& component)
+    {
+        juce::ignoreUnused(component);
+        resized();
+    };
+    mBoundsListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
@@ -147,6 +153,7 @@ Document::Section::Section(Accessor& accessor)
 
 Document::Section::~Section()
 {
+    mBoundsListener.detachFrom(mDraggableTable);
     mAccessor.removeListener(mListener);
 }
 
