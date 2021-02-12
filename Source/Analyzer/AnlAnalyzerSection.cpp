@@ -27,7 +27,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     {
         if(onRemove != nullptr)
         {
-            onRemove(mAccessor.getAttr<AttrType::identifier>());
+            onRemove();
         }
     };
     
@@ -124,6 +124,11 @@ Analyzer::Section::~Section()
     mPlotAccessor.removeListener(mPlotListener);
     mAccessor.removeListener(mListener);
     mSeparator.removeComponentListener(this);
+}
+
+juce::String Analyzer::Section::getIdentifier() const
+{
+    return mAccessor.getAttr<AttrType::identifier>();
 }
 
 void Analyzer::Section::resized()

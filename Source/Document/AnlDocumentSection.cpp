@@ -75,16 +75,16 @@ Document::Section::Section(Accessor& accessor)
                 anlStrongAssert(newSection != nullptr);
                 if(newSection != nullptr)
                 {
-                    newSection->onRemove = [this](juce::String const identifier)
+                    newSection->onRemove = [this, ptr = newSection.get()]()
                     {
                         if(onRemoveAnalyzer != nullptr)
                         {
-                            onRemoveAnalyzer(identifier);
+                            onRemoveAnalyzer(ptr->getIdentifier());
                         }
                     };
                     mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 }
-                anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
+                updateComponents();
             }
                 break;
                 
@@ -103,9 +103,6 @@ Document::Section::Section(Accessor& accessor)
                 break;
             case AcsrType::analyzers:
             {
-                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
-                anlAcsr.removeListener(mAnalyzerListener);
-                
                 mSections.erase(mSections.begin() + static_cast<long>(index));
                 updateComponents();
             }
@@ -115,15 +112,6 @@ Document::Section::Section(Accessor& accessor)
                 break;
         }
         
-    };
-    
-    mAnalyzerListener.onAttrChanged = [=](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        if(attribute == Analyzer::AttrType::identifier)
-        {
-            updateComponents();
-        }
     };
     
     mZoomTimeRuler.onDoubleClick = [&]()
@@ -142,7 +130,7 @@ Document::Section::Section(Accessor& accessor)
         auto layout = mAccessor.getAttr<AttrType::layout>();
         auto const identifier = layout[previousIndex];
         std::erase(layout, identifier);
-        layout.insert(layout.begin() + nextIndex, identifier);
+        layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
 
@@ -159,10 +147,6 @@ Document::Section::Section(Accessor& accessor)
 
 Document::Section::~Section()
 {
-    for(auto& anlAcsrs : mAccessor.getAccessors<AcsrType::analyzers>())
-    {
-        anlAcsrs.get().removeListener(mAnalyzerListener);
-    }
     mAccessor.removeListener(mListener);
 }
 

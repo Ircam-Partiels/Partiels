@@ -31,7 +31,6 @@ namespace Document
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        Analyzer::Accessor::Listener mAnalyzerListener;
         
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
