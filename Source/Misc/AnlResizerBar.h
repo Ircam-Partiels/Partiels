@@ -4,8 +4,8 @@
 
 ANALYSE_FILE_BEGIN
 
-class ResizerBar :
-public juce::Component
+class ResizerBar
+: public juce::Component
 {
 public:
     

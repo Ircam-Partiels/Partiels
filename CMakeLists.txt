@@ -39,6 +39,8 @@ file(GLOB_RECURSE GlobalSources
 
 file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlBasics.h
+    ${SOURCES_DIRECTORY}/Misc/AnlBoundsListener.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlBoundsListener.h
     ${SOURCES_DIRECTORY}/Misc/AnlNotifier.h
     ${SOURCES_DIRECTORY}/Misc/AnlBroadcaster.h
     ${SOURCES_DIRECTORY}/Misc/AnlAtomicManager.cpp
