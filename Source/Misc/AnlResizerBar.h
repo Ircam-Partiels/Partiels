@@ -17,7 +17,7 @@ public:
     
     enum Orientation
     {
-        vertical
+          vertical
         , horizontal
     };
     
