@@ -64,11 +64,6 @@ void ConcertinaTable::resized()
             content->setBounds(bounds.removeFromTop(containerSize));
         }
     }
-    
-    if(onResized != nullptr)
-    {
-        onResized();
-    }
 }
 
 juce::String ConcertinaTable::getTitle() const

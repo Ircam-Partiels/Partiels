@@ -373,13 +373,14 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         }
     };
     
-    auto onResized = [&]()
+    mBoundsListener.onComponentResized = [&](juce::Component& component)
     {
+        juce::ignoreUnused(component);
         resized();
     };
-    mProcessorSection.onResized = onResized;
-    mGraphicalSection.onResized = onResized;
-    mPluginSection.onResized = onResized;
+    mBoundsListener.attachTo(mProcessorSection);
+    mBoundsListener.attachTo(mGraphicalSection);
+    mBoundsListener.attachTo(mPluginSection);
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);
@@ -427,6 +428,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 
 Analyzer::PropertyPanel::~PropertyPanel()
 {
+    mBoundsListener.detachFrom(mProcessorSection);
+    mBoundsListener.detachFrom(mGraphicalSection);
+    mBoundsListener.detachFrom(mPluginSection);
     mAccessor.removeListener(mListener);
     auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
     plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).removeListener(mBinZoomListener);

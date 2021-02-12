@@ -29,9 +29,7 @@ public:
     juce::String getTitle() const;
     void setComponents(std::vector<ComponentRef> const& component);
     void setOpen(bool isOpen, bool shouldAnimate = false);
-    
-    std::function<void(void)> onResized = nullptr;
-    
+
     // juce::Component
     void resized() override;
     

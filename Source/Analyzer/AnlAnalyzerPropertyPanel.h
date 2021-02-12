@@ -68,6 +68,7 @@ namespace Analyzer
         Accessor::Listener mListener;
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;
+        BoundsListener mBoundsListener;
         
         PropertyText mPropertyName;
         
