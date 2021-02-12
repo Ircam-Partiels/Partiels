@@ -23,6 +23,7 @@ public:
     // juce::Component
     void resized() override;
 
+    static juce::var createDescription(juce::MouseEvent const& event);
 private:
     
     // juce::ComponentListener

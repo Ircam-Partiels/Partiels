@@ -2,6 +2,18 @@
 
 ANALYSE_FILE_BEGIN
 
+juce::var DraggableTable::createDescription(juce::MouseEvent const& event)
+{
+    auto description = std::make_unique<juce::DynamicObject>();
+    anlWeakAssert(description != nullptr);
+    if(description != nullptr)
+    {
+        description->setProperty("type", "DraggableTable::Content");
+        description->setProperty("offset", -event.getMouseDownY());
+    }
+    return {description.release()};
+}
+
 DraggableTable::DraggableTable(juce::String const& tooltip)
 {
     setTooltip(tooltip);
