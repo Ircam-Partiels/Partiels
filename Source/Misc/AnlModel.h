@@ -415,17 +415,21 @@ namespace Model
                         while(childs.size() > accessors.size())
                         {
                             auto const index = accessors.size();
+                            mDelayInsertionNotification = true;
                             if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, notification))
                             {
+                                anlStrongAssert(accessors[index] != nullptr);
                                 if(accessors[index] != nullptr)
                                 {
                                     accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
                                 }
+                                notifyAccessorInsertion<acsr_type>(index, notification);
                             }
                             else
                             {
                                 anlStrongAssert(false && "allocation failed");
                             }
+                            mDelayInsertionNotification = false;
                         }
                     }
                 }
@@ -477,17 +481,21 @@ namespace Model
                             anlStrongAssert(d.accessors[index] != nullptr);
                             if(d.accessors[index] != nullptr)
                             {
+                                mDelayInsertionNotification = true;
                                 if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, notification))
                                 {
+                                    anlStrongAssert(accessors[index] != nullptr);
                                     if(accessors[index] != nullptr)
                                     {
                                         accessors[index]->copyFrom(*(d.accessors[index].get()), notification);
                                     }
+                                    notifyAccessorInsertion<acsr_type>(index, notification);
                                 }
                                 else
                                 {
                                     anlStrongAssert(false && "allocation failed");
                                 }
+                                mDelayInsertionNotification = false;
                             }
                         }
                     }
@@ -553,7 +561,7 @@ namespace Model
                     if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
                         mListeners.notify([this, ptr = &listener](Listener& ltnr)
-                                          {
+                        {
                             if(&ltnr == ptr && ltnr.onAttrChanged != nullptr)
                             {
                                 ltnr.onAttrChanged(*static_cast<parent_t const*>(this), element_type::type);
@@ -598,20 +606,17 @@ namespace Model
         template <acsr_enum_type type>
         bool insertAccessor(size_t index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
         {
+            anlStrongAssert(accessor != nullptr);
+            if(accessor == nullptr)
+            {
+                return false;
+            }
+            
             auto& lock = getLock();
             auto const canAccess = lock.exchange(false);
             anlStrongAssert(canAccess == true);
             if(!canAccess)
             {
-                return false;
-            }
-            
-            using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
-            
-            anlStrongAssert(accessor != nullptr);
-            if(accessor == nullptr)
-            {
-                lock = true;
                 return false;
             }
             
@@ -621,29 +626,52 @@ namespace Model
             {
                 // Attaches the mutex to prevent recursive changes
                 (*it)->setLock(&getLock());
-                
-                if(onAccessorInserted != nullptr)
+                lock = true;
+                if(!mDelayInsertionNotification)
                 {
-                    lock.store(true);
-                    onAccessorInserted(type, index, notification);
-                    lock.store(false);
+                    notifyAccessorInsertion<type>(index, notification);
                 }
-                if constexpr((element_type::flags & Flag::notifying) != 0)
-                {
-                    mListeners.notify([index, this](Listener& listener)
-                    {
-                        if(listener.onAccessorInserted != nullptr)
-                        {
-                            listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, index);
-                        }
-                    }, notification);
-                }
+                return true;
             }
             lock = true;
-            return true;
+            return false;
         }
         
     private:
+        
+        template <acsr_enum_type type>
+        bool notifyAccessorInsertion(size_t index, NotificationType const notification)
+        {
+            auto& lock = getLock();
+            auto const canAccess = lock.exchange(false);
+            anlStrongAssert(canAccess == true);
+            if(!canAccess)
+            {
+                return false;
+            }
+            
+            if(onAccessorInserted != nullptr)
+            {
+                lock.store(true);
+                onAccessorInserted(type, index, notification);
+                lock.store(false);
+            }
+            
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
+            if constexpr((element_type::flags & Flag::notifying) != 0)
+            {
+                mListeners.notify([index, this](Listener& listener)
+                {
+                    if(listener.onAccessorInserted != nullptr)
+                    {
+                        listener.onAccessorInserted(*static_cast<parent_t const*>(this), type, index);
+                    }
+                }, notification);
+            }
+            
+            lock = true;
+            return true;
+        }
         
         void setLock(std::atomic<bool>* lock)
         {
@@ -737,6 +765,7 @@ namespace Model
         
         std::atomic<bool> mLock {true};
         std::atomic<bool>* mSharedLock = nullptr;
+        bool mDelayInsertionNotification = false;
         
         template<class, class, class> friend class Accessor;
         
