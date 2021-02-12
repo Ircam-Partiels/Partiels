@@ -143,11 +143,13 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     auto const& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
     ColourSelector colourSelector;
     colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(plotAcsr.getAttr<Plot::AttrType::colourPlain>(), juce::NotificationType::dontSendNotification);
+    colourSelector.setCurrentColour(plotAcsr.getAttr<Plot::AttrType::colours>().line, juce::NotificationType::dontSendNotification);
     colourSelector.onColourChanged = [&](juce::Colour const& colour)
     {
         auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
-        acsr.setAttr<Plot::AttrType::colourPlain>(colour, NotificationType::synchronous);
+        auto colours = acsr.getAttr<Plot::AttrType::colours>();
+        colours.line = colour;
+        acsr.setAttr<Plot::AttrType::colours>(colours, NotificationType::synchronous);
     };
     juce::DialogWindow::LaunchOptions options;
     options.dialogTitle = juce::translate("Select the color of the curve");
@@ -161,7 +163,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 , mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
 {
     auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    acsr.setAttr<Plot::AttrType::colourMap>(static_cast<Plot::ColourMap>(index), NotificationType::synchronous);
+    auto colours = acsr.getAttr<Plot::AttrType::colours>();
+    colours.map = static_cast<Plot::ColourMap>(index);
+    acsr.setAttr<Plot::AttrType::colours>(colours, NotificationType::synchronous);
 })
 , mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
 {

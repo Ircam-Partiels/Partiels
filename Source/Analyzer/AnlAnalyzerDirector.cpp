@@ -167,7 +167,8 @@ void Analyzer::Director::runRendering(NotificationType const notification)
         return;
     }
     
-    auto const colourMap = mAccessor.getAccessor<AcsrType::plot>(0).getAttr<Plot::AttrType::colourMap>();
+    auto const& plot = mAccessor.getAccessor<AcsrType::plot>(0);
+    auto const colourMap = plot.getAttr<Plot::AttrType::colours>().map;
     
     auto const witdh = static_cast<int>(results.size());
     auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());

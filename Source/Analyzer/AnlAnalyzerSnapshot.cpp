@@ -41,7 +41,7 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
     mPlotListener.onAttrChanged = [&](Plot::Accessor const& acsr, Plot::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        if(attribute == Plot::AttrType::colourPlain || attribute == Plot::AttrType::colourMap)
+        if(attribute == Plot::AttrType::colours)
         {
             repaint();
         }
@@ -87,11 +87,11 @@ void Analyzer::Snapshot::paint(juce::Graphics& g)
     auto const& plotAscr = mAccessor.getAccessor<AcsrType::plot>(0);
     auto const& valueZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colour = plotAscr.getAttr<Plot::AttrType::colourPlain>();
+    auto const& colours = plotAscr.getAttr<Plot::AttrType::colours>();
     auto const& description = mAccessor.getAttr<AttrType::description>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const time = mAccessor.getAttr<AttrType::time>();
-    Plot::Renderer::paint(g, bounds, colour, description.output, results, visibleValueRange, time);
+    Plot::Renderer::paint(g, bounds, colours.line, description.output, results, visibleValueRange, time);
     
     if(!results.empty() && results.cbegin()->values.size() > 1)
     {

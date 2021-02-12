@@ -11,13 +11,32 @@ namespace Plot
 {
     using ColourMap = tinycolormap::ColormapType;
     
+    struct ColourSet
+    {
+        ColourMap map = ColourMap::Inferno;
+        juce::Colour line = juce::Colours::aliceblue;
+        juce::Colour background = juce::Colours::black;
+        
+        inline bool operator==(ColourSet const& rhd) const noexcept
+        {
+            return map == rhd.map &&
+            line == rhd.line &&
+            background == rhd.background;
+        }
+        
+        inline bool operator!=(ColourSet const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+    
+    using WindowState = juce::String;
+
     enum class AttrType : size_t
     {
           height
-        , colourPlain
-        , colourMap
+        , colours
         , propertyState
-        , propertyVisible
     };
     
     enum class AcsrType : size_t
@@ -28,10 +47,8 @@ namespace Plot
 
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::height, int, Model::Flag::basic>
-    , Model::Attr<AttrType::colourPlain, juce::Colour, Model::Flag::basic>
-    , Model::Attr<AttrType::colourMap, ColourMap, Model::Flag::basic>
-    , Model::Attr<AttrType::propertyState, juce::String, Model::Flag::basic>
-    , Model::Attr<AttrType::propertyVisible, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
+    , Model::Attr<AttrType::propertyState, WindowState, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -47,10 +64,8 @@ namespace Plot
         
         Accessor()
         : Accessor(AttrContainer(  {80}
-                                 , {juce::Colours::aliceblue}
-                                 , {ColourMap::Inferno}
                                  , {}
-                                 , {false}))
+                                 , {}))
         {
         }
         
@@ -68,6 +83,16 @@ namespace Plot
             return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
     };
+}
+
+namespace XmlParser
+{
+    template<>
+    void toXml<Plot::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plot::ColourSet const& value);
+    
+    template<>
+    auto fromXml<Plot::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plot::ColourSet const& defaultValue)
+    -> Plot::ColourSet;
 }
 
 ANALYSE_FILE_END

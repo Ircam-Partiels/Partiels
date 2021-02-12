@@ -51,7 +51,7 @@ Analyzer::TimeRenderer::TimeRenderer(Accessor& accessor, Zoom::Accessor& timeZoo
     mPlotListener.onAttrChanged = [&](Plot::Accessor const& acsr, Plot::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        if(attribute == Plot::AttrType::colourPlain || attribute == Plot::AttrType::colourMap)
+        if(attribute == Plot::AttrType::colours)
         {
             repaint();
         }
@@ -129,7 +129,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
 
     if(results.front().values.empty())
     {
-        g.setColour(plotAcsr.getAttr<Plot::AttrType::colourPlain>());
+        g.setColour(plotAcsr.getAttr<Plot::AttrType::colours>().line);
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
             if(realTimeRange.contains(results[i].timestamp))
@@ -146,7 +146,7 @@ void Analyzer::TimeRenderer::paint(juce::Graphics& g)
     else if(results.front().values.size() == 1)
     {
         auto const clip = g.getClipBounds();
-        g.setColour(plotAcsr.getAttr<Plot::AttrType::colourPlain>());
+        g.setColour(plotAcsr.getAttr<Plot::AttrType::colours>().line);
         auto const valueRange = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto valueToPixel = [&](float const value)
         {
