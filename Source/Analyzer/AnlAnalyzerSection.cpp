@@ -87,7 +87,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
         {
             case Plot::AttrType::height:
             {
-                setSize(getWidth(), acsr.getAttr<Plot::AttrType::height>() + 4);
+                setSize(getWidth(), acsr.getAttr<Plot::AttrType::height>() + 2);
             }
                 break;
                 
