@@ -39,8 +39,8 @@ namespace Zoom
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::globalRange, Range, Model::Flag::notifying>
-    , Model::Attr<AttrType::minimumLength, double, Model::Flag::notifying>
+    < Model::Attr<AttrType::globalRange, Range, Model::Flag::basic>
+    , Model::Attr<AttrType::minimumLength, double, Model::Flag::basic>
     , Model::Attr<AttrType::visibleRange, Range, Model::Flag::basic>
     >;
     
