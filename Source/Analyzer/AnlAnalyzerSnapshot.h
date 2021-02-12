@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerPropertyPanel.h"
-#include "../Zoom/AnlZoomModel.h"
+#include "AnlAnalyzerRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -28,10 +28,11 @@ namespace Analyzer
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
-        
         Zoom::Accessor& mTimeZoomAccessor;
+        Renderer mRenderer;
+        Accessor::Listener mListener;
+        
+        
         Zoom::Accessor::Listener mZoomListener;
         juce::Label mInformation;
     };

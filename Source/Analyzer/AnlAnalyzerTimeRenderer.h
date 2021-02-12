@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
+#include "AnlAnalyzerRenderer.h"
 #include "../Zoom/AnlZoomPlayhead.h"
 
 ANALYSE_FILE_BEGIN
@@ -32,10 +33,10 @@ namespace Analyzer
     private:
         
         Accessor& mAccessor;
-        Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
-        
         Zoom::Accessor& mTimeZoomAccessor;
+        Renderer mRenderer;
+        Accessor::Listener mListener;
+        
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
         

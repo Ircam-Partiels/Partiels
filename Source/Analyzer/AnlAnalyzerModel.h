@@ -54,12 +54,7 @@ namespace Analyzer
           valueZoom
         , binZoom
     };
-    
-    enum class SignalType
-    {
-          image
-    };
-    
+
     enum class WarningType
     {
           feature
@@ -91,7 +86,6 @@ namespace Analyzer
 
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
-    , public Broadcaster<Accessor, SignalType>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
@@ -125,12 +119,6 @@ namespace Analyzer
             }
             return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
-        
-        std::shared_ptr<juce::Image const> getImage() const;
-        void setImage(std::shared_ptr<juce::Image> image, NotificationType notification);
-    private:
-            
-        AtomicManager<juce::Image> mImageManager;
     };
 }
 

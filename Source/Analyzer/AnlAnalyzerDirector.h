@@ -18,7 +18,6 @@ namespace Analyzer
     private:
         
         void runAnalysis(NotificationType const notification);
-        void runRendering(NotificationType const notification);
         void updateZoomRange(NotificationType const notification);
         
         // juce::AsyncUpdater
@@ -33,14 +32,11 @@ namespace Analyzer
         };
         
         Accessor& mAccessor;
+        std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::tuple<std::vector<Plugin::Result>, NotificationType>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
-        
-        std::atomic<ProcessState> mRenderingState {ProcessState::available};
-        std::future<std::tuple<juce::Image, NotificationType>> mRenderingProcess;
-        std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
-        
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
 }

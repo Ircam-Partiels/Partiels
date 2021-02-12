@@ -77,8 +77,11 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::results:
             case AttrType::warnings:
             case AttrType::time:
+            case AttrType::identifier:
+            case AttrType::height:
+            case AttrType::colours:
+            case AttrType::propertyState:
                 break;
-                
 }
     };
 

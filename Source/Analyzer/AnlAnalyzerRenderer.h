@@ -7,13 +7,40 @@ ANALYSE_FILE_BEGIN
 namespace Analyzer
 {
     class Renderer
+    : private juce::AsyncUpdater
     {
-        
     public:
-        static void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& colour, Plugin::Output const& output, std::vector<Plugin::Result> const& results, Zoom::Range const& valueRange, double time);
+
+        static juce::Image createImage(Accessor const& accessor, std::function<bool(void)> predicate = nullptr);
         
+        Renderer(Accessor& accessor);
+        ~Renderer() override;
         
-        static juce::Image createImage(std::vector<Plugin::Result> const& results, ColourMap const& colourMap, std::function<bool(void)> predicate = []() {return true;});
+        std::function<void(void)> onUpdated = nullptr;
+        
+        void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        void paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        
+    private:
+        
+        // juce::AsyncUpdater
+        void handleAsyncUpdate() override;
+        
+        enum class ProcessState
+        {
+              available
+            , aborted
+            , running
+            , ended
+        };
+        
+        Accessor& mAccessor;
+        Accessor::Listener mListener;
+        
+        std::atomic<ProcessState> mProcessState {ProcessState::available};
+        std::future<juce::Image> mProcess;
+        
+        juce::Image mImage;
     };
 }
 

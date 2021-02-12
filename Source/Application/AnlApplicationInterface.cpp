@@ -61,6 +61,7 @@ Application::Interface::Interface()
             case Document::AttrType::isPlaybackStarted:
             case Document::AttrType::playheadPosition:
             case Document::AttrType::layoutHorizontal:
+            case Document::AttrType::layout:
                 break;
         }
     };

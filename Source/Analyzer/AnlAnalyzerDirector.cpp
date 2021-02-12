@@ -13,7 +13,7 @@ Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioForm
 {
     accessor.onAttrUpdated = [&](AttrType anlAttr, NotificationType notification)
     {
-        switch (anlAttr)
+        switch(anlAttr)
         {
             case AttrType::name:
                 break;
@@ -33,7 +33,6 @@ Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioForm
             case AttrType::results:
             {
                 updateZoomRange(notification);
-                runRendering(notification);
             }
                 break;
         }
@@ -51,12 +50,6 @@ Analyzer::Director::~Director()
     {
         mAnalysisState = ProcessState::aborted;
         mAnalysisProcess.get();
-    }
-    
-    if(mRenderingProcess.valid())
-    {
-        mRenderingState = ProcessState::aborted;
-        mRenderingProcess.get();
     }
 }
 
@@ -151,57 +144,6 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     });
 }
 
-void Analyzer::Director::runRendering(NotificationType const notification)
-{
-    if(mRenderingProcess.valid())
-    {
-        mRenderingState = ProcessState::aborted;
-        mRenderingProcess.get();
-    }
-    mRenderingState = ProcessState::available;
-    
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    if(results.empty() || results[0].values.size() <= 1)
-    {
-        return;
-    }
-    
-    
-    auto const witdh = static_cast<int>(results.size());
-    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
-    anlWeakAssert(witdh > 0 && height > 0);
-    if(witdh < 0 || height < 0)
-    {
-        return;
-    }
-    
-    auto const colourMap = mAccessor.getAttr<AttrType::colours>().map;
-    mRenderingProcess = std::async([=, this]() -> std::tuple<juce::Image, NotificationType>
-    {
-        juce::Thread::setCurrentThreadName("Analyzer::Director::runRendering");
-        auto expected = ProcessState::available;
-        if(!mRenderingState.compare_exchange_weak(expected, ProcessState::running))
-        {
-            triggerAsyncUpdate();
-            return std::make_tuple(juce::Image(), notification);
-        }
-        
-        auto image = Renderer::createImage(results, colourMap, [this]()
-        {
-            return mRenderingState.load() != ProcessState::aborted;
-        });
-    
-        expected = ProcessState::running;
-        if(mRenderingState.compare_exchange_weak(expected, ProcessState::ended))
-        {
-            triggerAsyncUpdate();
-            return std::make_tuple(image, notification);
-        }
-        triggerAsyncUpdate();
-        return std::make_tuple(juce::Image(), notification);
-    });
-}
-
 void Analyzer::Director::updateZoomRange(NotificationType const notification)
 {
     auto const& results = mAccessor.getAttr<AttrType::results>();
@@ -254,21 +196,6 @@ void Analyzer::Director::handleAsyncUpdate()
         {
             mAnalysisProcess.get();
             mAnalysisState = ProcessState::available;
-        }
-    }
-    
-    if(mRenderingProcess.valid())
-    {
-        auto expected = ProcessState::ended;
-        if(mRenderingState.compare_exchange_weak(expected, ProcessState::available))
-        {
-            auto const result = mRenderingProcess.get();
-            mAccessor.setImage(std::make_shared<juce::Image>(std::get<0>(result)), std::get<1>(result));
-        }
-        else if(expected == ProcessState::aborted)
-        {
-            mAnalysisProcess.get();
-            mRenderingState = ProcessState::available;
         }
     }
 }

@@ -2,18 +2,191 @@
 
 ANALYSE_FILE_BEGIN
 
-void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& colour, Plugin::Output const& output, std::vector<Plugin::Result> const& results, Zoom::Range const& valueRange, double time)
+juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::function<bool(void)> predicate)
 {
-    g.setColour(juce::Colours::black);
+    auto const& results = accessor.getAttr<AttrType::results>();
+    if(results.empty())
+    {
+        return {};
+    }
+    
+    auto const width = static_cast<int>(results.size());
+    auto const height = static_cast<int>(results.front().values.size());
+    anlWeakAssert(width > 0 && height > 0);
+    if(width <= 0 || height <= 0)
+    {
+        return {};
+    }
+    
+    if(predicate == nullptr)
+    {
+        predicate = []()
+        {
+            return true;
+        };
+    }
+    
+    auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
+    juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
+    
+    auto const colourMap = accessor.getAttr<AttrType::colours>().map;
+    auto valueToColour = [&](float const value)
+    {
+        auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), colourMap);
+        return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+    };
+    
+    for(int i = 0; i < width && predicate(); ++i)
+    {
+        for(int j = 0; j < height && predicate(); ++j)
+        {
+            auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
+            data.setPixelColour(i, height - 1 - j, colour);
+        }
+    }
+    return predicate() ? image : juce::Image();
+}
+
+Analyzer::Renderer::Renderer(Accessor& accessor)
+: mAccessor(accessor)
+{
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
+            case AttrType::height:
+            case AttrType::propertyState:
+                break;
+            case AttrType::colours:
+            case AttrType::results:
+            {
+                if(mProcess.valid())
+                {
+                    mProcessState = ProcessState::aborted;
+                    mProcess.get();
+                }
+                mProcessState = ProcessState::available;
+                
+                auto const& results = acsr.getAttr<AttrType::results>();
+                if(results.empty() || results[0].values.size() <= 1)
+                {
+                    mImage = {};
+                    if(onUpdated != nullptr)
+                    {
+                        onUpdated();
+                    }
+                    return;
+                }
+                
+                
+                auto const witdh = static_cast<int>(results.size());
+                auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
+                anlWeakAssert(witdh > 0 && height > 0);
+                if(witdh < 0 || height < 0)
+                {
+                    mImage = {};
+                    if(onUpdated != nullptr)
+                    {
+                        onUpdated();
+                    }
+                    return;
+                }
+                
+                mProcess = std::async([this]() -> juce::Image
+                {
+                    juce::Thread::setCurrentThreadName("Analyzer::Renderer::Process");
+                    auto expected = ProcessState::available;
+                    if(!mProcessState.compare_exchange_weak(expected, ProcessState::running))
+                    {
+                        triggerAsyncUpdate();
+                        return {};
+                    }
+                    
+                    auto image = createImage(mAccessor, [this]()
+                    {
+                        return mProcessState.load() != ProcessState::aborted;
+                    });
+                    
+                    expected = ProcessState::running;
+                    if(mProcessState.compare_exchange_weak(expected, ProcessState::ended))
+                    {
+                        triggerAsyncUpdate();
+                        return image;
+                    }
+                    triggerAsyncUpdate();
+                    return {};
+                });
+            };
+                break;
+            case AttrType::time:
+            case AttrType::warnings:
+            case AttrType::processing:
+                break;
+        }
+    };
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Analyzer::Renderer::~Renderer()
+{
+    mAccessor.removeListener(mListener);
+    if(mProcess.valid())
+    {
+        mProcessState = ProcessState::aborted;
+        mProcess.get();
+    }
+}
+
+void Analyzer::Renderer::handleAsyncUpdate()
+{
+    if(mProcess.valid())
+    {
+        auto expected = ProcessState::ended;
+        if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
+        {
+            mImage = mProcess.get();
+            if(onUpdated != nullptr)
+            {
+                onUpdated();
+            }
+        }
+        else if(mProcessState == ProcessState::aborted)
+        {
+            mImage = mProcess.get();
+            mProcessState = ProcessState::available;
+            if(onUpdated != nullptr)
+            {
+                onUpdated();
+            }
+        }
+    }
+}
+
+void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+{
+    auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    auto const& output = mAccessor.getAttr<AttrType::description>().output;
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const time = mAccessor.getAttr<AttrType::time>();
+    
+    g.setColour(colours.background);
     g.fillRect(bounds);
-    if(results.empty() || bounds.isEmpty() || valueRange.isEmpty())
+    
+    if(results.empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
     {
         return;
     }
     
     enum class DisplayMode
     {
-          unsupported
+        unsupported
         , surface
         , bar
         , segment
@@ -36,15 +209,15 @@ void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bo
     
     auto getScaledValue = [&](float value)
     {
-        anlWeakAssert(!valueRange.isEmpty());
+        anlWeakAssert(!visibleValueRange.isEmpty());
         auto const verticalRange = bounds.getVerticalRange();
         anlWeakAssert(!verticalRange.isEmpty());
-        if(valueRange.isEmpty() || verticalRange.isEmpty())
+        if(visibleValueRange.isEmpty() || verticalRange.isEmpty())
         {
             return 0;
         }
-          
-        value = (value - static_cast<float>(valueRange.getStart())) / static_cast<float>(valueRange.getLength());
+        
+        value = (value - static_cast<float>(visibleValueRange.getStart())) / static_cast<float>(visibleValueRange.getLength());
         value = (1.0f - value) * static_cast<float>(verticalRange.getLength()) + static_cast<float>(verticalRange.getStart());
         return static_cast<int>(std::floor(value));
     };
@@ -58,14 +231,14 @@ void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bo
         {
             auto const realTime = Vamp::RealTime::fromSeconds(time);
             auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-            {
+                                   {
                 anlWeakAssert(result.hasTimestamp);
                 return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
             });
             
             if(it != results.cend())
             {
-                g.setColour(colour);
+                g.setColour(colours.line);
                 g.fillRect(bounds);
             }
         }
@@ -74,7 +247,7 @@ void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bo
         {
             auto const realTime = Vamp::RealTime::fromSeconds(time);
             auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-            {
+                                   {
                 anlWeakAssert(result.hasTimestamp);
                 return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
             });
@@ -86,16 +259,16 @@ void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bo
                 {
                     return;
                 }
-                    
+                
                 auto const value = it->values[0];
                 
                 auto const position = getScaledValue(value);
                 auto const area = bounds.withTop(position).toFloat();
                 
-                g.setColour(colour.withAlpha(0.2f));
+                g.setColour(colours.line.withAlpha(0.2f));
                 g.fillRect(area);
                 
-                g.setColour(colour);
+                g.setColour(colours.line);
                 g.fillRect(area.withHeight(1.0f));
             }
         }
@@ -130,55 +303,154 @@ void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bo
                 auto const position = getScaledValue(value);
                 auto const area = bounds.withTop(position).toFloat();
                 
-                g.setColour(colour.withAlpha(0.2f));
+                g.setColour(colours.line.withAlpha(0.2f));
                 g.fillRect(area);
                 
-                g.setColour(colour);
+                g.setColour(colours.line);
                 g.fillRect(area.withHeight(1.0f));
             }
         }
             break;
         case DisplayMode::matrix:
         {
+            auto image = mImage;
+            if(!image.isValid())
+            {
+                return;
+            }
             
+            auto const width = static_cast<float>(bounds.getWidth());
+            auto const height = bounds.getHeight();
+            
+            auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+            auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            
+            auto const globalTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            
+            auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
+            
+            auto const deltaX = static_cast<float>(time / globalTimeRange.getLength() * static_cast<double>(image.getWidth()));
+            auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image.getHeight()));
+            
+            auto const scaleX = width * static_cast<float>(image.getWidth());
+            auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
+            
+            auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
+            
+            g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
+            g.drawImageTransformed(image, transform);
         }
             break;
     }
 }
 
-juce::Image Analyzer::Renderer::createImage(std::vector<Plugin::Result> const& results, ColourMap const& colourMap, std::function<bool(void)> predicate)
+void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    if(results.empty())
+    auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    
+    g.setColour(colours.background);
+    g.fillRect(bounds);
+    
+    if(results.empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
     {
-        return {};
+        return;
     }
     
-    auto const width = static_cast<int>(results.size());
-    auto const height = static_cast<int>(results.front().values.size());
-    anlWeakAssert(width > 0 && height > 0);
-    if(width <= 0 || height <= 0)
-    {
-        return {};
-    }
+    auto const width = bounds.getWidth();
+    auto const height = bounds.getHeight();
     
-    auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
-    juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
+    auto const timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     
-    auto valueToColour = [&](float const value)
+    auto const realTimeRange = juce::Range<Vamp::RealTime>{Vamp::RealTime::fromSeconds(timeRange.getStart()), Vamp::RealTime::fromSeconds(timeRange.getEnd())};
+    
+    auto const timeLength = timeRange.getLength();
+    auto timeToPixel = [&](Vamp::RealTime const&  timestamp)
     {
-        auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), colourMap);
-        return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+        auto const time = (((timestamp.sec * 1000.0 + timestamp.msec()) / 1000.0) - timeRange.getStart()) / timeLength;
+        return static_cast<int>(time * width);
     };
     
-    for(int i = 0; i < width && predicate(); ++i)
+    auto const resultRatio = static_cast<double>(results.size()) / static_cast<double>(width);
+    auto const resultIncrement = static_cast<size_t>(std::floor(std::max(resultRatio, 1.0)));
+    
+    if(results.front().values.empty())
     {
-        for(int j = 0; j < height && predicate(); ++j)
+        g.setColour(mAccessor.getAttr<AttrType::colours>().line);
+        for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
-            auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
-            data.setPixelColour(i, height - 1 - j, colour);
+            if(realTimeRange.contains(results[i].timestamp))
+            {
+                auto const x = timeToPixel(results[i].timestamp);
+                g.drawVerticalLine(x, 0.0f, static_cast<float>(height));
+            }
+            else if(results[i].timestamp >= realTimeRange.getEnd())
+            {
+                break;
+            }
         }
     }
-    return predicate() ? image : juce::Image();
+    else if(results.front().values.size() == 1)
+    {
+        auto const clip = g.getClipBounds();
+        g.setColour(mAccessor.getAttr<AttrType::colours>().line);
+        auto const valueRange = mAccessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        auto valueToPixel = [&](float const value)
+        {
+            auto const ratio = 1.0f - (value - valueRange.getStart()) / valueRange.getLength();
+            return static_cast<int>(ratio * height);
+        };
+        juce::Point<float> pt;
+        
+        for(size_t i = 0; i < results.size(); i += resultIncrement)
+        {
+            auto const next = i + resultIncrement;
+            auto const isVisible = realTimeRange.contains(results[i].timestamp) || (next < results.size() && realTimeRange.contains(results[next].timestamp));
+            
+            auto const x = timeToPixel(results[i].timestamp);
+            auto const y = valueToPixel(results[i].values[0]);
+            juce::Point<float> const npt{static_cast<float>(x), static_cast<float>(y)};
+            if(x >= clip.getX() && x <= clip.getRight() && isVisible && i > 0)
+            {
+                g.drawLine({pt, npt});
+            }
+            else if(results[i].timestamp >= realTimeRange.getEnd() || x > clip.getRight())
+            {
+                break;
+            }
+            pt = npt;
+        }
+    }
+    else
+    {
+        auto image = mImage;
+        if(!image.isValid())
+        {
+            return;
+        }
+        
+        auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+        auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        
+        auto const globalTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        
+        auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
+        
+        auto const deltaX = static_cast<float>(timeRange.getStart() / globalTimeRange.getLength() * static_cast<double>(image.getWidth()));
+        auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image.getHeight()));
+        
+        auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image.getWidth()));
+        auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
+        
+        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
+        
+        g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
+        g.drawImageTransformed(image, transform);
+    }
 }
 
 ANALYSE_FILE_END
