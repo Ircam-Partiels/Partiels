@@ -7,7 +7,7 @@ Document::Transport::Transport(Accessor& accessor)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        switch (attribute)
+        switch(attribute)
         {
             case AttrType::gain:
             {
@@ -36,6 +36,7 @@ Document::Transport::Transport(Accessor& accessor)
                 break;
             case AttrType::file:
             case AttrType::layoutHorizontal:
+            case AttrType::layout:
                 break;
         }
     };

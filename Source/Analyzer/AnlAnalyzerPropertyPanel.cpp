@@ -333,6 +333,10 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::warnings:
             case AttrType::time:
             case AttrType::processing:
+            case AttrType::identifier:
+            case AttrType::height:
+            case AttrType::colours:
+            case AttrType::propertyState:
                 break;
         }
     };

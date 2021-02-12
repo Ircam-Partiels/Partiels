@@ -108,7 +108,7 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     addChildComponent(mBinScrollBar);
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mSnapshot);
-    addAndMakeVisible(mTimeRenderer);
+    addAndMakeVisible(mPlot);
     addAndMakeVisible(mResizerBarLeft);
     addAndMakeVisible(mResizerBarRight);
     setSize(80, 100);
@@ -148,7 +148,7 @@ void Analyzer::Section::resized()
         mSnapshot.setBounds(leftSide.withTrimmedLeft(1));
     }
     
-    // Renderer, rulers and scrollbars
+    // Plot, Rulers and Scrollbars
     {
         auto rightSide = bounds.removeFromRight(rightSize);
         auto const scrollbarBounds = rightSide.removeFromRight(8).reduced(0, 4);
@@ -157,7 +157,7 @@ void Analyzer::Section::resized()
         auto const rulerBounds = rightSide.removeFromRight(16).reduced(0, 4);
         mValueRuler.setBounds(rulerBounds);
         mBinRuler.setBounds(rulerBounds);
-        mTimeRenderer.setBounds(rightSide);
+        mPlot.setBounds(rightSide);
     }
 }
 

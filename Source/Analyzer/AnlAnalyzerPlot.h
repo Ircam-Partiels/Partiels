@@ -8,7 +8,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    class TimeRenderer
+    class Plot
     : public juce::Component
     {
     public:
@@ -20,8 +20,8 @@ namespace Analyzer
             , textColourId
         };
         
-        TimeRenderer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
-        ~TimeRenderer() override;
+        Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
+        ~Plot() override;
         
         // juce::Component
         void resized() override;

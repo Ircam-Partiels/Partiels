@@ -3,7 +3,7 @@
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "AnlAnalyzerThumbnail.h"
-#include "AnlAnalyzerTimeRenderer.h"
+#include "AnlAnalyzerPlot.h"
 #include "AnlAnalyzerSnapshot.h"
 
 ANALYSE_FILE_BEGIN
@@ -44,7 +44,7 @@ namespace Analyzer
         
         Thumbnail mThumbnail {mAccessor};
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
-        TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
+        Plot mPlot {mAccessor, mTimeZoomAccessor};
         
         Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};

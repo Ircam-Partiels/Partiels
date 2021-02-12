@@ -59,6 +59,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
             }
                 break;
             case AttrType::layoutHorizontal:
+            case AttrType::layout:
                 break;
         }
     };

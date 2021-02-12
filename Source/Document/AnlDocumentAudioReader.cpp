@@ -141,7 +141,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
             return 0;
         };
         
-        switch (attribute)
+        switch(attribute)
         {
             case AttrType::file:
             {
@@ -205,6 +205,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
             }
                 break;
             case AttrType::layoutHorizontal:
+            case AttrType::layout:
                 break;
         }
     };

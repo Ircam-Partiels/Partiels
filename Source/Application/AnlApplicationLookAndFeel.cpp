@@ -43,9 +43,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Analyzer::Snapshot::backgroundColourId, backgroundColour.darker());
     setColour(Analyzer::Snapshot::borderColourId, backgroundColour);
     setColour(Analyzer::Snapshot::textColourId, textColour);
-    setColour(Analyzer::TimeRenderer::backgroundColourId, backgroundColour.darker());
-    setColour(Analyzer::TimeRenderer::borderColourId, backgroundColour);
-    setColour(Analyzer::TimeRenderer::textColourId, textColour);
+    setColour(Analyzer::Plot::backgroundColourId, backgroundColour.darker());
+    setColour(Analyzer::Plot::borderColourId, backgroundColour);
+    setColour(Analyzer::Plot::textColourId, textColour);
     setColour(Analyzer::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour.darker());
