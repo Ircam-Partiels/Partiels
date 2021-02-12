@@ -30,7 +30,6 @@ namespace Analyzer
         Accessor& mAccessor;
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
-        Plot::Accessor::Listener mPlotListener;
         
         Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mZoomListener;

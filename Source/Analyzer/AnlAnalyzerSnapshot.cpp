@@ -13,9 +13,32 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        if(attribute == AttrType::results || attribute == AttrType::time)
+        switch(attribute)
         {
-            repaint();
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
+            case AttrType::height:
+                break;
+            case AttrType::colours:
+            {
+                repaint();
+            }
+                break;
+            case AttrType::propertyState:
+                break;
+            case AttrType::results:
+            case AttrType::time:
+            {
+                repaint();
+            }
+                break;
+                
+            case AttrType::warnings:
+            case AttrType::processing:
+                break;
         }
     };
     
@@ -38,31 +61,19 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
         repaint();
     };
     
-    mPlotListener.onAttrChanged = [&](Plot::Accessor const& acsr, Plot::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        if(attribute == Plot::AttrType::colours)
-        {
-            repaint();
-        }
-    };
     
     mAccessor.addReceiver(mReceiver);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    plotAcsr.addListener(mPlotListener, NotificationType::synchronous);
-    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::Snapshot::~Snapshot()
 {
     mTimeZoomAccessor.removeListener(mZoomListener);
-    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).removeListener(mZoomListener);
-    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-    plotAcsr.removeListener(mPlotListener);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
     mAccessor.removeReceiver(mReceiver);
 }
@@ -84,10 +95,9 @@ void Analyzer::Snapshot::paint(juce::Graphics& g)
     path.addRoundedRectangle(bounds, 4.0f);
     g.reduceClipRegion(path);
     
-    auto const& plotAscr = mAccessor.getAccessor<AcsrType::plot>(0);
-    auto const& valueZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colours = plotAscr.getAttr<Plot::AttrType::colours>();
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
     auto const& description = mAccessor.getAttr<AttrType::description>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const time = mAccessor.getAttr<AttrType::time>();
@@ -104,7 +114,7 @@ void Analyzer::Snapshot::paint(juce::Graphics& g)
         auto const width = getWidth();
         auto const height = getHeight();
         
-        auto const& binZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::binZoom>(0);
+        auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
         auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
         auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         

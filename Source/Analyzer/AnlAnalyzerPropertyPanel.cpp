@@ -140,16 +140,14 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                           
 , mPropertyColourSelector("Color", "The current color", [&]()
 {
-    auto const& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
     ColourSelector colourSelector;
     colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(plotAcsr.getAttr<Plot::AttrType::colours>().line, juce::NotificationType::dontSendNotification);
+    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colours>().line, juce::NotificationType::dontSendNotification);
     colourSelector.onColourChanged = [&](juce::Colour const& colour)
     {
-        auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
-        auto colours = acsr.getAttr<Plot::AttrType::colours>();
+        auto colours = mAccessor.getAttr<AttrType::colours>();
         colours.line = colour;
-        acsr.setAttr<Plot::AttrType::colours>(colours, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
     };
     juce::DialogWindow::LaunchOptions options;
     options.dialogTitle = juce::translate("Select the color of the curve");
@@ -162,22 +160,19 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 })
 , mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
 {
-    auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    auto colours = acsr.getAttr<Plot::AttrType::colours>();
-    colours.map = static_cast<Plot::ColourMap>(index);
-    acsr.setAttr<Plot::AttrType::colours>(colours, NotificationType::synchronous);
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.map = static_cast<ColourMap>(index);
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
 , mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
 {
-    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withStart(static_cast<double>(value));
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
 })
 , mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
 {
-    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
 })
@@ -420,13 +415,11 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
     mFloatingWindow.onChanged = [&]()
     {
-        auto& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
-        acsr.setAttr<Plot::AttrType::propertyState>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::propertyState>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
     };
     
-    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
-    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -436,9 +429,8 @@ Analyzer::PropertyPanel::~PropertyPanel()
     mBoundsListener.detachFrom(mGraphicalSection);
     mBoundsListener.detachFrom(mPluginSection);
     mAccessor.removeListener(mListener);
-    auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0).removeListener(mBinZoomListener);
-    plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
 }
 
 void Analyzer::PropertyPanel::resized()
@@ -453,8 +445,7 @@ void Analyzer::PropertyPanel::resized()
 
 void Analyzer::PropertyPanel::show()
 {
-    auto const& acsr = mAccessor.getAccessor<AcsrType::plot>(0);
-    auto const& displayInfo = acsr.getAttr<Plot::AttrType::propertyState>();
+    auto const& displayInfo = mAccessor.getAttr<AttrType::propertyState>();
     if(displayInfo.isEmpty())
     {
         auto const& desktop = juce::Desktop::getInstance();

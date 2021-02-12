@@ -10,6 +10,7 @@ ANALYSE_FILE_BEGIN
 namespace Plot
 {
     using ColourMap = tinycolormap::ColormapType;
+    using WindowState = juce::String;
     
     struct ColourSet
     {
@@ -29,8 +30,6 @@ namespace Plot
             return !(*this == rhd);
         }
     };
-    
-    using WindowState = juce::String;
 
     enum class AttrType : size_t
     {

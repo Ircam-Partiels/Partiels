@@ -167,8 +167,6 @@ void Analyzer::Director::runRendering(NotificationType const notification)
         return;
     }
     
-    auto const& plot = mAccessor.getAccessor<AcsrType::plot>(0);
-    auto const colourMap = plot.getAttr<Plot::AttrType::colours>().map;
     
     auto const witdh = static_cast<int>(results.size());
     auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
@@ -178,6 +176,7 @@ void Analyzer::Director::runRendering(NotificationType const notification)
         return;
     }
     
+    auto const colourMap = mAccessor.getAttr<AttrType::colours>().map;
     mRenderingProcess = std::async([=, this]() -> std::tuple<juce::Image, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runRendering");
@@ -206,7 +205,6 @@ void Analyzer::Director::runRendering(NotificationType const notification)
 
 void Analyzer::Director::updateZoomRange(NotificationType const notification)
 {
-    auto& plotAscr = mAccessor.getAccessor<AcsrType::plot>(0);
     auto const& results = mAccessor.getAttr<AttrType::results>();
     if(results.empty())
     {
@@ -233,11 +231,11 @@ void Analyzer::Director::updateZoomRange(NotificationType const notification)
     };
     
     auto const info = getZoomInfo();
-    auto& valueZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::valueZoom>(0);
+    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
     valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
     
-    auto& binZoomAcsr = plotAscr.getAccessor<Plot::AcsrType::binZoom>(0);
+    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
     binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(results[0].values.size())}, notification);
     binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
 }

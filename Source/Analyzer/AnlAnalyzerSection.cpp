@@ -9,16 +9,14 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
 {
     mValueRuler.onDoubleClick = [&]()
     {
-        auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-        auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::valueZoom>(0);
+        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
         auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
     
     mBinRuler.onDoubleClick = [&]()
     {
-        auto& plotAcsr = mAccessor.getAccessor<AcsrType::plot>(0);
-        auto& zoomAcsr = plotAcsr.getAccessor<Plot::AcsrType::binZoom>(0);
+        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
         auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
@@ -35,10 +33,21 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     {
         switch(type)
         {
+            case AttrType::identifier:
+                break;
             case AttrType::name:
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
+                break;
+            case AttrType::height:
+            {
+                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 2);
+            }
+                break;
+            case AttrType::colours:
+                break;
+            case AttrType::propertyState:
                 break;
             case AttrType::results:
             {
@@ -76,29 +85,19 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
                 }
             }
                 break;
+            case AttrType::time:
+                break;
             case AttrType::warnings:
                 break;
-        }
+            case AttrType::processing:
+                break;
+}
     };
     
-    mPlotListener.onAttrChanged = [&](Plot::Accessor const& acsr, Plot::AttrType const attribute)
-    {
-        switch(attribute)
-        {
-            case Plot::AttrType::height:
-            {
-                setSize(getWidth(), acsr.getAttr<Plot::AttrType::height>() + 2);
-            }
-                break;
-                
-            default:
-                break;
-        }
-    };
     
     auto onResizerMoved = [&](int size)
     {
-        mPlotAccessor.setAttr<Plot::AttrType::height>(size, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
     };
     mResizerBarLeft.onMoved = onResizerMoved;
     mResizerBarRight.onMoved = onResizerMoved;
@@ -116,12 +115,10 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     
     mSeparator.addComponentListener(this);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mPlotAccessor.addListener(mPlotListener, NotificationType::synchronous);
 }
 
 Analyzer::Section::~Section()
 {
-    mPlotAccessor.removeListener(mPlotListener);
     mAccessor.removeListener(mListener);
     mSeparator.removeComponentListener(this);
 }

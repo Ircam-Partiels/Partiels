@@ -38,20 +38,18 @@ namespace Analyzer
         void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
         
         Accessor& mAccessor;
-        Plot::Accessor& mPlotAccessor {mAccessor.getAccessor<AcsrType::plot>(0)};
         Zoom::Accessor& mTimeZoomAccessor;
         juce::Component& mSeparator;
         Accessor::Listener mListener;
-        Plot::Accessor::Listener mPlotListener;
         
         Thumbnail mThumbnail {mAccessor};
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         TimeRenderer mTimeRenderer {mAccessor, mTimeZoomAccessor};
         
-        Zoom::Ruler mValueRuler {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mValueScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
-        Zoom::Ruler mBinRuler  {mPlotAccessor.getAccessor<Plot::AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mBinScrollBar {mPlotAccessor.getAccessor<Plot::AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mBinRuler  {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mBinScrollBar {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
         
         ResizerBar mResizerBarLeft {ResizerBar::Orientation::horizontal, {50, 2000}};
         ResizerBar mResizerBarRight {ResizerBar::Orientation::horizontal, {50, 2000}};
