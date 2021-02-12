@@ -34,6 +34,7 @@ namespace Analyzer
         
         
         Zoom::Accessor::Listener mZoomListener;
+        LoadingCircle mProcessingButton;
         juce::Label mInformation;
     };
 }

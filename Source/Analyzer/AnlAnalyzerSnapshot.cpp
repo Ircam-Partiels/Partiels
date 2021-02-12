@@ -6,11 +6,13 @@ ANALYSE_FILE_BEGIN
 Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
-, mRenderer(accessor)
+, mRenderer(accessor, Renderer::Type::frame)
 {
+    addChildComponent(mProcessingButton);
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
+    
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -25,7 +27,14 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
             case AttrType::propertyState:
             case AttrType::results:
             case AttrType::warnings:
+                break;
             case AttrType::processing:
+            {
+                auto const state = acsr.getAttr<AttrType::processing>();
+                mProcessingButton.setActive(state);
+                mProcessingButton.setVisible(state);
+                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+            }
                 break;
             case AttrType::colours:
             case AttrType::time:
@@ -64,6 +73,7 @@ Analyzer::Snapshot::~Snapshot()
 void Analyzer::Snapshot::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
+    mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
 void Analyzer::Snapshot::paint(juce::Graphics& g)
@@ -78,7 +88,7 @@ void Analyzer::Snapshot::paint(juce::Graphics& g)
     path.addRoundedRectangle(bounds, 4.0f);
     g.reduceClipRegion(path);
     
-    mRenderer.paintFrame(g, bounds, mTimeZoomAccessor);
+    mRenderer.paint(g, bounds, mTimeZoomAccessor);
 }
 
 ANALYSE_FILE_END

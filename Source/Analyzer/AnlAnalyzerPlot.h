@@ -39,7 +39,7 @@ namespace Analyzer
         
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
-        
+        LoadingCircle mProcessingButton;
         juce::Label mInformation;
     };
 }

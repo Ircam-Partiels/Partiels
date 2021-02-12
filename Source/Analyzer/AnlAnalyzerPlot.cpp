@@ -5,8 +5,9 @@ ANALYSE_FILE_BEGIN
 Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
-, mRenderer(accessor)
+, mRenderer(accessor, Renderer::Type::range)
 {
+    addChildComponent(mProcessingButton);
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
@@ -38,15 +39,10 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
                 break;
             case AttrType::processing:
             {
-                if(acsr.getAttr<AttrType::processing>())
-                {
-                    mInformation.setVisible(true);
-                    mInformation.setText("processing...", juce::NotificationType::dontSendNotification);
-                }
-                else
-                {
-                    mInformation.setText("", juce::NotificationType::dontSendNotification);
-                }
+                auto const state = acsr.getAttr<AttrType::processing>();
+                mProcessingButton.setActive(state);
+                mProcessingButton.setVisible(state);
+                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
             }
                 break;
         }
@@ -81,6 +77,7 @@ void Analyzer::Plot::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
     mZoomPlayhead.setBounds(getLocalBounds().reduced(2));
+    mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
 void Analyzer::Plot::paint(juce::Graphics& g)
@@ -95,7 +92,7 @@ void Analyzer::Plot::paint(juce::Graphics& g)
     path.addRoundedRectangle(bounds, 4.0f);
     g.reduceClipRegion(path);
     
-    mRenderer.paintRange(g, bounds, mTimeZoomAccessor);
+    mRenderer.paint(g, bounds, mTimeZoomAccessor);
 }
 
 void Analyzer::Plot::mouseMove(juce::MouseEvent const& event)

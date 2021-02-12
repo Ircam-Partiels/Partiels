@@ -10,18 +10,26 @@ namespace Analyzer
     : private juce::AsyncUpdater
     {
     public:
+        
+        enum class Type
+        {
+              frame
+            , range
+        };
 
         static juce::Image createImage(Accessor const& accessor, std::function<bool(void)> predicate = nullptr);
         
-        Renderer(Accessor& accessor);
+        Renderer(Accessor& accessor, Type type);
         ~Renderer() override;
         
         std::function<void(void)> onUpdated = nullptr;
         
-        void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        void paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         
     private:
+        
+        void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds);
+        void paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
@@ -35,6 +43,7 @@ namespace Analyzer
         };
         
         Accessor& mAccessor;
+        Type const mType;
         Accessor::Listener mListener;
         
         std::atomic<ProcessState> mProcessState {ProcessState::available};

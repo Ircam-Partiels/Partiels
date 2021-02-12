@@ -47,8 +47,9 @@ juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::funct
     return predicate() ? image : juce::Image();
 }
 
-Analyzer::Renderer::Renderer(Accessor& accessor)
+Analyzer::Renderer::Renderer(Accessor& accessor, Type type)
 : mAccessor(accessor)
+, mType(type)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -83,13 +84,22 @@ Analyzer::Renderer::Renderer(Accessor& accessor)
                     return;
                 }
                 
-                
                 auto const witdh = static_cast<int>(results.size());
                 auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
                 anlWeakAssert(witdh > 0 && height > 0);
                 if(witdh < 0 || height < 0)
                 {
                     mImage = {};
+                    if(onUpdated != nullptr)
+                    {
+                        onUpdated();
+                    }
+                    return;
+                }
+                
+                if(mType == Type::frame)
+                {
+                    mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
                     if(onUpdated != nullptr)
                     {
                         onUpdated();
@@ -167,7 +177,21 @@ void Analyzer::Renderer::handleAsyncUpdate()
     }
 }
 
-void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+
+void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+{
+    switch(mType)
+    {
+        case Type::frame:
+            paintFrame(g, bounds);
+            break;
+        case Type::range:
+            paintRange(g, bounds, timeZoomAcsr);
+            break;
+    }
+}
+
+void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds)
 {
     auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -231,7 +255,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
         {
             auto const realTime = Vamp::RealTime::fromSeconds(time);
             auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                                   {
+            {
                 anlWeakAssert(result.hasTimestamp);
                 return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
             });
@@ -247,7 +271,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
         {
             auto const realTime = Vamp::RealTime::fromSeconds(time);
             auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                                   {
+            {
                 anlWeakAssert(result.hasTimestamp);
                 return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
             });
@@ -319,25 +343,45 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
                 return;
             }
             
+            auto const realTime = Vamp::RealTime::fromSeconds(time);
+            auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& t)
+            {
+                return result.timestamp < t;
+            });
+            if(it == results.cend())
+            {
+                return;
+            }
+            
+            juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
+            
+            auto const colourMap = colours.map;
+            auto valueToColour = [&](float const value)
+            {
+                auto const color = tinycolormap::GetColor(static_cast<double>(value) / (image.getHeight() * 0.25), colourMap);
+                return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+            };
+            
+            for(int j = 0; j < image.getHeight(); ++j)
+            {
+                auto const colour = valueToColour(it->values[static_cast<size_t>(j)]);
+                data.setPixelColour(0, image.getHeight() - 1 - j, colour);
+            }
+
             auto const width = static_cast<float>(bounds.getWidth());
             auto const height = bounds.getHeight();
-            
+
             auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
             auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            
-            auto const globalTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            
+
             auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
-            
-            auto const deltaX = static_cast<float>(time / globalTimeRange.getLength() * static_cast<double>(image.getWidth()));
+
             auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image.getHeight()));
-            
-            auto const scaleX = width * static_cast<float>(image.getWidth());
             auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
-            
-            auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
-            
+
+            auto const transform = juce::AffineTransform::translation(0, -deltaY).scaled(width, scaleY).translated(bounds.getX(), bounds.getY());
+
             g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
             g.drawImageTransformed(image, transform);
         }
@@ -446,7 +490,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
         auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image.getWidth()));
         auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
         
-        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY);
+        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY).translated(bounds.getX(), bounds.getY());
         
         g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
         g.drawImageTransformed(image, transform);
