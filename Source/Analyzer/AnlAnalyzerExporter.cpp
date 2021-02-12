@@ -1,5 +1,5 @@
 #include "AnlAnalyzerExporter.h"
-#include "../Plot/AnlPlotRenderer.h"
+#include "AnlAnalyzerRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -77,7 +77,7 @@ void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alert
         return;
     }
     
-    auto image = Plot::Renderer::createImage(results, accessor.getAttr<AttrType::colours>().map);
+    auto image = Renderer::createImage(results, accessor.getAttr<AttrType::colours>().map);
     if(!imageFormat->writeImageToStream(image, stream))
     {
         auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));

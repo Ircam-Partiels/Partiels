@@ -1,8 +1,8 @@
-#include "AnlPlotRenderer.h"
+#include "AnlAnalyzerRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
-void Plot::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& colour, Plugin::Output const& output, std::vector<Plugin::Result> const& results, Zoom::Range const& valueRange, double time)
+void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& colour, Plugin::Output const& output, std::vector<Plugin::Result> const& results, Zoom::Range const& valueRange, double time)
 {
     g.setColour(juce::Colours::black);
     g.fillRect(bounds);
@@ -146,7 +146,7 @@ void Plot::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds
     }
 }
 
-juce::Image Plot::Renderer::createImage(std::vector<Plugin::Result> const& results, ColourMap const& colourMap, std::function<bool(void)> predicate)
+juce::Image Analyzer::Renderer::createImage(std::vector<Plugin::Result> const& results, ColourMap const& colourMap, std::function<bool(void)> predicate)
 {
     if(results.empty())
     {

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "AnlPlotModel.h"
-#include "../Plugin/AnlPluginModel.h"
+#include "AnlAnalyzerModel.h"
 
 ANALYSE_FILE_BEGIN
 
-namespace Plot
+namespace Analyzer
 {
     class Renderer
     {

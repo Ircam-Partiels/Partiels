@@ -1,5 +1,5 @@
 #include "AnlAnalyzerSnapshot.h"
-#include "../Plot/AnlPlotRenderer.h"
+#include "AnlAnalyzerRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -101,7 +101,7 @@ void Analyzer::Snapshot::paint(juce::Graphics& g)
     auto const& description = mAccessor.getAttr<AttrType::description>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const time = mAccessor.getAttr<AttrType::time>();
-    Plot::Renderer::paint(g, bounds, colours.line, description.output, results, visibleValueRange, time);
+    Renderer::paint(g, bounds, colours.line, description.output, results, visibleValueRange, time);
     
     if(!results.empty() && results.cbegin()->values.size() > 1)
     {

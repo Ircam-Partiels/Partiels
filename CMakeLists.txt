@@ -100,12 +100,6 @@ file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
 
-file(GLOB PlotSources
-    ${SOURCES_DIRECTORY}/Plot/AnlPlotModel.cpp
-    ${SOURCES_DIRECTORY}/Plot/AnlPlotModel.h
-    ${SOURCES_DIRECTORY}/Plot/AnlPlotRenderer.cpp
-    ${SOURCES_DIRECTORY}/Plot/AnlPlotRenderer.h)
-
 file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
@@ -119,6 +113,8 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSnapshot.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSnapshot.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerRenderer.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerRenderer.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerTimeRenderer.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerTimeRenderer.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp
@@ -178,7 +174,6 @@ source_group("Zoom" FILES ${ZoomSources})
 source_group("Application" FILES ${ApplicationSources})
 source_group("Document" FILES ${DocumentSources})
 source_group("Analyzer" FILES ${AnalyzerSources})
-source_group("Plot" FILES ${PlotSources})
 source_group("Plugin" FILES ${PluginSources})
 source_group("Translations" FILES ${TranslationsSources})
 
@@ -221,7 +216,7 @@ create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURC
 create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-set(BriochesSources ${MiscSources} ${ZoomSources} ${PluginSources} ${PlotSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
+set(BriochesSources ${MiscSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources} ${TranslationsSources})
 target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
 

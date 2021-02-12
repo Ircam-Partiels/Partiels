@@ -1,10 +1,9 @@
 #include "AnlAnalyzerDirector.h"
 #include "AnlAnalyzerPropertyPanel.h"
+#include "AnlAnalyzerRenderer.h"
 
 #include "../Plugin/AnlPluginProcessor.h"
 #include "../Plugin/AnlPluginListScanner.h"
-#include "../Plot/AnlPlotRenderer.h"
-
 
 ANALYSE_FILE_BEGIN
 
@@ -187,7 +186,7 @@ void Analyzer::Director::runRendering(NotificationType const notification)
             return std::make_tuple(juce::Image(), notification);
         }
         
-        auto image = Plot::Renderer::createImage(results, colourMap, [this]()
+        auto image = Renderer::createImage(results, colourMap, [this]()
         {
             return mRenderingState.load() != ProcessState::aborted;
         });
