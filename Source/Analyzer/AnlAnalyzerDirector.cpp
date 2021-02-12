@@ -15,29 +15,30 @@ Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioForm
     {
         switch(anlAttr)
         {
-            case AttrType::name:
-                break;
             case AttrType::key:
-            {
-                runAnalysis(notification);
-            }
-                break;
             case AttrType::state:
             {
                 runAnalysis(notification);
             }
                 break;
-            case AttrType::description:
-                break;
-            
             case AttrType::results:
             {
                 updateZoomRange(notification);
             }
                 break;
+            case AttrType::name:
+            case AttrType::description:
+            case AttrType::identifier:
+            case AttrType::height:
+            case AttrType::colours:
+            case AttrType::propertyState:
+            case AttrType::time:
+            case AttrType::warnings:
+            case AttrType::processing:
+                break;
         }
     };
-    accessor.onAttrUpdated(AttrType::key, NotificationType::synchronous);
+    runAnalysis(NotificationType::synchronous);
 }
 
 Analyzer::Director::~Director()

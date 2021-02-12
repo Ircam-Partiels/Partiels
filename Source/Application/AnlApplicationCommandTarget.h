@@ -26,14 +26,7 @@ namespace Application
             
             , EditUndo
             , EditRedo
-            
-            , AnalysisOpen
             , AnalysisNew
-            , AnalysisSave
-            , AnalysisDuplicate
-            , AnalysisRemove
-            , AnalysisProperties
-            , AnalysisExport
             
             , PointsNew
             , PointsRemove

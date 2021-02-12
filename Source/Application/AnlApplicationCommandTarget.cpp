@@ -85,14 +85,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
-
-        , CommandIDs::AnalysisOpen
         , CommandIDs::AnalysisNew
-        , CommandIDs::AnalysisSave
-        , CommandIDs::AnalysisDuplicate
-        , CommandIDs::AnalysisRemove
-        , CommandIDs::AnalysisProperties
-        , CommandIDs::AnalysisExport
         
         , CommandIDs::PointsNew
         , CommandIDs::PointsRemove
@@ -183,49 +176,10 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
         
-        case CommandIDs::AnalysisOpen:
-        {
-            result.setInfo(juce::translate("Open Analysis Template"), juce::translate("Open a new analysis"), "Analysis", 0);
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-            break;
         case CommandIDs::AnalysisNew:
         {
             result.setInfo(juce::translate("Add New Analysis"), juce::translate("Adds a new analysis"), "Analysis", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-            break;
-        case CommandIDs::AnalysisSave:
-        {
-            result.setInfo(juce::translate("Save Analysis Template"), juce::translate("Save the analysis"), "Analysis", 0);
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-            break;
-        case CommandIDs::AnalysisDuplicate:
-        {
-            result.setInfo(juce::translate("Duplicate Analysis"), juce::translate("Duplicates the analysis of the document"), "Analysis", 0);
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-            break;
-        case CommandIDs::AnalysisRemove:
-        {
-            result.setInfo(juce::translate("Remove Analysis"), juce::translate("Removes the analysis from the document"), "Analysis", 0);
-            result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
-            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
-            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(!docAcsr.getAccessors<Document::AcsrType::analyzers>().empty());
-        }
-            break;
-        case CommandIDs::AnalysisProperties:
-        {
-            result.setInfo(juce::translate("Show Analysis Properties"), juce::translate("Shows the analysis property window"), "Analysis", 0);
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-            break;
-        case CommandIDs::AnalysisExport:
-        {
-            result.setInfo(juce::translate("Exports Analysis"), juce::translate("Exports the analysis"), "Analysis", 0);
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
             break;
@@ -407,26 +361,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             showUnsupportedAction();
             return true;
         }
-            
-            
-        case CommandIDs::AnalysisOpen:
-        {
-            showUnsupportedAction();
-            return true;
-        }
         case CommandIDs::AnalysisNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
-            return true;
-        }
-        case CommandIDs::AnalysisSave:
-        case CommandIDs::AnalysisDuplicate:
-        case CommandIDs::AnalysisRemove:
-        case CommandIDs::AnalysisProperties:
-        case CommandIDs::AnalysisExport:
-        {
-            showUnsupportedAction();
             return true;
         }
             
@@ -521,7 +459,7 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Transport", "Analysis", "Points", "Zoom", "Help"};
+    return {"File", "Edit", "Transport", "Points", "Zoom", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -554,16 +492,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     {
         menu.addCommandItem(&commandManager, CommandIDs::EditUndo);
         menu.addCommandItem(&commandManager, CommandIDs::EditRedo);
-    }
-    else if(menuName == "Analysis")
-    {
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisOpen);
+        menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisNew);
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisSave);
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisDuplicate);
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisRemove);
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisExport);
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisProperties);
     }
     else if(menuName == "Points")
     {
