@@ -112,9 +112,10 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
     }
     
     auto constexpr pi = 3.14159265358979323846;
-    auto const y = dragSourceDetails.localPosition.getY() + offset;
-    auto const sourceHeight = source->getHeight();
+    auto const position = dragSourceDetails.localPosition.getY() + offset;
+    auto const sourceHeight = static_cast<double>(source->getHeight() + 2);
     auto const index = static_cast<size_t>(std::distance(mContents.cbegin(), it));
+    
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     for(size_t i = 0; i < mContents.size(); ++i)
     {
@@ -122,22 +123,12 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
         {
             if(i != index && i != index + 1)
             {
-                auto const distance = static_cast<double>(std::abs(bounds.getY() - y)) / static_cast<double>(sourceHeight + 2);
+                auto const difference = std::abs(bounds.getY() - position);
+                auto const distance = static_cast<double>(difference) / sourceHeight;
                 auto const scale = 1.0 - std::max((0.8 - std::cos(std::min(distance * pi, pi))) / 1.8, 0.0);
-                bounds.removeFromTop(static_cast<int>(std::ceil(scale * static_cast<double>(sourceHeight + 2))));
+                bounds.removeFromTop(static_cast<int>(std::ceil(scale * sourceHeight)));
             }
             mContents[i]->setBounds(bounds.removeFromTop(mContents[i]->getHeight()));
-        }
-    }
-    
-    // Scroll the viewport if this is necessary
-    JUCE_COMPILER_WARNING("check if we should keep that here")
-    if(auto* viewport = findParentComponentOfClass<juce::Viewport>())
-    {
-        auto const position = viewport->getMouseXYRelative();
-        if(viewport->autoScroll(viewport->getWidth() / 2, position.getY(), 20, 2))
-        {
-            juce::Component::beginDragAutoRepeat(20);
         }
     }
 }
@@ -178,34 +169,37 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
         return;
     }
     
-    auto const y = dragSourceDetails.localPosition.getY() + offset;
-    auto const sourceHeight = source->getHeight();
     auto const index = static_cast<size_t>(std::distance(mContents.cbegin(), it));
-    auto previousY = 0;
-    auto distance = sourceHeight;
-    auto newIndex = index;
-    for(size_t i = 0; i < mContents.size(); ++i)
+    auto getNewIndex = [&]()
     {
-        if(mContents[i] != nullptr)
+        auto contentY = 0;
+        auto const position = dragSourceDetails.localPosition.getY() + offset;
+        auto const sourceHeight = source->getHeight() + 2;
+        for(size_t i = 0; i < mContents.size(); ++i)
         {
-            if(i != index && i != index + 1)
+            if(mContents[i] != nullptr)
             {
-                auto const dist = static_cast<double>(std::abs(previousY - y));
-                if(dist < sourceHeight)
+                auto const distance = std::abs(contentY - position);
+                if(i != index && i != index + 1 && distance <= sourceHeight)
                 {
-                    distance = dist;
-                    newIndex = i > index ? i - 1 : i;
+                    return i < index ? i : i - 1;
                 }
+                contentY += mContents[i]->getHeight();
             }
-            previousY += mContents[i]->getHeight();
         }
-    }
+        auto const distance = std::abs(contentY - position);
+        if(index < mContents.size() - 1 && distance <= sourceHeight)
+        {
+            return mContents.size() - 1;
+        }
+        return index;
+    };
     
-    if(newIndex != index)
+    auto const newIndex = getNewIndex();
+    if(index != newIndex && onComponentDragged != nullptr)
     {
         onComponentDragged(index, newIndex);
     }
-    
     itemDragExit(dragSourceDetails);
 }
 

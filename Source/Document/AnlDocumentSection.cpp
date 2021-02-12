@@ -27,7 +27,6 @@ Document::Section::Section(Accessor& accessor)
             {
                 return section->getIdentifier() == identifier;
             });
-            anlWeakAssert(it != mSections.cend());
             if(it != mSections.cend())
             {
                 components.push_back(*it->get());
@@ -85,7 +84,7 @@ Document::Section::Section(Accessor& accessor)
                     };
                     mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 }
-                updateComponents();
+                anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
             }
                 break;
                 
@@ -104,6 +103,9 @@ Document::Section::Section(Accessor& accessor)
                 break;
             case AcsrType::analyzers:
             {
+                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
+                anlAcsr.removeListener(mAnalyzerListener);
+                
                 mSections.erase(mSections.begin() + static_cast<long>(index));
                 updateComponents();
             }
@@ -113,6 +115,15 @@ Document::Section::Section(Accessor& accessor)
                 break;
         }
         
+    };
+    
+    mAnalyzerListener.onAttrChanged = [=](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        if(attribute == Analyzer::AttrType::identifier)
+        {
+            updateComponents();
+        }
     };
     
     mZoomTimeRuler.onDoubleClick = [&]()
@@ -148,6 +159,10 @@ Document::Section::Section(Accessor& accessor)
 
 Document::Section::~Section()
 {
+    for(auto& anlAcsrs : mAccessor.getAccessors<AcsrType::analyzers>())
+    {
+        anlAcsrs.get().removeListener(mAnalyzerListener);
+    }
     mAccessor.removeListener(mListener);
 }
 
