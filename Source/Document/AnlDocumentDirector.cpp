@@ -5,10 +5,11 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager)
+Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager const& audioFormatManager)
 : mAccessor(accessor)
+, mPluginListScanner(pluginListScanner)
 , mAudioFormatManager(audioFormatManager)
-, mPluginListTable(pluginAccessor)
+, mPluginListTable(pluginListAccessor, pluginListScanner)
 {
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
     {
@@ -78,7 +79,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginAcc
                 }
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
-                auto director = std::make_unique<Analyzer::Director>(anlAcsr, std::move(audioFormatReader));
+                auto director = std::make_unique<Analyzer::Director>(anlAcsr, mPluginListScanner, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
                 mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
             }

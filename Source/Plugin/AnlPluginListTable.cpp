@@ -1,11 +1,10 @@
-
 #include "AnlPluginListTable.h"
-#include "AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 
-PluginList::Table::Table(Accessor& accessor)
+PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
+, mScanner(scanner)
 , mClearButton(juce::translate("Clear"))
 , mScanButton(juce::translate("Scan"))
 {
@@ -41,11 +40,11 @@ PluginList::Table::Table(Accessor& accessor)
     mScanButton.setClickingTogglesState(false);
     mScanButton.onClick = [this]()
     {
-        auto getNewList = []() -> decltype(Scanner::getPluginKeys(48000.0, AlertType::window))
+        auto getNewList = [this]() -> decltype(mScanner.getPluginKeys(48000.0, AlertType::window))
         {
             try
             {
-                return Scanner::getPluginKeys(48000.0, AlertType::window);
+                return mScanner.getPluginKeys(48000.0, AlertType::window);
             }
             catch(std::runtime_error& e)
             {
@@ -113,7 +112,7 @@ void PluginList::Table::updateContent()
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
     for(auto const& key : keys)
     {
-        auto const description = Scanner::getPluginDescription(key, 48000.0, AlertType::window);
+        auto const description = mScanner.getPluginDescription(key, 48000.0, AlertType::window);
         if(description.name.isNotEmpty())
         {
             auto const filterName = (description.name + description.output.name + description.maker).removeCharacters(" ");

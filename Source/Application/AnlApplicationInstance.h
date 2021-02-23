@@ -57,6 +57,7 @@ namespace Application
         
         Accessor mApplicationAccessor;
         PluginList::Accessor mPluginListAccessor;
+        PluginList::Scanner mPluginListScanner;
         Document::Accessor mDocumentAccessor {
         Document::AttrContainer
         {
@@ -68,7 +69,7 @@ namespace Application
             , {144}
             , {}
         }};
-        Document::Director mDocumentDirector {mDocumentAccessor, mPluginListAccessor, mAudioFormatManager};
+        Document::Director mDocumentDirector {mDocumentAccessor, mPluginListAccessor, mPluginListScanner, mAudioFormatManager};
         Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};
         
         Properties mProperties;

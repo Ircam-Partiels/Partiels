@@ -7,8 +7,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
+Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
+, mPluginListScanner(pluginListScanner)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
 {
     accessor.onAttrUpdated = [&](AttrType anlAttr, NotificationType notification)
@@ -110,13 +111,13 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         return;
     }
     
-    auto const descriptions = PluginList::Scanner::getPluginDescription(key, reader->sampleRate, AlertType::window);
-    anlWeakAssert(descriptions != Plugin::Description{});
-    if(descriptions == Plugin::Description{})
+    auto const description = mPluginListScanner.getPluginDescription(key, reader->sampleRate, AlertType::window);
+    anlWeakAssert(description != Plugin::Description{});
+    if(description == Plugin::Description{})
     {
         return;
     }
-    mAccessor.setAttr<AttrType::description>(descriptions, notification);
+    mAccessor.setAttr<AttrType::description>(description, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
     
     mAnalysisProcess = std::async([=, this, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>

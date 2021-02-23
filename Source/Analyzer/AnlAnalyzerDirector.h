@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlAnalyzerModel.h"
+#include "../Plugin/AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +11,7 @@ namespace Analyzer
     : private juce::AsyncUpdater
     {
     public:
-        Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
+        Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
         ~Director() override;
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
@@ -32,6 +33,7 @@ namespace Analyzer
         };
         
         Accessor& mAccessor;
+        PluginList::Scanner& mPluginListScanner;
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::tuple<std::vector<Plugin::Result>, NotificationType>> mAnalysisProcess;

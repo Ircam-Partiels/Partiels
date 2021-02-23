@@ -6,31 +6,6 @@ ANALYSE_FILE_BEGIN
 
 Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate, AlertType const alertType, std::string const& errorMessage)
 {
-    using entry_t = std::tuple<std::string, float>;
-    struct entry_comp
-    {
-        bool operator() (entry_t const& lhs, entry_t const& rhs) const
-        {
-            return std::get<0>(lhs) + std::to_string(std::get<1>(lhs)) < std::get<0>(rhs) + std::to_string(std::get<1>(rhs));
-        }
-    };
-    
-    static std::mutex safetyMtex;
-    static std::map<entry_t, std::unique_ptr<Vamp::Plugin>, entry_comp> pluginList;
-    
-    std::unique_lock<std::mutex> lock(safetyMtex, std::try_to_lock);
-    anlStrongAssert(lock.owns_lock());
-    if(!lock.owns_lock())
-    {
-        return nullptr;
-    }
-    
-    auto const entry = std::make_tuple(key, sampleRate);
-    if(pluginList.count(entry) > 0_z)
-    {
-        return pluginList.at(entry).get();
-    }
-    
     using namespace Vamp;
     using namespace Vamp::HostExt;
     using AlertIconType = juce::AlertWindow::AlertIconType;
@@ -45,6 +20,19 @@ Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float samp
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, juce::translate("Cannot get the plugin loader."));
         }
         return nullptr;
+    }
+    
+    std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
+    anlStrongAssert(lock.owns_lock());
+    if(!lock.owns_lock())
+    {
+        return nullptr;
+    }
+    
+    auto const entry = std::make_tuple(key, sampleRate);
+    if(mPlugins.count(entry) > 0_z)
+    {
+        return mPlugins.at(entry).get();
     }
     
     auto const pluginKeys = pluginLoader->listPlugins();
@@ -80,8 +68,8 @@ Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float samp
         return nullptr;
     };
     
-    pluginList[entry] = doPlugin();
-    return pluginList[entry].get();
+    mPlugins[entry] = doPlugin();
+    return mPlugins[entry].get();
 }
 
 std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, AlertType const alertType)

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Misc/AnlBasics.h"
 #include "AnlPluginListModel.h"
+#include "AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -13,7 +13,7 @@ namespace PluginList
     {
     public:
         
-        Table(Accessor& accessor);
+        Table(Accessor& accessor, Scanner& scanner);
         ~Table() override;
         
         // juce::Component
@@ -35,6 +35,7 @@ namespace PluginList
         void sortOrderChanged(int newSortColumnId, bool isForwards) override;
         
         Accessor& mAccessor;
+        Scanner& mScanner;
         Accessor::Listener mListener;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         juce::TableListBox mPluginTable;

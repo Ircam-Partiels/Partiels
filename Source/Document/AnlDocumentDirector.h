@@ -11,7 +11,7 @@ namespace Document
     class Director
     {
     public:
-        Director(Accessor& accessor, PluginList::Accessor& pluginAccessor, juce::AudioFormatManager const& audioFormatManager);
+        Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager const& audioFormatManager);
         ~Director();
         
         void addAnalysis(AlertType const alertType, NotificationType const notification);
@@ -20,6 +20,7 @@ namespace Document
     private:
         
         Accessor& mAccessor;
+        PluginList::Scanner& mPluginListScanner;
         juce::AudioFormatManager const& mAudioFormatManager;
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
