@@ -191,8 +191,8 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
         {
             if(mContents[i] != nullptr)
             {
-                auto const distance = std::abs(contentY - position);
-                if(i != index && i != index + 1 && distance <= sourceHeight)
+                auto const distance = std::abs(contentY - 1 - position);
+                if(i != index && i != index + 1 && distance <= sourceHeight / 2)
                 {
                     return i < index ? i : i - 1;
                 }
