@@ -383,7 +383,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
             if(realTimeRange.contains(results[i].timestamp))
             {
                 auto const x = timeToPixel(results[i].timestamp);
-                g.drawVerticalLine(x, 0.0f, static_cast<float>(height));
+                g.drawVerticalLine(x, static_cast<float>(bounds.getY()), static_cast<float>(bounds.getBottom()));
             }
             else if(results[i].timestamp >= realTimeRange.getEnd())
             {
