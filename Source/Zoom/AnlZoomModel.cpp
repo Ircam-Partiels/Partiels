@@ -39,8 +39,8 @@ public:
                 Accessor acsr2{{{Range{0.0, 100.0}}, {1.0}, {Range{0.0, 100.0}}}};
                 acsr2.fromXml(*xml.get(), "Test", NotificationType::synchronous);
                 expect(acsr.getAttr<AttrType::visibleRange>() == acsr2.getAttr<AttrType::visibleRange>());
-                expect(acsr.getAttr<AttrType::globalRange>() != acsr2.getAttr<AttrType::globalRange>());
-                expect(std::abs(acsr.getAttr<AttrType::minimumLength>() - acsr2.getAttr<AttrType::minimumLength>()) > std::numeric_limits<double>::epsilon());
+                expect(acsr.getAttr<AttrType::globalRange>() == acsr2.getAttr<AttrType::globalRange>());
+                expect(std::abs(acsr.getAttr<AttrType::minimumLength>() - acsr2.getAttr<AttrType::minimumLength>()) < std::numeric_limits<double>::epsilon());
             }
         }
     }
