@@ -36,6 +36,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     auto const* const* readPointers = mBuffer.getArrayOfReadPointers();
     auto const position = mPosition;
     mPosition = position + static_cast<juce::int64>(stepSize);
+    auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));
     
     if(position > lengthInSamples)
     {
@@ -43,15 +44,22 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
         auto it = result.find(static_cast<int>(feature));
         if(it != result.end())
         {
+            for(auto& that : it->second)
+            {
+                if(!that.hasTimestamp)
+                {
+                    that.hasTimestamp = true;
+                    that.timestamp = rt;
+                }
+            }
             results.insert(results.end(), it->second.cbegin(), it->second.cend());
         }
         return false;
     }
+    
     auto const remaininSamples = std::min(lengthInSamples - position, static_cast<juce::int64>(blockSize));
-    
     mAudioFormatReader.read(writePointers, numChannels, position, static_cast<int>(remaininSamples));
-    auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));
-    
+
     auto result = mPlugin->process(readPointers, rt);
     auto it = result.find(static_cast<int>(feature));
     if(it != result.end())
