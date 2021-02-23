@@ -33,6 +33,9 @@ namespace Document
         Accessor::Listener mListener;
         BoundsListener mBoundsListener;
         
+        juce::Component mPlayheadContainer;
+        Zoom::Playhead mPlayhead {mAccessor.getAccessor<AcsrType::timeZoom>(0)};
+        
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         std::vector<std::unique_ptr<Analyzer::Section>> mSections;

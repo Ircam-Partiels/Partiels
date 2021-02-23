@@ -45,7 +45,11 @@ Document::Section::Section(Accessor& accessor)
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
+                break;
             case AttrType::playheadPosition:
+            {
+                mPlayhead.setPosition(acsr.getAttr<AttrType::playheadPosition>());
+            }
                 break;
             case AttrType::layoutHorizontal:
             {
@@ -145,6 +149,8 @@ Document::Section::Section(Accessor& accessor)
     mViewport.setScrollBarsShown(true, false, true, false);
     
     setSize(480, 200);
+    mPlayheadContainer.addAndMakeVisible(mPlayhead);
+    addAndMakeVisible(mPlayheadContainer);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mZoomTimeScrollBar);
@@ -165,8 +171,9 @@ void Document::Section::resized()
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
     auto const right = bounds.getWidth() - 32;
     
-    mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left).withRight(right));
-    mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left).withRight(right));
+    mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
+    mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 5));
+    mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
     
     mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
     mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));

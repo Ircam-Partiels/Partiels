@@ -80,15 +80,15 @@ void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
     
-    auto header = bounds.removeFromTop(82);
+    auto header = bounds.removeFromTop(40);
     mDocumentFileInfoPanel.setBounds(header.removeFromRight(320));
-    mDocumentTransport.setBounds(header.removeFromLeft(180));
+    mDocumentTransport.setBounds(header.removeFromLeft(240));
     auto buttons = header.withSizeKeepingCentre(120, 32);
-    mNavigate.setBounds(buttons.removeFromLeft(32));
+    mNavigate.setBounds(buttons.removeFromLeft(32).reduced(4));
     buttons.removeFromLeft(12);
-    mInspect.setBounds(buttons.removeFromLeft(32));
+    mInspect.setBounds(buttons.removeFromLeft(32).reduced(4));
     buttons.removeFromLeft(12);
-    mEdit.setBounds(buttons.removeFromLeft(32));
+    mEdit.setBounds(buttons.removeFromLeft(32).reduced(4));
     
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
     mDocumentSection.setBounds(bounds);
