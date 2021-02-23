@@ -40,6 +40,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     
     if(position > lengthInSamples)
     {
+        JUCE_COMPILER_WARNING("the time stamp is not always working")
         auto result = mPlugin->getRemainingFeatures();
         auto it = result.find(static_cast<int>(feature));
         if(it != result.end())
