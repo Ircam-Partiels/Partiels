@@ -97,49 +97,46 @@ void Analyzer::Plot::paint(juce::Graphics& g)
 
 void Analyzer::Plot::mouseMove(juce::MouseEvent const& event)
 {
-//    juce::ignoreUnused(event);
-//    repaint();
-//    auto const& results = mAccessor.getAttr<AttrType::results>();
-//    if(results.empty() && getWidth() > 0)
-//    {
-//        return;
-//    }
-//    juce::String text;
-//    
-//    auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
-//    auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
-//    auto const rtr = Vamp::RealTime::fromSeconds(time);
-//    text += Format::secondsToString(time) + "\n";
-//    if(results.front().values.empty())
-//    {
-//        
-//    }
-//    else if(results.front().values.size() == 1)
-//    {
-//        for(size_t i = 0; i < results.size(); i++)
-//        {
-//            if(results[i].timestamp >= rtr)
-//            {
-//                text += juce::String(results[i].values[0]) + results[i].label;
-//                break;
-//            }
-//        }
-//    }
-//    else
-//    {
-//        auto const valueRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
-//        for(size_t i = 0; i < results.size(); i++)
-//        {
-//            if(results[i].timestamp >= rtr)
-//            {
-//                auto const index = std::max(std::min((1.0 - static_cast<double>(event.y) / static_cast<double>(getHeight())), 1.0), 0.0) * valueRange.getLength() + valueRange.getStart();
-//                text += juce::String(static_cast<long>(index)) + "\n";
-//                text += juce::String(results[i].values[static_cast<size_t>(index)] / valueRange.getLength()) + results[i].label;
-//                break;
-//            }
-//        }
-//    }
-//    mInformation.setText(text, juce::NotificationType::dontSendNotification);
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    if(results.empty() || getWidth() <= 0 || getHeight() <= 0)
+    {
+        mInformation.setText("", juce::NotificationType::dontSendNotification);
+        return;
+    }
+
+    auto const timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
+    auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
+    juce::String text = Format::secondsToString(time) + "\n";
+    auto it = Plugin::getResultAt(results, time);
+    if(it != results.cend() && it->values.size() == 1)
+    {
+        text += juce::String(it->values[0]) + it->label;
+    }
+    else if(it != results.cend() && it->values.size() > 1)
+    {
+        
+        auto const binRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        if(binRange.isEmpty())
+        {
+            mInformation.setText("", juce::NotificationType::dontSendNotification);
+            return;
+        }
+        auto const index = std::max(std::min((1.0 - static_cast<double>(event.y) / static_cast<double>(getHeight())), 1.0), 0.0) * binRange.getLength() + binRange.getStart();
+        text += juce::String(static_cast<long>(index)) + " ";
+        
+        auto const& description = mAccessor.getAttr<AttrType::description>();
+        if(index < description.output.binNames.size())
+        {
+            text += juce::String(description.output.binNames[static_cast<size_t>(index)]);
+        }
+        text += "\n";
+        if(index < it->values.size())
+        {
+            text += juce::String(it->values[static_cast<size_t>(index)] / binRange.getLength()) + it->label;
+        }
+        
+    }
+    mInformation.setText(text, juce::NotificationType::dontSendNotification);
 }
 
 void Analyzer::Plot::mouseEnter(juce::MouseEvent const& event)

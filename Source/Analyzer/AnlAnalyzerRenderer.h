@@ -28,6 +28,15 @@ namespace Analyzer
         
     private:
         
+        enum class DisplayMode
+        {
+              unsupported
+            , surface
+            , bar
+            , segment
+            , matrix
+        };
+        
         void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds);
         void paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         

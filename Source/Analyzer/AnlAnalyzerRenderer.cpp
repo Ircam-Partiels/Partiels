@@ -208,15 +208,6 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
         return;
     }
     
-    enum class DisplayMode
-    {
-        unsupported
-        , surface
-        , bar
-        , segment
-        , matrix
-    };
-    
     auto getDisplayMode = [&]()
     {
         auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();
@@ -246,6 +237,11 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
         return static_cast<int>(std::floor(value));
     };
     
+    auto it = Plugin::getResultAt(results, time);
+    if(it == results.cend())
+    {
+        return;
+    }
     auto const displayMode = getDisplayMode();
     switch(displayMode)
     {
@@ -253,102 +249,60 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             break;
         case DisplayMode::surface:
         {
-            auto const realTime = Vamp::RealTime::fromSeconds(time);
-            auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-            {
-                anlWeakAssert(result.hasTimestamp);
-                return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
-            });
-            
-            if(it != results.cend())
-            {
-                g.setColour(colours.line);
-                g.fillRect(bounds);
-            }
+            g.setColour(colours.line);
+            g.fillRect(bounds);
         }
             break;
         case DisplayMode::bar:
         {
-            auto const realTime = Vamp::RealTime::fromSeconds(time);
-            auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+            anlWeakAssert(!it->values.empty());
+            if(it->values.empty())
             {
-                anlWeakAssert(result.hasTimestamp);
-                return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
-            });
-            
-            if(it != results.cend())
-            {
-                anlWeakAssert(!it->values.empty());
-                if(it->values.empty())
-                {
-                    return;
-                }
-                
-                auto const value = it->values[0];
-                
-                auto const position = getScaledValue(value);
-                auto const area = bounds.withTop(position).toFloat();
-                
-                g.setColour(colours.line.withAlpha(0.2f));
-                g.fillRect(area);
-                
-                g.setColour(colours.line);
-                g.fillRect(area.withHeight(1.0f));
+                return;
             }
+            
+            auto const area = bounds.withTop(getScaledValue(it->values[0])).toFloat();
+            g.setColour(colours.line.withAlpha(0.2f));
+            g.fillRect(area);
+            
+            g.setColour(colours.line);
+            g.fillRect(area.withHeight(1.0f));
         }
             break;
         case DisplayMode::segment:
         {
             auto const realTime = Vamp::RealTime::fromSeconds(time);
-            auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& t)
+            anlWeakAssert(!it->values.empty());
+            if(it->values.empty())
             {
-                return result.timestamp < t;
-            });
-            if(it != results.cend())
-            {
-                anlWeakAssert(!it->values.empty());
-                if(it->values.empty())
-                {
-                    return;
-                }
-                
-                auto getValue = [&]()
-                {
-                    if(it != results.cbegin())
-                    {
-                        auto const prev = std::prev(it, 1);
-                        auto const ratio = static_cast<float>((realTime - prev->timestamp) / (it->timestamp - prev->timestamp));
-                        return prev->values[0] * (1.0f - ratio) + it->values[0] * ratio;
-                    }
-                    return it->values[0];
-                };
-                
-                auto const value = getValue();
-                auto const position = getScaledValue(value);
-                auto const area = bounds.withTop(position).toFloat();
-                
-                g.setColour(colours.line.withAlpha(0.2f));
-                g.fillRect(area);
-                
-                g.setColour(colours.line);
-                g.fillRect(area.withHeight(1.0f));
+                return;
             }
+            
+            auto getValue = [&]()
+            {
+                if(it != results.cbegin())
+                {
+                    auto const prev = std::prev(it, 1);
+                    auto const ratio = static_cast<float>((realTime - prev->timestamp) / (it->timestamp - prev->timestamp));
+                    return prev->values[0] * (1.0f - ratio) + it->values[0] * ratio;
+                }
+                return it->values[0];
+            };
+            
+            auto const value = getValue();
+            auto const area = bounds.withTop(getScaledValue(value)).toFloat();
+            
+            g.setColour(colours.line.withAlpha(0.2f));
+            g.fillRect(area);
+            
+            g.setColour(colours.line);
+            g.fillRect(area.withHeight(1.0f));
         }
             break;
         case DisplayMode::matrix:
         {
             auto image = mImage;
             if(!image.isValid())
-            {
-                return;
-            }
-            
-            auto const realTime = Vamp::RealTime::fromSeconds(time);
-            auto it = std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& t)
-            {
-                return result.timestamp < t;
-            });
-            if(it == results.cend())
             {
                 return;
             }
