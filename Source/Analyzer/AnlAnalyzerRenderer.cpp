@@ -152,6 +152,11 @@ Analyzer::Renderer::~Renderer()
     }
 }
 
+juce::String Analyzer::Renderer::getIdentifier() const
+{
+    return mAccessor.getAttr<AttrType::identifier>();
+}
+
 void Analyzer::Renderer::handleAsyncUpdate()
 {
     if(mProcess.valid())
