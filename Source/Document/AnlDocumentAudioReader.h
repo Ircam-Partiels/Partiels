@@ -19,6 +19,8 @@ namespace Document
         AudioReader(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
         ~AudioReader() override;
 
+        double getSampleRate() const;
+        
         // juce::AudioSource
         void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
         void releaseResources() override;
@@ -56,7 +58,6 @@ namespace Document
         private:
             std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
             juce::AudioFormatReaderSource mAudioFormatReaderSource;
-            juce::ResamplingAudioSource mResamplingAudioSource;
             std::atomic<juce::int64> mReadPosition {0};
             juce::LinearSmoothedValue<float> mVolume;
             std::atomic<float> mVolumeTargetValue;

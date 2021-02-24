@@ -46,56 +46,38 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
 Document::AudioReader::Source::Source(std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAudioFormatReader(std::move(audioFormatReader))
 , mAudioFormatReaderSource(mAudioFormatReader.get(), false)
-, mResamplingAudioSource(&mAudioFormatReaderSource, false, std::max(static_cast<int>(mAudioFormatReader->numChannels), 2))
 {
     anlStrongAssert(mAudioFormatReader != nullptr);
 }
 
 void Document::AudioReader::Source::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    anlStrongAssert(sampleRate > 0.0);
-    anlStrongAssert(mAudioFormatReader->sampleRate > 0.0);
-    auto const currentSampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
-    auto const sourceSampleRate = mAudioFormatReader->sampleRate > 0.0 ? mAudioFormatReader->sampleRate : currentSampleRate;
-    
-    mResamplingAudioSource.setResamplingRatio(sourceSampleRate / currentSampleRate);
-    mResamplingAudioSource.prepareToPlay(samplesPerBlockExpected, currentSampleRate);
-    mVolume.reset(currentSampleRate, static_cast<double>(samplesPerBlockExpected) / currentSampleRate);
+    anlStrongAssert(sampleRate > 0.0 && mAudioFormatReader->sampleRate > 0.0);
+    anlStrongAssert(std::abs(mAudioFormatReader->sampleRate - sampleRate) < std::numeric_limits<double>::epsilon());
+    sampleRate = mAudioFormatReader->sampleRate > 0.0 ? mAudioFormatReader->sampleRate : 44100.0;
+    mAudioFormatReaderSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    mVolume.reset(mAudioFormatReader->sampleRate, static_cast<double>(samplesPerBlockExpected) / sampleRate);
     mVolume.setCurrentAndTargetValue(mVolumeTargetValue.load());
 }
 
 void Document::AudioReader::Source::releaseResources()
 {
-    mResamplingAudioSource.releaseResources();
+    mAudioFormatReaderSource.releaseResources();
 }
 
 void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill)
 {
     mVolume.setTargetValue(mVolumeTargetValue.load());
-    auto lastPosition = getNextReadPosition();
-    if(mReadPosition != lastPosition)
-    {
-        lastPosition = mReadPosition;
-        mAudioFormatReaderSource.setNextReadPosition(lastPosition);
-        mResamplingAudioSource.flushBuffers();
-    }
-    mResamplingAudioSource.getNextAudioBlock(bufferToFill);
+    mAudioFormatReaderSource.getNextAudioBlock(bufferToFill);
     for(auto i = 0; i < bufferToFill.numSamples; i++)
     {
         bufferToFill.buffer->applyGain(bufferToFill.startSample + i, 1, mVolume.getNextValue());
-    }
-    if(!mReadPosition.compare_exchange_weak(lastPosition, getNextReadPosition()))
-    {
-        mAudioFormatReaderSource.setNextReadPosition(mReadPosition.load());
-        mResamplingAudioSource.flushBuffers();
     }
 }
 
 void Document::AudioReader::Source::setNextReadPosition(juce::int64 newPosition)
 {
-    mReadPosition = newPosition;
     mAudioFormatReaderSource.setNextReadPosition(newPosition);
-    mResamplingAudioSource.flushBuffers();
 }
 
 juce::int64 Document::AudioReader::Source::getNextReadPosition() const
@@ -216,6 +198,11 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
 Document::AudioReader::~AudioReader()
 {
     mAccessor.removeListener(mListener);
+}
+
+double Document::AudioReader::getSampleRate() const
+{
+    return mSampleRate;
 }
 
 void Document::AudioReader::prepareToPlay(int samplesPerBlockExpected, double sampleRate)

@@ -24,8 +24,8 @@ namespace Application
         void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
         
         Document::AudioReader mDocumentAudioReader;
-        juce::AudioTransportSource mAudioTransportSource;
         juce::AudioSourcePlayer mAudioSourcePlayer;
+        juce::ResamplingAudioSource mResamplingAudioSource;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioReader)
     };
