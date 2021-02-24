@@ -249,7 +249,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             break;
         case DisplayMode::surface:
         {
-            g.setColour(colours.line);
+            g.setColour(colours.foreground);
             g.fillRect(bounds);
         }
             break;
@@ -262,10 +262,10 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             }
             
             auto const area = bounds.withTop(getScaledValue(it->values[0])).toFloat();
-            g.setColour(colours.line.withAlpha(0.2f));
+            g.setColour(colours.foreground.withAlpha(0.2f));
             g.fillRect(area);
             
-            g.setColour(colours.line);
+            g.setColour(colours.foreground);
             g.fillRect(area.withHeight(1.0f));
         }
             break;
@@ -292,10 +292,10 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             auto const value = getValue();
             auto const area = bounds.withTop(getScaledValue(value)).toFloat();
             
-            g.setColour(colours.line.withAlpha(0.2f));
+            g.setColour(colours.foreground.withAlpha(0.2f));
             g.fillRect(area);
             
-            g.setColour(colours.line);
+            g.setColour(colours.foreground);
             g.fillRect(area.withHeight(1.0f));
         }
             break;
@@ -307,6 +307,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
                 return;
             }
             
+            g.setColour(colours.background.withAlpha(1.0f));
             juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
             
             auto const colourMap = colours.map;
@@ -377,7 +378,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
     
     if(results.front().values.empty())
     {
-        g.setColour(mAccessor.getAttr<AttrType::colours>().line);
+        g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
         for(size_t i = 0; i < results.size(); i += resultIncrement)
         {
             if(realTimeRange.contains(results[i].timestamp))
@@ -394,7 +395,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
     else if(results.front().values.size() == 1)
     {
         auto const clip = g.getClipBounds();
-        g.setColour(mAccessor.getAttr<AttrType::colours>().line);
+        g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
         auto const valueRange = mAccessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         auto valueToPixel = [&](float const value)
         {
@@ -429,7 +430,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
         {
             return;
         }
-        
+        g.setColour(colours.background.withAlpha(1.0f));
         auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
         auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
         auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();

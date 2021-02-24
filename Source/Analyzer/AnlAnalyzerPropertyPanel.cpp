@@ -137,20 +137,26 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 {
     mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
 })
-                          
-, mPropertyColourSelector("Color", "The current color", [&]()
+      
+, mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
+{
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.map = static_cast<ColourMap>(index);
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+})
+, mPropertyForegroundColour("Foreground Color", "The foreground current color of the graphical renderer.", [&]()
 {
     ColourSelector colourSelector;
     colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colours>().line, juce::NotificationType::dontSendNotification);
+    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colours>().foreground, juce::NotificationType::dontSendNotification);
     colourSelector.onColourChanged = [&](juce::Colour const& colour)
     {
         auto colours = mAccessor.getAttr<AttrType::colours>();
-        colours.line = colour;
+        colours.foreground = colour;
         mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
     };
     juce::DialogWindow::LaunchOptions options;
-    options.dialogTitle = juce::translate("Select the color of the curve");
+    options.dialogTitle = juce::translate("Select the foreground color");
     options.content.setNonOwned(&colourSelector);
     options.componentToCentreAround = this;
     options.escapeKeyTriggersCloseButton = true;
@@ -158,12 +164,28 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     options.resizable = false;
     options.runModal();
 })
-, mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
+
+, mPropertyBackgroundColour("Background Color", "The background current color of the graphical renderer.", [&]()
 {
-    auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.map = static_cast<ColourMap>(index);
-    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    ColourSelector colourSelector;
+    colourSelector.setSize(400, 300);
+    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colours>().background, juce::NotificationType::dontSendNotification);
+    colourSelector.onColourChanged = [&](juce::Colour const& colour)
+    {
+        auto colours = mAccessor.getAttr<AttrType::colours>();
+        colours.background = colour;
+        mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+    };
+    juce::DialogWindow::LaunchOptions options;
+    options.dialogTitle = juce::translate("Select the background color");
+    options.content.setNonOwned(&colourSelector);
+    options.componentToCentreAround = this;
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = false;
+    options.runModal();
 })
+
 , mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
@@ -319,12 +341,13 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     {
                         return mPropertyColourMap;
                     }
-                    return mPropertyColourSelector;
+                    return mPropertyForegroundColour;
                 };
                 
                 mGraphicalSection.setComponents(
                 {
                       getPropertyColour()
+                    , mPropertyBackgroundColour
                     , mPropertyValueRangeMin
                     , mPropertyValueRangeMax
                 });

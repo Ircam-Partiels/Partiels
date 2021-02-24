@@ -15,13 +15,13 @@ namespace Analyzer
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
-        juce::Colour line = juce::Colours::aliceblue;
-        juce::Colour background = juce::Colours::black;
+        juce::Colour foreground = juce::Colours::aliceblue;
+        juce::Colour background = juce::Colours::transparentBlack;
         
         inline bool operator==(ColourSet const& rhd) const noexcept
         {
             return map == rhd.map &&
-            line == rhd.line &&
+            foreground == rhd.foreground &&
             background == rhd.background;
         }
         

@@ -10,7 +10,7 @@ void XmlParser::toXml<Analyzer::ColourSet>(juce::XmlElement& xml, juce::Identifi
     if(child != nullptr)
     {
         toXml(*child, "map", value.map);
-        toXml(*child, "line", value.line);
+        toXml(*child, "foreground", value.foreground);
         toXml(*child, "background", value.background);
         xml.addChildElement(child.release());
     }
@@ -28,7 +28,7 @@ auto XmlParser::fromXml<Analyzer::ColourSet>(juce::XmlElement const& xml, juce::
     }
     Analyzer::ColourSet value;
     value.map = fromXml(*child, "map", defaultValue.map);
-    value.line = fromXml(*child, "line", defaultValue.line);
+    value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
     value.background = fromXml(*child, "background", defaultValue.background);
     return value;
 }

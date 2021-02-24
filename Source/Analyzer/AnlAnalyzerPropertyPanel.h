@@ -80,8 +80,9 @@ namespace Analyzer
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyTextButton mPropertyResetProcessor;
         
-        PropertyTextButton mPropertyColourSelector;
         PropertyList mPropertyColourMap;
+        PropertyTextButton mPropertyForegroundColour;
+        PropertyTextButton mPropertyBackgroundColour;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
         
