@@ -105,6 +105,8 @@ namespace Analyzer
         PropertyTextButton mPropertyBackgroundColour;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
+        PropertyNumber mPropertyBinRangeMin;
+        PropertyNumber mPropertyBinRangeMax;
         
         PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};
         PropertyLabel mPropertyPluginFeature {"Feature", "The feature of the plugin"};

@@ -227,7 +227,6 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     options.resizable = false;
     options.runModal();
 })
-
 , mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
@@ -237,6 +236,18 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 , mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+})
+, mPropertyBinRangeMin("Bin Range Min.", "The minimum value of the bin range.", "", {Zoom::lowest(), Zoom::max()}, 1.0, [&](float value)
+{
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withStart(static_cast<double>(value));
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+})
+, mPropertyBinRangeMax("Bin Range Max.", "The maximum value of the bin range.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
+{
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
 })
@@ -404,6 +415,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyColourMapAlpha
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
+                        , mPropertyBinRangeMin
+                        , mPropertyBinRangeMax
                     });
                 }
                 
@@ -452,7 +465,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case Zoom::AttrType::globalRange:
             {
                 auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                
+                mPropertyBinRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
+                mPropertyBinRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
             }
                 break;
             case Zoom::AttrType::minimumLength:
