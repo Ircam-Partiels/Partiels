@@ -1,14 +1,10 @@
 #pragma once
 
-#include "../Zoom/AnlZoomRuler.h"
-#include "../Zoom/AnlZoomScrollBar.h"
-#include "AnlAnalyzerThumbnail.h"
-#include "AnlAnalyzerPlot.h"
-#include "AnlAnalyzerSnapshot.h"
+#include "AnlGroupPlot.h"
 
 ANALYSE_FILE_BEGIN
 
-namespace Analyzer
+namespace Group
 {
     class Section
     : public juce::Component
@@ -17,7 +13,7 @@ namespace Analyzer
         
         enum ColourIds : int
         {
-              sectionColourId = 0x2000340
+            sectionColourId = 0x20006100
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
@@ -32,21 +28,16 @@ namespace Analyzer
         void paint(juce::Graphics& g) override;
         
     private:
-
+        
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         juce::Component& mSeparator;
         Accessor::Listener mListener;
         BoundsListener mBoundsListener;
         
-        Thumbnail mThumbnail {mAccessor};
-        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
+//        Thumbnail mThumbnail {mAccessor};
+//        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         Plot mPlot {mAccessor, mTimeZoomAccessor};
-        
-        Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
-        Zoom::Ruler mBinRuler  {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mBinScrollBar {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
         
         ResizerBar mResizerBarLeft {ResizerBar::Orientation::horizontal, {50, 2000}};
         ResizerBar mResizerBarRight {ResizerBar::Orientation::horizontal, {50, 2000}};

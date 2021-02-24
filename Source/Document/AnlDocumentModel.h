@@ -41,7 +41,6 @@ namespace Document
     , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::Flag::basic, Model::resizable>
     >;
     
-    //! @todo Use a default gain to 1
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
     {

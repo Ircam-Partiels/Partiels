@@ -1,6 +1,4 @@
 #include "AnlDocumentSection.h"
-#include "AnlDocumentAudioReader.h"
-#include "../Plugin/AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 

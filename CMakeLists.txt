@@ -122,6 +122,13 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.h)
 
+file(GLOB GroupSources
+    ${SOURCES_DIRECTORY}/Group/AnlGroupModel.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupSection.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupSection.h)
+
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentDirector.cpp
@@ -173,10 +180,11 @@ file(GLOB TranslationsSources
 source_group("Global" FILES ${GlobalSources})
 source_group("Misc" FILES ${MiscSources})
 source_group("Zoom" FILES ${ZoomSources})
-source_group("Application" FILES ${ApplicationSources})
-source_group("Document" FILES ${DocumentSources})
-source_group("Analyzer" FILES ${AnalyzerSources})
 source_group("Plugin" FILES ${PluginSources})
+source_group("Analyzer" FILES ${AnalyzerSources})
+source_group("Group" FILES ${GroupSources})
+source_group("Document" FILES ${DocumentSources})
+source_group("Application" FILES ${ApplicationSources})
 source_group("Translations" FILES ${TranslationsSources})
 
 function(create_module_group TARGET GROUP_PATH MODULE_PATH)
@@ -218,7 +226,7 @@ create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURC
 create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-set(BriochesSources ${MiscSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${DocumentSources} ${ApplicationSources})
+set(BriochesSources ${MiscSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources} ${TranslationsSources})
 target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
