@@ -73,6 +73,42 @@ Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name
     };
 }
 
+Analyzer::PropertyPanel::PropertySlider::PropertySlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
+: PropertyComponent<juce::Slider>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
+    entry.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval));
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setTextValueSuffix(suffix);
+    entry.onValueChange = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(static_cast<float>(entry.getValue()));
+        }
+    };
+}
+
+Analyzer::PropertyPanel::PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn)
+: PropertyComponent<juce::ToggleButton>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setTooltip(juce::translate(tooltip));
+    entry.onClick = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(entry.getToggleState());
+        }
+    };
+}
+
+void Analyzer::PropertyPanel::PropertyToggle::resized()
+{
+    PropertyComponent<juce::ToggleButton>::resized();
+    entry.setBounds(getLocalBounds().removeFromRight(entry.getHeight()));
+}
+
 Analyzer::PropertyPanel::PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
 : PropertyComponent<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
 {
@@ -142,6 +178,12 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
 {
     auto colours = mAccessor.getAttr<AttrType::colours>();
     colours.map = static_cast<ColourMap>(index);
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+})
+, mPropertyBackgroundAlpha("Background Transparent", "The transparency of the background", [&](bool value)
+{
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.background = juce::Colours::black.withAlpha(value ? 1.0f : 0.0f);
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
 , mPropertyForegroundColour("Foreground Color", "The foreground current color of the graphical renderer.", [&]()
@@ -335,22 +377,27 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 auto const output = description.output;
                 auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();
-                auto getPropertyColour = [&]() -> juce::Component&
+                if(numDimensions > 1)
                 {
-                    if(numDimensions > 1)
+                    mGraphicalSection.setComponents(
                     {
-                        return mPropertyColourMap;
-                    }
-                    return mPropertyForegroundColour;
-                };
-                
-                mGraphicalSection.setComponents(
+                          mPropertyColourMap
+                        , mPropertyBackgroundAlpha
+                        , mPropertyValueRangeMin
+                        , mPropertyValueRangeMax
+                    });
+                }
+                else
                 {
-                      getPropertyColour()
-                    , mPropertyBackgroundColour
-                    , mPropertyValueRangeMin
-                    , mPropertyValueRangeMax
-                });
+                    mGraphicalSection.setComponents(
+                    {
+                          mPropertyForegroundColour
+                        , mPropertyBackgroundColour
+                        , mPropertyValueRangeMin
+                        , mPropertyValueRangeMax
+                    });
+                }
+                
             }
                 break;
             case AttrType::warnings:
@@ -358,7 +405,14 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::processing:
             case AttrType::identifier:
             case AttrType::height:
+                break;
             case AttrType::colours:
+            {
+                auto const colours = acsr.getAttr<AttrType::colours>();
+                mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
+                mPropertyBackgroundAlpha.entry.setToggleState(colours.background.getAlpha() > 0.0f, juce::NotificationType::dontSendNotification);
+            }
+                break;
             case AttrType::propertyState:
                 break;
         }

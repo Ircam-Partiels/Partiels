@@ -30,10 +30,12 @@ juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::funct
     juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
     
     auto const colourMap = accessor.getAttr<AttrType::colours>().map;
+    auto const backgroundAlpha = accessor.getAttr<AttrType::colours>().background.getAlpha();
     auto valueToColour = [&](float const value)
     {
+        auto const alpha = value < std::numeric_limits<float>::epsilon() ? backgroundAlpha : 1.0f;
         auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), colourMap);
-        return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+        return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), alpha);
     };
     
     for(int i = 0; i < width && predicate(); ++i)
@@ -316,10 +318,12 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
             
             auto const colourMap = colours.map;
+            auto const backgroundAlpha = colours.background.getAlpha();
             auto valueToColour = [&](float const value)
             {
+                auto const alpha = value < std::numeric_limits<float>::epsilon() ? backgroundAlpha : 1.0f;
                 auto const color = tinycolormap::GetColor(static_cast<double>(value) / (image.getHeight() * 0.25), colourMap);
-                return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
+                return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), alpha);
             };
             
             for(int j = 0; j < image.getHeight(); ++j)

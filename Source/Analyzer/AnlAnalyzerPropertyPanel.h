@@ -55,6 +55,25 @@ namespace Analyzer
             PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
             ~PropertyNumber() override = default;
         };
+        
+        class PropertySlider
+        : public PropertyComponent<juce::Slider>
+        {
+        public:
+            PropertySlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
+            ~PropertySlider() override = default;
+        };
+        
+        class PropertyToggle
+        : public PropertyComponent<juce::ToggleButton>
+        {
+        public:
+            PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn);
+            ~PropertyToggle() override = default;
+            
+            // juce::Component
+            void resized() override;
+        };
 
         class PropertyList
         : public PropertyComponent<juce::ComboBox>
@@ -81,6 +100,7 @@ namespace Analyzer
         PropertyTextButton mPropertyResetProcessor;
         
         PropertyList mPropertyColourMap;
+        PropertyToggle mPropertyBackgroundAlpha;
         PropertyTextButton mPropertyForegroundColour;
         PropertyTextButton mPropertyBackgroundColour;
         PropertyNumber mPropertyValueRangeMin;
