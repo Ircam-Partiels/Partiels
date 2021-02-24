@@ -138,6 +138,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentPlayhead.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentPlot.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentPlot.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
 

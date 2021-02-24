@@ -22,8 +22,6 @@ namespace Analyzer
         Renderer(Accessor& accessor, Type type);
         ~Renderer() override;
         
-        juce::String getIdentifier() const;
-        
         std::function<void(void)> onUpdated = nullptr;
         
         void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
