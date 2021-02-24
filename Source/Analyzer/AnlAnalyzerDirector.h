@@ -15,11 +15,10 @@ namespace Analyzer
         ~Director() override;
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
-        
+        void updateZooms(NotificationType const notification);
     private:
         
         void runAnalysis(NotificationType const notification);
-        void updateZoomRange(NotificationType const notification);
         
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
@@ -38,6 +37,7 @@ namespace Analyzer
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::tuple<std::vector<Plugin::Result>, NotificationType>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
+        std::tuple<bool, NotificationType> mUpdateZoom {false, NotificationType::synchronous};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

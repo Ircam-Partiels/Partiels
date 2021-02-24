@@ -377,12 +377,21 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 auto const output = description.output;
                 auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();
-                if(numDimensions > 1)
+                
+                if(numDimensions ==0)
                 {
                     mGraphicalSection.setComponents(
                     {
-                          mPropertyColourMap
-                        , mPropertyColourMapAlpha
+                          mPropertyForegroundColour
+                        , mPropertyBackgroundColour
+                    });
+                }
+                else if(numDimensions == 1)
+                {
+                    mGraphicalSection.setComponents(
+                    {
+                          mPropertyForegroundColour
+                        , mPropertyBackgroundColour
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                     });
@@ -391,8 +400,8 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 {
                     mGraphicalSection.setComponents(
                     {
-                          mPropertyForegroundColour
-                        , mPropertyBackgroundColour
+                          mPropertyColourMap
+                        , mPropertyColourMapAlpha
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                     });

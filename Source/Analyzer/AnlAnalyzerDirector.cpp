@@ -23,10 +23,6 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
             }
                 break;
             case AttrType::results:
-            {
-                updateZoomRange(notification);
-            }
-                break;
             case AttrType::name:
             case AttrType::description:
             case AttrType::identifier:
@@ -146,13 +142,15 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     });
 }
 
-void Analyzer::Director::updateZoomRange(NotificationType const notification)
+void Analyzer::Director::updateZooms(NotificationType const notification)
 {
     auto const& results = mAccessor.getAttr<AttrType::results>();
     if(results.empty())
     {
+        mUpdateZoom = std::make_tuple(true, notification);
         return;
     }
+    mUpdateZoom = std::make_tuple(false, notification);
     auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
     {
         Zoom::Range range;
@@ -193,6 +191,10 @@ void Analyzer::Director::handleAsyncUpdate()
             auto const result = mAnalysisProcess.get();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
             mAccessor.setAttr<AttrType::processing>(false, std::get<1>(result));
+            if(std::get<0>(mUpdateZoom))
+            {
+                updateZooms(std::get<1>(mUpdateZoom));
+            }
         }
         else if(expected == ProcessState::aborted)
         {
