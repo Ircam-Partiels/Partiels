@@ -180,10 +180,10 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     colours.map = static_cast<ColourMap>(index);
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
-, mPropertyBackgroundAlpha("Background Transparent", "The transparency of the background", [&](bool value)
+, mPropertyColourMapAlpha("Transparency", "The transparency of the graphical renderer", "", {0.0f, 1.0f}, 0.0f, [&](float value)
 {
     auto colours = mAccessor.getAttr<AttrType::colours>();
-    colours.background = juce::Colours::black.withAlpha(value ? 1.0f : 0.0f);
+    colours.background = juce::Colours::black.withAlpha(value);
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
 , mPropertyForegroundColour("Foreground Color", "The foreground current color of the graphical renderer.", [&]()
@@ -382,7 +382,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     mGraphicalSection.setComponents(
                     {
                           mPropertyColourMap
-                        , mPropertyBackgroundAlpha
+                        , mPropertyColourMapAlpha
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                     });
@@ -410,7 +410,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             {
                 auto const colours = acsr.getAttr<AttrType::colours>();
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
-                mPropertyBackgroundAlpha.entry.setToggleState(colours.background.getAlpha() > 0.0f, juce::NotificationType::dontSendNotification);
+                mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::propertyState:

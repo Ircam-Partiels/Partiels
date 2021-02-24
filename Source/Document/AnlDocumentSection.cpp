@@ -87,8 +87,8 @@ Document::Section::Section(Accessor& accessor)
                             onRemoveAnalyzer(ptr->getIdentifier());
                         }
                     };
-                    mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 }
+                mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
                 updateComponents();
             }
                 break;
@@ -96,7 +96,6 @@ Document::Section::Section(Accessor& accessor)
             default:
                 break;
         }
-        
     };
     
     mListener.onAccessorErased = [=](Accessor const& acsr, AcsrType type, size_t index)
@@ -116,7 +115,6 @@ Document::Section::Section(Accessor& accessor)
             default:
                 break;
         }
-        
     };
     
     mZoomTimeRuler.onDoubleClick = [&]()
@@ -145,6 +143,7 @@ Document::Section::Section(Accessor& accessor)
         resized();
     };
     mBoundsListener.attachTo(mDraggableTable);
+    mBoundsListener.attachTo(mPlot);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
@@ -152,6 +151,7 @@ Document::Section::Section(Accessor& accessor)
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
     addAndMakeVisible(mPlayheadContainer);
     addAndMakeVisible(mZoomTimeRuler);
+    addAndMakeVisible(mPlot);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mZoomTimeScrollBar);
     addAndMakeVisible(mResizerBar);
@@ -172,9 +172,9 @@ void Document::Section::resized()
     auto const right = bounds.getWidth() - 32;
     
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
-    mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 5));
+    mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    
+    mPlot.setBounds(bounds.removeFromTop(mPlot.getHeight()).withLeft(left).withRight(right + 6));
     mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
     mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));

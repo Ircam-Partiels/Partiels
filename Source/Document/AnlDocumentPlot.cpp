@@ -8,6 +8,7 @@ Document::Plot::Plot(Accessor& accessor)
 {
     addChildComponent(mProcessingButton);
     addAndMakeVisible(mZoomPlayhead);
+    addAndMakeVisible(mResizerBar);
     
     mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
@@ -136,6 +137,13 @@ Document::Plot::Plot(Accessor& accessor)
         }
     };
     
+    mResizerBar.onMoved = [this](int size)
+    {
+        setSize(getWidth(), size);
+    };
+    
+    setSize(100, 80);
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.getAccessor<AcsrType::timeZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
 }
@@ -155,6 +163,12 @@ Document::Plot::~Plot()
 
 void Document::Plot::resized()
 {
+    auto bounds = getLocalBounds();
+    // Resizers
+    {
+        bounds.removeFromBottom(2);
+        mResizerBar.setBounds(bounds.removeFromBottom(2));
+    }
     mZoomPlayhead.setBounds(getLocalBounds().reduced(2));
     mProcessingButton.setBounds(8, 8, 20, 20);
 }

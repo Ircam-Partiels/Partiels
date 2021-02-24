@@ -100,7 +100,7 @@ namespace Analyzer
         PropertyTextButton mPropertyResetProcessor;
         
         PropertyList mPropertyColourMap;
-        PropertyToggle mPropertyBackgroundAlpha;
+        PropertySlider mPropertyColourMapAlpha;
         PropertyTextButton mPropertyForegroundColour;
         PropertyTextButton mPropertyBackgroundColour;
         PropertyNumber mPropertyValueRangeMin;
