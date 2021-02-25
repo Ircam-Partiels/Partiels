@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    std::unique_ptr<juce::AudioFormatReader> createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, AlertType alertType);
+    std::unique_ptr<juce::AudioFormatReader> createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager& audioFormatManager, AlertType alertType);
     
     //! @brief The audio reader of a document
     class AudioReader
@@ -16,7 +16,7 @@ namespace Document
     , private juce::Timer
     {
     public:
-        AudioReader(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
+        AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~AudioReader() override;
 
         double getSampleRate() const;
@@ -64,7 +64,7 @@ namespace Document
         };
         
         Accessor& mAccessor;
-        juce::AudioFormatManager const& mAudioFormatManager;
+        juce::AudioFormatManager& mAudioFormatManager;
         Accessor::Listener mListener;
         double mSampleRate = 44100.0;
         int mSamplesPerBlockExpected = 512;

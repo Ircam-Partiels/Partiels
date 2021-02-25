@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager const& audioFormatManager, AlertType alertType)
+std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager& audioFormatManager, AlertType alertType)
 {
     using AlertIconType = juce::AlertWindow::AlertIconType;
     auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
@@ -12,26 +12,8 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     {
         return nullptr;
     }
-    auto* audioFormat = audioFormatManager.findFormatForFileExtension(file.getFileExtension());
-    if(audioFormat == nullptr)
-    {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format for the file extension FLEXTS couldn't be found.").replace("FLEXTS", file.getFileExtension()));
-        }
-        return nullptr;
-    }
-    auto inputStream = file.createInputStream();
-    if(inputStream == nullptr)
-    {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The input stream the file extension FLNALE cannot be created.").replace("FLNALE", file.getFileName()));
-        }
-        return nullptr;
-    }
-    
-    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(inputStream.release(), true));
+   
+    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
     if(audioFormatReader == nullptr)
     {
         if(alertType == AlertType::window)
@@ -107,7 +89,7 @@ void Document::AudioReader::Source::setGain(float gain)
     mVolumeTargetValue = gain;
 }
 
-Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager)
+Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
@@ -133,7 +115,13 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
                     mSourceManager.setInstance(nullptr);
                     return;
                 }
-                auto source = std::make_shared<Source>(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window));
+                auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                if(audioFormatReader == nullptr)
+                {
+                    mSourceManager.setInstance(nullptr);
+                    return;
+                }
+                auto source = std::make_shared<Source>(std::move(audioFormatReader));
                 if(source != nullptr)
                 {
                     source->setGain(static_cast<float>(acsr.getAttr<AttrType::gain>()));
@@ -187,6 +175,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager 
             }
                 break;
             case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
             case AttrType::layout:
                 break;
         }
