@@ -56,6 +56,10 @@ void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alert
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
     if(imageFormat == nullptr)
     {
+        if(alertType!= AlertType::window)
+        {
+            return;
+        }
         auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the file format of FLNM supported.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
@@ -64,6 +68,10 @@ void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alert
     juce::FileOutputStream stream(temp.getFile());
     if(!stream.openedOk())
     {
+        if(alertType!= AlertType::window)
+        {
+            return;
+        }
         auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
@@ -80,14 +88,22 @@ void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alert
     auto image = Renderer::createImage(accessor);
     if(!imageFormat->writeImageToStream(image, stream))
     {
+        if(alertType!= AlertType::window)
+        {
+            return;
+        }
         auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
 
-    if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
+    if(!temp.overwriteTargetFileWithTemporary())
     {
-        auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        if(alertType!= AlertType::window)
+        {
+            return;
+        }
+        auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
     }
 }
@@ -193,7 +209,7 @@ void Analyzer::Exporter::toXml(Accessor const& accessor, AlertType const alertTy
         {
             if(alertType == AlertType::window)
             {
-                auto const message = juce::translate("The analyzer ANLNAME can not be exported as XML because the analyzer cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
+                auto const message = juce::translate("The analyzer ANLNAME can not be exported as XML because the analyzer cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
                 juce::AlertWindow::showMessageBox(icon, title, message);
             }
             return child;
@@ -213,7 +229,7 @@ void Analyzer::Exporter::toXml(Accessor const& accessor, AlertType const alertTy
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analyzer ANLNAME can not be exported as XML because the analyzer cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
+            auto const message = juce::translate("The analyzer ANLNAME can not be exported as XML because the analyzer cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;
@@ -224,11 +240,11 @@ void Analyzer::Exporter::toXml(Accessor const& accessor, AlertType const alertTy
         element->addChildElement(toXml(i, results[i]).release());
     }
     
-    if(element->writeTo(temp.getFile()))
+    if(!element->writeTo(temp.getFile()))
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+            auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", temp.getTargetFile().getFullPathName()));
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;
@@ -236,7 +252,7 @@ void Analyzer::Exporter::toXml(Accessor const& accessor, AlertType const alertTy
        
     if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
     {
-        auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
     }
 }
