@@ -16,7 +16,7 @@ namespace Analyzer
     {
         ColourMap map = ColourMap::Inferno;
         juce::Colour foreground = juce::Colours::aliceblue;
-        juce::Colour background = juce::Colours::transparentBlack;
+        juce::Colour background = juce::Colours::black;
         
         inline bool operator==(ColourSet const& rhd) const noexcept
         {
@@ -96,7 +96,7 @@ namespace Analyzer
                                  , {}
                                  , {}
                                  , {}
-                                 , {80}
+                                 , {120}
                                  , {}
                                  , {}
                                  , {}
