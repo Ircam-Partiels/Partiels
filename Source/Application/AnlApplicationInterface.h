@@ -12,6 +12,7 @@ namespace Application
 {
     class Interface
     : public juce::Component
+    , public juce::FileDragAndDropTarget
     , public CommandTarget
     {
     public:
@@ -23,6 +24,10 @@ namespace Application
         void resized() override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
+        
+        // juce::FileDragAndDropTarget
+        bool isInterestedInFileDrag(juce::StringArray const& files) override;
+        void filesDropped(juce::StringArray const& files, int x, int y) override;
     private:
         
         Document::Accessor::Listener mDocumentListener;

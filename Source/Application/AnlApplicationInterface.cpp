@@ -61,6 +61,7 @@ Application::Interface::Interface()
             case Document::AttrType::isPlaybackStarted:
             case Document::AttrType::playheadPosition:
             case Document::AttrType::layoutHorizontal:
+            case Document::AttrType::layoutVertical:
             case Document::AttrType::layout:
                 break;
         }
@@ -111,6 +112,45 @@ void Application::Interface::lookAndFeelChanged()
 void Application::Interface::parentHierarchyChanged()
 {
     lookAndFeelChanged();
+}
+
+bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& files)
+{
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    for(auto const& fileName : files)
+    {
+        if(audioFormatWildcard.contains(juce::File(fileName).getFileExtension()))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Application::Interface::filesDropped(juce::StringArray const& files, int x, int y)
+{
+    juce::ignoreUnused(x, y);
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    auto getFile = [&]()
+    {
+        for(auto const& fileName : files)
+        {
+            if(audioFormatWildcard.contains(juce::File(fileName).getFileExtension()))
+            {
+                return juce::File(fileName);
+            }
+        }
+        return juce::File();
+    };
+    auto const file = getFile();
+    if(file == juce::File())
+    {
+        return;
+    }
+    Instance::get().openFile(file);
+    
+    auto& documentDir = Instance::get().getDocumentDirector();
+    documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
