@@ -27,6 +27,11 @@ Document::Plot::Plot(Accessor& accessor)
                 break;
             case AttrType::layoutHorizontal:
                 break;
+            case AttrType::layoutVertical:
+            {
+                setSize(getWidth(), acsr.getAttr<AttrType::layoutVertical>());
+            }
+                break;
             case AttrType::layout:
             {
                 repaint();
@@ -139,7 +144,7 @@ Document::Plot::Plot(Accessor& accessor)
     
     mResizerBar.onMoved = [this](int size)
     {
-        setSize(getWidth(), size);
+        mAccessor.setAttr<AttrType::layoutVertical>(size + 2, NotificationType::synchronous);
     };
     
     setSize(100, 80);
@@ -176,7 +181,7 @@ void Document::Plot::resized()
 void Document::Plot::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
-    auto const bounds = getLocalBounds().reduced(2);
+    auto const bounds = getLocalBounds().withTrimmedBottom(2).reduced(2);
     juce::Path path;
     path.addRoundedRectangle(bounds.expanded(1), 4.0f);
     g.setColour(findColour(ColourIds::borderColourId));
@@ -184,7 +189,6 @@ void Document::Plot::paint(juce::Graphics& g)
     path.clear();
     path.addRoundedRectangle(bounds, 4.0f);
     g.reduceClipRegion(path);
-    
     
     auto const& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();

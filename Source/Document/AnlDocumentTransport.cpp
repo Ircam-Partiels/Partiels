@@ -36,6 +36,7 @@ Document::Transport::Transport(Accessor& accessor)
                 break;
             case AttrType::file:
             case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
             case AttrType::layout:
                 break;
         }

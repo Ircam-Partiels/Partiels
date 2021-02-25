@@ -5,7 +5,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager const& audioFormatManager)
+Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mPluginListScanner(pluginListScanner)
 , mAudioFormatManager(audioFormatManager)
@@ -60,6 +60,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             }
                 break;
             case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
             case AttrType::layout:
                 break;
         }

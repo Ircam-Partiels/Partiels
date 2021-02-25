@@ -70,6 +70,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
             case AttrType::isPlaybackStarted:
             case AttrType::playheadPosition:
             case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
             case AttrType::layout:
                 break;
 }

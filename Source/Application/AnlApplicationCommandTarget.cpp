@@ -324,6 +324,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 , {false}
                 , {0.0}
                 , {144}
+                , {144}
                 , {}
             }, NotificationType::synchronous);
             Instance::get().openFile(fc.getResult());

@@ -16,6 +16,13 @@ Document::Section::Section(Accessor& accessor)
     
     auto updateComponents = [&]()
     {
+        mPlayheadContainer.setVisible(!mSections.empty());
+        mZoomTimeRuler.setVisible(!mSections.empty());
+        mPlot.setVisible(mSections.size() > 1);
+        mViewport.setVisible(!mSections.empty());
+        mZoomTimeScrollBar.setVisible(!mSections.empty());
+        mResizerBar.setVisible(!mSections.empty());
+        
         std::vector<ConcertinaTable::ComponentRef> components;
         components.reserve(mSections.size());
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -50,6 +57,7 @@ Document::Section::Section(Accessor& accessor)
             }
                 break;
             case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
             {
                 resized();
             }
@@ -147,12 +155,12 @@ Document::Section::Section(Accessor& accessor)
     
     setSize(480, 200);
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
-    addAndMakeVisible(mPlayheadContainer);
-    addAndMakeVisible(mZoomTimeRuler);
-    addAndMakeVisible(mPlot);
-    addAndMakeVisible(mViewport);
-    addAndMakeVisible(mZoomTimeScrollBar);
-    addAndMakeVisible(mResizerBar);
+    addChildComponent(mPlayheadContainer);
+    addChildComponent(mZoomTimeRuler);
+    addChildComponent(mPlot);
+    addChildComponent(mViewport);
+    addChildComponent(mZoomTimeScrollBar);
+    addChildComponent(mResizerBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -172,7 +180,10 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    mPlot.setBounds(bounds.removeFromTop(mPlot.getHeight()).withLeft(left).withRight(right + 6));
+    if(mPlot.isVisible())
+    {
+        mPlot.setBounds(bounds.removeFromTop(mPlot.getHeight()).withLeft(left).withRight(right + 6));
+    }
     mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
     mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));

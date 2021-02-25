@@ -58,17 +58,7 @@ namespace Application
         Accessor mApplicationAccessor;
         PluginList::Accessor mPluginListAccessor;
         PluginList::Scanner mPluginListScanner;
-        Document::Accessor mDocumentAccessor {
-        Document::AttrContainer
-        {
-              {juce::File{}}
-            , {false}
-            , {1.0}
-            , {false}
-            , {0.0}
-            , {144}
-            , {}
-        }};
+        Document::Accessor mDocumentAccessor;
         Document::Director mDocumentDirector {mDocumentAccessor, mPluginListAccessor, mPluginListScanner, mAudioFormatManager};
         Document::FileWatcher mDocumentFileWatcher {mDocumentAccessor, mAudioFormatManager};
         

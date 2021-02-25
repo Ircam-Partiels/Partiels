@@ -17,6 +17,7 @@ namespace Document
         , isPlaybackStarted
         , playheadPosition
         , layoutHorizontal
+        , layoutVertical
         , layout
     };
     
@@ -33,6 +34,7 @@ namespace Document
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::Flag::notifying>
     , Model::Attr<AttrType::playheadPosition, double, Model::Flag::notifying>
     , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
+    , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     >;
     
@@ -54,8 +56,19 @@ namespace Document
                                  , {false}
                                  , {0.0}
                                  , {144}
+                                 , {144}
                                  , {}))
         {
+        }
+        
+        template <acsr_enum_type type>
+        bool insertAccessor(size_t index, NotificationType const notification)
+        {
+            if constexpr(type == AcsrType::timeZoom)
+            {
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, 1.0}, Zoom::epsilon()), notification);
+            }
+            return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
     };
 }
