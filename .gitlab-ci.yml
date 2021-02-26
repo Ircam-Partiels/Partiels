@@ -85,7 +85,7 @@ Deploy::Linux:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR/release/Brioche_artefacts/
+    - cd $CI_PROJECT_DIR/release/Brioche_artefacts/Release
     - mkdir Brioche-v$CI_COMMIT_TAG
     - cp Brioche Brioche-v$CI_COMMIT_TAG
     - cp ../../../BinaryData/Icons/icon.png Brioche-v$CI_COMMIT_TAG
