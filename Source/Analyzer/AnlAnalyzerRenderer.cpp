@@ -51,111 +51,95 @@ Analyzer::Renderer::Renderer(Accessor& accessor, Type type)
 : mAccessor(accessor)
 , mType(type)
 {
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case AttrType::identifier:
-            case AttrType::name:
-            case AttrType::key:
-            case AttrType::description:
-            case AttrType::state:
-            case AttrType::height:
-            case AttrType::propertyState:
-                break;
-            case AttrType::colours:
-            case AttrType::results:
-            {
-                if(mProcess.valid())
-                {
-                    mProcessState = ProcessState::aborted;
-                    mProcess.get();
-                }
-                mProcessState = ProcessState::available;
-                
-                auto const& results = acsr.getAttr<AttrType::results>();
-                if(results.empty() || results[0].values.size() <= 1)
-                {
-                    mImage = {};
-                    if(onUpdated != nullptr)
-                    {
-                        onUpdated();
-                    }
-                    return;
-                }
-                
-                auto const witdh = static_cast<int>(results.size());
-                auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
-                anlWeakAssert(witdh > 0 && height > 0);
-                if(witdh < 0 || height < 0)
-                {
-                    mImage = {};
-                    if(onUpdated != nullptr)
-                    {
-                        onUpdated();
-                    }
-                    return;
-                }
-                
-                if(mType == Type::frame)
-                {
-                    mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
-                    if(onUpdated != nullptr)
-                    {
-                        onUpdated();
-                    }
-                    return;
-                }
-                
-                mProcess = std::async([this]() -> juce::Image
-                {
-                    juce::Thread::setCurrentThreadName("Analyzer::Renderer::Process");
-                    auto expected = ProcessState::available;
-                    if(!mProcessState.compare_exchange_weak(expected, ProcessState::running))
-                    {
-                        triggerAsyncUpdate();
-                        return {};
-                    }
-                    
-                    if(!mAccessor.acquireResultsReadingAccess())
-                    {
-                        triggerAsyncUpdate();
-                        return {};
-                    }
-                    auto image = createImage(mAccessor, [this]()
-                    {
-                        return mAccessor.canContinueToReadResults() && mProcessState.load() != ProcessState::aborted;
-                    });
-                    mAccessor.releaseResultsReadingAccess();
-                    
-                    expected = ProcessState::running;
-                    if(mProcessState.compare_exchange_weak(expected, ProcessState::ended))
-                    {
-                        triggerAsyncUpdate();
-                        return image;
-                    }
-                    triggerAsyncUpdate();
-                    return {};
-                });
-            };
-                break;
-            case AttrType::time:
-            case AttrType::warnings:
-            case AttrType::processing:
-                break;
-        }
-    };
-    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Analyzer::Renderer::~Renderer()
 {
-    mAccessor.removeListener(mListener);
     if(mProcess.valid())
     {
         mProcessState = ProcessState::aborted;
         mProcess.get();
     }
+}
+
+bool Analyzer::Renderer::isPreparing() const
+{
+    return mProcess.valid();
+}
+
+void Analyzer::Renderer::prepareRendering()
+{
+    if(mProcess.valid())
+    {
+        mProcessState = ProcessState::aborted;
+        mProcess.get();
+    }
+    mProcessState = ProcessState::available;
+    
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    if(results.empty() || results[0].values.size() <= 1)
+    {
+        mImage = {};
+        if(onUpdated != nullptr)
+        {
+            onUpdated();
+        }
+        return;
+    }
+    
+    auto const witdh = static_cast<int>(results.size());
+    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
+    anlWeakAssert(witdh > 0 && height > 0);
+    if(witdh < 0 || height < 0)
+    {
+        mImage = {};
+        if(onUpdated != nullptr)
+        {
+            onUpdated();
+        }
+        return;
+    }
+    
+    if(mType == Type::frame)
+    {
+        mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
+        if(onUpdated != nullptr)
+        {
+            onUpdated();
+        }
+        return;
+    }
+    
+    mProcess = std::async([this]() -> juce::Image
+    {
+        juce::Thread::setCurrentThreadName("Analyzer::Renderer::Process");
+        auto expected = ProcessState::available;
+        if(!mProcessState.compare_exchange_weak(expected, ProcessState::running))
+        {
+            triggerAsyncUpdate();
+            return {};
+        }
+        
+        if(!mAccessor.acquireResultsReadingAccess())
+        {
+            triggerAsyncUpdate();
+            return {};
+        }
+        auto image = createImage(mAccessor, [this]()
+        {
+            return mAccessor.canContinueToReadResults() && mProcessState.load() != ProcessState::aborted;
+        });
+        mAccessor.releaseResultsReadingAccess();
+        
+        expected = ProcessState::running;
+        if(mProcessState.compare_exchange_weak(expected, ProcessState::ended))
+        {
+            triggerAsyncUpdate();
+            return image;
+        }
+        triggerAsyncUpdate();
+        return {};
+    });
 }
 
 void Analyzer::Renderer::handleAsyncUpdate()
@@ -182,7 +166,6 @@ void Analyzer::Renderer::handleAsyncUpdate()
         }
     }
 }
-
 
 void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {

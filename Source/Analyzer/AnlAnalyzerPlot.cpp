@@ -13,7 +13,15 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     addChildComponent(mInformation);
     addAndMakeVisible(mZoomPlayhead);
     
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    auto updateProcessingButton = [this]()
+    {
+        auto const state = mRenderer.isPreparing() || mAccessor.getAttr<AttrType::processing>();
+        mProcessingButton.setActive(state);
+        mProcessingButton.setVisible(state);
+        mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+    };
+    
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {
@@ -23,12 +31,14 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
-            case AttrType::results:
             case AttrType::propertyState:
             case AttrType::warnings:
                 break;
+            case AttrType::results:
             case AttrType::colours:
             {
+                mRenderer.prepareRendering();
+                updateProcessingButton();
                 repaint();
             }
                 break;
@@ -39,23 +49,22 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
                 break;
             case AttrType::processing:
             {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                mProcessingButton.setActive(state);
-                mProcessingButton.setVisible(state);
-                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+                updateProcessingButton();
             }
                 break;
         }
     };
     
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
-        repaint();
+        mRenderer.prepareRendering();
+        updateProcessingButton();
     };
     
-    mRenderer.onUpdated = [this]()
+    mRenderer.onUpdated = [=, this]()
     {
+        updateProcessingButton();
         repaint();
     };
     
@@ -114,7 +123,6 @@ void Analyzer::Plot::mouseMove(juce::MouseEvent const& event)
     }
     else if(it != results.cend() && it->values.size() > 1)
     {
-        
         auto const binRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
         if(binRange.isEmpty())
         {

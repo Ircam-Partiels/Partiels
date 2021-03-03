@@ -24,6 +24,8 @@ namespace Analyzer
         
         std::function<void(void)> onUpdated = nullptr;
         
+        void prepareRendering();
+        bool isPreparing() const;
         void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         
     private:
@@ -53,7 +55,6 @@ namespace Analyzer
         
         Accessor& mAccessor;
         Type const mType;
-        Accessor::Listener mListener;
         
         std::atomic<ProcessState> mProcessState {ProcessState::available};
         std::future<juce::Image> mProcess;

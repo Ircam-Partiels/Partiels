@@ -13,7 +13,15 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
     
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    auto updateProcessingButton = [this]()
+    {
+        auto const state = mRenderer.isPreparing() || mAccessor.getAttr<AttrType::processing>();
+        mProcessingButton.setActive(state);
+        mProcessingButton.setVisible(state);
+        mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+    };
+    
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -26,14 +34,16 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
             case AttrType::height:
             case AttrType::propertyState:
             case AttrType::results:
+            {
+                mRenderer.prepareRendering();
+                updateProcessingButton();
+            };
+                break;
             case AttrType::warnings:
                 break;
             case AttrType::processing:
             {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                mProcessingButton.setActive(state);
-                mProcessingButton.setVisible(state);
-                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+                updateProcessingButton();
             }
                 break;
             case AttrType::colours:
@@ -45,14 +55,16 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
         }
     };
     
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
-        repaint();
+        mRenderer.prepareRendering();
+        updateProcessingButton();
     };
     
-    mRenderer.onUpdated = [this]()
+    mRenderer.onUpdated = [=, this]()
     {
+        updateProcessingButton();
         repaint();
     };
     
