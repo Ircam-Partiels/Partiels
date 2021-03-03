@@ -59,7 +59,7 @@ namespace Zoom
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
-            if constexpr(type == Zoom::AttrType::visibleRange)
+            if constexpr(type == AttrType::visibleRange)
             {
                 auto sanitize = [](Range const& visible, Range const& global, double minLength)
                 {
