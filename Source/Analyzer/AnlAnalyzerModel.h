@@ -106,6 +106,21 @@ namespace Analyzer
         {
         }
         
+        template <attr_enum_type type, typename value_v>
+        void setAttr(value_v const& value, NotificationType notification)
+        {
+            if constexpr(type == AttrType::results)
+            {
+                acquireResultsWrittingAccess();
+                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
+                releaseResultsWrittingAccess();
+            }
+            else
+            {
+                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
+            }
+        }
+        
         template <acsr_enum_type type>
         bool insertAccessor(size_t index, NotificationType const notification)
         {
@@ -119,6 +134,18 @@ namespace Analyzer
             }
             return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
         }
+        
+        void releaseResultsReadingAccess();
+        bool acquireResultsReadingAccess();
+        bool canContinueToReadResults() const;
+        
+    private:
+        
+        void releaseResultsWrittingAccess();
+        void acquireResultsWrittingAccess();
+        
+        std::atomic<int> mNumReadingAccess {false};
+        std::atomic<bool> mRequireWrittingAccess {false};
     };
 }
 

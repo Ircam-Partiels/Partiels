@@ -117,10 +117,16 @@ Analyzer::Renderer::Renderer(Accessor& accessor, Type type)
                         return {};
                     }
                     
+                    if(!mAccessor.acquireResultsReadingAccess())
+                    {
+                        triggerAsyncUpdate();
+                        return {};
+                    }
                     auto image = createImage(mAccessor, [this]()
                     {
-                        return mProcessState.load() != ProcessState::aborted;
+                        return mAccessor.canContinueToReadResults() && mProcessState.load() != ProcessState::aborted;
                     });
+                    mAccessor.releaseResultsReadingAccess();
                     
                     expected = ProcessState::running;
                     if(mProcessState.compare_exchange_weak(expected, ProcessState::ended))
