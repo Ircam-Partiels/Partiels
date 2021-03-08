@@ -64,6 +64,14 @@ namespace Analyzer
             ~PropertySlider() override = default;
         };
         
+        class PropertyRangeSlider
+        : public PropertyComponent<juce::Slider>
+        {
+        public:
+            PropertyRangeSlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float, float)> fn);
+            ~PropertyRangeSlider() override = default;
+        };
+        
         class PropertyToggle
         : public PropertyComponent<juce::ToggleButton>
         {
@@ -105,8 +113,8 @@ namespace Analyzer
         PropertyTextButton mPropertyBackgroundColour;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
-        PropertyNumber mPropertyBinRangeMin;
-        PropertyNumber mPropertyBinRangeMax;
+        PropertyRangeSlider mPropertyValueRange;
+        PropertyNumber mPropertyNumBins;
         
         PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};
         PropertyLabel mPropertyPluginFeature {"Feature", "The feature of the plugin"};

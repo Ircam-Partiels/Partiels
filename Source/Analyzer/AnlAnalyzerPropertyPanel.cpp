@@ -90,6 +90,23 @@ Analyzer::PropertyPanel::PropertySlider::PropertySlider(juce::String const& name
     };
 }
 
+Analyzer::PropertyPanel::PropertyRangeSlider::PropertyRangeSlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float, float)> fn)
+: PropertyComponent<juce::Slider>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setSliderStyle(juce::Slider::SliderStyle::TwoValueHorizontal);
+    entry.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval));
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setTextValueSuffix(suffix);
+    entry.onValueChange = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(static_cast<float>(entry.getMinValue()), static_cast<float>(entry.getMaxValue()));
+        }
+    };
+}
+
 Analyzer::PropertyPanel::PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn)
 : PropertyComponent<juce::ToggleButton>(juce::translate(name), juce::translate(tooltip))
 {
@@ -239,18 +256,12 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
 })
-, mPropertyBinRangeMin("Bin Range Min.", "The minimum value of the bin range.", "", {Zoom::lowest(), Zoom::max()}, 1.0, [&](float value)
+, mPropertyValueRange("Value Range", "The range of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float min, float max)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withStart(static_cast<double>(value));
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
 })
-, mPropertyBinRangeMax("Bin Range Max.", "The maximum value of the bin range.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
-{
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
-})
+, mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0, Zoom::max()}, 1.0, nullptr)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -419,14 +430,15 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 else
                 {
+                    mPropertyNumBins.entry.setEnabled(false);
                     mGraphicalSection.setComponents(
                     {
                           mPropertyColourMap
                         , mPropertyColourMapAlpha
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
-                        , mPropertyBinRangeMin
-                        , mPropertyBinRangeMax
+                        , mPropertyValueRange
+                        , mPropertyNumBins
                     });
                 }
                 
@@ -455,15 +467,20 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
             {
                 auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
+                auto const interval = acsr.getAttr<Zoom::AttrType::minimumLength>();
                 mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
                 mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
+                mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
             }
                 break;
-            case Zoom::AttrType::minimumLength:
-                break;
             case Zoom::AttrType::visibleRange:
+            {
+                auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
+                mPropertyValueRange.entry.setMinAndMaxValues(range.getStart(), range.getEnd(), juce::NotificationType::dontSendNotification);
+            }
                 break;
         }
     };
@@ -475,8 +492,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case Zoom::AttrType::globalRange:
             {
                 auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                mPropertyBinRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
-                mPropertyBinRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
+                mPropertyNumBins.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
             }
                 break;
             case Zoom::AttrType::minimumLength:
