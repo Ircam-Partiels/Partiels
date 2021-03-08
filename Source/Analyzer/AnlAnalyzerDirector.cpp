@@ -171,10 +171,19 @@ void Analyzer::Director::updateZooms(NotificationType const notification)
         return !initialized ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
     };
     
-    auto const info = getZoomInfo();
     auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
-    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+    auto const& output = mAccessor.getAttr<AttrType::description>().output;
+    if(output.hasKnownExtents)
+    {
+        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)}, notification);
+        valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>((output.isQuantized ? static_cast<double>(output.quantizeStep) : std::numeric_limits<double>::epsilon()), notification);
+    }
+    else
+    {
+        auto const info = getZoomInfo();
+        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
+        valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+    }
     
     auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
     binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(results[0].values.size())}, notification);
