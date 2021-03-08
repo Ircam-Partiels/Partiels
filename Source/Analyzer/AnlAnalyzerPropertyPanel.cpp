@@ -42,7 +42,7 @@ Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, ju
             editor->setJustification(entry.getJustificationType());
         }
     };
-    entry.onTextChange = [&]()
+    entry.onTextChange = [=]()
     {
         if(fn != nullptr)
         {
