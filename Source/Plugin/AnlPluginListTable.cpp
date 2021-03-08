@@ -10,8 +10,15 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
-        updateContent();
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::keys:
+            case AttrType::sortColumn:
+            case AttrType::sortIsFowards:
+                updateContent();
+                break;
+        }
     };
     
     addAndMakeVisible(mPluginTable);
@@ -106,6 +113,7 @@ void PluginList::Table::resized()
 
 void PluginList::Table::updateContent()
 {
+    mPluginTable.getHeader().setSortColumnId(static_cast<int>(mAccessor.getAttr<AttrType::sortColumn>()), mAccessor.getAttr<AttrType::sortIsFowards>());
     auto const& keys = mAccessor.getAttr<AttrType::keys>();
     
     mFilteredList.clear();
