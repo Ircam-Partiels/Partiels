@@ -48,6 +48,7 @@ Analyzer::Director::~Director()
     {
         mAnalysisState = ProcessState::aborted;
         mAnalysisProcess.get();
+        cancelPendingUpdate();
     }
 }
 
@@ -64,6 +65,7 @@ void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatR
     {
         mAnalysisState = ProcessState::aborted;
         mAnalysisProcess.get();
+        cancelPendingUpdate();
     }
     mAnalysisState = ProcessState::available;
     mAudioFormatReaderManager = std::move(audioFormatReader);
@@ -84,6 +86,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     {
         mAnalysisState = ProcessState::aborted;
         mAnalysisProcess.get();
+        cancelPendingUpdate();
     }
     mAnalysisState = ProcessState::available;
     
