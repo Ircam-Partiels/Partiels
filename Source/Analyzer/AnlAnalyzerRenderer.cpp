@@ -125,6 +125,7 @@ void Analyzer::Renderer::prepareRendering()
         
         if(!mAccessor.acquireResultsReadingAccess())
         {
+            mProcessState = ProcessState::aborted;
             triggerAsyncUpdate();
             return {};
         }
@@ -133,6 +134,12 @@ void Analyzer::Renderer::prepareRendering()
             return mAccessor.canContinueToReadResults() && mProcessState.load() != ProcessState::aborted;
         });
         mAccessor.releaseResultsReadingAccess();
+        if(image.isNull())
+        {
+            mProcessState = ProcessState::aborted;
+            triggerAsyncUpdate();
+            return {};
+        }
         
         expected = ProcessState::running;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::ended))
@@ -149,23 +156,23 @@ void Analyzer::Renderer::handleAsyncUpdate()
 {
     if(mProcess.valid())
     {
+        anlWeakAssert(mProcessState != ProcessState::available);
+        
         auto expected = ProcessState::ended;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
             mImage = mProcess.get();
-            if(onUpdated != nullptr)
-            {
-                onUpdated();
-            }
         }
-        else if(mProcessState == ProcessState::aborted)
+        expected = ProcessState::aborted;
+        if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
             mImage = mProcess.get();
             mProcessState = ProcessState::available;
-            if(onUpdated != nullptr)
-            {
-                onUpdated();
-            }
+        }
+        
+        if(onUpdated != nullptr)
+        {
+            onUpdated();
         }
     }
 }
