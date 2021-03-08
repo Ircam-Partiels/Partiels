@@ -2,6 +2,42 @@
 
 ANALYSE_FILE_BEGIN
 
+void Analyzer::Accessor::releaseResultsReadingAccess()
+{
+    anlStrongAssert(mNumReadingAccess > 0);
+    --mNumReadingAccess;
+}
+
+bool Analyzer::Accessor::acquireResultsReadingAccess()
+{
+    if(mRequireWrittingAccess.load())
+    {
+        return false;
+    }
+    ++mNumReadingAccess;
+    return true;
+}
+
+bool Analyzer::Accessor::canContinueToReadResults() const
+{
+    return mRequireWrittingAccess.load() == false;
+}
+
+void Analyzer::Accessor::releaseResultsWrittingAccess()
+{
+    anlStrongAssert(mRequireWrittingAccess.load() == true);
+    mRequireWrittingAccess = false;
+}
+
+void Analyzer::Accessor::acquireResultsWrittingAccess()
+{
+    anlStrongAssert(mRequireWrittingAccess.load() == false);
+    mRequireWrittingAccess = true;
+    while(mNumReadingAccess > 0)
+    {
+    }
+}
+
 template<>
 void XmlParser::toXml<Analyzer::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Analyzer::ColourSet const& value)
 {
