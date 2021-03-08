@@ -279,17 +279,25 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                         mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                     };
                     
-                    if(parameter.valueNames.empty())
+                    if(!parameter.valueNames.empty())
                     {
-                        auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
-                        return std::make_unique<PropertyNumber>(parameter.name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
+                        return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
                         {
-                            setValue(value);
+                            setValue(static_cast<float>(index));
                         });
                     }
-                    return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
+                    else if(parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon())
                     {
-                        setValue(static_cast<float>(index));
+                        return std::make_unique<PropertyToggle>(parameter.name, parameter.description, [=](bool state)
+                        {
+                            setValue(state ? 1.0f : 0.f);
+                        });
+                    }
+                    
+                    auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
+                    return std::make_unique<PropertyNumber>(parameter.name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
+                    {
+                        setValue(value);
                     });
                 };
                 

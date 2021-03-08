@@ -5,7 +5,6 @@
 - Add loop support
 - Fix value range min/max settings
 - Add container table
-- PropertyPanel - Add toggle support for on/off parameters
 - Zoom replace signal approach with model
 - Sanitize the analyzer model before analyzing
 - Add program support
