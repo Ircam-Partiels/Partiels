@@ -34,6 +34,7 @@ namespace Document
         
         Analyzer::Accessor::Listener mAnalyzerListener;
         Zoom::Accessor::Listener mZoomListener;
+        Zoom::Accessor::Listener mTimeZoomListener;
         Zoom::Playhead mZoomPlayhead;
         LoadingCircle mProcessingButton;
         

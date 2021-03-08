@@ -10,6 +10,18 @@ Document::Plot::Plot(Accessor& accessor)
     addAndMakeVisible(mZoomPlayhead);
     addAndMakeVisible(mResizerBar);
     
+    auto updateProcessingButton = [this]()
+    {
+        auto const state = std::any_of(mRenderers.cbegin(), mRenderers.cend(), [](auto const& renderer)
+        {
+            return std::get<0>(renderer).get().template getAttr<Analyzer::AttrType::processing>() || std::get<1>(renderer)->isPreparing();
+        });
+        mProcessingButton.setActive(state);
+        mProcessingButton.setVisible(state);
+        mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+        repaint();
+    };
+    
     mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -54,17 +66,19 @@ Document::Plot::Plot(Accessor& accessor)
                 anlStrongAssert(newRenderer != nullptr);
                 if(newRenderer != nullptr)
                 {
-                    newRenderer->onUpdated = [this]()
+                    newRenderer->onUpdated = [=]()
                     {
-                        repaint();
+                        updateProcessingButton();
                     };
-                    
                 }
-                anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
-                anlAcsr.getAccessor<Analyzer::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-                anlAcsr.getAccessor<Analyzer::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-                mRenderers.emplace(mRenderers.begin() + static_cast<long>(index), anlAcsr, std::move(newRenderer));
-                repaint();
+                auto it = mRenderers.emplace(mRenderers.begin() + static_cast<long>(index), anlAcsr, std::move(newRenderer));
+                anlStrongAssert(it != mRenderers.cend());
+                if(it != mRenderers.cend())
+                {
+                    anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
+                    anlAcsr.getAccessor<Analyzer::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+                    anlAcsr.getAccessor<Analyzer::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+                }
             }
                 break;
                 
@@ -101,13 +115,30 @@ Document::Plot::Plot(Accessor& accessor)
         }
     };
     
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr, attribute);
+        for(auto& renderer : mRenderers)
+        {
+            if(&(std::get<0>(renderer).get().getAccessor<Analyzer::AcsrType::valueZoom>(0)) == &acsr)
+            {
+                std::get<1>(renderer)->prepareRendering();
+                updateProcessingButton();
+            }
+            else if(&(std::get<0>(renderer).get().getAccessor<Analyzer::AcsrType::binZoom>(0)) == &acsr)
+            {
+                repaint();
+            }
+        }
+    };
+    
+    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
     };
     
-    mAnalyzerListener.onAttrChanged = [this](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
+    mAnalyzerListener.onAttrChanged = [=, this](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -118,25 +149,28 @@ Document::Plot::Plot(Accessor& accessor)
             case Analyzer::AttrType::description:
             case Analyzer::AttrType::state:
             case Analyzer::AttrType::height:
-            case Analyzer::AttrType::results:
             case Analyzer::AttrType::propertyState:
             case Analyzer::AttrType::warnings:
             case Analyzer::AttrType::time:
                 break;
+            case Analyzer::AttrType::results:
             case Analyzer::AttrType::colours:
             {
-                repaint();
+                auto it = std::find_if(mRenderers.cbegin(), mRenderers.cend(), [&](auto const& renderer)
+                {
+                    return &(std::get<0>(renderer).get()) == &acsr;
+                });
+                anlStrongAssert(it != mRenderers.cend());
+                if(it != mRenderers.cend())
+                {
+                    std::get<1>(*it)->prepareRendering();
+                    updateProcessingButton();
+                }
             }
                 break;
             case Analyzer::AttrType::processing:
             {
-                auto const state = std::any_of(mRenderers.cbegin(), mRenderers.cend(), [](auto const& renderer)
-                {
-                    return std::get<0>(renderer).get().template getAttr<Analyzer::AttrType::processing>();
-                });
-                mProcessingButton.setActive(state);
-                mProcessingButton.setVisible(state);
-                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+                updateProcessingButton();
             }
                 break;
         }
@@ -150,7 +184,7 @@ Document::Plot::Plot(Accessor& accessor)
     setSize(100, 80);
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::timeZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::timeZoom>(0).addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
 Document::Plot::~Plot()
@@ -162,7 +196,7 @@ Document::Plot::~Plot()
         anlAcsr.getAccessor<Analyzer::AcsrType::valueZoom>(0).removeListener(mZoomListener);
         anlAcsr.removeListener(mAnalyzerListener);
     }
-    mAccessor.getAccessor<AcsrType::timeZoom>(0).removeListener(mZoomListener);
+    mAccessor.getAccessor<AcsrType::timeZoom>(0).removeListener(mTimeZoomListener);
     mAccessor.removeListener(mListener);
 }
 
