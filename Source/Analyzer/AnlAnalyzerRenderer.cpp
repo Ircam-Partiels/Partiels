@@ -76,6 +76,7 @@ void Analyzer::Renderer::prepareRendering()
     {
         mProcessState = ProcessState::aborted;
         mProcess.get();
+        cancelPendingUpdate();
     }
     mProcessState = ProcessState::available;
     
@@ -169,11 +170,11 @@ void Analyzer::Renderer::handleAsyncUpdate()
             mImage = mProcess.get();
             mProcessState = ProcessState::available;
         }
-        
-        if(onUpdated != nullptr)
-        {
-            onUpdated();
-        }
+    }
+    
+    if(onUpdated != nullptr)
+    {
+        onUpdated();
     }
 }
 
