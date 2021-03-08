@@ -144,6 +144,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
 
 void Analyzer::Director::updateZooms(NotificationType const notification)
 {
+    JUCE_COMPILER_WARNING("If zoom extent is defined, the zoom can be updated before the analysis")
     auto const& results = mAccessor.getAttr<AttrType::results>();
     if(results.empty())
     {
