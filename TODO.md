@@ -3,7 +3,6 @@
 - Rename and Split Document to Group and Document
 - Move back Resampling to Document to support the changes of the audio file
 - Add loop support
-- Fix value range min/max settings
 - Add container table
 - Zoom replace signal approach with model
 - Sanitize the analyzer model before analyzing
