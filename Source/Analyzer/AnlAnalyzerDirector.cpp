@@ -99,7 +99,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         return;
     }
     
-    auto const state = mAccessor.getAttr<AttrType::state>();
+    auto state = mAccessor.getAttr<AttrType::state>();
     auto processor = Plugin::Processor::create(key, state, *reader, AlertType::window);
     if(processor == nullptr)
     {
