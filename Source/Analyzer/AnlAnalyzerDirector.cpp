@@ -119,7 +119,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     mAccessor.setAttr<AttrType::description>(description, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
     
-    mAnalysisProcess = std::async([=, this, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
+    mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
         
