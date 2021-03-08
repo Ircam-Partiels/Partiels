@@ -312,11 +312,13 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mParameterProperties.clear();
                 for(auto const& parameter : description.parameters)
                 {
-                    mParameterProperties[parameter.identifier] = createProperty(parameter);
-                }
-                for(auto const& property : mParameterProperties)
-                {
-                    components.push_back(*property.second.get());
+                    auto property = createProperty(parameter);
+                    anlWeakAssert(property != nullptr);
+                    if(property != nullptr)
+                    {
+                        components.push_back(*property.get());
+                        mParameterProperties[parameter.identifier] = std::move(property);
+                    }
                 }
                 components.push_back(mPropertyResetProcessor);
                 mProcessorSection.setComponents(components);
