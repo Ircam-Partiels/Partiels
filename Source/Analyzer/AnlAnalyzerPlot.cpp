@@ -19,6 +19,7 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         mProcessingButton.setActive(state);
         mProcessingButton.setVisible(state);
         mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+        repaint();
     };
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -39,7 +40,6 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             {
                 mRenderer.prepareRendering();
                 updateProcessingButton();
-                repaint();
             }
                 break;
             case AttrType::time:
@@ -55,30 +55,41 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         }
     };
     
-    mZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         mRenderer.prepareRendering();
         updateProcessingButton();
     };
     
-    mRenderer.onUpdated = [=, this]()
+    mBinZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
-        updateProcessingButton();
+        juce::ignoreUnused(acsr, attribute);
         repaint();
     };
     
+    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr, attribute);
+        repaint();
+    };
+    
+    mRenderer.onUpdated = [=]()
+    {
+        updateProcessingButton();
+    };
+    
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
+    mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
 Analyzer::Plot::~Plot()
 {
-    mTimeZoomAccessor.removeListener(mZoomListener);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mZoomListener);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mZoomListener);
+    mTimeZoomAccessor.removeListener(mTimeZoomListener);
+    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
+    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
     mAccessor.removeListener(mListener);
 }
 

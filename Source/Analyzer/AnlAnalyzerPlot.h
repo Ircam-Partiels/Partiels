@@ -34,10 +34,13 @@ namespace Analyzer
         
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
+        Zoom::Accessor::Listener mTimeZoomListener;
+        Zoom::Accessor::Listener mValueZoomListener;
+        Zoom::Accessor::Listener mBinZoomListener;
         Renderer mRenderer;
         Accessor::Listener mListener;
         
-        Zoom::Accessor::Listener mZoomListener;
+        
         Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
         LoadingCircle mProcessingButton;
         juce::Label mInformation;
