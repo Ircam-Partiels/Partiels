@@ -29,10 +29,13 @@ juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::funct
     auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
     juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
     
+    auto const& valueZoomAcsr = accessor.getAccessor<AcsrType::valueZoom>(0);
+    auto const valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const colourMap = accessor.getAttr<AttrType::colours>().map;
     auto valueToColour = [&](float const value)
     {
-        auto const color = tinycolormap::GetColor(static_cast<double>(value) / (height * 0.25), colourMap);
+        auto const ratio = (value - valueRange.getStart()) / valueRange.getLength();
+        auto const color = tinycolormap::GetColor(static_cast<double>(ratio), colourMap);
         return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
     };
     
@@ -301,7 +304,9 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             auto const colourMap = colours.map;
             auto valueToColour = [&](float const value)
             {
-                auto const color = tinycolormap::GetColor(static_cast<double>(value) / (image.getHeight() * 0.25), colourMap);
+                auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                auto const ratio = (value - valueRange.getStart()) / valueRange.getLength();
+                auto const color = tinycolormap::GetColor(static_cast<double>(ratio), colourMap);
                 return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
             };
             
