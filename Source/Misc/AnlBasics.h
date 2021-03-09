@@ -19,6 +19,7 @@
 #include <variant>
 #include <numeric>
 #include <cassert>
+#include <optional>
 
 #define anlStrongAssert assert
 #define anlWeakAssert jassert
