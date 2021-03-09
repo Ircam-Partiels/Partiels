@@ -3,78 +3,62 @@
 
 ANALYSE_FILE_BEGIN
 
-Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate, AlertType const alertType, std::string const& errorMessage)
+std::tuple<Vamp::Plugin*, std::optional<juce::String>> PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;
-    using AlertIconType = juce::AlertWindow::AlertIconType;
-    auto const errorTitle = juce::translate(errorMessage);
     
     auto* pluginLoader = PluginLoader::getInstance();
     anlWeakAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, juce::translate("Cannot get the plugin loader."));
-        }
-        return nullptr;
+        return {nullptr, "Cannot get the plugin loader."};
     }
     
     std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
-        return nullptr;
+        return {nullptr, "Cannot get the plugin loader thread."};
     }
     
     auto const entry = std::make_tuple(key, sampleRate);
     if(mPlugins.count(entry) > 0_z)
     {
-        return mPlugins.at(entry).get();
+        return {mPlugins.at(entry).get(), {}};
     }
     
     auto const pluginKeys = pluginLoader->listPlugins();
     if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), key) == pluginKeys.cend())
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, juce::translate("Plugin \"PLGKEY\" cannot be found.").replace("PLGKEY", key));
-        }
-        return nullptr;
+        return {nullptr, juce::translate("Plugin \"PLGKEY\" cannot be found.").replace("PLGKEY", key)};
     }
     
-    auto doPlugin = [&]() -> std::unique_ptr<Vamp::Plugin>
+    try
     {
-        try
+        auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+        if(plugin != nullptr)
         {
-            return std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+            mPlugins[entry] = std::move(plugin);
+            return {mPlugins[entry].get(), {}};
         }
-        catch(std::exception const& e)
-        {
-            if(alertType == AlertType::window)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, juce::translate(e.what()));
-            }
-        }
-        catch(...)
-        {
-            if(alertType == AlertType::window)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, juce::translate("Unknown reason"));
-            }
-        }
-        return nullptr;
-    };
-    
-    mPlugins[entry] = doPlugin();
-    return mPlugins[entry].get();
+    }
+    catch(std::exception const& e)
+    {
+        return {nullptr, juce::translate(e.what()).toStdString()};
+    }
+    catch(...)
+    {
+        return {nullptr, juce::translate("Unknown reason")};
+    }
+    return {nullptr, juce::translate("Cannot allocate the plugin.")};
 }
 
 std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, AlertType const alertType)
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;
+    using AlertIconType = juce::AlertWindow::AlertIconType;
     
     auto* pluginLoader = PluginLoader::getInstance();
     anlWeakAssert(pluginLoader != nullptr);
@@ -82,20 +66,20 @@ std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, Aler
     {
         if(alertType == AlertType::window)
         {
-            using AlertIconType = juce::AlertWindow::AlertIconType;
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Cannot get the plugin loader."));
         }
         return {};
     }
 
+    juce::StringArray errors;
     std::set<Plugin::Key> keys;
     auto const pluginKeys = pluginLoader->listPlugins();
     for(auto const& pluginKey : pluginKeys)
     {
-        auto* plugin = loadPlugin(pluginKey, static_cast<float>(sampleRate), alertType, "Enumeration of plugins failed!");
-        if(plugin != nullptr)
+        auto result = loadPlugin(pluginKey, static_cast<float>(sampleRate));
+        if(std::get<0>(result) != nullptr)
         {
-            auto const outputs = plugin->getOutputDescriptors();
+            auto const outputs = std::get<0>(result)->getOutputDescriptors();
             for(size_t feature = 0; feature < outputs.size(); ++feature)
             {
                 if(!keys.insert({pluginKey, outputs[feature].identifier}).second)
@@ -104,7 +88,17 @@ std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, Aler
                 }
             }
         }
+        if(std::get<1>(result))
+        {
+            errors.add(*std::get<1>(result));
+        }
     }
+    
+    if(!errors.isEmpty() && alertType == AlertType::window)
+    {
+        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), errors.joinIntoString("\n"));
+    }
+    
     return keys;
 }
 
@@ -112,6 +106,7 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
 {
     using namespace Vamp;
     using namespace Vamp::HostExt;
+    using AlertIconType = juce::AlertWindow::AlertIconType;
     
     auto* pluginLoader = PluginLoader::getInstance();
     anlWeakAssert(pluginLoader != nullptr);
@@ -119,17 +114,22 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
     {
         if(alertType == AlertType::window)
         {
-            using AlertIconType = juce::AlertWindow::AlertIconType;
             juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugin failed!"), juce::translate("Cannot get the plugin loader."));
         }
         return {};
     }
     
-    auto* plugin = loadPlugin(key.identifier, static_cast<float>(sampleRate), alertType, "Loading of plugin failed!");
-    if(plugin == nullptr)
+    auto result = loadPlugin(key.identifier, static_cast<float>(sampleRate));
+    auto* plugin = std::get<0>(result);
+    if(plugin != nullptr)
     {
+        if(std::get<1>(result) && alertType == AlertType::window)
+        {
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugin failed!"), *std::get<1>(result));
+        }
         return {};
     }
+    
     
     auto const outputs = plugin->getOutputDescriptors();
     for(size_t feature = 0; feature < outputs.size(); ++feature)
@@ -172,7 +172,6 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
     
     if(alertType == AlertType::window)
     {
-        using AlertIconType = juce::AlertWindow::AlertIconType;
         juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugin failed!"), juce::translate("Feature \"FTRID\" of plugin \"PLGKEY\" cannot be found.").replace("FTRID", key.feature).replace("PLGKEY", key.identifier));
     }
     return {};

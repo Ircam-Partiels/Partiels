@@ -13,7 +13,7 @@ namespace PluginList
         Plugin::Description getPluginDescription(Plugin::Key const& key, double sampleRate, AlertType const alertType);
         
     private:
-        Vamp::Plugin* loadPlugin(std::string const& key, float sampleRate, AlertType const alertType, std::string const& errorMessage = "");
+        std::tuple<Vamp::Plugin*, std::optional<juce::String>> loadPlugin(std::string const& key, float sampleRate);
         
         using entry_t = std::tuple<std::string, float>;
         struct entry_comp
