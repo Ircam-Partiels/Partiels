@@ -78,6 +78,57 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     return true;
 }
 
+Plugin::Description Plugin::Processor::getDescription() const
+{
+    anlStrongAssert(mPlugin != nullptr);
+    if(mPlugin == nullptr)
+    {
+        return {};
+    }
+    
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlWeakAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        return {};
+    }
+
+    Plugin::Description description;
+    description.name = mPlugin->getName();
+    description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
+    if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(mPlugin.get()))
+    {
+        using PluginInputDomainAdapter = Vamp::HostExt::PluginInputDomainAdapter;
+        if(auto* inputDomainAdapter = wrapper->getWrapper<PluginInputDomainAdapter const>())
+        {
+            description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
+            description.defaultState.windowType = inputDomainAdapter->getWindowType();
+        }
+    }
+
+    description.maker = mPlugin->getMaker();
+    description.version = static_cast<unsigned int>(mPlugin->getPluginVersion());
+    auto const categories = pluginLoader->getPluginCategory(mPlugin->getIdentifier());
+    description.category = categories.empty() ? "": categories.front();
+    description.details = mPlugin->getDescription();
+
+    auto const blockSize = mPlugin->getPreferredBlockSize();
+    description.defaultState.blockSize = blockSize > 0 ? blockSize : 512;
+    auto const stepSize = mPlugin->getPreferredStepSize();
+    description.defaultState.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
+    auto const parameters = mPlugin->getParameterDescriptors();
+    description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
+    for(auto const& parameter : parameters)
+    {
+        description.defaultState.parameters[parameter.identifier] = parameter.defaultValue;
+    }
+
+    auto const descriptors = mPlugin->getOutputDescriptors();
+    anlStrongAssert(descriptors.size() > mFeature);
+    description.output = descriptors.size() > mFeature ? descriptors[mFeature] : Plugin::Output{};
+
+    return description;
+}
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader, AlertType alertType)
 {
     using namespace Vamp;

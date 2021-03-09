@@ -15,6 +15,7 @@ namespace Plugin
         
         bool performNextAudioBlock(std::vector<Result>& results);
 
+        Description getDescription() const;
     private:
         
         Processor(juce::AudioFormatReader& audioFormatReader, std::unique_ptr<Vamp::Plugin> plugin, size_t const feature, State const& state);
