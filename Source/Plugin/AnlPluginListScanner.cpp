@@ -1,4 +1,3 @@
-
 #include "AnlPluginListScanner.h"
 #include <vamp-hostsdk/PluginLoader.h>
 

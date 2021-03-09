@@ -1,4 +1,3 @@
-
 #include "AnlPluginListModel.h"
 
 ANALYSE_FILE_BEGIN
