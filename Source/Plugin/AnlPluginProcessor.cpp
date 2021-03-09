@@ -129,6 +129,12 @@ Plugin::Description Plugin::Processor::getDescription() const
 
     return description;
 }
+
+Plugin::State Plugin::Processor::getState() const
+{
+    return mState;
+}
+
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader, AlertType alertType)
 {
     using namespace Vamp;
