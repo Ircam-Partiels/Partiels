@@ -225,6 +225,7 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
             case juce::AlertWindow::NoIcon:
                 return juce::Image();
         }
+        return juce::Image();
     };
     
     g.drawImage(getIcon(), {-48.0f, -20.0f, 180.0f, 180.0f});
