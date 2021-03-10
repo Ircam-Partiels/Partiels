@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Misc/AnlModel.h"
+#include "../Misc/AnlMisc.h"
 #include "../Zoom/AnlZoomModel.h"
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginWrapper.h>
