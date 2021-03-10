@@ -162,8 +162,6 @@ namespace Plugin
             return !(*this == rhd);
         }
     };
-    
-    JUCE_DEPRECATED(std::vector<Result>::const_iterator getResultAt(std::vector<Result> const& results, double time));
 }
 
 namespace XmlParser

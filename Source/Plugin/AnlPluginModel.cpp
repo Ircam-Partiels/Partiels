@@ -36,28 +36,6 @@ bool Plugin::Parameter::operator==(Parameter const& rhd) const noexcept
     valueNames == rhd.valueNames;
 }
 
-std::vector<Plugin::Result>::const_iterator Plugin::getResultAt(std::vector<Result> const& results, double time)
-{
-    if(results.empty())
-    {
-        return results.cend();
-    }
-    auto const realTime = Vamp::RealTime::fromSeconds(time);
-    if(results.front().hasDuration)
-    {
-        return std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-        {
-            anlWeakAssert(result.hasTimestamp);
-            return realTime >= result.timestamp && realTime < result.timestamp + result.duration;
-        });
-    }
-    return std::lower_bound(results.cbegin(), results.cend(), realTime, [](auto const& result, auto const& t)
-    {
-        anlWeakAssert(result.hasTimestamp);
-        return result.timestamp < t;
-    });
-}
-
 template<>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
 {
