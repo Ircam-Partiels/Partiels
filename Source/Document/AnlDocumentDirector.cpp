@@ -152,15 +152,9 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
         anlAcsr.setAttr<Analyzer::AttrType::identifier>(identifier, notification);
         anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, notification);
-        anlAcsr.setAttr<Analyzer::AttrType::key>(key, notification);
         anlAcsr.setAttr<Analyzer::AttrType::description>(description, notification);
         anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, notification);
-        
-        anlStrongAssert(mAnalyzers.size() > index);
-        if(mAnalyzers.size() > index)
-        {
-            mAnalyzers[index]->updateZooms(notification);
-        }
+        anlAcsr.setAttr<Analyzer::AttrType::key>(key, notification);
         
         auto layout = mAccessor.getAttr<AttrType::layout>();
         layout.push_back(identifier);
