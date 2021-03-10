@@ -3,133 +3,102 @@
 
 ANALYSE_FILE_BEGIN
 
-std::tuple<Vamp::Plugin*, std::optional<juce::String>> PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
+Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
 {
-    using namespace Vamp;
-    using namespace Vamp::HostExt;
-    
-    auto* pluginLoader = PluginLoader::getInstance();
-    anlWeakAssert(pluginLoader != nullptr);
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
-        return {nullptr, "Cannot get the plugin loader."};
+        throw std::runtime_error("plugin loader is not available");
     }
     
     std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
-        return {nullptr, "Cannot get the plugin loader thread."};
+        throw std::logic_error("plugin loader thread is already in used");
     }
     
     auto const entry = std::make_tuple(key, sampleRate);
-    if(mPlugins.count(entry) > 0_z)
+    auto it = mPlugins.find(entry);
+    if(it != mPlugins.end())
     {
-        return {mPlugins.at(entry).get(), {}};
+        return it->second.get();
     }
     
     auto const pluginKeys = pluginLoader->listPlugins();
     if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), key) == pluginKeys.cend())
     {
-        return {nullptr, juce::translate("Plugin \"PLGKEY\" cannot be found.").replace("PLGKEY", key)};
+        throw std::runtime_error("plugin key cannot be found");
     }
     
-    try
+    auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
+    if(plugin == nullptr)
     {
-        auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), PluginLoader::ADAPT_ALL_SAFE));
-        if(plugin != nullptr)
-        {
-            mPlugins[entry] = std::move(plugin);
-            return {mPlugins[entry].get(), {}};
-        }
+        throw std::runtime_error("plugin allocation failed");
     }
-    catch(std::exception const& e)
-    {
-        return {nullptr, juce::translate(e.what()).toStdString()};
-    }
-    catch(...)
-    {
-        return {nullptr, juce::translate("Unknown reason")};
-    }
-    return {nullptr, juce::translate("Cannot allocate the plugin.")};
+    
+    auto* pointer = plugin.get();
+    mPlugins[entry] = std::move(plugin);
+    return pointer;
 }
 
-std::set<Plugin::Key> PluginList::Scanner::getPluginKeys(double sampleRate, AlertType const alertType)
+std::tuple<std::set<Plugin::Key>, juce::StringArray> PluginList::Scanner::getKeys(double sampleRate)
 {
-    using namespace Vamp;
-    using namespace Vamp::HostExt;
-    using AlertIconType = juce::AlertWindow::AlertIconType;
-    
-    auto* pluginLoader = PluginLoader::getInstance();
-    anlWeakAssert(pluginLoader != nullptr);
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), juce::translate("Cannot get the plugin loader."));
-        }
-        return {};
+        throw std::runtime_error("plugin loader is not available");
     }
 
-    juce::StringArray errors;
     std::set<Plugin::Key> keys;
+    juce::StringArray errors;
     auto const pluginKeys = pluginLoader->listPlugins();
     for(auto const& pluginKey : pluginKeys)
     {
-        auto result = loadPlugin(pluginKey, static_cast<float>(sampleRate));
-        if(std::get<0>(result) != nullptr)
+        try
         {
-            auto const outputs = std::get<0>(result)->getOutputDescriptors();
-            for(size_t feature = 0; feature < outputs.size(); ++feature)
+            auto* plugin = loadPlugin(pluginKey, static_cast<float>(sampleRate));
+            if(plugin != nullptr)
             {
-                if(!keys.insert({pluginKey, outputs[feature].identifier}).second)
+                auto const outputs = plugin->getOutputDescriptors();
+                for(size_t feature = 0; feature < outputs.size(); ++feature)
                 {
-                    anlWeakAssert(false);
+                    if(!keys.insert({pluginKey, outputs[feature].identifier}).second)
+                    {
+                        anlWeakAssert(false);
+                        errors.add(pluginKey + ": insertion failed");
+                    }
                 }
             }
         }
-        if(std::get<1>(result))
+        catch(std::exception& e)
         {
-            errors.add(*std::get<1>(result));
+            errors.add(pluginKey + ": " + e.what());
+        }
+        catch(...)
+        {
+            errors.add(pluginKey + ": unknwon error");
         }
     }
-    
-    if(!errors.isEmpty() && alertType == AlertType::window)
-    {
-        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Enumeration of plugins failed!"), errors.joinIntoString("\n"));
-    }
-    
-    return keys;
+    return {keys, errors};
 }
 
-Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const& key, double sampleRate, AlertType const alertType)
+Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, double sampleRate)
 {
-    using namespace Vamp;
-    using namespace Vamp::HostExt;
-    using AlertIconType = juce::AlertWindow::AlertIconType;
-    
-    auto* pluginLoader = PluginLoader::getInstance();
-    anlWeakAssert(pluginLoader != nullptr);
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugin failed!"), juce::translate("Cannot get the plugin loader."));
-        }
-        return {};
+        throw std::runtime_error("plugin loader is not available");
     }
     
-    auto result = loadPlugin(key.identifier, static_cast<float>(sampleRate));
-    auto* plugin = std::get<0>(result);
-    if(plugin != nullptr)
+    auto* plugin = loadPlugin(key.identifier, static_cast<float>(sampleRate));
+    if(plugin == nullptr)
     {
-        if(std::get<1>(result) && alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugin failed!"), *std::get<1>(result));
-        }
-        return {};
+        throw std::runtime_error("allocation failed");
     }
-    
     
     auto const outputs = plugin->getOutputDescriptors();
     for(size_t feature = 0; feature < outputs.size(); ++feature)
@@ -141,7 +110,7 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
             description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
             if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin))
             {
-                if(auto* inputDomainAdapter = wrapper->getWrapper<PluginInputDomainAdapter>())
+                if(auto* inputDomainAdapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
                 {
                     description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
                     description.defaultState.windowType = inputDomainAdapter->getWindowType();
@@ -169,12 +138,7 @@ Plugin::Description PluginList::Scanner::getPluginDescription(Plugin::Key const&
             return description;
         }
     }
-    
-    if(alertType == AlertType::window)
-    {
-        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Loading of plugin failed!"), juce::translate("Feature \"FTRID\" of plugin \"PLGKEY\" cannot be found.").replace("FTRID", key.feature).replace("PLGKEY", key.identifier));
-    }
-    return {};
+    throw std::runtime_error("plugin feature cannot be found");
 }
 
 ANALYSE_FILE_END

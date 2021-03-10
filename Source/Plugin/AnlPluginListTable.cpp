@@ -47,21 +47,32 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mScanButton.setClickingTogglesState(false);
     mScanButton.onClick = [this]()
     {
-        auto getNewList = [this]() -> decltype(mScanner.getPluginKeys(48000.0, AlertType::window))
+        auto scanPlugins = [this]() -> decltype(mScanner.getKeys())
         {
             try
             {
-                return mScanner.getPluginKeys(48000.0, AlertType::window);
+                return mScanner.getKeys(48000.0);
             }
-            catch(std::runtime_error& e)
+            catch(std::exception& e)
             {
-                using AlertIconType = juce::AlertWindow::AlertIconType;
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, juce::translate("Scan failed!"), juce::translate(e.what()));
+                MessageWindow::show(MessageWindow::MessageType::warning,
+                                    "Plugins scan failed!", e.what());
+            }
+            catch(...)
+            {
+                MessageWindow::show(MessageWindow::MessageType::warning,
+                                    "Plugins scan failed!", "");
             }
             return {};
         };
-        
-        mAccessor.setAttr<AttrType::keys>(getNewList(), NotificationType::synchronous);
+        auto const results = scanPlugins();
+        mAccessor.setAttr<AttrType::keys>(std::get<0>(results), NotificationType::synchronous);
+        if(!std::get<1>(results).isEmpty())
+        {
+            MessageWindow::show(MessageWindow::MessageType::warning,
+                                "Plugins scan has encountered errors!",
+                                "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
+        }
     };
     
     addAndMakeVisible(mSearchField);
@@ -117,20 +128,39 @@ void PluginList::Table::updateContent()
     auto const& keys = mAccessor.getAttr<AttrType::keys>();
     
     mFilteredList.clear();
+    juce::StringArray errors;
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
     for(auto const& key : keys)
     {
-        auto const description = mScanner.getPluginDescription(key, 48000.0, AlertType::window);
-        if(description.name.isNotEmpty())
+        try
         {
-            auto const filterName = (description.name + description.output.name + description.maker).removeCharacters(" ");
-            if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
+            auto const description = mScanner.getDescription(key, 48000.0);
+            if(description.name.isNotEmpty())
             {
-                mFilteredList.push_back({key, description});
+                auto const filterName = (description.name + description.output.name + description.maker).removeCharacters(" ");
+                if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
+                {
+                    mFilteredList.push_back({key, description});
+                }
             }
         }
+        catch(std::exception& e)
+        {
+            errors.add(key.identifier + " - " + key.feature + ": " + e.what());
+        }
+        catch(...)
+        {
+            errors.add(key.identifier + " - " + key.feature + ": unknwon error");
+        }
     }
-        
+    
+    if(!errors.isEmpty())
+    {
+        MessageWindow::show(MessageWindow::MessageType::warning,
+                            "Plugins listing has encountered errors!",
+                            "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
+    }
+    
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
     switch(mAccessor.getAttr<AttrType::sortColumn>())
     {
