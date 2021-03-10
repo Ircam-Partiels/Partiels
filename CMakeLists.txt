@@ -72,6 +72,8 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.h
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.h
+    ${SOURCES_DIRECTORY}/Misc/AnlMessageWindow.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlMessageWindow.h
     ${SOURCES_DIRECTORY}/Misc/AnlMisc.h
     )
 
