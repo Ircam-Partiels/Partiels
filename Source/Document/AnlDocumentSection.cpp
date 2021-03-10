@@ -41,7 +41,7 @@ Document::Section::Section(Accessor& accessor)
         resized();
     };
     
-    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -70,7 +70,7 @@ Document::Section::Section(Accessor& accessor)
         }
     };
     
-    mListener.onAccessorInserted = [=](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
         switch(type)
@@ -104,7 +104,7 @@ Document::Section::Section(Accessor& accessor)
         }
     };
     
-    mListener.onAccessorErased = [=](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [=, this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
         switch(type)
