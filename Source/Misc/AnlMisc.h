@@ -11,6 +11,7 @@
 #include "AnlFloatingWindow.h"
 #include "AnlIconManager.h"
 #include "AnlLoadingCircle.h"
+#include "AnlMessageWindow.h"
 #include "AnlModel.h"
 #include "AnlNotifier.h"
 #include "AnlNumberField.h"

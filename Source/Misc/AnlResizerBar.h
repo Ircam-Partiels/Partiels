@@ -11,8 +11,8 @@ public:
     
     enum ColourIds : int
     {
-          activeColourId = 0x2005300
-        , inactiveColourId = 0x2005301
+          activeColourId = 0x2000500
+        , inactiveColourId
     };
     
     enum Orientation

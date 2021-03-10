@@ -13,8 +13,8 @@ public:
     
     enum ColourIds : int
     {
-          backgroundColourId = 0x2006000
-        , foregroundColourId = 0x2006001
+          backgroundColourId = 0x2000300
+        , foregroundColourId
     };
     
     LoadingCircle();

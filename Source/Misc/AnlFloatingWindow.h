@@ -15,7 +15,7 @@ public:
     
     enum ColourIds : int
     {
-        backgroundColourId = 0x2000000
+        backgroundColourId = 0x2000200
     };
     
     FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton = true, bool addToDesktop = true);
