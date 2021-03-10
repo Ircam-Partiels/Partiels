@@ -1,4 +1,5 @@
 #include "AnlAnalyzerRenderer.h"
+#include "AnlAnalyzerResults.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -238,7 +239,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
         return static_cast<int>(std::floor(value));
     };
     
-    auto it = Plugin::getResultAt(results, time);
+    auto it = Results::getResultAt(results, time);
     if(it == results.cend())
     {
         return;

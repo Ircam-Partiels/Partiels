@@ -1,4 +1,5 @@
 #include "AnlAnalyzerPlot.h"
+#include "AnlAnalyzerResults.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -127,7 +128,7 @@ void Analyzer::Plot::mouseMove(juce::MouseEvent const& event)
     auto const timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
     juce::String text = Format::secondsToString(time) + "\n";
-    auto it = Plugin::getResultAt(results, time);
+    auto it = Results::getResultAt(results, time);
     if(it != results.cend() && it->values.size() == 1)
     {
         text += juce::String(it->values[0]) + it->label;
