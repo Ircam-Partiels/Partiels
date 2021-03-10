@@ -42,7 +42,7 @@ Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, ju
             editor->setJustification(entry.getJustificationType());
         }
     };
-    entry.onTextChange = [=]()
+    entry.onTextChange = [=, this]()
     {
         if(fn != nullptr)
         {
@@ -154,7 +154,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
 })
 
-, mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [=](size_t index)
+, mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [&](size_t index)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.windowType = static_cast<Plugin::WindowType>(index);
