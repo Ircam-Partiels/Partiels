@@ -4,9 +4,9 @@ ANALYSE_FILE_BEGIN
 
 void ConcertinaTable::Header::paint(juce::Graphics& g)
 {
-    auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(lookAndFeel != nullptr);
-    if(lookAndFeel == nullptr)
+    auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf == nullptr)
     {
         return;
     }
@@ -15,10 +15,10 @@ void ConcertinaTable::Header::paint(juce::Graphics& g)
     auto const isMouseDown = isMouseButtonDown();
     auto const isMouseOver = juce::Component::isMouseOver();
     auto const& section = *static_cast<ConcertinaTable*>(getParentComponent());
-    auto const font = lookAndFeel->getHeaderFont(section, getHeight());
-    lookAndFeel->drawHeaderBackground(g, section, bounds, isMouseDown, isMouseOver);
-    lookAndFeel->drawHeaderButton(g, section, bounds.removeFromRight(getHeight()), section.mSizeRatio, isMouseDown, isMouseOver);
-    lookAndFeel->drawHeaderTitle(g, section, bounds, font, isMouseDown, isMouseOver);
+    auto const font = laf->getHeaderFont(section, getHeight());
+    laf->drawHeaderBackground(g, section, bounds, isMouseDown, isMouseOver);
+    laf->drawHeaderButton(g, section, bounds.removeFromRight(getHeight()), section.mSizeRatio, isMouseDown, isMouseOver);
+    laf->drawHeaderTitle(g, section, bounds, font, isMouseDown, isMouseOver);
 }
 
 void ConcertinaTable::Header::mouseDown(juce::MouseEvent const& event)
@@ -46,13 +46,13 @@ ConcertinaTable::ConcertinaTable(juce::String const& title, bool resizeOnClick, 
 
 void ConcertinaTable::resized()
 {
-    auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(lookAndFeel != nullptr);
+    auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
     
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     if(mHeader.isVisible())
     {
-        mHeader.setBounds(bounds.removeFromTop(lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20));
+        mHeader.setBounds(bounds.removeFromTop(laf != nullptr ? laf->getHeaderHeight(*this) : 20));
     }
     
     for(auto& content : mContents)
@@ -122,8 +122,8 @@ void ConcertinaTable::componentMovedOrResized(juce::Component& component, bool w
     juce::ignoreUnused(component, wasMoved);
     if(wasResized)
     {
-        auto const* lookAndFeel = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
-        anlWeakAssert(lookAndFeel != nullptr);
+        auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
+        anlWeakAssert(laf != nullptr);
         
         auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
         {
@@ -136,7 +136,7 @@ void ConcertinaTable::componentMovedOrResized(juce::Component& component, bool w
         });
         
         auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(fullSize) * mSizeRatio));
-        auto const headerHeight = lookAndFeel != nullptr ? lookAndFeel->getHeaderHeight(*this) : 20;
+        auto const headerHeight = laf != nullptr ? laf->getHeaderHeight(*this) : 20;
         setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
     }
 }
