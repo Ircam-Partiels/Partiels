@@ -49,6 +49,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Analyzer::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour.darker());
+    setColour(Document::Plot::backgroundColourId, backgroundColour.darker());
+    setColour(Document::Plot::borderColourId, backgroundColour);
+    setColour(Document::Plot::textColourId, textColour);
     
     auto& colourScheme = getCurrentColourScheme();
     colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, backgroundColour.darker());
