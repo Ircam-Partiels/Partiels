@@ -53,7 +53,7 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::share_png, IconsData::share_pngSize);
             break;
     }
-    
+    return juce::Image();
 }
 
 ANALYSE_FILE_END
