@@ -158,6 +158,7 @@ void Analyzer::Renderer::handleAsyncUpdate()
     if(mProcess.valid())
     {
         anlWeakAssert(mProcessState != ProcessState::available);
+        anlWeakAssert(mProcessState != ProcessState::running);
         
         auto expected = ProcessState::ended;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
