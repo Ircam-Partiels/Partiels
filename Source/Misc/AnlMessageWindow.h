@@ -9,7 +9,7 @@ class MessageWindow
 public:
     enum class MessageType
     {
-          unknwon = juce::AlertWindow::AlertIconType::NoIcon
+          unknown = juce::AlertWindow::AlertIconType::NoIcon
         , question = juce::AlertWindow::AlertIconType::QuestionIcon
         , warning = juce::AlertWindow::AlertIconType::WarningIcon
         , info = juce::AlertWindow::AlertIconType::InfoIcon

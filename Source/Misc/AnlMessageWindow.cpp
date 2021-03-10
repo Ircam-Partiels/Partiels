@@ -8,8 +8,8 @@ void MessageWindow::show(MessageType const type, juce::String const& title, juce
     {
         switch(type)
         {
-            case MessageType::unknwon:
-                return "Default";
+            case MessageType::unknown:
+                return "Unknown";
             case MessageType::question:
                 return "Question";
             case MessageType::warning:
@@ -17,6 +17,7 @@ void MessageWindow::show(MessageType const type, juce::String const& title, juce
             case MessageType::info:
                 return "Info";
         }
+        return "Unknown";
     };
     auto text = juce::translate(message);
     for(auto const& replacement : replacements)
