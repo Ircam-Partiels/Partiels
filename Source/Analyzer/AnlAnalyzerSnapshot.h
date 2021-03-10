@@ -14,7 +14,7 @@ namespace Analyzer
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x20005300
+              backgroundColourId = 0x2030200
             , borderColourId
             , textColourId
         };

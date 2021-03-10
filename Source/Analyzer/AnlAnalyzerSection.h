@@ -17,7 +17,7 @@ namespace Analyzer
         
         enum ColourIds : int
         {
-              sectionColourId = 0x2000340
+              sectionColourId = 0x2030100
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
