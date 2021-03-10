@@ -8,3 +8,4 @@
 - Sanitize the analyzer model before analyzing
 - Add program support
 - Remove Accessor in Renderer
+- Improve colour IDs
