@@ -60,6 +60,7 @@ namespace Analyzer
           feature
         , zoomMode
         , resultType
+        , state
     };
     
     using AttrContainer = Model::Container

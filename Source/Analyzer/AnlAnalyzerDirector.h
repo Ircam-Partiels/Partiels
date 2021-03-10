@@ -18,6 +18,7 @@ namespace Analyzer
         void updateZooms(NotificationType const notification);
     private:
         
+        void stopAnalysis(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
         
         // juce::AsyncUpdater

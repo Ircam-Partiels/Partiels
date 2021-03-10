@@ -9,14 +9,14 @@ namespace Plugin
     class Processor
     {
     public:
-        static std::unique_ptr<Processor> create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader, AlertType alertType);
+        
+        static std::unique_ptr<Processor> create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader);
         
         ~Processor() = default;
         
         bool performNextAudioBlock(std::vector<Result>& results);
-
         Description getDescription() const;
-        State getState() const;
+        
     private:
         
         Processor(juce::AudioFormatReader& audioFormatReader, std::unique_ptr<Vamp::Plugin> plugin, size_t const feature, State const& state);

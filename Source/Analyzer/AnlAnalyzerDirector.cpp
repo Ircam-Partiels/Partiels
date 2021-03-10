@@ -44,12 +44,8 @@ Analyzer::Director::~Director()
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
     
-    if(mAnalysisProcess.valid())
-    {
-        mAnalysisState = ProcessState::aborted;
-        mAnalysisProcess.get();
-        cancelPendingUpdate();
-    }
+    std::unique_lock<std::mutex> lock(mAnalysisMutex);
+    stopAnalysis(NotificationType::synchronous);
 }
 
 void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -61,6 +57,15 @@ void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatR
     }
     
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
+    stopAnalysis(notification);
+    mAudioFormatReaderManager = std::move(audioFormatReader);
+    lock.unlock();
+    
+    runAnalysis(notification);
+}
+
+void Analyzer::Director::stopAnalysis(NotificationType const notification)
+{
     if(mAnalysisProcess.valid())
     {
         mAnalysisState = ProcessState::aborted;
@@ -68,10 +73,7 @@ void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatR
         cancelPendingUpdate();
     }
     mAnalysisState = ProcessState::available;
-    mAudioFormatReaderManager = std::move(audioFormatReader);
-    lock.unlock();
-    
-    runAnalysis(notification);
+    mAccessor.setAttr<AttrType::processing>(false, notification);
 }
 
 void Analyzer::Director::runAnalysis(NotificationType const notification)
@@ -82,13 +84,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     {
         return;
     }
-    if(mAnalysisProcess.valid())
-    {
-        mAnalysisState = ProcessState::aborted;
-        mAnalysisProcess.get();
-        cancelPendingUpdate();
-    }
-    mAnalysisState = ProcessState::available;
+    stopAnalysis(notification);
     
     auto* reader = mAudioFormatReaderManager.get();
     if(reader == nullptr)
@@ -97,28 +93,72 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     }
     
     auto const key = mAccessor.getAttr<AttrType::key>();
-    if(key == Plugin::Key{})
+    if(key.identifier.empty() || key.feature.empty())
     {
         return;
     }
     
-    auto state = mAccessor.getAttr<AttrType::state>();
-    auto processor = Plugin::Processor::create(key, state, *reader, AlertType::window);
+    auto const state = mAccessor.getAttr<AttrType::state>();
+    anlStrongAssert(state.blockSize > 0 && state.stepSize > 0);
+    if(state.blockSize == 0 || state.stepSize == 0)
+    {
+        return;
+    }
+    
+    auto createProcessor = [&]() -> std::unique_ptr<Plugin::Processor>
+    {
+        try
+        {
+            return Plugin::Processor::create(key, state, *reader);
+        }
+        catch(std::exception& e)
+        {
+            MessageWindow::show(MessageWindow::MessageType::warning,
+                                "Plugin cannot be loaded",
+                                "The plugin cannot be loaded due to: REASON.",
+                                {{"REASON", e.what()}});
+        }
+        catch(...)
+        {
+            MessageWindow::show(MessageWindow::MessageType::warning,
+                                "Plugin cannot be loaded",
+                                "The plugin cannot be loaded due to: REASON.",
+                                {{"REASON", "unknwon error"}});
+        }
+        return nullptr;
+    };
+    
+    auto processor = createProcessor();
     if(processor == nullptr)
     {
-        mAccessor.setAttr<AttrType::warnings>(std::map<WarningType, juce::String>{}, notification);
+        std::map<WarningType, juce::String> warning;
+        warning[WarningType::state] = juce::translate("The step size or the block size might not be supported");
+        mAccessor.setAttr<AttrType::warnings>(warning, notification);
+        
+        lock.unlock();
+        if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon, juce::translate("Plugin cannot be loaded"), juce::translate("Initialization failed, the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size") + "?"))
+        {
+            auto newState = state;
+            auto const& description = mAccessor.getAttr<AttrType::description>();
+            newState.blockSize = description.defaultState.blockSize;
+            newState.stepSize = description.defaultState.stepSize;
+            mAccessor.setAttr<AttrType::state>(newState, notification);
+        }
         return;
     }
+    mAccessor.setAttr<AttrType::warnings>(std::map<WarningType, juce::String>{}, notification);
     
-    auto const description = mPluginListScanner.getPluginDescription(key, reader->sampleRate, AlertType::window);
+
+    auto description = processor->getDescription();
     anlWeakAssert(description != Plugin::Description{});
     if(description == Plugin::Description{})
     {
         return;
     }
     mAccessor.setAttr<AttrType::description>(description, notification);
-    mAccessor.setAttr<AttrType::processing>(true, notification);
+    updateZooms(notification);
     
+    mAccessor.setAttr<AttrType::processing>(true, notification);
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
@@ -148,17 +188,13 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
 void Analyzer::Director::updateZooms(NotificationType const notification)
 {
     JUCE_COMPILER_WARNING("If zoom extent is defined, the zoom can be updated before the analysis")
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    if(results.empty())
-    {
-        mUpdateZoom = std::make_tuple(true, notification);
-        return;
-    }
+    
     mUpdateZoom = std::make_tuple(false, notification);
     auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
     {
         Zoom::Range range;
         bool initialized = false;
+        auto const& results = mAccessor.getAttr<AttrType::results>();
         for(auto const& result : results)
         {
             auto const& values = result.values;
@@ -184,9 +220,23 @@ void Analyzer::Director::updateZooms(NotificationType const notification)
     }
     else
     {
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        if(results.empty())
+        {
+            mUpdateZoom = std::make_tuple(true, notification);
+            return;
+        }
+        
         auto const info = getZoomInfo();
         valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
         valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+    }
+    
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    if(results.empty())
+    {
+        mUpdateZoom = std::make_tuple(true, notification);
+        return;
     }
     
     auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
@@ -198,22 +248,22 @@ void Analyzer::Director::handleAsyncUpdate()
 {
     if(mAnalysisProcess.valid())
     {
+        anlWeakAssert(mAnalysisState != ProcessState::available);
+        anlWeakAssert(mAnalysisState != ProcessState::running);
+        
+        auto const result = mAnalysisProcess.get();
         auto expected = ProcessState::ended;
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
-            auto const result = mAnalysisProcess.get();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
-            mAccessor.setAttr<AttrType::processing>(false, std::get<1>(result));
             if(std::get<0>(mUpdateZoom))
             {
                 updateZooms(std::get<1>(mUpdateZoom));
             }
         }
-        else if(expected == ProcessState::aborted)
-        {
-            mAnalysisProcess.get();
-            mAnalysisState = ProcessState::available;
-        }
+        
+        std::unique_lock<std::mutex> lock(mAnalysisMutex);
+        stopAnalysis(std::get<1>(result));
     }
 }
 

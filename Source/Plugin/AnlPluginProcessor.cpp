@@ -130,67 +130,40 @@ Plugin::Description Plugin::Processor::getDescription() const
     return description;
 }
 
-Plugin::State Plugin::Processor::getState() const
+std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
 {
-    return mState;
-}
-
-std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader, AlertType alertType)
-{
-    using namespace Vamp;
-    using namespace Vamp::HostExt;
-    
-    using AlertIconType = juce::AlertWindow::AlertIconType;
-    auto const errorTitle = juce::translate("Plugin cannot be loaded!");
-    auto const errorMessage =  juce::translate("The plugin \"PLGNKEY: FTRKEY\" cannot be loaded: ").replace("PLGNKEY", key.identifier).replace("FTRKEY", key.feature);
-
-    if(key.identifier.empty())
-    {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Key is not defined") + ".");
-        }
-        return nullptr;
-    }
-    
-    if(key.feature.empty())
-    {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate(" Feature is not defined") + ".");
-        }
-        return nullptr;
-    }
-    
-    auto* pluginLoader = PluginLoader::getInstance();
-    anlWeakAssert(pluginLoader != nullptr);
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate(" Plugin manager is not available") + ".");
-        }
-        return nullptr;
+        throw std::runtime_error("plugin loader is not available");
     }
     
-    std::unique_ptr<Vamp::Plugin> instance;
-    try
+    anlStrongAssert(!key.identifier.empty());
+    if(key.identifier.empty())
     {
-        instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(audioFormatReader.sampleRate), PluginLoader::ADAPT_ALL_SAFE));
+        throw std::invalid_argument("plugin key is not defined");
     }
-    catch(std::runtime_error& e)
+    anlStrongAssert(!key.feature.empty());
+    if(key.feature.empty())
     {
-        juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate(e.what()) + ".");
-        return nullptr;
+        throw std::invalid_argument("plugin feature is not defined");
+    }
+    anlStrongAssert(state.blockSize > 0);
+    if(state.blockSize == 0)
+    {
+        throw std::invalid_argument("block size cannot be null");
+    }
+    anlStrongAssert(state.stepSize > 0);
+    if(state.stepSize == 0)
+    {
+        throw std::invalid_argument("step size cannot be null");
     }
     
+    auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(audioFormatReader.sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
     if(instance == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Unknown reason") + ".");
-        }
-        return nullptr;
+        throw std::runtime_error("allocation failed");
     }
     
     auto const outputs = instance->getOutputDescriptors();
@@ -200,18 +173,14 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     });
     if(feature == outputs.cend())
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Invalid feature") + ".");
-        }
-        return nullptr;
+        throw std::runtime_error("plugin feature is not invalid");
     }
-    auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
     
+    auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
     auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get());
     if(wrapper != nullptr)
     {
-        if(auto* adapter = wrapper->getWrapper<PluginInputDomainAdapter>())
+        if(auto* adapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
         {
             adapter->setWindowType(state.windowType);
         }
@@ -222,17 +191,17 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         instance->setParameter(parameter.first, parameter.second);
     }
     
-    anlWeakAssert(state.blockSize > 0 && state.stepSize > 0);
-    if(state.blockSize <= 0 || state.stepSize <= 0 || !instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
+    if(!instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
     {
-        if(alertType == AlertType::window)
-        {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorTitle, errorMessage + juce::translate("Initialization failed, either the number of channels, the step size or the block size might not be supported") + ".");
-        }
         return nullptr;
     }
 
-    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(instance), featureIndex, state));
+    auto processor = std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(instance), featureIndex, state));
+    if(processor == nullptr)
+    {
+        throw std::runtime_error("allocation failed");
+    }
+    return processor;
 }
 
 ANALYSE_FILE_END
