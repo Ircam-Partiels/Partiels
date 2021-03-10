@@ -1,6 +1,6 @@
 #include "AnlAnalyzerDirector.h"
 #include "AnlAnalyzerPropertyPanel.h"
-#include "AnlAnalyzerRenderer.h"
+#include "AnlAnalyzerResults.h"
 
 #include "../Plugin/AnlPluginProcessor.h"
 #include "../Plugin/AnlPluginListScanner.h"
@@ -22,9 +22,17 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
                 runAnalysis(notification);
             }
                 break;
-            case AttrType::results:
-            case AttrType::name:
             case AttrType::description:
+            {
+                updateZoomAccessors(notification);
+            }
+                break;
+            case AttrType::results:
+            {
+                updateZoomAccessors(notification);
+            }
+                break;
+            case AttrType::name:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:
@@ -136,7 +144,9 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         mAccessor.setAttr<AttrType::warnings>(warning, notification);
         
         lock.unlock();
-        if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon, juce::translate("Plugin cannot be loaded"), juce::translate("Initialization failed, the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size") + "?"))
+        if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
+                                              juce::translate("Plugin cannot be loaded"),
+                                              juce::translate("Initialization failed, the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?")))
         {
             auto newState = state;
             auto const& description = mAccessor.getAttr<AttrType::description>();
@@ -146,19 +156,25 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         }
         return;
     }
-    mAccessor.setAttr<AttrType::warnings>(std::map<WarningType, juce::String>{}, notification);
-    
-
     auto description = processor->getDescription();
-    anlWeakAssert(description != Plugin::Description{});
+    anlStrongAssert(description != Plugin::Description{});
     if(description == Plugin::Description{})
     {
+        std::map<WarningType, juce::String> warning;
+        warning[WarningType::state] = juce::translate("The plugin description is invalid");
+        mAccessor.setAttr<AttrType::warnings>(warning, notification);
+        
+        MessageWindow::show(MessageWindow::MessageType::warning,
+                            "Plugin cannot be loaded",
+                            "The plugin cannot be loaded due to: REASON.",
+                            {{"REASON", "invalid description"}});
         return;
     }
-    mAccessor.setAttr<AttrType::description>(description, notification);
-    updateZooms(notification);
     
+    mAccessor.setAttr<AttrType::description>(description, notification);
+    mAccessor.setAttr<AttrType::warnings>(std::map<WarningType, juce::String>{}, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
+    
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
@@ -185,63 +201,33 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     });
 }
 
-void Analyzer::Director::updateZooms(NotificationType const notification)
+void Analyzer::Director::updateZoomAccessors(NotificationType const notification)
 {
-    JUCE_COMPILER_WARNING("If zoom extent is defined, the zoom can be updated before the analysis")
-    
-    mUpdateZoom = std::make_tuple(false, notification);
-    auto getZoomInfo = [&]() -> std::tuple<Zoom::Range, double>
-    {
-        Zoom::Range range;
-        bool initialized = false;
-        auto const& results = mAccessor.getAttr<AttrType::results>();
-        for(auto const& result : results)
-        {
-            auto const& values = result.values;
-            auto const pair = std::minmax_element(values.cbegin(), values.cend());
-            if(pair.first != values.cend() && pair.second != values.cend())
-            {
-                auto const start = static_cast<double>(*pair.first);
-                auto const end = static_cast<double>(*pair.second);
-                range = !initialized ? Zoom::Range{start, end} : range.getUnionWith({start, end});
-                initialized = true;
-            }
-        }
-        auto constexpr epsilon = std::numeric_limits<double>::epsilon() * 100.0;
-        return !initialized ? std::make_tuple(Zoom::Range{0.0, 1.0}, 1.0) : std::make_tuple(range, epsilon);
-    };
-    
     auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+    
+    auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const& output = mAccessor.getAttr<AttrType::description>().output;
+    
     if(output.hasKnownExtents)
     {
         valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)}, notification);
-        valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>((output.isQuantized ? static_cast<double>(output.quantizeStep) : std::numeric_limits<double>::epsilon()), notification);
     }
-    else
+    else if(!results.empty())
     {
-        auto const& results = mAccessor.getAttr<AttrType::results>();
-        if(results.empty())
-        {
-            mUpdateZoom = std::make_tuple(true, notification);
-            return;
-        }
-        
-        auto const info = getZoomInfo();
-        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(std::get<0>(info), notification);
-        valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(std::get<1>(info), notification);
+        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getValueRange(results), notification);
     }
     
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    if(results.empty())
-    {
-        mUpdateZoom = std::make_tuple(true, notification);
-        return;
-    }
+    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon(), notification);
     
-    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(results[0].values.size())}, notification);
-    binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
+    if(output.hasFixedBinCount)
+    {
+        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(output.binCount)}, notification);
+    }
+    else if(!results.empty())
+    {
+        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getBinRange(results), notification);
+    }
 }
 
 void Analyzer::Director::handleAsyncUpdate()
@@ -256,10 +242,6 @@ void Analyzer::Director::handleAsyncUpdate()
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
-            if(std::get<0>(mUpdateZoom))
-            {
-                updateZooms(std::get<1>(mUpdateZoom));
-            }
         }
         
         std::unique_lock<std::mutex> lock(mAnalysisMutex);
