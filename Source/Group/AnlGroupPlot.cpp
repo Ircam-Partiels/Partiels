@@ -9,11 +9,13 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     addChildComponent(mProcessingButton);
     addAndMakeVisible(mZoomPlayhead);
     
-    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
+            case AttrType::name:
+                break;
             case AttrType::height:
                 break;
             case AttrType::layout:
