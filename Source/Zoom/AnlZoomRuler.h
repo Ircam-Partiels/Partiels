@@ -13,11 +13,11 @@ namespace Zoom
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x2001000
-            , tickColourId = 0x2001001
-            , textColourId = 0x2001002
-            , anchorColourId = 0x2001003
-            , selectionColourId = 0x2001004
+              backgroundColourId = 0x2010100
+            , tickColourId
+            , textColourId
+            , anchorColourId
+            , selectionColourId
         };
         
         enum Orientation : bool

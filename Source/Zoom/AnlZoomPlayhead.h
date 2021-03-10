@@ -13,7 +13,7 @@ namespace Zoom
         
         enum ColourIds : int
         {
-              playheadColourId = 0x2001100
+              playheadColourId = 0x2010000
         };
         
         Playhead(Accessor& accessor, juce::BorderSize<int> const& borderSize = {});
