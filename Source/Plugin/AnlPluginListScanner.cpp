@@ -79,7 +79,7 @@ std::tuple<std::set<Plugin::Key>, juce::StringArray> PluginList::Scanner::getKey
         }
         catch(...)
         {
-            errors.add(pluginKey + ": unknwon error");
+            errors.add(pluginKey + ": unknown error");
         }
     }
     return {keys, errors};
