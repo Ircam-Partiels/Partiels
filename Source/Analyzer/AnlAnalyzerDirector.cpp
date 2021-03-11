@@ -113,43 +113,54 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
         return;
     }
     
-    auto createProcessor = [&]() -> std::unique_ptr<Plugin::Processor>
+    auto showWarningWindow = [&](juce::String const& reason)
     {
-        try
-        {
-            return Plugin::Processor::create(key, state, *reader);
-        }
-        catch(std::exception& e)
-        {
-            MessageWindow::show(MessageWindow::MessageType::warning,
-                                "Plugin cannot be loaded",
-                                "The plugin cannot be loaded due to: REASON.",
-                                {{"REASON", e.what()}});
-        }
-        catch(...)
-        {
-            MessageWindow::show(MessageWindow::MessageType::warning,
-                                "Plugin cannot be loaded",
-                                "The plugin cannot be loaded due to: REASON.",
-                                {{"REASON", "unknwon error"}});
-        }
-        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
-        return nullptr;
+        MessageWindow::show(MessageWindow::MessageType::warning,
+                            "Plugin cannot be loaded",
+                            "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.",
+                            {
+                                  {"KEYID", key.identifier}
+                                , {"KEYFEATURE", key.feature}
+                                , {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}
+                                , {"REASON", reason}
+                            });
     };
     
-    auto processor = createProcessor();
+    std::unique_ptr<Plugin::Processor> processor;
+    try
+    {
+        processor = Plugin::Processor::create(key, state, *reader);
+    }
+    catch(std::exception& e)
+    {
+        showWarningWindow(e.what());
+        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
+        return;
+    }
+    catch(...)
+    {
+        showWarningWindow("unknown error");
+        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
+        return;
+    }
+    
     if(processor == nullptr)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::state, notification);
-        lock.unlock();
+        auto const& description = mAccessor.getAttr<AttrType::description>();
+        if(state.blockSize == description.defaultState.blockSize && state.stepSize == description.defaultState.stepSize)
+        {
+            showWarningWindow("invalid state");
+            return;
+        }
         if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
                                               juce::translate("Plugin cannot be loaded"),
-                                              juce::translate("Initialization failed, the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?")))
+                                              juce::translate("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?")))
         {
             auto newState = state;
-            auto const& description = mAccessor.getAttr<AttrType::description>();
             newState.blockSize = description.defaultState.blockSize;
             newState.stepSize = description.defaultState.stepSize;
+            lock.unlock();
             mAccessor.setAttr<AttrType::state>(newState, notification);
         }
         return;
@@ -158,10 +169,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     anlStrongAssert(description != Plugin::Description{});
     if(description == Plugin::Description{})
     {
-        MessageWindow::show(MessageWindow::MessageType::warning,
-                            "Plugin cannot be loaded",
-                            "The plugin cannot be loaded due to: REASON.",
-                            {{"REASON", "invalid description"}});
+        showWarningWindow("invalid description");
         mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
         return;
     }
