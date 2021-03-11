@@ -2,6 +2,21 @@
 
 ANALYSE_FILE_BEGIN
 
+Document::AttrContainer& Document::FileBased::getDefaultContainer()
+{
+    static Document::AttrContainer document
+    {
+        {juce::File{}}
+        , {false}
+        , {1.0}
+        , {false}
+        , {0.0}
+        , {144}
+        , {144}
+        , {}
+    };
+    return document;
+}
 
 Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
 : juce::FileBasedDocument(fileExtension, fileWildCard, openFileDialogTitle, saveFileDialogTitle)
@@ -79,7 +94,19 @@ void Document::FileBased::setLastDocumentOpened(juce::File const& file)
 
 void Document::FileBased::handleAsyncUpdate()
 {
-    setChangedFlag(!mAccessor.isEquivalentTo(mSavedStateAccessor));
+    changed();
+}
+
+void Document::FileBased::changed()
+{
+    if(getFile() == juce::File{})
+    {
+        setChangedFlag(!mAccessor.isEquivalentTo(getDefaultContainer()));
+    }
+    else
+    {
+        setChangedFlag(!mAccessor.isEquivalentTo(mSavedStateAccessor));
+    }
 }
 
 ANALYSE_FILE_END

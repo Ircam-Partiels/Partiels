@@ -89,20 +89,28 @@ juce::String Application::Instance::getFileWildCard()
 void Application::Instance::openFile(juce::File const& file)
 {
     auto const fileExtension = file.getFileExtension();
-    if(getFileExtension() == fileExtension)
+    if(file == juce::File{})
+    {
+        mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
+        mDocumentFileBased.setFile(file);
+        mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
+    }
+    else if(getFileExtension() == fileExtension)
     {
         mDocumentFileBased.loadFrom(file, true);
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
+        auto accessor = Document::Accessor(Document::FileBased::getDefaultContainer());
+        accessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
+        mDocumentAccessor.copyFrom(accessor, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
-        mDocumentAccessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
     }
     else
     {
-        anlWeakAssert(false && "file format is not supported");
+        MessageWindow::show(MessageWindow::MessageType::warning, "File format not supported!", "The format of the file FILENAME is not supported by thee application.", {{"FILENAME", file.getFullPathName()}});
     }
 }
 

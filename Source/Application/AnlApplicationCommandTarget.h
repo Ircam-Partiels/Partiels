@@ -17,7 +17,8 @@ namespace Application
 
         enum CommandIDs : int
         {
-              DocumentOpen = 0x2001
+              DocumentNew = 0x2001
+            , DocumentOpen
             , DocumentSave
             , DocumentDuplicate
             , DocumentConsolidate
@@ -62,7 +63,7 @@ namespace Application
     private:
         
         JUCE_DEPRECATED(static void showUnsupportedAction());
-        
+
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         

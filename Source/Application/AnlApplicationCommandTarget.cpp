@@ -76,7 +76,8 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
 {
     commands.addArray(
     {
-        CommandIDs::DocumentOpen
+          CommandIDs::DocumentNew
+        , CommandIDs::DocumentOpen
         , CommandIDs::DocumentSave
         , CommandIDs::DocumentDuplicate
         , CommandIDs::DocumentConsolidate
@@ -113,6 +114,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
     auto const& docAcsr = Instance::get().getDocumentAccessor();
     switch (commandID)
     {
+        case CommandIDs::DocumentNew:
+        {
+            result.setInfo(juce::translate("New..."), juce::translate("Create a new document"), "Application", 0);
+            result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(!docAcsr.isEquivalentTo(Document::FileBased::getDefaultContainer()));
+        }
+            break;
         case CommandIDs::DocumentOpen:
         {
             result.setInfo(juce::translate("Open..."), juce::translate("Open a document or an audio file"), "Application", 0);
@@ -302,35 +310,34 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     auto& fileBased = Instance::get().getDocumentFileBased();
     switch (info.commandID)
     {
+        case CommandIDs::DocumentNew:
+        {
+            if(fileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
+            {
+                return true;
+            }
+            Instance::get().openFile({});
+            return true;
+        }
         case CommandIDs::DocumentOpen:
         {
             if(fileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
             {
                 return true;
             }
-            auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+            auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
             juce::FileChooser fc(getCommandDescription(), fileBased.getFile(), audioFormatWildcard);
             if(!fc.browseForFileToOpen())
             {
                 return true;
             }
-            fileBased.setFile({});
-            Instance::get().getDocumentAccessor().copyFrom(
-            Document::AttrContainer
-            {
-                  {juce::File{}}
-                , {false}
-                , {1.0}
-                , {false}
-                , {0.0}
-                , {144}
-                , {144}
-                , {}
-            }, NotificationType::synchronous);
             Instance::get().openFile(fc.getResult());
-            
-            auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
+            auto const& documentAcsr = Instance::get().getDocumentAccessor();
+            if(documentAcsr.getAccessors<Document::AcsrType::analyzers>().empty())
+            {
+                auto& documentDir = Instance::get().getDocumentDirector();
+                documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
+            }
             return true;
         }
         case CommandIDs::DocumentOpenRecent:
@@ -472,6 +479,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     juce::PopupMenu menu;
     if(menuName == "File")
     {
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentNew);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentOpen);
         juce::PopupMenu recentFilesMenu;
         auto recentFileIndex = static_cast<int>(CommandIDs::DocumentOpenRecent);
