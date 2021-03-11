@@ -81,6 +81,7 @@ Analyzer::PropertyPanel::PropertySlider::PropertySlider(juce::String const& name
     entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval));
     entry.setTooltip(juce::translate(tooltip));
     entry.setTextValueSuffix(suffix);
+    entry.setScrollWheelEnabled(false);
     entry.onValueChange = [=, this]()
     {
         if(fn != nullptr)
@@ -98,6 +99,7 @@ Analyzer::PropertyPanel::PropertyRangeSlider::PropertyRangeSlider(juce::String c
     entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval));
     entry.setTooltip(juce::translate(tooltip));
     entry.setTextValueSuffix(suffix);
+    entry.setScrollWheelEnabled(false);
     entry.onValueChange = [=, this]()
     {
         if(fn != nullptr)
