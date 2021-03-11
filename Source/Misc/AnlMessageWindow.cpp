@@ -24,7 +24,7 @@ void MessageWindow::show(MessageType const type, juce::String const& title, juce
     auto text = juce::translate(message);
     for(auto const& replacement : replacements)
     {
-        text.replace(std::get<0>(replacement), std::get<1>(replacement));
+        text = text.replace(std::get<0>(replacement), std::get<1>(replacement));
     }
     DBG("[MessageWindow][" << getTypeAsText() << "][" << juce::translate(title) << "][" << text << "]");
     juce::AlertWindow::showMessageBox(static_cast<juce::AlertWindow::AlertIconType>(type), juce::translate(title), text);
