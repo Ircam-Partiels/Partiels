@@ -186,9 +186,20 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         }
     }
     
+    auto const descriptors = instance->getParameterDescriptors();
     for(auto const& parameter : state.parameters)
     {
-        instance->setParameter(parameter.first, parameter.second);
+        if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
+        {
+            return descriptor.identifier == parameter.first;
+        }))
+        {
+            instance->setParameter(parameter.first, parameter.second);
+        }
+        else
+        {
+            throw std::invalid_argument("invalid parameters");
+        }
     }
     
     if(!instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
