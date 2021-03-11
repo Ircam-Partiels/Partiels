@@ -448,7 +448,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
         auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image.getWidth()));
         auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
         
-        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY).translated(bounds.getX(), bounds.getY());
+        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY).translated(static_cast<float>(bounds.getX()), static_cast<float>(bounds.getY()));
         
         g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
         g.drawImageTransformed(image, transform);
