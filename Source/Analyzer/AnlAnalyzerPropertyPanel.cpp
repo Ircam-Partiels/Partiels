@@ -244,24 +244,24 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     options.resizable = false;
     options.runModal();
 })
-, mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
+, mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withStart(static_cast<double>(value));
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
 })
-, mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float value)
+, mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
 })
-, mPropertyValueRange("Value Range", "The range of the output.", "", {Zoom::lowest(), Zoom::max()}, 0.0, [&](float min, float max)
+, mPropertyValueRange("Value Range", "The range of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
 })
-, mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0, Zoom::max()}, 1.0, nullptr)
+, mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
