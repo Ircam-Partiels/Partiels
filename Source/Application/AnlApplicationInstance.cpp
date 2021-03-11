@@ -108,9 +108,8 @@ void Application::Instance::openFile(juce::File const& file)
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
-        auto accessor = Document::Accessor(Document::FileBased::getDefaultContainer());
-        accessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
-        mDocumentAccessor.copyFrom(accessor, NotificationType::synchronous);
+        mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
+        mDocumentAccessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
         auto const& documentAcsr = getDocumentAccessor();
