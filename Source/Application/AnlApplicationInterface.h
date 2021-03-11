@@ -27,6 +27,8 @@ namespace Application
         
         // juce::FileDragAndDropTarget
         bool isInterestedInFileDrag(juce::StringArray const& files) override;
+        void fileDragEnter(juce::StringArray const& files, int x, int y) override;
+        void fileDragExit(juce::StringArray const& files) override;
         void filesDropped(juce::StringArray const& files, int x, int y) override;
     private:
         

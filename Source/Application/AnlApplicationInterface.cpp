@@ -20,7 +20,6 @@ Application::Interface::Interface()
     mInspect.setTooltip(juce::translate("Inspect"));
     mEdit.setTooltip(juce::translate("Edit"));
     
-    JUCE_COMPILER_WARNING("FileDragAndDropTarget");
     mLoad.onClick = []()
     {
         using CommandIDs = CommandTarget::CommandIDs;
@@ -116,7 +115,7 @@ void Application::Interface::parentHierarchyChanged()
 
 bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& files)
 {
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
     for(auto const& fileName : files)
     {
         if(audioFormatWildcard.contains(juce::File(fileName).getFileExtension()))
@@ -127,10 +126,23 @@ bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& fil
     return false;
 }
 
+void Application::Interface::fileDragEnter(juce::StringArray const& files, int x, int y)
+{
+    juce::ignoreUnused(files, x, y);
+    mLoad.setState(juce::Button::ButtonState::buttonOver);
+}
+
+void Application::Interface::fileDragExit(juce::StringArray const& files)
+{
+    juce::ignoreUnused(files);
+    mLoad.setState(juce::Button::ButtonState::buttonNormal);
+}
+
 void Application::Interface::filesDropped(juce::StringArray const& files, int x, int y)
 {
     juce::ignoreUnused(x, y);
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    mLoad.setState(juce::Button::ButtonState::buttonNormal);
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
     auto getFile = [&]()
     {
         for(auto const& fileName : files)
@@ -148,9 +160,6 @@ void Application::Interface::filesDropped(juce::StringArray const& files, int x,
         return;
     }
     Instance::get().openFile(file);
-    
-    auto& documentDir = Instance::get().getDocumentDirector();
-    documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

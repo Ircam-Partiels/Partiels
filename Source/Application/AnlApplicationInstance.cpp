@@ -99,6 +99,12 @@ void Application::Instance::openFile(juce::File const& file)
     {
         mDocumentFileBased.loadFrom(file, true);
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
+        auto const& documentAcsr = getDocumentAccessor();
+        if(documentAcsr.getAccessors<Document::AcsrType::analyzers>().empty())
+        {
+            auto& documentDir = getDocumentDirector();
+            documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
+        }
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
@@ -107,6 +113,12 @@ void Application::Instance::openFile(juce::File const& file)
         mDocumentAccessor.copyFrom(accessor, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
+        auto const& documentAcsr = getDocumentAccessor();
+        if(documentAcsr.getAccessors<Document::AcsrType::analyzers>().empty())
+        {
+            auto& documentDir = getDocumentDirector();
+            documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
+        }
     }
     else
     {

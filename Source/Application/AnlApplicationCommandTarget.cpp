@@ -332,12 +332,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             Instance::get().openFile(fc.getResult());
-            auto const& documentAcsr = Instance::get().getDocumentAccessor();
-            if(documentAcsr.getAccessors<Document::AcsrType::analyzers>().empty())
-            {
-                auto& documentDir = Instance::get().getDocumentDirector();
-                documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
-            }
             return true;
         }
         case CommandIDs::DocumentOpenRecent:
