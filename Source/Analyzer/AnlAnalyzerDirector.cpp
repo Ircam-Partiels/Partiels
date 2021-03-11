@@ -133,16 +133,14 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
                                 "The plugin cannot be loaded due to: REASON.",
                                 {{"REASON", "unknwon error"}});
         }
+        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
         return nullptr;
     };
     
     auto processor = createProcessor();
     if(processor == nullptr)
     {
-        std::map<WarningType, juce::String> warning;
-        warning[WarningType::state] = juce::translate("The step size or the block size might not be supported");
-        mAccessor.setAttr<AttrType::warnings>(warning, notification);
-        
+        mAccessor.setAttr<AttrType::warnings>(WarningType::state, notification);
         lock.unlock();
         if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
                                               juce::translate("Plugin cannot be loaded"),
@@ -160,19 +158,16 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     anlStrongAssert(description != Plugin::Description{});
     if(description == Plugin::Description{})
     {
-        std::map<WarningType, juce::String> warning;
-        warning[WarningType::state] = juce::translate("The plugin description is invalid");
-        mAccessor.setAttr<AttrType::warnings>(warning, notification);
-        
         MessageWindow::show(MessageWindow::MessageType::warning,
                             "Plugin cannot be loaded",
                             "The plugin cannot be loaded due to: REASON.",
                             {{"REASON", "invalid description"}});
+        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
         return;
     }
     
     mAccessor.setAttr<AttrType::description>(description, notification);
-    mAccessor.setAttr<AttrType::warnings>(std::map<WarningType, juce::String>{}, notification);
+    mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
     
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>

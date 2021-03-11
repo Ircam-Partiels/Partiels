@@ -57,9 +57,8 @@ namespace Analyzer
 
     enum class WarningType
     {
-          feature
-        , zoomMode
-        , resultType
+          none
+        , plugin
         , state
     };
     
@@ -76,7 +75,7 @@ namespace Analyzer
     
     , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
     , Model::Attr<AttrType::time, double, Model::Flag::notifying>
-    , Model::Attr<AttrType::warnings, std::map<WarningType, juce::String>, Model::Flag::notifying>
+    , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, bool, Model::Flag::notifying>
     >;
     
