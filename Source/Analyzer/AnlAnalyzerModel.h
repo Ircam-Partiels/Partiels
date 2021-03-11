@@ -101,7 +101,7 @@ namespace Analyzer
                                  , {}
                                  , {}
                                  , {0.0}
-                                 , {}
+                                 , {WarningType::none}
                                  , {false}))
         {
         }
