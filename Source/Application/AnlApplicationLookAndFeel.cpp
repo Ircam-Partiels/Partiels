@@ -24,6 +24,10 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ConcertinaTable::ColourIds::headerTitleColourId, textColour);
     setColour(ConcertinaTable::ColourIds::headerButtonColourId, textColour);
 
+    setColour(IconManager::ColourIds::normalColourId, rulerColour);
+    setColour(IconManager::ColourIds::overColourId, rulerColour.brighter());
+    setColour(IconManager::ColourIds::downColourId, rulerColour.brighter());
+    
     setColour(LoadingCircle::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(LoadingCircle::ColourIds::foregroundColourId, rulerColour);
     
@@ -161,9 +165,10 @@ void Application::LookAndFeel::drawHeaderTitle(juce::Graphics& g, ConcertinaTabl
 void Application::LookAndFeel::setButtonIcon(juce::ImageButton& button, IconManager::IconType const type)
 {
     auto const icon = IconManager::getIcon(type);
-    auto const colour = juce::Colours::grey;
-    JUCE_COMPILER_WARNING("Use a colour scheme")
-    button.setImages(false, true, true, icon, 1.0f, colour, icon, 0.8f, colour.brighter(), icon, 0.8f, colour.brighter());
+    auto const normalColour = findColour(IconManager::ColourIds::normalColourId);
+    auto const overColour = findColour(IconManager::ColourIds::overColourId);
+    auto const downColour = findColour(IconManager::ColourIds::downColourId);
+    button.setImages(false, true, true, icon, 1.0f, normalColour, icon, 0.8f, overColour, icon, 0.8f, downColour);
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
