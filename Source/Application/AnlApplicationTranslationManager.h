@@ -15,4 +15,3 @@ namespace Application
 }
 
 ANALYSE_FILE_END
-
