@@ -17,10 +17,11 @@ public:
         , foregroundColourId
     };
     
-    LoadingCircle();
+    LoadingCircle(juce::Image const& inactiveImage = {});
     ~LoadingCircle() override = default;
     
     void setActive(bool state);
+    void setInactiveImage(juce::Image const& inactiveImage);
     
     // juce::Component
     void paint(juce::Graphics& g) override;
@@ -30,8 +31,8 @@ private:
     // juce::Timer
     void timerCallback() override;
     
-    juce::Image mImageProcessing;
-    juce::Image mImageReady;
+    juce::Image mImageActive;
+    juce::Image mImageInactive;
     float mRotation = 0.0f;
 };
 

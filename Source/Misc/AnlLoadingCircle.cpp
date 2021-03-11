@@ -3,9 +3,9 @@
 
 ANALYSE_FILE_BEGIN
 
-LoadingCircle::LoadingCircle()
-: mImageProcessing(IconManager::getIcon(IconManager::IconType::loading))
-, mImageReady(IconManager::getIcon(IconManager::IconType::checked))
+LoadingCircle::LoadingCircle(juce::Image const& inactiveImage)
+: mImageActive(IconManager::getIcon(IconManager::IconType::loading))
+, mImageInactive(inactiveImage)
 {
     setInterceptsMouseClicks(true, true);
 }
@@ -19,11 +19,11 @@ void LoadingCircle::paint(juce::Graphics& g)
     if(isTimerRunning())
     {
         g.addTransform(juce::AffineTransform::rotation(mRotation, localBounds.getCentreX(), localBounds.getCentreY()));
-        g.drawImageTransformed(mImageProcessing, placement.getTransformToFit(mImageProcessing.getBounds().toFloat(), localBounds), true);
+        g.drawImageTransformed(mImageActive, placement.getTransformToFit(mImageActive.getBounds().toFloat(), localBounds), true);
     }
-    else
+    else if(mImageInactive.isValid())
     {
-        g.drawImageTransformed(mImageReady, placement.getTransformToFit(mImageReady.getBounds().toFloat(), localBounds), true);
+        g.drawImageTransformed(mImageInactive, placement.getTransformToFit(mImageInactive.getBounds().toFloat(), localBounds), true);
     }
 }
 
@@ -43,6 +43,18 @@ void LoadingCircle::setActive(bool state)
     {
         stopTimer();
         repaint();
+    }
+}
+
+void LoadingCircle::setInactiveImage(juce::Image const& inactiveImage)
+{
+    if(inactiveImage != mImageInactive)
+    {
+        mImageInactive = inactiveImage;
+        if(!isTimerRunning())
+        {
+            repaint();
+        }
     }
 }
 

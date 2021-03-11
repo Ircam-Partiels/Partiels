@@ -65,17 +65,40 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
             }
                 break;
             case AttrType::processing:
+            case AttrType::warnings:
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
+                auto const warnings = acsr.getAttr<AttrType::warnings>();
+                auto getInactiveIconType = [warnings]()
+                {
+                    return warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert;
+                };
+                auto getTooltip = [state, warnings]()
+                {
+                    if(state)
+                    {
+                        return "Processing analysis...";
+                    }
+                    switch(warnings)
+                    {
+                        case WarningType::none:
+                            return "Analysis successfully completed!";
+                        case WarningType::plugin:
+                            return "Analysis failed: The plugin cannot be found or allocated!";
+                        case WarningType::state:
+                            return "Analysis failed: The step size or the block size might not be supported!";
+                    }
+                    return "Analysis finished!";
+                };
+                mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
+                mProcessingButton.setTooltip(juce::translate(getTooltip()));
                 mProcessingButton.setActive(state);
-                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
             }
                 break;
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
             case AttrType::results:
-            case AttrType::warnings:
             case AttrType::time:
             case AttrType::identifier:
             case AttrType::height:
