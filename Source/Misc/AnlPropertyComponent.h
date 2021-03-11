@@ -29,7 +29,7 @@ template <class entry_t> class PropertyComponent
 public:
     enum ColourIds : int
     {
-          backgroundColourId = 0x2000400
+          backgroundColourId = 0x2000500
         , textColourId
     };
     

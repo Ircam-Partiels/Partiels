@@ -8,6 +8,13 @@ class IconManager
 {
 public:
     
+    enum ColourIds : int
+    {
+          normalColourId = 0x2000300
+        , overColourId
+        , downColourId
+    };
+    
     enum class IconType
     {
           alert
