@@ -17,6 +17,20 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
         switch(anlAttr)
         {
             case AttrType::key:
+            {
+                try
+                {
+                    auto const& description = mPluginListScanner.getDescription(accessor.getAttr<AttrType::key>());
+                    mAccessor.setAttr<AttrType::name>(description.name, NotificationType::synchronous);
+                    mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
+                    mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
+                }
+                catch(...)
+                {
+                    
+                }
+            }
+                break;
             case AttrType::state:
             {
                 runAnalysis(notification);

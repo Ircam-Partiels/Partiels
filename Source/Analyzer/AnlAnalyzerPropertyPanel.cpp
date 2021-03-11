@@ -411,7 +411,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 for(auto const& parameter : state.parameters)
                 {
                     auto it = mParameterProperties.find(parameter.first);
-                    anlStrongAssert(it != mParameterProperties.end());
+                    anlWeakAssert(it != mParameterProperties.end());
                     if(it != mParameterProperties.end() && it->second != nullptr)
                     {
                         if(auto* propertyList = dynamic_cast<PropertyList*>(it->second.get()))
