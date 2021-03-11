@@ -342,6 +342,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 components.push_back(mPropertyResetProcessor);
+                components.push_back(mPropertyState);
                 mProcessorSection.setComponents(components);
                 components.clear();
                 
@@ -446,11 +447,30 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 
             }
                 break;
-            case AttrType::warnings:
-            case AttrType::time:
             case AttrType::processing:
-            case AttrType::identifier:
-            case AttrType::height:
+            case AttrType::warnings:
+            {
+                auto const state = acsr.getAttr<AttrType::processing>();
+                auto const warnings = acsr.getAttr<AttrType::warnings>();
+                auto getStateAsText = [state, warnings]()
+                {
+                    if(state)
+                    {
+                        return "Processing analysis...";
+                    }
+                    switch(warnings)
+                    {
+                        case WarningType::none:
+                            return "Analysis successfully completed!";
+                        case WarningType::plugin:
+                            return "Analysis failed: The plugin cannot be found or allocated!";
+                        case WarningType::state:
+                            return "Analysis failed: The step size or the block size might not be supported!";
+                    }
+                    return "Analysis finished!";
+                };
+                mPropertyState.setText(juce::translate(getStateAsText()), juce::NotificationType::dontSendNotification);
+            }
                 break;
             case AttrType::colours:
             {
@@ -459,6 +479,9 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }
                 break;
+            case AttrType::time:
+            case AttrType::identifier:
+            case AttrType::height:
             case AttrType::propertyState:
                 break;
         }
@@ -519,6 +542,12 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mBoundsListener.attachTo(mProcessorSection);
     mBoundsListener.attachTo(mGraphicalSection);
     mBoundsListener.attachTo(mPluginSection);
+    
+    mPropertyState.setTooltip(juce::translate("The state of the plugin"));
+    mPropertyState.setSize(sInnerWidth, 36);
+    mPropertyState.setJustification(juce::Justification::horizontallyJustified);
+    mPropertyState.setMultiLine(true);
+    mPropertyState.setReadOnly(true);
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);
