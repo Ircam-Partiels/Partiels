@@ -9,7 +9,6 @@ Application::LookAndFeel::LookAndFeel()
 {
     static FontManager fontManager;
     
-    JUCE_COMPILER_WARNING("Use a colour scheme")
     auto const backgroundColour = juce::Colours::grey.darker();
     auto const rulerColour = juce::Colours::grey;
     auto const textColour = juce::Colours::white;
