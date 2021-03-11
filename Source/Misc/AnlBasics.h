@@ -21,7 +21,7 @@
 #include <cassert>
 #include <optional>
 
-#define anlStrongAssert assert
+#define anlStrongAssert(condition) juce::ignoreUnused(condition); assert(condition)
 #define anlWeakAssert jassert
 
 ANALYSE_FILE_BEGIN
