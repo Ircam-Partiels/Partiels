@@ -105,7 +105,7 @@ namespace Analyzer
         PropertyNumber mPropertyBlockSize;
         PropertyNumber mPropertyStepSize;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
-        PropertyTextButton mPropertyResetProcessor;
+        PropertyList mPropertyPreset;
         juce::TextEditor mPropertyState;
         
         PropertyList mPropertyColourMap;

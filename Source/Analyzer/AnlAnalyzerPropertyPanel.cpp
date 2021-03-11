@@ -1,4 +1,5 @@
 #include "AnlAnalyzerPropertyPanel.h"
+#include "AnlAnalyzerExporter.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -188,9 +189,36 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     state.stepSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyResetProcessor("Reset", "Reset processor to the default state", [&]()
+, mPropertyPreset("Preset", "The preset of the analyzer", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
 {
-    mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
+    switch(index)
+    {
+        case 0:
+        {
+            mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
+        }
+            break;
+        case 1:
+        {
+            // Ignore (custom)
+        }
+            break;
+        case 2:
+        {
+            Exporter::fromPreset(mAccessor, AlertType::window);
+        }
+            break;
+        case 3:
+        {
+            Exporter::toPreset(mAccessor, AlertType::window);
+        }
+            break;
+        default:
+            break;
+    };
+    auto const& state = mAccessor.getAttr<AttrType::state>();
+    auto const& description = mAccessor.getAttr<AttrType::description>();
+    mPropertyPreset.entry.setSelectedItemIndex(state != description.defaultState, juce::NotificationType::dontSendNotification);
 })
       
 , mPropertyColourMap("Colour Map", "The colour map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
@@ -341,7 +369,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                         mParameterProperties[parameter.identifier] = std::move(property);
                     }
                 }
-                components.push_back(mPropertyResetProcessor);
+                components.push_back(mPropertyPreset);
                 components.push_back(mPropertyState);
                 mProcessorSection.setComponents(components);
                 components.clear();
@@ -400,6 +428,10 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
                         }
                     }
                 }
+                
+                mPropertyPreset.entry.setSelectedItemIndex(state != description.defaultState, juce::NotificationType::dontSendNotification);
+                mPropertyPreset.entry.setItemEnabled(1, true);
+                mPropertyPreset.entry.setItemEnabled(2, false);
             }
                 break;
             case AttrType::results:

@@ -5,8 +5,10 @@
 - Add loop support
 - Add container table
 - Zoom replace signal approach with model
-- Sanitize the analyzer model before analyzing
 - Add program support
 - Remove Accessor in Renderer
-- Improve colour IDs
 - Use a colour scheme for look and feel
+- Fix analyzer warnings
+- Automatic management of background colour transparency
+- Improve plugin blacklist support
+- Clean exporter

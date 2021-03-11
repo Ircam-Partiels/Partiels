@@ -10,6 +10,10 @@ namespace Analyzer
     {
     public:
         
+        static void toPreset(Accessor const& accessor, AlertType const alertType);
+        
+        static void fromPreset(Accessor& accessor, AlertType const alertType);
+        
         static void toTemplate(Accessor const& accessor, AlertType const alertType);
         
         static void toImage(Accessor const& accessor, AlertType const alertType);
