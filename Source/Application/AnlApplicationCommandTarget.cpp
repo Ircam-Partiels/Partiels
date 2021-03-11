@@ -16,8 +16,8 @@ void Application::CommandTarget::showUnsupportedAction()
     button.setBounds({480, 270, 80, 32});
     imageComponent.addAndMakeVisible(button);
     
-    auto const& lookAndFeel = juce::Desktop::getInstance().getDefaultLookAndFeel();
-    auto const bgColor = lookAndFeel.findColour(juce::ResizableWindow::backgroundColourId);
+    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+    auto const bgColor = laf.findColour(juce::ResizableWindow::backgroundColourId);
     
     juce::DialogWindow::LaunchOptions o;
     o.dialogTitle = juce::translate("Action Unavailable!");

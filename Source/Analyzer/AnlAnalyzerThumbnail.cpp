@@ -130,13 +130,13 @@ void Analyzer::Thumbnail::paint(juce::Graphics& g)
 
 void Analyzer::Thumbnail::lookAndFeelChanged()
 {
-    auto* lookAndFeel = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(lookAndFeel != nullptr);
-    if(lookAndFeel != nullptr)
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
     {
-        lookAndFeel->setButtonIcon(mExportButton, IconManager::IconType::share);
-        lookAndFeel->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
-        lookAndFeel->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
+        laf->setButtonIcon(mExportButton, IconManager::IconType::share);
+        laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
+        laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
     }
 }
 

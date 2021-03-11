@@ -98,13 +98,13 @@ void Application::Interface::resized()
 
 void Application::Interface::lookAndFeelChanged()
 {
-    auto* lookAndFeel = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(lookAndFeel != nullptr);
-    if(lookAndFeel != nullptr)
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
     {
-        lookAndFeel->setButtonIcon(mNavigate, IconManager::IconType::navigate);
-        lookAndFeel->setButtonIcon(mInspect, IconManager::IconType::search);
-        lookAndFeel->setButtonIcon(mEdit, IconManager::IconType::edit);
+        laf->setButtonIcon(mNavigate, IconManager::IconType::navigate);
+        laf->setButtonIcon(mInspect, IconManager::IconType::search);
+        laf->setButtonIcon(mEdit, IconManager::IconType::edit);
     }
 }
 
