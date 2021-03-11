@@ -25,6 +25,8 @@ namespace Document
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
         std::vector<std::unique_ptr<Analyzer::Director>> mAnalyzers;
+        double mSampleRate = 44100.0;
+        double mDuration = 0.0;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

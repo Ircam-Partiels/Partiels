@@ -18,17 +18,25 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             case AttrType::file:
             {
                 auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 if(reader == nullptr)
                 {
+                    mDuration = 0.0;
+                    mSampleRate = 44100.0;
+                    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 0.0}, notification);
+                    zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(0.0, notification);
+                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 0.0}, notification);
                     return;
                 }
-                auto const sampleRate = reader->sampleRate;
-                auto const duration = sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / sampleRate : 0.0;
-                
-                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, duration}, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(duration / 100.0, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, duration}, notification);
+                mSampleRate = reader->sampleRate > 0.0 ? reader->sampleRate : 44100.0;
+                mDuration = static_cast<double>(reader->lengthInSamples) / mSampleRate;
+                auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / reader->sampleRate, notification);
+                if(visibleRange == Zoom::Range{0.0, 0.0})
+                {
+                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
+                }
                 
                 for(auto const& anl : mAnalyzers)
                 {
@@ -109,10 +117,32 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 break;
         }
     };
+    
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+    zoomAcsr.onAttrUpdated = [&](Zoom::AttrType attribute, NotificationType notification)
+    {
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            {
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
+            }
+                break;
+            case Zoom::AttrType::minimumLength:
+            {
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / mSampleRate, notification);
+            }
+                break;
+            case Zoom::AttrType::visibleRange:
+                break;
+        }
+    };
 }
 
 Document::Director::~Director()
 {
+    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+    zoomAcsr.onAttrUpdated = nullptr;
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
@@ -151,9 +181,6 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
 
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
         anlAcsr.setAttr<Analyzer::AttrType::identifier>(identifier, notification);
-        anlAcsr.setAttr<Analyzer::AttrType::name>(description.name, notification);
-        anlAcsr.setAttr<Analyzer::AttrType::description>(description, notification);
-        anlAcsr.setAttr<Analyzer::AttrType::state>(description.defaultState, notification);
         anlAcsr.setAttr<Analyzer::AttrType::key>(key, notification);
         
         auto layout = mAccessor.getAttr<AttrType::layout>();

@@ -39,7 +39,7 @@ namespace Document
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::saveable, 1>
+    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::basic, 1>
     , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::Flag::basic, Model::resizable>
     >;
     
@@ -59,19 +59,6 @@ namespace Document
                                  , {144}
                                  , {}))
         {
-        }
-        
-        template <acsr_enum_type type>
-        bool insertAccessor(size_t index, NotificationType const notification)
-        {
-            if constexpr(type == AcsrType::timeZoom)
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, 1.0}, Zoom::epsilon()), notification);
-            }
-            else
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);                
-            }
         }
     };
 }
