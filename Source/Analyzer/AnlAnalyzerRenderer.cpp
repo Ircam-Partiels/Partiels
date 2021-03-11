@@ -202,9 +202,6 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const time = mAccessor.getAttr<AttrType::time>();
     
-    g.setColour(colours.background);
-    g.fillRect(bounds);
-    
     if(results.empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
     {
         return;
@@ -351,11 +348,7 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
 {
     auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colours = mAccessor.getAttr<AttrType::colours>();
     auto const& results = mAccessor.getAttr<AttrType::results>();
-    
-    g.setColour(colours.background);
-    g.fillRect(bounds);
     
     if(results.empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
     {

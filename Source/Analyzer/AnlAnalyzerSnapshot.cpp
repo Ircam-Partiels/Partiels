@@ -112,6 +112,10 @@ void Analyzer::Snapshot::paint(juce::Graphics& g)
     path.addRoundedRectangle(bounds, 4.0f);
     g.reduceClipRegion(path);
     
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    g.setColour(colours.background);
+    g.fillRect(bounds);
+    
     mRenderer.paint(g, bounds, mTimeZoomAccessor);
 }
 
