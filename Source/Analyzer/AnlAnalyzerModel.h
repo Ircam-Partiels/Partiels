@@ -133,7 +133,10 @@ namespace Analyzer
             {
                 return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, Zoom::max()}, 1.0), notification);
             }
-            return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);
+            else
+            {
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);                
+            }
         }
         
         void releaseResultsReadingAccess();
