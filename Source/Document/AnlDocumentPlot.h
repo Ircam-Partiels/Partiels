@@ -15,7 +15,7 @@ namespace Document
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x20005400
+              backgroundColourId = 0x2050000
             , borderColourId
             , textColourId
         };

@@ -16,7 +16,7 @@ namespace Document
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x2000400
+              backgroundColourId = 0x2050100
         };
         
         Section(Accessor& accessor);

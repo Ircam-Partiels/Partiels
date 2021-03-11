@@ -15,7 +15,7 @@ namespace Group
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x20006000
+              backgroundColourId = 0x2040000
             , borderColourId
         };
         

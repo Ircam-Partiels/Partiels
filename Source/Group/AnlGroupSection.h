@@ -14,7 +14,7 @@ namespace Group
         
         enum ColourIds : int
         {
-            sectionColourId = 0x20006100
+            sectionColourId = 0x2040100
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
