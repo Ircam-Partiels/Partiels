@@ -12,3 +12,5 @@
 - Automatic management of background colour transparency
 - Improve plugin blacklist support
 - Clean exporter
+- Add Zoom director
+- The Analyzer director doesn't manage key changes 
