@@ -167,7 +167,7 @@ void Application::LookAndFeel::setButtonIcon(juce::ImageButton& button, IconMana
     auto const normalColour = findColour(IconManager::ColourIds::normalColourId);
     auto const overColour = findColour(IconManager::ColourIds::overColourId);
     auto const downColour = findColour(IconManager::ColourIds::downColourId);
-    button.setImages(false, true, true, icon, 1.0f, normalColour, icon, 0.8f, overColour, icon, 0.8f, downColour);
+    button.setImages(false, true, true, icon, 1.0f, normalColour, icon, 1.0f, overColour, icon, 1.0f, downColour);
 }
 
 bool Application::LookAndFeel::areScrollbarButtonsVisible()
