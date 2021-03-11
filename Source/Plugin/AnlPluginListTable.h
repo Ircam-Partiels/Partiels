@@ -43,6 +43,8 @@ namespace PluginList
         juce::TextButton mScanButton;
         juce::TextEditor mSearchField;
         juce::String mLookingWord;
+        bool mIsBeingUpdated = false;
+        std::set<Plugin::Key> mBlacklist;
         
         JUCE_LEAK_DETECTOR(Table)
     };

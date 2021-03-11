@@ -10,15 +10,23 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
+        mIsBeingUpdated = true;
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::keys:
+                break;
             case AttrType::sortColumn:
             case AttrType::sortIsFowards:
-                updateContent();
+            {
+                auto const columnId = static_cast<int>(acsr.getAttr<AttrType::sortColumn>());
+                auto const isForward = acsr.getAttr<AttrType::sortIsFowards>();
+                mPluginTable.getHeader().setSortColumnId(columnId, isForward);
+            }
                 break;
         }
+        updateContent();
+        mIsBeingUpdated = false;
     };
     
     addAndMakeVisible(mPluginTable);
@@ -124,7 +132,6 @@ void PluginList::Table::resized()
 
 void PluginList::Table::updateContent()
 {
-    mPluginTable.getHeader().setSortColumnId(static_cast<int>(mAccessor.getAttr<AttrType::sortColumn>()), mAccessor.getAttr<AttrType::sortIsFowards>());
     auto const& keys = mAccessor.getAttr<AttrType::keys>();
     
     mFilteredList.clear();
@@ -134,31 +141,29 @@ void PluginList::Table::updateContent()
     {
         try
         {
-            auto const description = mScanner.getDescription(key, 48000.0);
-            if(description.name.isNotEmpty())
+            if(mBlacklist.count(key) == 0)
             {
-                auto const filterName = (description.name + description.output.name + description.maker).removeCharacters(" ");
-                if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
+                auto const description = mScanner.getDescription(key, 48000.0);
+                if(description.name.isNotEmpty())
                 {
-                    mFilteredList.push_back({key, description});
+                    auto const filterName = (description.name + description.output.name + description.maker).removeCharacters(" ");
+                    if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
+                    {
+                        mFilteredList.push_back({key, description});
+                    }
                 }
             }
         }
         catch(std::exception& e)
         {
+            mBlacklist.insert(key);
             errors.add(key.identifier + " - " + key.feature + ": " + e.what());
         }
         catch(...)
         {
-            errors.add(key.identifier + " - " + key.feature + ": unknwon error");
+            mBlacklist.insert(key);
+            errors.add(key.identifier + " - " + key.feature + ": unknown error");
         }
-    }
-    
-    if(!errors.isEmpty())
-    {
-        MessageWindow::show(MessageWindow::MessageType::warning,
-                            "Plugins listing has encountered errors!",
-                            "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
     }
     
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
@@ -204,6 +209,13 @@ void PluginList::Table::updateContent()
     mPluginTable.getHeader().reSortTable();
     mPluginTable.updateContent();
     mPluginTable.repaint();
+    
+    if(!errors.isEmpty())
+    {
+        MessageWindow::show(MessageWindow::MessageType::warning,
+                            "Plugins listing has encountered errors!",
+                            "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
+    }
 }
 
 int PluginList::Table::getNumRows()
@@ -295,8 +307,11 @@ void PluginList::Table::cellDoubleClicked(int rowNumber, int columnId, juce::Mou
 
 void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
 {
-    mAccessor.setAttr<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
-    mAccessor.setAttr<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
+    if(!mIsBeingUpdated)
+    {
+        mAccessor.setAttr<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
+    }
 }
 
 ANALYSE_FILE_END
