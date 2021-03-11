@@ -122,23 +122,6 @@ namespace Analyzer
             }
         }
         
-        template <acsr_enum_type type>
-        bool insertAccessor(size_t index, NotificationType const notification)
-        {
-            if constexpr(type == AcsrType::valueZoom)
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{Zoom::lowest(), Zoom::max()}, Zoom::epsilon()), notification);
-            }
-            else if constexpr(type == AcsrType::binZoom)
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, Zoom::max()}, 1.0), notification);
-            }
-            else
-            {
-                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAccessor<type>(index, notification);                
-            }
-        }
-        
         void releaseResultsReadingAccess();
         bool acquireResultsReadingAccess();
         bool canContinueToReadResults() const;

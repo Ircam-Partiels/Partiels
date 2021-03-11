@@ -51,7 +51,7 @@ namespace Zoom
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
         
-        Accessor(Range const range = {lowest(), max()}, double const length = epsilon())
+        Accessor(Range const range = {0.0, 0.0}, double const length = 0.0)
         : Accessor(AttrContainer({range}, {length}, {range}))
         {
         }

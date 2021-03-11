@@ -470,10 +470,17 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
             case Zoom::AttrType::minimumLength:
             {
                 auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                auto const interval = acsr.getAttr<Zoom::AttrType::minimumLength>();
-                mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
-                mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
-                mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
+                auto const isEnable = !range.isEmpty();
+                mPropertyValueRangeMin.entry.setEnabled(isEnable);
+                mPropertyValueRangeMax.entry.setEnabled(isEnable);
+                mPropertyValueRange.entry.setEnabled(isEnable);
+                if(isEnable)
+                {
+                    auto const interval = acsr.getAttr<Zoom::AttrType::minimumLength>();
+                    mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
+                    mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
+                    mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
+                }
             }
                 break;
             case Zoom::AttrType::visibleRange:

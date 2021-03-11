@@ -203,23 +203,25 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
 
 void Analyzer::Director::updateZoomAccessors(NotificationType const notification)
 {
-    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const& output = mAccessor.getAttr<AttrType::description>().output;
     
-    if(output.hasKnownExtents)
+    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    if(valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>() == Zoom::Range{0.0, 0.0})
     {
-        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)}, notification);
-    }
-    else if(!results.empty())
-    {
-        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getValueRange(results), notification);
+        if(output.hasKnownExtents)
+        {
+            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)}, notification);
+        }
+        else if(!results.empty())
+        {
+            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getValueRange(results), notification);
+        }
+        valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon(), notification);
+        valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
     }
     
-    valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon(), notification);
-    
+    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
     if(output.hasFixedBinCount)
     {
         binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(output.binCount)}, notification);
@@ -228,6 +230,11 @@ void Analyzer::Director::updateZoomAccessors(NotificationType const notification
     {
         binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getBinRange(results), notification);
     }
+    if(binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>() == Zoom::Range{0.0, 0.0})
+    {
+        binZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(binZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
+    }
+    binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
 }
 
 void Analyzer::Director::handleAsyncUpdate()
