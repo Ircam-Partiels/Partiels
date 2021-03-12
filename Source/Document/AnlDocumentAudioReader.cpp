@@ -228,6 +228,7 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
             if(readPosition >= endPosition)
             {
                 mReadPosition = 0;
+                instance->setNextReadPosition(0);
                 mIsPlaying.store(mIsLooping);
             }
             else
