@@ -223,20 +223,16 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
         if(instance != nullptr)
         {
             instance->getNextAudioBlock(bufferToFill);
-            mReadPosition = instance->getNextReadPosition();
-            
+            auto const readPosition = instance->getNextReadPosition();
             auto const endPosition = instance->getTotalLength();
-            if(mIsLooping && mReadPosition >= endPosition)
+            if(readPosition >= endPosition)
             {
-                instance->setNextReadPosition(0);
                 mReadPosition = 0;
+                mIsPlaying.store(mIsLooping);
             }
-
-            if(mReadPosition >= endPosition)
+            else
             {
-                mReadPosition = endPosition;
-                mIsPlaying.store(false);
-                triggerAsyncUpdate();
+                mReadPosition = readPosition;
             }
         }
     }
@@ -246,15 +242,11 @@ void Document::AudioReader::getNextAudioBlock(juce::AudioSourceChannelInfo const
     }
 }
 
-void Document::AudioReader::handleAsyncUpdate()
-{
-    mAccessor.setAttr<AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
-}
-
 void Document::AudioReader::timerCallback()
 {
     auto const sampleRate = mSampleRate > 0.0 ? mSampleRate : 44100.0;
     mAccessor.setAttr<AttrType::playheadPosition>(static_cast<double>(mReadPosition.load()) / sampleRate, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::isPlaybackStarted>(mIsPlaying.load(), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

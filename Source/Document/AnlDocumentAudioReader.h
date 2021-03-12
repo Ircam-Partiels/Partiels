@@ -12,7 +12,6 @@ namespace Document
     //! @brief The audio reader of a document
     class AudioReader
     : public juce::AudioSource
-    , private juce::AsyncUpdater
     , private juce::Timer
     {
     public:
@@ -27,9 +26,6 @@ namespace Document
         void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
         
     private:
-        
-        // juce::AsyncUpdater
-        void handleAsyncUpdate() override;
         
         // juce::Timer
         void timerCallback() override;
