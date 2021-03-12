@@ -235,9 +235,12 @@ void Document::Plot::paint(juce::Graphics& g)
         anlStrongAssert(it != mRenderers.cend());
         if(it != mRenderers.cend() && std::get<1>(*it) != nullptr)
         {
-            auto const colours = std::get<0>(*it).get().getAttr<Analyzer::AttrType::colours>();
-            g.setColour(colours.background);
-            g.fillRect(bounds);
+            if(lit == layout.crbegin())
+            {
+                auto const colours = std::get<0>(*it).get().getAttr<Analyzer::AttrType::colours>();
+                g.setColour(colours.background);
+                g.fillRect(bounds);
+            }
             
             std::get<1>(*it)->paint(g, bounds, timeZoomAcsr);
         }
