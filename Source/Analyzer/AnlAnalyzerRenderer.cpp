@@ -51,6 +51,83 @@ juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::funct
     return predicate() ? image : juce::Image();
 }
 
+void Analyzer::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
+{
+    if(!image.isValid())
+    {
+        return;
+    }
+    
+    using PixelRange = juce::Range<int>;
+    using ZoomRange = Zoom::Range;
+    
+    // Gets the visible zoom range of a zoom accessor and inverses it if necessary
+    auto const getZoomRange = [](Zoom::Accessor const& zoomAcsr, bool inverted)
+    {
+        if(!inverted)
+        {
+            return zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        }
+        auto const& globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        auto const& visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        return ZoomRange{globalRange.getEnd() - visibleRange.getEnd() + globalRange.getStart(), globalRange.getEnd() - visibleRange.getStart()+ globalRange.getStart()};
+    };
+    
+    // Gets the visible zoom range equivalent to the graphics clip bounds
+    auto const clipZoomRange = [](PixelRange const& global, PixelRange const& visible, ZoomRange const& zoom)
+    {
+        auto const ratio = zoom.getLength() / static_cast<double>(global.getLength());
+        auto const x1 = static_cast<double>(visible.getStart() - global.getStart()) * ratio + zoom.getStart();
+        auto const x2 = static_cast<double>(visible.getEnd() - global.getStart()) * ratio + zoom.getStart();
+        return ZoomRange{x1, x2};
+    };
+    
+    // Converts the visible zoom range to image range
+    auto toImageRange = [](ZoomRange const& globalRange, ZoomRange const& visibleRange, int imageSize)
+    {
+        auto const globalLength = globalRange.getLength();
+        anlStrongAssert(globalLength > 0.0);
+        if(globalLength <= 0.0)
+        {
+            return juce::Range<float>();
+        }
+        auto const scale = static_cast<float>(imageSize);
+        auto scaleValue = [&](double value)
+        {
+            return static_cast<float>((value - globalRange.getStart()) / globalLength * scale);
+        };
+        return juce::Range<float>{scaleValue(visibleRange.getStart()), scaleValue(visibleRange.getEnd())};
+    };
+    
+    // Draws a range of an image
+    auto drawImage = [&](juce::Rectangle<float> const& rectangle)
+    {
+        auto const graphicsBounds = g.getClipBounds().toFloat();
+        auto const imageBounds = rectangle.getSmallestIntegerContainer();
+        auto const clippedImage = image.getClippedImage(imageBounds);
+        
+        auto const deltaX = static_cast<float>(imageBounds.getX()) - rectangle.getX();
+        auto const deltaY = static_cast<float>(imageBounds.getY()) - rectangle.getY();
+        anlWeakAssert(deltaX <= 0);
+        anlWeakAssert(deltaY <= 0);
+        auto const scaleX = graphicsBounds.getWidth() / rectangle.getWidth();
+        auto const scaleY = graphicsBounds.getHeight() / rectangle.getHeight();
+        
+        g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
+        g.drawImageTransformed(clippedImage, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
+    };
+
+    auto const clipBounds = g.getClipBounds();
+    
+    auto const xClippedRange = clipZoomRange(bounds.getHorizontalRange(), clipBounds.getHorizontalRange(), getZoomRange(xZoomAcsr, false));
+    auto const xRange = toImageRange(xZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), xClippedRange, image.getWidth());
+    
+    auto const yClippedRange = clipZoomRange(bounds.getVerticalRange(), clipBounds.getVerticalRange(), getZoomRange(yZoomAcsr, true));
+    auto const yRange = toImageRange(yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), yClippedRange, image.getHeight());
+    
+    drawImage({xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()});
+}
+
 Analyzer::Renderer::Renderer(Accessor& accessor, Type type)
 : mAccessor(accessor)
 , mType(type)

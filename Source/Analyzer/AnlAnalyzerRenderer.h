@@ -18,6 +18,7 @@ namespace Analyzer
         };
 
         static juce::Image createImage(Accessor const& accessor, std::function<bool(void)> predicate = nullptr);
+        static void renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr);
         
         Renderer(Accessor& accessor, Type type);
         ~Renderer() override;
