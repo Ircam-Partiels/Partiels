@@ -152,6 +152,11 @@ void Analyzer::Renderer::prepareRendering()
         triggerAsyncUpdate();
         return {};
     });
+    
+    if(onUpdated != nullptr)
+    {
+        onUpdated();
+    }
 }
 
 void Analyzer::Renderer::handleAsyncUpdate()
