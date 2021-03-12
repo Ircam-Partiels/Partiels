@@ -12,6 +12,15 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     {
         return nullptr;
     }
+    
+    if(auto* format = audioFormatManager.findFormatForFileExtension(file.getFileExtension()))
+    {
+        if(auto* audioFormatReader = format->createMemoryMappedReader(file))
+        {
+            audioFormatReader->mapEntireFile();
+            return std::unique_ptr<juce::AudioFormatReader>(audioFormatReader);
+        }
+    }
    
     auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
     if(audioFormatReader == nullptr)
