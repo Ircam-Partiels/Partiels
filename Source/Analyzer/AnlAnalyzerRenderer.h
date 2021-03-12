@@ -60,7 +60,7 @@ namespace Analyzer
         std::atomic<ProcessState> mProcessState {ProcessState::available};
         std::future<juce::Image> mProcess;
         
-        juce::Image mImage;
+        std::vector<juce::Image> mImages;
     };
 }
 

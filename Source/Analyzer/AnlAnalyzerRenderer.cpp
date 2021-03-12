@@ -161,7 +161,7 @@ void Analyzer::Renderer::prepareRendering()
     auto const& results = mAccessor.getAttr<AttrType::results>();
     if(results.empty() || results[0].values.size() <= 1)
     {
-        mImage = {};
+        mImages.clear();
         if(onUpdated != nullptr)
         {
             onUpdated();
@@ -174,7 +174,7 @@ void Analyzer::Renderer::prepareRendering()
     anlWeakAssert(witdh > 0 && height > 0);
     if(witdh < 0 || height < 0)
     {
-        mImage = {};
+        mImages.clear();
         if(onUpdated != nullptr)
         {
             onUpdated();
@@ -184,7 +184,7 @@ void Analyzer::Renderer::prepareRendering()
     
     if(mType == Type::frame)
     {
-        mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
+        mImages = {juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false)};
         if(onUpdated != nullptr)
         {
             onUpdated();
@@ -246,12 +246,19 @@ void Analyzer::Renderer::handleAsyncUpdate()
         auto expected = ProcessState::ended;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
-            mImage = mProcess.get();
+            auto constexpr maxSize = 4096;
+            auto image = mProcess.get();
+            auto const dimension = std::max(image.getWidth(), image.getHeight());
+            for(int i = maxSize; i < dimension; i *= 2)
+            {
+                mImages.push_back(image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight())));
+            }
+            mImages.push_back(image);
         }
         expected = ProcessState::aborted;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
-            mImage = mProcess.get();
+            mImages.clear();
         }
     }
     
@@ -381,7 +388,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
             break;
         case DisplayMode::matrix:
         {
-            auto image = mImage;
+            auto image = mImages.empty() ? juce::Image() : mImages.front();
             if(!image.isValid())
             {
                 return;
@@ -502,30 +509,29 @@ void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> cons
     }
     else
     {
-        auto image = mImage;
-        if(!image.isValid())
+        if(mImages.empty())
         {
             return;
         }
         
-        auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-        auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        auto getZoomRatio = [](Zoom::Accessor const& acsr)
+        {
+            return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
+        };
         
-        auto const globalTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        
-        auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
-        
-        auto const deltaX = static_cast<float>(timeRange.getStart() / globalTimeRange.getLength() * static_cast<double>(image.getWidth()));
-        auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image.getHeight()));
-        
-        auto const scaleX = static_cast<float>(globalTimeRange.getLength() / timeRange.getLength() * static_cast<double>(width) / static_cast<double>(image.getWidth()));
-        auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
-        
-        auto const transform = juce::AffineTransform::translation(-deltaX, -deltaY).scaled(scaleX, scaleY).translated(static_cast<float>(bounds.getX()), static_cast<float>(bounds.getY()));
-        
-        g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-        g.drawImageTransformed(image, transform);
+        auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
+        auto const binZoomRatio = getZoomRatio(mAccessor.getAccessor<AcsrType::binZoom>(0));
+        auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
+        for(auto const& image : mImages)
+        {
+            auto const imageDimension = std::max(image.getWidth(), image.getHeight());
+            if(imageDimension >= boundsDimension)
+            {
+                renderImage(g, bounds, image, timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
+                return;
+            }
+        }
+        renderImage(g, bounds, mImages.back(), timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
     }
 }
 
