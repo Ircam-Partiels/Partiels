@@ -196,6 +196,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
     
+    anlDebug("Analyzer", "analysis launched");
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
@@ -269,6 +270,7 @@ void Analyzer::Director::handleAsyncUpdate()
         auto expected = ProcessState::ended;
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
+            anlDebug("Analyzer", "analysis succeeded");
             mAccessor.acquireResultsWrittingAccess();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
             if(!mAccessor.canContinueToReadResults())
