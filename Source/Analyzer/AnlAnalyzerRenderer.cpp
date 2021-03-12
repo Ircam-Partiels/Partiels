@@ -170,7 +170,6 @@ void Analyzer::Renderer::handleAsyncUpdate()
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
             mImage = mProcess.get();
-            mProcessState = ProcessState::available;
         }
     }
     
