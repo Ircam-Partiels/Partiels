@@ -43,6 +43,10 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
                 break;
             case AttrType::results:
             {
+                if(!mAccessor.canContinueToReadResults())
+                {
+                    mAccessor.releaseResultsWrittingAccess();
+                }
                 updateZoomAccessors(notification);
             }
                 break;
@@ -265,7 +269,12 @@ void Analyzer::Director::handleAsyncUpdate()
         auto expected = ProcessState::ended;
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
+            mAccessor.acquireResultsWrittingAccess();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
+            if(!mAccessor.canContinueToReadResults())
+            {
+                mAccessor.releaseResultsWrittingAccess();
+            }
         }
         
         std::unique_lock<std::mutex> lock(mAnalysisMutex);

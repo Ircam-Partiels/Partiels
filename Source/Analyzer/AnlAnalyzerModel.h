@@ -106,29 +106,14 @@ namespace Analyzer
         {
         }
         
-        template <attr_enum_type type, typename value_v>
-        void setAttr(value_v const& value, NotificationType notification)
-        {
-            if constexpr(type == AttrType::results)
-            {
-                acquireResultsWrittingAccess();
-                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
-                releaseResultsWrittingAccess();
-            }
-            else
-            {
-                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
-            }
-        }
-        
         void releaseResultsReadingAccess();
         bool acquireResultsReadingAccess();
         bool canContinueToReadResults() const;
         
-    private:
-        
         void releaseResultsWrittingAccess();
         void acquireResultsWrittingAccess();
+        
+    private:
         
         std::atomic<int> mNumReadingAccess {false};
         std::atomic<bool> mRequireWrittingAccess {false};
