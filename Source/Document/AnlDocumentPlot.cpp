@@ -164,7 +164,6 @@ Document::Plot::Plot(Accessor& accessor)
                 if(it != mRenderers.cend())
                 {
                     std::get<1>(*it)->prepareRendering();
-                    updateProcessingButton();
                 }
             }
                 break;
@@ -233,8 +232,13 @@ void Document::Plot::paint(juce::Graphics& g)
         {
             return std::get<0>(renderer).get().template getAttr<Analyzer::AttrType::identifier>() == identifier;
         });
+        anlStrongAssert(it != mRenderers.cend());
         if(it != mRenderers.cend() && std::get<1>(*it) != nullptr)
         {
+            auto const colours = std::get<0>(*it).get().getAttr<Analyzer::AttrType::colours>();
+            g.setColour(colours.background);
+            g.fillRect(bounds);
+            
             std::get<1>(*it)->paint(g, bounds, timeZoomAcsr);
         }
     }
