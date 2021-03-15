@@ -78,12 +78,14 @@ void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelIn
     {
         if(mIsPlaying.load())
         {
-            auto const numRemainingSamples = static_cast<int>(std::min(endPosition - mReadPosition.load(), static_cast<juce::int64>(numSamplesToProceed)));
+            auto const currentReadPosition = mReadPosition.load();
+            auto const numRemainingSamples = static_cast<int>(std::min(endPosition - currentReadPosition, static_cast<juce::int64>(numSamplesToProceed)));
             juce::AudioSourceChannelInfo tempBuffer(buffer, outputPosition, numRemainingSamples);
             
+            mAudioFormatReaderSource.setNextReadPosition(currentReadPosition);
             mAudioFormatReaderSource.getNextAudioBlock(tempBuffer);
-            auto const readPosition = mAudioFormatReaderSource.getNextReadPosition();
-            if(readPosition >= endPosition)
+            auto const nextReadPosition = mAudioFormatReaderSource.getNextReadPosition();
+            if(nextReadPosition >= endPosition)
             {
                 mReadPosition = mStartPosition.load();
                 mAudioFormatReaderSource.setNextReadPosition(mStartPosition.load());
@@ -91,7 +93,7 @@ void Document::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelIn
             }
             else
             {
-                mReadPosition = readPosition;
+                mReadPosition = nextReadPosition;
             }
             
             numSamplesToProceed -= numRemainingSamples;
@@ -127,6 +129,7 @@ double Document::AudioReader::Source::getReadPlayheadPosition() const
 
 void Document::AudioReader::Source::setPlaying(bool shouldPlay)
 {
+    mReadPosition.store(mStartPosition.load());
     mIsPlaying = shouldPlay;
 }
 
