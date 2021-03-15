@@ -17,8 +17,12 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     {
         if(auto* audioFormatReader = format->createMemoryMappedReader(file))
         {
-            audioFormatReader->mapEntireFile();
-            return std::unique_ptr<juce::AudioFormatReader>(audioFormatReader);
+            anlWeakAssert(audioFormatReader->sampleRate > 0.0);
+            if(audioFormatReader->sampleRate > 0.0)
+            {
+                audioFormatReader->mapEntireFile();
+                return std::unique_ptr<juce::AudioFormatReader>(audioFormatReader);
+            }
         }
     }
    
