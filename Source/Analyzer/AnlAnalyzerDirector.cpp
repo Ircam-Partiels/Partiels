@@ -195,6 +195,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     mAccessor.setAttr<AttrType::description>(description, notification);
     mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
+    mStartTime = juce::Time::getCurrentTime();
     
     anlDebug("Analyzer", "analysis launched");
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
@@ -270,13 +271,15 @@ void Analyzer::Director::handleAsyncUpdate()
         auto expected = ProcessState::ended;
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
-            anlDebug("Analyzer", "analysis succeeded");
+            auto const now = juce::Time::getCurrentTime();
+            anlDebug("Analyzer", "analysis succeeded (" + (now - mStartTime).getDescription() + ")");
             mAccessor.acquireResultsWrittingAccess();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
             if(!mAccessor.canContinueToReadResults())
             {
                 mAccessor.releaseResultsWrittingAccess();
             }
+            anlDebug("Analyzer", "analysis stored (" + (juce::Time::getCurrentTime() - now).getDescription() + ")");
         }
         
         std::unique_lock<std::mutex> lock(mAnalysisMutex);

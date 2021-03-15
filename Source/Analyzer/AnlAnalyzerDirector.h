@@ -38,6 +38,7 @@ namespace Analyzer
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::tuple<std::vector<Plugin::Result>, NotificationType>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
+        juce::Time mStartTime;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
