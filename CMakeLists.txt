@@ -226,6 +226,7 @@ create_module_group(Partiels "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DI
 create_module_group(Partiels "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
 create_module_group(Partiels "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
 create_module_group(Partiels "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
+create_module_group(Partiels "Modules\\juce_opengl" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_opengl")
 create_module_group(Partiels "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
 create_module_group(Partiels "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
 create_module_group(Partiels "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
