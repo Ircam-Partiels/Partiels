@@ -182,15 +182,15 @@ file(GLOB TranslationsSources
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Plugin.txt
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Analyzer.txt)
 
-source_group("Global" FILES ${GlobalSources})
-source_group("Misc" FILES ${MiscSources})
-source_group("Zoom" FILES ${ZoomSources})
-source_group("Plugin" FILES ${PluginSources})
-source_group("Analyzer" FILES ${AnalyzerSources})
-source_group("Group" FILES ${GroupSources})
-source_group("Document" FILES ${DocumentSources})
-source_group("Application" FILES ${ApplicationSources})
-source_group("Translations" FILES ${TranslationsSources})
+source_group("Source/Global" FILES ${GlobalSources})
+source_group("Source/Misc" FILES ${MiscSources})
+source_group("Source/Zoom" FILES ${ZoomSources})
+source_group("Source/Plugin" FILES ${PluginSources})
+source_group("Source/Analyzer" FILES ${AnalyzerSources})
+source_group("Source/Group" FILES ${GroupSources})
+source_group("Source/Document" FILES ${DocumentSources})
+source_group("Source/Application" FILES ${ApplicationSources})
+source_group("Source/Translations" FILES ${TranslationsSources})
 
 function(create_module_group TARGET GROUP_PATH MODULE_PATH)
 
