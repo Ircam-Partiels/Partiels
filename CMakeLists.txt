@@ -266,6 +266,7 @@ target_link_libraries(Brioche PRIVATE
     FontsData
     TranslationsData
     juce::juce_gui_extra
+    juce::juce_opengl
     juce::juce_audio_formats
     juce::juce_audio_devices
     juce::juce_recommended_config_flags
@@ -279,6 +280,7 @@ target_link_libraries(BriocheTest PRIVATE
     FontsData
     TranslationsData
     juce::juce_gui_extra
+    juce::juce_opengl
     juce::juce_audio_formats
     juce::juce_audio_devices
     juce::juce_recommended_config_flags

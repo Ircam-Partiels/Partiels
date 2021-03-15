@@ -6,6 +6,10 @@ ANALYSE_FILE_BEGIN
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
+    mOpenGLContext.setMultisamplingEnabled(true);
+    mOpenGLContext.setComponentPaintingEnabled(true);
+    mOpenGLContext.attachTo(*this);
+    
     if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
     {
         centreWithSize(1024, 768);
@@ -37,6 +41,7 @@ Application::Window::~Window()
     juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
+    mOpenGLContext.detach();
 }
 
 void Application::Window::closeButtonPressed()
