@@ -1,42 +1,42 @@
 cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
-project(Brioche VERSION 0.0.3 LANGUAGES C CXX)
+project(Partiels VERSION 0.0.3 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 include(vamp.cmake)
 
-juce_add_gui_app(Brioche
-    PRODUCT_NAME                        "Brioche"
+juce_add_gui_app(Partiels
+    PRODUCT_NAME                        "Partiels"
     VERSION                             "0.0.3"
     BUNDLE_ID                           com.ircam.analyse
     COMPANY_COPYRIGHT                   "Copyright 2020 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
     ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Icons/icon.png"
-    DOCUMENT_EXTENSIONS                 brioche
+    DOCUMENT_EXTENSIONS                 "ptldoc,aac,aiff,aif,flac,m4a,mp3,ogg,wav,wma"
     NEEDS_CURL                          FALSE
     NEEDS_WEB_BROWSER                   FALSE
     NEEDS_STORE_KIT                     FALSE
     HARDENED_RUNTIME_ENABLED            true
     HARDENED_RUNTIME_OPTIONS           "com.apple.security.cs.disable-library-validation")
 
-juce_add_console_app(BriocheTest
-    PRODUCT_NAME                        "BriocheTest"
+juce_add_console_app(PartielsTest
+    PRODUCT_NAME                        "PartielsTest"
     VERSION                             "0.0.3")
 
-juce_generate_juce_header(Brioche)
-juce_generate_juce_header(BriocheTest)
+juce_generate_juce_header(Partiels)
+juce_generate_juce_header(PartielsTest)
 
-set_target_properties(Brioche PROPERTIES CXX_STANDARD 20)
-set_target_properties(BriocheTest PROPERTIES CXX_STANDARD 20)
+set_target_properties(Partiels PROPERTIES CXX_STANDARD 20)
+set_target_properties(PartielsTest PROPERTIES CXX_STANDARD 20)
 
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
 
 file(GLOB_RECURSE GlobalSources
     ${SOURCES_DIRECTORY}/Main.cpp
-    ${CMAKE_CACHEFILE_DIR}/Brioche_artefacts/JuceLibraryCode/JuceHeader.h)
+    ${CMAKE_CACHEFILE_DIR}/Partiels_artefacts/JuceLibraryCode/JuceHeader.h)
 
 file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlBasics.h
@@ -221,31 +221,33 @@ endif()
     target_sources(${TARGET} PRIVATE ${SUB_SOURCES})
 endfunction()
 
-create_module_group(Brioche "Modules\\juce_core" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_core")
-create_module_group(Brioche "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_graphics")
-create_module_group(Brioche "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
-create_module_group(Brioche "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
-create_module_group(Brioche "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
-create_module_group(Brioche "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
-create_module_group(Brioche "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
-create_module_group(Brioche "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
-create_module_group(Brioche "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
+create_module_group(Partiels "Modules\\juce_core" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_core")
+create_module_group(Partiels "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_graphics")
+create_module_group(Partiels "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
+create_module_group(Partiels "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
+create_module_group(Partiels "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
+create_module_group(Partiels "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
+create_module_group(Partiels "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
+create_module_group(Partiels "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
+create_module_group(Partiels "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-set(BriochesSources ${MiscSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
-target_sources(Brioche PRIVATE ${GlobalSources} ${BriochesSources} ${TranslationsSources})
-target_sources(BriocheTest PRIVATE ${BriochesSources} ${SOURCES_DIRECTORY}/Test.cpp)
+set(PartielsSources ${MiscSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
+target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
+target_sources(PartielsTest PRIVATE ${PartielsSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
-set(BriochesDefinitions
+set(PartielsDefinitions
+    APP_DOC_PREFIX="ptl"
     DONT_SET_USING_JUCE_NAMESPACE=1
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_LOG_ASSERTIONS=1
     JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_USE_CURL=0
-    JUCE_WEB_BROWSER=0)
+    JUCE_WEB_BROWSER=0
+    JUCE_ENABLE_REPAINT_DEBUGGING=0)
 
-target_compile_definitions(Brioche PRIVATE ${BriochesDefinitions})
-target_compile_definitions(BriocheTest PRIVATE ${BriochesDefinitions})
+target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
+target_compile_definitions(PartielsTest PRIVATE ${PartielsDefinitions})
 
 file(GLOB ImagesDataSources ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)
 juce_add_binary_data(ImagesData HEADER_NAME "ImagesData.h" NAMESPACE ImagesData SOURCES ${ImagesDataSources})
@@ -259,7 +261,7 @@ juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE
 file(GLOB FontsDataSources ${BINARYDATA_DIRECTORY}/Fonts/*.otf)
 juce_add_binary_data(FontsData HEADER_NAME "FontsData.h" NAMESPACE FontsData SOURCES ${FontsDataSources})
 
-target_link_libraries(Brioche PRIVATE
+target_link_libraries(Partiels PRIVATE
     vamp
     ImagesData
     IconsData
@@ -273,7 +275,7 @@ target_link_libraries(Brioche PRIVATE
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
-target_link_libraries(BriocheTest PRIVATE
+target_link_libraries(PartielsTest PRIVATE
     vamp
     ImagesData
     IconsData
@@ -291,4 +293,4 @@ target_link_libraries(BriocheTest PRIVATE
     juce::juce_recommended_warning_flags)
 
 enable_testing()
-add_test(NAME AllTest COMMAND BriocheTest)
+add_test(NAME AllTest COMMAND PartielsTest)

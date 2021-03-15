@@ -78,12 +78,12 @@ Application::Instance& Application::Instance::get()
 
 juce::String Application::Instance::getFileExtension()
 {
-    return ".brioche";
+    return App::getFileExtensionFor("doc");
 }
 
 juce::String Application::Instance::getFileWildCard()
 {
-    return "*" + getFileExtension();
+    return App::getFileWildCardFor("doc");
 }
 
 void Application::Instance::openFile(juce::File const& file)

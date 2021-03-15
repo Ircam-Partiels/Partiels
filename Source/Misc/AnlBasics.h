@@ -49,6 +49,19 @@ namespace Format
     }
 }
 
+namespace App
+{
+    inline juce::String getFileExtensionFor(juce::String const& suffix)
+    {
+        return juce::String(".") + APP_DOC_PREFIX + suffix;
+    }
+    
+    inline juce::String getFileWildCardFor(juce::String const& suffix)
+    {
+        return "*" + getFileExtensionFor(suffix);
+    }
+}
+
 enum class NotificationType : bool
 {
     synchronous = false,

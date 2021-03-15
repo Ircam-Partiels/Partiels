@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 void Analyzer::Exporter::toPreset(Accessor const& accessor, AlertType const alertType)
 {
-    juce::FileChooser fc(juce::translate("Export as preset..."), {}, "*.briochepreset");
+    juce::FileChooser fc(juce::translate("Export as preset..."), {}, App::getFileWildCardFor("preset"));
     if(!fc.browseForFileToSave(true))
     {
         return;
@@ -46,7 +46,7 @@ void Analyzer::Exporter::toPreset(Accessor const& accessor, AlertType const aler
 
 void Analyzer::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
 {
-    juce::FileChooser fc(juce::translate("Load from preset..."), {}, "*.briochepreset");
+    juce::FileChooser fc(juce::translate("Load from preset..."), {}, App::getFileWildCardFor("preset"));
     if(!fc.browseForFileToOpen())
     {
         return;
@@ -82,7 +82,7 @@ void Analyzer::Exporter::fromPreset(Accessor& accessor, AlertType const alertTyp
 
 void Analyzer::Exporter::toTemplate(Accessor const& accessor, AlertType const alertType)
 {
-    juce::FileChooser fc(juce::translate("Export as template..."), {}, "*.briochetpl");
+    juce::FileChooser fc(juce::translate("Export as template..."), {}, App::getFileWildCardFor("template"));
     if(!fc.browseForFileToSave(true))
     {
         return;
@@ -301,7 +301,7 @@ void Analyzer::Exporter::toXml(Accessor const& accessor, AlertType const alertTy
         return child;
     };
     
-    auto element = std::make_unique<juce::XmlElement>("brioche");
+    auto element = std::make_unique<juce::XmlElement>("partiels");
     if(element == nullptr)
     {
         if(alertType == AlertType::window)

@@ -45,7 +45,7 @@ Build::Windows:
     - ctest -C Release
   artifacts:
     paths:
-      - $CI_PROJECT_DIR\release\Brioche_artefacts\Release\Brioche.exe
+      - $CI_PROJECT_DIR\release\Partiels_artefacts\Release\Partiels.exe
     expire_in: 1 week
 
 Build::Linux:
@@ -62,7 +62,7 @@ Build::Linux:
     - ctest -C Release
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/release/Brioche_artefacts/Release/Brioche
+      - $CI_PROJECT_DIR/release/Partiels_artefacts/Release/Partiels
     expire_in: 1 week
 
 Deploy::Windows:
@@ -73,9 +73,9 @@ Deploy::Windows:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR\release\Brioche_artefacts\Release
-    - tar.exe -a -c -f Brioche-v$CI_COMMIT_TAG-Windows-10.zip Brioche.exe
-    - cp Brioche-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Brioche\Alpha
+    - cd $CI_PROJECT_DIR\release\Partiels_artefacts\Release
+    - tar.exe -a -c -f Partiels-v$CI_COMMIT_TAG-Windows-10.zip Partiels.exe
+    - cp Partiels-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Brioche\Alpha
 
 Deploy::Linux:
   stage: deploy
@@ -85,10 +85,10 @@ Deploy::Linux:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR/release/Brioche_artefacts/Release
-    - mkdir Brioche-v$CI_COMMIT_TAG
-    - cp Brioche Brioche-v$CI_COMMIT_TAG
-    - cp ../../../BinaryData/Icons/icon.png Brioche-v$CI_COMMIT_TAG
-    - cp ../../../BinaryData/Misc/Brioche.desktop Brioche-v$CI_COMMIT_TAG
-    - tar -zcvf Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz Brioche-v$CI_COMMIT_TAG
-    - cp Brioche-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz /home/pierre/Nextcloud/Brioche/Alpha
+    - cd $CI_PROJECT_DIR/release/Partiels_artefacts/Release
+    - mkdir Partiels-v$CI_COMMIT_TAG
+    - cp Partiels Partiels-v$CI_COMMIT_TAG
+    - cp ../../../BinaryData/Icons/icon.png Partiels-v$CI_COMMIT_TAG
+    - cp ../../../BinaryData/Misc/Partiels.desktop Partiels-v$CI_COMMIT_TAG
+    - tar -zcvf Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz Partiels-v$CI_COMMIT_TAG
+    - cp Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz /home/pierre/Nextcloud/Brioche/Alpha
