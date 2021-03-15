@@ -1,7 +1,6 @@
 - Change the Font (Metropolis might be more adapted)
 - Rename Analyzer to Track
 - Rename and Split Document to Group and Document
-- Move back Resampling to Document to support the changes of the audio file
 - Add loop support
 - Add container table
 - Zoom replace signal approach with model
@@ -13,4 +12,4 @@
 - Improve plugin blacklist support
 - Clean exporter
 - Add Zoom director
-- The Analyzer director doesn't manage key changes 
+- The Analyzer director doesn't manage key changes

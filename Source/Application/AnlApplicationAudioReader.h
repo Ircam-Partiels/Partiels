@@ -25,7 +25,6 @@ namespace Application
         
         Document::AudioReader mDocumentAudioReader;
         juce::AudioSourcePlayer mAudioSourcePlayer;
-        juce::ResamplingAudioSource mResamplingAudioSource;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioReader)
     };
