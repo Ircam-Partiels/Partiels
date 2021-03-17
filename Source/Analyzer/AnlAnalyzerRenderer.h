@@ -61,6 +61,7 @@ namespace Analyzer
         std::future<juce::Image> mProcess;
         
         std::vector<juce::Image> mImages;
+        juce::Time mRenderingStartTime;
     };
 }
 

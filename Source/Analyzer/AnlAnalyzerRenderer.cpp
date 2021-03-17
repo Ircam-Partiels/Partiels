@@ -105,7 +105,8 @@ void Analyzer::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> con
         auto const graphicsBounds = g.getClipBounds().toFloat();
         auto const imageBounds = rectangle.getSmallestIntegerContainer();
         auto const clippedImage = image.getClippedImage(imageBounds);
-        
+        anlWeakAssert(clippedImage.getWidth() == imageBounds.getWidth());
+        anlWeakAssert(clippedImage.getHeight() == imageBounds.getHeight());
         auto const deltaX = static_cast<float>(imageBounds.getX()) - rectangle.getX();
         auto const deltaY = static_cast<float>(imageBounds.getY()) - rectangle.getY();
         anlWeakAssert(deltaX <= 0);
@@ -191,10 +192,13 @@ void Analyzer::Renderer::prepareRendering()
         }
         return;
     }
+    mRenderingStartTime = juce::Time::getCurrentTime();
     
+    anlDebug("Analyzer", "rendering launched");
     mProcess = std::async([this]() -> juce::Image
     {
         juce::Thread::setCurrentThreadName("Analyzer::Renderer::Process");
+        juce::Thread::setCurrentThreadPriority(10);
         auto expected = ProcessState::available;
         if(!mProcessState.compare_exchange_weak(expected, ProcessState::running))
         {
@@ -246,6 +250,8 @@ void Analyzer::Renderer::handleAsyncUpdate()
         auto expected = ProcessState::ended;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
+            auto const now = juce::Time::getCurrentTime();
+            anlDebug("Analyzer", "rendering succeeded (" + (now - mRenderingStartTime).getDescription() + ")");
             auto constexpr maxSize = 4096;
             auto image = mProcess.get();
             auto const dimension = std::max(image.getWidth(), image.getHeight());
