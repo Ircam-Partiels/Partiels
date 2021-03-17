@@ -155,9 +155,9 @@ void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alert
     }
     
     auto const& results = accessor.getAttr<AttrType::results>();
-    auto const witdh = static_cast<int>(results.size());
+    auto const width = static_cast<int>(results.size());
     auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
-    if(witdh < 0 || height < 0)
+    if(width < 0 || height < 0)
     {
         return;
     }
