@@ -48,7 +48,7 @@ Document::AudioReader::Source::Source(std::unique_ptr<juce::AudioFormatReader> a
 void Document::AudioReader::Source::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     anlStrongAssert(sampleRate > 0.0 && mAudioFormatReader->sampleRate > 0.0);
-    anlStrongAssert(std::abs(mAudioFormatReader->sampleRate - sampleRate) < std::numeric_limits<double>::epsilon());
+    anlStrongAssert(std::abs(mAudioFormatReader->sampleRate - sampleRate) < 0.001);
     sampleRate = mAudioFormatReader->sampleRate > 0.0 ? mAudioFormatReader->sampleRate : 44100.0;
     mAudioFormatReaderSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
     mVolume.reset(mAudioFormatReader->sampleRate, static_cast<double>(samplesPerBlockExpected) / sampleRate);
