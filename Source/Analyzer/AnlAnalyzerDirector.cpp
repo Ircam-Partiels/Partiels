@@ -195,12 +195,13 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     mAccessor.setAttr<AttrType::description>(description, notification);
     mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
-    mStartTime = juce::Time::getCurrentTime();
+    mAnalysisStartTime = juce::Time::getCurrentTime();
     
     anlDebug("Analyzer", "analysis launched");
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
         juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
+        juce::Thread::setCurrentThreadPriority(10);
         
         auto expected = ProcessState::available;
         if(!mAnalysisState.compare_exchange_weak(expected, ProcessState::running))
@@ -272,7 +273,7 @@ void Analyzer::Director::handleAsyncUpdate()
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
         {
             auto const now = juce::Time::getCurrentTime();
-            anlDebug("Analyzer", "analysis succeeded (" + (now - mStartTime).getDescription() + ")");
+            anlDebug("Analyzer", "analysis succeeded (" + (now - mAnalysisStartTime).getDescription() + ")");
             mAccessor.acquireResultsWrittingAccess();
             mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
             if(!mAccessor.canContinueToReadResults())
