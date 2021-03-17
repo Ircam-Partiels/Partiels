@@ -118,7 +118,7 @@ void Analyzer::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> con
         g.drawImageTransformed(clippedImage, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
     };
 
-    auto const clipBounds = g.getClipBounds();
+    auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
     
     auto const xClippedRange = clipZoomRange(bounds.getHorizontalRange(), clipBounds.getHorizontalRange(), getZoomRange(xZoomAcsr, false));
     auto const xRange = toImageRange(xZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), xClippedRange, image.getWidth());
