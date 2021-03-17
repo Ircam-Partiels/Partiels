@@ -169,10 +169,10 @@ void Analyzer::Renderer::prepareRendering()
         return;
     }
     
-    auto const witdh = static_cast<int>(results.size());
+    auto const width = static_cast<int>(results.size());
     auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
-    anlWeakAssert(witdh > 0 && height > 0);
-    if(witdh < 0 || height < 0)
+    anlWeakAssert(width > 0 && height > 0);
+    if(width < 0 || height < 0)
     {
         mImages.clear();
         if(onUpdated != nullptr)
