@@ -19,15 +19,32 @@ namespace Plugin
         
     private:
         
+        class CircularReader
+        {
+        public:
+            CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize);
+            ~CircularReader() = default;
+            
+            bool hasReachedEnd() const;
+            juce::int64 getPosition() const;
+            float const** getNextBlock();
+            
+        private:
+            int const mBlocksize;
+            int const mStepSize;
+            juce::AudioFormatReader& mAudioFormatReader;
+            juce::AudioBuffer<float> mBuffer;
+            int mBufferPosition {0};
+            juce::int64 mPosition {0};
+            std::vector<float const*> mOutputBuffer;
+        };
+        
         Processor(juce::AudioFormatReader& audioFormatReader, std::unique_ptr<Vamp::Plugin> plugin, size_t const feature, State const& state);
         
-        juce::AudioFormatReader& mAudioFormatReader;
         std::unique_ptr<Vamp::Plugin> mPlugin;
+        CircularReader mCircularReader;
         size_t const mFeature;
         State const mState;
-        
-        juce::int64 mPosition {0};
-        juce::AudioBuffer<float> mBuffer;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };

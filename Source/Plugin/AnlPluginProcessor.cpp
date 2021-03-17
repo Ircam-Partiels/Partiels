@@ -3,12 +3,71 @@
 
 ANALYSE_FILE_BEGIN
 
+Plugin::Processor::CircularReader::CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize)
+: mBlocksize(static_cast<int>(blockSize))
+, mStepSize(static_cast<int>(stepSize))
+, mAudioFormatReader(audioFormatReader)
+, mBuffer(static_cast<int>(audioFormatReader.numChannels), mBlocksize * 2)
+{
+    mOutputBuffer.resize(static_cast<size_t>(audioFormatReader.numChannels));
+}
+
+bool Plugin::Processor::CircularReader::hasReachedEnd() const
+{
+    anlStrongAssert(mPosition >= static_cast<juce::int64>(0));
+    anlStrongAssert(mPosition <= static_cast<juce::int64>(mAudioFormatReader.lengthInSamples));
+    return mPosition >= static_cast<juce::int64>(mAudioFormatReader.lengthInSamples);
+}
+
+juce::int64 Plugin::Processor::CircularReader::getPosition() const
+{
+    return mPosition;
+}
+
+float const** Plugin::Processor::CircularReader::getNextBlock()
+{
+    auto** inputPointers = mBuffer.getArrayOfWritePointers();
+    auto const numChannels = mBuffer.getNumChannels();
+    
+    auto bufferPosition = mBufferPosition;
+    auto const fullNumSamples = static_cast<juce::int64>(mAudioFormatReader.lengthInSamples);
+    auto const remainingNumSamples = static_cast<int>(fullNumSamples - mPosition);
+    auto const expectedNumSamples = std::max(static_cast<int>(static_cast<juce::int64>(mBlocksize) - mPosition), mStepSize);
+    auto const bufferSize = std::min(expectedNumSamples, remainingNumSamples);
+    
+    auto const hopeSize = std::max(mBlocksize - mStepSize, 0);
+    if(bufferPosition + bufferSize > mBuffer.getNumSamples())
+    {
+        if(hopeSize > 0)
+        {
+            auto const bufferSource = bufferPosition - hopeSize;
+            for(int channel = 0; channel < numChannels; ++channel)
+            {
+                mBuffer.copyFrom(channel, 0, mBuffer.getReadPointer(channel, bufferSource), hopeSize);
+            }
+        }
+        bufferPosition = hopeSize;
+    }
+    
+    juce::AudioBuffer<float> input(inputPointers, numChannels, bufferPosition, bufferSize);
+    mAudioFormatReader.read(input.getArrayOfWritePointers(), numChannels, mPosition, bufferSize);
+    
+    mBufferPosition = bufferPosition + bufferSize;
+    mPosition += static_cast<juce::int64>(bufferSize);
+    
+    auto const outputBufferPosition = std::max(bufferPosition - hopeSize, 0);
+    for(size_t channel = 0; channel < static_cast<size_t>(numChannels); ++channel)
+    {
+        mOutputBuffer[channel] = inputPointers[channel]+outputBufferPosition;
+    }
+    return mOutputBuffer.data();
+}
+
 Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::unique_ptr<Vamp::Plugin> plugin, size_t const feature, State const& state)
-: mAudioFormatReader(audioFormatReader)
-, mPlugin(std::move(plugin))
+: mPlugin(std::move(plugin))
+, mCircularReader(audioFormatReader, state.blockSize, state.stepSize)
 , mFeature(feature)
 , mState(state)
-, mBuffer(static_cast<int>(audioFormatReader.numChannels), static_cast<int>(state.blockSize))
 {
 }
 
@@ -21,9 +80,6 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     }
 
     auto const feature = mFeature;
-    auto const numChannels = static_cast<int>(mAudioFormatReader.numChannels);
-    auto const lengthInSamples = mAudioFormatReader.lengthInSamples;
-    auto const sampleRate = mAudioFormatReader.sampleRate;
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
     anlStrongAssert(blockSize > 0 && stepSize > 0);
@@ -32,13 +88,11 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
         return false;
     }
     
-    auto** writePointers = mBuffer.getArrayOfWritePointers();
-    auto const* const* readPointers = mBuffer.getArrayOfReadPointers();
-    auto const position = mPosition;
-    mPosition = position + static_cast<juce::int64>(stepSize);
+    auto const position = mCircularReader.getPosition();
+    auto const sampleRate = 44100.0; // Todo
     auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));
     
-    if(position > lengthInSamples)
+    if(mCircularReader.hasReachedEnd())
     {
         JUCE_COMPILER_WARNING("the time stamp is not always working")
         auto result = mPlugin->getRemainingFeatures();
@@ -58,10 +112,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
         return false;
     }
     
-    auto const remaininSamples = std::min(lengthInSamples - position, static_cast<juce::int64>(blockSize));
-    mAudioFormatReader.read(writePointers, numChannels, position, static_cast<int>(remaininSamples));
-
-    auto result = mPlugin->process(readPointers, rt);
+    auto result = mPlugin->process(mCircularReader.getNextBlock(), rt);
     auto it = result.find(static_cast<int>(feature));
     if(it != result.end())
     {
