@@ -196,7 +196,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
     mAccessor.setAttr<AttrType::processing>(true, notification);
     mAnalysisStartTime = juce::Time::getCurrentTime();
-    
+
     anlDebug("Analyzer", "analysis launched");
     mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
     {
@@ -209,17 +209,26 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
             triggerAsyncUpdate();
             return std::make_tuple(std::vector<Plugin::Result>{}, notification);
         }
+        expected = ProcessState::running;
 
         std::vector<Plugin::Result> results;
+        if(!processor->prepareToAnalyze(results))
+        {
+            mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
+            triggerAsyncUpdate();
+            return std::make_tuple(std::vector<Plugin::Result>{}, notification);
+        }
+        
         while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(results))
         {
         }
-        expected = ProcessState::running;
+        
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::ended))
         {
             triggerAsyncUpdate();
             return std::make_tuple(std::move(results), notification);
         }
+        
         triggerAsyncUpdate();
         return std::make_tuple(std::vector<Plugin::Result>{}, notification);
     });

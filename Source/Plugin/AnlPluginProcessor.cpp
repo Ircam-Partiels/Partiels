@@ -12,6 +12,11 @@ Plugin::Processor::CircularReader::CircularReader(juce::AudioFormatReader& audio
     mOutputBuffer.resize(static_cast<size_t>(audioFormatReader.numChannels));
 }
 
+juce::int64 Plugin::Processor::CircularReader::getLengthInSamples() const
+{
+    return mAudioFormatReader.lengthInSamples;
+}
+
 double Plugin::Processor::CircularReader::getSampleRate() const
 {
     return mAudioFormatReader.sampleRate;
@@ -104,6 +109,45 @@ Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::un
 {
 }
 
+bool Plugin::Processor::prepareToAnalyze(std::vector<Result>& results)
+{
+    anlStrongAssert(mPlugin != nullptr);
+    if(mPlugin == nullptr)
+    {
+        return false;
+    }
+    
+    auto const feature = mFeature;
+    auto const blockSize = mState.blockSize;
+    auto const stepSize = mState.stepSize;
+    anlStrongAssert(blockSize > 0 && stepSize > 0);
+    if(blockSize <= 0 || stepSize <= 0)
+    {
+        return false;
+    }
+    
+    auto const descriptors = mPlugin->getOutputDescriptors();
+    anlStrongAssert(mFeature < descriptors.size());
+    if(mFeature >= descriptors.size())
+    {
+        return false;
+    }
+    
+    auto const& descriptor = descriptors[mFeature];
+    if(descriptor.sampleType == Output::SampleType::OneSamplePerStep)
+    {
+        auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
+        results.reserve(static_cast<size_t>(std::ceil(length / static_cast<double>(mState.stepSize))));
+    }
+    else if(descriptor.sampleType == Output::SampleType::FixedSampleRate)
+    {
+        auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
+        auto const duration = length / mCircularReader.getSampleRate();
+        results.reserve(static_cast<size_t>(std::ceil(duration * descriptor.sampleRate)));
+    }
+    return true;
+}
+
 bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
 {
     anlStrongAssert(mPlugin != nullptr);
@@ -120,7 +164,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     {
         return false;
     }
-    
+
     auto const position = mCircularReader.getPosition();
     auto const sampleRate = mCircularReader.getSampleRate();
     auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));

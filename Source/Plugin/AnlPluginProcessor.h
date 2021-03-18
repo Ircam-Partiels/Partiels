@@ -14,6 +14,7 @@ namespace Plugin
         
         ~Processor() = default;
         
+        bool prepareToAnalyze(std::vector<Result>& results);
         bool performNextAudioBlock(std::vector<Result>& results);
         Description getDescription() const;
         
@@ -25,6 +26,7 @@ namespace Plugin
             CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize);
             ~CircularReader() = default;
             
+            juce::int64 getLengthInSamples() const;
             double getSampleRate() const;
             bool hasReachedEnd() const;
             juce::int64 getPosition() const;
