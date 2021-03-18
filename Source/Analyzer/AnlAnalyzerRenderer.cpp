@@ -28,24 +28,29 @@ juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::funct
     }
     
     auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
-    juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
+    juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
     
+    JUCE_COMPILER_WARNING("this is not thread safe");
     auto const& valueZoomAcsr = accessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const valueStart = valueRange.getStart();
+    auto const valueLength = valueRange.getLength();
     auto const colourMap = accessor.getAttr<AttrType::colours>().map;
-    auto valueToColour = [&](float const value)
-    {
-        auto const ratio = (value - valueRange.getStart()) / valueRange.getLength();
-        auto const color = tinycolormap::GetColor(static_cast<double>(ratio), colourMap);
-        return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
-    };
-    
+
+    auto* data = bitmapData.data;
+    auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);
+    auto const lineStride = static_cast<size_t>(bitmapData.lineStride);
+    auto const columnStride = lineStride * static_cast<size_t>(height - 1);
     for(int i = 0; i < width && predicate(); ++i)
     {
+        auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
         for(int j = 0; j < height && predicate(); ++j)
         {
-            auto const colour = valueToColour(results[static_cast<size_t>(i)].values[static_cast<size_t>(j)]);
-            data.setPixelColour(i, height - 1 - j, colour);
+            auto const& value = results[static_cast<size_t>(i)].values[static_cast<size_t>(j)];
+            auto const color = tinycolormap::GetColor(static_cast<double>((value - valueStart) / valueLength), colourMap);
+            auto const rgba = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
+            reinterpret_cast<juce::PixelARGB*>(pixel)->set(rgba);
+            pixel -= lineStride;
         }
     }
     return predicate() ? image : juce::Image();
