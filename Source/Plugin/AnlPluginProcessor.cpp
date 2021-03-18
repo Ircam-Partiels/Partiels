@@ -73,7 +73,17 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     }
     
     juce::AudioBuffer<float> input(inputPointers, numChannels, bufferPosition, bufferSize);
-    mAudioFormatReader.read(input.getArrayOfWritePointers(), numChannels, mReaderPosition, bufferSize);
+    auto const silence = static_cast<int>(std::max(mReaderPosition + bufferSize - mAudioFormatReader.lengthInSamples, static_cast<juce::int64>(0)));
+    if(silence >= bufferSize)
+    {
+        input.clear();
+    }
+    else
+    {
+        mAudioFormatReader.read(input.getArrayOfWritePointers(), numChannels, mReaderPosition, bufferSize - silence);
+        input.clear(bufferSize - silence, silence);
+    }
+    
     
     mBufferPosition = bufferPosition + bufferSize;
     mReaderPosition += static_cast<juce::int64>(bufferSize);
