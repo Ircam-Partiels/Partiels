@@ -260,6 +260,7 @@ void Analyzer::Renderer::handleAsyncUpdate()
                 mImages.push_back(image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight())));
             }
             mImages.push_back(image);
+            anlDebug("Analyzer", "rendering stored (" + (juce::Time::getCurrentTime() - now).getDescription() + ")");
         }
         expected = ProcessState::aborted;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
