@@ -124,6 +124,8 @@ file(GLOB AnalyzerSources
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerResults.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPlot.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPlot.h
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
+    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h
     ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.cpp
