@@ -4,6 +4,7 @@
 #include "AnlBasics.h"
 #include "AnlBoundsListener.h"
 #include "AnlBroadcaster.h"
+#include "AnlChrono.h"
 #include "AnlColouredPanel.h"
 #include "AnlColourSelector.h"
 #include "AnlConcertinaTable.h"
