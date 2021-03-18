@@ -32,8 +32,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
         anlDebug("Application", "Failed.");
         return;
     }
+    anlDebug("Application", "Reopening file...");
     openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
-    anlDebug("Application", "Ready.");
+    anlDebug("Application", "Ready!");
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
