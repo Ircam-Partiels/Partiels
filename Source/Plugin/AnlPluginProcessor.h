@@ -25,6 +25,7 @@ namespace Plugin
             CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize);
             ~CircularReader() = default;
             
+            double getSampleRate() const;
             bool hasReachedEnd() const;
             juce::int64 getPosition() const;
             float const** getNextBlock();
@@ -35,6 +36,7 @@ namespace Plugin
             juce::AudioFormatReader& mAudioFormatReader;
             juce::AudioBuffer<float> mBuffer;
             int mBufferPosition {0};
+            juce::int64 mReaderPosition {0};
             juce::int64 mPosition {0};
             std::vector<float const*> mOutputBuffer;
         };
@@ -47,6 +49,10 @@ namespace Plugin
         State const mState;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
+        
+    public:
+    
+        class CircularReaderUnitTest;
     };
 }
 
