@@ -1,9 +1,6 @@
 #include "AnlAnalyzerDirector.h"
-#include "AnlAnalyzerPropertyPanel.h"
+#include "AnlAnalyzerProcessor.h"
 #include "AnlAnalyzerResults.h"
-
-#include "../Plugin/AnlPluginProcessor.h"
-#include "../Plugin/AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -61,17 +58,42 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
                 break;
         }
     };
+    
+    mProcessor.onAnalysisEnded = [&](std::vector<Plugin::Result> const& results)
+    {
+        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
+        anlDebug("Analyzer", "analysis succeded");
+        auto const now = juce::Time::getCurrentTime();
+        mAccessor.acquireResultsWrittingAccess();
+        mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+        if(!mAccessor.canContinueToReadResults())
+        {
+            mAccessor.releaseResultsWrittingAccess();
+        }
+        anlDebug("Analyzer", "analysis stored in " + (juce::Time::getCurrentTime() - now).getDescription() + ")");
+    };
+    
+    mProcessor.onAnalysisAborted = [&]()
+    {
+        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
+        mAccessor.acquireResultsWrittingAccess();
+        mAccessor.setAttr<AttrType::results>(std::vector<Plugin::Result>{}, NotificationType::synchronous);
+        if(!mAccessor.canContinueToReadResults())
+        {
+            mAccessor.releaseResultsWrittingAccess();
+        }
+    };
+    
     runAnalysis(NotificationType::synchronous);
 }
 
 Analyzer::Director::~Director()
 {
+    mProcessor.onAnalysisAborted = nullptr;
+    mProcessor.onAnalysisEnded = nullptr;
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
-    
-    std::unique_lock<std::mutex> lock(mAnalysisMutex);
-    stopAnalysis(NotificationType::synchronous);
 }
 
 void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -82,156 +104,74 @@ void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatR
         return;
     }
     
-    std::unique_lock<std::mutex> lock(mAnalysisMutex);
-    stopAnalysis(notification);
-    mAudioFormatReaderManager = std::move(audioFormatReader);
-    lock.unlock();
-    
+    std::swap(mAudioFormatReaderManager, audioFormatReader);
     runAnalysis(notification);
-}
-
-void Analyzer::Director::stopAnalysis(NotificationType const notification)
-{
-    if(mAnalysisProcess.valid())
-    {
-        mAnalysisState = ProcessState::aborted;
-        mAnalysisProcess.get();
-        cancelPendingUpdate();
-    }
-    mAnalysisState = ProcessState::available;
-    mAccessor.setAttr<AttrType::processing>(false, notification);
 }
 
 void Analyzer::Director::runAnalysis(NotificationType const notification)
 {
-    std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
-    anlStrongAssert(lock.owns_lock());
-    if(!lock.owns_lock())
+    if(mAudioFormatReaderManager == nullptr)
     {
+        mProcessor.stopAnalysis();
         return;
     }
-    stopAnalysis(notification);
-    
-    auto* reader = mAudioFormatReaderManager.get();
-    if(reader == nullptr)
-    {
-        return;
-    }
-    
-    auto const key = mAccessor.getAttr<AttrType::key>();
-    if(key.identifier.empty() || key.feature.empty())
-    {
-        return;
-    }
-    
-    auto const state = mAccessor.getAttr<AttrType::state>();
-    anlStrongAssert(state.blockSize > 0 && state.stepSize > 0);
-    if(state.blockSize == 0 || state.stepSize == 0)
-    {
-        return;
-    }
-    
     auto showWarningWindow = [&](juce::String const& reason)
     {
         MessageWindow::show(MessageWindow::MessageType::warning,
                             "Plugin cannot be loaded",
                             "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.",
-                            {
-                                  {"KEYID", key.identifier}
-                                , {"KEYFEATURE", key.feature}
-                                , {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}
-                                , {"REASON", reason}
-                            });
+        {
+              {"KEYID", mAccessor.getAttr<AttrType::key>().identifier}
+            , {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}
+            , {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}
+            , {"REASON", reason}
+        });
     };
     
-    std::unique_ptr<Plugin::Processor> processor;
-    try
+    auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReaderManager.get());
+    if(!result.has_value())
     {
-        processor = Plugin::Processor::create(key, state, *reader);
-    }
-    catch(std::exception& e)
-    {
-        showWarningWindow(e.what());
-        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
+        mAccessor.setAttr<AttrType::processing>(false, notification);
         return;
     }
-    catch(...)
+    auto const warning = std::get<0>(*result);
+    auto const message = std::get<1>(*result);
+    auto const pluginDescription = std::get<2>(*result);
+    auto const pluginState = std::get<3>(*result);
+    mAccessor.setAttr<AttrType::warnings>(warning, notification);
+    switch(std::get<0>(*result))
     {
-        showWarningWindow("unknown error");
-        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
-        return;
+        case WarningType::none:
+        {
+            anlDebug("Analyzer", "analysis launched");
+            mAccessor.setAttr<AttrType::processing>(true, notification);
+            mAccessor.setAttr<AttrType::description>(pluginDescription, notification);
+        }
+            break;
+        case WarningType::state:
+        {
+            mAccessor.setAttr<AttrType::processing>(false, notification);
+            auto const state = mAccessor.getAttr<AttrType::state>();
+            if(state.blockSize == pluginDescription.defaultState.blockSize &&
+               state.stepSize == pluginDescription.defaultState.stepSize)
+            {
+                showWarningWindow(message);
+            }
+            else if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
+                                                       juce::translate("Plugin cannot be loaded"),
+                                                       juce::translate("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?")))
+            {
+                mAccessor.setAttr<AttrType::state>(pluginState, notification);
+            }
+        }
+            break;
+        case WarningType::plugin:
+        {
+            mAccessor.setAttr<AttrType::processing>(false, notification);
+            showWarningWindow(message);
+        }
+            break;
     }
-    
-    if(processor == nullptr)
-    {
-        mAccessor.setAttr<AttrType::warnings>(WarningType::state, notification);
-        auto const& description = mAccessor.getAttr<AttrType::description>();
-        if(state.blockSize == description.defaultState.blockSize && state.stepSize == description.defaultState.stepSize)
-        {
-            showWarningWindow("invalid state");
-            return;
-        }
-        if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
-                                              juce::translate("Plugin cannot be loaded"),
-                                              juce::translate("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?")))
-        {
-            auto newState = state;
-            newState.blockSize = description.defaultState.blockSize;
-            newState.stepSize = description.defaultState.stepSize;
-            lock.unlock();
-            mAccessor.setAttr<AttrType::state>(newState, notification);
-        }
-        return;
-    }
-    auto description = processor->getDescription();
-    anlStrongAssert(description != Plugin::Description{});
-    if(description == Plugin::Description{})
-    {
-        showWarningWindow("invalid description");
-        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
-        return;
-    }
-    
-    mAccessor.setAttr<AttrType::description>(description, notification);
-    mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
-    mAccessor.setAttr<AttrType::processing>(true, notification);
-    mAnalysisStartTime = juce::Time::getCurrentTime();
-
-    anlDebug("Analyzer", "analysis launched");
-    mAnalysisProcess = std::async([this, notification, processor = std::move(processor)]() -> std::tuple<std::vector<Plugin::Result>, NotificationType>
-    {
-        juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
-        juce::Thread::setCurrentThreadPriority(10);
-        
-        auto expected = ProcessState::available;
-        if(!mAnalysisState.compare_exchange_weak(expected, ProcessState::running))
-        {
-            triggerAsyncUpdate();
-            return std::make_tuple(std::vector<Plugin::Result>{}, notification);
-        }
-        expected = ProcessState::running;
-
-        std::vector<Plugin::Result> results;
-        if(!processor->prepareToAnalyze(results))
-        {
-            mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
-            triggerAsyncUpdate();
-            return std::make_tuple(std::vector<Plugin::Result>{}, notification);
-        }
-        
-        while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(results))
-        {
-        }
-        
-        if(mAnalysisState.compare_exchange_weak(expected, ProcessState::ended))
-        {
-            triggerAsyncUpdate();
-            return std::make_tuple(std::move(results), notification);
-        }
-        
-        triggerAsyncUpdate();
-        return std::make_tuple(std::vector<Plugin::Result>{}, notification);
-    });
 }
 
 void Analyzer::Director::updateZoomAccessors(NotificationType const notification)
@@ -268,33 +208,6 @@ void Analyzer::Director::updateZoomAccessors(NotificationType const notification
         binZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(binZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
     }
     binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
-}
-
-void Analyzer::Director::handleAsyncUpdate()
-{
-    if(mAnalysisProcess.valid())
-    {
-        anlWeakAssert(mAnalysisState != ProcessState::available);
-        anlWeakAssert(mAnalysisState != ProcessState::running);
-        
-        auto const result = mAnalysisProcess.get();
-        auto expected = ProcessState::ended;
-        if(mAnalysisState.compare_exchange_weak(expected, ProcessState::available))
-        {
-            auto const now = juce::Time::getCurrentTime();
-            anlDebug("Analyzer", "analysis succeeded (" + (now - mAnalysisStartTime).getDescription() + ")");
-            mAccessor.acquireResultsWrittingAccess();
-            mAccessor.setAttr<AttrType::results>(std::get<0>(result), std::get<1>(result));
-            if(!mAccessor.canContinueToReadResults())
-            {
-                mAccessor.releaseResultsWrittingAccess();
-            }
-            anlDebug("Analyzer", "analysis stored (" + (juce::Time::getCurrentTime() - now).getDescription() + ")");
-        }
-        
-        std::unique_lock<std::mutex> lock(mAnalysisMutex);
-        stopAnalysis(std::get<1>(result));
-    }
 }
 
 ANALYSE_FILE_END
