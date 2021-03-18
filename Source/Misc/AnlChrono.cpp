@@ -19,7 +19,7 @@ void Chrono::stop()
 {
 #ifdef DEBUG
     auto const duration = juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks() - mTime);
-    anlDebug(mDomain.getCharPointer(), mMessage + " " + juce::String(static_cast<int>(duration) * 1000.0) + "ms");
+    anlDebug(mDomain.getCharPointer(), mMessage + " " + juce::String(static_cast<int>(duration * 1000.0)) + "ms");
 #endif
 }
 
