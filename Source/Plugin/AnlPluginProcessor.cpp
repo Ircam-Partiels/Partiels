@@ -117,7 +117,6 @@ bool Plugin::Processor::prepareToAnalyze(std::vector<Result>& results)
         return false;
     }
     
-    auto const feature = mFeature;
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
     anlStrongAssert(blockSize > 0 && stepSize > 0);
