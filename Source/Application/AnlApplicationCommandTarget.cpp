@@ -165,7 +165,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::DocumentSaveTemplate:
         {
             result.setInfo(juce::translate("Save Template..."), juce::translate("Save as a template"), "Application", 0);
-            result.setActive(!docAcsr.getAccessors<Document::AcsrType::analyzers>().empty());
+            result.setActive(!docAcsr.getAccessors<Document::AcsrType::tracks>().empty());
         }
             break;
             

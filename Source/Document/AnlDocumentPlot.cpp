@@ -59,10 +59,10 @@ Document::Plot::Plot(Accessor& accessor)
         {
             case AcsrType::timeZoom:
                 break;
-            case AcsrType::analyzers:
+            case AcsrType::tracks:
             {
-                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
-                auto newRenderer = std::make_unique<Track::Renderer>(anlAcsr, Track::Renderer::Type::range);
+                auto& trackAcsr = mAccessor.getAccessor<AcsrType::tracks>(index);
+                auto newRenderer = std::make_unique<Track::Renderer>(trackAcsr, Track::Renderer::Type::range);
                 anlStrongAssert(newRenderer != nullptr);
                 if(newRenderer != nullptr)
                 {
@@ -71,13 +71,13 @@ Document::Plot::Plot(Accessor& accessor)
                         updateProcessingButton();
                     };
                 }
-                auto it = mRenderers.emplace(mRenderers.begin() + static_cast<long>(index), anlAcsr, std::move(newRenderer));
+                auto it = mRenderers.emplace(mRenderers.begin() + static_cast<long>(index), trackAcsr, std::move(newRenderer));
                 anlStrongAssert(it != mRenderers.cend());
                 if(it != mRenderers.cend())
                 {
-                    anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
-                    anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-                    anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+                    trackAcsr.addListener(mTrackListener, NotificationType::synchronous);
+                    trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+                    trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
                 }
             }
                 break;
@@ -94,17 +94,17 @@ Document::Plot::Plot(Accessor& accessor)
         {
             case AcsrType::timeZoom:
                 break;
-            case AcsrType::analyzers:
+            case AcsrType::tracks:
             {
                 anlStrongAssert(index < mRenderers.size());
                 if(index >= mRenderers.size())
                 {
                     return;
                 }
-                auto& anlAcsr = std::get<0>(mRenderers[index]).get();
-                anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
-                anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-                anlAcsr.removeListener(mAnalyzerListener);
+                auto& trackAcsr = std::get<0>(mRenderers[index]).get();
+                trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
+                trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+                trackAcsr.removeListener(mTrackListener);
                 mRenderers.erase(mRenderers.begin() + static_cast<long>(index));
                 repaint();
             }
@@ -138,7 +138,7 @@ Document::Plot::Plot(Accessor& accessor)
         repaint();
     };
     
-    mAnalyzerListener.onAttrChanged = [=, this](Track::Accessor const& acsr, Track::AttrType attribute)
+    mTrackListener.onAttrChanged = [=, this](Track::Accessor const& acsr, Track::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -190,10 +190,10 @@ Document::Plot::~Plot()
 {
     for(auto& renderer : mRenderers)
     {
-        auto& anlAcsr = std::get<0>(renderer).get();
-        anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
-        anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-        anlAcsr.removeListener(mAnalyzerListener);
+        auto& trackAcsr = std::get<0>(renderer).get();
+        trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
+        trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+        trackAcsr.removeListener(mTrackListener);
     }
     mAccessor.getAccessor<AcsrType::timeZoom>(0).removeListener(mTimeZoomListener);
     mAccessor.removeListener(mListener);

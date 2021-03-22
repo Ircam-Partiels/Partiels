@@ -101,7 +101,7 @@ void Application::Instance::openFile(juce::File const& file)
         mDocumentFileBased.loadFrom(file, true);
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
         auto const& documentAcsr = getDocumentAccessor();
-        if(documentAcsr.getAccessors<Document::AcsrType::analyzers>().empty())
+        if(documentAcsr.getAccessors<Document::AcsrType::tracks>().empty())
         {
             auto& documentDir = getDocumentDirector();
             documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
@@ -114,7 +114,7 @@ void Application::Instance::openFile(juce::File const& file)
         mDocumentFileBased.setFile({});
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
         auto const& documentAcsr = getDocumentAccessor();
-        if(documentAcsr.getAccessors<Document::AcsrType::analyzers>().empty())
+        if(documentAcsr.getAccessors<Document::AcsrType::tracks>().empty())
         {
             auto& documentDir = getDocumentDirector();
             documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);

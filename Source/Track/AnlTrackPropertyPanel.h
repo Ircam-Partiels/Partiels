@@ -125,9 +125,9 @@ namespace Track
         juce::TextEditor mPropertyPluginDetails;
         
         ConcertinaTable mProcessorSection {juce::translate("PROCESSOR"), true,
-            juce::translate("The processor parameters of the analyzer")};
+            juce::translate("The processor parameters of the track")};
         ConcertinaTable mGraphicalSection {juce::translate("GRAPHICAL"), true,
-            juce::translate("The graphical parameters of the analyzer")};
+            juce::translate("The graphical parameters of the track")};
         ConcertinaTable mPluginSection {juce::translate("PLUGIN"), true,
             juce::translate("The plugin information")};
         

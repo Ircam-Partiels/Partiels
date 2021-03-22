@@ -21,7 +21,7 @@ void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertTy
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analyzer ANLNAME can not be exported as a preset because the analyzer cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
+            auto const message = juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;
@@ -33,7 +33,7 @@ void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertTy
     auto const file = fc.getResult();
     if(!xml->writeTo(temp.getFile()) && alertType == AlertType::window)
     {
-        auto const message = juce::translate("The analyzer ANLNAME can not be exported as a preset because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as a preset because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
     }
     
@@ -61,7 +61,7 @@ void Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analyzer ANLNAME can not be parse to a preset.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
+            auto const message = juce::translate("The track ANLNAME can not be parse to a preset.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;
@@ -72,7 +72,7 @@ void Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analyzer ANLNAME can not be parse to a preset because the key arer not compatible.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
+            auto const message = juce::translate("The track ANLNAME can not be parse to a preset because the key arer not compatible.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;
@@ -97,7 +97,7 @@ void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alert
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analyzer ANLNAME can not be exported as a template because the analyzer cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
+            auto const message = juce::translate("The track ANLNAME can not be exported as a template because the track cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;
@@ -106,7 +106,7 @@ void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alert
     auto const file = fc.getResult();
     if(!xml->writeTo(temp.getFile()) && alertType == AlertType::window)
     {
-        auto const message = juce::translate("The analyzer ANLNAME can not be exported as a template because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as a template because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
     }
     
@@ -137,7 +137,7 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         {
             return;
         }
-        auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the file format of FLNM supported.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as image because the file format of FLNM supported.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
@@ -149,7 +149,7 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         {
             return;
         }
-        auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
@@ -169,7 +169,7 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         {
             return;
         }
-        auto const message = juce::translate("The analyzer ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
@@ -201,7 +201,7 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
     
     if(!stream.openedOk())
     {
-        auto const message = juce::translate("The analyzer ANLNAME can not be exported as CBV because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as CBV because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
@@ -286,7 +286,7 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
         {
             if(alertType == AlertType::window)
             {
-                auto const message = juce::translate("The analyzer ANLNAME can not be exported as XML because the analyzer cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
+                auto const message = juce::translate("The track ANLNAME can not be exported as XML because the track cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
                 juce::AlertWindow::showMessageBox(icon, title, message);
             }
             return child;
@@ -306,7 +306,7 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
     {
         if(alertType == AlertType::window)
         {
-            auto const message = juce::translate("The analyzer ANLNAME can not be exported as XML because the analyzer cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
+            auto const message = juce::translate("The track ANLNAME can not be exported as XML because the track cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
         return;

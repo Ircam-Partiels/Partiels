@@ -77,20 +77,20 @@ Document::Section::Section(Accessor& accessor)
         {
             case AcsrType::timeZoom:
                 break;
-            case AcsrType::analyzers:
+            case AcsrType::tracks:
             {
-                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
+                auto& trackAcsr = mAccessor.getAccessor<AcsrType::tracks>(index);
                 auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 
-                auto newSection = std::make_unique<Track::Section>(anlAcsr, timeZoomAcsr, mResizerBar);
+                auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, mResizerBar);
                 anlStrongAssert(newSection != nullptr);
                 if(newSection != nullptr)
                 {
                     newSection->onRemove = [this, ptr = newSection.get()]()
                     {
-                        if(onRemoveAnalyzer != nullptr)
+                        if(onRemoveTrack != nullptr)
                         {
-                            onRemoveAnalyzer(ptr->getIdentifier());
+                            onRemoveTrack(ptr->getIdentifier());
                         }
                     };
                 }
@@ -111,7 +111,7 @@ Document::Section::Section(Accessor& accessor)
         {
             case AcsrType::timeZoom:
                 break;
-            case AcsrType::analyzers:
+            case AcsrType::tracks:
             {
                 mSections.erase(mSections.begin() + static_cast<long>(index));
                 updateComponents();

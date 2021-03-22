@@ -32,7 +32,7 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Track::Accessor::Listener mAnalyzerListener;
+        Track::Accessor::Listener mTrackListener;
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Accessor::Listener mTimeZoomListener;
         Zoom::Playhead mZoomPlayhead;

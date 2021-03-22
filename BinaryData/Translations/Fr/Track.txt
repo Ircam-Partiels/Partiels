@@ -6,9 +6,9 @@ countries: fr be mc ch lu
 ###########################
 "ANLNAME PROPERTIES" = "PROPRIÉTÉS DE ANLNAME"
 "PROCESSOR" = "PROCESSEUR"
-"The processor parameters of the analyzer" = "Les paramètres du processeur de l'analyseur"
+"The processor parameters of the track" = "Les paramètres du processeur de l'analyseur"
 "GRAPHICAL" = "GRAPHIQUE"
-"The graphical parameters of the analyzer" = "Les paramètres graphiques de l'analyseur"
+"The graphical parameters of the track" = "Les paramètres graphiques de l'analyseur"
 "PLUGIN" = "PLUGICIEL"
 "The plugin information" = "Les informations du plugiciel"
 "Name" = "Nom"

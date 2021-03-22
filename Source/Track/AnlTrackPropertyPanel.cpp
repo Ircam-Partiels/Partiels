@@ -152,7 +152,7 @@ Track::PropertyPanel::PropertyList::PropertyList(juce::String const& name, juce:
 Track::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 
-, mPropertyName("Name", "The name of the analyzer", [&](juce::String text)
+, mPropertyName("Name", "The name of the track", [&](juce::String text)
 {
     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
 })
@@ -177,19 +177,19 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyBlockSize("Block Size", "The block size used by the analyzer. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
+, mPropertyBlockSize("Block Size", "The block size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.blockSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyStepSize("Step Size", "The step size used by the analyzer. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
+, mPropertyStepSize("Step Size", "The step size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
 {
     auto state = mAccessor.getAttr<AttrType::state>();
     state.stepSize = static_cast<size_t>(value);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
 })
-, mPropertyPreset("Preset", "The preset of the analyzer", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
+, mPropertyPreset("Preset", "The preset of the track", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
 {
     switch(index)
     {

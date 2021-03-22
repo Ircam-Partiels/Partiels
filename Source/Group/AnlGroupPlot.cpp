@@ -32,7 +32,7 @@ Group::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         repaint();
     };
     
-    mAnalyzerListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
+    mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -75,18 +75,18 @@ Group::Plot::~Plot()
 {
     for(auto& renderer : mRenderers)
     {
-        auto& anlAcsr = std::get<0>(renderer).get();
-        anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
-        anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-        anlAcsr.removeListener(mAnalyzerListener);
+        auto& trackAcsr = std::get<0>(renderer).get();
+        trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
+        trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+        trackAcsr.removeListener(mTrackListener);
     }
     mTimeZoomAccessor.removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
-void Group::Plot::addAnalyzer(Track::Accessor& anlAcsr)
+void Group::Plot::addTrack(Track::Accessor& trackAcsr)
 {
-    auto newRenderer = std::make_unique<Track::Renderer>(anlAcsr, Track::Renderer::Type::range);
+    auto newRenderer = std::make_unique<Track::Renderer>(trackAcsr, Track::Renderer::Type::range);
     anlStrongAssert(newRenderer != nullptr);
     if(newRenderer != nullptr)
     {
@@ -96,19 +96,19 @@ void Group::Plot::addAnalyzer(Track::Accessor& anlAcsr)
         };
         
     }
-    anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
-    anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    mRenderers.emplace(anlAcsr, std::move(newRenderer));
+    trackAcsr.addListener(mTrackListener, NotificationType::synchronous);
+    trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+    mRenderers.emplace(trackAcsr, std::move(newRenderer));
     repaint();
 }
 
-void Group::Plot::removeAnalyzer(Track::Accessor& anlAcsr)
+void Group::Plot::removeTrack(Track::Accessor& trackAcsr)
 {
-    anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
-    anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-    anlAcsr.removeListener(mAnalyzerListener);
-    mRenderers.erase(anlAcsr);
+    trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
+    trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+    trackAcsr.removeListener(mTrackListener);
+    mRenderers.erase(trackAcsr);
     repaint();
 }
 

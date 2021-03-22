@@ -22,8 +22,8 @@ namespace Group
         Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~Plot() override;
         
-        void addAnalyzer(Track::Accessor& anlAcsr);
-        void removeAnalyzer(Track::Accessor& anlAcsr);
+        void addTrack(Track::Accessor& trackAcsr);
+        void removeTrack(Track::Accessor& trackAcsr);
         
         // juce::Component
         void resized() override;
@@ -35,7 +35,7 @@ namespace Group
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
         
-        Track::Accessor::Listener mAnalyzerListener;
+        Track::Accessor::Listener mTrackListener;
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
         LoadingCircle mProcessingButton;

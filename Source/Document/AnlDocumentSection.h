@@ -22,7 +22,7 @@ namespace Document
         Section(Accessor& accessor);
         ~Section() override;
         
-        std::function<void(juce::String const& identifier)> onRemoveAnalyzer = nullptr;
+        std::function<void(juce::String const& identifier)> onRemoveTrack = nullptr;
         
         // juce::Component
         void resized() override;

@@ -62,7 +62,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
     mProcessor.onAnalysisEnded = [&](std::vector<Plugin::Result> const& results)
     {
         mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
-        anlDebug("Analyzer", "analysis succeded");
+        anlDebug("Track", "analysis succeded");
         auto const now = juce::Time::getCurrentTime();
         mAccessor.acquireResultsWrittingAccess();
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
@@ -70,7 +70,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
         {
             mAccessor.releaseResultsWrittingAccess();
         }
-        anlDebug("Analyzer", "analysis stored in " + (juce::Time::getCurrentTime() - now).getDescription());
+        anlDebug("Track", "analysis stored in " + (juce::Time::getCurrentTime() - now).getDescription());
     };
     
     mProcessor.onAnalysisAborted = [&]()
@@ -143,7 +143,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
     {
         case WarningType::none:
         {
-            anlDebug("Analyzer", "analysis launched");
+            anlDebug("Track", "analysis launched");
             mAccessor.setAttr<AttrType::processing>(true, notification);
             mAccessor.setAttr<AttrType::description>(pluginDescription, notification);
         }

@@ -42,7 +42,7 @@ namespace Track
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::vector<Plugin::Result>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
-        Chrono mChrono {"Analyzer", "processor analysis ended"};
+        Chrono mChrono {"Track", "processor analysis ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
     };

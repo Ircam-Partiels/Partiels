@@ -38,7 +38,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
                 }
                 
-                for(auto const& anl : mAnalyzers)
+                for(auto const& anl : mTracks)
                 {
                     if(anl != nullptr)
                     {
@@ -53,11 +53,11 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             case AttrType::playheadPosition:
             {
                 auto const time = mAccessor.getAttr<AttrType::playheadPosition>();
-                auto const numAnlAcsrs = mAccessor.getNumAccessors<AcsrType::analyzers>();
+                auto const numAnlAcsrs = mAccessor.getNumAccessors<AcsrType::tracks>();
                 for(size_t i = 0; i < numAnlAcsrs; ++i)
                 {
-                    auto& anlAcsr  = mAccessor.getAccessor<AcsrType::analyzers>(i);
-                    anlAcsr.setAttr<Track::AttrType::time>(time, notification);
+                    auto& trackAcsr  = mAccessor.getAccessor<AcsrType::tracks>(i);
+                    trackAcsr.setAttr<Track::AttrType::time>(time, notification);
                 }
                 auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -79,18 +79,18 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
         juce::ignoreUnused(notification);
         switch(type)
         {
-            case AcsrType::analyzers:
+            case AcsrType::tracks:
             {
-                anlStrongAssert(index <= mAnalyzers.size());
-                if(index > mAnalyzers.size())
+                anlStrongAssert(index <= mTracks.size());
+                if(index > mTracks.size())
                 {
                     return;
                 }
-                auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
+                auto& trackAcsr = mAccessor.getAccessor<AcsrType::tracks>(index);
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
-                auto director = std::make_unique<Track::Director>(anlAcsr, mPluginListScanner, std::move(audioFormatReader));
+                auto director = std::make_unique<Track::Director>(trackAcsr, mPluginListScanner, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
-                mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
+                mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
             }
                 break;
             case AcsrType::timeZoom:
@@ -103,14 +103,14 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
         juce::ignoreUnused(notification);
         switch(type)
         {
-            case AcsrType::analyzers:
+            case AcsrType::tracks:
             {
-                anlStrongAssert(index < mAnalyzers.size());
-                if(index >= mAnalyzers.size())
+                anlStrongAssert(index < mTracks.size());
+                if(index >= mTracks.size())
                 {
                     return;
                 }
-                mAnalyzers.erase(mAnalyzers.begin() + static_cast<long>(index));
+                mTracks.erase(mTracks.begin() + static_cast<long>(index));
             }
                 break;
             case AcsrType::timeZoom:
@@ -164,8 +164,8 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
             mModalWindow = nullptr;
         }
         
-        auto const index = mAccessor.getNumAccessors<AcsrType::analyzers>();
-        if(!mAccessor.insertAccessor<AcsrType::analyzers>(index, notification))
+        auto const index = mAccessor.getNumAccessors<AcsrType::tracks>();
+        if(!mAccessor.insertAccessor<AcsrType::tracks>(index, notification))
         {
             if(alertType == AlertType::window)
             {
@@ -179,9 +179,9 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
         
         auto const identifier = juce::Uuid().toString();
 
-        auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
-        anlAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
-        anlAcsr.setAttr<Track::AttrType::key>(key, notification);
+        auto& trackAcsr = mAccessor.getAccessor<Document::AcsrType::tracks>(index);
+        trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
+        trackAcsr.setAttr<Track::AttrType::key>(key, notification);
         
         auto layout = mAccessor.getAttr<AttrType::layout>();
         layout.push_back(identifier);
@@ -209,13 +209,13 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
 
 void Document::Director::removeAnalysis(juce::String const identifier, NotificationType const notification)
 {
-    auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
-    auto const it = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](Track::Accessor const& acsr)
+    auto const trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+    auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
     {
         return acsr.getAttr<Track::AttrType::identifier>() == identifier;
     });
-    anlWeakAssert(it != anlAcsrs.cend());
-    if(it == anlAcsrs.cend())
+    anlWeakAssert(it != trackAcsrs.cend());
+    if(it == trackAcsrs.cend())
     {
         return;
     }
@@ -232,8 +232,8 @@ void Document::Director::removeAnalysis(juce::String const identifier, Notificat
     auto layout = mAccessor.getAttr<AttrType::layout>();
     std::erase(layout, identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
-    auto const index = static_cast<size_t>(std::distance(anlAcsrs.cbegin(), it));
-    mAccessor.eraseAccessor<AcsrType::analyzers>(index, notification);
+    auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
+    mAccessor.eraseAccessor<AcsrType::tracks>(index, notification);
 }
 
 ANALYSE_FILE_END

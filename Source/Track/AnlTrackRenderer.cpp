@@ -199,7 +199,7 @@ void Track::Renderer::prepareRendering()
     }
     mRenderingStartTime = juce::Time::getCurrentTime();
     
-    anlDebug("Analyzer", "rendering launched");
+    anlDebug("Track", "rendering launched");
     mProcess = std::async([this]() -> juce::Image
     {
         juce::Thread::setCurrentThreadName("Track::Renderer::Process");
@@ -256,7 +256,7 @@ void Track::Renderer::handleAsyncUpdate()
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
         {
             auto const now = juce::Time::getCurrentTime();
-            anlDebug("Analyzer", "rendering succeeded (" + (now - mRenderingStartTime).getDescription() + ")");
+            anlDebug("Track", "rendering succeeded (" + (now - mRenderingStartTime).getDescription() + ")");
             auto constexpr maxSize = 4096;
             auto image = mProcess.get();
             auto const dimension = std::max(image.getWidth(), image.getHeight());
@@ -265,7 +265,7 @@ void Track::Renderer::handleAsyncUpdate()
                 mImages.push_back(image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight())));
             }
             mImages.push_back(image);
-            anlDebug("Analyzer", "rendering stored (" + (juce::Time::getCurrentTime() - now).getDescription() + ")");
+            anlDebug("Track", "rendering stored (" + (juce::Time::getCurrentTime() - now).getDescription() + ")");
         }
         expected = ProcessState::aborted;
         if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
