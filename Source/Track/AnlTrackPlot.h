@@ -13,13 +13,6 @@ namespace Track
     {
     public:
         
-        enum ColourIds : int
-        {
-              backgroundColourId = 0x2030000
-            , borderColourId
-            , textColourId
-        };
-        
         Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~Plot() override;
         

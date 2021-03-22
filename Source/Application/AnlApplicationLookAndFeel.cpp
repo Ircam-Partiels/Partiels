@@ -22,6 +22,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ConcertinaTable::ColourIds::headerBorderColourId, backgroundColour);
     setColour(ConcertinaTable::ColourIds::headerTitleColourId, textColour);
     setColour(ConcertinaTable::ColourIds::headerButtonColourId, textColour);
+    
+    setColour(Decorator::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Decorator::ColourIds::borderColourId, backgroundColour);
 
     setColour(IconManager::ColourIds::normalColourId, rulerColour);
     setColour(IconManager::ColourIds::overColourId, rulerColour.brighter());
@@ -33,22 +36,19 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ResizerBar::ColourIds::activeColourId, rulerColour.brighter());
     setColour(ResizerBar::ColourIds::inactiveColourId, backgroundColour.darker());
     
-    setColour(Zoom::Ruler::backgroundColourId, backgroundColour.darker());
-    setColour(Zoom::Ruler::tickColourId, textColour);
-    setColour(Zoom::Ruler::textColourId, textColour);
-    setColour(Zoom::Ruler::anchorColourId, thumbColour);
-    setColour(Zoom::Ruler::selectionColourId, thumbColour);
-    setColour(Zoom::Playhead::playheadColourId, thumbColour);
+    setColour(Zoom::Ruler::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Zoom::Ruler::ColourIds::tickColourId, textColour);
+    setColour(Zoom::Ruler::ColourIds::textColourId, textColour);
+    setColour(Zoom::Ruler::ColourIds::anchorColourId, thumbColour);
+    setColour(Zoom::Ruler::ColourIds::selectionColourId, thumbColour);
+    setColour(Zoom::Playhead::ColourIds::playheadColourId, thumbColour);
     
-    setColour(Track::Thumbnail::backgroundColourId, backgroundColour.darker());
-    setColour(Track::Thumbnail::borderColourId, backgroundColour);
-    setColour(Track::Thumbnail::textColourId, textColour);
-    setColour(Track::Snapshot::backgroundColourId, backgroundColour.darker());
-    setColour(Track::Snapshot::borderColourId, backgroundColour);
-    setColour(Track::Snapshot::textColourId, textColour);
-    setColour(Track::Plot::backgroundColourId, backgroundColour.darker());
-    setColour(Track::Plot::borderColourId, backgroundColour);
-    setColour(Track::Plot::textColourId, textColour);
+    setColour(Track::Thumbnail::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Track::Thumbnail::ColourIds::borderColourId, backgroundColour);
+    setColour(Track::Thumbnail::ColourIds::textColourId, textColour);
+    setColour(Track::Snapshot::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Track::Snapshot::ColourIds::borderColourId, backgroundColour);
+    setColour(Track::Snapshot::ColourIds::textColourId, textColour);
     setColour(Track::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour.darker());

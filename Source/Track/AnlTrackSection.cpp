@@ -34,9 +34,9 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
         switch(type)
         {
             case AttrType::identifier:
-                break;
             case AttrType::name:
             case AttrType::key:
+                break;
             case AttrType::description:
             {
                 auto const description = acsr.getAttr<AttrType::description>();
@@ -80,15 +80,11 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
             }
                 break;
             case AttrType::colours:
-                break;
             case AttrType::propertyState:
-                break;
             case AttrType::results:
-                break;
+            case AttrType::graphics:
             case AttrType::time:
-                break;
             case AttrType::warnings:
-                break;
             case AttrType::processing:
                 break;
         }
@@ -116,7 +112,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
     addChildComponent(mBinScrollBar);
     addAndMakeVisible(mThumbnail);
     addAndMakeVisible(mSnapshot);
-    addAndMakeVisible(mPlot);
+    addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBarLeft);
     addAndMakeVisible(mResizerBarRight);
     setSize(80, 100);
@@ -165,7 +161,7 @@ void Track::Section::resized()
         auto const rulerBounds = rightSide.removeFromRight(16).reduced(0, 4);
         mValueRuler.setBounds(rulerBounds);
         mBinRuler.setBounds(rulerBounds);
-        mPlot.setBounds(rightSide);
+        mPlotDecoration.setBounds(rightSide);
     }
 }
 

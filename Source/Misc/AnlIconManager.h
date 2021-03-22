@@ -10,7 +10,7 @@ public:
     
     enum ColourIds : int
     {
-          normalColourId = 0x2000300
+          normalColourId = 0x2000400
         , overColourId
         , downColourId
     };

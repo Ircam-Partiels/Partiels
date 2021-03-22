@@ -92,21 +92,11 @@ void Track::Plot::resized()
 
 void Track::Plot::paint(juce::Graphics& g)
 {
-    g.fillAll(findColour(ColourIds::backgroundColourId));
-    auto const bounds = getLocalBounds().reduced(2);
-    juce::Path path;
-    path.addRoundedRectangle(bounds.expanded(1), 4.0f);
-    g.setColour(findColour(ColourIds::borderColourId));
-    g.strokePath(path, juce::PathStrokeType(1.0f));
-    path.clear();
-    path.addRoundedRectangle(bounds, 4.0f);
-    g.reduceClipRegion(path);
-    
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
     g.setColour(colours.background);
-    g.fillRect(bounds);
+    g.fillRect(getLocalBounds());
     
-    mRenderer.paint(g, bounds, mTimeZoomAccessor);
+    mRenderer.paint(g, getLocalBounds(), mTimeZoomAccessor);
 }
 
 void Track::Plot::mouseMove(juce::MouseEvent const& event)

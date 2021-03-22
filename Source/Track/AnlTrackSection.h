@@ -17,7 +17,7 @@ namespace Track
         
         enum ColourIds : int
         {
-              sectionColourId = 0x2030100
+              sectionColourId = 0x2030000
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
@@ -42,6 +42,7 @@ namespace Track
         Thumbnail mThumbnail {mAccessor};
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         Plot mPlot {mAccessor, mTimeZoomAccessor};
+        Decorator mPlotDecoration {mPlot, 1, 4.0f};
         
         Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};

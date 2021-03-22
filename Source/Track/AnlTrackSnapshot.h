@@ -14,7 +14,7 @@ namespace Track
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x2030200
+              backgroundColourId = 0x2030100
             , borderColourId
             , textColourId
         };

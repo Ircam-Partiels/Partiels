@@ -60,6 +60,10 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.h
     ${SOURCES_DIRECTORY}/Misc/AnlColourSelector.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlColourSelector.h
+    ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.h
+    ${SOURCES_DIRECTORY}/Misc/AnlDecorator.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlDecorator.h
     ${SOURCES_DIRECTORY}/Misc/AnlTooltip.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlTooltip.h
     ${SOURCES_DIRECTORY}/Misc/AnlNumberField.cpp
@@ -70,8 +74,6 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlResizerBar.h
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaTable.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlConcertinaTable.h
-    ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.cpp
-    ${SOURCES_DIRECTORY}/Misc/AnlDraggableTable.h
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlLoadingCircle.h
     ${SOURCES_DIRECTORY}/Misc/AnlMessageWindow.cpp
