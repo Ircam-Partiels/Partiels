@@ -70,7 +70,7 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
         {
             mAccessor.releaseResultsWrittingAccess();
         }
-        anlDebug("Analyzer", "analysis stored in " + (juce::Time::getCurrentTime() - now).getDescription() + ")");
+        anlDebug("Analyzer", "analysis stored in " + (juce::Time::getCurrentTime() - now).getDescription());
     };
     
     mProcessor.onAnalysisAborted = [&]()
