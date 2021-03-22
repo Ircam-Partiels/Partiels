@@ -135,6 +135,7 @@ namespace Model
         template <acsr_enum_type type>
         auto getNumAccessors() const noexcept
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return std::get<static_cast<size_t>(type)>(mAccessors).accessors.size();
         }
 
@@ -142,6 +143,7 @@ namespace Model
         template <acsr_enum_type type>
         auto getAccessors() noexcept
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             
             using accessor_type = typename element_type::accessor_type;
@@ -162,6 +164,7 @@ namespace Model
         template <acsr_enum_type type>
         auto getAccessors() const noexcept
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             
             using accessor_type = typename element_type::accessor_type;
@@ -183,6 +186,7 @@ namespace Model
         template <acsr_enum_type type>
         auto& getAccessor(size_t index) noexcept
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
         }
         
@@ -190,6 +194,7 @@ namespace Model
         template <acsr_enum_type type>
         auto const& getAccessor(size_t index) const noexcept
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
         }
         
@@ -197,6 +202,7 @@ namespace Model
         template <acsr_enum_type type>
         bool insertAccessor(size_t index, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             using sub_accessor_type = typename element_type::accessor_type;
             return insertAccessor<type>(index, std::make_unique<sub_accessor_type>(), notification);
@@ -206,6 +212,7 @@ namespace Model
         template <acsr_enum_type type>
         void eraseAccessor(size_t index, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             auto& lock = getLock();
             auto const canAccess = lock.exchange(false);
             anlStrongAssert(canAccess == true);
@@ -250,6 +257,7 @@ namespace Model
         template <attr_enum_type type>
         auto const& getAttr() const noexcept
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return std::get<static_cast<size_t>(type)>(mAttributes).value;
         }
         
@@ -258,6 +266,7 @@ namespace Model
         template <attr_enum_type type, typename T>
         void setAttr(T const& value, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), attr_container_type>::type;
             
             using value_type = typename element_type::value_type;
@@ -306,6 +315,7 @@ namespace Model
         template <attr_enum_type type, typename T>
         void setAttr(std::initializer_list<T>&& tvalue, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), attr_container_type>::type;
             typename element_type::value_type const value {tvalue};
             static_cast<parent_t*>(this)->template setAttr<type>(value, notification);
@@ -315,6 +325,7 @@ namespace Model
         //! @details Only the saveable attributes are stored into the xml
         auto toXml(juce::StringRef const& name) const
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             auto xml = std::make_unique<juce::XmlElement>(name);
             anlWeakAssert(xml != nullptr);
             if(xml == nullptr)
@@ -359,6 +370,7 @@ namespace Model
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             anlWeakAssert(xml.hasTagName(name));
             if(!xml.hasTagName(name))
             {
@@ -439,6 +451,7 @@ namespace Model
         //! @brief Copy the content from another container
         void copyFrom(Accessor const& accessor, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             detail::for_each(accessor.mAttributes, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -507,6 +520,7 @@ namespace Model
         //! @brief Compare the content with accessor
         bool isEquivalentTo(Accessor const& accessor) const
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             bool result = true;
             detail::for_each(accessor.mAttributes, [&](auto& d)
             {
@@ -553,6 +567,7 @@ namespace Model
         
         void addListener(Listener& listener, NotificationType const notification)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             if(mListeners.add(listener))
             {
                 detail::for_each(mAttributes, [&](auto& d)
@@ -593,6 +608,7 @@ namespace Model
         
         void removeListener(Listener& listener)
         {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             mListeners.remove(listener);
         }
         
