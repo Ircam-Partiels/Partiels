@@ -17,3 +17,6 @@
 
 - Replace Analyzer::Renderer -> Analyzer::Graphics
 - Add  Analyzer::Graphics (GUI processor)
+
+- Add juce::isMessageThread in model
+- Check move track
