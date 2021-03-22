@@ -14,15 +14,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     addChildComponent(mInformation);
     addAndMakeVisible(mZoomPlayhead);
     
-    auto updateProcessingButton = [this]()
-    {
-        auto const state = mAccessor.getAttr<AttrType::processing>();
-        mProcessingButton.setActive(state);
-        mProcessingButton.setVisible(state);
-        mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
-        repaint();
-    };
-    
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -37,10 +28,10 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::warnings:
                 break;
             case AttrType::results:
+            case AttrType::graphics:
             case AttrType::colours:
             {
-                mRenderer.prepareRendering();
-                updateProcessingButton();
+                repaint();
             }
                 break;
             case AttrType::time:
@@ -50,17 +41,20 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
                 break;
             case AttrType::processing:
             {
-                updateProcessingButton();
+                auto const state = mAccessor.getAttr<AttrType::processing>();
+                mProcessingButton.setActive(state);
+                mProcessingButton.setVisible(state);
+                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+                repaint();
             }
                 break;
         }
     };
     
-    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mValueZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
-        mRenderer.prepareRendering();
-        updateProcessingButton();
+        repaint();
     };
     
     mBinZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
@@ -73,11 +67,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
-    };
-    
-    mRenderer.onUpdated = [=]()
-    {
-        updateProcessingButton();
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);

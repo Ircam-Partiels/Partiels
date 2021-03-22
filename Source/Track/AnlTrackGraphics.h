@@ -16,10 +16,10 @@ namespace Track
         void runRendering(Accessor const& accessor);
         void stopRendering();
         
-        std::function<void(std::vector<juce::Image> const& images)> onRenderingEnded = nullptr;
+        std::function<void(std::vector<juce::Image> images)> onRenderingUpdated = nullptr;
+        std::function<void(std::vector<juce::Image> images)> onRenderingEnded = nullptr;
         std::function<void(void)> onRenderingAborted = nullptr;
         
-        static juce::Image createImage(std::vector<Plugin::Result> const& results, ColourMap const colourMap, Zoom::Range const valueRange, std::function<bool(void)> predicate = nullptr);
     private:
         
         void abortRendering();
@@ -35,10 +35,12 @@ namespace Track
             , ended
         };
         
+        std::mutex mMutex;
+        std::vector<juce::Image> mImages;
         std::atomic<ProcessState> mRenderingState {ProcessState::available};
-        std::future<std::vector<juce::Image>> mRenderingProcess;
+        std::thread mRenderingProcess;
         std::mutex mRenderingMutex;
-        Chrono mChrono {"Track", "graphics rerndering ended"};
+        Chrono mChrono {"Track", "graphics rendering ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Graphics)
     };

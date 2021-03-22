@@ -27,6 +27,10 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     auto const results = accessor.getAttr<AttrType::results>();
     if(results == nullptr || results->empty() || results->at(0).values.size() <= 1)
     {
+        if(onRenderingEnded != nullptr)
+        {
+            onRenderingEnded({});
+        }
         return;
     }
     
@@ -35,6 +39,10 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
+        if(onRenderingEnded != nullptr)
+        {
+            onRenderingEnded({});
+        }
         return;
     }
     
@@ -42,7 +50,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     auto const valueRange = accessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
     
     mChrono.start();
-    mRenderingProcess = std::async([=, this]() -> std::vector<juce::Image>
+    mRenderingProcess = std::thread([=, this]()
     {
         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
         juce::Thread::setCurrentThreadPriority(10);
@@ -50,68 +58,179 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         if(!mRenderingState.compare_exchange_weak(expected, ProcessState::running))
         {
             triggerAsyncUpdate();
-            return {};
         }
         
         
-        auto image = createImage(*results, colourMap, valueRange, [this]()
+        auto createImage = [](int width, int height, std::vector<Plugin::Result> const& results, ColourMap const colourMap, Zoom::Range const valueRange, std::function<bool(void)> predicate) -> juce::Image
+        {
+            if(results.empty())
+            {
+                return {};
+            }
+            
+            anlStrongAssert(width > 0 && height > 0);
+            if(width <= 0 || height <= 0)
+            {
+                return {};
+            }
+            
+            auto const numColumns = static_cast<int>(results.size());
+            auto const numRows = static_cast<int>(results.front().values.size());
+            anlStrongAssert(numColumns > 0 && numRows > 0 && numColumns >= width && numRows >= height);
+            if(numColumns <= 0 || numRows <= 0)
+            {
+                return {};
+            }
+            width = std::min(numColumns, width);
+            height = std::min(numRows, height);
+            
+            if(predicate == nullptr)
+            {
+                predicate = []()
+                {
+                    return true;
+                };
+            }
+            
+            auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
+            juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
+            
+            auto const valueStart = valueRange.getStart();
+            auto const valueLength = valueRange.getLength();
+            
+            auto* data = bitmapData.data;
+            auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);
+            auto const lineStride = static_cast<size_t>(bitmapData.lineStride);
+            auto const columnStride = lineStride * static_cast<size_t>(height - 1);
+            
+            auto const wd = numColumns / width;
+            auto const hd = numRows / height;
+            for(int i = 0; i < width && predicate(); ++i)
+            {
+                auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
+                auto const& values = results[static_cast<size_t>(i * wd)].values;
+                for(int j = 0; j < height && predicate(); ++j)
+                {
+                    auto const& value = values[static_cast<size_t>(j * hd)];
+                    auto const color = tinycolormap::GetColor(static_cast<double>((value - valueStart) / valueLength), colourMap);
+                    auto const rgba = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
+                    reinterpret_cast<juce::PixelARGB*>(pixel)->set(rgba);
+                    pixel -= lineStride;
+                }
+            }
+            return predicate() ? image : juce::Image();
+        };
+        
+        auto const maxImageSize = 4096;
+        if(width > maxImageSize || height > maxImageSize)
+        {
+            auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), *results, colourMap, valueRange, [this]()
+            {
+                return mRenderingState.load() != ProcessState::aborted;
+            });
+            
+            if(image.isNull())
+            {
+                mRenderingState = ProcessState::aborted;
+                triggerAsyncUpdate();
+                return;
+            }
+            
+            std::unique_lock<std::mutex> imageLock(mMutex);
+            mImages.push_back(image);
+            imageLock.unlock();
+            triggerAsyncUpdate();
+        }
+        
+        auto image = createImage(width, height, *results, colourMap, valueRange, [this]()
         {
             return mRenderingState.load() != ProcessState::aborted;
         });
-
+        
         if(image.isNull())
         {
             mRenderingState = ProcessState::aborted;
             triggerAsyncUpdate();
-            return {};
+            return;
         }
         
-        expected = ProcessState::running;
-        if(mRenderingState.compare_exchange_weak(expected, ProcessState::ended))
+        auto const dimension = std::max(image.getWidth(), image.getHeight());
+        for(int i = maxImageSize; i < dimension; i *= 2)
         {
+            auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
+            std::unique_lock<std::mutex> imageLock(mMutex);
+            if(i == maxImageSize)
+            {
+                mImages = {rescaledImage};
+            }
+            else
+            {
+                mImages.push_back(rescaledImage);
+            }
+            imageLock.unlock();
             triggerAsyncUpdate();
-            return {image};
         }
+        
+        std::unique_lock<std::mutex> imageLock(mMutex);
+        mImages.push_back(image);
+        imageLock.unlock();
+
+        expected = ProcessState::running;
+        mRenderingState.compare_exchange_weak(expected, ProcessState::ended);
         triggerAsyncUpdate();
-        return {};
     });
 }
 
 void Track::Graphics::handleAsyncUpdate()
 {
     std::unique_lock<std::mutex> lock(mRenderingMutex);
-    if(mRenderingProcess.valid())
+    if(mRenderingProcess.joinable())
     {
         anlWeakAssert(mRenderingState != ProcessState::available);
-        anlWeakAssert(mRenderingState != ProcessState::running);
         
-        auto const results = mRenderingProcess.get();
         auto expected = ProcessState::ended;
-        if(mRenderingState.compare_exchange_weak(expected, ProcessState::available))
+        if(mRenderingState.load() == ProcessState::running)
         {
-            mChrono.stop();
+            std::unique_lock<std::mutex> imageLock(mMutex);
             if(onRenderingEnded != nullptr)
             {
-                onRenderingEnded(results);
+                onRenderingUpdated(mImages);
             }
+            imageLock.unlock();
         }
-        else if(expected == ProcessState::aborted)
+        else if(mRenderingState.compare_exchange_weak(expected, ProcessState::available))
         {
+            mRenderingProcess.join();
+            mChrono.stop();
+            std::unique_lock<std::mutex> imageLock(mMutex);
+            if(onRenderingEnded != nullptr)
+            {
+                onRenderingEnded(mImages);
+            }
+            imageLock.unlock();
+            mRenderingState = ProcessState::available;
+        }
+        else
+        {
+            mRenderingProcess.join();
             if(onRenderingAborted != nullptr)
             {
                 onRenderingAborted();
             }
+            std::unique_lock<std::mutex> imageLock(mMutex);
+            mImages = {};
+            imageLock.unlock();
+            mRenderingState = ProcessState::available;
         }
-        abortRendering();
     }
 }
 
 void Track::Graphics::abortRendering()
 {
-    if(mRenderingProcess.valid())
+    if(mRenderingProcess.joinable())
     {
         mRenderingState = ProcessState::aborted;
-        mRenderingProcess.get();
+        mRenderingProcess.join();
         cancelPendingUpdate();
         
         if(onRenderingAborted != nullptr)
@@ -119,55 +238,10 @@ void Track::Graphics::abortRendering()
             onRenderingAborted();
         }
     }
+    std::unique_lock<std::mutex> lock(mMutex);
+    mImages = {};
+    lock.unlock();
     mRenderingState = ProcessState::available;
-}
-
-juce::Image Track::Graphics::createImage(std::vector<Plugin::Result> const& results, ColourMap const colourMap, Zoom::Range const valueRange, std::function<bool(void)> predicate)
-{
-    if(results.empty())
-    {
-        return {};
-    }
-    
-    auto const width = static_cast<int>(results.size());
-    auto const height = static_cast<int>(results.front().values.size());
-    anlWeakAssert(width > 0 && height > 0);
-    if(width <= 0 || height <= 0)
-    {
-        return {};
-    }
-    
-    if(predicate == nullptr)
-    {
-        predicate = []()
-        {
-            return true;
-        };
-    }
-    
-    auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
-    juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
-    
-    auto const valueStart = valueRange.getStart();
-    auto const valueLength = valueRange.getLength();
-    
-    auto* data = bitmapData.data;
-    auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);
-    auto const lineStride = static_cast<size_t>(bitmapData.lineStride);
-    auto const columnStride = lineStride * static_cast<size_t>(height - 1);
-    for(int i = 0; i < width && predicate(); ++i)
-    {
-        auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
-        for(int j = 0; j < height && predicate(); ++j)
-        {
-            auto const& value = results[static_cast<size_t>(i)].values[static_cast<size_t>(j)];
-            auto const color = tinycolormap::GetColor(static_cast<double>((value - valueStart) / valueLength), colourMap);
-            auto const rgba = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
-            reinterpret_cast<juce::PixelARGB*>(pixel)->set(rgba);
-            pixel -= lineStride;
-        }
-    }
-    return predicate() ? image : juce::Image();
 }
 
 ANALYSE_FILE_END

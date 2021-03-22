@@ -44,6 +44,7 @@ namespace Track
         , propertyState
         
         , results
+        , graphics
         , time
         , warnings
         , processing
@@ -74,6 +75,7 @@ namespace Track
     , Model::Attr<AttrType::propertyState, WindowState, Model::Flag::basic>
     
     , Model::Attr<AttrType::results, std::shared_ptr<const std::vector<Plugin::Result>>, Model::Flag::notifying>
+    , Model::Attr<AttrType::graphics, std::vector<juce::Image>, Model::Flag::notifying>
     , Model::Attr<AttrType::time, double, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, bool, Model::Flag::notifying>
@@ -97,6 +99,7 @@ namespace Track
                                  , {}
                                  , {}
                                  , {120}
+                                 , {}
                                  , {}
                                  , {}
                                  , {}

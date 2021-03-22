@@ -9,9 +9,9 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
 , mPluginListScanner(pluginListScanner)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
 {
-    accessor.onAttrUpdated = [&](AttrType anlAttr, NotificationType notification)
+    accessor.onAttrUpdated = [&](AttrType attr, NotificationType notification)
     {
-        switch(anlAttr)
+        switch(attr)
         {
             case AttrType::key:
             {
@@ -43,6 +43,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 updateZoomAccessors(notification);
             }
                 break;
+            case AttrType::graphics:
             case AttrType::name:
             case AttrType::identifier:
             case AttrType::height:
@@ -55,16 +56,51 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
         }
     };
     
+    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    valueZoomAcsr.onAttrUpdated = [&](Zoom::AttrType attr, NotificationType notification)
+    {
+        juce::ignoreUnused(notification);
+        switch(attr)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
+                break;
+            case Zoom::AttrType::visibleRange:
+            {
+                mAccessor.setAttr<AttrType::processing>(true, NotificationType::synchronous);
+                mGraphics.runRendering(accessor);
+            }
+                break;
+        }
+    };
+    
     mProcessor.onAnalysisEnded = [&](std::shared_ptr<std::vector<Plugin::Result>> results)
     {
-        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+        mGraphics.runRendering(accessor);
     };
     
     mProcessor.onAnalysisAborted = [&]()
     {
-        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::results>(nullptr, NotificationType::synchronous);
+        mGraphics.runRendering(accessor);
+    };
+    
+    mGraphics.onRenderingUpdated = [&](std::vector<juce::Image> images)
+    {
+        mAccessor.setAttr<AttrType::graphics>(images, NotificationType::synchronous);
+    };
+    
+    mGraphics.onRenderingEnded = [&](std::vector<juce::Image> images)
+    {
+        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(images, NotificationType::synchronous);
+    };
+    
+    mGraphics.onRenderingAborted = [&]()
+    {
+        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(std::vector<juce::Image>{}, NotificationType::synchronous);
     };
     
     runAnalysis(NotificationType::synchronous);
@@ -72,11 +108,15 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
 
 Track::Director::~Director()
 {
+    mGraphics.onRenderingAborted = nullptr;
+    mGraphics.onRenderingEnded = nullptr;
     mProcessor.onAnalysisAborted = nullptr;
     mProcessor.onAnalysisEnded = nullptr;
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
+    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    valueZoomAcsr.onAttrUpdated = nullptr;
 }
 
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -93,6 +133,7 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
 
 void Track::Director::runAnalysis(NotificationType const notification)
 {
+    mGraphics.stopRendering();
     if(mAudioFormatReaderManager == nullptr)
     {
         mProcessor.stopAnalysis();

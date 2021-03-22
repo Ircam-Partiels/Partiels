@@ -380,30 +380,30 @@ void Track::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> const& 
     }
     else
     {
-        JUCE_COMPILER_WARNING("to do")
-//        if(mImages.empty())
-//        {
-//            return;
-//        }
-//
-//        auto getZoomRatio = [](Zoom::Accessor const& acsr)
-//        {
-//            return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
-//        };
-//
-//        auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
-//        auto const binZoomRatio = getZoomRatio(mAccessor.getAccessor<AcsrType::binZoom>(0));
-//        auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
-//        for(auto const& image : mImages)
-//        {
-//            auto const imageDimension = std::max(image.getWidth(), image.getHeight());
-//            if(imageDimension >= boundsDimension)
-//            {
-//                renderImage(g, bounds, image, timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
-//                return;
-//            }
-//        }
-//        renderImage(g, bounds, mImages.back(), timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
+        auto const images = mAccessor.getAttr<AttrType::graphics>();
+        if(images.empty())
+        {
+            return;
+        }
+
+        auto getZoomRatio = [](Zoom::Accessor const& acsr)
+        {
+            return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
+        };
+
+        auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
+        auto const binZoomRatio = getZoomRatio(mAccessor.getAccessor<AcsrType::binZoom>(0));
+        auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
+        for(auto const& image : images)
+        {
+            auto const imageDimension = std::max(image.getWidth(), image.getHeight());
+            if(imageDimension >= boundsDimension)
+            {
+                renderImage(g, bounds, image, timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
+                return;
+            }
+        }
+        renderImage(g, bounds, images.back(), timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
     }
 }
 
