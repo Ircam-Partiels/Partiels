@@ -154,26 +154,27 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         return;
     }
     
-    JUCE_COMPILER_WARNING("to do");
-//    auto const& results = accessor.getAttr<AttrType::results>();
-//    auto const width = static_cast<int>(results.size());
-//    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
-//    if(width < 0 || height < 0)
-//    {
-//        return;
-//    }
-//
-//    auto image = Graphics::createImage(accessor);
-//    if(!imageFormat->writeImageToStream(image, stream))
-//    {
-//        if(alertType!= AlertType::window)
-//        {
-//            return;
-//        }
-//        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-//        juce::AlertWindow::showMessageBox(icon, title, message);
-//        return;
-//    }
+    auto const& graphics = accessor.getAttr<AttrType::graphics>();
+    if(graphics.empty())
+    {
+        if(alertType!= AlertType::window)
+        {
+            return;
+        }
+        auto const message = juce::translate("The track ANLNAME can not be exported as image because the rendering is not ready.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        juce::AlertWindow::showMessageBox(icon, title, message);
+        return;
+    }
+    if(!imageFormat->writeImageToStream(graphics.back(), stream))
+    {
+        if(alertType!= AlertType::window)
+        {
+            return;
+        }
+        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        juce::AlertWindow::showMessageBox(icon, title, message);
+        return;
+    }
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
