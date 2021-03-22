@@ -47,7 +47,13 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
             case AttrType::name:
             case AttrType::identifier:
             case AttrType::height:
+                break;
             case AttrType::colours:
+            {
+                mAccessor.setAttr<AttrType::processing>(true, NotificationType::synchronous);
+                mGraphics.runRendering(accessor);
+            }
+                break;
             case AttrType::propertyState:
             case AttrType::time:
             case AttrType::warnings:

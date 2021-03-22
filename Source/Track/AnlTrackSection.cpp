@@ -1,6 +1,138 @@
 #include "AnlTrackSection.h"
+#include "AnlTrackResults.h"
 
 ANALYSE_FILE_BEGIN
+
+Track::Section::PlotContainer::PlotContainer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+: mAccessor(accessor)
+, mTimeZoomAccessor(timeZoomAccessor)
+, mPlot(accessor, timeZoomAccessor)
+, mZoomPlayhead(timeZoomAccessor)
+{
+    addAndMakeVisible(mPlot);
+    addChildComponent(mProcessingButton);
+    mInformation.setEditable(false);
+    mInformation.setInterceptsMouseClicks(false, false);
+    addChildComponent(mInformation);
+    addAndMakeVisible(mZoomPlayhead);
+    
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
+            case AttrType::height:
+            case AttrType::propertyState:
+            case AttrType::warnings:
+            case AttrType::results:
+            case AttrType::graphics:
+            case AttrType::colours:
+                break;
+            case AttrType::time:
+            {
+                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::time>());
+            }
+                break;
+            case AttrType::processing:
+            {
+                auto const state = mAccessor.getAttr<AttrType::processing>();
+                mProcessingButton.setActive(state);
+                mProcessingButton.setVisible(state);
+                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+                repaint();
+            }
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Track::Section::PlotContainer::~PlotContainer()
+{
+    mAccessor.removeListener(mListener);
+}
+
+void Track::Section::PlotContainer::resized()
+{
+    auto bounds = getLocalBounds();
+    mPlot.setBounds(bounds);
+    mInformation.setBounds(bounds.removeFromRight(200).removeFromTop(80));
+    mProcessingButton.setBounds(8, 8, 20, 20);
+}
+
+void Track::Section::PlotContainer::paint(juce::Graphics& g)
+{
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    g.setColour(colours.background);
+    g.fillRect(getLocalBounds());
+}
+
+void Track::Section::PlotContainer::mouseMove(juce::MouseEvent const& event)
+{
+    auto const& resultsPtr = mAccessor.getAttr<AttrType::results>();
+    if(resultsPtr == nullptr)
+    {
+        mInformation.setText("", juce::NotificationType::dontSendNotification);
+        return;
+    }
+    
+    auto const& results = *resultsPtr;
+    if(results.empty() || getWidth() <= 0 || getHeight() <= 0)
+    {
+        mInformation.setText("", juce::NotificationType::dontSendNotification);
+        return;
+    }
+    
+    auto const timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
+    auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
+    juce::String text = Format::secondsToString(time) + "\n";
+    auto it = Results::getResultAt(results, time);
+    if(it != results.cend() && it->values.size() == 1)
+    {
+        text += juce::String(it->values[0]) + it->label;
+    }
+    else if(it != results.cend() && it->values.size() > 1)
+    {
+        auto const binRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+        if(binRange.isEmpty())
+        {
+            mInformation.setText("", juce::NotificationType::dontSendNotification);
+            return;
+        }
+        auto const index = std::max(std::min((1.0 - static_cast<double>(event.y) / static_cast<double>(getHeight())), 1.0), 0.0) * binRange.getLength() + binRange.getStart();
+        text += juce::String(static_cast<long>(index)) + " ";
+        
+        auto const& description = mAccessor.getAttr<AttrType::description>();
+        if(index < description.output.binNames.size())
+        {
+            text += juce::String(description.output.binNames[static_cast<size_t>(index)]);
+        }
+        text += "\n";
+        if(index < it->values.size())
+        {
+            text += juce::String(it->values[static_cast<size_t>(index)] / binRange.getLength()) + it->label;
+        }
+        
+    }
+    mInformation.setText(text, juce::NotificationType::dontSendNotification);
+}
+
+void Track::Section::PlotContainer::mouseEnter(juce::MouseEvent const& event)
+{
+    mInformation.setVisible(true);
+    mouseMove(event);
+}
+
+void Track::Section::PlotContainer::mouseExit(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    mInformation.setVisible(false);
+}
 
 Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator)
 : mAccessor(accessor)

@@ -12,7 +12,8 @@ Decorator::Decorator(juce::Component& content, int borderThickness, float corner
 
 void Decorator::resized()
 {
-    juce::BorderSize<int> const borderSize(mBorderThickness);
+    auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 1.5f));
+    juce::BorderSize<int> const borderSize(offset);
     mContent.setBounds(borderSize.subtractedFrom(getLocalBounds()));
 }
 
@@ -24,8 +25,9 @@ void Decorator::paint(juce::Graphics& g)
 
 void Decorator::paintOverChildren(juce::Graphics& g)
 {
+    auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 0.5f));
     g.setColour(findColour(ColourIds::borderColourId));
-    g.drawRoundedRectangle(getLocalBounds().toFloat(), mCornerSize, static_cast<int>(mBorderThickness));
+    g.drawRoundedRectangle(getLocalBounds().reduced(offset).toFloat(), mCornerSize, static_cast<float>(mBorderThickness));
 }
 
 ANALYSE_FILE_END

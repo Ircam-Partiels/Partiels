@@ -13,10 +13,7 @@ namespace Track
         enum class Type
         {
               frame
-            , range
         };
-
-        static void renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr);
         
         Renderer(Accessor& accessor, Type type);
         ~Renderer() = default;
@@ -38,7 +35,6 @@ namespace Track
         };
         
         void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds);
-        void paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         
         Accessor& mAccessor;
         Type const mType;

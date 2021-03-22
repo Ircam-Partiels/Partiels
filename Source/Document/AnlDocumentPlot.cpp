@@ -4,22 +4,54 @@ ANALYSE_FILE_BEGIN
 
 Document::Plot::Plot(Accessor& accessor)
 : mAccessor(accessor)
-, mZoomPlayhead(mAccessor.getAccessor<AcsrType::timeZoom>(0), {2, 2, 2, 2})
+, mZoomPlayhead(mAccessor.getAccessor<AcsrType::timeZoom>(0), {})
 {
     addChildComponent(mProcessingButton);
     addAndMakeVisible(mZoomPlayhead);
-    addAndMakeVisible(mResizerBar);
     
-    auto updateProcessingButton = [this]()
+    auto updateLayout = [&]()
     {
-        auto const state = std::any_of(mRenderers.cbegin(), mRenderers.cend(), [](auto const& renderer)
+        auto const& layout = mAccessor.getAttr<AttrType::layout>();
+        auto const& trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+        std::erase_if(mPlots, [&](auto const& pair)
         {
-            return std::get<0>(renderer).get().template getAttr<Track::AttrType::processing>();
+            return std::binary_search(layout.cbegin(), layout.cend(), pair.first) ||
+            std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+            {
+                return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == pair.first;
+            });
         });
-        mProcessingButton.setActive(state);
-        mProcessingButton.setVisible(state);
-        mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
-        repaint();
+        
+        removeAllChildren();
+        for(auto const& identifier : layout)
+        {
+            auto plotIt = mPlots.find(identifier);
+            if(plotIt == mPlots.cend())
+            {
+                auto trackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                {
+                    return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
+                });
+                if(trackIt != trackAcsrs.cend())
+                {
+                    auto plot = std::make_unique<Track::Plot>(*trackIt, mAccessor.getAccessor<AcsrType::timeZoom>(0));
+                    anlStrongAssert(plot != nullptr);
+                    if(plot != nullptr)
+                    {
+                        addAndMakeVisible(plot.get(), 0);
+                        mPlots[identifier] = std::move(plot);
+                    }
+                }
+            }
+            else
+            {
+                addAndMakeVisible(plotIt->second.get(), 0);
+            }
+        }
+
+        addAndMakeVisible(mProcessingButton, -1);
+        addAndMakeVisible(mZoomPlayhead, -1);
+        resized();
     };
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -46,205 +78,64 @@ Document::Plot::Plot(Accessor& accessor)
                 break;
             case AttrType::layout:
             {
-                repaint();
+                updateLayout();
             }
                 break;
         }
     };
     
-    mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [=](Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
+        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::timeZoom:
                 break;
             case AcsrType::tracks:
             {
-                auto& trackAcsr = mAccessor.getAccessor<AcsrType::tracks>(index);
-                auto newRenderer = std::make_unique<Track::Renderer>(trackAcsr, Track::Renderer::Type::range);
-                anlStrongAssert(newRenderer != nullptr);
-                if(newRenderer != nullptr)
-                {
-                    newRenderer->onUpdated = [=]()
-                    {
-                        updateProcessingButton();
-                    };
-                }
-                auto it = mRenderers.emplace(mRenderers.begin() + static_cast<long>(index), trackAcsr, std::move(newRenderer));
-                anlStrongAssert(it != mRenderers.cend());
-                if(it != mRenderers.cend())
-                {
-                    trackAcsr.addListener(mTrackListener, NotificationType::synchronous);
-                    trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-                    trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-                }
+                updateLayout();
             }
-                break;
-                
-            default:
                 break;
         }
     };
     
-    mListener.onAccessorErased = [=, this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [=](Accessor const& acsr, AcsrType type, size_t index)
     {
-        juce::ignoreUnused(acsr);
+        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::timeZoom:
                 break;
             case AcsrType::tracks:
             {
-                anlStrongAssert(index < mRenderers.size());
-                if(index >= mRenderers.size())
-                {
-                    return;
-                }
-                auto& trackAcsr = std::get<0>(mRenderers[index]).get();
-                trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
-                trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-                trackAcsr.removeListener(mTrackListener);
-                mRenderers.erase(mRenderers.begin() + static_cast<long>(index));
-                repaint();
-            }
-                break;
-                
-            default:
-                break;
-        }
-    };
-    
-    mZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr, attribute);
-        for(auto& renderer : mRenderers)
-        {
-            if(&(std::get<0>(renderer).get().getAccessor<Track::AcsrType::valueZoom>(0)) == &acsr)
-            {
-                std::get<1>(renderer)->prepareRendering();
-                updateProcessingButton();
-            }
-            else if(&(std::get<0>(renderer).get().getAccessor<Track::AcsrType::binZoom>(0)) == &acsr)
-            {
-                repaint();
-            }
-        }
-    };
-    
-    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr, attribute);
-        repaint();
-    };
-    
-    mTrackListener.onAttrChanged = [=, this](Track::Accessor const& acsr, Track::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case Track::AttrType::identifier:
-            case Track::AttrType::name:
-            case Track::AttrType::key:
-            case Track::AttrType::description:
-            case Track::AttrType::state:
-            case Track::AttrType::height:
-            case Track::AttrType::propertyState:
-            case Track::AttrType::warnings:
-            case Track::AttrType::time:
-                break;
-            case Track::AttrType::results:
-            case Track::AttrType::colours:
-            {
-                auto it = std::find_if(mRenderers.cbegin(), mRenderers.cend(), [&](auto const& renderer)
-                {
-                    return &(std::get<0>(renderer).get()) == &acsr;
-                });
-                anlStrongAssert(it != mRenderers.cend());
-                if(it != mRenderers.cend())
-                {
-                    std::get<1>(*it)->prepareRendering();
-                }
-            }
-                break;
-            case Track::AttrType::processing:
-            {
-                updateProcessingButton();
+                updateLayout();
             }
                 break;
         }
-    };
-    
-    mResizerBar.onMoved = [this](int size)
-    {
-        mAccessor.setAttr<AttrType::layoutVertical>(size + 2, NotificationType::synchronous);
     };
     
     setSize(100, 80);
-
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::timeZoom>(0).addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
 Document::Plot::~Plot()
 {
-    for(auto& renderer : mRenderers)
-    {
-        auto& trackAcsr = std::get<0>(renderer).get();
-        trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
-        trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
-        trackAcsr.removeListener(mTrackListener);
-    }
-    mAccessor.getAccessor<AcsrType::timeZoom>(0).removeListener(mTimeZoomListener);
     mAccessor.removeListener(mListener);
 }
 
 void Document::Plot::resized()
 {
     auto bounds = getLocalBounds();
-    // Resizers
-    {
-        bounds.removeFromBottom(2);
-        mResizerBar.setBounds(bounds.removeFromBottom(2));
-    }
-    mZoomPlayhead.setBounds(getLocalBounds().reduced(2));
     mProcessingButton.setBounds(8, 8, 20, 20);
-}
-
-void Document::Plot::paint(juce::Graphics& g)
-{
-    g.fillAll(findColour(ColourIds::backgroundColourId));
-    auto const bounds = getLocalBounds().withTrimmedBottom(2).reduced(2);
-    juce::Path path;
-    path.addRoundedRectangle(bounds.expanded(1), 4.0f);
-    g.setColour(findColour(ColourIds::borderColourId));
-    g.strokePath(path, juce::PathStrokeType(1.0f));
-    path.clear();
-    path.addRoundedRectangle(bounds, 4.0f);
-    g.reduceClipRegion(path);
     
-    auto const& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    for(auto lit = layout.crbegin(); lit != layout.crend(); ++lit)
+    for(auto const& identifier : layout)
     {
-        auto const& identifier = *lit;
-        auto it = std::find_if(mRenderers.cbegin(), mRenderers.cend(), [&](auto const& renderer)
+        auto it = mPlots.find(identifier);
+        if(it != mPlots.cend() && it->second != nullptr)
         {
-            return std::get<0>(renderer).get().template getAttr<Track::AttrType::identifier>() == identifier;
-        });
-        anlStrongAssert(it != mRenderers.cend());
-        if(it != mRenderers.cend() && std::get<1>(*it) != nullptr)
-        {
-            if(lit == layout.crbegin())
-            {
-                auto const colours = std::get<0>(*it).get().getAttr<Track::AttrType::colours>();
-                g.setColour(colours.background);
-                g.fillRect(bounds);
-            }
-            
-            std::get<1>(*it)->paint(g, bounds, timeZoomAcsr);
+            it->second->setBounds(bounds);
         }
     }
 }
-
 ANALYSE_FILE_END

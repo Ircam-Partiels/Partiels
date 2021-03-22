@@ -86,20 +86,6 @@ Group::Plot::~Plot()
 
 void Group::Plot::addTrack(Track::Accessor& trackAcsr)
 {
-    auto newRenderer = std::make_unique<Track::Renderer>(trackAcsr, Track::Renderer::Type::range);
-    anlStrongAssert(newRenderer != nullptr);
-    if(newRenderer != nullptr)
-    {
-        newRenderer->onUpdated = [this]()
-        {
-            repaint();
-        };
-        
-    }
-    trackAcsr.addListener(mTrackListener, NotificationType::synchronous);
-    trackAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    trackAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-    mRenderers.emplace(trackAcsr, std::move(newRenderer));
     repaint();
 }
 
@@ -120,29 +106,6 @@ void Group::Plot::resized()
 
 void Group::Plot::paint(juce::Graphics& g)
 {
-    g.fillAll(findColour(ColourIds::backgroundColourId));
-    auto const bounds = getLocalBounds().reduced(2);
-    juce::Path path;
-    path.addRoundedRectangle(bounds.expanded(1), 4.0f);
-    g.setColour(findColour(ColourIds::borderColourId));
-    g.strokePath(path, juce::PathStrokeType(1.0f));
-    path.clear();
-    path.addRoundedRectangle(bounds, 4.0f);
-    g.reduceClipRegion(path);
-    
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    for(auto lit = layout.crbegin(); lit != layout.crend(); ++lit)
-    {
-        auto const& identifier = *lit;
-        auto it = std::find_if(mRenderers.cbegin(), mRenderers.cend(), [&](auto const& pair)
-        {
-            return pair.first.get().template getAttr<Track::AttrType::identifier>() == identifier;
-        });
-        if(it != mRenderers.cend() && (*it).second != nullptr)
-        {
-            (*it).second->paint(g, bounds, mTimeZoomAccessor);
-        }
-    }
 }
 
 ANALYSE_FILE_END

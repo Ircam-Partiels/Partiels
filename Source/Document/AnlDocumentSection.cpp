@@ -18,7 +18,7 @@ Document::Section::Section(Accessor& accessor)
     {
         mPlayheadContainer.setVisible(!mSections.empty());
         mZoomTimeRuler.setVisible(!mSections.empty());
-        mPlot.setVisible(mSections.size() > 1);
+        mPlotDecorator.setVisible(mSections.size() > 1);
         mViewport.setVisible(!mSections.empty());
         mZoomTimeScrollBar.setVisible(!mSections.empty());
         mResizerBar.setVisible(!mSections.empty());
@@ -149,7 +149,7 @@ Document::Section::Section(Accessor& accessor)
         resized();
     };
     mBoundsListener.attachTo(mDraggableTable);
-    mBoundsListener.attachTo(mPlot);
+    mBoundsListener.attachTo(mPlotDecorator);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
@@ -157,7 +157,7 @@ Document::Section::Section(Accessor& accessor)
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
     addChildComponent(mPlayheadContainer);
     addChildComponent(mZoomTimeRuler);
-    addChildComponent(mPlot);
+    addChildComponent(mPlotDecorator);
     addChildComponent(mViewport);
     addChildComponent(mZoomTimeScrollBar);
     addChildComponent(mResizerBar);
@@ -180,9 +180,9 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    if(mPlot.isVisible())
+    if(mPlotDecorator.isVisible())
     {
-        mPlot.setBounds(bounds.removeFromTop(mPlot.getHeight()).withLeft(left).withRight(right + 6));
+        mPlotDecorator.setBounds(bounds.removeFromTop(100).withLeft(left).withRight(right + 6));
     }
     mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
     mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));

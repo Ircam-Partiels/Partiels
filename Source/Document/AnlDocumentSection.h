@@ -40,6 +40,8 @@ namespace Document
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         Plot mPlot {mAccessor};
+        Decorator mPlotDecorator {mPlot, 1, 4.0f};
+        
         std::vector<std::unique_ptr<Track::Section>> mSections;
         DraggableTable mDraggableTable;
         juce::Viewport mViewport;

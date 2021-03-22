@@ -17,7 +17,7 @@ namespace Track
         
         enum ColourIds : int
         {
-              sectionColourId = 0x2030000
+              sectionColourId = 0x2030100
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);
@@ -32,6 +32,32 @@ namespace Track
         void paint(juce::Graphics& g) override;
         
     private:
+        
+        class PlotContainer
+        : public juce::Component
+        {
+        public:
+            PlotContainer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
+            ~PlotContainer() override;
+            
+            // juce::Component
+            void resized() override;
+            void paint(juce::Graphics& g) override;
+            void mouseMove(juce::MouseEvent const& event) override;
+            void mouseEnter(juce::MouseEvent const& event) override;
+            void mouseExit(juce::MouseEvent const& event) override;
+            
+        private:
+            
+            Accessor& mAccessor;
+            Zoom::Accessor& mTimeZoomAccessor;
+            Accessor::Listener mListener;
+            Plot mPlot;
+            
+            Zoom::Playhead mZoomPlayhead;
+            LoadingCircle mProcessingButton;
+            juce::Label mInformation;
+        };
 
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
@@ -41,8 +67,9 @@ namespace Track
         
         Thumbnail mThumbnail {mAccessor};
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
-        Plot mPlot {mAccessor, mTimeZoomAccessor};
-        Decorator mPlotDecoration {mPlot, 1, 4.0f};
+        
+        PlotContainer mPlotContainer {mAccessor, mTimeZoomAccessor};
+        Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};
         
         Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};

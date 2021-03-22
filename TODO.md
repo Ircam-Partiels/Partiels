@@ -4,6 +4,7 @@
 - Add loop support
 - Add container table
 - Zoom replace signal approach with model
+- Zoom fix rulers
 - Add program support
 - Remove Accessor in Renderer
 - Use a colour scheme for look and feel
@@ -19,3 +20,4 @@
 - Add  Analyzer::Graphics (GUI processor)
 
 - Check move track
+- Add percent for analysing/rendering
