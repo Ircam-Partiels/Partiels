@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Analyzer
+namespace Track
 {
     class Thumbnail
     : public juce::Component

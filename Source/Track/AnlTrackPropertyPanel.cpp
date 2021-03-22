@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::PropertyPanel::PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn)
+Track::PropertyPanel::PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn)
 : PropertyComponent<juce::TextButton>(juce::translate(name), juce::translate(tooltip), nullptr)
 {
     title.setVisible(false);
@@ -18,12 +18,12 @@ Analyzer::PropertyPanel::PropertyTextButton::PropertyTextButton(juce::String con
     };
 }
 
-void Analyzer::PropertyPanel::PropertyTextButton::resized()
+void Track::PropertyPanel::PropertyTextButton::resized()
 {
     entry.setBounds(getLocalBounds().reduced(32, 2));
 }
 
-Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
+Track::PropertyPanel::PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
 : PropertyComponent<juce::Label>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setRepaintsOnMouseActivity(true);
@@ -52,13 +52,13 @@ Analyzer::PropertyPanel::PropertyText::PropertyText(juce::String const& name, ju
     };
 }
 
-Analyzer::PropertyPanel::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip)
+Track::PropertyPanel::PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip)
 : PropertyText(name, tooltip, nullptr)
 {
     entry.setEditable(false, false);
 }
 
-Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
+Track::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
 : PropertyComponent<NumberField>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval), juce::NotificationType::dontSendNotification);
@@ -74,7 +74,7 @@ Analyzer::PropertyPanel::PropertyNumber::PropertyNumber(juce::String const& name
     };
 }
 
-Analyzer::PropertyPanel::PropertySlider::PropertySlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
+Track::PropertyPanel::PropertySlider::PropertySlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
 : PropertyComponent<juce::Slider>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
@@ -92,7 +92,7 @@ Analyzer::PropertyPanel::PropertySlider::PropertySlider(juce::String const& name
     };
 }
 
-Analyzer::PropertyPanel::PropertyRangeSlider::PropertyRangeSlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float, float)> fn)
+Track::PropertyPanel::PropertyRangeSlider::PropertyRangeSlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float, float)> fn)
 : PropertyComponent<juce::Slider>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setSliderStyle(juce::Slider::SliderStyle::TwoValueHorizontal);
@@ -110,7 +110,7 @@ Analyzer::PropertyPanel::PropertyRangeSlider::PropertyRangeSlider(juce::String c
     };
 }
 
-Analyzer::PropertyPanel::PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn)
+Track::PropertyPanel::PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn)
 : PropertyComponent<juce::ToggleButton>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setTooltip(juce::translate(tooltip));
@@ -123,13 +123,13 @@ Analyzer::PropertyPanel::PropertyToggle::PropertyToggle(juce::String const& name
     };
 }
 
-void Analyzer::PropertyPanel::PropertyToggle::resized()
+void Track::PropertyPanel::PropertyToggle::resized()
 {
     PropertyComponent<juce::ToggleButton>::resized();
     entry.setBounds(getLocalBounds().removeFromRight(entry.getHeight()));
 }
 
-Analyzer::PropertyPanel::PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
+Track::PropertyPanel::PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
 : PropertyComponent<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setTooltip(tooltip);
@@ -149,7 +149,7 @@ Analyzer::PropertyPanel::PropertyList::PropertyList(juce::String const& name, ju
     };
 }
 
-Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
+Track::PropertyPanel::PropertyPanel(Accessor& accessor)
 : mAccessor(accessor)
 
 , mPropertyName("Name", "The name of the analyzer", [&](juce::String text)
@@ -623,7 +623,7 @@ Analyzer::PropertyPanel::PropertyPanel(Accessor& accessor)
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Analyzer::PropertyPanel::~PropertyPanel()
+Track::PropertyPanel::~PropertyPanel()
 {
     mBoundsListener.detachFrom(mProcessorSection);
     mBoundsListener.detachFrom(mGraphicalSection);
@@ -633,7 +633,7 @@ Analyzer::PropertyPanel::~PropertyPanel()
     mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
 }
 
-void Analyzer::PropertyPanel::resized()
+void Track::PropertyPanel::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mPropertyName.setBounds(bounds.removeFromTop(mPropertyName.getHeight()));
@@ -643,7 +643,7 @@ void Analyzer::PropertyPanel::resized()
     setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
 }
 
-void Analyzer::PropertyPanel::show()
+void Track::PropertyPanel::show()
 {
     auto const& displayInfo = mAccessor.getAttr<AttrType::propertyState>();
     if(displayInfo.isEmpty())

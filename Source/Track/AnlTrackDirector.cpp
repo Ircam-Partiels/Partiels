@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
+Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
 , mPluginListScanner(pluginListScanner)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
@@ -87,7 +87,7 @@ Analyzer::Director::Director(Accessor& accessor, PluginList::Scanner& pluginList
     runAnalysis(NotificationType::synchronous);
 }
 
-Analyzer::Director::~Director()
+Track::Director::~Director()
 {
     mProcessor.onAnalysisAborted = nullptr;
     mProcessor.onAnalysisEnded = nullptr;
@@ -96,7 +96,7 @@ Analyzer::Director::~Director()
     mAccessor.onAccessorErased = nullptr;
 }
 
-void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
+void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
     anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReaderManager);
     if(audioFormatReader == mAudioFormatReaderManager)
@@ -108,7 +108,7 @@ void Analyzer::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatR
     runAnalysis(notification);
 }
 
-void Analyzer::Director::runAnalysis(NotificationType const notification)
+void Track::Director::runAnalysis(NotificationType const notification)
 {
     if(mAudioFormatReaderManager == nullptr)
     {
@@ -174,7 +174,7 @@ void Analyzer::Director::runAnalysis(NotificationType const notification)
     }
 }
 
-void Analyzer::Director::updateZoomAccessors(NotificationType const notification)
+void Track::Director::updateZoomAccessors(NotificationType const notification)
 {
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const& output = mAccessor.getAttr<AttrType::description>().output;

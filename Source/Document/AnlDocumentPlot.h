@@ -32,7 +32,7 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Analyzer::Accessor::Listener mAnalyzerListener;
+        Track::Accessor::Listener mAnalyzerListener;
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Accessor::Listener mTimeZoomListener;
         Zoom::Playhead mZoomPlayhead;
@@ -40,8 +40,8 @@ namespace Document
         
         ResizerBar mResizerBar {ResizerBar::Orientation::horizontal, {50, 2000}};
         
-        using AnlAcsrRef = std::reference_wrapper<Analyzer::Accessor>;
-        std::vector<std::tuple<AnlAcsrRef, std::unique_ptr<Analyzer::Renderer>>> mRenderers;
+        using AnlAcsrRef = std::reference_wrapper<Track::Accessor>;
+        std::vector<std::tuple<AnlAcsrRef, std::unique_ptr<Track::Renderer>>> mRenderers;
     };
 }
 

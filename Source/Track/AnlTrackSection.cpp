@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator)
+Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mSeparator(separator)
@@ -125,18 +125,18 @@ Analyzer::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juc
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Analyzer::Section::~Section()
+Track::Section::~Section()
 {
     mAccessor.removeListener(mListener);
     mBoundsListener.detachFrom(mSeparator);
 }
 
-juce::String Analyzer::Section::getIdentifier() const
+juce::String Track::Section::getIdentifier() const
 {
     return mAccessor.getAttr<AttrType::identifier>();
 }
 
-void Analyzer::Section::resized()
+void Track::Section::resized()
 {
     auto bounds = getLocalBounds();
     auto const leftSize = mSeparator.getScreenX() - getScreenX();
@@ -169,7 +169,7 @@ void Analyzer::Section::resized()
     }
 }
 
-void Analyzer::Section::paint(juce::Graphics& g)
+void Track::Section::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::sectionColourId, true));
 }

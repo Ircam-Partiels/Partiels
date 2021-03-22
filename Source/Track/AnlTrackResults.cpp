@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Results::Container::const_iterator Analyzer::Results::getResultAt(Container const& results, double time)
+Track::Results::Container::const_iterator Track::Results::getResultAt(Container const& results, double time)
 {
     if(results.empty())
     {
@@ -24,7 +24,7 @@ Analyzer::Results::Container::const_iterator Analyzer::Results::getResultAt(Cont
     });
 }
 
-Zoom::Range Analyzer::Results::getValueRange(Container const& results)
+Zoom::Range Track::Results::getValueRange(Container const& results)
 {
     auto it = std::find_if(results.cbegin(), results.cend(), [](auto const& v)
     {
@@ -46,7 +46,7 @@ Zoom::Range Analyzer::Results::getValueRange(Container const& results)
     });
 }
 
-Zoom::Range Analyzer::Results::getBinRange(Container const& results)
+Zoom::Range Track::Results::getBinRange(Container const& results)
 {
     if(results.empty())
     {

@@ -40,7 +40,7 @@ namespace Document
     
     using AcsrContainer = Model::Container
     < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::basic, 1>
-    , Model::Acsr<AcsrType::analyzers, Analyzer::Accessor, Model::Flag::basic, Model::resizable>
+    , Model::Acsr<AcsrType::analyzers, Track::Accessor, Model::Flag::basic, Model::resizable>
     >;
     
     class Accessor

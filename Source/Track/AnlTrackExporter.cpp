@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-void Analyzer::Exporter::toPreset(Accessor const& accessor, AlertType const alertType)
+void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Export as preset..."), {}, App::getFileWildCardFor("preset"));
     if(!fc.browseForFileToSave(true))
@@ -44,7 +44,7 @@ void Analyzer::Exporter::toPreset(Accessor const& accessor, AlertType const aler
     }
 }
 
-void Analyzer::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
+void Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Load from preset..."), {}, App::getFileWildCardFor("preset"));
     if(!fc.browseForFileToOpen())
@@ -80,7 +80,7 @@ void Analyzer::Exporter::fromPreset(Accessor& accessor, AlertType const alertTyp
     accessor.setAttr<AttrType::state>(XmlParser::fromXml(*xml.get(), "state", accessor.getAttr<AttrType::state>()), NotificationType::synchronous);
 }
 
-void Analyzer::Exporter::toTemplate(Accessor const& accessor, AlertType const alertType)
+void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Export as template..."), {}, App::getFileWildCardFor("template"));
     if(!fc.browseForFileToSave(true))
@@ -117,7 +117,7 @@ void Analyzer::Exporter::toTemplate(Accessor const& accessor, AlertType const al
     }
 }
 
-void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alertType)
+void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Export to image"), {}, "*.png;*.jpeg;*.jpg");
     if (!fc.browseForFileToSave(true))
@@ -185,7 +185,7 @@ void Analyzer::Exporter::toImage(Accessor const& accessor, AlertType const alert
     }
 }
 
-void Analyzer::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
+void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Export as CVS..."), {}, "*.csv");
     if(!fc.browseForFileToSave(true))
@@ -261,7 +261,7 @@ void Analyzer::Exporter::toCsv(Accessor const& accessor, AlertType const alertTy
     }
 }
 
-void Analyzer::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
+void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Export as XML..."), {}, "*.xml");
     if(!fc.browseForFileToSave(true))

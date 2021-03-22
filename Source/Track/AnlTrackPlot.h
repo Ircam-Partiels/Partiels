@@ -6,7 +6,7 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Analyzer
+namespace Track
 {
     class Plot
     : public juce::Component

@@ -7,7 +7,7 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Analyzer
+namespace Track
 {
     using ColourMap = tinycolormap::ColormapType;
     using WindowState = juce::String;
@@ -123,11 +123,11 @@ namespace Analyzer
 namespace XmlParser
 {
     template<>
-    void toXml<Analyzer::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Analyzer::ColourSet const& value);
+    void toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value);
     
     template<>
-    auto fromXml<Analyzer::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Analyzer::ColourSet const& defaultValue)
-    -> Analyzer::ColourSet;
+    auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
+    -> Track::ColourSet;
 }
 
 ANALYSE_FILE_END

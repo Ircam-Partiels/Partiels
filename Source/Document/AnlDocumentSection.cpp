@@ -82,7 +82,7 @@ Document::Section::Section(Accessor& accessor)
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
                 auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 
-                auto newSection = std::make_unique<Analyzer::Section>(anlAcsr, timeZoomAcsr, mResizerBar);
+                auto newSection = std::make_unique<Track::Section>(anlAcsr, timeZoomAcsr, mResizerBar);
                 anlStrongAssert(newSection != nullptr);
                 if(newSection != nullptr)
                 {

@@ -43,7 +43,7 @@ namespace Group
 //        Thumbnail mThumbnail {mAccessor};
 //        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         Plot mPlot {mAccessor, mTimeZoomAccessor};
-        std::vector<std::unique_ptr<Analyzer::Section>> mSubSections;
+        std::vector<std::unique_ptr<Track::Section>> mSubSections;
         DraggableTable mDraggableTable;
         juce::Viewport mViewport;
         

@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::function<bool(void)> predicate)
+juce::Image Track::Renderer::createImage(Accessor const& accessor, std::function<bool(void)> predicate)
 {
     auto const& results = accessor.getAttr<AttrType::results>();
     if(results.empty())
@@ -56,7 +56,7 @@ juce::Image Analyzer::Renderer::createImage(Accessor const& accessor, std::funct
     return predicate() ? image : juce::Image();
 }
 
-void Analyzer::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
+void Track::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
 {
     if(!image.isValid())
     {
@@ -134,13 +134,13 @@ void Analyzer::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> con
     drawImage({xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()});
 }
 
-Analyzer::Renderer::Renderer(Accessor& accessor, Type type)
+Track::Renderer::Renderer(Accessor& accessor, Type type)
 : mAccessor(accessor)
 , mType(type)
 {
 }
 
-Analyzer::Renderer::~Renderer()
+Track::Renderer::~Renderer()
 {
     if(mProcess.valid())
     {
@@ -149,12 +149,12 @@ Analyzer::Renderer::~Renderer()
     }
 }
 
-bool Analyzer::Renderer::isPreparing() const
+bool Track::Renderer::isPreparing() const
 {
     return mProcess.valid();
 }
 
-void Analyzer::Renderer::prepareRendering()
+void Track::Renderer::prepareRendering()
 {
     if(mProcess.valid())
     {
@@ -202,7 +202,7 @@ void Analyzer::Renderer::prepareRendering()
     anlDebug("Analyzer", "rendering launched");
     mProcess = std::async([this]() -> juce::Image
     {
-        juce::Thread::setCurrentThreadName("Analyzer::Renderer::Process");
+        juce::Thread::setCurrentThreadName("Track::Renderer::Process");
         juce::Thread::setCurrentThreadPriority(10);
         auto expected = ProcessState::available;
         if(!mProcessState.compare_exchange_weak(expected, ProcessState::running))
@@ -245,7 +245,7 @@ void Analyzer::Renderer::prepareRendering()
     }
 }
 
-void Analyzer::Renderer::handleAsyncUpdate()
+void Track::Renderer::handleAsyncUpdate()
 {
     if(mProcess.valid())
     {
@@ -280,7 +280,7 @@ void Analyzer::Renderer::handleAsyncUpdate()
     }
 }
 
-void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     switch(mType)
     {
@@ -293,7 +293,7 @@ void Analyzer::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bo
     }
 }
 
-void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds)
+void Track::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds)
 {
     auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -444,7 +444,7 @@ void Analyzer::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> cons
     }
 }
 
-void Analyzer::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();

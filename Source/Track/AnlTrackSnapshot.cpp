@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
 , mRenderer(accessor, Renderer::Type::frame)
@@ -86,7 +86,7 @@ Analyzer::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccesso
     mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
-Analyzer::Snapshot::~Snapshot()
+Track::Snapshot::~Snapshot()
 {
     mTimeZoomAccessor.removeListener(mTimeZoomListener);
     mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
@@ -94,13 +94,13 @@ Analyzer::Snapshot::~Snapshot()
     mAccessor.removeListener(mListener);
 }
 
-void Analyzer::Snapshot::resized()
+void Track::Snapshot::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
     mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
-void Analyzer::Snapshot::paint(juce::Graphics& g)
+void Track::Snapshot::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
     auto const bounds = getLocalBounds().reduced(2);

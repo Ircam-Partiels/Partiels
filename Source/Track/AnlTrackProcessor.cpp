@@ -3,19 +3,19 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Processor::~Processor()
+Track::Processor::~Processor()
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
     abortAnalysis();
 }
 
-void Analyzer::Processor::stopAnalysis()
+void Track::Processor::stopAnalysis()
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
     abortAnalysis();
 }
 
-Analyzer::Processor::Result Analyzer::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
+Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
 {
     auto const& description = accessor.getAttr<AttrType::description>();
     auto const& state = accessor.getAttr<AttrType::state>();
@@ -69,7 +69,7 @@ Analyzer::Processor::Result Analyzer::Processor::runAnalysis(Accessor const& acc
     mChrono.start();
     mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> std::vector<Plugin::Result>
     {
-        juce::Thread::setCurrentThreadName("Analyzer::Director::runAnalysis");
+        juce::Thread::setCurrentThreadName("Track::Director::runAnalysis");
         juce::Thread::setCurrentThreadPriority(10);
         
         auto expected = ProcessState::available;
@@ -105,7 +105,7 @@ Analyzer::Processor::Result Analyzer::Processor::runAnalysis(Accessor const& acc
     return std::make_tuple(WarningType::none, "", description, state);
 }
 
-void Analyzer::Processor::handleAsyncUpdate()
+void Track::Processor::handleAsyncUpdate()
 {
     std::unique_lock<std::mutex> lock(mAnalysisMutex);
     if(mAnalysisProcess.valid())
@@ -134,7 +134,7 @@ void Analyzer::Processor::handleAsyncUpdate()
     }
 }
 
-void Analyzer::Processor::abortAnalysis()
+void Track::Processor::abortAnalysis()
 {
     if(mAnalysisProcess.valid())
     {

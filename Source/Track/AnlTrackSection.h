@@ -8,7 +8,7 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Analyzer
+namespace Track
 {
     class Section
     : public juce::Component

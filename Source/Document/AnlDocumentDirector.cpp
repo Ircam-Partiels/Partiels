@@ -57,7 +57,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 for(size_t i = 0; i < numAnlAcsrs; ++i)
                 {
                     auto& anlAcsr  = mAccessor.getAccessor<AcsrType::analyzers>(i);
-                    anlAcsr.setAttr<Analyzer::AttrType::time>(time, notification);
+                    anlAcsr.setAttr<Track::AttrType::time>(time, notification);
                 }
                 auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
                 auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -88,7 +88,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
-                auto director = std::make_unique<Analyzer::Director>(anlAcsr, mPluginListScanner, std::move(audioFormatReader));
+                auto director = std::make_unique<Track::Director>(anlAcsr, mPluginListScanner, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
                 mAnalyzers.insert(mAnalyzers.begin() + static_cast<long>(index), std::move(director));
             }
@@ -180,8 +180,8 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
         auto const identifier = juce::Uuid().toString();
 
         auto& anlAcsr = mAccessor.getAccessor<Document::AcsrType::analyzers>(index);
-        anlAcsr.setAttr<Analyzer::AttrType::identifier>(identifier, notification);
-        anlAcsr.setAttr<Analyzer::AttrType::key>(key, notification);
+        anlAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
+        anlAcsr.setAttr<Track::AttrType::key>(key, notification);
         
         auto layout = mAccessor.getAttr<AttrType::layout>();
         layout.push_back(identifier);
@@ -210,9 +210,9 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
 void Document::Director::removeAnalysis(juce::String const identifier, NotificationType const notification)
 {
     auto const anlAcsrs = mAccessor.getAccessors<AcsrType::analyzers>();
-    auto const it = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](Analyzer::Accessor const& acsr)
+    auto const it = std::find_if(anlAcsrs.cbegin(), anlAcsrs.cend(), [&](Track::Accessor const& acsr)
     {
-        return acsr.getAttr<Analyzer::AttrType::identifier>() == identifier;
+        return acsr.getAttr<Track::AttrType::identifier>() == identifier;
     });
     anlWeakAssert(it != anlAcsrs.cend());
     if(it == anlAcsrs.cend())
@@ -223,7 +223,7 @@ void Document::Director::removeAnalysis(juce::String const identifier, Notificat
     
     auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
     auto const title = juce::translate("Remove Analysis");
-    auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Analyzer::AttrType::name>());
+    auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Track::AttrType::name>());
     if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
     {
         return;

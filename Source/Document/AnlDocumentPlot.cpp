@@ -14,7 +14,7 @@ Document::Plot::Plot(Accessor& accessor)
     {
         auto const state = std::any_of(mRenderers.cbegin(), mRenderers.cend(), [](auto const& renderer)
         {
-            return std::get<0>(renderer).get().template getAttr<Analyzer::AttrType::processing>() || std::get<1>(renderer)->isPreparing();
+            return std::get<0>(renderer).get().template getAttr<Track::AttrType::processing>() || std::get<1>(renderer)->isPreparing();
         });
         mProcessingButton.setActive(state);
         mProcessingButton.setVisible(state);
@@ -62,7 +62,7 @@ Document::Plot::Plot(Accessor& accessor)
             case AcsrType::analyzers:
             {
                 auto& anlAcsr = mAccessor.getAccessor<AcsrType::analyzers>(index);
-                auto newRenderer = std::make_unique<Analyzer::Renderer>(anlAcsr, Analyzer::Renderer::Type::range);
+                auto newRenderer = std::make_unique<Track::Renderer>(anlAcsr, Track::Renderer::Type::range);
                 anlStrongAssert(newRenderer != nullptr);
                 if(newRenderer != nullptr)
                 {
@@ -76,8 +76,8 @@ Document::Plot::Plot(Accessor& accessor)
                 if(it != mRenderers.cend())
                 {
                     anlAcsr.addListener(mAnalyzerListener, NotificationType::synchronous);
-                    anlAcsr.getAccessor<Analyzer::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
-                    anlAcsr.getAccessor<Analyzer::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+                    anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
+                    anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).addListener(mZoomListener, NotificationType::synchronous);
                 }
             }
                 break;
@@ -102,8 +102,8 @@ Document::Plot::Plot(Accessor& accessor)
                     return;
                 }
                 auto& anlAcsr = std::get<0>(mRenderers[index]).get();
-                anlAcsr.getAccessor<Analyzer::AcsrType::binZoom>(0).removeListener(mZoomListener);
-                anlAcsr.getAccessor<Analyzer::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+                anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
+                anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
                 anlAcsr.removeListener(mAnalyzerListener);
                 mRenderers.erase(mRenderers.begin() + static_cast<long>(index));
                 repaint();
@@ -120,12 +120,12 @@ Document::Plot::Plot(Accessor& accessor)
         juce::ignoreUnused(acsr, attribute);
         for(auto& renderer : mRenderers)
         {
-            if(&(std::get<0>(renderer).get().getAccessor<Analyzer::AcsrType::valueZoom>(0)) == &acsr)
+            if(&(std::get<0>(renderer).get().getAccessor<Track::AcsrType::valueZoom>(0)) == &acsr)
             {
                 std::get<1>(renderer)->prepareRendering();
                 updateProcessingButton();
             }
-            else if(&(std::get<0>(renderer).get().getAccessor<Analyzer::AcsrType::binZoom>(0)) == &acsr)
+            else if(&(std::get<0>(renderer).get().getAccessor<Track::AcsrType::binZoom>(0)) == &acsr)
             {
                 repaint();
             }
@@ -138,23 +138,23 @@ Document::Plot::Plot(Accessor& accessor)
         repaint();
     };
     
-    mAnalyzerListener.onAttrChanged = [=, this](Analyzer::Accessor const& acsr, Analyzer::AttrType attribute)
+    mAnalyzerListener.onAttrChanged = [=, this](Track::Accessor const& acsr, Track::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case Analyzer::AttrType::identifier:
-            case Analyzer::AttrType::name:
-            case Analyzer::AttrType::key:
-            case Analyzer::AttrType::description:
-            case Analyzer::AttrType::state:
-            case Analyzer::AttrType::height:
-            case Analyzer::AttrType::propertyState:
-            case Analyzer::AttrType::warnings:
-            case Analyzer::AttrType::time:
+            case Track::AttrType::identifier:
+            case Track::AttrType::name:
+            case Track::AttrType::key:
+            case Track::AttrType::description:
+            case Track::AttrType::state:
+            case Track::AttrType::height:
+            case Track::AttrType::propertyState:
+            case Track::AttrType::warnings:
+            case Track::AttrType::time:
                 break;
-            case Analyzer::AttrType::results:
-            case Analyzer::AttrType::colours:
+            case Track::AttrType::results:
+            case Track::AttrType::colours:
             {
                 auto it = std::find_if(mRenderers.cbegin(), mRenderers.cend(), [&](auto const& renderer)
                 {
@@ -167,7 +167,7 @@ Document::Plot::Plot(Accessor& accessor)
                 }
             }
                 break;
-            case Analyzer::AttrType::processing:
+            case Track::AttrType::processing:
             {
                 updateProcessingButton();
             }
@@ -191,8 +191,8 @@ Document::Plot::~Plot()
     for(auto& renderer : mRenderers)
     {
         auto& anlAcsr = std::get<0>(renderer).get();
-        anlAcsr.getAccessor<Analyzer::AcsrType::binZoom>(0).removeListener(mZoomListener);
-        anlAcsr.getAccessor<Analyzer::AcsrType::valueZoom>(0).removeListener(mZoomListener);
+        anlAcsr.getAccessor<Track::AcsrType::binZoom>(0).removeListener(mZoomListener);
+        anlAcsr.getAccessor<Track::AcsrType::valueZoom>(0).removeListener(mZoomListener);
         anlAcsr.removeListener(mAnalyzerListener);
     }
     mAccessor.getAccessor<AcsrType::timeZoom>(0).removeListener(mTimeZoomListener);
@@ -230,14 +230,14 @@ void Document::Plot::paint(juce::Graphics& g)
         auto const& identifier = *lit;
         auto it = std::find_if(mRenderers.cbegin(), mRenderers.cend(), [&](auto const& renderer)
         {
-            return std::get<0>(renderer).get().template getAttr<Analyzer::AttrType::identifier>() == identifier;
+            return std::get<0>(renderer).get().template getAttr<Track::AttrType::identifier>() == identifier;
         });
         anlStrongAssert(it != mRenderers.cend());
         if(it != mRenderers.cend() && std::get<1>(*it) != nullptr)
         {
             if(lit == layout.crbegin())
             {
-                auto const colours = std::get<0>(*it).get().getAttr<Analyzer::AttrType::colours>();
+                auto const colours = std::get<0>(*it).get().getAttr<Track::AttrType::colours>();
                 g.setColour(colours.background);
                 g.fillRect(bounds);
             }

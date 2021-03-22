@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
 , mRenderer(accessor, Renderer::Type::range)
@@ -86,7 +86,7 @@ Analyzer::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
-Analyzer::Plot::~Plot()
+Track::Plot::~Plot()
 {
     mTimeZoomAccessor.removeListener(mTimeZoomListener);
     mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
@@ -94,14 +94,14 @@ Analyzer::Plot::~Plot()
     mAccessor.removeListener(mListener);
 }
 
-void Analyzer::Plot::resized()
+void Track::Plot::resized()
 {
     mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
     mZoomPlayhead.setBounds(getLocalBounds().reduced(2));
     mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
-void Analyzer::Plot::paint(juce::Graphics& g)
+void Track::Plot::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
     auto const bounds = getLocalBounds().reduced(2);
@@ -120,7 +120,7 @@ void Analyzer::Plot::paint(juce::Graphics& g)
     mRenderer.paint(g, bounds, mTimeZoomAccessor);
 }
 
-void Analyzer::Plot::mouseMove(juce::MouseEvent const& event)
+void Track::Plot::mouseMove(juce::MouseEvent const& event)
 {
     auto const& results = mAccessor.getAttr<AttrType::results>();
     if(results.empty() || getWidth() <= 0 || getHeight() <= 0)
@@ -163,13 +163,13 @@ void Analyzer::Plot::mouseMove(juce::MouseEvent const& event)
     mInformation.setText(text, juce::NotificationType::dontSendNotification);
 }
 
-void Analyzer::Plot::mouseEnter(juce::MouseEvent const& event)
+void Track::Plot::mouseEnter(juce::MouseEvent const& event)
 {
     mInformation.setVisible(true);
     mouseMove(event);
 }
 
-void Analyzer::Plot::mouseExit(juce::MouseEvent const& event)
+void Track::Plot::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     mInformation.setVisible(false);

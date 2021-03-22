@@ -22,8 +22,8 @@ namespace Group
         Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~Plot() override;
         
-        void addAnalyzer(Analyzer::Accessor& anlAcsr);
-        void removeAnalyzer(Analyzer::Accessor& anlAcsr);
+        void addAnalyzer(Track::Accessor& anlAcsr);
+        void removeAnalyzer(Track::Accessor& anlAcsr);
         
         // juce::Component
         void resized() override;
@@ -35,12 +35,12 @@ namespace Group
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
         
-        Analyzer::Accessor::Listener mAnalyzerListener;
+        Track::Accessor::Listener mAnalyzerListener;
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
         LoadingCircle mProcessingButton;
         
-        using AnlAcsrRef = std::reference_wrapper<Analyzer::Accessor>;
+        using AnlAcsrRef = std::reference_wrapper<Track::Accessor>;
         struct AnlAcsrRefComp
         {
             bool operator()(AnlAcsrRef const& lhs, AnlAcsrRef const& rhs) const
@@ -48,7 +48,7 @@ namespace Group
                 return &(lhs.get()) < &(rhs.get());
             }
         };
-        std::map<AnlAcsrRef, std::unique_ptr<Analyzer::Renderer>, AnlAcsrRefComp> mRenderers;
+        std::map<AnlAcsrRef, std::unique_ptr<Track::Renderer>, AnlAcsrRefComp> mRenderers;
     };
 }
 

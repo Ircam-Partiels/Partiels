@@ -40,16 +40,16 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::selectionColourId, thumbColour);
     setColour(Zoom::Playhead::playheadColourId, thumbColour);
     
-    setColour(Analyzer::Thumbnail::backgroundColourId, backgroundColour.darker());
-    setColour(Analyzer::Thumbnail::borderColourId, backgroundColour);
-    setColour(Analyzer::Thumbnail::textColourId, textColour);
-    setColour(Analyzer::Snapshot::backgroundColourId, backgroundColour.darker());
-    setColour(Analyzer::Snapshot::borderColourId, backgroundColour);
-    setColour(Analyzer::Snapshot::textColourId, textColour);
-    setColour(Analyzer::Plot::backgroundColourId, backgroundColour.darker());
-    setColour(Analyzer::Plot::borderColourId, backgroundColour);
-    setColour(Analyzer::Plot::textColourId, textColour);
-    setColour(Analyzer::Section::sectionColourId, backgroundColour.darker());
+    setColour(Track::Thumbnail::backgroundColourId, backgroundColour.darker());
+    setColour(Track::Thumbnail::borderColourId, backgroundColour);
+    setColour(Track::Thumbnail::textColourId, textColour);
+    setColour(Track::Snapshot::backgroundColourId, backgroundColour.darker());
+    setColour(Track::Snapshot::borderColourId, backgroundColour);
+    setColour(Track::Snapshot::textColourId, textColour);
+    setColour(Track::Plot::backgroundColourId, backgroundColour.darker());
+    setColour(Track::Plot::borderColourId, backgroundColour);
+    setColour(Track::Plot::textColourId, textColour);
+    setColour(Track::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour.darker());
     setColour(Document::Plot::backgroundColourId, backgroundColour.darker());

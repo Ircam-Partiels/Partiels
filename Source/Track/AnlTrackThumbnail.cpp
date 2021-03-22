@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
+Track::Thumbnail::Thumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
     addAndMakeVisible(mPropertiesButton);
@@ -111,12 +111,12 @@ Analyzer::Thumbnail::Thumbnail(Accessor& accessor)
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Analyzer::Thumbnail::~Thumbnail()
+Track::Thumbnail::~Thumbnail()
 {
     mAccessor.removeListener(mListener);
 }
 
-void Analyzer::Thumbnail::resized()
+void Track::Thumbnail::resized()
 {
     auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
     auto constexpr separator = 2;
@@ -131,7 +131,7 @@ void Analyzer::Thumbnail::resized()
     mPropertiesButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
 }
 
-void Analyzer::Thumbnail::paint(juce::Graphics& g)
+void Track::Thumbnail::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
     
@@ -151,7 +151,7 @@ void Analyzer::Thumbnail::paint(juce::Graphics& g)
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
 }
 
-void Analyzer::Thumbnail::lookAndFeelChanged()
+void Track::Thumbnail::lookAndFeelChanged()
 {
     auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
     anlWeakAssert(laf != nullptr);
@@ -163,17 +163,17 @@ void Analyzer::Thumbnail::lookAndFeelChanged()
     }
 }
 
-void Analyzer::Thumbnail::parentHierarchyChanged()
+void Track::Thumbnail::parentHierarchyChanged()
 {
     lookAndFeelChanged();
 }
 
-void Analyzer::Thumbnail::colourChanged()
+void Track::Thumbnail::colourChanged()
 {
     setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
 }
 
-void Analyzer::Thumbnail::mouseDrag(juce::MouseEvent const& event)
+void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* parent = getParentComponent();

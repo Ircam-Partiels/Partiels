@@ -5,7 +5,7 @@
 
 ANALYSE_FILE_BEGIN
 
-namespace Analyzer
+namespace Track
 {
     class Processor
     : private juce::AsyncUpdater

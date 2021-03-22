@@ -2,13 +2,13 @@
 
 ANALYSE_FILE_BEGIN
 
-void Analyzer::Accessor::releaseResultsReadingAccess()
+void Track::Accessor::releaseResultsReadingAccess()
 {
     anlStrongAssert(mNumReadingAccess > 0);
     --mNumReadingAccess;
 }
 
-bool Analyzer::Accessor::acquireResultsReadingAccess()
+bool Track::Accessor::acquireResultsReadingAccess()
 {
     if(mRequireWrittingAccess.load())
     {
@@ -18,18 +18,18 @@ bool Analyzer::Accessor::acquireResultsReadingAccess()
     return true;
 }
 
-bool Analyzer::Accessor::canContinueToReadResults() const
+bool Track::Accessor::canContinueToReadResults() const
 {
     return mRequireWrittingAccess.load() == false;
 }
 
-void Analyzer::Accessor::releaseResultsWrittingAccess()
+void Track::Accessor::releaseResultsWrittingAccess()
 {
     anlStrongAssert(mRequireWrittingAccess.load() == true);
     mRequireWrittingAccess = false;
 }
 
-void Analyzer::Accessor::acquireResultsWrittingAccess()
+void Track::Accessor::acquireResultsWrittingAccess()
 {
     anlStrongAssert(mRequireWrittingAccess.load() == false);
     mRequireWrittingAccess = true;
@@ -39,7 +39,7 @@ void Analyzer::Accessor::acquireResultsWrittingAccess()
 }
 
 template<>
-void XmlParser::toXml<Analyzer::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Analyzer::ColourSet const& value)
+void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
     anlWeakAssert(child != nullptr);
@@ -53,8 +53,8 @@ void XmlParser::toXml<Analyzer::ColourSet>(juce::XmlElement& xml, juce::Identifi
 }
 
 template<>
-auto XmlParser::fromXml<Analyzer::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Analyzer::ColourSet const& defaultValue)
--> Analyzer::ColourSet
+auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
+-> Track::ColourSet
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
@@ -62,7 +62,7 @@ auto XmlParser::fromXml<Analyzer::ColourSet>(juce::XmlElement const& xml, juce::
     {
         return defaultValue;
     }
-    Analyzer::ColourSet value;
+    Track::ColourSet value;
     value.map = fromXml(*child, "map", defaultValue.map);
     value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
     value.background = fromXml(*child, "background", defaultValue.background);
