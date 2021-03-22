@@ -103,15 +103,17 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             auto const lineStride = static_cast<size_t>(bitmapData.lineStride);
             auto const columnStride = lineStride * static_cast<size_t>(imageHeight - 1);
             
-            auto const wd = numColumns / imageWidth;
-            auto const hd = numRows / imageHeight;
+            auto const wd = std::max(static_cast<double>(numColumns) / static_cast<double>(imageWidth), 1.0);
+            auto const hd = std::max(static_cast<double>(numRows) / static_cast<double>(imageHeight), 1.0);
             for(int i = 0; i < imageWidth && predicate(); ++i)
             {
                 auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
-                auto const& values = results->at(static_cast<size_t>(i * wd)).values;
+                auto const columnIndex = std::min(static_cast<size_t>(std::round(i * wd)), static_cast<size_t>(numColumns - 1));
+                auto const& values = results->at(columnIndex).values;
                 for(int j = 0; j < imageHeight; ++j)
                 {
-                    auto const& value = values[static_cast<size_t>(j * hd)];
+                    auto const rowIndex = std::min(static_cast<size_t>(std::round(j * hd)), static_cast<size_t>(numRows - 1));
+                    auto const& value = values[rowIndex];
                     auto const color = tinycolormap::GetColor(static_cast<double>((value - valueStart) / valueLength), colourMap);
                     auto const rgba = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
                     reinterpret_cast<juce::PixelARGB*>(pixel)->set(rgba);
@@ -121,7 +123,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             return predicate() ? image : juce::Image();
         };
         
-        auto const maxImageSize = 4096;
+        auto constexpr maxImageSize = 4096;
         if(width > maxImageSize || height > maxImageSize)
         {
             auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), [this]()
