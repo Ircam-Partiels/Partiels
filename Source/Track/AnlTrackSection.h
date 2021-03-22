@@ -33,12 +33,12 @@ namespace Track
         
     private:
         
-        class PlotContainer
+        class Container
         : public juce::Component
         {
         public:
-            PlotContainer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
-            ~PlotContainer() override;
+            Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content);
+            ~Container() override;
             
             // juce::Component
             void resized() override;
@@ -51,8 +51,8 @@ namespace Track
             
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
+            juce::Component& mContent;
             Accessor::Listener mListener;
-            Plot mPlot;
             
             Zoom::Playhead mZoomPlayhead;
             LoadingCircle mProcessingButton;
@@ -66,9 +66,13 @@ namespace Track
         BoundsListener mBoundsListener;
         
         Thumbnail mThumbnail {mAccessor};
-        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         
-        PlotContainer mPlotContainer {mAccessor, mTimeZoomAccessor};
+        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
+        Container mSnapshotContainer {mAccessor, mTimeZoomAccessor, mSnapshot};
+        Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
+        
+        Plot mPlot {mAccessor, mTimeZoomAccessor};
+        Container mPlotContainer {mAccessor, mTimeZoomAccessor, mPlot};
         Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};
         
         Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};

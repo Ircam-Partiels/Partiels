@@ -54,7 +54,7 @@ void Track::Renderer::prepareRendering()
     }
 }
 
-void Track::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds)
 {
     switch(mType)
     {

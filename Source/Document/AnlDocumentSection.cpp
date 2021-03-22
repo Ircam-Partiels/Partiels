@@ -140,6 +140,16 @@ Document::Section::Section(Accessor& accessor)
         auto const identifier = layout[previousIndex];
         std::erase(layout, identifier);
         layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
+        
+        auto const trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+        std::erase_if(layout, [&](auto const& trackIdentifier)
+        {
+            return std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+            {
+                return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == trackIdentifier;
+            });
+        });
+        anlWeakAssert(layout.size() == trackAcsrs.size());
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
 

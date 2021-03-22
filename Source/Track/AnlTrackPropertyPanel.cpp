@@ -454,6 +454,10 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         {
                             propertyNumber->entry.setValue(static_cast<float>(parameter.second), silent);
                         }
+                        else if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(it->second.get()))
+                        {
+                            propertyToggle->entry.setToggleState(static_cast<bool>(parameter.second), silent);
+                        }
                         else
                         {
                             anlStrongAssert(false && "property unsupported");
@@ -467,6 +471,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
                 break;
             case AttrType::results:
+            case AttrType::graphics:
                 break;
             case AttrType::processing:
             case AttrType::warnings:

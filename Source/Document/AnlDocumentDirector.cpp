@@ -186,6 +186,7 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
         auto layout = mAccessor.getAttr<AttrType::layout>();
         layout.push_back(identifier);
         mAccessor.setAttr<AttrType::layout>(layout, notification);
+        anlStrongAssert(layout.size() == mAccessor.getNumAccessors<AcsrType::tracks>());
     };
     
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -220,7 +221,6 @@ void Document::Director::removeAnalysis(juce::String const identifier, Notificat
         return;
     }
     
-    
     auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
     auto const title = juce::translate("Remove Analysis");
     auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Track::AttrType::name>());
@@ -234,6 +234,7 @@ void Document::Director::removeAnalysis(juce::String const identifier, Notificat
     mAccessor.setAttr<AttrType::layout>(layout, notification);
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAccessor<AcsrType::tracks>(index, notification);
+    anlStrongAssert(layout.size() == mAccessor.getNumAccessors<AcsrType::tracks>());
 }
 
 ANALYSE_FILE_END

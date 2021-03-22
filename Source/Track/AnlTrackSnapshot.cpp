@@ -33,6 +33,8 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::state:
             case AttrType::height:
             case AttrType::propertyState:
+            case AttrType::graphics:
+                break;
             case AttrType::results:
             {
                 mRenderer.prepareRendering();
@@ -102,21 +104,7 @@ void Track::Snapshot::resized()
 
 void Track::Snapshot::paint(juce::Graphics& g)
 {
-    g.fillAll(findColour(ColourIds::backgroundColourId));
-    auto const bounds = getLocalBounds().reduced(2);
-    juce::Path path;
-    path.addRoundedRectangle(bounds.expanded(1), 4.0f);
-    g.setColour(findColour(ColourIds::borderColourId));
-    g.strokePath(path, juce::PathStrokeType(1.0f));
-    path.clear();
-    path.addRoundedRectangle(bounds, 4.0f);
-    g.reduceClipRegion(path);
-    
-    auto const& colours = mAccessor.getAttr<AttrType::colours>();
-    g.setColour(colours.background);
-    g.fillRect(bounds);
-    
-    mRenderer.paint(g, bounds, mTimeZoomAccessor);
+    mRenderer.paint(g, getLocalBounds());
 }
 
 ANALYSE_FILE_END

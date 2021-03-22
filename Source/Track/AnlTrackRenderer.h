@@ -21,7 +21,7 @@ namespace Track
         std::function<void(void)> onUpdated = nullptr;
         
         void prepareRendering();
-        void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds);
         
     private:
         

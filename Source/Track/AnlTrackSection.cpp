@@ -3,13 +3,13 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Section::PlotContainer::PlotContainer(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+Track::Section::Container::Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
-, mPlot(accessor, timeZoomAccessor)
+, mContent(content)
 , mZoomPlayhead(timeZoomAccessor)
 {
-    addAndMakeVisible(mPlot);
+    addAndMakeVisible(mContent);
     addChildComponent(mProcessingButton);
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
@@ -52,27 +52,27 @@ Track::Section::PlotContainer::PlotContainer(Accessor& accessor, Zoom::Accessor&
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Track::Section::PlotContainer::~PlotContainer()
+Track::Section::Container::~Container()
 {
     mAccessor.removeListener(mListener);
 }
 
-void Track::Section::PlotContainer::resized()
+void Track::Section::Container::resized()
 {
     auto bounds = getLocalBounds();
-    mPlot.setBounds(bounds);
+    mContent.setBounds(bounds);
     mInformation.setBounds(bounds.removeFromRight(200).removeFromTop(80));
     mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
-void Track::Section::PlotContainer::paint(juce::Graphics& g)
+void Track::Section::Container::paint(juce::Graphics& g)
 {
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
     g.setColour(colours.background);
     g.fillRect(getLocalBounds());
 }
 
-void Track::Section::PlotContainer::mouseMove(juce::MouseEvent const& event)
+void Track::Section::Container::mouseMove(juce::MouseEvent const& event)
 {
     auto const& resultsPtr = mAccessor.getAttr<AttrType::results>();
     if(resultsPtr == nullptr)
@@ -122,13 +122,13 @@ void Track::Section::PlotContainer::mouseMove(juce::MouseEvent const& event)
     mInformation.setText(text, juce::NotificationType::dontSendNotification);
 }
 
-void Track::Section::PlotContainer::mouseEnter(juce::MouseEvent const& event)
+void Track::Section::Container::mouseEnter(juce::MouseEvent const& event)
 {
     mInformation.setVisible(true);
     mouseMove(event);
 }
 
-void Track::Section::PlotContainer::mouseExit(juce::MouseEvent const& event)
+void Track::Section::Container::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     mInformation.setVisible(false);
@@ -243,7 +243,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
     addChildComponent(mBinRuler);
     addChildComponent(mBinScrollBar);
     addAndMakeVisible(mThumbnail);
-    addAndMakeVisible(mSnapshot);
+    addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBarLeft);
     addAndMakeVisible(mResizerBarRight);
@@ -281,7 +281,7 @@ void Track::Section::resized()
     {
         auto leftSide = bounds.removeFromLeft(leftSize);
         mThumbnail.setBounds(leftSide.removeFromLeft(48));
-        mSnapshot.setBounds(leftSide.withTrimmedLeft(1));
+        mSnapshotDecoration.setBounds(leftSide.withTrimmedLeft(1));
     }
     
     // Plot, Rulers and Scrollbars

@@ -99,6 +99,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::description:
             case AttrType::state:
             case AttrType::results:
+            case AttrType::graphics:
             case AttrType::time:
             case AttrType::identifier:
             case AttrType::height:

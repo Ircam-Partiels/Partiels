@@ -6,7 +6,7 @@ Document::AttrContainer& Document::FileBased::getDefaultContainer()
 {
     static Document::AttrContainer document
     {
-        {juce::File{}}
+          {juce::File{}}
         , {false}
         , {1.0}
         , {false}
