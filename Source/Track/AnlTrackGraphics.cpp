@@ -61,28 +61,28 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         }
         
         
-        auto createImage = [](int width, int height, std::vector<Plugin::Result> const& results, ColourMap const colourMap, Zoom::Range const valueRange, std::function<bool(void)> predicate) -> juce::Image
+        auto createImage = [&](int imageWidth, int imageHeight, std::function<bool(void)> predicate) -> juce::Image
         {
-            if(results.empty())
+            if(results->empty())
             {
                 return {};
             }
             
-            anlStrongAssert(width > 0 && height > 0);
-            if(width <= 0 || height <= 0)
+            anlStrongAssert(imageWidth > 0 && imageHeight > 0);
+            if(imageWidth <= 0 || imageHeight <= 0)
             {
                 return {};
             }
             
-            auto const numColumns = static_cast<int>(results.size());
-            auto const numRows = static_cast<int>(results.front().values.size());
-            anlStrongAssert(numColumns > 0 && numRows > 0 && numColumns >= width && numRows >= height);
+            auto const numColumns = static_cast<int>(results->size());
+            auto const numRows = static_cast<int>(results->front().values.size());
+            anlStrongAssert(numColumns > 0 && numRows > 0 && numColumns >= width && numRows >= imageHeight);
             if(numColumns <= 0 || numRows <= 0)
             {
                 return {};
             }
-            width = std::min(numColumns, width);
-            height = std::min(numRows, height);
+            imageWidth = std::min(numColumns, imageWidth);
+            imageHeight = std::min(numRows, imageHeight);
             
             if(predicate == nullptr)
             {
@@ -92,7 +92,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                 };
             }
             
-            auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
+            auto image = juce::Image(juce::Image::PixelFormat::ARGB, imageWidth, imageHeight, false);
             juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
             
             auto const valueStart = valueRange.getStart();
@@ -101,15 +101,15 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             auto* data = bitmapData.data;
             auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);
             auto const lineStride = static_cast<size_t>(bitmapData.lineStride);
-            auto const columnStride = lineStride * static_cast<size_t>(height - 1);
+            auto const columnStride = lineStride * static_cast<size_t>(imageHeight - 1);
             
-            auto const wd = numColumns / width;
-            auto const hd = numRows / height;
-            for(int i = 0; i < width && predicate(); ++i)
+            auto const wd = numColumns / imageWidth;
+            auto const hd = numRows / imageHeight;
+            for(int i = 0; i < imageWidth && predicate(); ++i)
             {
                 auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
-                auto const& values = results[static_cast<size_t>(i * wd)].values;
-                for(int j = 0; j < height && predicate(); ++j)
+                auto const& values = results->at(static_cast<size_t>(i * wd)).values;
+                for(int j = 0; j < imageHeight; ++j)
                 {
                     auto const& value = values[static_cast<size_t>(j * hd)];
                     auto const color = tinycolormap::GetColor(static_cast<double>((value - valueStart) / valueLength), colourMap);
@@ -124,7 +124,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         auto const maxImageSize = 4096;
         if(width > maxImageSize || height > maxImageSize)
         {
-            auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), *results, colourMap, valueRange, [this]()
+            auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), [this]()
             {
                 return mRenderingState.load() != ProcessState::aborted;
             });
@@ -142,7 +142,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             triggerAsyncUpdate();
         }
         
-        auto image = createImage(width, height, *results, colourMap, valueRange, [this]()
+        auto image = createImage(width, height, [this]()
         {
             return mRenderingState.load() != ProcessState::aborted;
         });
