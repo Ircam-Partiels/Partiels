@@ -141,6 +141,11 @@ void Track::Processor::abortAnalysis()
         mAnalysisState = ProcessState::aborted;
         mAnalysisProcess.get();
         cancelPendingUpdate();
+        
+        if(onAnalysisAborted != nullptr)
+        {
+            onAnalysisAborted();
+        }
     }
     mAnalysisState = ProcessState::available;
 }

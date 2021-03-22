@@ -106,8 +106,8 @@ namespace Track
         {
         }
         
-        void releaseResultsReadingAccess();
-        bool acquireResultsReadingAccess();
+        void releaseResultsReadingAccess() const;
+        bool acquireResultsReadingAccess() const;
         bool canContinueToReadResults() const;
         
         void releaseResultsWrittingAccess();
@@ -115,7 +115,7 @@ namespace Track
         
     private:
         
-        std::atomic<int> mNumReadingAccess {false};
+        mutable std::atomic<int> mNumReadingAccess {false};
         std::atomic<bool> mRequireWrittingAccess {false};
     };
 }

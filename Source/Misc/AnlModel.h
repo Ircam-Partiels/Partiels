@@ -711,10 +711,6 @@ namespace Model
                     return isEquivalentTo(slhs, srhs);
                 });
             }
-            else if constexpr(is_specialization<T, std::unique_ptr>::value)
-            {
-                return lhs != nullptr && rhs != nullptr && isEquivalentTo(*lhs.get(), *rhs.get());
-            }
             else
             {
                 return lhs == rhs;
@@ -743,13 +739,6 @@ namespace Model
                 for(auto const& pair : rhs)
                 {
                     setValue(lhs[pair.first], pair.second);
-                }
-            }
-            else if constexpr(is_specialization<T, std::unique_ptr>::value)
-            {
-                if(lhs != nullptr && rhs != nullptr)
-                {
-                    setValue(*lhs.get(), *rhs.get());
                 }
             }
             else

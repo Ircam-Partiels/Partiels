@@ -2,13 +2,13 @@
 
 ANALYSE_FILE_BEGIN
 
-void Track::Accessor::releaseResultsReadingAccess()
+void Track::Accessor::releaseResultsReadingAccess() const
 {
     anlStrongAssert(mNumReadingAccess > 0);
     --mNumReadingAccess;
 }
 
-bool Track::Accessor::acquireResultsReadingAccess()
+bool Track::Accessor::acquireResultsReadingAccess() const
 {
     if(mRequireWrittingAccess.load())
     {

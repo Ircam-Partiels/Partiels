@@ -106,30 +106,30 @@ file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
 
 file(GLOB TrackSources
-    ${SOURCES_DIRECTORY}/Track/AnlTrackModel.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackModel.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackDirector.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackDirector.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackExporter.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackExporter.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackRenderer.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackRenderer.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackGraphics.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackGraphics.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackModel.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackModel.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackPlot.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackPlot.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackRenderer.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackRenderer.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackSection.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackSection.h)
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSection.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h)
 
 file(GLOB GroupSources
     ${SOURCES_DIRECTORY}/Group/AnlGroupModel.h
