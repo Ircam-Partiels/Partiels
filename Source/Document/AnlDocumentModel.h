@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
-#include "../Analyzer/AnlAnalyzerModel.h"
+#include "../Track/AnlTrackModel.h"
 #include "../Zoom/AnlZoomModel.h"
 #include "../Misc/AnlBroadcaster.h"
 

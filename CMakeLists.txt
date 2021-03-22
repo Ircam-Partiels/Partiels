@@ -105,31 +105,31 @@ file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
 
-file(GLOB AnalyzerSources
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerModel.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerDirector.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerDirector.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerExporter.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerExporter.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSnapshot.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSnapshot.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerRenderer.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerRenderer.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerResults.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerResults.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPlot.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerPlot.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerProcessor.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerThumbnail.h
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.cpp
-    ${SOURCES_DIRECTORY}/Analyzer/AnlAnalyzerSection.h)
+file(GLOB TrackSources
+    ${SOURCES_DIRECTORY}/Track/AnlTrackModel.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackModel.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackDirector.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackDirector.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackExporter.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackExporter.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackRenderer.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackRenderer.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackPlot.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackPlot.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackProcessor.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSection.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackSection.h)
 
 file(GLOB GroupSources
     ${SOURCES_DIRECTORY}/Group/AnlGroupModel.h
@@ -184,13 +184,13 @@ file(GLOB ApplicationSources
 file(GLOB TranslationsSources
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Fr.txt
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Plugin.txt
-    ${BINARYDATA_DIRECTORY}/Translations/Fr/Analyzer.txt)
+    ${BINARYDATA_DIRECTORY}/Translations/Fr/Track.txt)
 
 source_group("Source/Global" FILES ${GlobalSources})
 source_group("Source/Misc" FILES ${MiscSources})
 source_group("Source/Zoom" FILES ${ZoomSources})
 source_group("Source/Plugin" FILES ${PluginSources})
-source_group("Source/Analyzer" FILES ${AnalyzerSources})
+source_group("Source/Track" FILES ${TrackSources})
 source_group("Source/Group" FILES ${GroupSources})
 source_group("Source/Document" FILES ${DocumentSources})
 source_group("Source/Application" FILES ${ApplicationSources})
@@ -236,7 +236,7 @@ create_module_group(Partiels "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOUR
 create_module_group(Partiels "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
 create_module_group(Partiels "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
-set(PartielsSources ${MiscSources} ${ZoomSources} ${PluginSources} ${AnalyzerSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
+set(PartielsSources ${MiscSources} ${ZoomSources} ${PluginSources} ${TrackSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
 target_sources(PartielsTest PRIVATE ${PartielsSources} ${SOURCES_DIRECTORY}/Test.cpp)
 

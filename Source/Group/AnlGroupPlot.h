@@ -2,7 +2,7 @@
 
 #include "AnlGroupModel.h"
 #include "../Zoom/AnlZoomPlayhead.h"
-#include "../Analyzer/AnlAnalyzerRenderer.h"
+#include "../Track/AnlTrackRenderer.h"
 
 ANALYSE_FILE_BEGIN
 

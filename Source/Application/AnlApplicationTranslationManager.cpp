@@ -9,7 +9,7 @@ Application::TranslationManager::TranslationManager()
     if(ls != nullptr)
     {
         ls->addStrings({juce::String::createStringFromData(TranslationsData::Plugin_txt, TranslationsData::Plugin_txtSize), false});
-        ls->addStrings({juce::String::createStringFromData(TranslationsData::Analyzer_txt, TranslationsData::Analyzer_txtSize), false});
+        ls->addStrings({juce::String::createStringFromData(TranslationsData::Track_txt, TranslationsData::Track_txtSize), false});
     }
     juce::LocalisedStrings::setCurrentMappings(ls.release());
 }

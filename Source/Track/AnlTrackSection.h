@@ -2,9 +2,9 @@
 
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
-#include "AnlAnalyzerThumbnail.h"
-#include "AnlAnalyzerPlot.h"
-#include "AnlAnalyzerSnapshot.h"
+#include "AnlTrackThumbnail.h"
+#include "AnlTrackPlot.h"
+#include "AnlTrackSnapshot.h"
 
 ANALYSE_FILE_BEGIN
 

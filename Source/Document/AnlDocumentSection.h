@@ -2,7 +2,7 @@
 
 #include "AnlDocumentModel.h"
 #include "AnlDocumentPlot.h"
-#include "../Analyzer/AnlAnalyzerSection.h"
+#include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
 

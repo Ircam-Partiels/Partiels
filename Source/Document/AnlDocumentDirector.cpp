@@ -1,7 +1,7 @@
 #include "AnlDocumentDirector.h"
 #include "AnlDocumentAudioReader.h"
 #include "../Plugin/AnlPluginListScanner.h"
-#include "../Analyzer/AnlAnalyzerPropertyPanel.h"
+#include "../Track/AnlTrackPropertyPanel.h"
 
 ANALYSE_FILE_BEGIN
 

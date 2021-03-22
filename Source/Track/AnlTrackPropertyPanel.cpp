@@ -1,5 +1,5 @@
-#include "AnlAnalyzerPropertyPanel.h"
-#include "AnlAnalyzerExporter.h"
+#include "AnlTrackPropertyPanel.h"
+#include "AnlTrackExporter.h"
 
 ANALYSE_FILE_BEGIN
 

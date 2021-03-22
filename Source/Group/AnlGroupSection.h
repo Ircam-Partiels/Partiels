@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlGroupPlot.h"
-#include "../Analyzer/AnlAnalyzerSection.h"
+#include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
 

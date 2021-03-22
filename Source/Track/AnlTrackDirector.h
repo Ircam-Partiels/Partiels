@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnlAnalyzerModel.h"
-#include "AnlAnalyzerProcessor.h"
+#include "AnlTrackModel.h"
+#include "AnlTrackProcessor.h"
 #include "../Plugin/AnlPluginListScanner.h"
 
 ANALYSE_FILE_BEGIN

@@ -1,32 +1,37 @@
 #pragma once
 
-#include "AnlAnalyzerPropertyPanel.h"
-#include "AnlAnalyzerRenderer.h"
+#include "AnlTrackModel.h"
+#include "AnlTrackRenderer.h"
+#include "../Zoom/AnlZoomPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Analyzer
 {
-    class Snapshot
+    class Plot
     : public juce::Component
     {
     public:
         
         enum ColourIds : int
         {
-              backgroundColourId = 0x2030200
+              backgroundColourId = 0x2030000
             , borderColourId
             , textColourId
         };
         
-        Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
-        ~Snapshot() override;
+        Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
+        ~Plot() override;
         
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
-
+        void mouseMove(juce::MouseEvent const& event) override;
+        void mouseEnter(juce::MouseEvent const& event) override;
+        void mouseExit(juce::MouseEvent const& event) override;
+        
     private:
+        
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mTimeZoomListener;
@@ -35,6 +40,8 @@ namespace Analyzer
         Renderer mRenderer;
         Accessor::Listener mListener;
         
+        
+        Zoom::Playhead mZoomPlayhead {mTimeZoomAccessor, {2, 2, 2, 2}};
         LoadingCircle mProcessingButton;
         juce::Label mInformation;
     };

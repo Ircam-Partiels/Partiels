@@ -2,7 +2,7 @@
 
 #include "../Misc/AnlMisc.h"
 #include "../Zoom/AnlZoomModel.h"
-#include "../Analyzer/AnlAnalyzerModel.h"
+#include "../Track/AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
 

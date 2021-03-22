@@ -1,5 +1,5 @@
-#include "AnlAnalyzerSnapshot.h"
-#include "AnlAnalyzerRenderer.h"
+#include "AnlTrackSnapshot.h"
+#include "AnlTrackRenderer.h"
 
 ANALYSE_FILE_BEGIN
 

@@ -1,6 +1,6 @@
-#include "AnlAnalyzerDirector.h"
-#include "AnlAnalyzerProcessor.h"
-#include "AnlAnalyzerResults.h"
+#include "AnlTrackDirector.h"
+#include "AnlTrackProcessor.h"
+#include "AnlTrackResults.h"
 
 ANALYSE_FILE_BEGIN
 

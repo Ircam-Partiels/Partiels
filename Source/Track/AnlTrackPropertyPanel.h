@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlAnalyzerModel.h"
+#include "AnlTrackModel.h"
 #include "../Misc/AnlMisc.h"
 
 ANALYSE_FILE_BEGIN

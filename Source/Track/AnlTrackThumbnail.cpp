@@ -1,5 +1,5 @@
-#include "AnlAnalyzerThumbnail.h"
-#include "AnlAnalyzerExporter.h"
+#include "AnlTrackThumbnail.h"
+#include "AnlTrackExporter.h"
 
 ANALYSE_FILE_BEGIN
 
