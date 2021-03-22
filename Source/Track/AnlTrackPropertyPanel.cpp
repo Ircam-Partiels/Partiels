@@ -378,6 +378,38 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 auto const output = description.output;
                 mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
                 mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
+                
+                if(output.binCount == 0)
+                {
+                    mGraphicalSection.setComponents(
+                    {
+                          mPropertyForegroundColour
+                        , mPropertyBackgroundColour
+                    });
+                }
+                else if(output.binCount == 1)
+                {
+                    mGraphicalSection.setComponents(
+                    {
+                          mPropertyForegroundColour
+                        , mPropertyBackgroundColour
+                        , mPropertyValueRangeMin
+                        , mPropertyValueRangeMax
+                    });
+                }
+                else 
+                {
+                    mPropertyNumBins.entry.setEnabled(false);
+                    mGraphicalSection.setComponents(
+                    {
+                          mPropertyColourMap
+                        , mPropertyColourMapAlpha
+                        , mPropertyValueRangeMin
+                        , mPropertyValueRangeMax
+                        , mPropertyValueRange
+                        , mPropertyNumBins
+                    });
+                }
 
                 // Plugin Information Part
                 mPropertyPluginName.entry.setText(description.name, silent);
@@ -435,49 +467,6 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
                 break;
             case AttrType::results:
-            {
-                auto const description = mAccessor.getAttr<AttrType::description>();
-                auto const& results = mAccessor.getAttr<AttrType::results>();
-                if(results.empty())
-                {
-                    break;
-                }
-                auto const output = description.output;
-                auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();
-                
-                if(numDimensions ==0)
-                {
-                    mGraphicalSection.setComponents(
-                    {
-                          mPropertyForegroundColour
-                        , mPropertyBackgroundColour
-                    });
-                }
-                else if(numDimensions == 1)
-                {
-                    mGraphicalSection.setComponents(
-                    {
-                          mPropertyForegroundColour
-                        , mPropertyBackgroundColour
-                        , mPropertyValueRangeMin
-                        , mPropertyValueRangeMax
-                    });
-                }
-                else
-                {
-                    mPropertyNumBins.entry.setEnabled(false);
-                    mGraphicalSection.setComponents(
-                    {
-                          mPropertyColourMap
-                        , mPropertyColourMapAlpha
-                        , mPropertyValueRangeMin
-                        , mPropertyValueRangeMax
-                        , mPropertyValueRange
-                        , mPropertyNumBins
-                    });
-                }
-                
-            }
                 break;
             case AttrType::processing:
             case AttrType::warnings:

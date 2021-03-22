@@ -24,27 +24,25 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     }
     abortRendering();
     
-    auto const& results = accessor.getAttr<AttrType::results>();
-    if(results.empty() || results[0].values.size() <= 1)
+    auto const results = accessor.getAttr<AttrType::results>();
+    if(results == nullptr || results->empty() || results->at(0).values.size() <= 1)
     {
         return;
     }
     
-    auto const width = static_cast<int>(results.size());
-    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
+    auto const width = static_cast<int>(results->size());
+    auto const height = static_cast<int>(results->at(0).values.size());
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
         return;
     }
     
-    if(!accessor.acquireResultsReadingAccess())
-    {
-        return;
-    }
+    auto const colourMap = accessor.getAttr<AttrType::colours>().map;
+    auto const valueRange = accessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
     
     mChrono.start();
-    mRenderingProcess = std::async([this, &accessor]() -> std::vector<juce::Image>
+    mRenderingProcess = std::async([=, this]() -> std::vector<juce::Image>
     {
         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
         juce::Thread::setCurrentThreadPriority(10);
@@ -56,11 +54,11 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         }
         
         
-        auto image = createImage(accessor, [this, &accessor]()
+        auto image = createImage(*results, colourMap, valueRange, [this]()
         {
-            return accessor.canContinueToReadResults() && mRenderingState.load() != ProcessState::aborted;
+            return mRenderingState.load() != ProcessState::aborted;
         });
-        accessor.releaseResultsReadingAccess();
+
         if(image.isNull())
         {
             mRenderingState = ProcessState::aborted;
@@ -124,9 +122,8 @@ void Track::Graphics::abortRendering()
     mRenderingState = ProcessState::available;
 }
 
-juce::Image Track::Graphics::createImage(Accessor const& accessor, std::function<bool(void)> predicate)
+juce::Image Track::Graphics::createImage(std::vector<Plugin::Result> const& results, ColourMap const colourMap, Zoom::Range const valueRange, std::function<bool(void)> predicate)
 {
-    auto const& results = accessor.getAttr<AttrType::results>();
     if(results.empty())
     {
         return {};
@@ -151,12 +148,8 @@ juce::Image Track::Graphics::createImage(Accessor const& accessor, std::function
     auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
     juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
     
-    JUCE_COMPILER_WARNING("this is not thread safe");
-    auto const& valueZoomAcsr = accessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const valueStart = valueRange.getStart();
     auto const valueLength = valueRange.getLength();
-    auto const colourMap = accessor.getAttr<AttrType::colours>().map;
     
     auto* data = bitmapData.data;
     auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);

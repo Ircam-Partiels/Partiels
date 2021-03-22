@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     class Renderer
-    : private juce::AsyncUpdater
     {
     public:
         
@@ -17,16 +16,14 @@ namespace Track
             , range
         };
 
-        static juce::Image createImage(Accessor const& accessor, std::function<bool(void)> predicate = nullptr);
         static void renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr);
         
         Renderer(Accessor& accessor, Type type);
-        ~Renderer() override;
+        ~Renderer() = default;
         
         std::function<void(void)> onUpdated = nullptr;
         
         void prepareRendering();
-        bool isPreparing() const;
         void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         
     private:
@@ -43,25 +40,9 @@ namespace Track
         void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds);
         void paintRange(juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         
-        // juce::AsyncUpdater
-        void handleAsyncUpdate() override;
-        
-        enum class ProcessState
-        {
-              available
-            , aborted
-            , running
-            , ended
-        };
-        
         Accessor& mAccessor;
         Type const mType;
-        
-        std::atomic<ProcessState> mProcessState {ProcessState::available};
-        std::future<juce::Image> mProcess;
-        
-        std::vector<juce::Image> mImages;
-        juce::Time mRenderingStartTime;
+        juce::Image mImage;
     };
 }
 

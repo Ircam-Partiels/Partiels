@@ -32,7 +32,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     {
         auto const processing = mAccessor.getAttr<AttrType::processing>();
         auto const& results = mAccessor.getAttr<AttrType::results>();
-        auto const canBeExported = !processing && !results.empty();
+        auto const canBeExported = !processing && results != nullptr && !results->empty();
         juce::PopupMenu menu;
         menu.addItem(juce::translate("Export as template..."), true, false, [this]()
         {

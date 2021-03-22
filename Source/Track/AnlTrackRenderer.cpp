@@ -3,59 +3,6 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Image Track::Renderer::createImage(Accessor const& accessor, std::function<bool(void)> predicate)
-{
-    auto const& results = accessor.getAttr<AttrType::results>();
-    if(results.empty())
-    {
-        return {};
-    }
-    
-    auto const width = static_cast<int>(results.size());
-    auto const height = static_cast<int>(results.front().values.size());
-    anlWeakAssert(width > 0 && height > 0);
-    if(width <= 0 || height <= 0)
-    {
-        return {};
-    }
-    
-    if(predicate == nullptr)
-    {
-        predicate = []()
-        {
-            return true;
-        };
-    }
-    
-    auto image = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
-    juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
-    
-    JUCE_COMPILER_WARNING("this is not thread safe");
-    auto const& valueZoomAcsr = accessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const valueStart = valueRange.getStart();
-    auto const valueLength = valueRange.getLength();
-    auto const colourMap = accessor.getAttr<AttrType::colours>().map;
-
-    auto* data = bitmapData.data;
-    auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);
-    auto const lineStride = static_cast<size_t>(bitmapData.lineStride);
-    auto const columnStride = lineStride * static_cast<size_t>(height - 1);
-    for(int i = 0; i < width && predicate(); ++i)
-    {
-        auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
-        for(int j = 0; j < height && predicate(); ++j)
-        {
-            auto const& value = results[static_cast<size_t>(i)].values[static_cast<size_t>(j)];
-            auto const color = tinycolormap::GetColor(static_cast<double>((value - valueStart) / valueLength), colourMap);
-            auto const rgba = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
-            reinterpret_cast<juce::PixelARGB*>(pixel)->set(rgba);
-            pixel -= lineStride;
-        }
-    }
-    return predicate() ? image : juce::Image();
-}
-
 void Track::Renderer::renderImage(juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
 {
     if(!image.isValid())
@@ -140,34 +87,21 @@ Track::Renderer::Renderer(Accessor& accessor, Type type)
 {
 }
 
-Track::Renderer::~Renderer()
-{
-    if(mProcess.valid())
-    {
-        mProcessState = ProcessState::aborted;
-        mProcess.get();
-    }
-}
-
-bool Track::Renderer::isPreparing() const
-{
-    return mProcess.valid();
-}
-
 void Track::Renderer::prepareRendering()
 {
-    if(mProcess.valid())
+    auto resultPtr = mAccessor.getAttr<AttrType::results>();
+    if(resultPtr == nullptr)
     {
-        mProcessState = ProcessState::aborted;
-        mProcess.get();
-        cancelPendingUpdate();
+        if(onUpdated != nullptr)
+        {
+            onUpdated();
+        }
+        return;
     }
-    mProcessState = ProcessState::available;
     
-    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const& results = *resultPtr;
     if(results.empty() || results[0].values.size() <= 1)
     {
-        mImages.clear();
         if(onUpdated != nullptr)
         {
             onUpdated();
@@ -180,7 +114,6 @@ void Track::Renderer::prepareRendering()
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
-        mImages.clear();
         if(onUpdated != nullptr)
         {
             onUpdated();
@@ -190,88 +123,7 @@ void Track::Renderer::prepareRendering()
     
     if(mType == Type::frame)
     {
-        mImages = {juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false)};
-        if(onUpdated != nullptr)
-        {
-            onUpdated();
-        }
-        return;
-    }
-    mRenderingStartTime = juce::Time::getCurrentTime();
-    
-    anlDebug("Track", "rendering launched");
-    mProcess = std::async([this]() -> juce::Image
-    {
-        juce::Thread::setCurrentThreadName("Track::Renderer::Process");
-        juce::Thread::setCurrentThreadPriority(10);
-        auto expected = ProcessState::available;
-        if(!mProcessState.compare_exchange_weak(expected, ProcessState::running))
-        {
-            triggerAsyncUpdate();
-            return {};
-        }
-        
-        if(!mAccessor.acquireResultsReadingAccess())
-        {
-            mProcessState = ProcessState::aborted;
-            triggerAsyncUpdate();
-            return {};
-        }
-        auto image = createImage(mAccessor, [this]()
-        {
-            return mAccessor.canContinueToReadResults() && mProcessState.load() != ProcessState::aborted;
-        });
-        mAccessor.releaseResultsReadingAccess();
-        if(image.isNull())
-        {
-            mProcessState = ProcessState::aborted;
-            triggerAsyncUpdate();
-            return {};
-        }
-        
-        expected = ProcessState::running;
-        if(mProcessState.compare_exchange_weak(expected, ProcessState::ended))
-        {
-            triggerAsyncUpdate();
-            return image;
-        }
-        triggerAsyncUpdate();
-        return {};
-    });
-    
-    if(onUpdated != nullptr)
-    {
-        onUpdated();
-    }
-}
-
-void Track::Renderer::handleAsyncUpdate()
-{
-    if(mProcess.valid())
-    {
-        anlWeakAssert(mProcessState != ProcessState::available);
-        anlWeakAssert(mProcessState != ProcessState::running);
-        
-        auto expected = ProcessState::ended;
-        if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
-        {
-            auto const now = juce::Time::getCurrentTime();
-            anlDebug("Track", "rendering succeeded (" + (now - mRenderingStartTime).getDescription() + ")");
-            auto constexpr maxSize = 4096;
-            auto image = mProcess.get();
-            auto const dimension = std::max(image.getWidth(), image.getHeight());
-            for(int i = maxSize; i < dimension; i *= 2)
-            {
-                mImages.push_back(image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight())));
-            }
-            mImages.push_back(image);
-            anlDebug("Track", "rendering stored (" + (juce::Time::getCurrentTime() - now).getDescription() + ")");
-        }
-        expected = ProcessState::aborted;
-        if(mProcessState.compare_exchange_weak(expected, ProcessState::available))
-        {
-            mImages.clear();
-        }
+        mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
     }
     
     if(onUpdated != nullptr)
@@ -299,13 +151,15 @@ void Track::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& 
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
     auto const& output = mAccessor.getAttr<AttrType::description>().output;
-    auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const time = mAccessor.getAttr<AttrType::time>();
+    auto resultPtr = mAccessor.getAttr<AttrType::results>();
     
-    if(results.empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
+    if(resultPtr == nullptr || resultPtr->empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
     {
         return;
     }
+    
+    auto const& results = *resultPtr;
     
     auto getDisplayMode = [&]()
     {
@@ -400,7 +254,7 @@ void Track::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& 
             break;
         case DisplayMode::matrix:
         {
-            auto image = mImages.empty() ? juce::Image() : mImages.front();
+            auto image = mImage;
             if(!image.isValid())
             {
                 return;
@@ -448,8 +302,13 @@ void Track::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> const& 
 {
     auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const resultsPtr = mAccessor.getAttr<AttrType::results>();
+    if(resultsPtr == nullptr)
+    {
+        return;
+    }
     
+    auto const& results = *resultsPtr;
     if(results.empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
     {
         return;
@@ -521,29 +380,30 @@ void Track::Renderer::paintRange(juce::Graphics& g, juce::Rectangle<int> const& 
     }
     else
     {
-        if(mImages.empty())
-        {
-            return;
-        }
-        
-        auto getZoomRatio = [](Zoom::Accessor const& acsr)
-        {
-            return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
-        };
-        
-        auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
-        auto const binZoomRatio = getZoomRatio(mAccessor.getAccessor<AcsrType::binZoom>(0));
-        auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
-        for(auto const& image : mImages)
-        {
-            auto const imageDimension = std::max(image.getWidth(), image.getHeight());
-            if(imageDimension >= boundsDimension)
-            {
-                renderImage(g, bounds, image, timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
-                return;
-            }
-        }
-        renderImage(g, bounds, mImages.back(), timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
+        JUCE_COMPILER_WARNING("to do")
+//        if(mImages.empty())
+//        {
+//            return;
+//        }
+//
+//        auto getZoomRatio = [](Zoom::Accessor const& acsr)
+//        {
+//            return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
+//        };
+//
+//        auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
+//        auto const binZoomRatio = getZoomRatio(mAccessor.getAccessor<AcsrType::binZoom>(0));
+//        auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
+//        for(auto const& image : mImages)
+//        {
+//            auto const imageDimension = std::max(image.getWidth(), image.getHeight());
+//            if(imageDimension >= boundsDimension)
+//            {
+//                renderImage(g, bounds, image, timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
+//                return;
+//            }
+//        }
+//        renderImage(g, bounds, mImages.back(), timeZoomAcsr, mAccessor.getAccessor<AcsrType::binZoom>(0));
     }
 }
 

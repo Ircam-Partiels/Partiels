@@ -40,10 +40,6 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 break;
             case AttrType::results:
             {
-                if(!mAccessor.canContinueToReadResults())
-                {
-                    mAccessor.releaseResultsWrittingAccess();
-                }
                 updateZoomAccessors(notification);
             }
                 break;
@@ -59,29 +55,16 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
         }
     };
     
-    mProcessor.onAnalysisEnded = [&](std::vector<Plugin::Result> const& results)
+    mProcessor.onAnalysisEnded = [&](std::shared_ptr<std::vector<Plugin::Result>> results)
     {
         mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
-        anlDebug("Track", "analysis succeded");
-        auto const now = juce::Time::getCurrentTime();
-        mAccessor.acquireResultsWrittingAccess();
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
-        if(!mAccessor.canContinueToReadResults())
-        {
-            mAccessor.releaseResultsWrittingAccess();
-        }
-        anlDebug("Track", "analysis stored in " + (juce::Time::getCurrentTime() - now).getDescription());
     };
     
     mProcessor.onAnalysisAborted = [&]()
     {
         mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
-        mAccessor.acquireResultsWrittingAccess();
-        mAccessor.setAttr<AttrType::results>(std::vector<Plugin::Result>{}, NotificationType::synchronous);
-        if(!mAccessor.canContinueToReadResults())
-        {
-            mAccessor.releaseResultsWrittingAccess();
-        }
+        mAccessor.setAttr<AttrType::results>(nullptr, NotificationType::synchronous);
     };
     
     runAnalysis(NotificationType::synchronous);
@@ -186,9 +169,9 @@ void Track::Director::updateZoomAccessors(NotificationType const notification)
         {
             valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)}, notification);
         }
-        else if(!results.empty())
+        else if(results != nullptr && !results->empty())
         {
-            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getValueRange(results), notification);
+            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getValueRange(*results), notification);
         }
         valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon(), notification);
         valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
@@ -199,9 +182,9 @@ void Track::Director::updateZoomAccessors(NotificationType const notification)
     {
         binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(output.binCount)}, notification);
     }
-    else if(!results.empty())
+    else if(results != nullptr && !results->empty())
     {
-        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getBinRange(results), notification);
+        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getBinRange(*results), notification);
     }
     if(binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>() == Zoom::Range{0.0, 0.0})
     {

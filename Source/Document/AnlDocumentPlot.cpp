@@ -14,7 +14,7 @@ Document::Plot::Plot(Accessor& accessor)
     {
         auto const state = std::any_of(mRenderers.cbegin(), mRenderers.cend(), [](auto const& renderer)
         {
-            return std::get<0>(renderer).get().template getAttr<Track::AttrType::processing>() || std::get<1>(renderer)->isPreparing();
+            return std::get<0>(renderer).get().template getAttr<Track::AttrType::processing>();
         });
         mProcessingButton.setActive(state);
         mProcessingButton.setVisible(state);

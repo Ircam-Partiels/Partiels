@@ -16,7 +16,7 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     
     auto updateProcessingButton = [this]()
     {
-        auto const state = mRenderer.isPreparing() || mAccessor.getAttr<AttrType::processing>();
+        auto const state = mAccessor.getAttr<AttrType::processing>();
         mProcessingButton.setActive(state);
         mProcessingButton.setVisible(state);
         mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
@@ -122,7 +122,14 @@ void Track::Plot::paint(juce::Graphics& g)
 
 void Track::Plot::mouseMove(juce::MouseEvent const& event)
 {
-    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const& resultsPtr = mAccessor.getAttr<AttrType::results>();
+    if(resultsPtr == nullptr)
+    {
+        mInformation.setText("", juce::NotificationType::dontSendNotification);
+        return;
+    }
+    
+    auto const& results = *resultsPtr;
     if(results.empty() || getWidth() <= 0 || getHeight() <= 0)
     {
         mInformation.setText("", juce::NotificationType::dontSendNotification);

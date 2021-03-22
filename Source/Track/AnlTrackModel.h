@@ -73,7 +73,7 @@ namespace Track
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
     , Model::Attr<AttrType::propertyState, WindowState, Model::Flag::basic>
     
-    , Model::Attr<AttrType::results, std::vector<Plugin::Result>, Model::Flag::notifying>
+    , Model::Attr<AttrType::results, std::shared_ptr<const std::vector<Plugin::Result>>, Model::Flag::notifying>
     , Model::Attr<AttrType::time, double, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, bool, Model::Flag::notifying>
@@ -105,18 +105,6 @@ namespace Track
                                  , {false}))
         {
         }
-        
-        void releaseResultsReadingAccess() const;
-        bool acquireResultsReadingAccess() const;
-        bool canContinueToReadResults() const;
-        
-        void releaseResultsWrittingAccess();
-        void acquireResultsWrittingAccess();
-        
-    private:
-        
-        mutable std::atomic<int> mNumReadingAccess {false};
-        std::atomic<bool> mRequireWrittingAccess {false};
     };
 }
 

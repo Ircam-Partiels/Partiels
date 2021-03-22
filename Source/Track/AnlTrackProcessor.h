@@ -18,7 +18,7 @@ namespace Track
         Result runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader);
         void stopAnalysis();
         
-        std::function<void(std::vector<Plugin::Result> const& results)> onAnalysisEnded = nullptr;
+        std::function<void(std::shared_ptr<std::vector<Plugin::Result>> results)> onAnalysisEnded = nullptr;
         std::function<void(void)> onAnalysisAborted = nullptr;
         
     private:
@@ -39,7 +39,7 @@ namespace Track
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
-        std::future<std::vector<Plugin::Result>> mAnalysisProcess;
+        std::future<std::shared_ptr<std::vector<Plugin::Result>>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
         Chrono mChrono {"Track", "processor analysis ended"};
 

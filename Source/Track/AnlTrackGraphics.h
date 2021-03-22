@@ -19,7 +19,7 @@ namespace Track
         std::function<void(std::vector<juce::Image> const& images)> onRenderingEnded = nullptr;
         std::function<void(void)> onRenderingAborted = nullptr;
         
-        static juce::Image createImage(Accessor const& accessor, std::function<bool(void)> predicate = nullptr);
+        static juce::Image createImage(std::vector<Plugin::Result> const& results, ColourMap const colourMap, Zoom::Range const valueRange, std::function<bool(void)> predicate = nullptr);
     private:
         
         void abortRendering();

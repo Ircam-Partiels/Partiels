@@ -38,22 +38,9 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
             case AttrType::name:
             case AttrType::key:
             case AttrType::description:
-            case AttrType::state:
-                break;
-            case AttrType::height:
             {
-                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 2);
-            }
-                break;
-            case AttrType::colours:
-                break;
-            case AttrType::propertyState:
-                break;
-            case AttrType::results:
-            {
-                auto const& results = acsr.getAttr<AttrType::results>();
-                auto const numDimensions = results.empty() ? 0_z : results.front().values.size();
-                switch(numDimensions)
+                auto const description = acsr.getAttr<AttrType::description>();
+                switch(description.output.binCount)
                 {
                     case 0_z:
                     {
@@ -84,6 +71,19 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
                         break;
                 }
             }
+                break;
+            case AttrType::state:
+                break;
+            case AttrType::height:
+            {
+                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 2);
+            }
+                break;
+            case AttrType::colours:
+                break;
+            case AttrType::propertyState:
+                break;
+            case AttrType::results:
                 break;
             case AttrType::time:
                 break;

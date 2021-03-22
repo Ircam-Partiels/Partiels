@@ -2,42 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-void Track::Accessor::releaseResultsReadingAccess() const
-{
-    anlStrongAssert(mNumReadingAccess > 0);
-    --mNumReadingAccess;
-}
-
-bool Track::Accessor::acquireResultsReadingAccess() const
-{
-    if(mRequireWrittingAccess.load())
-    {
-        return false;
-    }
-    ++mNumReadingAccess;
-    return true;
-}
-
-bool Track::Accessor::canContinueToReadResults() const
-{
-    return mRequireWrittingAccess.load() == false;
-}
-
-void Track::Accessor::releaseResultsWrittingAccess()
-{
-    anlStrongAssert(mRequireWrittingAccess.load() == true);
-    mRequireWrittingAccess = false;
-}
-
-void Track::Accessor::acquireResultsWrittingAccess()
-{
-    anlStrongAssert(mRequireWrittingAccess.load() == false);
-    mRequireWrittingAccess = true;
-    while(mNumReadingAccess > 0)
-    {
-    }
-}
-
 template<>
 void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value)
 {

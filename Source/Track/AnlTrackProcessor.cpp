@@ -67,7 +67,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     }
     
     mChrono.start();
-    mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> std::vector<Plugin::Result>
+    mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> std::shared_ptr<std::vector<Plugin::Result>>
     {
         juce::Thread::setCurrentThreadName("Track::Director::runAnalysis");
         juce::Thread::setCurrentThreadPriority(10);
@@ -80,15 +80,22 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         }
         expected = ProcessState::running;
 
-        std::vector<Plugin::Result> results;
-        if(!processor->prepareToAnalyze(results))
+        auto results = std::make_shared<std::vector<Plugin::Result>>();
+        if(results == nullptr)
         {
             mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
             triggerAsyncUpdate();
             return {};
         }
         
-        while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(results))
+        if(!processor->prepareToAnalyze(*results))
+        {
+            mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
+            triggerAsyncUpdate();
+            return {};
+        }
+        
+        while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(*results))
         {
         }
         

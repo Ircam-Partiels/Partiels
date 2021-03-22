@@ -1,5 +1,5 @@
 #include "AnlTrackExporter.h"
-#include "AnlTrackRenderer.h"
+#include "AnlTrackGraphics.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -154,25 +154,26 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         return;
     }
     
-    auto const& results = accessor.getAttr<AttrType::results>();
-    auto const width = static_cast<int>(results.size());
-    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
-    if(width < 0 || height < 0)
-    {
-        return;
-    }
-    
-    auto image = Renderer::createImage(accessor);
-    if(!imageFormat->writeImageToStream(image, stream))
-    {
-        if(alertType!= AlertType::window)
-        {
-            return;
-        }
-        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
-        return;
-    }
+    JUCE_COMPILER_WARNING("to do");
+//    auto const& results = accessor.getAttr<AttrType::results>();
+//    auto const width = static_cast<int>(results.size());
+//    auto const height = static_cast<int>(results.empty() ? 0 : results[0].values.size());
+//    if(width < 0 || height < 0)
+//    {
+//        return;
+//    }
+//
+//    auto image = Graphics::createImage(accessor);
+//    if(!imageFormat->writeImageToStream(image, stream))
+//    {
+//        if(alertType!= AlertType::window)
+//        {
+//            return;
+//        }
+//        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+//        juce::AlertWindow::showMessageBox(icon, title, message);
+//        return;
+//    }
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
@@ -193,15 +194,26 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
         return;
     }
     
-    juce::TemporaryFile temp(fc.getResult());
-    juce::FileOutputStream stream(temp.getFile());
-    
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as CSV failed!");
     
+    auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    if(resultsPtr == nullptr)
+    {
+        if(alertType == AlertType::window)
+        {
+            auto const message = juce::translate("The track ANLNAME can not be exported as CSV because the results are not computed yet.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
+            juce::AlertWindow::showMessageBox(icon, title, message);
+        }
+        return;
+    }
+    
+    juce::TemporaryFile temp(fc.getResult());
+    juce::FileOutputStream stream(temp.getFile());
+    
     if(!stream.openedOk())
     {
-        auto const message = juce::translate("The track ANLNAME can not be exported as CBV because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
+        auto const message = juce::translate("The track ANLNAME can not be exported as CSV because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
@@ -234,7 +246,7 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
     addColumn("DURATION");
     addColumn("LABEL");
     
-    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const& results = *resultsPtr;
     for(size_t i = 0; i < results.front().values.size(); ++i)
     {
         addColumn("BIN " + juce::String(i));
@@ -311,7 +323,19 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
         }
         return;
     }
-    auto const& results = accessor.getAttr<AttrType::results>();
+    
+    auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    if(resultsPtr == nullptr)
+    {
+        if(alertType == AlertType::window)
+        {
+            auto const message = juce::translate("The track ANLNAME can not be exported as XML because the results are not computed yet.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
+            juce::AlertWindow::showMessageBox(icon, title, message);
+        }
+        return;
+    }
+    
+    auto const& results = *resultsPtr;
     for(size_t i = 0; i < results.size(); ++i)
     {
         element->addChildElement(toXml(i, results[i]).release());

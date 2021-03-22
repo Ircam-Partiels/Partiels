@@ -15,7 +15,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     
     auto updateProcessingButton = [this]()
     {
-        auto const state = mRenderer.isPreparing() || mAccessor.getAttr<AttrType::processing>();
+        auto const state = mAccessor.getAttr<AttrType::processing>();
         mProcessingButton.setActive(state);
         mProcessingButton.setVisible(state);
         mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
