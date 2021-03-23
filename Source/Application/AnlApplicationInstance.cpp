@@ -33,13 +33,32 @@ void Application::Instance::initialise(juce::String const& commandLine)
         return;
     }
     anlDebug("Application", "Ready!");
-    anlDebug("Application", "Reopening file...");
-    openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
+    auto const path = commandLine.removeCharacters("\"");
+    if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+    {
+        anlDebug("Application", "Opening new file...");
+        openFile(juce::File(path));
+    }
+    else
+    {
+        anlDebug("Application", "Reopening last document...");
+        openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
+    }
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
 {
-    juce::ignoreUnused(commandLine);
+    if(mWindow == nullptr)
+    {
+        anlDebug("Application", "Failed: not initialized.");
+        return;
+    }
+    auto const path = commandLine.removeCharacters("\"");
+    if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+    {
+        anlDebug("Application", "Opening new file...");
+        openFile(juce::File(path));
+    }
 }
 
 void Application::Instance::systemRequestedQuit()
