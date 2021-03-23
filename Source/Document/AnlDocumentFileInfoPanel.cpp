@@ -2,10 +2,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocument& fileBasedDocument, juce::AudioFormatManager& audioFormatManager)
+Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
-, mFileBasedDocument(fileBasedDocument)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -45,7 +44,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
                 
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<ConcertinaTable::ComponentRef> panels {mPanelProjectName, mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
+                std::vector<ConcertinaTable::ComponentRef> panels {mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
                 
                 for(auto const& key : metadataValues.getAllKeys())
                 {
@@ -73,20 +72,16 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::FileBasedDocume
             case AttrType::layoutVertical:
             case AttrType::layout:
                 break;
-}
-        changeListenerCallback(&mFileBasedDocument);
+        }
     };
     
     mViewport.setViewedComponent(&mConcertinaTable, false);
     addAndMakeVisible(mViewport);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mFileBasedDocument.addChangeListener(this);
-    changeListenerCallback(&mFileBasedDocument);
 }
 
 Document::FileInfoPanel::~FileInfoPanel()
 {
-    mFileBasedDocument.removeChangeListener(this);
     mAccessor.removeListener(mListener);
 }
 
@@ -95,17 +90,6 @@ void Document::FileInfoPanel::resized()
     auto const scrollbarThickness = mViewport.getScrollBarThickness();
     mConcertinaTable.setBounds(getLocalBounds().withHeight(mConcertinaTable.getHeight()).withTrimmedRight(scrollbarThickness));
     mViewport.setBounds(getLocalBounds());
-}
-
-void Document::FileInfoPanel::changeListenerCallback(juce::ChangeBroadcaster* source)
-{
-    juce::ignoreUnused(source);
-    anlStrongAssert(source == &mFileBasedDocument);
-    auto const file = mFileBasedDocument.getFile();
-    auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved";
-    auto const extension = file.existsAsFile() && mFileBasedDocument.hasChangedSinceSaved() ? "*" : "";
-    mPanelProjectName.entry.setText(name + extension, juce::NotificationType::dontSendNotification);
-    mPanelProjectName.entry.setTooltip(file.existsAsFile() ? file.getFullPathName() : "");
 }
 
 ANALYSE_FILE_END

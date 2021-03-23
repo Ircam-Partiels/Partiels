@@ -96,6 +96,7 @@ void Document::FileBased::setLastDocumentOpened(juce::File const& file)
 void Document::FileBased::handleAsyncUpdate()
 {
     changed();
+    sendChangeMessage();
 }
 
 void Document::FileBased::changed()

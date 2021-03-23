@@ -11,25 +11,19 @@ namespace Document
     //! @todo Add popup window that diisplays the full text when the mouse is over after a few ms
     class FileInfoPanel
     : public juce::Component
-    , private juce::ChangeListener
     {
     public:
-        FileInfoPanel(Accessor& accessor, juce::FileBasedDocument& fileBasedDocument, juce::AudioFormatManager& audioFormatManager);
+        FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~FileInfoPanel() override;
         
         // juce::Component
         void resized() override;
         
     private:
-        // juce::ChangeListener
-        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
-        
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
-        juce::FileBasedDocument& mFileBasedDocument;
         Accessor::Listener mListener;
         
-        PropertyLabel mPanelProjectName {juce::translate("Project"), juce::translate("The name of the project")};
         PropertyLabel mPanelFilePath {juce::translate("File"), juce::translate("The path of the audio file")};
         PropertyLabel mPanelFileFormat {juce::translate("Format"), juce::translate("The format of the audio file")};
         PropertyLabel mPanelSampleRate {juce::translate("Sample Rate"), juce::translate("The sample rate of the audio file")};

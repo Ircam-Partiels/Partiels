@@ -10,6 +10,7 @@ namespace Application
     class Window
     : public juce::DocumentWindow
     , private juce::AsyncUpdater
+    , private juce::ChangeListener
     {
     public:
         Window();
@@ -23,6 +24,9 @@ namespace Application
     private:
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
+        
+        // juce::ChangeListener
+        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         MainMenuModel mMainMenuModel;

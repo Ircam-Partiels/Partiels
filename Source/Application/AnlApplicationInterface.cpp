@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
-: mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getDocumentFileBased(), Instance::get().getAudioFormatManager())
+: mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
 , mDocumentTransport(Instance::get().getDocumentAccessor())
 , mDocumentSection(Instance::get().getDocumentAccessor())
 {    

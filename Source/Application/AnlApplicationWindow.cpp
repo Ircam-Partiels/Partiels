@@ -30,13 +30,15 @@ Application::Window::Window()
     juce::PopupMenu extraAppleMenuItems;
     juce::MenuBarModel::setMacMainMenu(&mMainMenuModel, nullptr);
 #endif
+    Instance::get().getDocumentFileBased().addChangeListener(this);
 }
 
 Application::Window::~Window()
 {
+    Instance::get().getDocumentFileBased().removeChangeListener(this);
 #if !JUCE_MAC
     setMenuBar(nullptr);
-#elif  !defined(JUCE_IOS)
+#elif !defined(JUCE_IOS)
     juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
@@ -63,6 +65,16 @@ void Application::Window::moved()
 void Application::Window::handleAsyncUpdate()
 {
     Instance::get().getApplicationAccessor().setAttr<AttrType::windowState>(getBounds().toString(), NotificationType::synchronous);
+}
+
+void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    juce::ignoreUnused(source);
+    anlStrongAssert(source == &Instance::get().getDocumentFileBased());
+    auto const file = Instance::get().getDocumentFileBased().getFile();
+    auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
+    auto const extension = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved() ? "*" : "";
+    setName(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString + " - " + name + extension);
 }
 
 ANALYSE_FILE_END
