@@ -37,7 +37,7 @@ namespace Track
         : public juce::Component
         {
         public:
-            Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content);
+            Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content, bool showPlayhead);
             ~Container() override;
             
             // juce::Component
@@ -68,11 +68,11 @@ namespace Track
         Thumbnail mThumbnail {mAccessor};
         
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
-        Container mSnapshotContainer {mAccessor, mTimeZoomAccessor, mSnapshot};
+        Container mSnapshotContainer {mAccessor, mTimeZoomAccessor, mSnapshot, false};
         Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
         
         Plot mPlot {mAccessor, mTimeZoomAccessor};
-        Container mPlotContainer {mAccessor, mTimeZoomAccessor, mPlot};
+        Container mPlotContainer {mAccessor, mTimeZoomAccessor, mPlot, true};
         Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};
         
         Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};

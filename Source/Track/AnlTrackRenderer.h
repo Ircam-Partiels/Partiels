@@ -9,13 +9,7 @@ namespace Track
     class Renderer
     {
     public:
-        
-        enum class Type
-        {
-              frame
-        };
-        
-        Renderer(Accessor& accessor, Type type);
+        Renderer(Accessor& accessor);
         ~Renderer() = default;
         
         std::function<void(void)> onUpdated = nullptr;
@@ -37,7 +31,6 @@ namespace Track
         void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds);
         
         Accessor& mAccessor;
-        Type const mType;
         juce::Image mImage;
     };
 }

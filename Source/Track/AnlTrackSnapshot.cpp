@@ -6,21 +6,8 @@ ANALYSE_FILE_BEGIN
 Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
-, mRenderer(accessor, Renderer::Type::frame)
+, mRenderer(accessor)
 {
-    addChildComponent(mProcessingButton);
-    mInformation.setEditable(false);
-    mInformation.setInterceptsMouseClicks(false, false);
-    addChildComponent(mInformation);
-    
-    auto updateProcessingButton = [this]()
-    {
-        auto const state = mAccessor.getAttr<AttrType::processing>();
-        mProcessingButton.setActive(state);
-        mProcessingButton.setVisible(state);
-        mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
-    };
-    
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -38,16 +25,11 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::results:
             {
                 mRenderer.prepareRendering();
-                updateProcessingButton();
             };
                 break;
             case AttrType::warnings:
                 break;
             case AttrType::processing:
-            {
-                updateProcessingButton();
-            }
-                break;
             case AttrType::colours:
             case AttrType::time:
             {
@@ -60,8 +42,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
-        mRenderer.prepareRendering();
-        updateProcessingButton();
+        repaint();
     };
     
     mBinZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
@@ -78,7 +59,6 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     
     mRenderer.onUpdated = [=, this]()
     {
-        updateProcessingButton();
         repaint();
     };
     
@@ -94,12 +74,6 @@ Track::Snapshot::~Snapshot()
     mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
     mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
     mAccessor.removeListener(mListener);
-}
-
-void Track::Snapshot::resized()
-{
-    mInformation.setBounds(getLocalBounds().removeFromRight(200).removeFromTop(80));
-    mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
 void Track::Snapshot::paint(juce::Graphics& g)

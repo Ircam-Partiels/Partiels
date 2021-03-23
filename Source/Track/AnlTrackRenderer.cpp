@@ -3,9 +3,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Renderer::Renderer(Accessor& accessor, Type type)
+Track::Renderer::Renderer(Accessor& accessor)
 : mAccessor(accessor)
-, mType(type)
 {
 }
 
@@ -43,10 +42,7 @@ void Track::Renderer::prepareRendering()
         return;
     }
     
-    if(mType == Type::frame)
-    {
-        mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
-    }
+    mImage = juce::Image(juce::Image::PixelFormat::ARGB, 1, height, false);
     
     if(onUpdated != nullptr)
     {
@@ -55,16 +51,6 @@ void Track::Renderer::prepareRendering()
 }
 
 void Track::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bounds)
-{
-    switch(mType)
-    {
-        case Type::frame:
-            paintFrame(g, bounds);
-            break;
-    }
-}
-
-void Track::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds)
 {
     auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
     auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -195,21 +181,21 @@ void Track::Renderer::paintFrame(juce::Graphics& g, juce::Rectangle<int> const& 
                 auto const colour = valueToColour(it->values[static_cast<size_t>(j)]);
                 data.setPixelColour(0, image.getHeight() - 1 - j, colour);
             }
-
+            
             auto const width = static_cast<float>(bounds.getWidth());
             auto const height = bounds.getHeight();
-
+            
             auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
             auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-
+            
             auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
-
+            
             auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image.getHeight()));
             auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
-
+            
             auto const transform = juce::AffineTransform::translation(0.0f, -deltaY).scaled(width, scaleY).translated(static_cast<float>(bounds.getX()), static_cast<float>(bounds.getY()));
-
+            
             g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
             g.drawImageTransformed(image, transform);
         }

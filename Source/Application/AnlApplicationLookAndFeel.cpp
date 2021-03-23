@@ -46,9 +46,6 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Track::Thumbnail::ColourIds::backgroundColourId, backgroundColour.darker());
     setColour(Track::Thumbnail::ColourIds::borderColourId, backgroundColour);
     setColour(Track::Thumbnail::ColourIds::textColourId, textColour);
-    setColour(Track::Snapshot::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(Track::Snapshot::ColourIds::borderColourId, backgroundColour);
-    setColour(Track::Snapshot::ColourIds::textColourId, textColour);
     setColour(Track::Section::sectionColourId, backgroundColour.darker());
     
     setColour(Document::Section::backgroundColourId, backgroundColour.darker());

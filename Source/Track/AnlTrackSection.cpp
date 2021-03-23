@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Section::Container::Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content)
+Track::Section::Container::Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content, bool showPlayhead)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
 , mContent(content)
@@ -14,7 +14,10 @@ Track::Section::Container::Container(Accessor& accessor, Zoom::Accessor& timeZoo
     mInformation.setEditable(false);
     mInformation.setInterceptsMouseClicks(false, false);
     addChildComponent(mInformation);
-    addAndMakeVisible(mZoomPlayhead);
+    if(showPlayhead)
+    {
+        addAndMakeVisible(mZoomPlayhead);
+    }
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
@@ -34,7 +37,10 @@ Track::Section::Container::Container(Accessor& accessor, Zoom::Accessor& timeZoo
                 break;
             case AttrType::time:
             {
-                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::time>());
+                if(mZoomPlayhead.isVisible())
+                {
+                    mZoomPlayhead.setPosition(acsr.getAttr<AttrType::time>());                    
+                }
             }
                 break;
             case AttrType::processing:

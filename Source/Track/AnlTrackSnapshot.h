@@ -11,19 +11,10 @@ namespace Track
     : public juce::Component
     {
     public:
-        
-        enum ColourIds : int
-        {
-              backgroundColourId = 0x2030100
-            , borderColourId
-            , textColourId
-        };
-        
         Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~Snapshot() override;
         
         // juce::Component
-        void resized() override;
         void paint(juce::Graphics& g) override;
 
     private:
@@ -34,9 +25,6 @@ namespace Track
         Zoom::Accessor::Listener mBinZoomListener;
         Renderer mRenderer;
         Accessor::Listener mListener;
-        
-        LoadingCircle mProcessingButton;
-        juce::Label mInformation;
     };
 }
 
