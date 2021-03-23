@@ -34,12 +34,15 @@ namespace Application
             {
                 auto sanitize = [](std::vector<juce::File> const& files)
                 {
-                    std::vector<juce::File> copy = files;
-                    copy.erase(std::unique(copy.begin(), copy.end()), copy.end());
-                    copy.erase(std::remove_if(copy.begin(), copy.end(), [](auto const& file)
+                    std::set<juce::File> duplicates;
+                    std::vector<juce::File> copy;
+                    for(auto const& file : files)
                     {
-                        return !file.existsAsFile();
-                    }), copy.end());
+                        if(file.existsAsFile() && duplicates.insert(file).second)
+                        {
+                            copy.push_back(file);
+                        }
+                    }
                     return copy;
                 };
                 
