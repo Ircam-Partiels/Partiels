@@ -2,6 +2,7 @@
 
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
+#include "../Zoom/AnlZoomPlayhead.h"
 #include "AnlTrackThumbnail.h"
 #include "AnlTrackPlot.h"
 #include "AnlTrackSnapshot.h"

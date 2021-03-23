@@ -1,8 +1,6 @@
 #pragma once
 
 #include "AnlTrackModel.h"
-#include "AnlTrackRenderer.h"
-#include "../Zoom/AnlZoomPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 

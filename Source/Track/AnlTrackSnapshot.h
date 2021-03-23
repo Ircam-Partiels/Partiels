@@ -1,7 +1,6 @@
 #pragma once
 
-#include "AnlTrackPropertyPanel.h"
-#include "AnlTrackRenderer.h"
+#include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -23,7 +22,6 @@ namespace Track
         Zoom::Accessor::Listener mTimeZoomListener;
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;
-        Renderer mRenderer;
         Accessor::Listener mListener;
     };
 }
