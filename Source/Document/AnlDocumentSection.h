@@ -35,7 +35,7 @@ namespace Document
         juce::Component mPlayheadContainer;
         Zoom::Playhead mPlayhead {mAccessor.getAccessor<AcsrType::timeZoom>(0)};
         
-        ResizerBar mResizerBar {ResizerBar::Orientation::vertical, {50, 300}};
+        ResizerBar mResizerBar {ResizerBar::Orientation::vertical, true, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
         Plot mPlot {mAccessor};
         Decorator mPlotDecorator {mPlot, 1, 4.0f};

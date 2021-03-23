@@ -2,8 +2,9 @@
 
 ANALYSE_FILE_BEGIN
 
-ResizerBar::ResizerBar(Orientation const orientation, juce::Range<int> const range)
+ResizerBar::ResizerBar(Orientation const orientation, bool direction, juce::Range<int> const range)
 : mOrientation(orientation)
+, mDirection(direction)
 , mRange(range)
 {
     setRepaintsOnMouseActivity(true);
@@ -28,18 +29,41 @@ void ResizerBar::mouseDown(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     auto const isVertical = mOrientation == Orientation::vertical;
-    mSavedPosition = isVertical ? getX() : getY();
+    mSavedPosition = isVertical ? (mDirection ? getX() : getRight()) : (mDirection ? getY() : getBottom());
 }
 
 void ResizerBar::mouseDrag(juce::MouseEvent const& event)
 {
+    auto getRange = [&]() -> juce::Range<int>
+    {
+        if(mDirection)
+        {
+            return mRange;
+        }
+        else if(mOrientation == Orientation::horizontal)
+        {
+            return {getParentHeight() - mRange.getEnd(), getParentHeight() - mRange.getStart()};
+        }
+        return {getParentWidth() - mRange.getEnd(), getParentWidth() - mRange.getStart()};
+    };
+    
     auto const isVertical = mOrientation == Orientation::vertical;
     auto const offset = isVertical ? event.getDistanceFromDragStartX() : event.getDistanceFromDragStartY();
-    auto const newPosition = mRange.isEmpty() ? mSavedPosition + offset : mRange.clipValue(mSavedPosition + offset);
-    setTopLeftPosition(isVertical ? newPosition : getX(), !isVertical ? newPosition : getY());
+    auto const newPosition = mRange.isEmpty() ? mSavedPosition + offset : getRange().clipValue(mSavedPosition + offset);
+    if(mDirection)
+    {
+        setTopLeftPosition(isVertical ? newPosition : getX(),
+                           !isVertical ? newPosition : getY());
+    }
+    else
+    {
+        setTopLeftPosition(isVertical ? newPosition - getWidth() : getX(),
+                           !isVertical ? newPosition - getHeight() : getY());
+    }
+    
     if(onMoved != nullptr)
     {
-        onMoved(newPosition);
+        onMoved(mDirection ? newPosition : mOrientation == Orientation::horizontal ? getParentHeight() - newPosition : getParentWidth() - newPosition);
     }
 }
 

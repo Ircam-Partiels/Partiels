@@ -21,7 +21,7 @@ public:
         , horizontal
     };
     
-    ResizerBar(Orientation const orientation, juce::Range<int> const range = {});
+    ResizerBar(Orientation const orientation, bool direction, juce::Range<int> const range = {});
     ~ResizerBar() override = default;
     
     void paint(juce::Graphics& g) override;
@@ -31,6 +31,7 @@ public:
     std::function<void(int)> onMoved = nullptr;
 private:
     Orientation const mOrientation;
+    bool const mDirection;
     juce::Range<int> const mRange;
     int mSavedPosition;
 };

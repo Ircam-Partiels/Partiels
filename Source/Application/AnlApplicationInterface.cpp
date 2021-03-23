@@ -9,6 +9,7 @@ Application::Interface::Interface()
 , mDocumentSection(Instance::get().getDocumentAccessor())
 {    
     addAndMakeVisible(mDocumentFileInfoPanel);
+    addAndMakeVisible(mFileInfoResizer);
     addAndMakeVisible(mDocumentTransport);
     addAndMakeVisible(mNavigate);
     addAndMakeVisible(mInspect);
@@ -66,6 +67,13 @@ Application::Interface::Interface()
         }
     };
     
+    mFileInfoResizer.onMoved = [&](int size)
+    {
+        mDocumentFileInfoPanel.setSize(size, mDocumentFileInfoPanel.getHeight());
+        resized();
+    };
+    
+    mDocumentFileInfoPanel.setSize(240, 100);
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     documentAccessor.addListener(mDocumentListener, NotificationType::synchronous);
 }
@@ -81,7 +89,6 @@ void Application::Interface::resized()
     auto bounds = getLocalBounds();
     
     auto header = bounds.removeFromTop(40);
-    mDocumentFileInfoPanel.setBounds(header.removeFromRight(320));
     mDocumentTransport.setBounds(header.removeFromLeft(240));
     auto buttons = header.withSizeKeepingCentre(120, 32);
     mNavigate.setBounds(buttons.removeFromLeft(32).reduced(4));
@@ -91,9 +98,10 @@ void Application::Interface::resized()
     mEdit.setBounds(buttons.removeFromLeft(32).reduced(4));
     
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
-    mDocumentSection.setBounds(bounds);
-    
     mLoad.setBounds(bounds.withSizeKeepingCentre(200, 32));
+    mDocumentFileInfoPanel.setBounds(bounds.removeFromRight(mDocumentFileInfoPanel.getWidth()));
+    mFileInfoResizer.setBounds(bounds.removeFromRight(2));
+    mDocumentSection.setBounds(bounds);
 }
 
 void Application::Interface::lookAndFeelChanged()
