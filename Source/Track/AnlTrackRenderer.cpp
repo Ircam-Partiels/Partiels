@@ -66,6 +66,15 @@ void Track::Renderer::paint(juce::Graphics& g, juce::Rectangle<int> const& bound
     
     auto const& results = *resultPtr;
     
+    enum class DisplayMode
+    {
+          unsupported
+        , surface
+        , bar
+        , segment
+        , matrix
+    };
+    
     auto getDisplayMode = [&]()
     {
         auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();

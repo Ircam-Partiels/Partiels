@@ -18,17 +18,6 @@ namespace Track
         void paint(juce::Graphics& g, juce::Rectangle<int> const& bounds);
         
     private:
-        enum class DisplayMode
-        {
-              unsupported
-            , surface
-            , bar
-            , segment
-            , matrix
-        };
-        
-        void paintFrame(juce::Graphics& g, juce::Rectangle<int> const& bounds);
-        
         Accessor& mAccessor;
         juce::Image mImage;
     };
