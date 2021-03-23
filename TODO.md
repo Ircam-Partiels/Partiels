@@ -16,8 +16,5 @@
 - The Analyzer director doesn't manage key changes
 - Add push notification support
 
-- Replace Analyzer::Renderer -> Analyzer::Graphics
-- Add  Analyzer::Graphics (GUI processor)
-
 - Check move track
 - Add percent for analysing/rendering
