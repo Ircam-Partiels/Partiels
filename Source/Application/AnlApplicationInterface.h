@@ -16,7 +16,6 @@ namespace Application
     , public CommandTarget
     {
     public:
-        
         Interface();
         ~Interface() override;
         
@@ -31,7 +30,6 @@ namespace Application
         void fileDragExit(juce::StringArray const& files) override;
         void filesDropped(juce::StringArray const& files, int x, int y) override;
     private:
-        
         Document::Accessor::Listener mDocumentListener;
         
         // Header

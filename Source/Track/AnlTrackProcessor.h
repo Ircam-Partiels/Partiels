@@ -22,7 +22,6 @@ namespace Track
         std::function<void(void)> onAnalysisAborted = nullptr;
         
     private:
-        
         void abortAnalysis();
         
         // juce::AsyncUpdater

@@ -9,7 +9,6 @@ namespace Plugin
     class Processor
     {
     public:
-        
         static std::unique_ptr<Processor> create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader);
         
         ~Processor() = default;
@@ -19,7 +18,6 @@ namespace Plugin
         Description getDescription() const;
         
     private:
-        
         class CircularReader
         {
         public:

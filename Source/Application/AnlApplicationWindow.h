@@ -21,7 +21,6 @@ namespace Application
         void moved() override;
         
     private:
-        
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
         

@@ -21,7 +21,6 @@ namespace Track
         std::function<void(void)> onRenderingAborted = nullptr;
         
     private:
-        
         void abortRendering();
         
         // juce::AsyncUpdater

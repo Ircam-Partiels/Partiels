@@ -18,7 +18,6 @@ namespace Document
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
     private:
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
 

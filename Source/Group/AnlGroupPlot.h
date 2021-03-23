@@ -12,7 +12,6 @@ namespace Group
     : public juce::Component
     {
     public:
-        
         enum ColourIds : int
         {
               backgroundColourId = 0x2040000
@@ -30,7 +29,6 @@ namespace Group
         void paint(juce::Graphics& g) override;
         
     private:
-        
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;

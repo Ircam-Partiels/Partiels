@@ -15,7 +15,6 @@ namespace Application
         juce::Typeface::Ptr getDefaultSansSerifTypeface();
         juce::String getDefaultSansSerifTypefaceName();
     private:
-        
         std::vector<juce::Typeface::Ptr> mFonts;
         juce::Typeface::Ptr mDefaultSansSerifTypeface;
     };

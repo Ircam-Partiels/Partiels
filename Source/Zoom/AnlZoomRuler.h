@@ -10,7 +10,6 @@ namespace Zoom
     : public juce::Component
     {
     public:
-        
         enum ColourIds : int
         {
               backgroundColourId = 0x2010100
@@ -83,7 +82,6 @@ namespace Zoom
         void paint(juce::Graphics& g) override;
         
     private:
-        
         juce::Range<double> calculateSelectedValueRange(juce::MouseEvent const& event);
         
         std::function<double(double)> mFromZoomRange = fromZoomRangePassThrough;

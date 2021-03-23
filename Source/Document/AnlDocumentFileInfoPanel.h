@@ -21,7 +21,6 @@ namespace Document
         void resized() override;
         
     private:
-        
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         

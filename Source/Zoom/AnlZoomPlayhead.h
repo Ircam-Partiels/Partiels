@@ -10,7 +10,6 @@ namespace Zoom
     : public juce::Component
     {
     public:
-        
         enum ColourIds : int
         {
               playheadColourId = 0x2010000
@@ -27,7 +26,6 @@ namespace Zoom
         void parentSizeChanged() override;
         void colourChanged() override;
     private:
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         juce::BorderSize<int> mBorderSize {};

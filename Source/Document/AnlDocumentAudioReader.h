@@ -24,7 +24,6 @@ namespace Document
         void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
         
     private:
-        
         // juce::Timer
         void timerCallback() override;
         

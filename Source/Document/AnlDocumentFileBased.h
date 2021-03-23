@@ -16,7 +16,6 @@ namespace Document
 
         static Document::AttrContainer& getDefaultContainer();
     protected:
-        
         // juce::FileBasedDocument
         juce::String getDocumentTitle() override;
         juce::Result loadDocument(juce::File const& file) override;
@@ -26,7 +25,6 @@ namespace Document
         void changed() override;
         
     private:
-        
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
         

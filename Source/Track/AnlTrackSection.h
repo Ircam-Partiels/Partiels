@@ -14,7 +14,6 @@ namespace Track
     : public juce::Component
     {
     public:
-        
         enum ColourIds : int
         {
               sectionColourId = 0x2030100
@@ -32,7 +31,6 @@ namespace Track
         void paint(juce::Graphics& g) override;
         
     private:
-        
         class Container
         : public juce::Component
         {

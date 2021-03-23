@@ -19,7 +19,6 @@ namespace Application
     : public juce::JUCEApplication
     {
     public:
-        
         Instance() = default;
         ~Instance() override = default;
         
@@ -49,7 +48,6 @@ namespace Application
         juce::AudioDeviceManager& getAudioDeviceManager();
 
     private:
-        
         TranslationManager mTranslationManager;
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;

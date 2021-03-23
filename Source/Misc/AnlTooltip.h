@@ -18,7 +18,6 @@ namespace Tooltip
         std::function<void(juce::String const&)> onChanged = nullptr;
         
     private:
-        
         // juce::Timer
         void timerCallback() override;
         
@@ -29,7 +28,6 @@ namespace Tooltip
     : public juce::Component
     {
     public:
-        
         Display();
         ~Display() override = default;
         
@@ -37,7 +35,6 @@ namespace Tooltip
         void resized() override;
         
     private:
-        
         juce::Label mLabel;
         Server mServer;
     };

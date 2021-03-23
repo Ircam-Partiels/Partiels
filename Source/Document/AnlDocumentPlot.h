@@ -12,7 +12,6 @@ namespace Document
     : public juce::Component
     {
     public:
-        
         Plot(Accessor& accessor);
         ~Plot() override;
         
@@ -20,7 +19,6 @@ namespace Document
         void resized() override;
         
     private:
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
     

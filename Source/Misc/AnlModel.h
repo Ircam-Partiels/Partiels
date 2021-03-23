@@ -617,7 +617,6 @@ namespace Model
         std::function<void(acsr_enum_type type, size_t index, NotificationType notification)> onAccessorErased = nullptr;
         
     protected:
-        
         //! @brief Inserts a new accessor in the container
         template <acsr_enum_type type>
         bool insertAccessor(size_t index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
@@ -654,7 +653,6 @@ namespace Model
         }
         
     private:
-        
         template <acsr_enum_type type>
         bool notifyAccessorInsertion(size_t index, NotificationType const notification)
         {

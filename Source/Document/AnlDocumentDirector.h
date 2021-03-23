@@ -18,7 +18,6 @@ namespace Document
         void removeAnalysis(juce::String const identifier, NotificationType const notification);
         
     private:
-        
         Accessor& mAccessor;
         PluginList::Scanner& mPluginListScanner;
         juce::AudioFormatManager& mAudioFormatManager;

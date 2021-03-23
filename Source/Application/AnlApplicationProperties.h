@@ -12,14 +12,12 @@ namespace Application
     : private juce::ChangeListener
     {
     public:
-        
         static const int sMaxIONumber = 64;
         
         Properties();
         ~Properties() override;
         
     private:
-        
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         

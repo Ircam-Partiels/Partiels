@@ -11,7 +11,6 @@ namespace Track
     : public juce::Component
     {
     public:
-        
         PropertyPanel(Accessor& accessor);
         ~PropertyPanel() override;
         
@@ -20,7 +19,6 @@ namespace Track
         
         void show();
     private:
-        
         class PropertyTextButton
         : public PropertyComponent<juce::TextButton>
         {

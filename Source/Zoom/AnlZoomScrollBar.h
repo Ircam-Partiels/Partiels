@@ -11,7 +11,6 @@ namespace Zoom
     , private juce::ScrollBar::Listener
     {
     public:
-        
         enum Orientation : bool
         {
               vertical
@@ -24,7 +23,6 @@ namespace Zoom
         // juce::Component
         void resized() override;        
     private:
-        
         // juce::ScrollBar::Listener
         void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
         

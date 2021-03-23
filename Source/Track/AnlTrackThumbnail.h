@@ -10,7 +10,6 @@ namespace Track
     : public juce::Component
     {
     public:
-        
         enum ColourIds : int
         {
               backgroundColourId = 0x2030200
@@ -32,7 +31,6 @@ namespace Track
         std::function<void(void)> onRemove = nullptr;
         
     private:
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         PropertyPanel mPropertyPanel {mAccessor};

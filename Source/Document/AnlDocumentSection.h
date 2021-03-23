@@ -13,7 +13,6 @@ namespace Document
     , public juce::DragAndDropContainer
     {
     public:
-        
         enum ColourIds : int
         {
               backgroundColourId = 0x2050100
@@ -29,7 +28,6 @@ namespace Document
         void paint(juce::Graphics& g) override;
         
     private:
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         BoundsListener mBoundsListener;

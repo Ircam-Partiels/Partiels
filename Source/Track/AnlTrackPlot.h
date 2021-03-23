@@ -12,7 +12,6 @@ namespace Track
     : public juce::Component
     {
     public:
-        
         Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~Plot() override;
         
@@ -20,7 +19,6 @@ namespace Track
         void paint(juce::Graphics& g) override;
         
     private:
-        
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mTimeZoomListener;

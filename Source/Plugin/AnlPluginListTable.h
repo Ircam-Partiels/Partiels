@@ -12,7 +12,6 @@ namespace PluginList
     , private juce::TableListBoxModel
     {
     public:
-        
         Table(Accessor& accessor, Scanner& scanner);
         ~Table() override;
         
@@ -22,7 +21,6 @@ namespace PluginList
         std::function<void(Plugin::Key const& key, Plugin::Description const& description)> onPluginSelected = nullptr;
         
     private:
-        
         void updateContent();
         
         // juce::TableListBoxModel

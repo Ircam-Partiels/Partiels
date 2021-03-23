@@ -9,7 +9,6 @@ namespace Track
     class Exporter
     {
     public:
-        
         static void toPreset(Accessor const& accessor, AlertType const alertType);
         
         static void fromPreset(Accessor& accessor, AlertType const alertType);

@@ -13,7 +13,6 @@ namespace Document
         FileWatcher(Accessor& accessor, juce::AudioFormatManager const& audioFormatManager);
         ~FileWatcher() override;
     private:
-        
         // juce::Timer
         void timerCallback() override;
         
