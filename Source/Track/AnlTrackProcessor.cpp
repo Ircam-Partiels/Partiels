@@ -109,7 +109,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         return {};
     });
     
-    return std::make_tuple(WarningType::none, "", description, state);
+    return std::make_tuple(WarningType::none, "", pluginDescription, state);
 }
 
 void Track::Processor::handleAsyncUpdate()
