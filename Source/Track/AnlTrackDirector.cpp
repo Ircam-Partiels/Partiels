@@ -15,17 +15,27 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
         {
             case AttrType::key:
             {
-                auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
-                try
+                auto getDescription = [&]() -> Plugin::Description
                 {
-                    auto const& description = mPluginListScanner.getDescription(accessor.getAttr<AttrType::key>(), sampleRate);
-                    mAccessor.setAttr<AttrType::name>(description.name, NotificationType::synchronous);
-                    mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
-                    mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
+                    try
+                    {
+                        auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
+                        return mPluginListScanner.getDescription(accessor.getAttr<AttrType::key>(), sampleRate);
+                        
+                    }
+                    catch(...) {}
+                    return {};
+                };
+                auto description = getDescription();
+                mAccessor.setAttr<AttrType::name>(description.name, NotificationType::synchronous);
+                mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
+                if(mAccessor.getAttr<AttrType::state>() == description.defaultState)
+                {
+                    runAnalysis(notification);
                 }
-                catch(...)
+                else
                 {
-                    
+                    mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
                 }
             }
                 break;
