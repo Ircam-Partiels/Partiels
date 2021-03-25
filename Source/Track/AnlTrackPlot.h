@@ -17,6 +17,20 @@ namespace Track
         void paint(juce::Graphics& g) override;
         
     private:
+        static float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
+        static float secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
+        static double pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
+        static double realTimeToSeconds(Vamp::RealTime const& rt);
+        static Vamp::RealTime secondsToRealTime(double seconds);
+        static Vamp::RealTime getEndRealTime(Plugin::Result const& rt);
+        
+
+        static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange);
+        
+        static void paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange);
+        
+        static void paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr);
+        
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mTimeZoomListener;
