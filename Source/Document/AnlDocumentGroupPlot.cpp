@@ -73,7 +73,7 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
                 break;
             case AttrType::layoutVertical:
             {
-                setSize(getWidth(), acsr.getAttr<AttrType::layoutVertical>());
+                //setSize(getWidth(), acsr.getAttr<AttrType::layoutVertical>());
             }
                 break;
             case AttrType::layout:

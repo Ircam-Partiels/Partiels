@@ -44,6 +44,9 @@ namespace Document
         DraggableTable mDraggableTable;
         juce::Viewport mViewport;
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
+        
+        ResizerBar mResizerBarLeft {ResizerBar::Orientation::horizontal, true, {50, 2000}};
+        ResizerBar mResizerBarRight {ResizerBar::Orientation::horizontal, true, {50, 2000}};
     };
 }
 

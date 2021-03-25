@@ -150,6 +150,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupPlot.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupPlot.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupSection.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupSection.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
 

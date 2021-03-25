@@ -19,6 +19,8 @@ Document::Section::Section(Accessor& accessor)
         mPlayheadContainer.setVisible(!mSections.empty());
         mZoomTimeRuler.setVisible(!mSections.empty());
         mPlotDecorator.setVisible(mSections.size() > 1);
+        mResizerBarLeft.setVisible(mSections.size() > 1);
+        mResizerBarRight.setVisible(mSections.size() > 1);
         mViewport.setVisible(!mSections.empty());
         mZoomTimeScrollBar.setVisible(!mSections.empty());
         mResizerBar.setVisible(!mSections.empty());
@@ -134,6 +136,13 @@ Document::Section::Section(Accessor& accessor)
         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
     };
     
+    auto onResizerMoved = [&](int size)
+    {
+        mAccessor.setAttr<AttrType::layoutVertical>(size, NotificationType::synchronous);
+    };
+    mResizerBarLeft.onMoved = onResizerMoved;
+    mResizerBarRight.onMoved = onResizerMoved;
+    
     mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
@@ -171,6 +180,8 @@ Document::Section::Section(Accessor& accessor)
     addChildComponent(mViewport);
     addChildComponent(mZoomTimeScrollBar);
     addChildComponent(mResizerBar);
+    addAndMakeVisible(mResizerBarLeft);
+    addAndMakeVisible(mResizerBarRight);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -192,7 +203,11 @@ void Document::Section::resized()
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
     if(mPlotDecorator.isVisible())
     {
-        mPlotDecorator.setBounds(bounds.removeFromTop(100).withLeft(left).withRight(right + 6));
+        auto const bottom = mAccessor.getAttr<AttrType::layoutVertical>();
+        mPlotDecorator.setBounds(bounds.removeFromTop(bottom - bounds.getY()).withLeft(left).withRight(right + 6));
+        auto resizersBounds = bounds.removeFromTop(2);
+        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(left).reduced(4, 0));
+        mResizerBarRight.setBounds(resizersBounds.removeFromLeft(right).reduced(4, 0));
     }
     mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
     mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));
