@@ -256,7 +256,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                     {
                         instance->setPlaying(true);
                     }
-                    startTimer(50);
+                    startTimer(20);
                 }
                 else
                 {
