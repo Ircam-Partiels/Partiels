@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentGroupSnapshot.h"
 #include "AnlDocumentGroupPlot.h"
 #include "../Track/AnlTrackSection.h"
 
@@ -37,6 +38,10 @@ namespace Document
         
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, true, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
+        
+        GroupSnapshot mSnapshot {mAccessor};
+        Decorator mSnapshotDecorator {mSnapshot, 1, 4.0f};
+        
         GroupPlot mPlot {mAccessor};
         Decorator mPlotDecorator {mPlot, 1, 4.0f};
         

@@ -19,4 +19,4 @@
 - Check move track
 - Add percent for analysing/rendering
 - Improve zoom support using modes
-- Improve section mouse down (results)
+- Improve section mouse down (results) - Move Section::Container

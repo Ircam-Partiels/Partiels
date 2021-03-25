@@ -23,7 +23,6 @@ namespace Document
         Accessor::Listener mListener;
     
         Zoom::Playhead mZoomPlayhead;
-        LoadingCircle mProcessingButton;
         
         std::map<juce::String, std::unique_ptr<Track::Plot>> mPlots;
     };

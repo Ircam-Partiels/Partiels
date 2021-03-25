@@ -1,28 +1,28 @@
 #pragma once
 
-#include "AnlTrackModel.h"
+#include "AnlDocumentModel.h"
+#include "../Track/AnlTrackSnapshot.h"
+
 
 ANALYSE_FILE_BEGIN
 
-namespace Track
+namespace Document
 {
-    class Snapshot
+    class GroupSnapshot
     : public juce::Component
     {
     public:
-        Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
-        ~Snapshot() override;
+        GroupSnapshot(Accessor& accessor);
+        ~GroupSnapshot() override;
         
         // juce::Component
-        void paint(juce::Graphics& g) override;
-
+        void resized() override;
+        
     private:
         Accessor& mAccessor;
-        Zoom::Accessor& mTimeZoomAccessor;
-        Zoom::Accessor::Listener mTimeZoomListener;
-        Zoom::Accessor::Listener mValueZoomListener;
-        Zoom::Accessor::Listener mBinZoomListener;
         Accessor::Listener mListener;
+        
+        std::map<juce::String, std::unique_ptr<Track::Snapshot>> mSnapshots;
     };
 }
 

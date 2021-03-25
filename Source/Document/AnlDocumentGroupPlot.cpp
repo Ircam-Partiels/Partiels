@@ -6,7 +6,6 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
 : mAccessor(accessor)
 , mZoomPlayhead(mAccessor.getAccessor<AcsrType::timeZoom>(0), {})
 {
-    addChildComponent(mProcessingButton);
     addAndMakeVisible(mZoomPlayhead);
     
     auto updateLayout = [&]()
@@ -49,7 +48,6 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
             }
         }
 
-        addAndMakeVisible(mProcessingButton, -1);
         addAndMakeVisible(mZoomPlayhead, -1);
         resized();
     };
@@ -63,17 +61,13 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
+            case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
+            case AttrType::groups:
                 break;
             case AttrType::playheadPosition:
             {
                 mZoomPlayhead.setPosition(acsr.getAttr<AttrType::playheadPosition>());
-            }
-                break;
-            case AttrType::layoutHorizontal:
-                break;
-            case AttrType::layoutVertical:
-            {
-                //setSize(getWidth(), acsr.getAttr<AttrType::layoutVertical>());
             }
                 break;
             case AttrType::layout:
@@ -126,7 +120,6 @@ Document::GroupPlot::~GroupPlot()
 void Document::GroupPlot::resized()
 {
     auto bounds = getLocalBounds();
-    mProcessingButton.setBounds(8, 8, 20, 20);
     
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)

@@ -160,7 +160,7 @@ void Document::GroupSection::resized()
 
 void Document::GroupSection::paint(juce::Graphics& g)
 {
-    
+    juce::ignoreUnused(g);
 }
 
 ANALYSE_FILE_END

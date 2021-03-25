@@ -18,6 +18,7 @@ Document::Section::Section(Accessor& accessor)
     {
         mPlayheadContainer.setVisible(!mSections.empty());
         mZoomTimeRuler.setVisible(!mSections.empty());
+        mSnapshotDecorator.setVisible(mSections.size() > 1);
         mPlotDecorator.setVisible(mSections.size() > 1);
         mResizerBarLeft.setVisible(mSections.size() > 1);
         mResizerBarRight.setVisible(mSections.size() > 1);
@@ -168,7 +169,6 @@ Document::Section::Section(Accessor& accessor)
         resized();
     };
     mBoundsListener.attachTo(mDraggableTable);
-    mBoundsListener.attachTo(mPlotDecorator);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
@@ -176,6 +176,7 @@ Document::Section::Section(Accessor& accessor)
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
     addChildComponent(mPlayheadContainer);
     addChildComponent(mZoomTimeRuler);
+    addChildComponent(mSnapshotDecorator);
     addChildComponent(mPlotDecorator);
     addChildComponent(mViewport);
     addChildComponent(mZoomTimeScrollBar);
@@ -201,17 +202,20 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    if(mPlotDecorator.isVisible())
+    if(mSections.size() > 1)
     {
         auto const bottom = mAccessor.getAttr<AttrType::layoutVertical>();
-        mPlotDecorator.setBounds(bounds.removeFromTop(bottom - bounds.getY()).withLeft(left).withRight(right + 6));
+        auto subsection = bounds.removeFromTop(bottom - bounds.getY());
+        mSnapshotDecorator.setBounds(subsection.removeFromLeft(left));
+        mPlotDecorator.setBounds(subsection.withRight(right + 6));
         auto resizersBounds = bounds.removeFromTop(2);
         mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(left).reduced(4, 0));
         mResizerBarRight.setBounds(resizersBounds.removeFromLeft(right).reduced(4, 0));
     }
-    mResizerBar.setBounds(left - 2, bounds.getY() + 2, 2, mDraggableTable.getHeight() - 4);
     mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
+    
+    mResizerBar.setBounds(left - 2, mPlayheadContainer.getBottom() + 2, 2, mViewport.getBottom() - mPlayheadContainer.getBottom() - 4);
 }
 
 void Document::Section::paint(juce::Graphics& g)
