@@ -19,3 +19,4 @@
 - Check move track
 - Add percent for analysing/rendering
 - Improve zoom support using modes
+- Improve section mouse down (results)
