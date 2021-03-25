@@ -156,7 +156,6 @@ void Track::Snapshot::paint(juce::Graphics& g)
         case DisplayMode::segment:
         {
             auto const realTime = Vamp::RealTime::fromSeconds(time);
-            anlWeakAssert(!it->values.empty());
             if(it->values.empty())
             {
                 return;
