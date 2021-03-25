@@ -51,6 +51,7 @@ namespace Document
         
         std::vector<std::unique_ptr<Track::Section>> mSections;
         DraggableTable mDraggableTable;
+        ConcertinaTable mConcertinaTable {"", false};
         juce::Viewport mViewport;
         Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
         

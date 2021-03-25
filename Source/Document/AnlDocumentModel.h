@@ -39,6 +39,7 @@ namespace Document
         , layoutHorizontal
         , layoutVertical
         , layout
+        , expanded
         , groups
     };
     
@@ -57,6 +58,7 @@ namespace Document
     , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
     , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
+    , Model::Attr<AttrType::expanded, bool, Model::Flag::basic>
     , Model::Attr<AttrType::groups, std::vector<Group>, Model::Flag::basic>
     >;
     
@@ -80,6 +82,7 @@ namespace Document
                                  , {144}
                                  , {144}
                                  , {}
+                                 , {false}
                                  , {{}}))
         {
         }

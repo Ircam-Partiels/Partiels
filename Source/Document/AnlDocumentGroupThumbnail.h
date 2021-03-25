@@ -16,7 +16,7 @@ namespace Document
         };
         
         GroupThumbnail(Accessor& accessor);
-        ~GroupThumbnail() override = default;
+        ~GroupThumbnail() override;
         
         // juce::Component
         void resized() override;
@@ -26,11 +26,10 @@ namespace Document
         
     private:
         Accessor& mAccessor;
+        Accessor::Listener mListener;
         
-        juce::ImageButton mPropertiesButton;
         juce::ImageButton mExportButton;
-        LoadingCircle mProcessingButton;
-        juce::ImageButton mRemoveButton;
+        juce::ImageButton mExpandButton;
     };
 }
 

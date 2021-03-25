@@ -18,11 +18,6 @@ Document::Section::Section(Accessor& accessor)
     {
         mPlayheadContainer.setVisible(!mSections.empty());
         mZoomTimeRuler.setVisible(!mSections.empty());
-        mSnapshotDecorator.setVisible(mSections.size() > 1);
-        mThumbnailDecorator.setVisible(mSections.size() > 1);
-        mPlotDecorator.setVisible(mSections.size() > 1);
-        mResizerBarLeft.setVisible(mSections.size() > 1);
-        mResizerBarRight.setVisible(mSections.size() > 1);
         mViewport.setVisible(!mSections.empty());
         mZoomTimeScrollBar.setVisible(!mSections.empty());
         mResizerBar.setVisible(!mSections.empty());
@@ -71,7 +66,14 @@ Document::Section::Section(Accessor& accessor)
                 updateComponents();
             }
                 break;
-        }
+            case AttrType::expanded:
+            {
+                mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
+            }
+                break;
+            case AttrType::groups:
+                break;
+}
     };
     
     mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
@@ -169,20 +171,23 @@ Document::Section::Section(Accessor& accessor)
         juce::ignoreUnused(component);
         resized();
     };
-    mBoundsListener.attachTo(mDraggableTable);
-    mViewport.setViewedComponent(&mDraggableTable, false);
+    
+    mConcertinaTable.setComponents({mDraggableTable});
+    mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
+    mBoundsListener.attachTo(mConcertinaTable);
+    mViewport.setViewedComponent(&mConcertinaTable, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
     setSize(480, 200);
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
-    addChildComponent(mPlayheadContainer);
-    addChildComponent(mZoomTimeRuler);
-    addChildComponent(mThumbnailDecorator);
-    addChildComponent(mSnapshotDecorator);
-    addChildComponent(mPlotDecorator);
-    addChildComponent(mViewport);
-    addChildComponent(mZoomTimeScrollBar);
-    addChildComponent(mResizerBar);
+    addAndMakeVisible(mPlayheadContainer);
+    addAndMakeVisible(mZoomTimeRuler);
+    addAndMakeVisible(mThumbnailDecorator);
+    addAndMakeVisible(mSnapshotDecorator);
+    addAndMakeVisible(mPlotDecorator);
+    addAndMakeVisible(mViewport);
+    addAndMakeVisible(mZoomTimeScrollBar);
+    addAndMakeVisible(mResizerBar);
     addAndMakeVisible(mResizerBarLeft);
     addAndMakeVisible(mResizerBarRight);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -190,7 +195,7 @@ Document::Section::Section(Accessor& accessor)
 
 Document::Section::~Section()
 {
-    mBoundsListener.detachFrom(mDraggableTable);
+    mBoundsListener.detachFrom(mConcertinaTable);
     mAccessor.removeListener(mListener);
 }
 
@@ -198,13 +203,14 @@ void Document::Section::resized()
 {
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
     auto bounds = getLocalBounds().withTrimmedRight(scrollbarWidth);
+    auto const width = bounds.getWidth();
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
-    auto const right = bounds.getWidth() - 32;
+    auto const right = width - 32;
     
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    if(mSections.size() > 1)
+    if(true)
     {
         auto const bottom = mAccessor.getAttr<AttrType::layoutVertical>();
         auto subsection = bounds.removeFromTop(bottom - bounds.getY());
@@ -215,7 +221,10 @@ void Document::Section::resized()
         mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(left).reduced(4, 0));
         mResizerBarRight.setBounds(resizersBounds.removeFromLeft(right).reduced(4, 0));
     }
-    mDraggableTable.setBounds(bounds.withHeight(mDraggableTable.getHeight()));
+    if(width != mConcertinaTable.getWidth())
+    {
+        mConcertinaTable.setBounds(mConcertinaTable.getLocalBounds().withWidth(width));
+    }
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
     
     mResizerBar.setBounds(left - 2, mPlayheadContainer.getBottom() + 2, 2, mViewport.getBottom() - mPlayheadContainer.getBottom() - 4);

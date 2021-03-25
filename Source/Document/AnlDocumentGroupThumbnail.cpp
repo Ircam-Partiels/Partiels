@@ -5,23 +5,14 @@ ANALYSE_FILE_BEGIN
 Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
-    addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mExportButton);
-    addAndMakeVisible(mRemoveButton);
-    addAndMakeVisible(mProcessingButton);
+    addAndMakeVisible(mExpandButton);
     
-    mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
-    mExportButton.setTooltip(juce::translate("Export the analysis"));
-    mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
+    mExportButton.setTooltip(juce::translate("Export the analyses"));
     
-    mRemoveButton.onClick = [&]()
+    mExpandButton.onClick = [&]()
     {
-
-    };
-    
-    mPropertiesButton.onClick = [&]()
-    {
-        
+        mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
     
     mExportButton.onClick = [&]()
@@ -29,6 +20,36 @@ Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
         // Force to repaint to update the state
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
+    
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType const attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::file:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+            case AttrType::playheadPosition:
+            case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
+            case AttrType::layout:
+            case AttrType::expanded:
+            {
+                lookAndFeelChanged();
+            }
+                break;
+            case AttrType::groups:
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Document::GroupThumbnail::~GroupThumbnail()
+{
+    mAccessor.removeListener(mListener);
 }
 
 void Document::GroupThumbnail::resized()
@@ -36,14 +57,10 @@ void Document::GroupThumbnail::resized()
     auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
-    mRemoveButton.setVisible(bounds.getHeight() >= size);
-    mRemoveButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mProcessingButton.setVisible(bounds.getHeight() >= size);
-    mProcessingButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mExpandButton.setVisible(bounds.getHeight() >= size);
+    mExpandButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
     mExportButton.setVisible(bounds.getHeight() >= size);
     mExportButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mPropertiesButton.setVisible(bounds.getHeight() >= size);
-    mPropertiesButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
 }
 
 void Document::GroupThumbnail::paint(juce::Graphics& g)
@@ -68,8 +85,16 @@ void Document::GroupThumbnail::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
-        laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
-        laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
+        if(mAccessor.getAttr<AttrType::expanded>())
+        {
+            laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);
+            mExpandButton.setTooltip(juce::translate("Shrink the analyses"));
+        }
+        else
+        {
+            laf->setButtonIcon(mExpandButton, IconManager::IconType::expand);
+            mExpandButton.setTooltip(juce::translate("Expand the analyses"));
+        }
     }
 }
 

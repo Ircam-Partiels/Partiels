@@ -19,6 +19,9 @@ juce::Image IconManager::getIcon(IconType const type)
         case IconType::edit:
             return juce::ImageCache::getFromMemory(IconsData::editer_png, IconsData::editer_pngSize);
             break;
+        case IconType::expand:
+            return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
+            break;
         case IconType::information:
             return juce::ImageCache::getFromMemory(IconsData::information_png, IconsData::information_pngSize);
             break;
@@ -51,6 +54,9 @@ juce::Image IconManager::getIcon(IconType const type)
             break;
         case IconType::share:
             return juce::ImageCache::getFromMemory(IconsData::share_png, IconsData::share_pngSize);
+            break;
+        case IconType::shrink:
+            return juce::ImageCache::getFromMemory(IconsData::shrink_png, IconsData::shrink_pngSize);
             break;
     }
     return juce::Image();

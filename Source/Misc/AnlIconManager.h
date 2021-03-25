@@ -21,6 +21,7 @@ public:
         , cancel
         , checked
         , edit
+        , expand
         , information
         , loading
         , loop
@@ -32,6 +33,7 @@ public:
         , rewind
         , search
         , share
+        , shrink
     };
     
     static juce::Image getIcon(IconType const type);
