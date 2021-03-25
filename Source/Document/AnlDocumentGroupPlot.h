@@ -8,12 +8,12 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    class Plot
+    class GroupPlot
     : public juce::Component
     {
     public:
-        Plot(Accessor& accessor);
-        ~Plot() override;
+        GroupPlot(Accessor& accessor);
+        ~GroupPlot() override;
         
         // juce::Component
         void resized() override;

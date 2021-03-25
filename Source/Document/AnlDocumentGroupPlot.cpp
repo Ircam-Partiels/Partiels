@@ -1,8 +1,8 @@
-#include "AnlDocumentPlot.h"
+#include "AnlDocumentGroupPlot.h"
 
 ANALYSE_FILE_BEGIN
 
-Document::Plot::Plot(Accessor& accessor)
+Document::GroupPlot::GroupPlot(Accessor& accessor)
 : mAccessor(accessor)
 , mZoomPlayhead(mAccessor.getAccessor<AcsrType::timeZoom>(0), {})
 {
@@ -118,12 +118,12 @@ Document::Plot::Plot(Accessor& accessor)
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Document::Plot::~Plot()
+Document::GroupPlot::~GroupPlot()
 {
     mAccessor.removeListener(mListener);
 }
 
-void Document::Plot::resized()
+void Document::GroupPlot::resized()
 {
     auto bounds = getLocalBounds();
     mProcessingButton.setBounds(8, 8, 20, 20);

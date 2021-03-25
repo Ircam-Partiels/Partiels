@@ -132,6 +132,7 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h)
 
 file(GLOB DocumentSources
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentDirector.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentDirector.h
@@ -147,8 +148,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentPlayhead.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentPlot.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentPlot.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupPlot.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupPlot.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
 

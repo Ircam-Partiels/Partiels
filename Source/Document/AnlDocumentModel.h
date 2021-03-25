@@ -9,6 +9,26 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
+    struct Group
+    {
+        juce::String identifier;                    //!< The identifier of the group
+        juce::String name;                          //!< The name of the group
+        int height = 144;                           //!< The height of the group
+        juce::Colour colour = juce::Colours::black; //!< The colour of the group
+        bool open = true;                           //!< The open/closed state of the group
+        std::vector<juce::String> layout;           //!< The layout of the group
+        
+        inline bool operator==(Group const& rhd) const noexcept
+        {
+            return identifier == rhd.identifier && name == rhd.name && height == rhd.height && colour == rhd.colour && open == rhd.open && layout == rhd.layout;
+        }
+        
+        inline bool operator!=(Group const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+    
     enum class AttrType : size_t
     {
           file
@@ -19,6 +39,7 @@ namespace Document
         , layoutHorizontal
         , layoutVertical
         , layout
+        , groups
     };
     
     enum class AcsrType : size_t
@@ -36,6 +57,7 @@ namespace Document
     , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
     , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
+    , Model::Attr<AttrType::groups, std::vector<Group>, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -57,10 +79,21 @@ namespace Document
                                  , {0.0}
                                  , {144}
                                  , {144}
-                                 , {}))
+                                 , {}
+                                 , {{}}))
         {
         }
     };
+}
+
+namespace XmlParser
+{
+    template<>
+    void toXml<Document::Group>(juce::XmlElement& xml, juce::Identifier const& attributeName, Document::Group const& value);
+    
+    template<>
+    auto fromXml<Document::Group>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Document::Group const& defaultValue)
+    -> Document::Group;
 }
 
 ANALYSE_FILE_END

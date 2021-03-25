@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
-#include "AnlDocumentPlot.h"
+#include "AnlDocumentGroupPlot.h"
 #include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -37,7 +37,7 @@ namespace Document
         
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, true, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
-        Plot mPlot {mAccessor};
+        GroupPlot mPlot {mAccessor};
         Decorator mPlotDecorator {mPlot, 1, 4.0f};
         
         std::vector<std::unique_ptr<Track::Section>> mSections;
