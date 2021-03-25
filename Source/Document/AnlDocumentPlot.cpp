@@ -138,4 +138,5 @@ void Document::Plot::resized()
         }
     }
 }
+
 ANALYSE_FILE_END
