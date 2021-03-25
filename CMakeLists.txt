@@ -131,13 +131,6 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h)
 
-file(GLOB GroupSources
-    ${SOURCES_DIRECTORY}/Group/AnlGroupModel.h
-    ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.cpp
-    ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.h
-    ${SOURCES_DIRECTORY}/Group/AnlGroupSection.cpp
-    ${SOURCES_DIRECTORY}/Group/AnlGroupSection.h)
-
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentDirector.cpp
