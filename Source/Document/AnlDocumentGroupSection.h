@@ -17,7 +17,7 @@ namespace Document
     public:
         enum ColourIds : int
         {
-              sectionColourId = 0x2030100
+              sectionColourId = 0x2040100
         };
         
         GroupSection(Accessor& accessor, size_t index, juce::Component& separator);

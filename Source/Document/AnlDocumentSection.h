@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentGroupThumbnail.h"
 #include "AnlDocumentGroupSnapshot.h"
 #include "AnlDocumentGroupPlot.h"
 #include "../Track/AnlTrackSection.h"
@@ -16,7 +17,7 @@ namespace Document
     public:
         enum ColourIds : int
         {
-              backgroundColourId = 0x2040100
+              backgroundColourId = 0x2040300
         };
         
         Section(Accessor& accessor);
@@ -38,6 +39,9 @@ namespace Document
         
         ResizerBar mResizerBar {ResizerBar::Orientation::vertical, true, {50, 300}};
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
+        
+        GroupThumbnail mThumbnail {mAccessor};
+        Decorator mThumbnailDecorator {mThumbnail, 1, 4.0f};
         
         GroupSnapshot mSnapshot {mAccessor};
         Decorator mSnapshotDecorator {mSnapshot, 1, 4.0f};

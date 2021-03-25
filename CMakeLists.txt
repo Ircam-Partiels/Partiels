@@ -154,6 +154,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupSection.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupSnapshot.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupSnapshot.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupThumbnail.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupThumbnail.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
 

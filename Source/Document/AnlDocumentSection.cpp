@@ -19,6 +19,7 @@ Document::Section::Section(Accessor& accessor)
         mPlayheadContainer.setVisible(!mSections.empty());
         mZoomTimeRuler.setVisible(!mSections.empty());
         mSnapshotDecorator.setVisible(mSections.size() > 1);
+        mThumbnailDecorator.setVisible(mSections.size() > 1);
         mPlotDecorator.setVisible(mSections.size() > 1);
         mResizerBarLeft.setVisible(mSections.size() > 1);
         mResizerBarRight.setVisible(mSections.size() > 1);
@@ -176,6 +177,7 @@ Document::Section::Section(Accessor& accessor)
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
     addChildComponent(mPlayheadContainer);
     addChildComponent(mZoomTimeRuler);
+    addChildComponent(mThumbnailDecorator);
     addChildComponent(mSnapshotDecorator);
     addChildComponent(mPlotDecorator);
     addChildComponent(mViewport);
@@ -206,7 +208,8 @@ void Document::Section::resized()
     {
         auto const bottom = mAccessor.getAttr<AttrType::layoutVertical>();
         auto subsection = bounds.removeFromTop(bottom - bounds.getY());
-        mSnapshotDecorator.setBounds(subsection.removeFromLeft(left));
+        mThumbnailDecorator.setBounds(subsection.removeFromLeft(48));
+        mSnapshotDecorator.setBounds(subsection.removeFromLeft(left - 48).withTrimmedLeft(1));
         mPlotDecorator.setBounds(subsection.withRight(right + 6));
         auto resizersBounds = bounds.removeFromTop(2);
         mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(left).reduced(4, 0));

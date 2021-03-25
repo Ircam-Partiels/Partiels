@@ -1,39 +1,32 @@
 #pragma once
 
-#include "AnlTrackPropertyPanel.h"
+#include "AnlDocumentModel.h"
 
 ANALYSE_FILE_BEGIN
 
-namespace Track
+namespace Document
 {
-    class Thumbnail
+    class GroupThumbnail
     : public juce::Component
     {
     public:
         enum ColourIds : int
         {
-              backgroundColourId = 0x2030200
-            , borderColourId
-            , textColourId
+              textColourId = 0x2040200
         };
         
-        Thumbnail(Accessor& accessor);
-        ~Thumbnail() override;
+        GroupThumbnail(Accessor& accessor);
+        ~GroupThumbnail() override = default;
         
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
-        void colourChanged() override;
-        void mouseDrag(juce::MouseEvent const& event) override;
-        
-        std::function<void(void)> onRemove = nullptr;
         
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
-        PropertyPanel mPropertyPanel {mAccessor};
+        
         juce::ImageButton mPropertiesButton;
         juce::ImageButton mExportButton;
         LoadingCircle mProcessingButton;
