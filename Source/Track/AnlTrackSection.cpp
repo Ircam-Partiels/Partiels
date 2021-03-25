@@ -248,7 +248,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
     addChildComponent(mValueScrollBar);
     addChildComponent(mBinRuler);
     addChildComponent(mBinScrollBar);
-    addAndMakeVisible(mThumbnail);
+    addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBarLeft);
@@ -286,7 +286,7 @@ void Track::Section::resized()
     // Thumbnail and Snapshot
     {
         auto leftSide = bounds.removeFromLeft(leftSize);
-        mThumbnail.setBounds(leftSide.removeFromLeft(48));
+        mThumbnailDecoration.setBounds(leftSide.removeFromLeft(48));
         mSnapshotDecoration.setBounds(leftSide.withTrimmedLeft(1));
     }
     

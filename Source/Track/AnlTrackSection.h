@@ -65,6 +65,7 @@ namespace Track
         BoundsListener mBoundsListener;
         
         Thumbnail mThumbnail {mAccessor};
+        Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
         
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         Container mSnapshotContainer {mAccessor, mTimeZoomAccessor, mSnapshot, false};

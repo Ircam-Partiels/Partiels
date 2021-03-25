@@ -12,9 +12,7 @@ namespace Track
     public:
         enum ColourIds : int
         {
-              backgroundColourId = 0x2030200
-            , borderColourId
-            , textColourId
+              textColourId = 0x2030200
         };
         
         Thumbnail(Accessor& accessor);
@@ -25,7 +23,6 @@ namespace Track
         void paint(juce::Graphics& g) override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
-        void colourChanged() override;
         void mouseDrag(juce::MouseEvent const& event) override;
         
         std::function<void(void)> onRemove = nullptr;

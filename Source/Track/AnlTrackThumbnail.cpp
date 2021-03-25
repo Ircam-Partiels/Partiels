@@ -1,4 +1,5 @@
 #include "AnlTrackThumbnail.h"
+#include "AnlTrackSection.h"
 #include "AnlTrackExporter.h"
 
 ANALYSE_FILE_BEGIN
@@ -134,11 +135,6 @@ void Track::Thumbnail::resized()
 
 void Track::Thumbnail::paint(juce::Graphics& g)
 {
-    g.fillAll(findColour(ColourIds::backgroundColourId));
-    
-    g.setColour(findColour(ColourIds::borderColourId));
-    g.drawRoundedRectangle(getLocalBounds().reduced(1).toFloat(), 4.0f, 1.0f);
-    
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
     
@@ -169,15 +165,10 @@ void Track::Thumbnail::parentHierarchyChanged()
     lookAndFeelChanged();
 }
 
-void Track::Thumbnail::colourChanged()
-{
-    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
-}
-
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
-    auto* parent = getParentComponent();
+    auto* parent = findParentComponentOfClass<Section>();
     anlWeakAssert(dragContainer != nullptr && parent != nullptr);
     if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
     {

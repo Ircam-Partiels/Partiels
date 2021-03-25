@@ -43,12 +43,11 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::ColourIds::selectionColourId, thumbColour);
     setColour(Zoom::Playhead::ColourIds::playheadColourId, thumbColour);
     
-    setColour(Track::Thumbnail::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(Track::Thumbnail::ColourIds::borderColourId, backgroundColour);
     setColour(Track::Thumbnail::ColourIds::textColourId, textColour);
-    setColour(Track::Section::sectionColourId, backgroundColour.darker());
+    setColour(Track::Section::ColourIds::sectionColourId, backgroundColour.darker());
     
-    setColour(Document::Section::backgroundColourId, backgroundColour.darker());
+    setColour(Document::GroupThumbnail::ColourIds::textColourId, textColour);
+    setColour(Document::Section::ColourIds::backgroundColourId, backgroundColour.darker());
     
     auto& colourScheme = getCurrentColourScheme();
     colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, backgroundColour.darker());
