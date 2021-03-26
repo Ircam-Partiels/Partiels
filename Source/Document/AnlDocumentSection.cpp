@@ -71,8 +71,6 @@ Document::Section::Section(Accessor& accessor)
                 mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
             }
                 break;
-            case AttrType::groups:
-                break;
 }
     };
     

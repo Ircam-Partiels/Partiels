@@ -63,7 +63,6 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
             case AttrType::isPlaybackStarted:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
-            case AttrType::groups:
                 break;
             case AttrType::playheadPosition:
             {

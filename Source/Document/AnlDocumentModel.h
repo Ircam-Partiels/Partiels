@@ -40,7 +40,6 @@ namespace Document
         , layoutVertical
         , layout
         , expanded
-        , groups
     };
     
     enum class AcsrType : size_t
@@ -59,7 +58,6 @@ namespace Document
     , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::expanded, bool, Model::Flag::basic>
-    , Model::Attr<AttrType::groups, std::vector<Group>, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -82,8 +80,7 @@ namespace Document
                                  , {144}
                                  , {144}
                                  , {}
-                                 , {false}
-                                 , {{}}))
+                                 , {false}))
         {
         }
     };

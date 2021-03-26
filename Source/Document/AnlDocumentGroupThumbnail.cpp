@@ -39,8 +39,6 @@ Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
                 lookAndFeelChanged();
             }
                 break;
-            case AttrType::groups:
-                break;
         }
     };
     

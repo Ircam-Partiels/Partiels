@@ -15,7 +15,6 @@ Document::AttrContainer& Document::FileBased::getDefaultContainer()
         , {144}
         , {}
         , {false}
-        , {{}}
     };
     return document;
 }
