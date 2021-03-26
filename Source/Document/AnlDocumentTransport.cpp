@@ -38,6 +38,7 @@ Document::Transport::Transport(Accessor& accessor)
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::layout:
+            case AttrType::expanded:
                 break;
         }
     };

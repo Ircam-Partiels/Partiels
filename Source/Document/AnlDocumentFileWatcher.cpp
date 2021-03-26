@@ -29,6 +29,7 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::layout:
+            case AttrType::expanded:
                 break;
         }
     };

@@ -71,6 +71,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::layout:
+            case AttrType::expanded:
                 break;
         }
     };

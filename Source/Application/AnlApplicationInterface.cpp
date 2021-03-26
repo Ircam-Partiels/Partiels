@@ -63,6 +63,7 @@ Application::Interface::Interface()
             case Document::AttrType::layoutHorizontal:
             case Document::AttrType::layoutVertical:
             case Document::AttrType::layout:
+            case Document::AttrType::expanded:
                 break;
         }
     };

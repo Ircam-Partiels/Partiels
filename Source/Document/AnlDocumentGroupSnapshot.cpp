@@ -60,6 +60,7 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
             case AttrType::playheadPosition:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
+            case AttrType::expanded:
                 break;
             case AttrType::layout:
             {
