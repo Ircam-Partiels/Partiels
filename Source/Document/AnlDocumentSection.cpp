@@ -2,26 +2,11 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::Section(Accessor& accessor)
+Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mZoomTimeRuler.setPrimaryTickInterval(0);
-    mZoomTimeRuler.setTickReferenceValue(0.0);
-    mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
-    mZoomTimeRuler.setMaximumStringWidth(70.0);
-    mZoomTimeRuler.setValueAsStringMethod([](double value)
-    {
-        return Format::secondsToString(value, {":", ":", ":", ""});
-    });
-    
     auto updateComponents = [&]()
     {
-        mPlayheadContainer.setVisible(!mSections.empty());
-        mZoomTimeRuler.setVisible(!mSections.empty());
-        mViewport.setVisible(!mSections.empty());
-        mZoomTimeScrollBar.setVisible(!mSections.empty());
-        mResizerBar.setVisible(!mSections.empty());
-        
         std::vector<ConcertinaTable::ComponentRef> components;
         components.reserve(mSections.size());
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -49,13 +34,11 @@ Document::Section::Section(Accessor& accessor)
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
-                break;
             case AttrType::playheadPosition:
-            {
-                mPlayhead.setPosition(acsr.getAttr<AttrType::playheadPosition>());
-            }
-                break;
             case AttrType::layoutHorizontal:
+            {
+                resized();
+            }
             case AttrType::layoutVertical:
             {
                 resized();
@@ -71,7 +54,7 @@ Document::Section::Section(Accessor& accessor)
                 mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
             }
                 break;
-}
+        }
     };
     
     mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
@@ -102,9 +85,6 @@ Document::Section::Section(Accessor& accessor)
                 updateComponents();
             }
                 break;
-                
-            default:
-                break;
         }
     };
     
@@ -121,29 +101,13 @@ Document::Section::Section(Accessor& accessor)
                 updateComponents();
             }
                 break;
-                
-            default:
-                break;
         }
-    };
-    
-    mZoomTimeRuler.onDoubleClick = [&]()
-    {
-        auto& acsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
-        acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     
     mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
     };
-    
-    auto onResizerMoved = [&](int size)
-    {
-        mAccessor.setAttr<AttrType::layoutVertical>(size, NotificationType::synchronous);
-    };
-    mResizerBarLeft.onMoved = onResizerMoved;
-    mResizerBarRight.onMoved = onResizerMoved;
     
     mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
     {
@@ -163,37 +127,131 @@ Document::Section::Section(Accessor& accessor)
         anlWeakAssert(layout.size() == trackAcsrs.size());
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
-
+    
     mBoundsListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
-        resized();
+        auto const height = mGroupSection.getHeight() + mConcertinaTable.getHeight();
+        setSize(getWidth(), height);
     };
+    mBoundsListener.attachTo(mGroupSection);
+    mBoundsListener.attachTo(mConcertinaTable);
     
     mConcertinaTable.setComponents({mDraggableTable});
     mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
-    mBoundsListener.attachTo(mConcertinaTable);
-    mViewport.setViewedComponent(&mConcertinaTable, false);
+    
+    addAndMakeVisible(mGroupSection);
+    addAndMakeVisible(mConcertinaTable);
+    addAndMakeVisible(mResizerBar);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Document::Section::GroupContainer::~GroupContainer()
+{
+    mBoundsListener.detachFrom(mConcertinaTable);
+    mAccessor.removeListener(mListener);
+}
+
+void Document::Section::GroupContainer::resized()
+{
+    auto bounds = getLocalBounds();
+    auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
+    mResizerBar.setBounds(left, 0, 2, bounds.getHeight());
+    mGroupSection.setBounds(bounds.removeFromTop(mGroupSection.getHeight()));
+    mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
+}
+
+Document::Section::Section(Accessor& accessor)
+: mAccessor(accessor)
+{
+    mZoomTimeRuler.setPrimaryTickInterval(0);
+    mZoomTimeRuler.setTickReferenceValue(0.0);
+    mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
+    mZoomTimeRuler.setMaximumStringWidth(70.0);
+    mZoomTimeRuler.setValueAsStringMethod([](double value)
+    {
+        return Format::secondsToString(value, {":", ":", ":", ""});
+    });
+    
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::file:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+                break;
+            case AttrType::playheadPosition:
+            {
+                mPlayhead.setPosition(acsr.getAttr<AttrType::playheadPosition>());
+            }
+                break;
+            case AttrType::layoutHorizontal:
+                break;
+            case AttrType::layoutVertical:
+            {
+                resized();
+            }
+                break;
+            case AttrType::layout:
+                break;
+            case AttrType::expanded:
+                break;
+        }
+    };
+    
+    auto accessorChanged = [this](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr, index);
+        switch(type)
+        {
+            case AcsrType::timeZoom:
+                break;
+            case AcsrType::tracks:
+            {
+                auto const numTracks = acsr.getNumAccessors<AcsrType::tracks>();
+                mPlayheadContainer.setVisible(numTracks > 0);
+                mZoomTimeRuler.setVisible(numTracks > 0);
+                mViewport.setVisible(numTracks > 0);
+                mZoomTimeScrollBar.setVisible(numTracks > 0);
+            }
+                break;
+        }
+    };
+    
+    mListener.onAccessorInserted = accessorChanged;
+    mListener.onAccessorErased = accessorChanged;
+    
+    mZoomTimeRuler.onDoubleClick = [&]()
+    {
+        auto& acsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+        acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+    };
+    
+    mGroupContainer.onRemoveTrack = [&](juce::String const& identifier)
+    {
+        if(onRemoveTrack != nullptr)
+        {
+            onRemoveTrack(identifier);
+        }
+    };
+    
+    mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     
     setSize(480, 200);
     mPlayheadContainer.addAndMakeVisible(mPlayhead);
     addAndMakeVisible(mPlayheadContainer);
     addAndMakeVisible(mZoomTimeRuler);
-    addAndMakeVisible(mThumbnailDecorator);
-    addAndMakeVisible(mSnapshotDecorator);
-    addAndMakeVisible(mPlotDecorator);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mZoomTimeScrollBar);
-    addAndMakeVisible(mResizerBar);
-    addAndMakeVisible(mResizerBarLeft);
-    addAndMakeVisible(mResizerBarRight);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::Section::~Section()
 {
-    mBoundsListener.detachFrom(mConcertinaTable);
     mAccessor.removeListener(mListener);
 }
 
@@ -208,24 +266,8 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    if(true)
-    {
-        auto const bottom = mAccessor.getAttr<AttrType::layoutVertical>();
-        auto subsection = bounds.removeFromTop(bottom - bounds.getY());
-        mThumbnailDecorator.setBounds(subsection.removeFromLeft(48));
-        mSnapshotDecorator.setBounds(subsection.removeFromLeft(left - 48).withTrimmedLeft(1));
-        mPlotDecorator.setBounds(subsection.withRight(right + 6));
-        auto resizersBounds = bounds.removeFromTop(2);
-        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(left).reduced(4, 0));
-        mResizerBarRight.setBounds(resizersBounds.removeFromLeft(right).reduced(4, 0));
-    }
-    if(width != mConcertinaTable.getWidth())
-    {
-        mConcertinaTable.setBounds(mConcertinaTable.getLocalBounds().withWidth(width));
-    }
+    mGroupContainer.setBounds(mGroupContainer.getLocalBounds().withWidth(width));
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
-    
-    mResizerBar.setBounds(left - 2, mPlayheadContainer.getBottom() + 2, 2, mViewport.getBottom() - mPlayheadContainer.getBottom() - 4);
 }
 
 void Document::Section::paint(juce::Graphics& g)
