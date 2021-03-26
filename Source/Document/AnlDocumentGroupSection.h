@@ -25,7 +25,6 @@ namespace Document
         
         // juce::Component
         void resized() override;
-        void paint(juce::Graphics& g) override;
         
     private:
         class Container
