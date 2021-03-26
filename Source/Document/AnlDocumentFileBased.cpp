@@ -2,9 +2,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::AttrContainer& Document::FileBased::getDefaultContainer()
+Document::AttrContainer const& Document::FileBased::getDefaultContainer()
 {
-    static Document::AttrContainer document
+    static AttrContainer const document
     {
           {juce::File{}}
         , {false}
@@ -14,7 +14,7 @@ Document::AttrContainer& Document::FileBased::getDefaultContainer()
         , {144}
         , {144}
         , {}
-        , {false}
+        , {true}
     };
     return document;
 }

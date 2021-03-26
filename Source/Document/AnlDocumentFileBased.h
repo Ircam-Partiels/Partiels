@@ -14,7 +14,7 @@ namespace Document
         FileBased(Accessor& accessor, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
         ~FileBased() override;
 
-        static Document::AttrContainer& getDefaultContainer();
+        static Document::AttrContainer const& getDefaultContainer();
     protected:
         // juce::FileBasedDocument
         juce::String getDocumentTitle() override;
