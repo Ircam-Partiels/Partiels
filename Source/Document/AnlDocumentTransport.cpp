@@ -109,14 +109,14 @@ void Document::Transport::resized()
 
 void Document::Transport::lookAndFeelChanged()
 {
-    auto* lookAndFeel = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(lookAndFeel != nullptr);
-    if(lookAndFeel != nullptr)
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
     {
-        lookAndFeel->setButtonIcon(mRewindButton, IconManager::IconType::rewind);
-        lookAndFeel->setButtonIcon(mLoopButton, IconManager::IconType::loop);
+        laf->setButtonIcon(mRewindButton, IconManager::IconType::rewind);
+        laf->setButtonIcon(mLoopButton, IconManager::IconType::loop);
         auto const state = mAccessor.getAttr<AttrType::isPlaybackStarted>();
-        lookAndFeel->setButtonIcon(mPlaybackButton, state ? IconManager::IconType::pause : IconManager::IconType::play);
+        laf->setButtonIcon(mPlaybackButton, state ? IconManager::IconType::pause : IconManager::IconType::play);
     }
 }
 
