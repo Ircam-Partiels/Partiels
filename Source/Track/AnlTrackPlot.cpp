@@ -195,8 +195,8 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     auto const rtStart = secondsToRealTime(clipTimeStart);
     auto const rtEnd = secondsToRealTime(clipTimeEnd);
     
-    // Time distance corresponding to 1 pixel
-    auto const minDiffTime = secondsToRealTime(timeRange.getLength() / static_cast<double>(bounds.getWidth()));
+    // Time distance corresponding to epsilon pixels
+    auto const minDiffTime = secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
     
     // Find the first result that is inside the clip bounds
     auto first = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
