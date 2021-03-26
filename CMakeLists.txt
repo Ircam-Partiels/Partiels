@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON)
+set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 project(Partiels VERSION 0.0.4 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
@@ -195,46 +197,6 @@ source_group("Source/Group" FILES ${GroupSources})
 source_group("Source/Document" FILES ${DocumentSources})
 source_group("Source/Application" FILES ${ApplicationSources})
 source_group("Source/Translations" FILES ${TranslationsSources})
-
-function(create_module_group TARGET GROUP_PATH MODULE_PATH)
-
-if(APPLE)
-    file(GLOB MAIN_CPP_SOURCES ${MODULE_PATH}/*.cpp)
-    set_source_files_properties(${MAIN_CPP_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
-    source_group(${GROUP_PATH} FILES ${MAIN_CPP_SOURCES})
-    target_sources(${TARGET} PRIVATE ${MAIN_CPP_SOURCES})
-
-    file(GLOB MAIN_OTHER_SOURCES ${MODULE_PATH}/*.h ${MODULE_PATH}/*.mm)
-    source_group(${GROUP_PATH} FILES ${MAIN_OTHER_SOURCES})
-else()
-    file(GLOB MAIN_OTHER_SOURCES ${MODULE_PATH}/*.h ${MODULE_PATH}/*.cpp)
-    source_group(${GROUP_PATH} FILES ${MAIN_OTHER_SOURCES})
-endif()
-
-    file(GLOB_RECURSE SUB_SOURCES ${MODULE_PATH}/**/*.cpp ${MODULE_PATH}/**/*.h)
-    set_source_files_properties(${SUB_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
-
-    foreach(SOURCE ${SUB_SOURCES})
-        file(RELATIVE_PATH FILE_PATH_REL "${MODULE_PATH}" "${SOURCE}")
-        get_filename_component(DIR_PATH_REL ${FILE_PATH_REL} DIRECTORY)
-
-        string(REPLACE "/" "\\\\" SUBGROUP ${DIR_PATH_REL})
-        source_group(${GROUP_PATH}\\${SUBGROUP} FILES ${SOURCE})
-    endforeach()
-
-    target_sources(${TARGET} PRIVATE ${SUB_SOURCES})
-endfunction()
-
-create_module_group(Partiels "Modules\\juce_core" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_core")
-create_module_group(Partiels "Modules\\juce_graphics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_graphics")
-create_module_group(Partiels "Modules\\juce_events" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_events")
-create_module_group(Partiels "Modules\\juce_gui_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_basics")
-create_module_group(Partiels "Modules\\juce_gui_extra" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_gui_extra")
-create_module_group(Partiels "Modules\\juce_opengl" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_opengl")
-create_module_group(Partiels "Modules\\juce_data_structures" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_data_structures")
-create_module_group(Partiels "Modules\\juce_audio_formats" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_formats")
-create_module_group(Partiels "Modules\\juce_audio_basics" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_basics")
-create_module_group(Partiels "Modules\\juce_audio_devices" "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/modules/juce_audio_devices")
 
 set(PartielsSources ${MiscSources} ${ZoomSources} ${PluginSources} ${TrackSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
