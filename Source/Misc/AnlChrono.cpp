@@ -8,19 +8,17 @@ Chrono::Chrono(juce::String const& domain, juce::String const& message)
 {
 }
 
+#ifdef DEBUG
 void Chrono::start()
 {
-#ifdef DEBUG
     mTime = juce::Time::getHighResolutionTicks();
-#endif
 }
 
 void Chrono::stop()
 {
-#ifdef DEBUG
     auto const duration = juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks() - mTime);
     anlDebug(mDomain.getCharPointer(), mMessage + " " + juce::String(static_cast<int>(duration * 1000.0)) + "ms");
-#endif
 }
+#endif
 
 ANALYSE_FILE_END
