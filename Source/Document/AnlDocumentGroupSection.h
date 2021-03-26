@@ -20,8 +20,9 @@ namespace Document
               sectionColourId = 0x2040100
         };
         
-        GroupSection(Accessor& accessor, size_t index, juce::Component& separator);
-        ~GroupSection() override;        
+        GroupSection(Accessor& accessor, juce::Component& separator);
+        ~GroupSection() override;
+        
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
@@ -31,7 +32,7 @@ namespace Document
         : public juce::Component
         {
         public:
-            Container(Accessor& accessor, size_t index, juce::Component& content, bool showPlayhead);
+            Container(Accessor& accessor, juce::Component& content, bool showPlayhead);
             ~Container() override;
             
             // juce::Component
@@ -40,7 +41,6 @@ namespace Document
         private:
             
             Accessor& mAccessor;
-            size_t const mIndex;
             juce::Component& mContent;
             Accessor::Listener mListener;
             
@@ -48,7 +48,6 @@ namespace Document
         };
 
         Accessor& mAccessor;
-        size_t const mIndex;
         juce::Component& mSeparator;
         Accessor::Listener mListener;
         BoundsListener mBoundsListener;
@@ -57,11 +56,11 @@ namespace Document
         Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
         
         GroupSnapshot mSnapshot {mAccessor,};
-        Container mSnapshotContainer {mAccessor, mIndex, mSnapshot, false};
+        Container mSnapshotContainer {mAccessor, mSnapshot, false};
         Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
         
         GroupPlot mPlot {mAccessor};
-        Container mPlotContainer {mAccessor, mIndex, mPlot, true};
+        Container mPlotContainer {mAccessor, mPlot, true};
         Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};
         
         Zoom::Accessor zoomAcsr;

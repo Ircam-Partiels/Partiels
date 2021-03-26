@@ -2,9 +2,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::GroupSection::Container::Container(Accessor& accessor, size_t index, juce::Component& content, bool showPlayhead)
+Document::GroupSection::Container::Container(Accessor& accessor, juce::Component& content, bool showPlayhead)
 : mAccessor(accessor)
-, mIndex(index)
 , mContent(content)
 , mZoomPlayhead(mAccessor.getAccessor<AcsrType::timeZoom>(0))
 {
@@ -53,9 +52,8 @@ void Document::GroupSection::Container::resized()
     mContent.setBounds(bounds);
 }
 
-Document::GroupSection::GroupSection(Accessor& accessor, size_t index, juce::Component& separator)
+Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separator)
 : mAccessor(accessor)
-, mIndex(index)
 , mSeparator(separator)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
@@ -68,14 +66,14 @@ Document::GroupSection::GroupSection(Accessor& accessor, size_t index, juce::Com
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
             case AttrType::playheadPosition:
-                break;
             case AttrType::layoutHorizontal:
+                break;
+            case AttrType::layoutVertical:
             {
-                auto const size = mAccessor.getAttr<AttrType::layoutHorizontal>();
+                auto const size = mAccessor.getAttr<AttrType::layoutVertical>();
                 setSize(getWidth(), size + 2);
             }
                 break;
-            case AttrType::layoutVertical:
             case AttrType::layout:
             case AttrType::expanded:
                 break;
@@ -93,7 +91,7 @@ Document::GroupSection::GroupSection(Accessor& accessor, size_t index, juce::Com
     
     auto onResizerMoved = [&](int size)
     {
-        mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::layoutVertical>(size, NotificationType::synchronous);
     };
     mResizerBarLeft.onMoved = onResizerMoved;
     mResizerBarRight.onMoved = onResizerMoved;
