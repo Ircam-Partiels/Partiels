@@ -3,9 +3,9 @@
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "../Zoom/AnlZoomPlayhead.h"
-//#include "AnlTrackThumbnail.h"
+#include "AnlDocumentGroupThumbnail.h"
+#include "AnlDocumentGroupSnapshot.h"
 #include "AnlDocumentGroupPlot.h"
-//#include "AnlTrackSnapshot.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -21,12 +21,7 @@ namespace Document
         };
         
         GroupSection(Accessor& accessor, size_t index, juce::Component& separator);
-        ~GroupSection() override;
-        
-        juce::String getIdentifier() const;
-        
-        std::function<void(void)> onRemove = nullptr;
-        
+        ~GroupSection() override;        
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
@@ -41,7 +36,6 @@ namespace Document
             
             // juce::Component
             void resized() override;
-            void paint(juce::Graphics& g) override;
             
         private:
             
@@ -59,19 +53,13 @@ namespace Document
         Accessor::Listener mListener;
         BoundsListener mBoundsListener;
 
-        juce::Component mThumbnail;
+        GroupThumbnail mThumbnail {mAccessor,};
+        Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
         
-        juce::Component mSnapshot;
+        GroupSnapshot mSnapshot {mAccessor,};
         Container mSnapshotContainer {mAccessor, mIndex, mSnapshot, false};
         Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
         
-        
-//        Thumbnail mThumbnail {mAccessor};
-//
-//        Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
-//        Container mSnapshotContainer {mAccessor, mTimeZoomAccessor, mSnapshot, false};
-//        Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
-//
         GroupPlot mPlot {mAccessor};
         Container mPlotContainer {mAccessor, mIndex, mPlot, true};
         Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};

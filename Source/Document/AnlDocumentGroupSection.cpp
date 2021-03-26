@@ -18,6 +18,11 @@ Document::GroupSection::Container::Container(Accessor& accessor, size_t index, j
     {
         switch(attribute)
         {
+            case AttrType::file:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+                break;
             case AttrType::playheadPosition:
             {
                 if(mZoomPlayhead.isVisible())
@@ -26,10 +31,10 @@ Document::GroupSection::Container::Container(Accessor& accessor, size_t index, j
                 }
             }
                 break;
-            case AttrType::groups:
-            {
-                repaint();
-            }
+            case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
+            case AttrType::layout:
+            case AttrType::expanded:
                 break;
         }
     };
@@ -48,15 +53,6 @@ void Document::GroupSection::Container::resized()
     mContent.setBounds(bounds);
 }
 
-void Document::GroupSection::Container::paint(juce::Graphics& g)
-{
-    auto const& groups = mAccessor.getAttr<AttrType::groups>();
-    if(mIndex < groups.size())
-    {
-        g.fillAll(groups[mIndex].colour);
-    }
-}
-
 Document::GroupSection::GroupSection(Accessor& accessor, size_t index, juce::Component& separator)
 : mAccessor(accessor)
 , mIndex(index)
@@ -64,17 +60,24 @@ Document::GroupSection::GroupSection(Accessor& accessor, size_t index, juce::Com
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
+        juce::ignoreUnused(acsr);
         switch(type)
         {
-            case AttrType::groups:
+            case AttrType::file:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+            case AttrType::playheadPosition:
+                break;
+            case AttrType::layoutHorizontal:
             {
-                auto const& groups = mAccessor.getAttr<AttrType::groups>();
-                if(mIndex < groups.size())
-                {
-                    setSize(getWidth(), groups[mIndex].height + 2);
-                }
-                
+                auto const size = mAccessor.getAttr<AttrType::layoutHorizontal>();
+                setSize(getWidth(), size + 2);
             }
+                break;
+            case AttrType::layoutVertical:
+            case AttrType::layout:
+            case AttrType::expanded:
                 break;
         }
     };
@@ -90,19 +93,14 @@ Document::GroupSection::GroupSection(Accessor& accessor, size_t index, juce::Com
     
     auto onResizerMoved = [&](int size)
     {
-        auto groups = mAccessor.getAttr<AttrType::groups>();
-        if(mIndex < groups.size())
-        {
-            groups[mIndex].height = size;
-            mAccessor.setAttr<AttrType::groups>(groups, NotificationType::synchronous);
-        }
+        mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
     };
     mResizerBarLeft.onMoved = onResizerMoved;
     mResizerBarRight.onMoved = onResizerMoved;
     
     addAndMakeVisible(mRuler);
     addAndMakeVisible(mScrollBar);
-    addAndMakeVisible(mThumbnail);
+    addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBarLeft);
@@ -117,16 +115,6 @@ Document::GroupSection::~GroupSection()
 {
     mAccessor.removeListener(mListener);
     mBoundsListener.detachFrom(mSeparator);
-}
-
-juce::String Document::GroupSection::getIdentifier() const
-{
-    auto const& groups = mAccessor.getAttr<AttrType::groups>();
-    if(mIndex < groups.size())
-    {
-        return groups[mIndex].identifier;
-    }
-    return "";
 }
 
 void Document::GroupSection::resized()
@@ -145,7 +133,7 @@ void Document::GroupSection::resized()
     // Thumbnail and Snapshot
     {
         auto leftSide = bounds.removeFromLeft(leftSize);
-        mThumbnail.setBounds(leftSide.removeFromLeft(48));
+        mThumbnailDecoration.setBounds(leftSide.removeFromLeft(48));
         mSnapshotDecoration.setBounds(leftSide.withTrimmedLeft(1));
     }
     
