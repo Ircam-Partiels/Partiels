@@ -154,7 +154,7 @@ Document::Section::GroupContainer::~GroupContainer()
 
 void Document::Section::GroupContainer::resized()
 {
-    auto bounds = getLocalBounds();
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
     mResizerBar.setBounds(left, 0, 2, bounds.getHeight());
     mGroupSection.setBounds(bounds.removeFromTop(mGroupSection.getHeight()));
@@ -266,7 +266,7 @@ void Document::Section::resized()
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    mGroupContainer.setBounds(mGroupContainer.getLocalBounds().withWidth(width));
+    mGroupContainer.setBounds(0, 0, width, mGroupContainer.getHeight());
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
 }
 
