@@ -19,7 +19,7 @@ public:
     };
     
     FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton = true, bool addToDesktop = true);
-    ~FloatingWindow() override = default;
+    ~FloatingWindow() override;
     
     std::function<void()> onChanged = nullptr;
 private:

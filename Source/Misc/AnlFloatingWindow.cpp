@@ -12,6 +12,13 @@ FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersC
 #endif
 }
 
+FloatingWindow::~FloatingWindow()
+{
+#ifndef JUCE_MAC
+    juce::Desktop::getInstance().removeFocusChangeListener(this);
+#endif
+}
+
 void FloatingWindow::closeButtonPressed()
 {
     setVisible(false);
