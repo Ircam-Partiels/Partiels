@@ -75,7 +75,7 @@ Deploy::Windows:
   script:
     - cd $CI_PROJECT_DIR\release\Partiels_artefacts\Release
     - tar.exe -a -c -f Partiels-v$CI_COMMIT_TAG-Windows-10.zip Partiels.exe
-    - cp Partiels-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Brioche\Alpha
+    - cp Partiels-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Partiels\Alpha
 
 Deploy::Linux:
   stage: deploy
@@ -91,4 +91,4 @@ Deploy::Linux:
     - cp ../../../BinaryData/Icons/icon.png Partiels-v$CI_COMMIT_TAG
     - cp ../../../BinaryData/Misc/Partiels.desktop Partiels-v$CI_COMMIT_TAG
     - tar -zcvf Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz Partiels-v$CI_COMMIT_TAG
-    - cp Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz /home/pierre/Nextcloud/Brioche/Alpha
+    - cp Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz /home/pierre/Nextcloud/Partiels/Alpha
