@@ -16,10 +16,35 @@ namespace Track
         // juce::Component
         void paint(juce::Graphics& g) override;
 
+        class Overlay
+        : public juce::Component
+        {
+        public:
+            Overlay(Snapshot& snapshot);
+            ~Overlay() override;
+            
+            // juce::Component
+            void resized() override;
+            void paint(juce::Graphics& g) override;
+            
+        private:            
+            Snapshot& mSnapshot;
+            Accessor& mAccessor;
+            Accessor::Listener mListener;
+            
+            LoadingCircle mProcessingButton;
+            juce::Label mInformation;
+        };
+        
     private:
+        static void paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, double time);
+        
+        static void paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange);
+        
+        static void paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, double time, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr);
+        
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        Zoom::Accessor::Listener mTimeZoomListener;
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;
         Accessor::Listener mListener;

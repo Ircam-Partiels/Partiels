@@ -1,5 +1,5 @@
 #include "AnlTrackSnapshot.h"
-#include "AnlTrackResults.h"
+#include "AnlTrackGraphics.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -45,22 +45,13 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         repaint();
     };
     
-    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr, attribute);
-        repaint();
-    };
-    
-
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
     mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
-    mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
 Track::Snapshot::~Snapshot()
 {
-    mTimeZoomAccessor.removeListener(mTimeZoomListener);
     mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
     mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
     mAccessor.removeListener(mListener);
@@ -68,159 +59,351 @@ Track::Snapshot::~Snapshot()
 
 void Track::Snapshot::paint(juce::Graphics& g)
 {
+    auto const results = mAccessor.getAttr<AttrType::results>();
+    if(results == nullptr || results->empty())
+    {
+        return;
+    }
+    
     auto const bounds = getLocalBounds();
-    auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const& visibleValueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    if(bounds.isEmpty())
+    {
+        return;
+    }
+    
     auto const& output = mAccessor.getAttr<AttrType::description>().output;
     auto const time = mAccessor.getAttr<AttrType::time>();
-    auto resultPtr = mAccessor.getAttr<AttrType::results>();
-    
-    if(resultPtr == nullptr || resultPtr->empty() || bounds.isEmpty() || visibleValueRange.isEmpty())
+    auto const& valueRange = mAccessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+    if(output.hasFixedBinCount)
     {
-        return;
-    }
-    
-    auto const& results = *resultPtr;
-    
-    enum class DisplayMode
-    {
-          unsupported
-        , surface
-        , bar
-        , segment
-        , matrix
-    };
-    
-    auto const numDimensions = output.hasFixedBinCount ? output.binCount : results.front().values.size();
-    auto getDisplayMode = [&]()
-    {
-        switch(numDimensions)
+        switch(output.binCount)
         {
             case 0:
-                return output.hasDuration ? DisplayMode::surface : DisplayMode::unsupported;
+            {
+                g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
+                paintMarker(g, bounds.toFloat(), *results, time);
+            }
+                break;
             case 1:
-                return output.hasDuration ? DisplayMode::bar : DisplayMode::segment;
+            {
+                g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
+                paintSegment(g, bounds.toFloat(), *results, time, valueRange);
+            }
+                break;
             default:
-                return DisplayMode::matrix;
+            {
+                paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), time, mTimeZoomAccessor, mAccessor.getAccessor<AcsrType::binZoom>(0));
+            }
+                break;
         }
-    };
-    
-    auto getScaledValue = [&](float value)
+    }
+    else
     {
-        anlWeakAssert(!visibleValueRange.isEmpty());
-        auto const verticalRange = bounds.getVerticalRange();
-        anlWeakAssert(!verticalRange.isEmpty());
-        if(visibleValueRange.isEmpty() || verticalRange.isEmpty())
-        {
-            return 0;
-        }
-        
-        value = (value - static_cast<float>(visibleValueRange.getStart())) / static_cast<float>(visibleValueRange.getLength());
-        value = (1.0f - value) * static_cast<float>(verticalRange.getLength()) + static_cast<float>(verticalRange.getStart());
-        return static_cast<int>(std::floor(value));
-    };
-    
-    auto it = Results::getResultAt(results, time);
-    if(it == results.cend())
+        g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
+        paintSegment(g, bounds.toFloat(), *results, time, valueRange);
+    }
+}
+
+void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, double time)
+{
+    auto const rt = Graphics::secondsToRealTime(time);
+    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+    {
+        return result.hasTimestamp && Graphics::getEndRealTime(result) >= rt;
+    });
+    if(it != results.cend() && Graphics::getEndRealTime(*it) <= rt)
+    {
+        g.fillRect(bounds);
+    }
+}
+
+void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange)
+{
+    auto const rt = Graphics::secondsToRealTime(time);
+    auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+    {
+        return result.hasTimestamp && Graphics::getEndRealTime(result) >= rt;
+    });
+    if(second == results.cend())
     {
         return;
     }
-    auto const displayMode = getDisplayMode();
-    switch(displayMode)
+    auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
+    if(second->timestamp <= rt && Graphics::getEndRealTime(*second) >= rt)
     {
-        case DisplayMode::unsupported:
-            break;
-        case DisplayMode::surface:
+        if(!second->values.empty())
         {
-            g.setColour(colours.foreground);
-            g.fillRect(bounds);
+            auto const y = Graphics::valueToPixel(second->values[0], valueRange, bounds);
+            auto const clipBounds = g.getClipBounds().toFloat();
+            g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y);
         }
-            break;
-        case DisplayMode::bar:
+    }
+    else if(first->timestamp <= rt && Graphics::getEndRealTime(*first) >= rt)
+    {
+        if(!first->values.empty())
         {
-            anlWeakAssert(!it->values.empty());
-            if(it->values.empty())
+            auto const y = Graphics::valueToPixel(first->values[0], valueRange, bounds);
+            auto const clipBounds = g.getClipBounds().toFloat();
+            g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y);
+        }
+    }
+    else if(first != second && first->hasTimestamp)
+    {
+        if(!first->values.empty() && !second->values.empty())
+        {
+            auto const start = Graphics::realTimeToSeconds(Graphics::getEndRealTime(*first));
+            auto const end = Graphics::realTimeToSeconds(second->timestamp);
+            anlStrongAssert(end > start);
+            if(end <= start)
             {
                 return;
             }
-            
-            auto const area = bounds.withTop(getScaledValue(it->values[0])).toFloat();
-            g.setColour(colours.foreground.withAlpha(0.2f));
-            g.fillRect(area);
-            
-            g.setColour(colours.foreground);
-            g.fillRect(area.withHeight(1.0f));
+            auto const ratio = static_cast<float>((time - start) / (end - start));
+            auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
+            auto const y = Graphics::valueToPixel(value, valueRange, bounds);
+            auto const clipBounds = g.getClipBounds().toFloat();
+            g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y);
         }
-            break;
-        case DisplayMode::segment:
+    }
+}
+
+void Track::Snapshot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, double time, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr)
+{
+    if(images.empty())
+    {
+        return;
+    }
+    
+    auto renderImage = [&](juce::Image const& image, double t,  Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
+    {
+        if(!image.isValid())
         {
-            auto const realTime = Vamp::RealTime::fromSeconds(time);
-            if(it->values.empty())
-            {
-                return;
-            }
-            
-            auto getValue = [&]()
-            {
-                if(it != results.cbegin())
-                {
-                    auto const prev = std::prev(it, 1);
-                    auto const ratio = static_cast<float>((realTime - prev->timestamp) / (it->timestamp - prev->timestamp));
-                    return prev->values[0] * (1.0f - ratio) + it->values[0] * ratio;
-                }
-                return it->values[0];
-            };
-            
-            auto const value = getValue();
-            auto const area = bounds.withTop(getScaledValue(value)).toFloat();
-            
-            g.setColour(colours.foreground.withAlpha(0.2f));
-            g.fillRect(area);
-            
-            g.setColour(colours.foreground);
-            g.fillRect(area.withHeight(1.0f));
+            return;
         }
-            break;
-        case DisplayMode::matrix:
+        
+        using PixelRange = juce::Range<int>;
+        using ZoomRange = Zoom::Range;
+        
+        // Gets the visible zoom range of a zoom accessor and inverses it if necessary
+        auto const getZoomRange = [](Zoom::Accessor const& zoomAcsr, bool inverted)
         {
-            juce::Image image(juce::Image::PixelFormat::ARGB, 1, static_cast<int>(numDimensions), false);
-            juce::Image::BitmapData const data(image, juce::Image::BitmapData::writeOnly);
-            
-            auto const colourMap = colours.map;
-            auto valueToColour = [&](float const value)
+            if(!inverted)
             {
-                auto const& valueRange = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                auto const ratio = (value - valueRange.getStart()) / valueRange.getLength();
-                auto const color = tinycolormap::GetColor(static_cast<double>(ratio), colourMap);
-                return juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f);
-            };
-            
-            for(int j = 0; j < image.getHeight(); ++j)
-            {
-                auto const colour = valueToColour(it->values[static_cast<size_t>(j)]);
-                data.setPixelColour(0, image.getHeight() - 1 - j, colour);
+                return zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             }
-            
-            auto const width = static_cast<float>(bounds.getWidth());
-            auto const height = bounds.getHeight();
-            
-            auto const& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-            auto const binVisibleRange = binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            auto const binGlobalRange = binZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            
-            auto const valueRange = juce::Range<double>(binGlobalRange.getEnd() - binVisibleRange.getEnd(), binGlobalRange.getEnd() - binVisibleRange.getStart());
-            
-            auto const deltaY = static_cast<float>(valueRange.getStart() / binGlobalRange.getLength() * static_cast<double>(image.getHeight()));
-            auto const scaleY = static_cast<float>(binGlobalRange.getLength() / valueRange.getLength() * static_cast<double>(height) / static_cast<double>(image.getHeight()));
-            
-            auto const transform = juce::AffineTransform::translation(0.0f, -deltaY).scaled(width, scaleY).translated(static_cast<float>(bounds.getX()), static_cast<float>(bounds.getY()));
+            auto const& globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const& visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            return ZoomRange{globalRange.getEnd() - visibleRange.getEnd() + globalRange.getStart(), globalRange.getEnd() - visibleRange.getStart()+ globalRange.getStart()};
+        };
+        
+        // Gets the visible zoom range equivalent to the graphics clip bounds
+        auto const clipZoomRange = [](PixelRange const& global, PixelRange const& visible, ZoomRange const& zoom)
+        {
+            auto const ratio = zoom.getLength() / static_cast<double>(global.getLength());
+            auto const x1 = static_cast<double>(visible.getStart() - global.getStart()) * ratio + zoom.getStart();
+            auto const x2 = static_cast<double>(visible.getEnd() - global.getStart()) * ratio + zoom.getStart();
+            return ZoomRange{x1, x2};
+        };
+        
+        // Converts the visible zoom range to image range
+        auto toImageRange = [](ZoomRange const& globalRange, ZoomRange const& visibleRange, int imageSize)
+        {
+            auto const globalLength = globalRange.getLength();
+            anlStrongAssert(globalLength > 0.0);
+            if(globalLength <= 0.0)
+            {
+                return juce::Range<float>();
+            }
+            auto const scale = static_cast<float>(imageSize);
+            auto scaleValue = [&](double value)
+            {
+                return static_cast<float>((value - globalRange.getStart()) / globalLength * scale);
+            };
+            return juce::Range<float>{scaleValue(visibleRange.getStart()), scaleValue(visibleRange.getEnd())};
+        };
+        
+        // Draws a range of an image
+        auto drawImage = [&](juce::Rectangle<float> const& rectangle)
+        {
+            auto const graphicsBounds = g.getClipBounds().toFloat();
+            auto const imageBounds = rectangle.getSmallestIntegerContainer();
+            auto const clippedImage = image.getClippedImage(imageBounds);
+            anlWeakAssert(clippedImage.getWidth() == imageBounds.getWidth());
+            anlWeakAssert(clippedImage.getHeight() == imageBounds.getHeight());
+            auto const deltaX = static_cast<float>(imageBounds.getX()) - rectangle.getX();
+            auto const deltaY = static_cast<float>(imageBounds.getY()) - rectangle.getY();
+            anlWeakAssert(deltaX <= 0);
+            anlWeakAssert(deltaY <= 0);
+            auto const scaleX = graphicsBounds.getWidth() / rectangle.getWidth();
+            auto const scaleY = graphicsBounds.getHeight() / rectangle.getHeight();
             
             g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-            g.drawImageTransformed(image, transform);
+            g.drawImageTransformed(clippedImage, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
+        };
+        
+        auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
+        
+        auto const xClippedRange = clipZoomRange(bounds.getHorizontalRange(), clipBounds.getHorizontalRange(), {t, t});
+        auto const xRange = toImageRange(xZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), xClippedRange, image.getWidth());
+        
+        auto const yClippedRange = clipZoomRange(bounds.getVerticalRange(), clipBounds.getVerticalRange(), getZoomRange(yZoomAcsr, true));
+        auto const yRange = toImageRange(yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), yClippedRange, image.getHeight());
+        
+        drawImage({std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
+    };
+    
+    auto getZoomRatio = [](Zoom::Accessor const& acsr)
+    {
+        return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
+    };
+    
+    auto const binZoomRatio = getZoomRatio(binZoomAcsr);
+    auto const boundsDimension = bounds.getHeight() * binZoomRatio;
+    for(auto const& image : images)
+    {
+        auto const imageDimension = std::max(image.getWidth(), image.getHeight());
+        if(imageDimension >= boundsDimension)
+        {
+            renderImage(image, time, timeZoomAcsr, binZoomAcsr);
+            return;
         }
-            break;
     }
+    renderImage(images.back(), time, timeZoomAcsr, binZoomAcsr);
+}
+
+Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
+: mSnapshot(snapshot)
+, mAccessor(mSnapshot.mAccessor)
+{
+    addAndMakeVisible(mSnapshot);
+    addChildComponent(mProcessingButton);
+    mInformation.setEditable(false);
+    mInformation.setInterceptsMouseClicks(false, false);
+    mInformation.setJustificationType(juce::Justification::topLeft);
+    addChildComponent(mInformation);
+
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
+            case AttrType::height:
+            case AttrType::propertyState:
+            case AttrType::results:
+            {
+                auto const& results = mAccessor.getAttr<AttrType::results>();
+                mInformation.setVisible(results != nullptr && !results->empty());
+            }
+                break;
+            case AttrType::graphics:
+                break;
+            case AttrType::time:
+            {
+                auto const results = mAccessor.getAttr<AttrType::results>();
+                if(results == nullptr || results->empty())
+                {
+                    return;
+                }
+                auto const& output = mAccessor.getAttr<AttrType::description>().output;
+                auto const time = mAccessor.getAttr<AttrType::time>();
+                
+                if(output.hasFixedBinCount)
+                {
+                    switch(output.binCount)
+                    {
+                        case 0:
+                        {
+                            mInformation.setText(Graphics::getMarkerText(*results, time), juce::NotificationType::dontSendNotification);
+                        }
+                            break;
+                        case 1:
+                        {
+                            mInformation.setText(Graphics::getSegmentText(*results, time), juce::NotificationType::dontSendNotification);
+                        }
+                            break;
+                        default:
+                        {
+                            mInformation.setText(Graphics::getGridText(*results, time), juce::NotificationType::dontSendNotification);
+                        }
+                            break;
+                    }
+                }
+                else
+                {
+                    mInformation.setText(Graphics::getSegmentText(*results, time), juce::NotificationType::dontSendNotification);
+                }
+            }
+                break;
+            case AttrType::colours:
+            {
+                auto const colours = acsr.getAttr<AttrType::colours>();
+                mInformation.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
+            }
+                break;
+            case AttrType::warnings:
+            case AttrType::processing:
+            {
+                auto const state = acsr.getAttr<AttrType::processing>();
+                auto const warnings = acsr.getAttr<AttrType::warnings>();
+                
+                auto getInactiveIconType = [warnings]()
+                {
+                    return warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert;
+                };
+                auto getTooltip = [state, warnings]() -> juce::String
+                {
+                    if(std::get<0>(state))
+                    {
+                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
+                    }
+                    else if(std::get<2>(state))
+                    {
+                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
+                    }
+                    switch(warnings)
+                    {
+                        case WarningType::none:
+                            return "Analysis successfully completed!";
+                        case WarningType::plugin:
+                            return "Analysis failed: The plugin cannot be found or allocated!";
+                        case WarningType::state:
+                            return "Analysis failed: The step size or the block size might not be supported!";
+                    }
+                    return "Analysis finished!";
+                };
+                mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
+                mProcessingButton.setTooltip(juce::translate(getTooltip()));
+                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
+            }
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Track::Snapshot::Overlay::~Overlay()
+{
+    mAccessor.removeListener(mListener);
+}
+
+void Track::Snapshot::Overlay::resized()
+{
+    auto bounds = getLocalBounds();
+    mSnapshot.setBounds(bounds);
+    mInformation.setBounds(bounds);
+    mProcessingButton.setBounds(8, 8, 20, 20);
+}
+
+void Track::Snapshot::Overlay::paint(juce::Graphics& g)
+{
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    g.setColour(colours.background);
+    g.fillRect(getLocalBounds());
 }
 
 ANALYSE_FILE_END
