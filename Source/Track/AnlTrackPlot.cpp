@@ -89,14 +89,12 @@ void Track::Plot::paint(juce::Graphics& g)
         {
             case 0:
             {
-                g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
-                paintMarkers(g, bounds.toFloat(), *resultsPtr, timeRange);
+                paintMarkers(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *resultsPtr, timeRange);
             }
                 break;
             case 1:
             {
-                g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
-                paintSegments(g, bounds.toFloat(), *resultsPtr, timeRange, valueRange);
+                paintSegments(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *resultsPtr, timeRange, valueRange);
             }
                 break;
             default:
@@ -108,12 +106,11 @@ void Track::Plot::paint(juce::Graphics& g)
     }
     else
     {
-        g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
-        paintSegments(g, bounds.toFloat(), *resultsPtr, timeRange, valueRange);
+        paintSegments(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *resultsPtr, timeRange, valueRange);
     }
 }
 
-void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
+void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
 {
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
@@ -153,10 +150,27 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
         it = std::next(it);
     }
     
+    // Shadow
+    {
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        rectangles.offsetAll(-2.0f, 0.0f);
+        g.fillRectList(rectangles);
+        rectangles.offsetAll(4.0f, 0.0f);
+        g.fillRectList(rectangles);
+        rectangles.offsetAll(-2.0f, 0.0f);
+        
+        g.setColour(juce::Colours::black.withAlpha(0.25f));
+        rectangles.offsetAll(-1.0f, 0.0f);
+        g.fillRectList(rectangles);
+        rectangles.offsetAll(2.0f, 0.0f);
+        g.fillRectList(rectangles);
+        rectangles.offsetAll(-1.0f, 0.0f);
+    }
+    g.setColour(colour);
     g.fillRectList(rectangles);
 }
 
-void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
+void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
 {
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
@@ -256,7 +270,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             }
             else if(next != first)
             {
-                auto const end = Graphics::realTimeToSeconds(Graphics::getEndRealTime(*next));
+                auto const end = Graphics::realTimeToSeconds(next->timestamp);
                 auto const x2 = Graphics::secondsToPixel(end, timeRange, bounds);
                 auto const y2 = Graphics::valueToPixel(values.getEnd(), valueRange, bounds);
                 path.lineTo(x2, y2);
@@ -265,7 +279,17 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         }
     }
     
-    g.strokePath(path, juce::PathStrokeType(1));
+    // Shadow
+    {
+        g.setColour(juce::Colours::black.withAlpha(0.25f));
+        g.strokePath(path, juce::PathStrokeType(1.0f), juce::AffineTransform::translation(0.0f, 3.0f));
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        g.strokePath(path, juce::PathStrokeType(1.0f), juce::AffineTransform::translation(0.0f, 2.0f));
+        g.setColour(juce::Colours::black.withAlpha(0.75f));
+        g.strokePath(path, juce::PathStrokeType(1.0f), juce::AffineTransform::translation(0.0f, 1.0f));
+    }
+    g.setColour(colour);
+    g.strokePath(path, juce::PathStrokeType(1.0f));
 }
 
 void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr)

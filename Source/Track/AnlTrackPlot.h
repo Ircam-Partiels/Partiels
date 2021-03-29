@@ -17,9 +17,9 @@ namespace Track
         void paint(juce::Graphics& g) override;
         
     private:
-        static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange);
+        static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange);
         
-        static void paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange);
+        static void paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange);
         
         static void paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr);
         
