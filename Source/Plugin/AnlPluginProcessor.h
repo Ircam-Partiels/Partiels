@@ -15,6 +15,7 @@ namespace Plugin
         
         bool prepareToAnalyze(std::vector<Result>& results);
         bool performNextAudioBlock(std::vector<Result>& results);
+        float getAdvancement() const;
         Description getDescription() const;
         
     private:

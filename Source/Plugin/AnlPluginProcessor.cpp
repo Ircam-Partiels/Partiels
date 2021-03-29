@@ -205,6 +205,12 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     return true;
 }
 
+float Plugin::Processor::getAdvancement() const
+{
+    auto const position = static_cast<float>(mCircularReader.getPosition());
+    return  position / static_cast<float>(mCircularReader.getLengthInSamples());
+}
+
 Plugin::Description Plugin::Processor::getDescription() const
 {
     anlStrongAssert(mPlugin != nullptr);
