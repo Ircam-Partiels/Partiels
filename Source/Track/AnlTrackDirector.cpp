@@ -61,8 +61,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 break;
             case AttrType::colours:
             {
-                mAccessor.setAttr<AttrType::processing>(true, NotificationType::synchronous);
-                mGraphics.runRendering(accessor);
+                runRendering(NotificationType::synchronous);
             }
                 break;
             case AttrType::propertyState:
@@ -84,8 +83,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 break;
             case Zoom::AttrType::visibleRange:
             {
-                mAccessor.setAttr<AttrType::processing>(true, NotificationType::synchronous);
-                mGraphics.runRendering(accessor);
+                runRendering(NotificationType::synchronous);
             }
                 break;
         }
@@ -94,13 +92,13 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
     mProcessor.onAnalysisEnded = [&](std::shared_ptr<std::vector<Plugin::Result>> results)
     {
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
-        mGraphics.runRendering(accessor);
+        runRendering(NotificationType::synchronous);
     };
     
     mProcessor.onAnalysisAborted = [&]()
     {
         mAccessor.setAttr<AttrType::results>(nullptr, NotificationType::synchronous);
-        mGraphics.runRendering(accessor);
+        runRendering(NotificationType::synchronous);
     };
     
     mGraphics.onRenderingUpdated = [&](std::vector<juce::Image> images)
@@ -213,6 +211,12 @@ void Track::Director::runAnalysis(NotificationType const notification)
         }
             break;
     }
+}
+
+void Track::Director::runRendering(NotificationType const notification)
+{
+    mAccessor.setAttr<AttrType::processing>(true, notification);
+    mGraphics.runRendering(mAccessor);
 }
 
 void Track::Director::updateZoomAccessors(NotificationType const notification)
