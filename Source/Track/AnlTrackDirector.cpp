@@ -21,12 +21,13 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                     {
                         auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
                         return mPluginListScanner.getDescription(accessor.getAttr<AttrType::key>(), sampleRate);
-                        
                     }
-                    catch(...) {}
+                    catch(...)
+                    {
+                    }
                     return {};
                 };
-                auto description = getDescription();
+                auto const description = getDescription();
                 mAccessor.setAttr<AttrType::name>(description.name, NotificationType::synchronous);
                 mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
                 if(mAccessor.getAttr<AttrType::state>() == description.defaultState)
