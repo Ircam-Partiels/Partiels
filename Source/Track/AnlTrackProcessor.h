@@ -17,6 +17,7 @@ namespace Track
         
         Result runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader);
         void stopAnalysis();
+        bool isRunning() const;
         float getAdvancement() const;
         
         std::function<void(std::shared_ptr<std::vector<Plugin::Result>> results)> onAnalysisEnded = nullptr;

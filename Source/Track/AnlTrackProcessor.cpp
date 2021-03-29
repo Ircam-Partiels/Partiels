@@ -142,6 +142,11 @@ void Track::Processor::handleAsyncUpdate()
     }
 }
 
+bool Track::Processor::isRunning() const
+{
+    return mAnalysisProcess.valid();
+}
+
 float Track::Processor::getAdvancement() const
 {
     return mAdvancement.load();
