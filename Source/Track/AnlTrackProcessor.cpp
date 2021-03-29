@@ -97,8 +97,9 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         
         while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(*results))
         {
+            mAdvancement.store(processor->getAdvancement());
         }
-        
+        mAdvancement.store(1.0f);
         if(mAnalysisState.compare_exchange_weak(expected, ProcessState::ended))
         {
             triggerAsyncUpdate();
@@ -141,8 +142,14 @@ void Track::Processor::handleAsyncUpdate()
     }
 }
 
+float Track::Processor::getAdvancement() const
+{
+    return mAdvancement.load();
+}
+
 void Track::Processor::abortAnalysis()
 {
+    mAdvancement.store(0.0f);
     if(mAnalysisProcess.valid())
     {
         mAnalysisState = ProcessState::aborted;

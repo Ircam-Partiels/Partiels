@@ -17,6 +17,7 @@ namespace Track
         
         Result runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader);
         void stopAnalysis();
+        float getAdvancement() const;
         
         std::function<void(std::shared_ptr<std::vector<Plugin::Result>> results)> onAnalysisEnded = nullptr;
         std::function<void(void)> onAnalysisAborted = nullptr;
@@ -40,6 +41,7 @@ namespace Track
         std::atomic<ProcessState> mAnalysisState {ProcessState::available};
         std::future<std::shared_ptr<std::vector<Plugin::Result>>> mAnalysisProcess;
         std::mutex mAnalysisMutex;
+        std::atomic<float> mAdvancement {0.0f};
         Chrono mChrono {"Track", "processor analysis ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Processor)
