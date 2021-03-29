@@ -15,6 +15,7 @@ namespace Track
         
         void runRendering(Accessor const& accessor);
         void stopRendering();
+        float getAdvancement() const;
         
         std::function<void(std::vector<juce::Image> images)> onRenderingUpdated = nullptr;
         std::function<void(std::vector<juce::Image> images)> onRenderingEnded = nullptr;
@@ -39,6 +40,7 @@ namespace Track
         std::atomic<ProcessState> mRenderingState {ProcessState::available};
         std::thread mRenderingProcess;
         std::mutex mRenderingMutex;
+        std::atomic<float> mAdvancement {0.0f};
         Chrono mChrono {"Track", "graphics rendering ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Graphics)

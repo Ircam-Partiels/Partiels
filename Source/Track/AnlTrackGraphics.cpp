@@ -60,9 +60,9 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             triggerAsyncUpdate();
         }
         
-        
-        auto createImage = [&](int imageWidth, int imageHeight, std::function<bool(void)> predicate) -> juce::Image
+        auto createImage = [&](int imageWidth, int imageHeight, float& advancement, std::function<bool(void)> predicate) -> juce::Image
         {
+            advancement = 0.0f;
             if(results->empty())
             {
                 return {};
@@ -119,15 +119,20 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                     reinterpret_cast<juce::PixelARGB*>(pixel)->set(rgba);
                     pixel -= lineStride;
                 }
+                advancement = static_cast<float>(i) / static_cast<float>(imageWidth);
             }
+            advancement = 1.0f;
             return predicate() ? image : juce::Image();
         };
         
         auto constexpr maxImageSize = 4096;
-        if(width > maxImageSize || height > maxImageSize)
+        auto const dimension = std::max(width, height);
+        if(dimension > maxImageSize)
         {
-            auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), [this]()
+            float advancement = 0.0f;
+            auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), advancement, [&]()
             {
+                mAdvancement.store(0.05f * advancement);
                 return mRenderingState.load() != ProcessState::aborted;
             });
             
@@ -142,13 +147,19 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             mImages.push_back(image);
             imageLock.unlock();
             triggerAsyncUpdate();
+            
+            mAdvancement.store(0.05f);
         }
         
-        auto image = createImage(width, height, [this]()
+        auto const currentAdvancement = mAdvancement.load();
+        float advancement = 0.0f;
+        auto image = createImage(width, height, advancement, [&]()
         {
+            mAdvancement.store(currentAdvancement + (0.98f - currentAdvancement) * advancement);
             return mRenderingState.load() != ProcessState::aborted;
         });
         
+        mAdvancement.store(0.98f);
         if(image.isNull())
         {
             mRenderingState = ProcessState::aborted;
@@ -156,7 +167,6 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             return;
         }
         
-        auto const dimension = std::max(image.getWidth(), image.getHeight());
         for(int i = maxImageSize; i < dimension; i *= 2)
         {
             auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
@@ -171,16 +181,23 @@ void Track::Graphics::runRendering(Accessor const& accessor)
             }
             imageLock.unlock();
             triggerAsyncUpdate();
+            mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
         }
         
         std::unique_lock<std::mutex> imageLock(mMutex);
         mImages.push_back(image);
         imageLock.unlock();
 
+        mAdvancement.store(1.0f);
         expected = ProcessState::running;
         mRenderingState.compare_exchange_weak(expected, ProcessState::ended);
         triggerAsyncUpdate();
     });
+}
+
+float Track::Graphics::getAdvancement() const
+{
+    return mAdvancement.load();
 }
 
 void Track::Graphics::handleAsyncUpdate()
@@ -229,6 +246,7 @@ void Track::Graphics::handleAsyncUpdate()
 
 void Track::Graphics::abortRendering()
 {
+    mAdvancement.store(0.0f);
     if(mRenderingProcess.joinable())
     {
         mRenderingState = ProcessState::aborted;
