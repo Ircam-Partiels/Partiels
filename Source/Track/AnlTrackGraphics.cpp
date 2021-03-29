@@ -269,4 +269,37 @@ void Track::Graphics::abortRendering()
     mRenderingState = ProcessState::available;
 }
 
+
+float Track::Graphics::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
+{
+    return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
+}
+
+float Track::Graphics::secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds)
+{
+    return static_cast<float>((seconds - timeRange.getStart()) / timeRange.getLength()) * bounds.getWidth() + bounds.getX();
+}
+
+double Track::Graphics::pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds)
+{
+    return static_cast<double>(position - bounds.getX()) / static_cast<double>(bounds.getWidth()) * timeRange.getLength() + timeRange.getStart();
+}
+
+double Track::Graphics::realTimeToSeconds(Vamp::RealTime const& rt)
+{
+    return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
+}
+
+Vamp::RealTime Track::Graphics::secondsToRealTime(double seconds)
+{
+    auto const secondint = floor(seconds);
+    return Vamp::RealTime(static_cast<int>(secondint), static_cast<int>(std::round((seconds - secondint) * 1000000000.0)));
+}
+
+Vamp::RealTime Track::Graphics::getEndRealTime(Plugin::Result const& rt)
+{
+    anlWeakAssert(rt.hasTimestamp);
+    return rt.hasDuration ? rt.timestamp + rt.duration : rt.timestamp;
+}
+
 ANALYSE_FILE_END
