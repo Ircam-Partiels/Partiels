@@ -15,6 +15,7 @@ namespace Track
         
         void runRendering(Accessor const& accessor);
         void stopRendering();
+        bool isRunning() const;
         float getAdvancement() const;
         
         std::function<void(std::vector<juce::Image> images)> onRenderingUpdated = nullptr;

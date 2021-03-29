@@ -195,6 +195,11 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     });
 }
 
+bool Track::Graphics::isRunning() const
+{
+    return mRenderingProcess.joinable();
+}
+
 float Track::Graphics::getAdvancement() const
 {
     return mAdvancement.load();
