@@ -302,4 +302,82 @@ Vamp::RealTime Track::Graphics::getEndRealTime(Plugin::Result const& rt)
     return rt.hasDuration ? rt.timestamp + rt.duration : rt.timestamp;
 }
 
+juce::String Track::Graphics::getMarkerText(std::vector<Plugin::Result> const& results, double time)
+{
+    auto const rt = secondsToRealTime(time);
+    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+    {
+        return result.hasTimestamp && getEndRealTime(result) >= rt;
+    });
+    if(it != results.cend() && getEndRealTime(*it) <= rt)
+    {
+        return it->label;
+    }
+    return "";
+}
+
+juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& results, double time)
+{
+    auto const rt = secondsToRealTime(time);
+    auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+    {
+        return result.hasTimestamp && getEndRealTime(result) >= rt;
+    });
+    if(second == results.cend())
+    {
+        return "";
+    }
+    auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
+    if(second->timestamp <= rt && Graphics::getEndRealTime(*second) >= rt)
+    {
+        if(!second->values.empty())
+        {
+            return juce::String(second->values[0]) + second->label;
+        }
+    }
+    else if(first->timestamp <= rt && Graphics::getEndRealTime(*first) >= rt)
+    {
+        if(!first->values.empty())
+        {
+            return juce::String(first->values[0]) + first->label;
+        }
+    }
+    else if(first != second && first->hasTimestamp)
+    {
+        if(!first->values.empty() && !second->values.empty())
+        {
+            auto const start = Graphics::realTimeToSeconds(Graphics::getEndRealTime(*first));
+            auto const end = Graphics::realTimeToSeconds(second->timestamp);
+            anlStrongAssert(end > start);
+            if(end <= start)
+            {
+                return "";
+            }
+            auto const ratio = static_cast<float>((time - start) / (end - start));
+            auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
+            return juce::String(value) + second->label;
+        }
+    }
+    return "";
+}
+
+juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& results, double time)
+{
+    auto const rt = secondsToRealTime(time);
+    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+    {
+        return result.hasTimestamp && getEndRealTime(result) >= rt;
+    });
+    if(it == results.cend() || it->values.empty())
+    {
+        return "";
+    }
+    auto const first = it->values.front();
+    auto const moments = std::accumulate(it->values.cbegin(), it->values.cend(), std::make_tuple(first, first, first), [](auto const& m, auto const value)
+    {
+        return std::make_tuple(std::min(std::get<0>(m), value), std::get<1>(m) + value, std::max(std::get<2>(m), value));
+    });
+    return "min: " + juce::String(std::get<0>(moments)) + it->label + "\n" + "avg: " + juce::String(std::get<1>(moments) / static_cast<float>(it->values.size())) + it->label + "\n" + "max: " + juce::String(std::get<2>(moments)) + it->label;
+}
+
 ANALYSE_FILE_END
