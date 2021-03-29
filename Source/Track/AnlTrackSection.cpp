@@ -46,9 +46,9 @@ Track::Section::Container::Container(Accessor& accessor, Zoom::Accessor& timeZoo
             case AttrType::processing:
             {
                 auto const state = mAccessor.getAttr<AttrType::processing>();
-                mProcessingButton.setActive(state);
-                mProcessingButton.setVisible(state);
-                mProcessingButton.setTooltip(state ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
+                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
+                mProcessingButton.setVisible(std::get<0>(state) || std::get<2>(state));
+                mProcessingButton.setTooltip((std::get<0>(state) || std::get<2>(state)) ? juce::translate("Processing analysis...") : juce::translate("Analysis finished!"));
                 repaint();
             }
                 break;

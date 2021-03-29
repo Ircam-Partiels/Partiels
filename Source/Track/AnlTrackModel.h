@@ -78,7 +78,7 @@ namespace Track
     , Model::Attr<AttrType::graphics, std::vector<juce::Image>, Model::Flag::notifying>
     , Model::Attr<AttrType::time, double, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
-    , Model::Attr<AttrType::processing, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -105,7 +105,7 @@ namespace Track
                                  , {}
                                  , {0.0}
                                  , {WarningType::none}
-                                 , {false}))
+                                 , {{false, 0.0, false, 0.0}}))
         {
         }
     };

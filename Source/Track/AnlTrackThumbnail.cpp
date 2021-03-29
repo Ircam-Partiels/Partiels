@@ -31,23 +31,25 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     
     mExportButton.onClick = [&]()
     {
+        JUCE_COMPILER_WARNING("these conditions should be fixed")
         auto const processing = mAccessor.getAttr<AttrType::processing>();
         auto const& results = mAccessor.getAttr<AttrType::results>();
-        auto const canBeExported = !processing && results != nullptr && !results->empty();
+        auto const resultsAreReady = !std::get<0>(processing) && results != nullptr && !results->empty();
+        auto const grapphicsAreReady = !std::get<2>(processing) && results != nullptr && !results->empty();
         juce::PopupMenu menu;
         menu.addItem(juce::translate("Export as template..."), true, false, [this]()
         {
             Exporter::toTemplate(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as image", canBeExported, false, [this]()
+        menu.addItem("Export as image", grapphicsAreReady, false, [this]()
         {
             Exporter::toImage(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as CSV...", canBeExported, false, [this]()
+        menu.addItem("Export as CSV...", resultsAreReady, false, [this]()
         {
             Exporter::toCsv(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as XML...", canBeExported, false, [this]()
+        menu.addItem("Export as XML...", resultsAreReady, false, [this]()
         {
             Exporter::toXml(mAccessor, AlertType::window);
         });
@@ -74,11 +76,15 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
                 {
                     return warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert;
                 };
-                auto getTooltip = [state, warnings]()
+                auto getTooltip = [state, warnings]() -> juce::String
                 {
-                    if(state)
+                    if(std::get<0>(state))
                     {
-                        return "Processing analysis...";
+                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
+                    }
+                    else if(std::get<2>(state))
+                    {
+                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
                     }
                     switch(warnings)
                     {
@@ -93,7 +99,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
                 };
                 mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
                 mProcessingButton.setTooltip(juce::translate(getTooltip()));
-                mProcessingButton.setActive(state);
+                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
             }
                 break;
             case AttrType::key:

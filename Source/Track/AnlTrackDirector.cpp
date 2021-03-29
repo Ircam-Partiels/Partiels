@@ -62,7 +62,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 break;
             case AttrType::colours:
             {
-                runRendering(NotificationType::synchronous);
+                runRendering();
             }
                 break;
             case AttrType::propertyState:
@@ -84,7 +84,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 break;
             case Zoom::AttrType::visibleRange:
             {
-                runRendering(NotificationType::synchronous);
+                runRendering();
             }
                 break;
         }
@@ -92,14 +92,18 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
     
     mProcessor.onAnalysisEnded = [&](std::shared_ptr<std::vector<Plugin::Result>> results)
     {
+        stopTimer();
+        timerCallback();
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
-        runRendering(NotificationType::synchronous);
+        runRendering();
     };
     
     mProcessor.onAnalysisAborted = [&]()
     {
+        stopTimer();
+        timerCallback();
         mAccessor.setAttr<AttrType::results>(nullptr, NotificationType::synchronous);
-        runRendering(NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(std::vector<juce::Image>{}, NotificationType::synchronous);
     };
     
     mGraphics.onRenderingUpdated = [&](std::vector<juce::Image> images)
@@ -109,13 +113,15 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
     
     mGraphics.onRenderingEnded = [&](std::vector<juce::Image> images)
     {
-        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
+        stopTimer();
+        timerCallback();
         mAccessor.setAttr<AttrType::graphics>(images, NotificationType::synchronous);
     };
     
     mGraphics.onRenderingAborted = [&]()
     {
-        mAccessor.setAttr<AttrType::processing>(false, NotificationType::synchronous);
+        stopTimer();
+        timerCallback();
         mAccessor.setAttr<AttrType::graphics>(std::vector<juce::Image>{}, NotificationType::synchronous);
     };
     
@@ -171,7 +177,6 @@ void Track::Director::runAnalysis(NotificationType const notification)
     auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReaderManager.get());
     if(!result.has_value())
     {
-        mAccessor.setAttr<AttrType::processing>(false, notification);
         return;
     }
     auto const warning = std::get<0>(*result);
@@ -184,13 +189,12 @@ void Track::Director::runAnalysis(NotificationType const notification)
         case WarningType::none:
         {
             anlDebug("Track", "analysis launched");
-            mAccessor.setAttr<AttrType::processing>(true, notification);
             mAccessor.setAttr<AttrType::description>(pluginDescription, notification);
+            startTimer(50);
         }
             break;
         case WarningType::state:
         {
-            mAccessor.setAttr<AttrType::processing>(false, notification);
             auto const state = mAccessor.getAttr<AttrType::state>();
             if(state.blockSize == pluginDescription.defaultState.blockSize &&
                state.stepSize == pluginDescription.defaultState.stepSize)
@@ -207,16 +211,15 @@ void Track::Director::runAnalysis(NotificationType const notification)
             break;
         case WarningType::plugin:
         {
-            mAccessor.setAttr<AttrType::processing>(false, notification);
             showWarningWindow(message);
         }
             break;
     }
 }
 
-void Track::Director::runRendering(NotificationType const notification)
+void Track::Director::runRendering()
 {
-    mAccessor.setAttr<AttrType::processing>(true, notification);
+    startTimer(50);
     mGraphics.runRendering(mAccessor);
 }
 
@@ -254,6 +257,15 @@ void Track::Director::updateZoomAccessors(NotificationType const notification)
         binZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(binZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
     }
     binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
+}
+
+void Track::Director::timerCallback()
+{
+    auto const processorRunning = mProcessor.isRunning();
+    auto const processorProgress = mProcessor.getAdvancement();
+    auto const graphicsRunning = mGraphics.isRunning();
+    auto const graphicsProgress = mGraphics.getAdvancement();
+    mAccessor.setAttr<AttrType::processing>(std::make_tuple(processorRunning, processorProgress, graphicsRunning, graphicsProgress), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

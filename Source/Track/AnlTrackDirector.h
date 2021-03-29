@@ -10,16 +10,20 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     class Director
+    : private juce::Timer
     {
     public:
         Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
-        ~Director();
+        ~Director() override;
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
     private:
         void runAnalysis(NotificationType const notification);
-        void runRendering(NotificationType const notification);
+        void runRendering();
         void updateZoomAccessors(NotificationType const notification);
+        
+        // juce::Timer
+        void timerCallback() override;
         
         Accessor& mAccessor;
         PluginList::Scanner& mPluginListScanner;

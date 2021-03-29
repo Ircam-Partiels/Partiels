@@ -478,11 +478,15 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto getStateAsText = [state, warnings]()
+                auto getStateAsText = [state, warnings]() -> juce::String
                 {
-                    if(state)
+                    if(std::get<0>(state))
                     {
-                        return "Processing analysis...";
+                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
+                    }
+                    else if(std::get<2>(state))
+                    {
+                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
                     }
                     switch(warnings)
                     {
