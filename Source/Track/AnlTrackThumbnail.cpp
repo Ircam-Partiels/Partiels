@@ -35,13 +35,13 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         auto const processing = mAccessor.getAttr<AttrType::processing>();
         auto const& results = mAccessor.getAttr<AttrType::results>();
         auto const resultsAreReady = !std::get<0>(processing) && results != nullptr && !results->empty();
-        auto const grapphicsAreReady = !std::get<2>(processing) && results != nullptr && !results->empty();
+        auto const graphicsAreReady = !std::get<2>(processing) && results != nullptr && !results->empty();
         juce::PopupMenu menu;
         menu.addItem(juce::translate("Export as template..."), true, false, [this]()
         {
             Exporter::toTemplate(mAccessor, AlertType::window);
         });
-        menu.addItem("Export as image", grapphicsAreReady, false, [this]()
+        menu.addItem("Export as image", graphicsAreReady, false, [this]()
         {
             Exporter::toImage(mAccessor, AlertType::window);
         });
