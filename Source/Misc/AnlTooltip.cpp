@@ -2,14 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Tooltip::Server::Server()
-{
-    if(juce::Desktop::getInstance().getMainMouseSource().canHover())
-    {
-        startTimer(123);
-    }
-}
-
 void Tooltip::Server::timerCallback()
 {
     auto getTipFor = [](juce::Component* component) -> juce::String
@@ -43,6 +35,10 @@ Tooltip::Display::Display()
     {
         mLabel.setText(tip, juce::NotificationType::dontSendNotification);
     };
+    if(juce::Desktop::getInstance().getMainMouseSource().canHover())
+    {
+        mServer.startTimer(123);
+    }
 }
 
 void Tooltip::Display::resized()

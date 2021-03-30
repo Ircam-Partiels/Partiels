@@ -9,18 +9,18 @@ namespace Tooltip
     using Client = juce::TooltipClient;
     
     class Server
-    : private juce::Timer
+    : public juce::Timer
     {
     public:
-        Server();
+        Server() = default;
         ~Server() override = default;
         
         std::function<void(juce::String const&)> onChanged = nullptr;
         
-    private:
         // juce::Timer
         void timerCallback() override;
         
+    private:
         juce::String mTip;
     };
     
