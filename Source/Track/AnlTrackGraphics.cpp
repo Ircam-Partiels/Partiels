@@ -377,7 +377,7 @@ juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& res
     {
         return std::make_tuple(std::min(std::get<0>(m), value), std::get<1>(m) + value, std::max(std::get<2>(m), value));
     });
-    return "min: " + juce::String(std::get<0>(moments)) + it->label + "\n" + "avg: " + juce::String(std::get<1>(moments) / static_cast<float>(it->values.size())) + it->label + "\n" + "max: " + juce::String(std::get<2>(moments)) + it->label;
+    return juce::String(std::get<0>(moments)) + it->label + " " + juce::String(std::get<1>(moments) / static_cast<float>(it->values.size())) + it->label + " " + juce::String(std::get<2>(moments)) + it->label;
 }
 
 ANALYSE_FILE_END
