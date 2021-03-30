@@ -280,53 +280,23 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
         {
             case AttrType::identifier:
             case AttrType::key:
-            case AttrType::description:
             case AttrType::state:
             case AttrType::height:
             case AttrType::propertyState:
             case AttrType::graphics:
-                break;
             case AttrType::name:
+            case AttrType::description:
             case AttrType::results:
+                break;
             case AttrType::time:
             {
-                auto const name = mAccessor.getAttr<AttrType::name>();
-                auto getTooltip = [&]() -> juce::String
+                for(auto const& mouseSource : juce::Desktop::getInstance().getMouseSources())
                 {
-                    auto const results = mAccessor.getAttr<AttrType::results>();
-                    if(results == nullptr || results->empty())
+                    if(mouseSource.getComponentUnderMouse() == this && (mouseSource.isDragging() || !mouseSource.isTouch()))
                     {
-                        return "";
+                        mouseSource.triggerFakeMove();
                     }
-                    auto const& output = mAccessor.getAttr<AttrType::description>().output;
-                    auto const time = mAccessor.getAttr<AttrType::time>();
-                    if(output.hasFixedBinCount)
-                    {
-                        switch(output.binCount)
-                        {
-                            case 0:
-                            {
-                                return Graphics::getMarkerText(*results, time);
-                            }
-                                break;
-                            case 1:
-                            {
-                                return Graphics::getSegmentText(*results, time);
-                            }
-                                break;
-                            default:
-                            {
-                                return Graphics::getGridText(*results, time);
-                            }
-                                break;
-                        }
-                    }
-                    return Graphics::getSegmentText(*results, time);
-                };
-                
-                auto const tip = getTooltip();
-                setTooltip(name + (tip.isEmpty() ? "" : (": " + tip)));
-                mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
+                }
             }
                 break;
             case AttrType::colours:
@@ -340,7 +310,8 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                
+                auto const output = acsr.getAttr<AttrType::description>().output;
+        
                 auto getTooltip = [state, warnings]() -> juce::String
                 {
                     if(std::get<0>(state))
@@ -394,10 +365,55 @@ void Track::Snapshot::Overlay::paint(juce::Graphics& g)
     g.fillRect(getLocalBounds());
 }
 
+void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
+{
+    auto const name = mAccessor.getAttr<AttrType::name>();
+    auto getTooltip = [&]() -> juce::String
+    {
+        auto const results = mAccessor.getAttr<AttrType::results>();
+        auto const& output = mAccessor.getAttr<AttrType::description>().output;
+        if(results == nullptr || results->empty())
+        {
+            return "";
+        }
+        auto const time = mAccessor.getAttr<AttrType::time>();
+        if(output.hasFixedBinCount)
+        {
+            switch(output.binCount)
+            {
+                case 0:
+                {
+                    return Graphics::getMarkerText(*results, output, time);
+                }
+                    break;
+                case 1:
+                {
+                    return Graphics::getSegmentText(*results, output, time);
+                }
+                    break;
+                default:
+                {
+                    auto const& binVisibleRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+                    auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
+                    auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
+                    return Graphics::getGridText(*results, output, time, bin);
+                }
+                    break;
+            }
+        }
+        return Graphics::getSegmentText(*results, output, time);
+    };
+    
+    auto const tip = getTooltip();
+    setTooltip(name + (tip.isEmpty() ? "" : (": " + tip)));
+    mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
+}
+
 void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     mTooltip.setVisible(!mProcessingButton.isVisible());
+    mouseMove(event);
 }
 
 void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)

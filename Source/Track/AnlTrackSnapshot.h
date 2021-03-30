@@ -27,6 +27,7 @@ namespace Track
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
+            void mouseMove(juce::MouseEvent const& event) override;
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
             
