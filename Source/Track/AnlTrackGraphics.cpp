@@ -325,7 +325,7 @@ juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& 
     });
     if(second == results.cend())
     {
-        return "";
+        return "-";
     }
     auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
     if(second->timestamp <= rt && Graphics::getEndRealTime(*second) >= rt)
@@ -353,7 +353,7 @@ juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& 
             anlStrongAssert(end > start);
             if(end <= start)
             {
-                return "";
+                return "-";
             }
             auto const ratio = static_cast<float>((time - start) / (end - start));
             auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
@@ -361,7 +361,7 @@ juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& 
             return juce::String(value, 2) + label;
         }
     }
-    return "";
+    return "-";
 }
 
 juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin)
@@ -373,23 +373,15 @@ juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& res
     });
     if(it == results.cend() || it->values.empty())
     {
-        return "";
+        return "-";
     }
     anlStrongAssert(bin < it->values.size());
     if(bin >= it->values.size())
     {
-        return "";
+        return "-";
     }
-    auto getBinName = [&]()
-    {
-        if(bin < output.binNames.size() && !output.binNames[bin].empty())
-        {
-            return output.binNames[bin];
-        }
-        return std::to_string(bin);
-    };
     auto const label = it->label.empty() ? output.unit : it->label;
-    return juce::String(it->values[bin], 2) + label + " (" + getBinName() + ")";
+    return juce::String(it->values[bin], 2) + label;
 }
 
 ANALYSE_FILE_END
