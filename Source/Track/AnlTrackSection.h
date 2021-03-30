@@ -68,8 +68,8 @@ namespace Track
         Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
         
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
-        Container mSnapshotContainer {mAccessor, mTimeZoomAccessor, mSnapshot, false};
-        Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
+        Snapshot::Overlay mSnapshotOverlay {mSnapshot};
+        Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 4.0f};
         
         Plot mPlot {mAccessor, mTimeZoomAccessor};
         Container mPlotContainer {mAccessor, mTimeZoomAccessor, mPlot, true};
