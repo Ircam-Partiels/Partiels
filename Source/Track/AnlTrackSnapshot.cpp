@@ -80,14 +80,12 @@ void Track::Snapshot::paint(juce::Graphics& g)
         {
             case 0:
             {
-                g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
-                paintMarker(g, bounds.toFloat(), *results, time);
+                paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time);
             }
                 break;
             case 1:
             {
-                g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
-                paintSegment(g, bounds.toFloat(), *results, time, valueRange);
+                paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time, valueRange);
             }
                 break;
             default:
@@ -99,12 +97,11 @@ void Track::Snapshot::paint(juce::Graphics& g)
     }
     else
     {
-        g.setColour(mAccessor.getAttr<AttrType::colours>().foreground);
-        paintSegment(g, bounds.toFloat(), *results, time, valueRange);
+        paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time, valueRange);
     }
 }
 
-void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, double time)
+void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time)
 {
     auto const rt = Graphics::secondsToRealTime(time);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
@@ -113,11 +110,12 @@ void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> cons
     });
     if(it != results.cend() && Graphics::getEndRealTime(*it) <= rt)
     {
+        g.setColour(colour);
         g.fillRect(bounds);
     }
 }
 
-void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange)
+void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange)
 {
     auto const rt = Graphics::secondsToRealTime(time);
     auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
@@ -128,23 +126,33 @@ void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> con
     {
         return;
     }
+    
+    auto const clipBounds = g.getClipBounds().toFloat();
+    auto paintLineWithShadow = [&](float const y)
+    {
+        g.setColour(juce::Colours::black.withAlpha(0.25f));
+        g.drawLine(clipBounds.getX(), y + 3.0f, clipBounds.getRight(), y + 3.0f,  1.0f);
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f,  1.0f);
+        g.setColour(juce::Colours::black.withAlpha(0.75f));
+        g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f,  1.0f);
+        g.setColour(colour);
+        g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y ,  1.0f);
+    };
+    
     auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
     if(second->timestamp <= rt && Graphics::getEndRealTime(*second) >= rt)
     {
         if(!second->values.empty())
         {
-            auto const y = Graphics::valueToPixel(second->values[0], valueRange, bounds);
-            auto const clipBounds = g.getClipBounds().toFloat();
-            g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y);
+            paintLineWithShadow(Graphics::valueToPixel(second->values[0], valueRange, bounds));
         }
     }
     else if(first->timestamp <= rt && Graphics::getEndRealTime(*first) >= rt)
     {
         if(!first->values.empty())
         {
-            auto const y = Graphics::valueToPixel(first->values[0], valueRange, bounds);
-            auto const clipBounds = g.getClipBounds().toFloat();
-            g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y);
+            paintLineWithShadow(Graphics::valueToPixel(first->values[0], valueRange, bounds));
         }
     }
     else if(first != second && first->hasTimestamp)
@@ -160,9 +168,7 @@ void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> con
             }
             auto const ratio = static_cast<float>((time - start) / (end - start));
             auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
-            auto const y = Graphics::valueToPixel(value, valueRange, bounds);
-            auto const clipBounds = g.getClipBounds().toFloat();
-            g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y);
+            paintLineWithShadow(Graphics::valueToPixel(value, valueRange, bounds));
         }
     }
 }
