@@ -302,7 +302,7 @@ Vamp::RealTime Track::Graphics::getEndRealTime(Plugin::Result const& rt)
     return rt.hasDuration ? rt.timestamp + rt.duration : rt.timestamp;
 }
 
-juce::String Track::Graphics::getMarkerText(std::vector<Plugin::Result> const& results, double time)
+juce::String Track::Graphics::getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time)
 {
     auto const rt = secondsToRealTime(time);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
@@ -311,12 +311,12 @@ juce::String Track::Graphics::getMarkerText(std::vector<Plugin::Result> const& r
     });
     if(it != results.cend() && getEndRealTime(*it) <= rt)
     {
-        return it->label;
+        return it->label.empty() ? output.unit : it->label;
     }
     return "";
 }
 
-juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& results, double time)
+juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time)
 {
     auto const rt = secondsToRealTime(time);
     auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
@@ -332,14 +332,16 @@ juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& 
     {
         if(!second->values.empty())
         {
-            return juce::String(second->values[0]) + second->label;
+            auto const label = second->label.empty() ? output.unit : second->label;
+            return juce::String(second->values[0], 2) + label;
         }
     }
     else if(first->timestamp <= rt && Graphics::getEndRealTime(*first) >= rt)
     {
         if(!first->values.empty())
         {
-            return juce::String(first->values[0]) + first->label;
+            auto const label = first->label.empty() ? output.unit : first->label;
+            return juce::String(first->values[0], 2) + label;
         }
     }
     else if(first != second && first->hasTimestamp)
@@ -355,13 +357,14 @@ juce::String Track::Graphics::getSegmentText(std::vector<Plugin::Result> const& 
             }
             auto const ratio = static_cast<float>((time - start) / (end - start));
             auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
-            return juce::String(value) + second->label;
+            auto const label = second->label.empty() ? output.unit : second->label;
+            return juce::String(value, 2) + label;
         }
     }
     return "";
 }
 
-juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& results, double time)
+juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin)
 {
     auto const rt = secondsToRealTime(time);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
@@ -372,12 +375,21 @@ juce::String Track::Graphics::getGridText(std::vector<Plugin::Result> const& res
     {
         return "";
     }
-    auto const first = it->values.front();
-    auto const moments = std::accumulate(it->values.cbegin(), it->values.cend(), std::make_tuple(first, first, first), [](auto const& m, auto const value)
+    anlStrongAssert(bin < it->values.size());
+    if(bin >= it->values.size())
     {
-        return std::make_tuple(std::min(std::get<0>(m), value), std::get<1>(m) + value, std::max(std::get<2>(m), value));
-    });
-    return juce::String(std::get<0>(moments)) + it->label + " " + juce::String(std::get<1>(moments) / static_cast<float>(it->values.size())) + it->label + " " + juce::String(std::get<2>(moments)) + it->label;
+        return "";
+    }
+    auto getBinName = [&]()
+    {
+        if(bin < output.binNames.size() && !output.binNames[bin].empty())
+        {
+            return output.binNames[bin];
+        }
+        return std::to_string(bin);
+    };
+    auto const label = it->label.empty() ? output.unit : it->label;
+    return juce::String(it->values[bin], 2) + label + " (" + getBinName() + ")";
 }
 
 ANALYSE_FILE_END

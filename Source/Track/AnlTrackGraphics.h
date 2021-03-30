@@ -29,9 +29,9 @@ namespace Track
         static Vamp::RealTime secondsToRealTime(double seconds);
         static Vamp::RealTime getEndRealTime(Plugin::Result const& rt);
 
-        static juce::String getMarkerText(std::vector<Plugin::Result> const& results, double time);
-        static juce::String getSegmentText(std::vector<Plugin::Result> const& results, double time);
-        static juce::String getGridText(std::vector<Plugin::Result> const& results, double time);
+        static juce::String getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
+        static juce::String getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
+        static juce::String getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin);
         
     private:
         void abortRendering();
