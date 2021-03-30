@@ -7,14 +7,15 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
 {
+    setInterceptsMouseClicks(false, false);
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
-            case AttrType::name:
             case AttrType::key:
+            case AttrType::name:
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
@@ -22,10 +23,10 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::warnings:
                 break;
             case AttrType::results:
+            case AttrType::time:
             case AttrType::graphics:
             case AttrType::processing:
             case AttrType::colours:
-            case AttrType::time:
             {
                 repaint();
             }
@@ -258,22 +259,6 @@ void Track::Snapshot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& b
         drawImage({std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
     
-    auto getZoomRatio = [](Zoom::Accessor const& acsr)
-    {
-        return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
-    };
-    
-    auto const binZoomRatio = getZoomRatio(binZoomAcsr);
-    auto const boundsDimension = bounds.getHeight() * binZoomRatio;
-    for(auto const& image : images)
-    {
-        auto const imageDimension = std::max(image.getWidth(), image.getHeight());
-        if(imageDimension >= boundsDimension)
-        {
-            renderImage(image, time, timeZoomAcsr, binZoomAcsr);
-            return;
-        }
-    }
     renderImage(images.back(), time, timeZoomAcsr, binZoomAcsr);
 }
 
@@ -283,71 +268,71 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 {
     addAndMakeVisible(mSnapshot);
     addChildComponent(mProcessingButton);
-    mInformation.setEditable(false);
-    mInformation.setInterceptsMouseClicks(false, false);
-    mInformation.setJustificationType(juce::Justification::topLeft);
-    addChildComponent(mInformation);
+    mTooltip.setEditable(false);
+    mTooltip.setJustificationType(juce::Justification::topLeft);
+    mTooltip.setInterceptsMouseClicks(false, false);
+    addChildComponent(mTooltip);
+    setInterceptsMouseClicks(true, true);
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {
             case AttrType::identifier:
-            case AttrType::name:
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
             case AttrType::propertyState:
-            case AttrType::results:
-            {
-                auto const& results = mAccessor.getAttr<AttrType::results>();
-                mInformation.setVisible(results != nullptr && !results->empty());
-            }
-                break;
             case AttrType::graphics:
                 break;
+            case AttrType::name:
+            case AttrType::results:
             case AttrType::time:
             {
-                auto const results = mAccessor.getAttr<AttrType::results>();
-                if(results == nullptr || results->empty())
+                auto const name = mAccessor.getAttr<AttrType::name>();
+                auto getTooltip = [&]() -> juce::String
                 {
-                    return;
-                }
-                auto const& output = mAccessor.getAttr<AttrType::description>().output;
-                auto const time = mAccessor.getAttr<AttrType::time>();
-                
-                if(output.hasFixedBinCount)
-                {
-                    switch(output.binCount)
+                    auto const results = mAccessor.getAttr<AttrType::results>();
+                    if(results == nullptr || results->empty())
                     {
-                        case 0:
-                        {
-                            mInformation.setText(Graphics::getMarkerText(*results, time), juce::NotificationType::dontSendNotification);
-                        }
-                            break;
-                        case 1:
-                        {
-                            mInformation.setText(Graphics::getSegmentText(*results, time), juce::NotificationType::dontSendNotification);
-                        }
-                            break;
-                        default:
-                        {
-                            mInformation.setText(Graphics::getGridText(*results, time), juce::NotificationType::dontSendNotification);
-                        }
-                            break;
+                        return "";
                     }
-                }
-                else
-                {
-                    mInformation.setText(Graphics::getSegmentText(*results, time), juce::NotificationType::dontSendNotification);
-                }
+                    auto const& output = mAccessor.getAttr<AttrType::description>().output;
+                    auto const time = mAccessor.getAttr<AttrType::time>();
+                    if(output.hasFixedBinCount)
+                    {
+                        switch(output.binCount)
+                        {
+                            case 0:
+                            {
+                                return Graphics::getMarkerText(*results, time);
+                            }
+                                break;
+                            case 1:
+                            {
+                                return Graphics::getSegmentText(*results, time);
+                            }
+                                break;
+                            default:
+                            {
+                                return Graphics::getGridText(*results, time);
+                            }
+                                break;
+                        }
+                    }
+                    return Graphics::getSegmentText(*results, time);
+                };
+                
+                auto const tip = getTooltip();
+                setTooltip(name + (tip.isEmpty() ? "" : (": " + tip)));
+                mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
             }
                 break;
             case AttrType::colours:
             {
                 auto const colours = acsr.getAttr<AttrType::colours>();
-                mInformation.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
+                mTooltip.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
             }
                 break;
             case AttrType::warnings:
@@ -356,10 +341,6 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
                 
-                auto getInactiveIconType = [warnings]()
-                {
-                    return warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert;
-                };
                 auto getTooltip = [state, warnings]() -> juce::String
                 {
                     if(std::get<0>(state))
@@ -381,9 +362,10 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                     }
                     return "Analysis finished!";
                 };
-                mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
                 mProcessingButton.setTooltip(juce::translate(getTooltip()));
                 mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
+                mProcessingButton.setVisible(warnings != WarningType::none || std::get<0>(state) || std::get<2>(state));
+                mTooltip.setVisible(!mProcessingButton.isVisible() && isMouseOverOrDragging());
             }
                 break;
         }
@@ -401,7 +383,7 @@ void Track::Snapshot::Overlay::resized()
 {
     auto bounds = getLocalBounds();
     mSnapshot.setBounds(bounds);
-    mInformation.setBounds(bounds);
+    mTooltip.setBounds(bounds);
     mProcessingButton.setBounds(8, 8, 20, 20);
 }
 
@@ -410,6 +392,18 @@ void Track::Snapshot::Overlay::paint(juce::Graphics& g)
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
     g.setColour(colours.background);
     g.fillRect(getLocalBounds());
+}
+
+void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    mTooltip.setVisible(!mProcessingButton.isVisible());
+}
+
+void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    mTooltip.setVisible(false);
 }
 
 ANALYSE_FILE_END

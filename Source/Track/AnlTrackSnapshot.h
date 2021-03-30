@@ -18,6 +18,7 @@ namespace Track
 
         class Overlay
         : public juce::Component
+        , public juce::SettableTooltipClient
         {
         public:
             Overlay(Snapshot& snapshot);
@@ -26,6 +27,8 @@ namespace Track
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
+            void mouseEnter(juce::MouseEvent const& event) override;
+            void mouseExit(juce::MouseEvent const& event) override;
             
         private:            
             Snapshot& mSnapshot;
@@ -33,7 +36,7 @@ namespace Track
             Accessor::Listener mListener;
             
             LoadingCircle mProcessingButton;
-            juce::Label mInformation;
+            juce::Label mTooltip;
         };
         
     private:
