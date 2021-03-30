@@ -2,7 +2,6 @@
 
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
-#include "../Zoom/AnlZoomPlayhead.h"
 #include "AnlTrackThumbnail.h"
 #include "AnlTrackPlot.h"
 #include "AnlTrackSnapshot.h"
@@ -32,32 +31,6 @@ namespace Track
         void paint(juce::Graphics& g) override;
         
     private:
-        class Container
-        : public juce::Component
-        {
-        public:
-            Container(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::Component& content, bool showPlayhead);
-            ~Container() override;
-            
-            // juce::Component
-            void resized() override;
-            void paint(juce::Graphics& g) override;
-            void mouseMove(juce::MouseEvent const& event) override;
-            void mouseEnter(juce::MouseEvent const& event) override;
-            void mouseExit(juce::MouseEvent const& event) override;
-            
-        private:
-            
-            Accessor& mAccessor;
-            Zoom::Accessor& mTimeZoomAccessor;
-            juce::Component& mContent;
-            Accessor::Listener mListener;
-            
-            Zoom::Playhead mZoomPlayhead;
-            LoadingCircle mProcessingButton;
-            juce::Label mInformation;
-        };
-
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         juce::Component& mSeparator;
@@ -72,8 +45,8 @@ namespace Track
         Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 4.0f};
         
         Plot mPlot {mAccessor, mTimeZoomAccessor};
-        Container mPlotContainer {mAccessor, mTimeZoomAccessor, mPlot, true};
-        Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};
+        Plot::Overlay mPlotOverlay {mPlot};
+        Decorator mPlotDecoration {mPlotOverlay, 1, 4.0f};
         
         Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
