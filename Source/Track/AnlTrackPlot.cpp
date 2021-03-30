@@ -155,16 +155,12 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
         g.setColour(juce::Colours::black.withAlpha(0.5f));
         rectangles.offsetAll(-2.0f, 0.0f);
         g.fillRectList(rectangles);
-        rectangles.offsetAll(4.0f, 0.0f);
-        g.fillRectList(rectangles);
-        rectangles.offsetAll(-2.0f, 0.0f);
+        rectangles.offsetAll(2.0f, 0.0f);
         
         g.setColour(juce::Colours::black.withAlpha(0.25f));
         rectangles.offsetAll(-1.0f, 0.0f);
         g.fillRectList(rectangles);
-        rectangles.offsetAll(2.0f, 0.0f);
-        g.fillRectList(rectangles);
-        rectangles.offsetAll(-1.0f, 0.0f);
+        rectangles.offsetAll(1.0f, 0.0f);
     }
     g.setColour(colour);
     g.fillRectList(rectangles);
@@ -395,6 +391,189 @@ void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bound
         }
     }
     renderImage(images.back(), timeZoomAcsr, binZoomAcsr);
+}
+
+Track::Plot::Overlay::Overlay(Plot& plot)
+: mPlot(plot)
+, mAccessor(mPlot.mAccessor)
+, mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
+, mZoomPlayhead(mTimeZoomAccessor)
+{
+    addAndMakeVisible(mPlot);
+    addChildComponent(mProcessingButton);
+    mTooltip.setEditable(false);
+    mTooltip.setJustificationType(juce::Justification::topLeft);
+    mTooltip.setInterceptsMouseClicks(false, false);
+    addChildComponent(mTooltip);
+    setInterceptsMouseClicks(true, true);
+    addAndMakeVisible(mZoomPlayhead);
+    
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::key:
+            case AttrType::description:
+            case AttrType::state:
+            case AttrType::height:
+            case AttrType::propertyState:
+            case AttrType::results:
+            case AttrType::graphics:
+                break;
+            case AttrType::time:
+            {
+                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::time>());
+            }
+                break;
+            case AttrType::colours:
+            {
+                auto const colours = acsr.getAttr<AttrType::colours>();
+                mTooltip.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
+            }
+                break;
+            case AttrType::warnings:
+            case AttrType::processing:
+            {
+                auto const state = acsr.getAttr<AttrType::processing>();
+                auto const warnings = acsr.getAttr<AttrType::warnings>();
+                auto const output = acsr.getAttr<AttrType::description>().output;
+                
+                auto getTooltip = [state, warnings]() -> juce::String
+                {
+                    if(std::get<0>(state))
+                    {
+                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
+                    }
+                    else if(std::get<2>(state))
+                    {
+                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
+                    }
+                    switch(warnings)
+                    {
+                        case WarningType::none:
+                            return "Analysis successfully completed!";
+                        case WarningType::plugin:
+                            return "Analysis failed: The plugin cannot be found or allocated!";
+                        case WarningType::state:
+                            return "Analysis failed: The step size or the block size might not be supported!";
+                    }
+                    return "Analysis finished!";
+                };
+                mProcessingButton.setTooltip(juce::translate(getTooltip()));
+                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
+                mProcessingButton.setVisible(warnings != WarningType::none || std::get<0>(state) || std::get<2>(state));
+                mTooltip.setVisible(!mProcessingButton.isVisible() && isMouseOverOrDragging());
+            }
+                break;
+        }
+    };
+    
+    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType const attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
+                break;
+            case Zoom::AttrType::visibleRange:
+            {
+                for(auto const& mouseSource : juce::Desktop::getInstance().getMouseSources())
+                {
+                    if(mouseSource.getComponentUnderMouse() == this && (mouseSource.isDragging() || !mouseSource.isTouch()))
+                    {
+                        mouseSource.triggerFakeMove();
+                    }
+                }
+            }
+                break;
+        }
+    };
+    
+    mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Track::Plot::Overlay::~Overlay()
+{
+    mAccessor.removeListener(mListener);
+    mTimeZoomAccessor.removeListener(mTimeZoomListener);
+}
+
+void Track::Plot::Overlay::resized()
+{
+    auto bounds = getLocalBounds();
+    mPlot.setBounds(bounds);
+    mTooltip.setBounds(bounds);
+    mProcessingButton.setBounds(8, 8, 20, 20);
+}
+
+void Track::Plot::Overlay::paint(juce::Graphics& g)
+{
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    g.setColour(colours.background);
+    g.fillRect(getLocalBounds());
+}
+
+void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
+{
+    auto const name = mAccessor.getAttr<AttrType::name>();
+    auto const& timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
+    auto const time = static_cast<double>(event.x) / static_cast<double>(getWidth()) * timeRange.getLength() + timeRange.getStart();
+    
+    auto getTooltip = [&]() -> juce::String
+    {
+        auto const results = mAccessor.getAttr<AttrType::results>();
+        auto const& output = mAccessor.getAttr<AttrType::description>().output;
+        if(results == nullptr || results->empty())
+        {
+            return "-";
+        }
+        if(output.hasFixedBinCount)
+        {
+            switch(output.binCount)
+            {
+                case 0:
+                {
+                    return Graphics::getMarkerText(*results, output, time);
+                }
+                    break;
+                case 1:
+                {
+                    return Graphics::getSegmentText(*results, output, time);
+                }
+                    break;
+                default:
+                {
+                    auto const& binVisibleRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+                    auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
+                    auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
+                    auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
+                    return binName + " • " +  Graphics::getGridText(*results, output, time, bin);
+                }
+                    break;
+            }
+        }
+        return Graphics::getSegmentText(*results, output, time);
+    };
+    
+    auto const tip = Format::secondsToString(time) + " • "+  getTooltip();
+    setTooltip(name + ": " + tip);
+    mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
+}
+
+void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
+{
+    mTooltip.setVisible(true);
+    mouseMove(event);
+}
+
+void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    mTooltip.setVisible(false);
 }
 
 ANALYSE_FILE_END

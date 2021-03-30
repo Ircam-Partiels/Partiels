@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlTrackModel.h"
+#include "../Zoom/AnlZoomPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -15,6 +16,33 @@ namespace Track
         
         // juce::Component
         void paint(juce::Graphics& g) override;
+        
+        class Overlay
+        : public juce::Component
+        , public juce::SettableTooltipClient
+        {
+        public:
+            Overlay(Plot& plot);
+            ~Overlay() override;
+            
+            // juce::Component
+            void resized() override;
+            void paint(juce::Graphics& g) override;
+            void mouseMove(juce::MouseEvent const& event) override;
+            void mouseEnter(juce::MouseEvent const& event) override;
+            void mouseExit(juce::MouseEvent const& event) override;
+            
+        private:
+            Plot& mPlot;
+            Accessor& mAccessor;
+            Zoom::Accessor& mTimeZoomAccessor;
+            Accessor::Listener mListener;
+            Zoom::Accessor::Listener mTimeZoomListener;
+            
+            LoadingCircle mProcessingButton;
+            juce::Label mTooltip;
+            Zoom::Playhead mZoomPlayhead;
+        };
         
     private:
         static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange);
