@@ -302,6 +302,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             {
                 auto const colours = acsr.getAttr<AttrType::colours>();
                 mTooltip.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
+                setOpaque(colours.background.isOpaque());
             }
                 break;
             case AttrType::warnings:
