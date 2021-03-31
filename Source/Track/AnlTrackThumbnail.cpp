@@ -60,6 +60,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
+        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::name:
