@@ -338,19 +338,22 @@ void Application::LookAndFeel::drawProgressBar(juce::Graphics& g, juce::Progress
     auto const barBounds = progressBar.getLocalBounds().toFloat();
     auto const cornerSize = static_cast<float>(barBounds.getHeight()) * 0.5f;
     
-    g.setColour(progressBar.findColour(juce::ProgressBar::ColourIds::backgroundColourId));
+    auto const backgroundColour = progressBar.findColour(juce::ProgressBar::ColourIds::backgroundColourId);
+    auto const foregroundColour = progressBar.findColour(juce::ProgressBar::ColourIds::foregroundColourId);
+    
+    g.setColour(backgroundColour);
     g.fillRoundedRectangle(barBounds, cornerSize);
     
     if(progress > 0.0)
     {
-        g.setColour(progressBar.findColour(juce::ProgressBar::ColourIds::foregroundColourId));
+        g.setColour(foregroundColour);
         auto const progressWidth = barBounds.getWidth() * static_cast<float>(std::min(progress, 1.0));
         g.fillRoundedRectangle(barBounds.withWidth(progressWidth), cornerSize);
     }
     
     if(!textToShow.isEmpty())
     {
-        g.setColour(progressBar.findColour(juce::Label::ColourIds::textColourId));
+        g.setColour(juce::Colour::contrasting(backgroundColour, foregroundColour));
         g.setFont(barBounds.getHeight() * 0.6f);
         auto getText = [&]()
         {
