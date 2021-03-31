@@ -112,7 +112,6 @@ Document::GroupSnapshot::~GroupSnapshot()
 void Document::GroupSnapshot::resized()
 {
     auto bounds = getLocalBounds();
-    
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)
     {
