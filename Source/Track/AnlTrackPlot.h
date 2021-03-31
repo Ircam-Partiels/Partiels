@@ -39,7 +39,6 @@ namespace Track
             Accessor::Listener mListener;
             Zoom::Accessor::Listener mTimeZoomListener;
             
-            LoadingCircle mProcessingButton;
             juce::Label mTooltip;
             Zoom::Playhead mZoomPlayhead;
         };

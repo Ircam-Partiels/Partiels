@@ -400,7 +400,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 , mZoomPlayhead(mTimeZoomAccessor)
 {
     addAndMakeVisible(mPlot);
-    addChildComponent(mProcessingButton);
     mTooltip.setEditable(false);
     mTooltip.setJustificationType(juce::Justification::topLeft);
     mTooltip.setInterceptsMouseClicks(false, false);
@@ -421,6 +420,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::propertyState:
             case AttrType::results:
             case AttrType::graphics:
+            case AttrType::warnings:
                 break;
             case AttrType::time:
             {
@@ -433,39 +433,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
                 mTooltip.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
             }
                 break;
-            case AttrType::warnings:
             case AttrType::processing:
-            {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto const output = acsr.getAttr<AttrType::description>().output;
-                
-                auto getTooltip = [state, warnings]() -> juce::String
-                {
-                    if(std::get<0>(state))
-                    {
-                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
-                    }
-                    else if(std::get<2>(state))
-                    {
-                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
-                    }
-                    switch(warnings)
-                    {
-                        case WarningType::none:
-                            return "Analysis successfully completed!";
-                        case WarningType::plugin:
-                            return "Analysis failed: The plugin cannot be found or allocated!";
-                        case WarningType::state:
-                            return "Analysis failed: The step size or the block size might not be supported!";
-                    }
-                    return "Analysis finished!";
-                };
-                mProcessingButton.setTooltip(juce::translate(getTooltip()));
-                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
-                mProcessingButton.setVisible(warnings != WarningType::none || std::get<0>(state) || std::get<2>(state));
-                mTooltip.setVisible(!mProcessingButton.isVisible() && isMouseOverOrDragging());
-            }
                 break;
         }
     };
@@ -504,10 +472,9 @@ Track::Plot::Overlay::~Overlay()
 
 void Track::Plot::Overlay::resized()
 {
-    auto bounds = getLocalBounds();
+    auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
-    mTooltip.setBounds(bounds);
-    mProcessingButton.setBounds(8, 8, 20, 20);
+    mTooltip.setBounds(0, 0, 200, 20);
 }
 
 void Track::Plot::Overlay::paint(juce::Graphics& g)
