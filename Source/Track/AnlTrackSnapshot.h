@@ -36,7 +36,6 @@ namespace Track
             Accessor& mAccessor;
             Accessor::Listener mListener;
             
-            LoadingCircle mProcessingButton;
             juce::Label mTooltip;
         };
         

@@ -267,7 +267,6 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 , mAccessor(mSnapshot.mAccessor)
 {
     addAndMakeVisible(mSnapshot);
-    addChildComponent(mProcessingButton);
     mTooltip.setEditable(false);
     mTooltip.setJustificationType(juce::Justification::topLeft);
     mTooltip.setInterceptsMouseClicks(false, false);
@@ -307,37 +306,6 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 break;
             case AttrType::warnings:
             case AttrType::processing:
-            {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto const output = acsr.getAttr<AttrType::description>().output;
-        
-                auto getTooltip = [state, warnings]() -> juce::String
-                {
-                    if(std::get<0>(state))
-                    {
-                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
-                    }
-                    else if(std::get<2>(state))
-                    {
-                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
-                    }
-                    switch(warnings)
-                    {
-                        case WarningType::none:
-                            return "Analysis successfully completed!";
-                        case WarningType::plugin:
-                            return "Analysis failed: The plugin cannot be found or allocated!";
-                        case WarningType::state:
-                            return "Analysis failed: The step size or the block size might not be supported!";
-                    }
-                    return "Analysis finished!";
-                };
-                mProcessingButton.setTooltip(juce::translate(getTooltip()));
-                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
-                mProcessingButton.setVisible(warnings != WarningType::none || std::get<0>(state) || std::get<2>(state));
-                mTooltip.setVisible(!mProcessingButton.isVisible() && isMouseOverOrDragging());
-            }
                 break;
         }
     };
@@ -352,10 +320,9 @@ Track::Snapshot::Overlay::~Overlay()
 
 void Track::Snapshot::Overlay::resized()
 {
-    auto bounds = getLocalBounds();
+    auto const bounds = getLocalBounds();
     mSnapshot.setBounds(bounds);
-    mTooltip.setBounds(bounds);
-    mProcessingButton.setBounds(8, 8, 20, 20);
+    mTooltip.setBounds(0, 0, getWidth(), 40);
 }
 
 void Track::Snapshot::Overlay::paint(juce::Graphics& g)
@@ -411,8 +378,7 @@ void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 
 void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    juce::ignoreUnused(event);
-    mTooltip.setVisible(!mProcessingButton.isVisible());
+    mTooltip.setVisible(true);
     mouseMove(event);
 }
 
