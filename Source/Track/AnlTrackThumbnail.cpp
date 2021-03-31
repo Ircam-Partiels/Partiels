@@ -10,7 +10,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mPropertiesButton);
     addAndMakeVisible(mExportButton);
     addAndMakeVisible(mRemoveButton);
-    addAndMakeVisible(mProcessingButton);
+    addAndMakeVisible(mStateButton);
     
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
@@ -69,39 +69,6 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
                 break;
             case AttrType::processing:
             case AttrType::warnings:
-            {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto getInactiveIconType = [warnings]()
-                {
-                    return warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert;
-                };
-                auto getTooltip = [state, warnings]() -> juce::String
-                {
-                    if(std::get<0>(state))
-                    {
-                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
-                    }
-                    else if(std::get<2>(state))
-                    {
-                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
-                    }
-                    switch(warnings)
-                    {
-                        case WarningType::none:
-                            return "Analysis successfully completed!";
-                        case WarningType::plugin:
-                            return "Analysis failed: The plugin cannot be found or allocated!";
-                        case WarningType::state:
-                            return "Analysis failed: The step size or the block size might not be supported!";
-                    }
-                    return "Analysis finished!";
-                };
-                mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
-                mProcessingButton.setTooltip(juce::translate(getTooltip()));
-                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
-            }
-                break;
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
@@ -131,8 +98,8 @@ void Track::Thumbnail::resized()
     auto const size = bounds.getWidth() - separator;
     mRemoveButton.setVisible(bounds.getHeight() >= size);
     mRemoveButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mProcessingButton.setVisible(bounds.getHeight() >= size);
-    mProcessingButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mStateButton.setVisible(bounds.getHeight() >= size);
+    mStateButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
     mExportButton.setVisible(bounds.getHeight() >= size);
     mExportButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
     mPropertiesButton.setVisible(bounds.getHeight() >= size);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlTrackPropertyPanel.h"
+#include "AnlTrackStateButton.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -33,7 +34,7 @@ namespace Track
         PropertyPanel mPropertyPanel {mAccessor};
         juce::ImageButton mPropertiesButton;
         juce::ImageButton mExportButton;
-        LoadingCircle mProcessingButton;
+        StateButton mStateButton {mAccessor};
         juce::ImageButton mRemoveButton;
     };
 }
