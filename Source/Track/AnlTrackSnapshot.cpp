@@ -364,7 +364,8 @@ void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
                     auto const& binVisibleRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
                     auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
                     auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
-                    return Graphics::getGridText(*results, output, time, bin);
+                    auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
+                    return binName + " • " + Graphics::getGridText(*results, output, time, bin);
                 }
                     break;
             }
@@ -373,7 +374,7 @@ void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
     };
     
     auto const tip = getTooltip();
-    setTooltip(name + (tip.isEmpty() ? "" : (": " + tip)));
+    setTooltip(name + ": " + tip);
     mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
 }
 
