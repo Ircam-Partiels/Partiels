@@ -10,6 +10,7 @@ Track::StateButton::StateButton(Accessor& accessor)
     {
         switch(attribute)
         {
+            case AttrType::name:
             case AttrType::processing:
             case AttrType::warnings:
             {
@@ -23,30 +24,30 @@ Track::StateButton::StateButton(Accessor& accessor)
                 {
                     if(std::get<0>(state))
                     {
-                        return "Analysing... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
+                        return "analysing... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
                     }
                     else if(std::get<2>(state))
                     {
-                        return "Rendering... (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
+                        return "rendering... (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
                     }
                     switch(warnings)
                     {
                         case WarningType::none:
-                            return "Analysis and rendering successfully completed!";
+                            return "analysis and rendering successfully completed!";
                         case WarningType::plugin:
-                            return "Analysis failed: The plugin cannot be found or allocated!";
+                            return "analysis failed: the plugin cannot be found or allocated!";
                         case WarningType::state:
-                            return "Analysis failed: The step size or the block size might not be supported!";
+                            return "analysis failed: the step size or the block size might not be supported!";
                     }
-                    return "Analysis and rendering successfully completed!";
+                    return "analysis and rendering successfully completed!";
                 };
                 mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
-                auto const name = acsr.getAttr<AttrType::name>();
-                mProcessingButton.setTooltip(name + ": " + juce::translate(getTooltip()));
+                auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + juce::translate(getTooltip());
+                mProcessingButton.setTooltip(tooltip);
+                setTooltip(tooltip);
                 mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
             }
                 break;
-            case AttrType::name:
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:

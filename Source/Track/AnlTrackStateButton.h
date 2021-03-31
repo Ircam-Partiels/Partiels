@@ -8,6 +8,7 @@ namespace Track
 {
     class StateButton
     : public juce::Component
+    , public juce::SettableTooltipClient
     {
     public:
         StateButton(Accessor& accessor);
