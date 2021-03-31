@@ -130,6 +130,8 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackSection.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackStateButton.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackStateButton.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h)
 
