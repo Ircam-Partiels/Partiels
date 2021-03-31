@@ -404,8 +404,8 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     mTooltip.setJustificationType(juce::Justification::topLeft);
     mTooltip.setInterceptsMouseClicks(false, false);
     addChildComponent(mTooltip);
-    setInterceptsMouseClicks(true, true);
     addAndMakeVisible(mZoomPlayhead);
+    setInterceptsMouseClicks(true, true);
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
