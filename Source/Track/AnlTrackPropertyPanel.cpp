@@ -370,7 +370,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 components.push_back(mPropertyPreset);
-                components.push_back(mPropertyState);
+                components.push_back(mProgressBar);
                 mProcessorSection.setComponents(components);
                 components.clear();
                 
@@ -472,35 +472,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
             case AttrType::results:
             case AttrType::graphics:
-                break;
             case AttrType::processing:
             case AttrType::warnings:
-            {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto getStateAsText = [state, warnings]() -> juce::String
-                {
-                    if(std::get<0>(state))
-                    {
-                        return "Processing analysis (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
-                    }
-                    else if(std::get<2>(state))
-                    {
-                        return "Processing rendering (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
-                    }
-                    switch(warnings)
-                    {
-                        case WarningType::none:
-                            return "Analysis successfully completed!";
-                        case WarningType::plugin:
-                            return "Analysis failed: The plugin cannot be found or allocated!";
-                        case WarningType::state:
-                            return "Analysis failed: The step size or the block size might not be supported!";
-                    }
-                    return "Analysis finished!";
-                };
-                mPropertyState.setText(juce::translate(getStateAsText()), juce::NotificationType::dontSendNotification);
-            }
                 break;
             case AttrType::colours:
             {
@@ -573,11 +546,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     mBoundsListener.attachTo(mGraphicalSection);
     mBoundsListener.attachTo(mPluginSection);
     
-    mPropertyState.setTooltip(juce::translate("The state of the plugin"));
-    mPropertyState.setSize(sInnerWidth, 36);
-    mPropertyState.setJustification(juce::Justification::horizontallyJustified);
-    mPropertyState.setMultiLine(true);
-    mPropertyState.setReadOnly(true);
+    mProgressBar.setSize(sInnerWidth, 36);
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);

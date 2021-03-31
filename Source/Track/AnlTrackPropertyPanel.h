@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlTrackModel.h"
+#include "AnlTrackProgressBar.h"
 #include "../Misc/AnlMisc.h"
 
 ANALYSE_FILE_BEGIN
@@ -104,7 +105,7 @@ namespace Track
         PropertyNumber mPropertyStepSize;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
-        juce::TextEditor mPropertyState;
+        ProgressBar mProgressBar {mAccessor};
         
         PropertyList mPropertyColourMap;
         PropertySlider mPropertyColourMapAlpha;
