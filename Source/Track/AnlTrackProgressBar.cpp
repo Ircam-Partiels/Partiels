@@ -111,11 +111,11 @@ void Track::ProgressBar::paint(juce::Graphics& g)
         juce::RectanglePlacement const placement(juce::RectanglePlacement::Flags::stretchToFit);
         if(mStateImage.isValid())
         {
-            auto const imageBounds = localBounds.removeFromLeft(halfHeight).withHeight(halfHeight).toFloat();
+            auto const imageBounds = localBounds.removeFromLeft(halfHeight).withSizeKeepingCentre(halfHeight, halfHeight).toFloat();
             g.drawImageTransformed(mStateImage, placement.getTransformToFit(mStateImage.getBounds().toFloat(), imageBounds), true);
         }
         g.setFont(juce::Font(static_cast<float>(halfHeight)));
-        g.drawMultiLineText(mMessage, localBounds.getX() + 4, halfHeight, localBounds.getWidth() - 8, juce::Justification::centredLeft, 0.0f);
+        g.drawFittedText(mMessage, localBounds.withTrimmedLeft(4), juce::Justification::left, 2);
     }
 }
 
