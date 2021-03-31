@@ -403,6 +403,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     mTooltip.setEditable(false);
     mTooltip.setJustificationType(juce::Justification::topLeft);
     mTooltip.setInterceptsMouseClicks(false, false);
+    mTooltip.setComponentEffect(&mDropShadowEffect);
     addChildComponent(mTooltip);
     addAndMakeVisible(mZoomPlayhead);
     setInterceptsMouseClicks(true, true);

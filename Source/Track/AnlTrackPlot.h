@@ -40,6 +40,7 @@ namespace Track
             Zoom::Accessor::Listener mTimeZoomListener;
             
             juce::Label mTooltip;
+            juce::DropShadowEffect mDropShadowEffect;
             Zoom::Playhead mZoomPlayhead;
         };
         
