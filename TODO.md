@@ -6,13 +6,9 @@
 - Zoom replace signal approach with model
 - Zoom fix rulers
 - Add program support
-- Remove Accessor in Renderer
 - Use a colour scheme for look and feel
-- Fix analyzer warnings
-- Automatic management of background colour transparency
 - Improve plugin blacklist support
 - Clean exporter
-- Add Zoom director
 - The Analyzer director doesn't manage key changes
 - Add push notification support
 
@@ -20,3 +16,7 @@
 - Add percent for analysing/rendering
 - Improve zoom support using modes
 - Improve section mouse down (results) - Move Section::Container
+- Notarization
+- Fix export state
+- FAcultative shadow ?
+- Fix colour management
