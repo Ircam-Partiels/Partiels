@@ -37,6 +37,7 @@ namespace Track
             Accessor::Listener mListener;
             
             juce::Label mTooltip;
+            juce::DropShadowEffect mDropShadowEffect;
         };
         
     private:

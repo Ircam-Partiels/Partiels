@@ -270,6 +270,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
     mTooltip.setEditable(false);
     mTooltip.setJustificationType(juce::Justification::topLeft);
     mTooltip.setInterceptsMouseClicks(false, false);
+    mTooltip.setComponentEffect(&mDropShadowEffect);
     addChildComponent(mTooltip);
     setInterceptsMouseClicks(true, true);
 
