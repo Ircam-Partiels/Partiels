@@ -106,6 +106,10 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, backgroundColour);
     setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, textColour);
     
+    // juce::ProgressBar
+    setColour(juce::ProgressBar::ColourIds::backgroundColourId, backgroundColour);
+    setColour(juce::ProgressBar::ColourIds::foregroundColourId, thumbColour);
+    
     setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());
     setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
 }
@@ -325,6 +329,45 @@ void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
     }
     
     g.drawRect(label.getLocalBounds());
+}
+
+void Application::LookAndFeel::drawProgressBar(juce::Graphics& g, juce::ProgressBar& progressBar, int width, int height, double progress, juce::String const& textToShow)
+{
+    juce::ignoreUnused(width, height);
+    
+    auto const barBounds = progressBar.getLocalBounds().toFloat();
+    auto const cornerSize = static_cast<float>(barBounds.getHeight()) * 0.5f;
+    
+    g.setColour(progressBar.findColour(juce::ProgressBar::ColourIds::backgroundColourId));
+    g.fillRoundedRectangle(barBounds, cornerSize);
+    
+    if(progress > 0.0)
+    {
+        g.setColour(progressBar.findColour(juce::ProgressBar::ColourIds::foregroundColourId));
+        auto const progressWidth = barBounds.getWidth() * static_cast<float>(std::min(progress, 1.0));
+        g.fillRoundedRectangle(barBounds.withWidth(progressWidth), cornerSize);
+    }
+    
+    if(!textToShow.isEmpty())
+    {
+        g.setColour(progressBar.findColour(juce::Label::ColourIds::textColourId));
+        g.setFont(barBounds.getHeight() * 0.6f);
+        auto getText = [&]()
+        {
+            if(juce::CharacterFunctions::isDigit(textToShow[0]))
+            {
+                return textToShow;
+            }
+            return textToShow + ' ' + juce::String(static_cast<int>(std::round(progress * 100.0))) + '%';
+        };
+        g.drawText(getText(), 0, 0, width, height, juce::Justification::centred, false);
+    }
+}
+
+bool Application::LookAndFeel::isProgressBarOpaque(juce::ProgressBar& progressBar)
+{
+    juce::ignoreUnused(progressBar);
+    return false;
 }
 
 ANALYSE_FILE_END

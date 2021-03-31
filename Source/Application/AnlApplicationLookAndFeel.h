@@ -45,6 +45,10 @@ namespace Application
         
         // juce::Label::LookAndFeelMethods
         void drawLabel(juce::Graphics& g, juce::Label& label) override;
+        
+        // juce::ProgressBar::LookAndFeelMethods
+        void drawProgressBar(juce::Graphics& g, juce::ProgressBar& progressBar, int width, int height, double progress, juce::String const& textToShow) override;
+        bool isProgressBarOpaque(juce::ProgressBar& progressBar) override;
     };
 }
 
