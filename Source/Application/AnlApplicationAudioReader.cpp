@@ -7,14 +7,16 @@ Application::AudioReader::AudioReader()
 : mDocumentAudioReader(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
 {
     mAudioSourcePlayer.setSource(this);
-    Instance::get().getAudioDeviceManager().addAudioCallback(&mAudioSourcePlayer);
+    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+    audioDeviceManager.addAudioCallback(&mAudioSourcePlayer);
 }
 
 Application::AudioReader::~AudioReader()
 {
-    Instance::get().getAudioDeviceManager().removeAudioCallback(&mAudioSourcePlayer);
+    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+    audioDeviceManager.removeAudioCallback(&mAudioSourcePlayer);
+    audioDeviceManager.closeAudioDevice();
     mAudioSourcePlayer.setSource(nullptr);
-    Instance::get().getAudioDeviceManager().closeAudioDevice();
 }
 
 void Application::AudioReader::prepareToPlay(int samplesPerBlockExpected, double sampleRate)

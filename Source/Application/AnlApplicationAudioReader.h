@@ -10,8 +10,6 @@ namespace Application
     : private juce::AudioSource
     {
     public:
-        static const int sMaxIONumber = 64;
-        
         AudioReader();
         ~AudioReader() override;
         
