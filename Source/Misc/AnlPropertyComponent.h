@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlBasics.h"
+#include "AnlNumberField.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -50,12 +51,74 @@ public:
     ~PropertyComponent() override = default;
 };
 
-class PropertyLabel
+class PropertyTextButton
+: public PropertyComponent<juce::TextButton>
+{
+public:
+    PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn);
+    ~PropertyTextButton() override = default;
+    
+    // juce::Component
+    void resized() override;
+};
+
+class PropertyText
 : public PropertyComponent<juce::Label>
 {
 public:
-    PropertyLabel(juce::String const& name, juce::String const& tooltip = {}, juce::String const& text = {}, callback_type fn = nullptr);
+    PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn);
+    ~PropertyText() override = default;
+};
+
+class PropertyLabel
+: public PropertyText
+{
+public:
+    PropertyLabel(juce::String const& name, juce::String const& tooltip);
     ~PropertyLabel() override = default;
+};
+
+class PropertyNumber
+: public PropertyComponent<NumberField>
+{
+public:
+    PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
+    ~PropertyNumber() override = default;
+};
+
+class PropertySlider
+: public PropertyComponent<juce::Slider>
+{
+public:
+    PropertySlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn);
+    ~PropertySlider() override = default;
+};
+
+class PropertyRangeSlider
+: public PropertyComponent<juce::Slider>
+{
+public:
+    PropertyRangeSlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float, float)> fn);
+    ~PropertyRangeSlider() override = default;
+};
+
+class PropertyToggle
+: public PropertyComponent<juce::ToggleButton>
+{
+public:
+    PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn);
+    ~PropertyToggle() override = default;
+    
+    // juce::Component
+    void resized() override;
+};
+
+class PropertyList
+: public PropertyComponent<juce::ComboBox>
+{
+public:
+    PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn);
+    ~PropertyList() override = default;
 };
 
 ANALYSE_FILE_END

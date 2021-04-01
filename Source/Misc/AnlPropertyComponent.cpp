@@ -41,13 +41,32 @@ void PropertyComponentBase::resized()
     title.setJustificationType(juce::Justification::centredLeft);
 }
 
-PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip, juce::String const& text, callback_type fn)
-: PropertyComponent<juce::Label>(name, tooltip, fn)
+PropertyTextButton::PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn)
+: PropertyComponent<juce::TextButton>(juce::translate(name), juce::translate(tooltip), nullptr)
+{
+    title.setVisible(false);
+    entry.setButtonText(name);
+    entry.setTooltip(tooltip);
+    entry.onClick = [=]()
+    {
+        if(fn != nullptr)
+        {
+            fn();
+        }
+    };
+}
+
+void PropertyTextButton::resized()
+{
+    entry.setBounds(getLocalBounds().reduced(32, 2));
+}
+
+PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip, std::function<void(juce::String)> fn)
+: PropertyComponent<juce::Label>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setRepaintsOnMouseActivity(true);
     entry.setEditable(true);
     entry.setTooltip(tooltip);
-    entry.setText(text, juce::NotificationType::dontSendNotification);
     entry.setJustificationType(juce::Justification::right);
     entry.setMinimumHorizontalScale(1.0f);
     entry.setBorderSize({});
@@ -62,11 +81,108 @@ PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& toolt
             editor->setJustification(entry.getJustificationType());
         }
     };
-    entry.onTextChange = [&]()
+    entry.onTextChange = [=, this]()
     {
-        if(callback != nullptr)
+        if(fn != nullptr)
         {
-            callback(entry);
+            fn(entry.getText());
+        }
+    };
+}
+
+PropertyLabel::PropertyLabel(juce::String const& name, juce::String const& tooltip)
+: PropertyText(name, tooltip, nullptr)
+{
+    entry.setEditable(false, false);
+}
+
+PropertyNumber::PropertyNumber(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
+: PropertyComponent<NumberField>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval), juce::NotificationType::dontSendNotification);
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.setTextValueSuffix(suffix);
+    entry.onValueChanged = [=](double value)
+    {
+        if(fn != nullptr)
+        {
+            fn(static_cast<float>(value));
+        }
+    };
+}
+
+PropertySlider::PropertySlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float)> fn)
+: PropertyComponent<juce::Slider>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
+    entry.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval));
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setTextValueSuffix(suffix);
+    entry.setScrollWheelEnabled(false);
+    entry.onValueChange = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(static_cast<float>(entry.getValue()));
+        }
+    };
+}
+
+PropertyRangeSlider::PropertyRangeSlider(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, juce::Range<float> const& range, float interval, std::function<void(float, float)> fn)
+: PropertyComponent<juce::Slider>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setSliderStyle(juce::Slider::SliderStyle::TwoValueHorizontal);
+    entry.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
+    entry.setRange({static_cast<double>(range.getStart()), static_cast<double>(range.getEnd())}, static_cast<double>(interval));
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setTextValueSuffix(suffix);
+    entry.setScrollWheelEnabled(false);
+    entry.onValueChange = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(static_cast<float>(entry.getMinValue()), static_cast<float>(entry.getMaxValue()));
+        }
+    };
+}
+
+PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn)
+: PropertyComponent<juce::ToggleButton>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setTooltip(juce::translate(tooltip));
+    entry.onClick = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(entry.getToggleState());
+        }
+    };
+}
+
+void PropertyToggle::resized()
+{
+    PropertyComponent<juce::ToggleButton>::resized();
+    entry.setBounds(getLocalBounds().removeFromRight(entry.getHeight()));
+}
+
+PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
+: PropertyComponent<juce::ComboBox>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setTooltip(tooltip);
+    juce::StringArray items;
+    for(auto const& value : values)
+    {
+        items.add(juce::String(value)+suffix);
+    }
+    entry.addItemList(items, 1);
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.onChange = [=, this]()
+    {
+        if(fn != nullptr)
+        {
+            fn(entry.getSelectedItemIndex() > 0 ? static_cast<size_t>(entry.getSelectedItemIndex()) : 0_z);
         }
     };
 }
