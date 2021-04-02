@@ -6,6 +6,7 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationTranslationManager.h"
 #include "AnlApplicationProperties.h"
+#include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationAudioReader.h"
 
@@ -40,6 +41,7 @@ namespace Application
         
         Accessor& getApplicationAccessor();
         AudioSettings& getAudioSettings();
+        About& getAbout();
         PluginList::Accessor& getPluginListAccessor();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
@@ -68,6 +70,7 @@ namespace Application
         Document::FileBased mDocumentFileBased {mDocumentAccessor, getFileExtension(), getFileWildCard(), "Open a document", "Save the document"};
         
         std::unique_ptr<Window> mWindow;
+        std::unique_ptr<About> mAbout;
         std::unique_ptr<AudioSettings> mAudioSettings;
     };
 }
