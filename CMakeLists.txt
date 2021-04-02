@@ -166,14 +166,14 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
 
 file(GLOB ApplicationSources
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAbout.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAbout.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioSettings.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioSettings.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.cpp
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.h
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.cpp
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.
     ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.cpp
@@ -182,6 +182,8 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationFontManager.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationTranslationManager.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationTranslationManager.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.cpp
