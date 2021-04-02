@@ -23,24 +23,14 @@ Application::Window::Window()
     setResizable(true, false);
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
-    mMainMenuModel.setApplicationCommandManagerToWatch(&Instance::get().getApplicationCommandManager());
-#if !JUCE_MAC
-    setMenuBar(&mMainMenuModel);
-#elif !defined(JUCE_IOS)
-    juce::PopupMenu extraAppleMenuItems;
-    juce::MenuBarModel::setMacMainMenu(&mMainMenuModel, nullptr);
-#endif
+    mMainMenuModel.initialize();
     Instance::get().getDocumentFileBased().addChangeListener(this);
 }
 
 Application::Window::~Window()
 {
     Instance::get().getDocumentFileBased().removeChangeListener(this);
-#if !JUCE_MAC
-    setMenuBar(nullptr);
-#elif !defined(JUCE_IOS)
-    juce::MenuBarModel::setMacMainMenu(nullptr);
-#endif
+    mMainMenuModel.shutdown();
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     mOpenGLContext.detach();
 }

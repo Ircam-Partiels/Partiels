@@ -592,4 +592,29 @@ void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMe
     }
 }
 
+void Application::MainMenuModel::initialize()
+{
+    auto& commandManager = Instance::get().getApplicationCommandManager();
+    setApplicationCommandManagerToWatch(&commandManager);
+#ifdef JUCE_MAC
+    juce::PopupMenu extraAppleMenuItems;
+    using CommandIDs = CommandTarget::CommandIDs;
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAbout);
+    extraAppleMenuItems.addSeparator();
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
+    juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
+#else
+    setMenuBar(this);
+#endif
+}
+
+void Application::MainMenuModel::shutdown()
+{
+#ifdef JUCE_MAC
+    juce::MenuBarModel::setMacMainMenu(nullptr, nullptr);
+#else
+    setMenuBar(nullptr);
+#endif
+}
+
 ANALYSE_FILE_END

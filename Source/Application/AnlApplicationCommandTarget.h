@@ -81,6 +81,9 @@ namespace Application
         juce::StringArray getMenuBarNames() override;
         juce::PopupMenu getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName) override;
         void menuItemSelected(int menuItemID, int topLevelMenuIndex) override;
+        
+        void initialize();
+        void shutdown();
     };
 }
 
