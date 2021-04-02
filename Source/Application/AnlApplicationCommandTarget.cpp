@@ -453,7 +453,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::HelpOpenAbout:
         case CommandIDs::HelpOpenManual:
-        case CommandIDs::HelpOpenForum:
         {
             showUnsupportedAction();
             return true;
