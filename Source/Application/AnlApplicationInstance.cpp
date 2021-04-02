@@ -32,6 +32,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
         anlDebug("Application", "Failed.");
         return;
     }
+    mAudioSettings = std::make_unique<AudioSettings>();
+    if(mAudioSettings == nullptr)
+    {
+        anlDebug("Application", "Failed.");
+        return;
+    }
+    
     anlDebug("Application", "Ready!");
     auto const path = commandLine.removeCharacters("\"");
     if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
@@ -86,6 +93,7 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
+    mAudioSettings.reset();
     mWindow.reset();
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     anlDebug("Application", "Done");
@@ -148,6 +156,11 @@ void Application::Instance::openFile(juce::File const& file)
 Application::Accessor& Application::Instance::getApplicationAccessor()
 {
     return mApplicationAccessor;
+}
+
+Application::AudioSettings& Application::Instance::getAudioSettings()
+{
+    return *mAudioSettings.get();
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()
