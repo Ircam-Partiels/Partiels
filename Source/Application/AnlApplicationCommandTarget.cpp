@@ -388,7 +388,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::AnalysisNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.addAnalysis(AlertType::window, NotificationType::synchronous);
+            documentDir.addTrack(AlertType::window, NotificationType::synchronous);
             return true;
         }
             

@@ -149,7 +149,7 @@ Document::Director::~Director()
     mAccessor.onAccessorErased = nullptr;
 }
 
-void Document::Director::addAnalysis(AlertType const alertType, NotificationType const notification)
+void Document::Director::addTrack(AlertType const alertType, NotificationType const notification)
 {
     if(mModalWindow != nullptr)
     {
@@ -209,7 +209,7 @@ void Document::Director::addAnalysis(AlertType const alertType, NotificationType
     }
 }
 
-void Document::Director::removeAnalysis(juce::String const identifier, NotificationType const notification)
+void Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
 {
     auto const trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)

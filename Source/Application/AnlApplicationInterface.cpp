@@ -30,7 +30,7 @@ Application::Interface::Interface()
     mDocumentSection.onRemoveTrack = [](juce::String const& identifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeAnalysis(identifier, NotificationType::synchronous);
+        documentDir.removeTrack(identifier, NotificationType::synchronous);
     };
     
     mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
