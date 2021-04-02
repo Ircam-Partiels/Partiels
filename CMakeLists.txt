@@ -126,8 +126,6 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackProgressBar.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackPropertyPanel.h
-    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackResults.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackSection.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackSection.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackSnapshot.cpp

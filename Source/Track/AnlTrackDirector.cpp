@@ -1,6 +1,6 @@
 #include "AnlTrackDirector.h"
 #include "AnlTrackProcessor.h"
-#include "AnlTrackResults.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -237,7 +237,7 @@ void Track::Director::updateZoomAccessors(NotificationType const notification)
         }
         else if(results != nullptr && !results->empty())
         {
-            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getValueRange(*results), notification);
+            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Tools::getValueRange(*results), notification);
         }
         valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon(), notification);
         valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
@@ -250,7 +250,7 @@ void Track::Director::updateZoomAccessors(NotificationType const notification)
     }
     else if(results != nullptr && !results->empty())
     {
-        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Results::getBinRange(*results), notification);
+        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Tools::getBinRange(*results), notification);
     }
     if(binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>() == Zoom::Range{0.0, 0.0})
     {
