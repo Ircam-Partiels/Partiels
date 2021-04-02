@@ -22,17 +22,6 @@ namespace Track
         std::function<void(std::vector<juce::Image> images)> onRenderingEnded = nullptr;
         std::function<void(void)> onRenderingAborted = nullptr;
         
-        static float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
-        static float secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
-        static double pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
-        static double realTimeToSeconds(Vamp::RealTime const& rt);
-        static Vamp::RealTime secondsToRealTime(double seconds);
-        static Vamp::RealTime getEndRealTime(Plugin::Result const& rt);
-
-        static juce::String getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
-        static juce::String getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
-        static juce::String getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin);
-        
     private:
         void abortRendering();
         

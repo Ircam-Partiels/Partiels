@@ -135,7 +135,9 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackStateButton.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackStateButton.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h)
+    ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h
+    ${SOURCES_DIRECTORY}/Track/AnlTrackTools.cpp
+    ${SOURCES_DIRECTORY}/Track/AnlTrackTools.h)
 
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp

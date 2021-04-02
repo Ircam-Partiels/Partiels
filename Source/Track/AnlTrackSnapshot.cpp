@@ -1,5 +1,5 @@
 #include "AnlTrackSnapshot.h"
-#include "AnlTrackGraphics.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -104,12 +104,12 @@ void Track::Snapshot::paint(juce::Graphics& g)
 
 void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time)
 {
-    auto const rt = Graphics::secondsToRealTime(time);
+    auto const rt = Tools::secondsToRealTime(time);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
     {
-        return result.hasTimestamp && Graphics::getEndRealTime(result) >= rt;
+        return result.hasTimestamp && Tools::getEndRealTime(result) >= rt;
     });
-    if(it != results.cend() && Graphics::getEndRealTime(*it) <= rt)
+    if(it != results.cend() && Tools::getEndRealTime(*it) <= rt)
     {
         g.setColour(colour);
         g.fillRect(bounds);
@@ -118,10 +118,10 @@ void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> cons
 
 void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange)
 {
-    auto const rt = Graphics::secondsToRealTime(time);
+    auto const rt = Tools::secondsToRealTime(time);
     auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
     {
-        return result.hasTimestamp && Graphics::getEndRealTime(result) >= rt;
+        return result.hasTimestamp && Tools::getEndRealTime(result) >= rt;
     });
     if(second == results.cend())
     {
@@ -142,26 +142,26 @@ void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> con
     };
     
     auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
-    if(second->timestamp <= rt && Graphics::getEndRealTime(*second) >= rt)
+    if(second->timestamp <= rt && Tools::getEndRealTime(*second) >= rt)
     {
         if(!second->values.empty())
         {
-            paintLineWithShadow(Graphics::valueToPixel(second->values[0], valueRange, bounds));
+            paintLineWithShadow(Tools::valueToPixel(second->values[0], valueRange, bounds));
         }
     }
-    else if(first->timestamp <= rt && Graphics::getEndRealTime(*first) >= rt)
+    else if(first->timestamp <= rt && Tools::getEndRealTime(*first) >= rt)
     {
         if(!first->values.empty())
         {
-            paintLineWithShadow(Graphics::valueToPixel(first->values[0], valueRange, bounds));
+            paintLineWithShadow(Tools::valueToPixel(first->values[0], valueRange, bounds));
         }
     }
     else if(first != second && first->hasTimestamp)
     {
         if(!first->values.empty() && !second->values.empty())
         {
-            auto const start = Graphics::realTimeToSeconds(Graphics::getEndRealTime(*first));
-            auto const end = Graphics::realTimeToSeconds(second->timestamp);
+            auto const start = Tools::realTimeToSeconds(Tools::getEndRealTime(*first));
+            auto const end = Tools::realTimeToSeconds(second->timestamp);
             anlStrongAssert(end > start);
             if(end <= start)
             {
@@ -169,7 +169,7 @@ void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> con
             }
             auto const ratio = static_cast<float>((time - start) / (end - start));
             auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
-            paintLineWithShadow(Graphics::valueToPixel(value, valueRange, bounds));
+            paintLineWithShadow(Tools::valueToPixel(value, valueRange, bounds));
         }
     }
 }
@@ -352,12 +352,12 @@ void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
             {
                 case 0:
                 {
-                    return Graphics::getMarkerText(*results, output, time);
+                    return Tools::getMarkerText(*results, output, time);
                 }
                     break;
                 case 1:
                 {
-                    return Graphics::getSegmentText(*results, output, time);
+                    return Tools::getSegmentText(*results, output, time);
                 }
                     break;
                 default:
@@ -366,12 +366,12 @@ void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
                     auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
                     auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
                     auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
-                    return binName + " • " + Graphics::getGridText(*results, output, time, bin);
+                    return binName + " • " + Tools::getGridText(*results, output, time, bin);
                 }
                     break;
             }
         }
-        return Graphics::getSegmentText(*results, output, time);
+        return Tools::getSegmentText(*results, output, time);
     };
     
     auto const tip = getTooltip();

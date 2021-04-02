@@ -1,5 +1,5 @@
 #include "AnlTrackPlot.h"
-#include "AnlTrackGraphics.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -114,18 +114,18 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
 {
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
-    auto const clipTimeStart = Graphics::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
-    auto const clipTimeEnd = Graphics::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
-    auto const rtStart = Graphics::secondsToRealTime(clipTimeStart);
-    auto const rtEnd = Graphics::secondsToRealTime(clipTimeEnd);
+    auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
+    auto const clipTimeEnd = Tools::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
+    auto const rtStart = Tools::secondsToRealTime(clipTimeStart);
+    auto const rtEnd = Tools::secondsToRealTime(clipTimeEnd);
     
     // Time distance corresponding to epsilon pixels
-    auto const minDiffTime = Graphics::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
+    auto const minDiffTime = Tools::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
   
     // Find the first result that is inside the clip bounds
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
     {
-        return Graphics::getEndRealTime(result) >= rtStart;
+        return Tools::getEndRealTime(result) >= rtStart;
     });
     
     juce::RectangleList<float> rectangles;
@@ -133,18 +133,18 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     {
         if(it->hasTimestamp)
         {
-            auto const start = Graphics::realTimeToSeconds(it->timestamp);
-            auto const x = Graphics::secondsToPixel(start, timeRange, bounds);
+            auto const start = Tools::realTimeToSeconds(it->timestamp);
+            auto const x = Tools::secondsToPixel(start, timeRange, bounds);
             
             // Skip any adjacent result with a distance inferior to epsilon pixels
             auto next = std::next(it);
-            while(next != results.cend() && next->timestamp < rtEnd && next->hasTimestamp && next->timestamp < Graphics::getEndRealTime(*it) + minDiffTime)
+            while(next != results.cend() && next->timestamp < rtEnd && next->hasTimestamp && next->timestamp < Tools::getEndRealTime(*it) + minDiffTime)
             {
                 it = std::exchange(next, std::next(next));
             }
             
-            auto const end = Graphics::realTimeToSeconds(Graphics::getEndRealTime(*it));
-            auto const w = Graphics::secondsToPixel(end, timeRange, bounds) - x;
+            auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*it));
+            auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x;
             rectangles.add({x, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
         }
         it = std::next(it);
@@ -170,18 +170,18 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
 {
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
-    auto const clipTimeStart = Graphics::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
-    auto const clipTimeEnd = Graphics::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
-    auto const rtStart = Graphics::secondsToRealTime(clipTimeStart);
-    auto const rtEnd = Graphics::secondsToRealTime(clipTimeEnd);
+    auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
+    auto const clipTimeEnd = Tools::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
+    auto const rtStart = Tools::secondsToRealTime(clipTimeStart);
+    auto const rtEnd = Tools::secondsToRealTime(clipTimeEnd);
     
     // Time distance corresponding to epsilon pixels
-    auto const minDiffTime = Graphics::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
+    auto const minDiffTime = Tools::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
     
     // Find the first result that is inside the clip bounds
     auto first = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
     {
-        return Graphics::getEndRealTime(result) >= rtStart;
+        return Tools::getEndRealTime(result) >= rtStart;
     });
     if(first == results.cend())
     {
@@ -195,7 +195,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     // Find the last result that is inside the clip bounds
     auto last = std::find_if(first, results.cend(), [&](Plugin::Result const& result)
     {
-        return Graphics::getEndRealTime(result) >= rtEnd;
+        return Tools::getEndRealTime(result) >= rtEnd;
     });
     if(last != results.cend())
     {
@@ -224,7 +224,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             {
                 juce::Range<float> minmax(input->values[0], input->values[0]);
                 // Skip any adjacent result with a distance inferior to epsilon pixels
-                auto const limit = Graphics::getEndRealTime(*input) + minDiffTime;
+                auto const limit = Tools::getEndRealTime(*input) + minDiffTime;
                 while(input != last)
                 {
                     if(!input->values.empty())
@@ -232,7 +232,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
                         minmax = minmax.getUnionWith(input->values[0]);
                     }
                     auto next = std::next(input);
-                    if(!next->hasTimestamp || Graphics::getEndRealTime(*next) > limit)
+                    if(!next->hasTimestamp || Tools::getEndRealTime(*next) > limit)
                     {
                         break;
                     }
@@ -245,9 +245,9 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto const& next = std::get<0>(elements);
             auto const& values = std::get<1>(elements);
             
-            auto const start = Graphics::realTimeToSeconds(first->timestamp);
-            auto const x = Graphics::secondsToPixel(start, timeRange, bounds);
-            auto const y = Graphics::valueToPixel(values.getStart(), valueRange, bounds);
+            auto const start = Tools::realTimeToSeconds(first->timestamp);
+            auto const x = Tools::secondsToPixel(start, timeRange, bounds);
+            auto const y = Tools::valueToPixel(values.getStart(), valueRange, bounds);
             
             if(std::exchange(shouldStartSubPath, false))
             {
@@ -260,15 +260,15 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             
             if(next == first && first->hasDuration)
             {
-                auto const end = Graphics::realTimeToSeconds(Graphics::getEndRealTime(*first));
-                auto const x2 = Graphics::secondsToPixel(end, timeRange, bounds);
+                auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*first));
+                auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
                 path.lineTo(x2, y);
             }
             else if(next != first)
             {
-                auto const end = Graphics::realTimeToSeconds(next->timestamp);
-                auto const x2 = Graphics::secondsToPixel(end, timeRange, bounds);
-                auto const y2 = Graphics::valueToPixel(values.getEnd(), valueRange, bounds);
+                auto const end = Tools::realTimeToSeconds(next->timestamp);
+                auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
+                auto const y2 = Tools::valueToPixel(values.getEnd(), valueRange, bounds);
                 path.lineTo(x2, y2);
             }
             first = (next != first) ? next : std::next(first);
@@ -506,12 +506,12 @@ void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
             {
                 case 0:
                 {
-                    return Graphics::getMarkerText(*results, output, time);
+                    return Tools::getMarkerText(*results, output, time);
                 }
                     break;
                 case 1:
                 {
-                    return Graphics::getSegmentText(*results, output, time);
+                    return Tools::getSegmentText(*results, output, time);
                 }
                     break;
                 default:
@@ -520,12 +520,12 @@ void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
                     auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
                     auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
                     auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
-                    return binName + " • " +  Graphics::getGridText(*results, output, time, bin);
+                    return binName + " • " +  Tools::getGridText(*results, output, time, bin);
                 }
                     break;
             }
         }
-        return Graphics::getSegmentText(*results, output, time);
+        return Tools::getSegmentText(*results, output, time);
     };
     
     auto const tip = Format::secondsToString(time) + " • "+  getTooltip();
