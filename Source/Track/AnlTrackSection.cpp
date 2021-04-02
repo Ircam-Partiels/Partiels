@@ -39,36 +39,47 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
                 break;
             case AttrType::description:
             {
-                auto const description = acsr.getAttr<AttrType::description>();
-                switch(description.output.binCount)
+                auto const& output = acsr.getAttr<AttrType::description>().output;
+                if(output.hasFixedBinCount)
                 {
-                    case 0_z:
+                    switch(output.binCount)
                     {
-                        mBinRuler.setVisible(false);
-                        mBinScrollBar.setVisible(false);
-                        
-                        mValueRuler.setVisible(true);
-                        mValueScrollBar.setVisible(true);
+                        case 0_z:
+                        {
+                            mBinRuler.setVisible(false);
+                            mBinScrollBar.setVisible(false);
+                            
+                            mValueRuler.setVisible(false);
+                            mValueScrollBar.setVisible(false);
+                        }
+                            break;
+                        case 1_z:
+                        {
+                            mBinRuler.setVisible(false);
+                            mBinScrollBar.setVisible(false);
+                            
+                            mValueRuler.setVisible(true);
+                            mValueScrollBar.setVisible(true);
+                        }
+                            break;
+                        default:
+                        {
+                            mBinRuler.setVisible(true);
+                            mBinScrollBar.setVisible(true);
+                            
+                            mValueRuler.setVisible(false);
+                            mValueScrollBar.setVisible(false);
+                        }
+                            break;
                     }
-                        break;
-                    case 1_z:
-                    {
-                        mBinRuler.setVisible(false);
-                        mBinScrollBar.setVisible(false);
-                        
-                        mValueRuler.setVisible(true);
-                        mValueScrollBar.setVisible(true);
-                    }
-                        break;
-                    default:
-                    {
-                        mBinRuler.setVisible(true);
-                        mBinScrollBar.setVisible(true);
-                        
-                        mValueRuler.setVisible(false);
-                        mValueScrollBar.setVisible(false);
-                    }
-                        break;
+                }
+                else
+                {
+                    mBinRuler.setVisible(false);
+                    mBinScrollBar.setVisible(false);
+                    
+                    mValueRuler.setVisible(true);
+                    mValueScrollBar.setVisible(true);
                 }
             }
                 break;
