@@ -458,6 +458,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             showUnsupportedAction();
             return true;
         }
+        case CommandIDs::HelpOpenForum:
+        {
+            juce::URL url("https://forum.ircam.fr/projects/detail/partiels/");
+            if(url.isWellFormed())
+            {
+                url.launchInDefaultBrowser();
+            }
+            return true;
+        }
     }
     return false;
 }
