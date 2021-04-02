@@ -168,6 +168,8 @@ file(GLOB DocumentSources
 file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioSettings.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioSettings.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioReader.cpp
