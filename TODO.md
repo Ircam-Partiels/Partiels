@@ -20,3 +20,11 @@
 - Fix export state
 - FAcultative shadow ?
 - Fix colour management
+
+- Look And Feel
+- Translations
+- Debug
+- remove magic enum
+- remove ILF?
+- CI/CD
+- https://github.com/taglib/taglib
