@@ -16,4 +16,4 @@ cmake ..
 
 This project has been developed at [Ircam](https://www.ircam.fr/) by Pierre Guillot.  
 
-This software is based the [Vamp](https://www.vamp-plugins.org/) analysis plugin format, developed at the [Centre for Digital Music](http://c4dm.eecs.qmul.ac.uk/), Queen Mary, University of London.
+This software is based on the [Vamp](https://www.vamp-plugins.org/) analysis plugin format, developed at the [Centre for Digital Music](http://c4dm.eecs.qmul.ac.uk/), Queen Mary, University of London.
