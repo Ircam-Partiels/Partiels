@@ -116,20 +116,33 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
     return juce::String(it->values[bin], 2) + label;
 }
 
-
-Zoom::Range Track::Tools::getValueRange(std::vector<Plugin::Result> const& results)
+std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const& description)
 {
-    auto it = std::find_if(results.cbegin(), results.cend(), [](auto const& v)
+    auto const& output = description.output;
+    if(!output.hasKnownExtents)
+    {
+        return std::optional<Zoom::Range>();
+    }
+    return Zoom::Range(static_cast<double>(output.minValue), static_cast<double>(output.maxValue));
+}
+
+std::optional<Zoom::Range> Track::Tools::getValueRange(std::shared_ptr<const std::vector<Plugin::Result>> const& results)
+{
+    if(results == nullptr || results->empty())
+    {
+        return std::optional<Zoom::Range>();
+    }
+    auto it = std::find_if(results->cbegin(), results->cend(), [](auto const& v)
     {
         return !v.values.empty();
     });
-    if(it == results.cend())
+    if(it == results->cend())
     {
-        return Zoom::Range{Zoom::lowest(), Zoom::max()};
+        return std::optional<Zoom::Range>();
     }
     auto const [min, max] = std::minmax_element(it->values.cbegin(), it->values.cend());
     auto const firstRange = Zoom::Range{static_cast<double>(*min), static_cast<double>(*max)};
-    return std::accumulate(results.cbegin() + 1, results.cend(), firstRange, [](auto const r, auto const& v)
+    return std::accumulate(results->cbegin() + 1, results->cend(), firstRange, [](auto const r, auto const& v)
     {
         if(v.values.empty())
         {
@@ -140,14 +153,24 @@ Zoom::Range Track::Tools::getValueRange(std::vector<Plugin::Result> const& resul
     });
 }
 
-Zoom::Range Track::Tools::getBinRange(std::vector<Plugin::Result> const& results)
+std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& description)
 {
-    if(results.empty())
+    auto const& output = description.output;
+    if(!output.hasFixedBinCount)
     {
-        return Zoom::Range{0.0, 1.0};
+        return std::optional<Zoom::Range>();
     }
-    auto const firstRange = Zoom::Range::emptyRange(static_cast<double>(results.front().values.size()));
-    return std::accumulate(results.cbegin() + 1, results.cend(), firstRange, [](auto const r, auto const& v)
+    return Zoom::Range(0.0, static_cast<double>(output.binCount));
+}
+
+std::optional<Zoom::Range> Track::Tools::getBinRange(std::shared_ptr<const std::vector<Plugin::Result>> const& results)
+{
+    if(results == nullptr || results->empty())
+    {
+        return std::optional<Zoom::Range>();
+    }
+    auto const firstRange = Zoom::Range::emptyRange(static_cast<double>(results->front().values.size()));
+    return std::accumulate(results->cbegin() + 1, results->cend(), firstRange, [](auto const r, auto const& v)
     {
         return r.getUnionWith({static_cast<double>(v.values.size()), static_cast<double>(v.values.size())});
     });
