@@ -189,7 +189,6 @@ Document::Section::Section(Accessor& accessor)
             }
                 break;
             case AttrType::layoutHorizontal:
-                break;
             case AttrType::layoutVertical:
             {
                 resized();
