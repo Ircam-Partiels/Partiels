@@ -1,5 +1,7 @@
 #include "AnlTrackPropertyPanel.h"
+#include "AnlTrackTools.h"
 #include "AnlTrackExporter.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -128,17 +130,47 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     options.resizable = false;
     options.runModal();
 })
+, mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Plugin", "Results", "Manual"}, [&](size_t index)
+{
+    auto applyRange = [&](std::optional<Zoom::Range> const& globalRange)
+    {
+        if(globalRange.has_value())
+        {
+            return;
+        }
+        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, *globalRange);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*globalRange, NotificationType::synchronous);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
+    };
+    
+    switch(index)
+    {
+        case 0:
+        {
+            applyRange(Tools::getValueRange(mAccessor.getAttr<AttrType::description>()));
+        }
+            break;
+        case 1:
+        {
+            applyRange(Tools::getValueRange(mAccessor.getAttr<AttrType::results>()));
+        }
+            break;
+        default:
+            break;
+    }
+})
 , mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withStart(static_cast<double>(value));
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+    auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), static_cast<double>(value) + 1.0);
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(value), end}, NotificationType::synchronous);
 })
 , mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
 {
     auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>().withEnd(static_cast<double>(value));
-    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, NotificationType::synchronous);
+    auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), static_cast<double>(value)- 1.0);
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{start, static_cast<double>(value)}, NotificationType::synchronous);
 })
 , mPropertyValueRange("Value Range", "The range of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
 {
@@ -147,7 +179,31 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
 })
 , mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 {
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    auto updateValueZoomMode = [&]()
+    {
+        auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        
+        auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+        auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+        mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
+        mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
+        mPropertyValueRangeMode.entry.setItemEnabled(3, false);
+        if(pluginRange.has_value() && range == *pluginRange)
+        {
+            mPropertyValueRangeMode.entry.setSelectedId(1);
+        }
+        else if(resultsRange.has_value() && range == *resultsRange)
+        {
+            mPropertyValueRangeMode.entry.setSelectedId(2);
+        }
+        else
+        {
+            mPropertyValueRangeMode.entry.setSelectedId(3);
+        }
+    };
+    
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         auto constexpr silent = juce::NotificationType::dontSendNotification;
@@ -233,7 +289,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
                 mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
                 
-                if(output.binCount == 0)
+                if(output.hasFixedBinCount && output.binCount == 0)
                 {
                     mGraphicalSection.setComponents(
                     {
@@ -241,12 +297,13 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyBackgroundColour
                     });
                 }
-                else if(output.binCount == 1)
+                else if(!output.hasFixedBinCount || output.binCount == 1)
                 {
                     mGraphicalSection.setComponents(
                     {
                           mPropertyForegroundColour
                         , mPropertyBackgroundColour
+                        , mPropertyValueRangeMode
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                     });
@@ -258,6 +315,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                     {
                           mPropertyColourMap
                         , mPropertyColourMapAlpha
+                        , mPropertyValueRangeMode
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                         , mPropertyValueRange
@@ -272,6 +330,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertyPluginVersion.entry.setText(juce::String(description.version), silent);
                 mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, silent);
                 mPropertyPluginDetails.setText(description.details + " - " + description.output.description, silent);
+                
+                updateValueZoomMode();
             }
             case AttrType::state:
             {
@@ -325,6 +385,10 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
                 break;
             case AttrType::results:
+            {
+                updateValueZoomMode();
+            }
+                break;
             case AttrType::graphics:
             case AttrType::processing:
             case AttrType::warnings:
@@ -344,7 +408,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
         }
     };
     
-    mValueZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         switch(attribute)
         {
@@ -353,6 +417,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             {
                 auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
                 auto const isEnable = !range.isEmpty();
+                mPropertyValueRangeMode.entry.setEnabled(isEnable);
                 mPropertyValueRangeMin.entry.setEnabled(isEnable);
                 mPropertyValueRangeMax.entry.setEnabled(isEnable);
                 mPropertyValueRange.entry.setEnabled(isEnable);
@@ -363,6 +428,9 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                     mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
                     mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
                 }
+                
+                updateValueZoomMode();
+                mPropertyValueRange.repaint();
             }
                 break;
             case Zoom::AttrType::visibleRange:
