@@ -11,7 +11,14 @@ namespace Track
     , public juce::SettableTooltipClient
     {
     public:
-        ProgressBar(Accessor& accessor);
+        enum class Mode
+        {
+              analysis
+            , rendering
+            , both
+        };
+        
+        ProgressBar(Accessor& accessor, Mode mode);
         ~ProgressBar() override;
         
         // juce::Component
@@ -20,6 +27,7 @@ namespace Track
         
     private:
         Accessor& mAccessor;
+        Mode const mMode;
         Accessor::Listener mListener;
         double mProgressValue;
         juce::ProgressBar mProgressBar {mProgressValue};

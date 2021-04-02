@@ -2,8 +2,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::ProgressBar::ProgressBar(Accessor& accessor)
+Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
 : mAccessor(accessor)
+, mMode(mode)
 {
     addChildComponent(mProgressBar);
 
@@ -18,31 +19,55 @@ Track::ProgressBar::ProgressBar(Accessor& accessor)
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
                 
-                auto const isProcessing = std::get<0>(state) || std::get<2>(state);
-                if(isProcessing)
+                if(std::get<0>(state))
                 {
-                    mProgressValue = static_cast<double>(std::get<0>(state) ? std::get<1>(state) : std::get<3>(state));
-                    mProgressBar.setTextToDisplay(std::get<0>(state) ? "Analysing... " : "Rendering... ");
+                    if(mMode == Mode::analysis || mMode == Mode::both)
+                    {
+                        mProgressBar.setVisible(true);
+                        mProgressValue = static_cast<double>(std::get<1>(state));
+                        mProgressBar.setTextToDisplay("Analysing... ");
+                    }
+                    else
+                    {
+                        mProgressBar.setVisible(false);
+                        mMessage = "Analysing... ";
+                    }
+                }
+                else if(std::get<2>(state) && (mMode == Mode::rendering || mMode == Mode::both))
+                {
+                    mProgressBar.setVisible(true);
+                    mProgressValue = static_cast<double>(std::get<3>(state));
+                    mProgressBar.setTextToDisplay("Rendering... ");
                 }
                 else
                 {
+                    mProgressBar.setVisible(false);
                     mStateImage = IconManager::getIcon(warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert);
-                    auto getMessage = [warnings]()
+                    auto getMessage = [&, warnings]()
                     {
                         switch(warnings)
                         {
                             case WarningType::none:
-                                return "Analysis and rendering successfully completed!";
+                                break;
                             case WarningType::plugin:
                                 return "Analysis failed: the plugin cannot be found or allocated!";
                             case WarningType::state:
                                 return "Analysis failed: the step size or the block size might not be supported!";
                         }
+                        switch(mMode)
+                        {
+                            case Mode::analysis:
+                                return "Analysis successfully completed!";
+                            case Mode::rendering:
+                                return "Rendering successfully completed!";
+                            case Mode::both:
+                                return "Analysis and rendering successfully completed!";
+                        }
                         return "Analysis and rendering successfully completed!";
                     };
+                    
                     mMessage = getMessage();
                 }
-                mProgressBar.setVisible(isProcessing);
                 
                 auto getTooltip = [&, state, warnings]() -> juce::String
                 {
@@ -82,6 +107,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::propertyState:
+            case AttrType::zoomMode:
                 break;
         }
     };
