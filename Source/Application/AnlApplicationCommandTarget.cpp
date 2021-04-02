@@ -468,7 +468,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::HelpOpenManual:
         {
-            showUnsupportedAction();
+            juce::URL const url("https://forum.ircam.fr/contact/documentations-logiciels/");
+            if(url.isWellFormed())
+            {
+                url.launchInDefaultBrowser();
+            }
             return true;
         }
         case CommandIDs::HelpOpenForum:
