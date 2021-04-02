@@ -105,6 +105,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::ZoomOut
         
         , CommandIDs::HelpOpenAudioSettings
+        , CommandIDs::HelpOpenAbout
         , CommandIDs::HelpOpenManual
         , CommandIDs::HelpOpenForum
     });
@@ -295,6 +296,15 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #endif
         }
             break;
+        case CommandIDs::HelpOpenAbout:
+        {
+#ifdef JUCE_MAC
+            result.setInfo(juce::translate("About Partiels"), juce::translate("Show the information about the application"), "Application", 0);
+#else
+            result.setInfo(juce::translate("About Partiels"), juce::translate("Show the information about the application"), "help", 0);
+#endif
+        }
+            break;
         case CommandIDs::HelpOpenManual:
         {
             result.setInfo(juce::translate("Open Manual"), juce::translate("Opens the manual in a web browser"), "Help", 0);
@@ -452,6 +462,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
         case CommandIDs::HelpOpenAbout:
+        {
+            Instance::get().getAbout().show();
+            return true;
+        }
         case CommandIDs::HelpOpenManual:
         {
             showUnsupportedAction();
