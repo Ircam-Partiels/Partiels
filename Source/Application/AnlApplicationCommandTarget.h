@@ -70,21 +70,6 @@ namespace Application
         
         Accessor::Listener mListener;
     };
-    
-    class MainMenuModel
-    : public juce::MenuBarModel
-    {
-    public:
-        MainMenuModel() = default;
-        ~MainMenuModel() override = default;
-        
-        juce::StringArray getMenuBarNames() override;
-        juce::PopupMenu getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName) override;
-        void menuItemSelected(int menuItemID, int topLevelMenuIndex) override;
-        
-        void initialize();
-        void shutdown();
-    };
 }
 
 ANALYSE_FILE_END

@@ -23,14 +23,12 @@ Application::Window::Window()
     setResizable(true, false);
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
-    mMainMenuModel.initialize();
     Instance::get().getDocumentFileBased().addChangeListener(this);
 }
 
 Application::Window::~Window()
 {
     Instance::get().getDocumentFileBased().removeChangeListener(this);
-    mMainMenuModel.shutdown();
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     mOpenGLContext.detach();
 }

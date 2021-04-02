@@ -182,6 +182,8 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationFontManager.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationLookAndFeel.h
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationMainMenuModel.cpp
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationMainMenuModel.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationModel.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationTranslationManager.cpp
