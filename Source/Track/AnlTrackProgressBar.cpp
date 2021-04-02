@@ -107,7 +107,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::propertyState:
-            case AttrType::zoomMode:
+            case AttrType::zoomLink:
                 break;
         }
     };

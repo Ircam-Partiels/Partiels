@@ -80,6 +80,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::propertyState:
+            case AttrType::zoomLink:
                 break;
 }
     };

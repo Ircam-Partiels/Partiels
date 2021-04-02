@@ -92,6 +92,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
                 break;
             case AttrType::colours:
             case AttrType::propertyState:
+            case AttrType::zoomLink:
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::time:

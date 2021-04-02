@@ -20,6 +20,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::state:
             case AttrType::height:
             case AttrType::propertyState:
+            case AttrType::zoomLink:
             case AttrType::warnings:
                 break;
             case AttrType::results:
@@ -283,6 +284,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::state:
             case AttrType::height:
             case AttrType::propertyState:
+            case AttrType::zoomLink:
             case AttrType::graphics:
             case AttrType::name:
             case AttrType::description:

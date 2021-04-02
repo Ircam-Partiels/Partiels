@@ -405,6 +405,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::propertyState:
+            case AttrType::zoomLink:
                 break;
         }
     };

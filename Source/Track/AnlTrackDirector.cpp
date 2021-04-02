@@ -97,6 +97,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
             }
                 break;
             case AttrType::propertyState:
+            case AttrType::zoomLink:
             case AttrType::time:
             case AttrType::warnings:
             case AttrType::processing:
