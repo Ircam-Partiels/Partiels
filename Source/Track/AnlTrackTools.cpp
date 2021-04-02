@@ -116,4 +116,41 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
     return juce::String(it->values[bin], 2) + label;
 }
 
+
+Zoom::Range Track::Tools::getValueRange(std::vector<Plugin::Result> const& results)
+{
+    auto it = std::find_if(results.cbegin(), results.cend(), [](auto const& v)
+    {
+        return !v.values.empty();
+    });
+    if(it == results.cend())
+    {
+        return Zoom::Range{Zoom::lowest(), Zoom::max()};
+    }
+    auto const [min, max] = std::minmax_element(it->values.cbegin(), it->values.cend());
+    auto const firstRange = Zoom::Range{static_cast<double>(*min), static_cast<double>(*max)};
+    return std::accumulate(results.cbegin() + 1, results.cend(), firstRange, [](auto const r, auto const& v)
+    {
+        if(v.values.empty())
+        {
+            return r;
+        }
+        auto const [min, max] = std::minmax_element(v.values.cbegin(), v.values.cend());
+        return r.getUnionWith({static_cast<double>(*min), static_cast<double>(*max)});
+    });
+}
+
+Zoom::Range Track::Tools::getBinRange(std::vector<Plugin::Result> const& results)
+{
+    if(results.empty())
+    {
+        return Zoom::Range{0.0, 1.0};
+    }
+    auto const firstRange = Zoom::Range::emptyRange(static_cast<double>(results.front().values.size()));
+    return std::accumulate(results.cbegin() + 1, results.cend(), firstRange, [](auto const r, auto const& v)
+    {
+        return r.getUnionWith({static_cast<double>(v.values.size()), static_cast<double>(v.values.size())});
+    });
+}
+
 ANALYSE_FILE_END

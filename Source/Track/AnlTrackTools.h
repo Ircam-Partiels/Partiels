@@ -18,7 +18,10 @@ namespace Track
         juce::String getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
         juce::String getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
         juce::String getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin);
-    };
+    
+        Zoom::Range getValueRange(std::vector<Plugin::Result> const& results);
+        Zoom::Range getBinRange(std::vector<Plugin::Result> const& results);
+    }
 }
 
 ANALYSE_FILE_END
