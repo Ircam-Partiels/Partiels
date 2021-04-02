@@ -36,7 +36,7 @@ namespace Track
         PropertyNumber mPropertyStepSize;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
-        ProgressBar mProgressBar {mAccessor};
+        ProgressBar mProgressBarAnalysis {mAccessor, ProgressBar::Mode::analysis};
         
         PropertyList mPropertyColourMap;
         PropertySlider mPropertyColourMapAlpha;
@@ -47,6 +47,7 @@ namespace Track
         PropertyNumber mPropertyValueRangeMax;
         PropertyRangeSlider mPropertyValueRange;
         PropertyNumber mPropertyNumBins;
+        ProgressBar mProgressBarRendering {mAccessor, ProgressBar::Mode::rendering};
         
         PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};
         PropertyLabel mPropertyPluginFeature {"Feature", "The feature of the plugin"};

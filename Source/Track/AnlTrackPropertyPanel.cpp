@@ -280,7 +280,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                     }
                 }
                 components.push_back(mPropertyPreset);
-                components.push_back(mProgressBar);
+                components.push_back(mProgressBarAnalysis);
                 mProcessorSection.setComponents(components);
                 components.clear();
                 
@@ -320,6 +320,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyValueRangeMax
                         , mPropertyValueRange
                         , mPropertyNumBins
+                        , mProgressBarRendering
                     });
                 }
 
@@ -468,7 +469,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     mBoundsListener.attachTo(mGraphicalSection);
     mBoundsListener.attachTo(mPluginSection);
     
-    mProgressBar.setSize(sInnerWidth, 36);
+    mProgressBarAnalysis.setSize(sInnerWidth, 36);
+    mProgressBarRendering.setSize(sInnerWidth, 36);
     
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);
