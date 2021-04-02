@@ -110,6 +110,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(juce::ProgressBar::ColourIds::backgroundColourId, backgroundColour);
     setColour(juce::ProgressBar::ColourIds::foregroundColourId, thumbColour);
     
+    // juce::HyperlinkButton
+    setColour(juce::HyperlinkButton::ColourIds::textColourId, juce::Colour(0xFF16A4DB));
+    
     setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());
     setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
 }
