@@ -10,6 +10,7 @@ Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
     auto& commandManager = Instance::get().getApplicationCommandManager();
     setApplicationCommandManagerToWatch(&commandManager);
 #ifdef JUCE_MAC
+    juce::ignoreUnused(mWindow);
     juce::PopupMenu extraAppleMenuItems;
     using CommandIDs = CommandTarget::CommandIDs;
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAbout);

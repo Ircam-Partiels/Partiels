@@ -9,6 +9,7 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationAudioReader.h"
+#include "AnlApplicationMainMenuModel.h"
 
 #include "../Document/AnlDocumentDirector.h"
 #include "../Document/AnlDocumentFileWatcher.h"
@@ -70,6 +71,7 @@ namespace Application
         Document::FileBased mDocumentFileBased {mDocumentAccessor, getFileExtension(), getFileWildCard(), "Open a document", "Save the document"};
         
         std::unique_ptr<Window> mWindow;
+        std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<About> mAbout;
         std::unique_ptr<AudioSettings> mAudioSettings;
     };

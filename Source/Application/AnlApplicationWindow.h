@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlApplicationInterface.h"
-#include "AnlApplicationMainMenuModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -29,7 +28,6 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
         
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
-        MainMenuModel mMainMenuModel {*this};
         Interface mInterface;
         juce::OpenGLContext mOpenGLContext;
     };

@@ -32,6 +32,12 @@ void Application::Instance::initialise(juce::String const& commandLine)
         anlDebug("Application", "Failed.");
         return;
     }
+    mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
+    if(mMainMenuModel == nullptr)
+    {
+        anlDebug("Application", "Failed.");
+        return;
+    }
     mAudioSettings = std::make_unique<AudioSettings>();
     if(mAudioSettings == nullptr)
     {
@@ -101,6 +107,7 @@ void Application::Instance::shutdown()
 {
     mAbout.reset();
     mAudioSettings.reset();
+    mMainMenuModel.reset();
     mWindow.reset();
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     anlDebug("Application", "Done");
