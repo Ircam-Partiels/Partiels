@@ -565,11 +565,14 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     }
     else if(menuName == "Help")
     {
+#ifndef JUCE_MAC
+        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenAbout);
+#endif
         menu.addCommandItem(&commandManager, CommandIDs::HelpOpenManual);
         menu.addCommandItem(&commandManager, CommandIDs::HelpOpenForum);
 #ifndef JUCE_MAC
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::ShowAudioSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
 #endif
     }
     else
