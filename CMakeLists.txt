@@ -234,12 +234,16 @@ juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE
 file(GLOB FontsDataSources ${BINARYDATA_DIRECTORY}/Fonts/*.otf)
 juce_add_binary_data(FontsData HEADER_NAME "FontsData.h" NAMESPACE FontsData SOURCES ${FontsDataSources})
 
+file(GLOB MiscDataSources ${BINARYDATA_DIRECTORY}/Misc/About.txt)
+juce_add_binary_data(MiscData HEADER_NAME "MiscData.h" NAMESPACE MiscData SOURCES ${MiscDataSources})
+
 target_link_libraries(Partiels PRIVATE
     vamp
     ImagesData
     IconsData
     FontsData
     TranslationsData
+    MiscData
     juce::juce_gui_extra
     juce::juce_opengl
     juce::juce_audio_formats
@@ -254,6 +258,7 @@ target_link_libraries(PartielsTest PRIVATE
     IconsData
     FontsData
     TranslationsData
+    MiscData
     juce::juce_gui_extra
     juce::juce_opengl
     juce::juce_audio_formats
