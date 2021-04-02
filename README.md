@@ -1,4 +1,6 @@
-# Analyse
+# Partiels
+
+[Partiels](https://forum.ircam.fr/projects/detail/partiels/) is software intended for the analysis of digital audio files. Partiels aims to offer a set of dynamic and ergonomic tools that meet the expectations of research in signal processing, musicology as well as compositional practices. Partiels allows to carry out, load, visualize, edit and export audio analyzes.
 
 ### Compilation
 
@@ -10,12 +12,8 @@ cd analyse && mkdir build && cd build
 cmake ..
 ```
 
-### TODO
+#### Credits
 
-- Look And Feel
-- Translations
-- Debug
-- remove magic enum
-- remove ILF?
-- CI/CD
-- https://github.com/taglib/taglib
+This project has been developed at [Ircam](https://www.ircam.fr/) by Pierre Guillot.  
+
+This software is based the [Vamp](https://www.vamp-plugins.org/) analysis plugin format, developed at the [Centre for Digital Music](http://c4dm.eecs.qmul.ac.uk/), Queen Mary, University of London.
