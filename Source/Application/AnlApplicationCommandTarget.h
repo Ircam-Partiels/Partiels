@@ -45,6 +45,7 @@ namespace Application
             , ZoomIn
             , ZoomOut
             
+            , HelpOpenAudioSettings
             , HelpOpenManual
             , HelpOpenForum
 

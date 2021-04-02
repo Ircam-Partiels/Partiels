@@ -104,6 +104,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::ZoomIn
         , CommandIDs::ZoomOut
         
+        , CommandIDs::HelpOpenAudioSettings
         , CommandIDs::HelpOpenManual
         , CommandIDs::HelpOpenForum
     });
@@ -283,6 +284,17 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
             
+        case CommandIDs::HelpOpenAudioSettings:
+        {
+#ifdef JUCE_MAC
+            result.setInfo(juce::translate("Audio Settings..."), juce::translate("Show the audio settings panel"), "Application", 0);
+            result.defaultKeypresses.add(juce::KeyPress(',', juce::ModifierKeys::commandModifier, 0));
+#else
+            result.setInfo(juce::translate("Audio Settings..."), juce::translate("Show the audio settings panel"), "Help", 0);
+            result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier, 0));
+#endif
+        }
+            break;
         case CommandIDs::HelpOpenManual:
         {
             result.setInfo(juce::translate("Open Manual"), juce::translate("Opens the manual in a web browser"), "Help", 0);
@@ -433,6 +445,13 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
             
+            
+        case CommandIDs::HelpOpenAudioSettings:
+        {
+            Instance::get().getAudioSettings().show();
+            return true;
+        }
+        case CommandIDs::HelpOpenAbout:
         case CommandIDs::HelpOpenManual:
         case CommandIDs::HelpOpenForum:
         {
@@ -526,6 +545,10 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     {
         menu.addCommandItem(&commandManager, CommandIDs::HelpOpenManual);
         menu.addCommandItem(&commandManager, CommandIDs::HelpOpenForum);
+#ifndef JUCE_MAC
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::ShowAudioSettings);
+#endif
     }
     else
     {
