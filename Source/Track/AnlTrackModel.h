@@ -31,6 +31,13 @@ namespace Track
         }
     };
     
+    enum class WarningType
+    {
+          none
+        , plugin
+        , state
+    };
+    
     enum class AttrType : size_t
     {
           identifier
@@ -54,13 +61,6 @@ namespace Track
     {
           valueZoom
         , binZoom
-    };
-
-    enum class WarningType
-    {
-          none
-        , plugin
-        , state
     };
     
     using AttrContainer = Model::Container
