@@ -26,12 +26,8 @@ namespace Application
         PropertyList mPropertyDriver;
         PropertyList mPropertyOutputDevice;
         PropertyList mPropertySampleRate;
-#ifdef JUCE_MAC
         PropertyList mPropertyBufferSize;
         PropertyNumber mPropertyBufferSizeNumber;
-#else
-
-#endif
         PropertyTextButton mPropertyDriverPanel;
         
         FloatingWindow mFloatingWindow {"Audio Settings"};
