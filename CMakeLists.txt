@@ -95,7 +95,9 @@ file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.h
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomPlayhead.cpp
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomPlayhead.h)
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomPlayhead.h
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.cpp
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.h)
 
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp
