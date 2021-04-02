@@ -182,6 +182,9 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
 
         auto& trackAcsr = mAccessor.getAccessor<Document::AcsrType::tracks>(index);
         trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
+        trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::state>(description.defaultState, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::key>(key, notification);
         
         auto layout = mAccessor.getAttr<AttrType::layout>();
