@@ -20,7 +20,6 @@ namespace Track
     private:
         void runAnalysis(NotificationType const notification);
         void runRendering();
-        void updateZoomAccessors(NotificationType const notification);
         
         // juce::Timer
         void timerCallback() override;

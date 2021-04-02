@@ -1,6 +1,7 @@
 #include "AnlTrackDirector.h"
 #include "AnlTrackProcessor.h"
 #include "AnlTrackTools.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -9,7 +10,59 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
 , mPluginListScanner(pluginListScanner)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
 {
-    accessor.onAttrUpdated = [&](AttrType attr, NotificationType notification)
+    auto sanitizeZooms = [this](NotificationType notification)
+    {
+        // Value Zoom
+        {
+            auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+            auto applyZoom = [&](Zoom::Range const& globalRange)
+            {
+                auto const& output = mAccessor.getAttr<AttrType::description>().output;
+                auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
+                auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, NotificationType::synchronous);
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
+            };
+            
+            auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+            auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+            if(globalRange.isEmpty() && pluginRange.has_value())
+            {
+                applyZoom(*pluginRange);
+            }
+            else if(globalRange.isEmpty() && resultsRange.has_value())
+            {
+                applyZoom(*resultsRange);
+            }
+        }
+        
+        // Bin Zoom
+        {
+            auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+            auto applyZoom = [&](Zoom::Range const& globalRange)
+            {
+                auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, notification);
+            };
+            
+            auto const pluginRange = Tools::getBinRange(mAccessor.getAttr<AttrType::description>());
+            auto const resultsRange = Tools::getBinRange(mAccessor.getAttr<AttrType::results>());
+            if(pluginRange.has_value())
+            {
+                applyZoom(*pluginRange);
+            }
+            else if(resultsRange.has_value())
+            {
+                applyZoom(*resultsRange);
+            }
+        }
+    };
+    
+    accessor.onAttrUpdated = [=, this](AttrType attr, NotificationType notification)
     {
         switch(attr)
         {
@@ -25,12 +78,12 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
                 break;
             case AttrType::description:
             {
-                updateZoomAccessors(notification);
+                sanitizeZooms(notification);
             }
                 break;
             case AttrType::results:
             {
-                updateZoomAccessors(notification);
+                sanitizeZooms(notification);
             }
                 break;
             case AttrType::graphics:
@@ -199,42 +252,6 @@ void Track::Director::runRendering()
 {
     startTimer(50);
     mGraphics.runRendering(mAccessor);
-}
-
-void Track::Director::updateZoomAccessors(NotificationType const notification)
-{
-    auto const& results = mAccessor.getAttr<AttrType::results>();
-    auto const& output = mAccessor.getAttr<AttrType::description>().output;
-    
-    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
-    if(valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>() == Zoom::Range{0.0, 0.0})
-    {
-        if(output.hasKnownExtents)
-        {
-            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(output.minValue), static_cast<double>(output.maxValue)}, notification);
-        }
-        else if(results != nullptr && !results->empty())
-        {
-            valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Tools::getValueRange(*results), notification);
-        }
-        valueZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon(), notification);
-        valueZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
-    }
-    
-    auto& binZoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
-    if(output.hasFixedBinCount)
-    {
-        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, static_cast<double>(output.binCount)}, notification);
-    }
-    else if(results != nullptr && !results->empty())
-    {
-        binZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Tools::getBinRange(*results), notification);
-    }
-    if(binZoomAcsr.getAttr<Zoom::AttrType::visibleRange>() == Zoom::Range{0.0, 0.0})
-    {
-        binZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(binZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), notification);
-    }
-    binZoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
 }
 
 void Track::Director::timerCallback()
