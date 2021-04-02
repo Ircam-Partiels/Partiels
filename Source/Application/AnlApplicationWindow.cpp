@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::Window::Window()
-: juce::DocumentWindow(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
+: juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
     mOpenGLContext.setComponentPaintingEnabled(true);
     mOpenGLContext.attachTo(*this);
@@ -74,7 +74,7 @@ void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source
     auto const file = Instance::get().getDocumentFileBased().getFile();
     auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
     auto const extension = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved() ? "*" : "";
-    setName(Instance::get().getApplicationName() + " - " + ProjectInfo::versionString + " - " + name + extension);
+    setName(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString + " - " + name + extension);
 }
 
 ANALYSE_FILE_END
