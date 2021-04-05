@@ -5,9 +5,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
+Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
-, mPluginListScanner(pluginListScanner)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
 {
     auto sanitizeZooms = [this](NotificationType notification)

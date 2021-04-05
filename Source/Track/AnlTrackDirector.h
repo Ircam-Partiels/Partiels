@@ -13,7 +13,7 @@ namespace Track
     : private juce::Timer
     {
     public:
-        Director(Accessor& accessor, PluginList::Scanner& pluginListScanner, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
+        Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
         ~Director() override;
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
@@ -25,7 +25,6 @@ namespace Track
         void timerCallback() override;
         
         Accessor& mAccessor;
-        PluginList::Scanner& mPluginListScanner;
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         Processor mProcessor;
         Graphics mGraphics;

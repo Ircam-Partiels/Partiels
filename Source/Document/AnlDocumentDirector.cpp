@@ -7,7 +7,6 @@ ANALYSE_FILE_BEGIN
 
 Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
-, mPluginListScanner(pluginListScanner)
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginListAccessor, pluginListScanner)
 {
@@ -89,7 +88,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
                 auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
-                auto director = std::make_unique<Track::Director>(trackAcsr, mPluginListScanner, std::move(audioFormatReader));
+                auto director = std::make_unique<Track::Director>(trackAcsr, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
             }

@@ -19,7 +19,6 @@ namespace Document
         
     private:
         Accessor& mAccessor;
-        PluginList::Scanner& mPluginListScanner;
         juce::AudioFormatManager& mAudioFormatManager;
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
