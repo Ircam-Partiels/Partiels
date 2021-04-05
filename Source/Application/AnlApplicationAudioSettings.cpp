@@ -192,7 +192,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         for(int i = 0; i < outputDeviceNames.size(); i++)
         {
             mPropertyOutputDevice.entry.addItem(outputDeviceNames[i], i + 1);
-            if(outputDeviceNames[i] == currentAudioDevice->getName())
+            if(currentAudioDevice != nullptr && outputDeviceNames[i] == currentAudioDevice->getName())
             {
                 mPropertyOutputDevice.entry.setSelectedItemIndex(i);
             }
