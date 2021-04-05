@@ -21,9 +21,6 @@ namespace Application
     private:
         std::unique_ptr<juce::Drawable> mImage;
         FloatingWindow mFloatingWindow {"About Partiels - v" + juce::String(ProjectInfo::versionString)};
-        juce::HyperlinkButton mPartielsLink {"Partiels", juce::URL("https://forum.ircam.fr/projects/detail/partiels/")};
-        juce::HyperlinkButton mIrcamLink {"Ircam", juce::URL("https://www.ircam.fr/")};
-        juce::HyperlinkButton mVampLink {"Vamp", juce::URL("https://www.vamp-plugins.org/")};
     };
 }
 

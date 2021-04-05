@@ -8,12 +8,6 @@ ANALYSE_FILE_BEGIN
 Application::About::About()
 : mImage(juce::Drawable::createFromImageData(IconsData::icon_png, IconsData::icon_pngSize))
 {
-    addAndMakeVisible(mPartielsLink);
-    mPartielsLink.setBounds(2, 2, 44, 20);
-    addAndMakeVisible(mIrcamLink);
-    mIrcamLink.setBounds(78, 130, 44, 20);
-    addAndMakeVisible(mVampLink);
-    mVampLink.setBounds(152, 162, 42, 20);
     setSize(400, 400);
 }
 
@@ -26,10 +20,6 @@ void Application::About::paint(juce::Graphics& g)
     
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
     g.setFont(16.0f);
-    auto const font = g.getCurrentFont();
-    mPartielsLink.setFont(font, false);
-    mIrcamLink.setFont(font, false);
-    mVampLink.setFont(font, false);
     juce::String const text(MiscData::About_txt, MiscData::About_txtSize);
     g.drawFittedText(text, getLocalBounds().reduced(4), juce::Justification::left, 40);
 }
