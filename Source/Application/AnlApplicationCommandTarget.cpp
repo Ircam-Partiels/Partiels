@@ -114,6 +114,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
 void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result)
 {
     auto const& docAcsr = Instance::get().getDocumentAccessor();
+    auto const& transportAcsr = docAcsr.getAcsr<Document::AcsrType::transport>();
     switch (commandID)
     {
         case CommandIDs::DocumentNew:
@@ -249,7 +250,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-            result.setTicked(docAcsr.getAttr<Document::AttrType::isPlaybackStarted>());
+            result.setTicked(transportAcsr.getAttr<Transport::AttrType::playback>());
         }
             break;
         case CommandIDs::TransportToggleLooping:
@@ -257,14 +258,14 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-            result.setTicked(docAcsr.getAttr<Document::AttrType::isLooping>());
+            result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
         }
             break;
         case CommandIDs::TransportRewindPlayHead:
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::runningPlayheadPosition>() > 0.0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() > 0.0);
         }
             break;
             
@@ -330,6 +331,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     };
     
     auto& fileBased = Instance::get().getDocumentFileBased();
+    auto& docAcsr = Instance::get().getDocumentAccessor();
+    auto& transportAcsr = docAcsr.getAcsr<Document::AcsrType::transport>();
     switch (info.commandID)
     {
         case CommandIDs::DocumentNew:
@@ -407,31 +410,28 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             
         case CommandIDs::TransportTogglePlayback:
         {
-            auto constexpr attr = Document::AttrType::isPlaybackStarted;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            auto constexpr attr = Transport::AttrType::playback;
+            transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::TransportToggleLooping:
         {
-            auto constexpr attr = Document::AttrType::isLooping;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            documentAcsr.setAttr<attr>(!documentAcsr.getAttr<attr>(), NotificationType::synchronous);
+            auto constexpr attr = Transport::AttrType::looping;
+            transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
         case CommandIDs::TransportRewindPlayHead:
         {
-            auto constexpr attr = Document::AttrType::runningPlayheadPosition;
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-            auto const isPlaying = documentAcsr.getAttr<Document::AttrType::isPlaybackStarted>();
+            auto constexpr attr = Transport::AttrType::startPlayhead;
+            auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
             if(isPlaying)
             {
-                documentAcsr.setAttr<Document::AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
+                transportAcsr.setAttr<Transport::AttrType::playback>(false, NotificationType::synchronous);
             }
-            documentAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
+            transportAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
             if(isPlaying)
             {
-                documentAcsr.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
+                transportAcsr.setAttr<Transport::AttrType::playback>(true, NotificationType::synchronous);
             }
             return true;
         }

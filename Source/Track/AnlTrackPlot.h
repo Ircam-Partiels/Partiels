@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlTrackModel.h"
-#include "../Zoom/AnlZoomPlayhead.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -41,7 +40,6 @@ namespace Track
             
             juce::Label mTooltip;
             juce::DropShadowEffect mDropShadowEffect;
-            Zoom::Playhead mZoomPlayhead;
         };
         
     private:

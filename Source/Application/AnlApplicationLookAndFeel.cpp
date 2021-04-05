@@ -41,7 +41,6 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::ColourIds::textColourId, textColour);
     setColour(Zoom::Ruler::ColourIds::anchorColourId, thumbColour);
     setColour(Zoom::Ruler::ColourIds::selectionColourId, thumbColour);
-    setColour(Zoom::Playhead::ColourIds::playheadColourId, thumbColour);
     
     setColour(Transport::PlayheadContainer::ColourIds::startPlayheadColourId, textColour);
     setColour(Transport::PlayheadContainer::ColourIds::runningPlayheadColourId, thumbColour);

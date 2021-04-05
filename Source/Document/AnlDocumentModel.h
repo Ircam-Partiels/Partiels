@@ -2,8 +2,8 @@
 
 #include "../Misc/AnlMisc.h"
 #include "../Track/AnlTrackModel.h"
+#include "../Transport/AnlTransportModel.h"
 #include "../Zoom/AnlZoomModel.h"
-#include "../Misc/AnlBroadcaster.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -32,11 +32,6 @@ namespace Document
     enum class AttrType : size_t
     {
           file
-        , isLooping
-        , gain
-        , isPlaybackStarted
-        , startPlayheadPosition
-        , runningPlayheadPosition
         , layoutHorizontal
         , layoutVertical
         , layout
@@ -46,16 +41,12 @@ namespace Document
     enum class AcsrType : size_t
     {
           timeZoom
+        , transport
         , tracks
     };
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
-    , Model::Attr<AttrType::isLooping, bool, Model::Flag::notifying | Model::Flag::saveable>
-    , Model::Attr<AttrType::gain, double, Model::Flag::notifying | Model::Flag::saveable>
-    , Model::Attr<AttrType::isPlaybackStarted, bool, Model::Flag::notifying>
-    , Model::Attr<AttrType::startPlayheadPosition, double, Model::Flag::notifying | Model::Flag::saveable>
-    , Model::Attr<AttrType::runningPlayheadPosition, double, Model::Flag::notifying>
     , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
     , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
@@ -64,6 +55,7 @@ namespace Document
     
     using AcsrContainer = Model::Container
     < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::basic, 1>
+    , Model::Acsr<AcsrType::transport, Transport::Accessor, Model::Flag::basic, 1>
     , Model::Acsr<AcsrType::tracks, Track::Accessor, Model::Flag::basic, Model::resizable>
     >;
     
@@ -75,11 +67,6 @@ namespace Document
         
         Accessor()
         : Accessor(AttrContainer(  {juce::File{}}
-                                 , {false}
-                                 , {1.0}
-                                 , {false}
-                                 , {0.0}
-                                 , {0.0}
                                  , {144}
                                  , {144}
                                  , {}

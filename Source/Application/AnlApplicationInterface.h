@@ -2,9 +2,9 @@
 
 #include "AnlApplicationCommandTarget.h"
 #include "../Document/AnlDocumentModel.h"
-#include "../Document/AnlDocumentTransport.h"
 #include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentSection.h"
+#include "../Transport/AnlTransportDisplay.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -35,7 +35,7 @@ namespace Application
         // Header
         ResizerBar mFileInfoResizer {ResizerBar::Orientation::vertical, false, {4, 320}};
         Document::FileInfoPanel mDocumentFileInfoPanel;
-        Document::Transport mDocumentTransport;
+        Transport::Display mTransportDisplay;
         
         juce::ImageButton mNavigate;
         juce::ImageButton mInspect;

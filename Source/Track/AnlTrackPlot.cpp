@@ -398,7 +398,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mZoomPlayhead(mTimeZoomAccessor)
 {
     addAndMakeVisible(mPlot);
     mTooltip.setEditable(false);
@@ -406,7 +405,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     mTooltip.setInterceptsMouseClicks(false, false);
     mTooltip.setComponentEffect(&mDropShadowEffect);
     addChildComponent(mTooltip);
-    addAndMakeVisible(mZoomPlayhead);
     setInterceptsMouseClicks(true, true);
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -424,11 +422,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::warnings:
-                break;
             case AttrType::time:
-            {
-                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::time>());
-            }
                 break;
             case AttrType::colours:
             {

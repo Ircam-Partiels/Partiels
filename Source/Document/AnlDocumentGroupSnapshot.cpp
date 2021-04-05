@@ -54,10 +54,6 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::expanded:
@@ -76,6 +72,7 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {
@@ -91,6 +88,7 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {
@@ -131,21 +129,12 @@ Document::GroupSnapshot::Overlay::Overlay(GroupSnapshot& snapshot)
     addChildComponent(mProcessingButton);
     setInterceptsMouseClicks(true, true);
     
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-                break;
-            case AttrType::runningPlayheadPosition:
-            {
-                
-            }
-                break;
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::expanded:

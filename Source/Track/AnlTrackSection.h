@@ -16,7 +16,7 @@ namespace Track
     public:
         enum ColourIds : int
         {
-              sectionColourId = 0x2030100
+              sectionColourId = 0x2030000
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator);

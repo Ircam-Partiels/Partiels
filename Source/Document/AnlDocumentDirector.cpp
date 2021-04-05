@@ -46,12 +46,32 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
             }
                 break;
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-            case AttrType::runningPlayheadPosition:
+            case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
+            case AttrType::layout:
+            case AttrType::expanded:
+                break;
+        }
+    };
+    
+    mAccessor.getAcsr<AcsrType::transport>().onAttrUpdated = [&](Transport::AttrType attribute, NotificationType notification)
+    {
+        auto& transporAcsr = mAccessor.getAcsr<AcsrType::transport>();
+        switch(attribute)
+        {
+            case Transport::AttrType::playback:
+                break;
+            case Transport::AttrType::startPlayhead:
             {
-                auto const time = mAccessor.getAttr<AttrType::runningPlayheadPosition>();
+                if(!transporAcsr.getAttr<Transport::AttrType::playback>())
+                {
+                    transporAcsr.setAttr<Transport::AttrType::runningPlayhead>(transporAcsr.getAttr<Transport::AttrType::startPlayhead>(), notification);
+                }
+            }
+                break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                auto const time = transporAcsr.getAttr<Transport::AttrType::runningPlayhead>();
                 auto const numAnlAcsrs = mAccessor.getNumAcsr<AcsrType::tracks>();
                 for(size_t i = 0; i < numAnlAcsrs; ++i)
                 {
@@ -66,10 +86,9 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
             }
                 break;
-            case AttrType::layoutHorizontal:
-            case AttrType::layoutVertical:
-            case AttrType::layout:
-            case AttrType::expanded:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::gain:
                 break;
         }
     };
@@ -93,6 +112,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
             }
                 break;
+            case AcsrType::transport:
             case AcsrType::timeZoom:
                 break;
         }
@@ -113,6 +133,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 mTracks.erase(mTracks.begin() + static_cast<long>(index));
             }
                 break;
+            case AcsrType::transport:
             case AcsrType::timeZoom:
                 break;
         }

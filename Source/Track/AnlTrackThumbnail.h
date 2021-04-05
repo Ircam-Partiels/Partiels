@@ -13,7 +13,7 @@ namespace Track
     public:
         enum ColourIds : int
         {
-              textColourId = 0x2030200
+              textColourId = 0x2030100
         };
         
         Thumbnail(Accessor& accessor);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
-#include "../Zoom/AnlZoomPlayhead.h"
+#include "../Transport/AnlTransportPlayheadContainer.h"
 #include "../Track/AnlTrackPlot.h"
 
 ANALYSE_FILE_BEGIN
@@ -21,9 +21,6 @@ namespace Document
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
-    
-        Zoom::Playhead mZoomPlayhead;
-        
         std::map<juce::String, std::unique_ptr<Track::Plot>> mPlots;
     };
 }

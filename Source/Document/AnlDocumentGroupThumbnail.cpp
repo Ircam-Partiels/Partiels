@@ -27,11 +27,6 @@ Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-            case AttrType::startPlayheadPosition:
-            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::layout:

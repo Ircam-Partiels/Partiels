@@ -12,7 +12,7 @@ namespace Document
     public:
         enum ColourIds : int
         {
-              textColourId = 0x2040200
+              textColourId = 0x2040100
         };
         
         GroupThumbnail(Accessor& accessor);

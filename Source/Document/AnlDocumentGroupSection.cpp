@@ -2,56 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::GroupSection::Container::Container(Accessor& accessor, juce::Component& content, bool showPlayhead)
-: mAccessor(accessor)
-, mContent(content)
-, mZoomPlayhead(mAccessor.getAcsr<AcsrType::timeZoom>())
-{
-    addAndMakeVisible(mContent);
-    if(showPlayhead)
-    {
-        addAndMakeVisible(mZoomPlayhead);
-    }
-    
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-                break;
-            case AttrType::runningPlayheadPosition:
-            {
-                if(mZoomPlayhead.isVisible())
-                {
-                    mZoomPlayhead.setPosition(acsr.getAttr<AttrType::runningPlayheadPosition>());
-                }
-            }
-                break;
-            case AttrType::layoutHorizontal:
-            case AttrType::layoutVertical:
-            case AttrType::layout:
-            case AttrType::expanded:
-                break;
-        }
-    };
-    
-    mAccessor.addListener(mListener, NotificationType::synchronous);
-}
-
-Document::GroupSection::Container::~Container()
-{
-    mAccessor.removeListener(mListener);
-}
-
-void Document::GroupSection::Container::resized()
-{
-    auto bounds = getLocalBounds();
-    mContent.setBounds(bounds);
-}
-
 Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separator)
 : mAccessor(accessor)
 , mSeparator(separator)
@@ -62,10 +12,6 @@ Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separa
         switch(type)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
                 break;
             case AttrType::layoutVertical:

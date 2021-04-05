@@ -15,7 +15,7 @@ namespace Document
     public:
         enum ColourIds : int
         {
-              backgroundColourId = 0x2040300
+              backgroundColourId = 0x2040200
         };
         
         Section(Accessor& accessor);
@@ -54,8 +54,7 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        juce::Component mPlayheadContainer;
-        Zoom::Playhead mPlayhead {mAccessor.getAcsr<AcsrType::timeZoom>()};
+        Transport::PlayheadContainer mTransportPlayheadContainer;
         
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         

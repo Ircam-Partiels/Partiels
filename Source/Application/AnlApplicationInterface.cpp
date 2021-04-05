@@ -5,12 +5,12 @@ ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
 : mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
-, mDocumentTransport(Instance::get().getDocumentAccessor())
+, mTransportDisplay(Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>())
 , mDocumentSection(Instance::get().getDocumentAccessor())
 {    
     addAndMakeVisible(mDocumentFileInfoPanel);
     addAndMakeVisible(mFileInfoResizer);
-    addAndMakeVisible(mDocumentTransport);
+    addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mNavigate);
     addAndMakeVisible(mInspect);
     addAndMakeVisible(mEdit);
@@ -43,7 +43,7 @@ Application::Interface::Interface()
                 auto const& audioFormatManager = Instance::get().getAudioFormatManager();
                 auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
                 
-                mDocumentTransport.setEnabled(isDocumentEnable);
+                mTransportDisplay.setEnabled(isDocumentEnable);
                 mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
                 mDocumentSection.setEnabled(isDocumentEnable);
                 if(!isDocumentEnable)
@@ -56,10 +56,6 @@ Application::Interface::Interface()
                 }
             }
                 break;
-            case Document::AttrType::isLooping:
-            case Document::AttrType::gain:
-            case Document::AttrType::isPlaybackStarted:
-            case Document::AttrType::runningPlayheadPosition:
             case Document::AttrType::layoutHorizontal:
             case Document::AttrType::layoutVertical:
             case Document::AttrType::layout:
@@ -90,7 +86,7 @@ void Application::Interface::resized()
     auto bounds = getLocalBounds();
     
     auto header = bounds.removeFromTop(40);
-    mDocumentTransport.setBounds(header.removeFromLeft(240));
+    mTransportDisplay.setBounds(header.removeFromLeft(240));
     auto buttons = header.withSizeKeepingCentre(120, 32);
     mNavigate.setBounds(buttons.removeFromLeft(32).reduced(4));
     buttons.removeFromLeft(12);

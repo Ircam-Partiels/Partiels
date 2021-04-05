@@ -7,11 +7,6 @@ Document::AttrContainer const& Document::FileBased::getDefaultContainer()
     static AttrContainer const document
     {
           {juce::File{}}
-        , {false}
-        , {1.0}
-        , {false}
-        , {0.0}
-        , {0.0}
         , {144}
         , {144}
         , {}

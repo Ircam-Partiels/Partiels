@@ -4,10 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::GroupPlot::GroupPlot(Accessor& accessor)
 : mAccessor(accessor)
-, mZoomPlayhead(mAccessor.getAcsr<AcsrType::timeZoom>(), {})
 {
-    addAndMakeVisible(mZoomPlayhead);
-    
     auto updateLayout = [&]()
     {
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -48,27 +45,18 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
             }
         }
 
-        addAndMakeVisible(mZoomPlayhead, -1);
         resized();
     };
     
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::expanded:
-                break;
-            case AttrType::runningPlayheadPosition:
-            {
-                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::runningPlayheadPosition>());
-            }
                 break;
             case AttrType::layout:
             {
@@ -84,6 +72,7 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {
@@ -99,6 +88,7 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {

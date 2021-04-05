@@ -2,7 +2,7 @@
 
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
-#include "../Zoom/AnlZoomPlayhead.h"
+#include "../Transport/AnlTransportPlayheadContainer.h"
 #include "AnlDocumentGroupThumbnail.h"
 #include "AnlDocumentGroupSnapshot.h"
 #include "AnlDocumentGroupPlot.h"
@@ -17,7 +17,7 @@ namespace Document
     public:
         enum ColourIds : int
         {
-              sectionColourId = 0x2040100
+              sectionColourId = 0x2040000
         };
         
         GroupSection(Accessor& accessor, juce::Component& separator);
@@ -27,25 +27,6 @@ namespace Document
         void resized() override;
         
     private:
-        class Container
-        : public juce::Component
-        {
-        public:
-            Container(Accessor& accessor, juce::Component& content, bool showPlayhead);
-            ~Container() override;
-            
-            // juce::Component
-            void resized() override;
-            
-        private:
-            
-            Accessor& mAccessor;
-            juce::Component& mContent;
-            Accessor::Listener mListener;
-            
-            Zoom::Playhead mZoomPlayhead;
-        };
-
         Accessor& mAccessor;
         juce::Component& mSeparator;
         Accessor::Listener mListener;
@@ -55,12 +36,10 @@ namespace Document
         Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
         
         GroupSnapshot mSnapshot {mAccessor,};
-        Container mSnapshotContainer {mAccessor, mSnapshot, false};
-        Decorator mSnapshotDecoration {mSnapshotContainer, 1, 4.0f};
+        Decorator mSnapshotDecoration {mSnapshot, 1, 4.0f};
         
         GroupPlot mPlot {mAccessor};
-        Container mPlotContainer {mAccessor, mPlot, true};
-        Decorator mPlotDecoration {mPlotContainer, 1, 4.0f};
+        Decorator mPlotDecoration {mPlot, 1, 4.0f};
         
         Zoom::Accessor zoomAcsr;
         Zoom::Ruler mRuler {zoomAcsr, Zoom::Ruler::Orientation::vertical};

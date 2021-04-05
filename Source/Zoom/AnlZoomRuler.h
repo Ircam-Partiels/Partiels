@@ -12,7 +12,7 @@ namespace Zoom
     public:
         enum ColourIds : int
         {
-              backgroundColourId = 0x2010100
+              backgroundColourId = 0x2010000
             , tickColourId
             , textColourId
             , anchorColourId

@@ -31,10 +31,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-            case AttrType::runningPlayheadPosition:
+                break;
             case AttrType::layoutHorizontal:
             {
                 resized();
@@ -63,6 +60,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {
@@ -94,6 +92,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {
@@ -163,6 +162,7 @@ void Document::Section::GroupContainer::resized()
 
 Document::Section::Section(Accessor& accessor)
 : mAccessor(accessor)
+, mTransportPlayheadContainer(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 {
     mZoomTimeRuler.setPrimaryTickInterval(0);
     mZoomTimeRuler.setTickReferenceValue(0.0);
@@ -179,14 +179,6 @@ Document::Section::Section(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::isLooping:
-            case AttrType::gain:
-            case AttrType::isPlaybackStarted:
-                break;
-            case AttrType::runningPlayheadPosition:
-            {
-                mPlayhead.setPosition(acsr.getAttr<AttrType::runningPlayheadPosition>());
-            }
                 break;
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
@@ -207,11 +199,12 @@ Document::Section::Section(Accessor& accessor)
         switch(type)
         {
             case AcsrType::timeZoom:
+            case AcsrType::transport:
                 break;
             case AcsrType::tracks:
             {
                 auto const numTracks = acsr.getNumAcsr<AcsrType::tracks>();
-                mPlayheadContainer.setVisible(numTracks > 0);
+                mTransportPlayheadContainer.setVisible(numTracks > 0);
                 mZoomTimeRuler.setVisible(numTracks > 0);
                 mViewport.setVisible(numTracks > 0);
                 mZoomTimeScrollBar.setVisible(numTracks > 0);
@@ -239,13 +232,13 @@ Document::Section::Section(Accessor& accessor)
     
     mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, true, false);
-    
+    mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
+    addMouseListener(&mTransportPlayheadContainer, true);
     setSize(480, 200);
-    mPlayheadContainer.addAndMakeVisible(mPlayhead);
-    addAndMakeVisible(mPlayheadContainer);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mZoomTimeScrollBar);
+    addAndMakeVisible(mTransportPlayheadContainer);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -263,8 +256,10 @@ void Document::Section::resized()
     auto const right = width - 32;
     
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
-    mPlayheadContainer.setBounds(bounds.removeFromTop(14).withLeft(left + 2).withRight(right + 6));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
+    auto const transportHeight = std::min(bounds.getHeight(), mGroupContainer.getHeight()) + 14;
+    mTransportPlayheadContainer.setBounds(left + 2, bounds.getY(), right - left + 4, transportHeight);
+    bounds.removeFromTop(14);
     mGroupContainer.setBounds(0, 0, width, mGroupContainer.getHeight());
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
 }
