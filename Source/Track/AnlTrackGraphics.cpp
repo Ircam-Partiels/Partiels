@@ -47,7 +47,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     }
     
     auto const colourMap = accessor.getAttr<AttrType::colours>().map;
-    auto const valueRange = accessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+    auto const valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     
     mChrono.start();
     mRenderingProcess = std::thread([=, this]()

@@ -55,13 +55,13 @@ namespace Document
         Accessor::Listener mListener;
         
         juce::Component mPlayheadContainer;
-        Zoom::Playhead mPlayhead {mAccessor.getAccessor<AcsrType::timeZoom>(0)};
+        Zoom::Playhead mPlayhead {mAccessor.getAcsr<AcsrType::timeZoom>()};
         
-        Zoom::Ruler mZoomTimeRuler {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::Ruler::Orientation::horizontal};
+        Zoom::Ruler mZoomTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         
         GroupContainer mGroupContainer {mAccessor};
         juce::Viewport mViewport;
-        Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAccessor<AcsrType::timeZoom>(0), Zoom::ScrollBar::Orientation::horizontal};
+        Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
     };
 }
 

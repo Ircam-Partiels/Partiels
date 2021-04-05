@@ -8,7 +8,7 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
     auto updateLayout = [&]()
     {
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
-        auto const& trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         std::erase_if(mSnapshots, [&](auto const& pair)
         {
             return std::binary_search(layout.cbegin(), layout.cend(), pair.first) ||
@@ -30,7 +30,7 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
                 });
                 if(trackIt != trackAcsrs.cend())
                 {
-                    auto plot = std::make_unique<Track::Snapshot>(*trackIt, mAccessor.getAccessor<AcsrType::timeZoom>(0));
+                    auto plot = std::make_unique<Track::Snapshot>(*trackIt, mAccessor.getAcsr<AcsrType::timeZoom>());
                     anlStrongAssert(plot != nullptr);
                     if(plot != nullptr)
                     {
@@ -57,7 +57,7 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
-            case AttrType::playheadPosition:
+            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::expanded:
@@ -121,6 +121,72 @@ void Document::GroupSnapshot::resized()
             it->second->setBounds(bounds);
         }
     }
+}
+
+Document::GroupSnapshot::Overlay::Overlay(GroupSnapshot& snapshot)
+: mSnapshot(snapshot)
+, mAccessor(mSnapshot.mAccessor)
+{
+    addAndMakeVisible(mSnapshot);
+    addChildComponent(mProcessingButton);
+    setInterceptsMouseClicks(true, true);
+    
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::file:
+            case AttrType::isLooping:
+            case AttrType::gain:
+            case AttrType::isPlaybackStarted:
+                break;
+            case AttrType::runningPlayheadPosition:
+            {
+                
+            }
+                break;
+            case AttrType::layoutHorizontal:
+            case AttrType::layoutVertical:
+            case AttrType::expanded:
+            case AttrType::layout:
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Document::GroupSnapshot::Overlay::~Overlay()
+{
+    mAccessor.removeListener(mListener);
+}
+
+void Document::GroupSnapshot::Overlay::resized()
+{
+    auto bounds = getLocalBounds();
+    mSnapshot.setBounds(bounds);
+    mProcessingButton.setBounds(8, 8, 20, 20);
+}
+
+void Document::GroupSnapshot::Overlay::paint(juce::Graphics& g)
+{
+    juce::ignoreUnused(g);
+}
+
+void Document::GroupSnapshot::Overlay::mouseMove(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+}
+
+void Document::GroupSnapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
+{
+    mouseMove(event);
+}
+
+void Document::GroupSnapshot::Overlay::mouseExit(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
 }
 
 ANALYSE_FILE_END

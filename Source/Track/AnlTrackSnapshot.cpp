@@ -48,14 +48,14 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
 }
 
 Track::Snapshot::~Snapshot()
 {
-    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
+    mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mBinZoomListener);
+    mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mValueZoomListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -75,7 +75,7 @@ void Track::Snapshot::paint(juce::Graphics& g)
     
     auto const& output = mAccessor.getAttr<AttrType::description>().output;
     auto const time = mAccessor.getAttr<AttrType::time>();
-    auto const& valueRange = mAccessor.getAccessor<AcsrType::valueZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+    auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     if(output.hasFixedBinCount)
     {
         switch(output.binCount)
@@ -92,7 +92,7 @@ void Track::Snapshot::paint(juce::Graphics& g)
                 break;
             default:
             {
-                paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), time, mTimeZoomAccessor, mAccessor.getAccessor<AcsrType::binZoom>(0));
+                paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), time, mTimeZoomAccessor, mAccessor.getAcsr<AcsrType::binZoom>());
             }
                 break;
         }
@@ -364,7 +364,7 @@ void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
                     break;
                 default:
                 {
-                    auto const& binVisibleRange = mAccessor.getAccessor<AcsrType::binZoom>(0).getAttr<Zoom::AttrType::visibleRange>();
+                    auto const& binVisibleRange = mAccessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
                     auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
                     auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
                     auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");

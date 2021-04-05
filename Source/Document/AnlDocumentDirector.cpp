@@ -18,7 +18,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             case AttrType::file:
             {
                 auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
                 if(reader == nullptr)
                 {
                     mDuration = 0.0;
@@ -50,16 +50,16 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
-            case AttrType::playheadPosition:
+            case AttrType::runningPlayheadPosition:
             {
-                auto const time = mAccessor.getAttr<AttrType::playheadPosition>();
-                auto const numAnlAcsrs = mAccessor.getNumAccessors<AcsrType::tracks>();
+                auto const time = mAccessor.getAttr<AttrType::runningPlayheadPosition>();
+                auto const numAnlAcsrs = mAccessor.getNumAcsr<AcsrType::tracks>();
                 for(size_t i = 0; i < numAnlAcsrs; ++i)
                 {
-                    auto& trackAcsr  = mAccessor.getAccessor<AcsrType::tracks>(i);
+                    auto& trackAcsr  = mAccessor.getAcsr<AcsrType::tracks>(i);
                     trackAcsr.setAttr<Track::AttrType::time>(time, notification);
                 }
-                auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
                 auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                 if(!range.contains(time))
                 {
@@ -87,7 +87,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 {
                     return;
                 }
-                auto& trackAcsr = mAccessor.getAccessor<AcsrType::tracks>(index);
+                auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
                 auto director = std::make_unique<Track::Director>(trackAcsr, mPluginListScanner, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
@@ -119,7 +119,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
         }
     };
     
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = [&](Zoom::AttrType attribute, NotificationType notification)
     {
         switch(attribute)
@@ -142,7 +142,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
 
 Document::Director::~Director()
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = nullptr;
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
@@ -165,8 +165,8 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
             mModalWindow = nullptr;
         }
         
-        auto const index = mAccessor.getNumAccessors<AcsrType::tracks>();
-        if(!mAccessor.insertAccessor<AcsrType::tracks>(index, notification))
+        auto const index = mAccessor.getNumAcsr<AcsrType::tracks>();
+        if(!mAccessor.insertAcsr<AcsrType::tracks>(index, notification))
         {
             if(alertType == AlertType::window)
             {
@@ -180,7 +180,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         
         auto const identifier = juce::Uuid().toString();
 
-        auto& trackAcsr = mAccessor.getAccessor<Document::AcsrType::tracks>(index);
+        auto& trackAcsr = mAccessor.getAcsr<Document::AcsrType::tracks>(index);
         trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
         trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
@@ -190,7 +190,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         auto layout = mAccessor.getAttr<AttrType::layout>();
         layout.push_back(identifier);
         mAccessor.setAttr<AttrType::layout>(layout, notification);
-        anlStrongAssert(layout.size() == mAccessor.getNumAccessors<AcsrType::tracks>());
+        anlStrongAssert(layout.size() == mAccessor.getNumAcsr<AcsrType::tracks>());
     };
     
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -214,7 +214,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
 
 void Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
 {
-    auto const trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
     {
         return acsr.getAttr<Track::AttrType::identifier>() == identifier;
@@ -237,8 +237,8 @@ void Document::Director::removeTrack(juce::String const identifier, Notification
     std::erase(layout, identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
-    mAccessor.eraseAccessor<AcsrType::tracks>(index, notification);
-    anlStrongAssert(layout.size() == mAccessor.getNumAccessors<AcsrType::tracks>());
+    mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
+    anlStrongAssert(layout.size() == mAccessor.getNumAcsr<AcsrType::tracks>());
 }
 
 ANALYSE_FILE_END

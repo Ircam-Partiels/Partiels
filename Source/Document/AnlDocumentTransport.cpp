@@ -19,13 +19,26 @@ Document::Transport::Transport(Accessor& accessor)
             {
                 auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                mPosition.setEnabled(!state);
                 lookAndFeelChanged();
             }
                 break;
-            case AttrType::playheadPosition:
+            case AttrType::startPlayheadPosition:
             {
-                auto const time = acsr.getAttr<AttrType::playheadPosition>();
-                mPlayPositionInHMSms.setText(Format::secondsToString(time), juce::NotificationType::dontSendNotification);
+                auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
+                if(!state)
+                {
+                    mPosition.setTime(acsr.getAttr<AttrType::startPlayheadPosition>(), juce::NotificationType::dontSendNotification);
+                }
+            }
+                break;
+            case AttrType::runningPlayheadPosition:
+            {
+                auto const state = acsr.getAttr<AttrType::isPlaybackStarted>();
+                if(state)
+                {
+                    mPosition.setTime(acsr.getAttr<AttrType::runningPlayheadPosition>(), juce::NotificationType::dontSendNotification);
+                }
             }
                 break;
             case AttrType::isLooping:
@@ -50,7 +63,7 @@ Document::Transport::Transport(Accessor& accessor)
         {
             mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(false, NotificationType::synchronous);
         }
-        mAccessor.setAttr<AttrType::playheadPosition>(0.0, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::startPlayheadPosition>(0.0, NotificationType::synchronous);
         if(isPlaying)
         {
             mAccessor.setAttr<Document::AttrType::isPlaybackStarted>(true, NotificationType::synchronous);
@@ -77,13 +90,15 @@ Document::Transport::Transport(Accessor& accessor)
         mAccessor.setAttr<AttrType::gain>(gain, NotificationType::synchronous);
     };
     
+    mPosition.onTimeChanged = [&](double time)
+    {
+        mAccessor.setAttr<AttrType::startPlayheadPosition>(time, NotificationType::synchronous);
+    };
+    
     addAndMakeVisible(mRewindButton);
     addAndMakeVisible(mPlaybackButton);
     addAndMakeVisible(mLoopButton);
-    
-    mPlayPositionInHMSms.setJustificationType(juce::Justification::horizontallyJustified);
-    mPlayPositionInHMSms.setMinimumHorizontalScale(1.0f);
-    addAndMakeVisible(mPlayPositionInHMSms);
+    addAndMakeVisible(mPosition);
     
     addAndMakeVisible(mVolumeSlider);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -104,7 +119,7 @@ void Document::Transport::resized()
     mLoopButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(4));
     
     mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
-    mPlayPositionInHMSms.setBounds(bounds);
+    mPosition.setBounds(bounds);
 }
 
 void Document::Transport::lookAndFeelChanged()

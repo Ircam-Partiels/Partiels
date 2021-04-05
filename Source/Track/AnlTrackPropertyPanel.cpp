@@ -138,7 +138,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
         {
             return;
         }
-        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
         auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, *globalRange);
         zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*globalRange, NotificationType::synchronous);
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
@@ -162,26 +162,26 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
 })
 , mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), static_cast<double>(value) + 1.0);
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(value), end}, NotificationType::synchronous);
 })
 , mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), static_cast<double>(value)- 1.0);
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{start, static_cast<double>(value)}, NotificationType::synchronous);
 })
 , mPropertyValueRange("Value Range", "The range of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
 {
-    auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
 })
 , mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 {
     auto updateValueZoomMode = [&]()
     {
-        auto const& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
         auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         
         auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
@@ -510,8 +510,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
         mAccessor.setAttr<AttrType::propertyState>(mFloatingWindow.getWindowStateAsString(), NotificationType::synchronous);
     };
     
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).addListener(mValueZoomListener, NotificationType::synchronous);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).addListener(mBinZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -521,8 +521,8 @@ Track::PropertyPanel::~PropertyPanel()
     mBoundsListener.detachFrom(mGraphicalSection);
     mBoundsListener.detachFrom(mPluginSection);
     mAccessor.removeListener(mListener);
-    mAccessor.getAccessor<AcsrType::binZoom>(0).removeListener(mBinZoomListener);
-    mAccessor.getAccessor<AcsrType::valueZoom>(0).removeListener(mValueZoomListener);
+    mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mBinZoomListener);
+    mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mValueZoomListener);
 }
 
 void Track::PropertyPanel::resized()

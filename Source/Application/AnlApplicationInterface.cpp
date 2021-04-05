@@ -59,7 +59,7 @@ Application::Interface::Interface()
             case Document::AttrType::isLooping:
             case Document::AttrType::gain:
             case Document::AttrType::isPlaybackStarted:
-            case Document::AttrType::playheadPosition:
+            case Document::AttrType::runningPlayheadPosition:
             case Document::AttrType::layoutHorizontal:
             case Document::AttrType::layoutVertical:
             case Document::AttrType::layout:

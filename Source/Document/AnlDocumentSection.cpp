@@ -34,7 +34,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
-            case AttrType::playheadPosition:
+            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
             {
                 resized();
@@ -66,8 +66,8 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
                 break;
             case AcsrType::tracks:
             {
-                auto& trackAcsr = mAccessor.getAccessor<AcsrType::tracks>(index);
-                auto& timeZoomAcsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+                auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
+                auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
                 
                 auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, mResizerBar);
                 anlStrongAssert(newSection != nullptr);
@@ -116,7 +116,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
         std::erase(layout, identifier);
         layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
         
-        auto const trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+        auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         std::erase_if(layout, [&](auto const& trackIdentifier)
         {
             return std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
@@ -183,9 +183,9 @@ Document::Section::Section(Accessor& accessor)
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
                 break;
-            case AttrType::playheadPosition:
+            case AttrType::runningPlayheadPosition:
             {
-                mPlayhead.setPosition(acsr.getAttr<AttrType::playheadPosition>());
+                mPlayhead.setPosition(acsr.getAttr<AttrType::runningPlayheadPosition>());
             }
                 break;
             case AttrType::layoutHorizontal:
@@ -210,7 +210,7 @@ Document::Section::Section(Accessor& accessor)
                 break;
             case AcsrType::tracks:
             {
-                auto const numTracks = acsr.getNumAccessors<AcsrType::tracks>();
+                auto const numTracks = acsr.getNumAcsr<AcsrType::tracks>();
                 mPlayheadContainer.setVisible(numTracks > 0);
                 mZoomTimeRuler.setVisible(numTracks > 0);
                 mViewport.setVisible(numTracks > 0);
@@ -225,7 +225,7 @@ Document::Section::Section(Accessor& accessor)
     
     mZoomTimeRuler.onDoubleClick = [&]()
     {
-        auto& acsr = mAccessor.getAccessor<AcsrType::timeZoom>(0);
+        auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     

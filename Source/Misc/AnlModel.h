@@ -105,7 +105,7 @@ namespace Model
                     auto constexpr size_flags = element_type::size_flags;
                     for(size_t index = 0; index < size_flags; ++index)
                     {
-                        if(!static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, NotificationType::synchronous))
+                        if(!static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, NotificationType::synchronous))
                         {
                             anlStrongAssert(false && "allocation failed");
                         }
@@ -123,9 +123,9 @@ namespace Model
                 {
                     using element_type = typename std::remove_reference<decltype(d)>::type;
                     auto constexpr acsr_type = element_type::type;
-                    while(getNumAccessors<acsr_type>() > 0)
+                    while(getNumAcsr<acsr_type>() > 0)
                     {
-                        eraseAccessor<acsr_type>(getNumAccessors<acsr_type>() - 1, NotificationType::synchronous);
+                        eraseAcsr<acsr_type>(getNumAcsr<acsr_type>() - 1, NotificationType::synchronous);
                     }
                 });
             }
@@ -133,7 +133,7 @@ namespace Model
         
         //! @brief Gets an accessor of a container
         template <acsr_enum_type type>
-        auto getNumAccessors() const noexcept
+        auto getNumAcsr() const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return std::get<static_cast<size_t>(type)>(mAccessors).accessors.size();
@@ -141,7 +141,7 @@ namespace Model
 
         //! @brief Gets all the accessors of a container
         template <acsr_enum_type type>
-        auto getAccessors() noexcept
+        auto getAcsrs() noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
@@ -162,7 +162,7 @@ namespace Model
         
         //! @brief Gets all the accessors of a container
         template <acsr_enum_type type>
-        auto getAccessors() const noexcept
+        auto getAcsrs() const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
@@ -184,7 +184,7 @@ namespace Model
         
         //! @brief Gets an accessor of a container
         template <acsr_enum_type type>
-        auto& getAccessor(size_t index) noexcept
+        auto& getAcsr(size_t index = 0_z) noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
@@ -192,7 +192,7 @@ namespace Model
         
         //! @brief Gets an accessor of a container
         template <acsr_enum_type type>
-        auto const& getAccessor(size_t index) const noexcept
+        auto const& getAcsr(size_t index = 0_z) const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
@@ -200,17 +200,17 @@ namespace Model
         
         //! @brief Inserts a new accessor in the container
         template <acsr_enum_type type>
-        bool insertAccessor(size_t index, NotificationType const notification)
+        bool insertAcsr(size_t index, NotificationType const notification)
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             using sub_accessor_type = typename element_type::accessor_type;
-            return insertAccessor<type>(index, std::make_unique<sub_accessor_type>(), notification);
+            return insertAcsr<type>(index, std::make_unique<sub_accessor_type>(), notification);
         }
         
         //! @brief Erase an accessor from the container
         template <acsr_enum_type type>
-        void eraseAccessor(size_t index, NotificationType const notification)
+        void eraseAcsr(size_t index, NotificationType const notification)
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             auto& lock = getLock();
@@ -351,7 +351,7 @@ namespace Model
                 {
                     auto constexpr acsr_type = element_type::type;
                     static auto const enumname = std::string(magic_enum::enum_name(acsr_type));
-                    auto const acsrs = getAccessors<acsr_type>();
+                    auto const acsrs = getAcsrs<acsr_type>();
                     for(auto const& acsr : acsrs)
                     {
                         auto child = acsr.get().toXml(enumname.c_str());
@@ -409,7 +409,7 @@ namespace Model
                         while(accessors.size() > childs.size())
                         {
                             auto const index = accessors.size() - 1;
-                            static_cast<parent_t*>(this)->template eraseAccessor<acsr_type>(index, notification);
+                            static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
                         }
                     }
                     
@@ -428,7 +428,7 @@ namespace Model
                         {
                             auto const index = accessors.size();
                             mDelayInsertionNotification = true;
-                            if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, notification))
+                            if(static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
                             {
                                 anlStrongAssert(accessors[index] != nullptr);
                                 if(accessors[index] != nullptr)
@@ -475,7 +475,7 @@ namespace Model
                         while(accessors.size() > d.accessors.size())
                         {
                             auto const index = accessors.size() - 1;
-                            static_cast<parent_t*>(this)->template eraseAccessor<acsr_type>(index, notification);
+                            static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
                         }
                     }
                     for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
@@ -495,7 +495,7 @@ namespace Model
                             if(d.accessors[index] != nullptr)
                             {
                                 mDelayInsertionNotification = true;
-                                if(static_cast<parent_t*>(this)->template insertAccessor<acsr_type>(index, notification))
+                                if(static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
                                 {
                                     anlStrongAssert(accessors[index] != nullptr);
                                     if(accessors[index] != nullptr)
@@ -543,7 +543,7 @@ namespace Model
                     if constexpr((element_type::flags & Flag::comparable) != 0)
                     {
                         auto constexpr acsr_type = element_type::type;
-                        auto const acsrs = getAccessors<acsr_type>();
+                        auto const acsrs = getAcsrs<acsr_type>();
                         result = acsrs.size() == d.accessors.size() && std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
                         {
                             return ctnr != nullptr && acsr.get().isEquivalentTo(*(ctnr.get()));
@@ -590,7 +590,7 @@ namespace Model
                     using element_type = typename std::remove_reference<decltype(d)>::type;
                     if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
-                        auto const acsrs = getAccessors<element_type::type>();
+                        auto const acsrs = getAcsrs<element_type::type>();
                         for(size_t index = 0; index < acsrs.size(); ++index)
                         {
                             mListeners.notify([this, index, ptr = &listener](Listener& ltnr)
@@ -619,7 +619,7 @@ namespace Model
     protected:
         //! @brief Inserts a new accessor in the container
         template <acsr_enum_type type>
-        bool insertAccessor(size_t index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
+        bool insertAcsr(size_t index, std::unique_ptr<typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type> accessor, NotificationType const notification)
         {
             anlStrongAssert(accessor != nullptr);
             if(accessor == nullptr)

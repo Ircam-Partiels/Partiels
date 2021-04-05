@@ -9,14 +9,14 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::
 {
     mValueRuler.onDoubleClick = [&]()
     {
-        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
         auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
     
     mBinRuler.onDoubleClick = [&]()
     {
-        auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
         auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };

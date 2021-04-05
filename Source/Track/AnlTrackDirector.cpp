@@ -14,7 +14,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
     {
         // Value Zoom
         {
-            auto& zoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
             auto applyZoom = [&](Zoom::Range const& globalRange)
             {
                 auto const& output = mAccessor.getAttr<AttrType::description>().output;
@@ -40,7 +40,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
         
         // Bin Zoom
         {
-            auto& zoomAcsr = mAccessor.getAccessor<AcsrType::binZoom>(0);
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
             auto applyZoom = [&](Zoom::Range const& globalRange)
             {
                 auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
@@ -105,7 +105,7 @@ Track::Director::Director(Accessor& accessor, PluginList::Scanner& pluginListSca
         }
     };
     
-    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     valueZoomAcsr.onAttrUpdated = [&](Zoom::AttrType attr, NotificationType notification)
     {
         juce::ignoreUnused(notification);
@@ -169,7 +169,7 @@ Track::Director::~Director()
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
-    auto& valueZoomAcsr = mAccessor.getAccessor<AcsrType::valueZoom>(0);
+    auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     valueZoomAcsr.onAttrUpdated = nullptr;
 }
 

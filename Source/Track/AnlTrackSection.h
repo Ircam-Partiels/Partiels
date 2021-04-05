@@ -48,10 +48,10 @@ namespace Track
         Plot::Overlay mPlotOverlay {mPlot};
         Decorator mPlotDecoration {mPlotOverlay, 1, 4.0f};
         
-        Zoom::Ruler mValueRuler {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mValueScrollBar {mAccessor.getAccessor<AcsrType::valueZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
-        Zoom::Ruler mBinRuler  {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mBinScrollBar {mAccessor.getAccessor<AcsrType::binZoom>(0), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mValueRuler {mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mValueScrollBar {mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mBinRuler  {mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mBinScrollBar {mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
         
         ResizerBar mResizerBarLeft {ResizerBar::Orientation::horizontal, true, {50, 2000}};
         ResizerBar mResizerBarRight {ResizerBar::Orientation::horizontal, true, {50, 2000}};

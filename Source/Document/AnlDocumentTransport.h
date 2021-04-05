@@ -25,7 +25,7 @@ namespace Document
         juce::ImageButton mPlaybackButton;
         juce::ImageButton mLoopButton;
         
-        juce::Label mPlayPositionInHMSms {"", "00h 00m 00s 000ms"};
+        HMSmsField mPosition;
         juce::Slider mVolumeSlider {juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};
     };
 }

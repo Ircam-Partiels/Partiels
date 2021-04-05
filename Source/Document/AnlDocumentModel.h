@@ -35,7 +35,8 @@ namespace Document
         , isLooping
         , gain
         , isPlaybackStarted
-        , playheadPosition
+        , startPlayheadPosition
+        , runningPlayheadPosition
         , layoutHorizontal
         , layoutVertical
         , layout
@@ -53,7 +54,8 @@ namespace Document
     , Model::Attr<AttrType::isLooping, bool, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::gain, double, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::isPlaybackStarted, bool, Model::Flag::notifying>
-    , Model::Attr<AttrType::playheadPosition, double, Model::Flag::notifying>
+    , Model::Attr<AttrType::startPlayheadPosition, double, Model::Flag::notifying | Model::Flag::saveable>
+    , Model::Attr<AttrType::runningPlayheadPosition, double, Model::Flag::notifying>
     , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
     , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
@@ -76,6 +78,7 @@ namespace Document
                                  , {false}
                                  , {1.0}
                                  , {false}
+                                 , {0.0}
                                  , {0.0}
                                  , {144}
                                  , {144}

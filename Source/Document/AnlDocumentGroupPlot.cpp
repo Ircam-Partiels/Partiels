@@ -4,14 +4,14 @@ ANALYSE_FILE_BEGIN
 
 Document::GroupPlot::GroupPlot(Accessor& accessor)
 : mAccessor(accessor)
-, mZoomPlayhead(mAccessor.getAccessor<AcsrType::timeZoom>(0), {})
+, mZoomPlayhead(mAccessor.getAcsr<AcsrType::timeZoom>(), {})
 {
     addAndMakeVisible(mZoomPlayhead);
     
     auto updateLayout = [&]()
     {
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
-        auto const& trackAcsrs = mAccessor.getAccessors<AcsrType::tracks>();
+        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         std::erase_if(mPlots, [&](auto const& pair)
         {
             return std::binary_search(layout.cbegin(), layout.cend(), pair.first) ||
@@ -33,7 +33,7 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
                 });
                 if(trackIt != trackAcsrs.cend())
                 {
-                    auto plot = std::make_unique<Track::Plot>(*trackIt, mAccessor.getAccessor<AcsrType::timeZoom>(0));
+                    auto plot = std::make_unique<Track::Plot>(*trackIt, mAccessor.getAcsr<AcsrType::timeZoom>());
                     anlStrongAssert(plot != nullptr);
                     if(plot != nullptr)
                     {
@@ -65,9 +65,9 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
             case AttrType::layoutVertical:
             case AttrType::expanded:
                 break;
-            case AttrType::playheadPosition:
+            case AttrType::runningPlayheadPosition:
             {
-                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::playheadPosition>());
+                mZoomPlayhead.setPosition(acsr.getAttr<AttrType::runningPlayheadPosition>());
             }
                 break;
             case AttrType::layout:

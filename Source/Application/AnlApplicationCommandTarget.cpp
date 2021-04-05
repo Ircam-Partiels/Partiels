@@ -167,7 +167,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::DocumentSaveTemplate:
         {
             result.setInfo(juce::translate("Save Template..."), juce::translate("Save as a template"), "Application", 0);
-            result.setActive(!docAcsr.getAccessors<Document::AcsrType::tracks>().empty());
+            result.setActive(!docAcsr.getAcsrs<Document::AcsrType::tracks>().empty());
         }
             break;
             
@@ -264,13 +264,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::playheadPosition>() > 0.0);
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && docAcsr.getAttr<Document::AttrType::runningPlayheadPosition>() > 0.0);
         }
             break;
             
         case CommandIDs::ZoomIn:
         {
-            auto const& zoomAcsr = docAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
+            auto const& zoomAcsr = docAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
@@ -278,7 +278,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             break;
         case CommandIDs::ZoomOut:
         {
-            auto const& zoomAcsr = docAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
+            auto const& zoomAcsr = docAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
@@ -421,7 +421,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::TransportRewindPlayHead:
         {
-            auto constexpr attr = Document::AttrType::playheadPosition;
+            auto constexpr attr = Document::AttrType::runningPlayheadPosition;
             auto& documentAcsr = Instance::get().getDocumentAccessor();
             auto const isPlaying = documentAcsr.getAttr<Document::AttrType::isPlaybackStarted>();
             if(isPlaying)
@@ -439,7 +439,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::ZoomIn:
         {
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            auto& zoomAcsr = documentAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
+            auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / -100.0), NotificationType::synchronous);
@@ -448,7 +448,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::ZoomOut:
         {
             auto& documentAcsr = Instance::get().getDocumentAccessor();
-            auto& zoomAcsr = documentAcsr.getAccessor<Document::AcsrType::timeZoom>(0);
+            auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / 100.0), NotificationType::synchronous);

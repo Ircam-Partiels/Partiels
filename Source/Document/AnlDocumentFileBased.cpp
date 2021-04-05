@@ -11,6 +11,7 @@ Document::AttrContainer const& Document::FileBased::getDefaultContainer()
         , {1.0}
         , {false}
         , {0.0}
+        , {0.0}
         , {144}
         , {144}
         , {}

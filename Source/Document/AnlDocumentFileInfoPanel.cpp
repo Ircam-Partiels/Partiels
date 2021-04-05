@@ -67,7 +67,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
             case AttrType::isLooping:
             case AttrType::gain:
             case AttrType::isPlaybackStarted:
-            case AttrType::playheadPosition:
+            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::layout:

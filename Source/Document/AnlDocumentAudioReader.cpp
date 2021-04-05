@@ -235,6 +235,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                     source->setPlaying(acsr.getAttr<AttrType::isPlaybackStarted>());
                     source->setLooping(acsr.getAttr<AttrType::isLooping>());
                     source->setGain(static_cast<float>(acsr.getAttr<AttrType::gain>()));
+                    source->setStartPlayheadPosition(acsr.getAttr<AttrType::startPlayheadPosition>());
                     source->prepareToPlay(mSamplesPerBlockExpected, mSampleRate);
                 }
                 mSourceManager.setInstance(source);
@@ -280,7 +281,16 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 }
             }
                 break;
-            case AttrType::playheadPosition:
+            case AttrType::startPlayheadPosition:
+            {
+                auto instance = mSourceManager.getInstance();
+                if(instance != nullptr)
+                {
+                    instance->setStartPlayheadPosition(acsr.getAttr<AttrType::startPlayheadPosition>());
+                }
+            }
+                break;
+            case AttrType::runningPlayheadPosition:
             case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::layout:
@@ -338,7 +348,7 @@ void Document::AudioReader::timerCallback()
     auto instance = mSourceManager.getInstance();
     if(instance != nullptr)
     {
-        mAccessor.setAttr<AttrType::playheadPosition>(instance->getReadPlayheadPosition(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::runningPlayheadPosition>(instance->getReadPlayheadPosition(), NotificationType::synchronous);
         mAccessor.setAttr<AttrType::isPlaybackStarted>(instance->isPlaying(), NotificationType::synchronous);
     }
 }
