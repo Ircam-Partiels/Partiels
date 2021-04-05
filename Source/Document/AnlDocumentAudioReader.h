@@ -42,6 +42,7 @@ namespace Document
             void setPlaying(bool shouldPlay);
             void setLooping(bool shouldLoop);
             void setGain(float gain);
+            void setStartPlayheadPosition(double position);
             
             double getSampleRate() const;
             bool isPlaying() const;
@@ -76,6 +77,7 @@ namespace Document
             void setPlaying(bool shouldPlay);
             void setLooping(bool shouldLoop);
             void setGain(float gain);
+            void setStartPlayheadPosition(double position);
             
             bool isPlaying() const;
             double getReadPlayheadPosition() const;

@@ -143,6 +143,12 @@ void Document::AudioReader::Source::setGain(float gain)
     mVolumeTargetValue = gain;
 }
 
+void Document::AudioReader::Source::setStartPlayheadPosition(double position)
+{
+    auto const sampleRate = mAudioFormatReader->sampleRate > 0.0 ? mAudioFormatReader->sampleRate : 44100.0;
+    mStartPosition.store(static_cast<juce::int64>(position * sampleRate));
+}
+
 Document::AudioReader::ResamplingSource::ResamplingSource(std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mSource(std::move(audioFormatReader))
 {
@@ -194,6 +200,11 @@ void Document::AudioReader::ResamplingSource::setLooping(bool shouldLoop)
 void Document::AudioReader::ResamplingSource::setGain(float gain)
 {
     mSource.setGain(gain);
+}
+
+void Document::AudioReader::ResamplingSource::setStartPlayheadPosition(double position)
+{
+    mSource.setStartPlayheadPosition(position);
 }
 
 Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
