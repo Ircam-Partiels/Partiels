@@ -101,6 +101,15 @@ file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.h)
 
+file(GLOB TransportSources
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportAudioReader.cpp
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportAudioReader.h
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportDisplay.cpp
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportDisplay.h
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportModel.h
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadContainer.cpp
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadContainer.h)
+
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.h
@@ -205,6 +214,7 @@ file(GLOB TranslationsSources
 source_group("Source/Global" FILES ${GlobalSources})
 source_group("Source/Misc" FILES ${MiscSources})
 source_group("Source/Zoom" FILES ${ZoomSources})
+source_group("Source/Transport" FILES ${TransportSources})
 source_group("Source/Plugin" FILES ${PluginSources})
 source_group("Source/Track" FILES ${TrackSources})
 source_group("Source/Group" FILES ${GroupSources})
@@ -212,7 +222,7 @@ source_group("Source/Document" FILES ${DocumentSources})
 source_group("Source/Application" FILES ${ApplicationSources})
 source_group("Source/Translations" FILES ${TranslationsSources})
 
-set(PartielsSources ${MiscSources} ${ZoomSources} ${PluginSources} ${TrackSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
+set(PartielsSources ${MiscSources} ${ZoomSources} ${TransportSources} ${PluginSources} ${TrackSources} ${GroupSources} ${DocumentSources} ${ApplicationSources})
 target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
 target_sources(PartielsTest PRIVATE ${PartielsSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
