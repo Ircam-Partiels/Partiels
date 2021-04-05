@@ -177,7 +177,7 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioSettings.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAudioSettings.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.cpp
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationProperties.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationCommandTarget.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInterface.cpp
