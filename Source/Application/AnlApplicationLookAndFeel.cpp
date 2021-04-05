@@ -43,6 +43,9 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Zoom::Ruler::ColourIds::selectionColourId, thumbColour);
     setColour(Zoom::Playhead::ColourIds::playheadColourId, thumbColour);
     
+    setColour(Transport::PlayheadContainer::ColourIds::startPlayheadColourId, textColour);
+    setColour(Transport::PlayheadContainer::ColourIds::runningPlayheadColourId, thumbColour);
+    
     setColour(Track::Thumbnail::ColourIds::textColourId, textColour);
     setColour(Track::Section::ColourIds::sectionColourId, backgroundColour.darker());
     
