@@ -319,7 +319,7 @@ void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
         auto const font = getLabelFont(label);
         g.setFont(font);
         
-        auto const caretWidth = isEditable ? 3 : 0;
+        auto const caretWidth = label.isEditable() ? 3 : 0;
         auto const textArea = getLabelBorderSize(label).subtractedFrom(label.getLocalBounds()).withTrimmedRight(caretWidth);
         
         g.drawFittedText(label.getText(), textArea, label.getJustificationType(), std::max(1, static_cast<int>(std::ceil(static_cast<float>(textArea.getHeight()) / font.getHeight()))), label.getMinimumHorizontalScale());
