@@ -25,6 +25,17 @@ NumberField::NumberField()
             editor->moveCaretToTop(false);
             editor->moveCaretToEnd(true);
         }
+        if(onEditorShow != nullptr)
+        {
+            onEditorShow();
+        }
+    };
+    mLabel.onEditorHide = [&]()
+    {
+        if(onEditorHide != nullptr)
+        {
+            onEditorHide();
+        }
     };
     mLabel.onTextChange = [&]()
     {
@@ -175,6 +186,26 @@ juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String c
         getLookAndFeel().playAlertSound();
     }
     return newInput.retainCharacters("-0123456789.");
+}
+
+bool NumberField::isBeingEdited() const
+{
+    return mLabel.isBeingEdited();
+}
+
+void NumberField::setEditable(bool editOnSingleClick, bool editOnDoubleClick, bool lossOfFocusDiscards)
+{
+    mLabel.setEditable(editOnSingleClick, editOnDoubleClick, lossOfFocusDiscards);
+}
+
+juce::Font NumberField::getFont() const noexcept
+{
+    return mLabel.getFont();
+}
+
+void NumberField::setFont(juce::Font const& newFont)
+{
+    mLabel.setFont(newFont);
 }
 
 void NumberField::resized()

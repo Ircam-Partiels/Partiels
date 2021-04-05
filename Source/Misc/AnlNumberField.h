@@ -34,6 +34,14 @@ public:
 
     std::function<void(double)> onValueChanged = nullptr;
     
+    // Forward to internal juce::Label
+    bool isBeingEdited() const;
+    void setEditable(bool editOnSingleClick, bool editOnDoubleClick, bool lossOfFocusDiscards);
+    juce::Font getFont() const noexcept;
+    void setFont(juce::Font const& newFont);
+    std::function<void()> onEditorShow = nullptr;
+    std::function<void()> onEditorHide = nullptr;
+    
     // juce::Component
     void resized() override;
     
