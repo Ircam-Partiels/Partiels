@@ -89,4 +89,4 @@ ANALYSE_FILE_END
 template<typename T, template<typename...> class Ref> struct is_specialization : std::false_type {};
 template<template<typename...> class Ref, typename... Args> struct is_specialization<Ref<Args...>, Ref> : std::true_type {};
 
-constexpr std::size_t operator ""_z (unsigned long long n) { return n; }
+constexpr std::size_t operator ""_z (unsigned long long n) { return static_cast<std::size_t>(n); }
