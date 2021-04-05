@@ -11,6 +11,7 @@
 #include "AnlDraggableTable.h"
 #include "AnlDecorator.h"
 #include "AnlFloatingWindow.h"
+#include "AnlHMSmsField.h"
 #include "AnlIconManager.h"
 #include "AnlLoadingCircle.h"
 #include "AnlMessageWindow.h"

@@ -56,6 +56,8 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlIconManager.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlFloatingWindow.h
+    ${SOURCES_DIRECTORY}/Misc/AnlHMSmsField.cpp
+    ${SOURCES_DIRECTORY}/Misc/AnlHMSmsField.h
     ${SOURCES_DIRECTORY}/Misc/AnlChrono.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlChrono.h
     ${SOURCES_DIRECTORY}/Misc/AnlColouredPanel.cpp
