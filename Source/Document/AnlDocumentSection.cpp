@@ -153,9 +153,9 @@ Document::Section::GroupContainer::~GroupContainer()
 
 void Document::Section::GroupContainer::resized()
 {
-    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
-    mResizerBar.setBounds(left, 0, 2, bounds.getHeight());
+    mResizerBar.setBounds(left, 0, 2, getHeight());
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mGroupSection.setBounds(bounds.removeFromTop(mGroupSection.getHeight()));
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
 }
