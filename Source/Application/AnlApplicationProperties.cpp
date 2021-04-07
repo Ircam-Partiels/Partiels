@@ -85,7 +85,7 @@ void Application::Properties::saveToFile(PropertyType type)
             break;
         case PropertyType::PluginList:
         {
-            writeTo(Instance::get().getPluginListAccessor().toXml("PluginList"), "pluginlist.settings");
+            writeTo(Instance::get().getPluginListAccessor().toXml("PluginList"), "plugin.settings");
         }
             break;
         case PropertyType::AudioSetup:
@@ -93,7 +93,7 @@ void Application::Properties::saveToFile(PropertyType type)
             auto xml = Instance::get().getAudioDeviceManager().createStateXml();
             if(xml != nullptr)
             {
-                writeTo(std::move(xml), "audiosetup.settings");
+                writeTo(std::move(xml), "audio.settings");
             }
         }
             break;
@@ -117,7 +117,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             break;
         case PropertyType::PluginList:
         {
-            auto xml = juce::parseXML(getFile("pluginlist.settings"));
+            auto xml = juce::parseXML(getFile("plugin.settings"));
             if(xml != nullptr)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
@@ -127,7 +127,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             break;
         case PropertyType::AudioSetup:
         {
-            auto xml = juce::parseXML(getFile("audiosetup.settings"));
+            auto xml = juce::parseXML(getFile("audio.settings"));
             auto& manager = Instance::get().getAudioDeviceManager();
             manager.initialise(0, sMaxIONumber, xml.get(), true);
         }
