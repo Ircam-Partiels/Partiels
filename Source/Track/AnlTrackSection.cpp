@@ -2,9 +2,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, juce::Component& separator)
+Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, juce::Component& separator)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mTransportAccessor(transportAcsr)
 , mSeparator(separator)
 {
     mValueRuler.onDoubleClick = [&]()

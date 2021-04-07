@@ -3,9 +3,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
+, mTransportAccessor(transportAccessor)
 {
     setInterceptsMouseClicks(false, false);
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -398,6 +399,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
+, mTransportPlayheadContainer(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
 {
     addAndMakeVisible(mPlot);
     mTooltip.setEditable(false);
@@ -405,7 +407,9 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     mTooltip.setInterceptsMouseClicks(false, false);
     mTooltip.setComponentEffect(&mDropShadowEffect);
     addChildComponent(mTooltip);
-    setInterceptsMouseClicks(true, true);
+    setInterceptsMouseClicks(true, false);
+    addAndMakeVisible(mTransportPlayheadContainer);
+    addMouseListener(&mTransportPlayheadContainer, false);
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
@@ -472,6 +476,7 @@ void Track::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
+    mTransportPlayheadContainer.setBounds(bounds);
     mTooltip.setBounds(0, 0, 200, 20);
 }
 

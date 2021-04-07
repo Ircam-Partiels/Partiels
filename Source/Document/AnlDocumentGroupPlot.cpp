@@ -19,6 +19,8 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
         });
         
         removeAllChildren();
+        auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+        auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
         for(auto const& identifier : layout)
         {
             auto plotIt = mPlots.find(identifier);
@@ -30,7 +32,7 @@ Document::GroupPlot::GroupPlot(Accessor& accessor)
                 });
                 if(trackIt != trackAcsrs.cend())
                 {
-                    auto plot = std::make_unique<Track::Plot>(*trackIt, mAccessor.getAcsr<AcsrType::timeZoom>());
+                    auto plot = std::make_unique<Track::Plot>(*trackIt, timeZoomAcsr, transportAcsr);
                     anlStrongAssert(plot != nullptr);
                     if(plot != nullptr)
                     {

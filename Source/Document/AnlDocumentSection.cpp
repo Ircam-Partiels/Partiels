@@ -66,8 +66,9 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
             {
                 auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
                 auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+                auto& transport = mAccessor.getAcsr<AcsrType::transport>();
                 
-                auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, mResizerBar);
+                auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, transport, mResizerBar);
                 anlStrongAssert(newSection != nullptr);
                 if(newSection != nullptr)
                 {
@@ -232,7 +233,7 @@ Document::Section::Section(Accessor& accessor)
     mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, true, false);
     mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
-    addMouseListener(&mTransportPlayheadContainer, true);
+//    addMouseListener(&mTransportPlayheadContainer, true);
     setSize(480, 200);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mViewport);

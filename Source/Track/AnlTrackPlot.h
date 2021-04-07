@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlTrackModel.h"
+#include "../Transport/AnlTransportPlayheadContainer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +11,7 @@ namespace Track
     : public juce::Component
     {
     public:
-        Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
+        Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
         ~Plot() override;
         
         // juce::Component
@@ -37,7 +38,7 @@ namespace Track
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener;
             Zoom::Accessor::Listener mTimeZoomListener;
-            
+            Transport::PlayheadContainer mTransportPlayheadContainer;
             juce::Label mTooltip;
             juce::DropShadowEffect mDropShadowEffect;
         };
@@ -51,6 +52,7 @@ namespace Track
         
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
+        Transport::Accessor& mTransportAccessor;
         Zoom::Accessor::Listener mTimeZoomListener;
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;
