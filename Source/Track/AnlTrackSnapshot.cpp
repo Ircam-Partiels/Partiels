@@ -1,5 +1,6 @@
 #include "AnlTrackSnapshot.h"
 #include "AnlTrackTools.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -339,44 +340,9 @@ void Track::Snapshot::Overlay::paint(juce::Graphics& g)
 void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     auto const name = mAccessor.getAttr<AttrType::name>();
-    auto getTooltip = [&]() -> juce::String
-    {
-        auto const results = mAccessor.getAttr<AttrType::results>();
-        auto const& output = mAccessor.getAttr<AttrType::description>().output;
-        if(results == nullptr || results->empty())
-        {
-            return "";
-        }
-        auto const time = mAccessor.getAttr<AttrType::time>();
-        if(output.hasFixedBinCount)
-        {
-            switch(output.binCount)
-            {
-                case 0:
-                {
-                    return Tools::getMarkerText(*results, output, time);
-                }
-                    break;
-                case 1:
-                {
-                    return Tools::getSegmentText(*results, output, time);
-                }
-                    break;
-                default:
-                {
-                    auto const& binVisibleRange = mAccessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
-                    auto const y = static_cast<float>(getHeight() - 1 - event.y) / static_cast<float>(getHeight());
-                    auto const bin = static_cast<size_t>(std::floor(y * binVisibleRange.getLength() + binVisibleRange.getStart()));
-                    auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
-                    return binName + " • " + Tools::getGridText(*results, output, time, bin);
-                }
-                    break;
-            }
-        }
-        return Tools::getSegmentText(*results, output, time);
-    };
-    
-    auto const tip = getTooltip();
+    auto const time = mAccessor.getAttr<AttrType::time>();
+    auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
+    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
     setTooltip(name + ": " + tip);
     mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
 }
