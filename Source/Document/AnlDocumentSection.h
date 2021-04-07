@@ -54,8 +54,6 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Transport::PlayheadContainer mTransportPlayheadContainer;
-        
         Zoom::Ruler mZoomTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         
         GroupContainer mGroupContainer {mAccessor};

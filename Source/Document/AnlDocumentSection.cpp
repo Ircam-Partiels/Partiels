@@ -163,7 +163,6 @@ void Document::Section::GroupContainer::resized()
 
 Document::Section::Section(Accessor& accessor)
 : mAccessor(accessor)
-, mTransportPlayheadContainer(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 {
     mZoomTimeRuler.setPrimaryTickInterval(0);
     mZoomTimeRuler.setTickReferenceValue(0.0);
@@ -204,7 +203,6 @@ Document::Section::Section(Accessor& accessor)
             case AcsrType::tracks:
             {
                 auto const numTracks = acsr.getNumAcsr<AcsrType::tracks>();
-                mTransportPlayheadContainer.setVisible(numTracks > 0);
                 mZoomTimeRuler.setVisible(numTracks > 0);
                 mViewport.setVisible(numTracks > 0);
                 mZoomTimeScrollBar.setVisible(numTracks > 0);
@@ -232,13 +230,10 @@ Document::Section::Section(Accessor& accessor)
     
     mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, true, false);
-    mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
-//    addMouseListener(&mTransportPlayheadContainer, true);
     setSize(480, 200);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mZoomTimeScrollBar);
-    addAndMakeVisible(mTransportPlayheadContainer);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -257,8 +252,6 @@ void Document::Section::resized()
     
     mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
     mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    auto const transportHeight = std::min(bounds.getHeight(), mGroupContainer.getHeight()) + 14;
-    mTransportPlayheadContainer.setBounds(left + 2, bounds.getY(), right - left + 4, transportHeight);
     bounds.removeFromTop(14);
     mGroupContainer.setBounds(0, 0, width, mGroupContainer.getHeight());
     mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
