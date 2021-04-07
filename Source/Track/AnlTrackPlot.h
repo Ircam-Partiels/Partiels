@@ -37,7 +37,6 @@ namespace Track
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener;
-            Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadContainer mTransportPlayheadContainer;
             juce::Label mTooltip;
             juce::DropShadowEffect mDropShadowEffect;

@@ -1,5 +1,6 @@
 #include "AnlTrackPlot.h"
 #include "AnlTrackTools.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -441,36 +442,12 @@ Track::Plot::Overlay::Overlay(Plot& plot)
         }
     };
     
-    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType const attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case Zoom::AttrType::globalRange:
-            case Zoom::AttrType::minimumLength:
-                break;
-            case Zoom::AttrType::visibleRange:
-            {
-                for(auto const& mouseSource : juce::Desktop::getInstance().getMouseSources())
-                {
-                    if(mouseSource.getComponentUnderMouse() == this && (mouseSource.isDragging() || !mouseSource.isTouch()))
-                    {
-                        mouseSource.triggerFakeMove();
-                    }
-                }
-            }
-                break;
-        }
-    };
-    
-    mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Track::Plot::Overlay::~Overlay()
 {
     mAccessor.removeListener(mListener);
-    mTimeZoomAccessor.removeListener(mTimeZoomListener);
 }
 
 void Track::Plot::Overlay::resized()
