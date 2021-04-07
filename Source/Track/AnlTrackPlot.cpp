@@ -467,6 +467,12 @@ void Track::Plot::Overlay::paint(juce::Graphics& g)
 
 void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
+    if(!getLocalBounds().contains(event.x, event.y))
+    {
+        mTooltip.setVisible(false);
+        return;
+    }
+    mTooltip.setVisible(true);
     auto const name = mAccessor.getAttr<AttrType::name>();
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
     auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
@@ -476,7 +482,6 @@ void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 
 void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    mTooltip.setVisible(true);
     mouseMove(event);
 }
 
