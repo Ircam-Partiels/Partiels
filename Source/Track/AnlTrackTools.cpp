@@ -116,6 +116,39 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
     return juce::String(it->values[bin], 2) + label;
 }
 
+juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size_t bin)
+{
+    auto const results = acsr.getAttr<AttrType::results>();
+    auto const& output = acsr.getAttr<AttrType::description>().output;
+    if(results == nullptr || results->empty())
+    {
+        return "-";
+    }
+    if(output.hasFixedBinCount)
+    {
+        switch(output.binCount)
+        {
+            case 0:
+            {
+                return Tools::getMarkerText(*results, output, time);
+            }
+                break;
+            case 1:
+            {
+                return Tools::getSegmentText(*results, output, time);
+            }
+                break;
+            default:
+            {
+                auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
+                return binName + " • " +  Tools::getGridText(*results, output, time, bin);
+            }
+                break;
+        }
+    }
+    return Tools::getSegmentText(*results, output, time);
+}
+
 std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const& description)
 {
     auto const& output = description.output;
