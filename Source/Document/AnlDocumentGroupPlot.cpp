@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 Document::GroupPlot::GroupPlot(Accessor& accessor)
 : mAccessor(accessor)
 {
+    setInterceptsMouseClicks(false, false);
     auto updateLayout = [&]()
     {
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -159,9 +160,8 @@ void Document::GroupPlot::Overlay::mouseMove(juce::MouseEvent const& event)
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
 
     auto text = Format::secondsToString(time);
-    for(auto it = layout.crbegin(); it != layout.crend(); ++it)
+    for(auto const& identifier : layout)
     {
-        auto const identifier = *it;
         auto trackIt = std::find_if(tracks.cbegin(), tracks.cend(), [&](auto const& trackAcsr)
         {
             return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
@@ -172,13 +172,11 @@ void Document::GroupPlot::Overlay::mouseMove(juce::MouseEvent const& event)
             auto const name = trackAcsr.getAttr<Track::AttrType::name>();
             
             auto const bin = Zoom::Tools::getScaledValueFromHeight(trackAcsr.getAcsr<Track::AcsrType::binZoom>(), *this, event.y);
-            auto const tip = Format::secondsToString(time) + " • "+ Track::Tools::getResultText(trackAcsr, time, static_cast<size_t>(std::floor(bin)));
-            text += "\n" + tip;
+            auto const tip = Track::Tools::getResultText(trackAcsr, time, static_cast<size_t>(std::floor(bin)));
+            text += "\n" + name + ": " + tip;
         }
     }
 
-//    auto const tip = Format::secondsToString(time) + " • "+  getTooltip();
-//    setTooltip(name + ": " + tip);
     mTooltip.setText(text, juce::NotificationType::dontSendNotification);
 }
 

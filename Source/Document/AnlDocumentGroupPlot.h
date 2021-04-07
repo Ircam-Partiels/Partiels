@@ -20,7 +20,6 @@ namespace Document
         
         class Overlay
         : public juce::Component
-        , public juce::SettableTooltipClient
         {
         public:
             Overlay(GroupPlot& groupPlot);
