@@ -154,8 +154,13 @@ void Document::GroupPlot::Overlay::resized()
 
 void Document::GroupPlot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    auto const time = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::timeZoom>(), *this, event.x);
+    if(!getLocalBounds().contains(event.x, event.y))
+    {
+        mTooltip.setVisible(false);
+        return;
+    }
     
+    auto const time = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::timeZoom>(), *this, event.x);
     auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
 
@@ -182,7 +187,6 @@ void Document::GroupPlot::Overlay::mouseMove(juce::MouseEvent const& event)
 
 void Document::GroupPlot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    mTooltip.setVisible(true);
     mouseMove(event);
 }
 
