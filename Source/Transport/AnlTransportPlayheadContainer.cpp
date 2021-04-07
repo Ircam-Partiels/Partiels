@@ -1,4 +1,5 @@
 #include "AnlTransportPlayheadContainer.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -14,16 +15,16 @@ Transport::PlayheadContainer::PlayheadContainer(Accessor& accessor, Zoom::Access
                 break;
             case AttrType::startPlayhead:
             {
-                repaint(toPixel(mStartPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
                 mStartPlayhead = acsr.getAttr<AttrType::startPlayhead>();
-                repaint(toPixel(mStartPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
             }
                 break;
             case AttrType::runningPlayhead:
             {
-                repaint(toPixel(mRunningPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
                 mRunningPlayhead = acsr.getAttr<AttrType::runningPlayhead>();
-                repaint(toPixel(mRunningPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
             }
                 break;
             case AttrType::looping:
@@ -62,37 +63,15 @@ Transport::PlayheadContainer::~PlayheadContainer()
 void Transport::PlayheadContainer::paint(juce::Graphics& g)
 {
     g.setColour(findColour(ColourIds::startPlayheadColourId));
-    g.fillRect(toPixel(mStartPlayhead), 0, 1, getHeight());
+    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
     g.setColour(findColour(ColourIds::runningPlayheadColourId));
-    g.fillRect(toPixel(mRunningPlayhead), 0, 1, getHeight());
+    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
 }
 
 void Transport::PlayheadContainer::mouseDown(juce::MouseEvent const& event)
 {
     auto const relEvent = event.getEventRelativeTo(this);
-    mAccessor.setAttr<AttrType::startPlayhead>(toTime(relEvent.x), NotificationType::synchronous);
-}
-
-int Transport::PlayheadContainer::toPixel(double time) const
-{
-    auto const range = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
-    auto const width = getWidth();
-    if(width <= 0 || range.isEmpty())
-    {
-        return 0;
-    }
-    return static_cast<int>(std::round((time - range.getStart()) / range.getLength() * static_cast<double>(width)));
-}
-
-double Transport::PlayheadContainer::toTime(int pixel) const
-{
-    auto const range = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
-    auto const width = getWidth();
-    if(width <= 0 || range.isEmpty())
-    {
-        return 0.0;
-    }
-    return static_cast<double>(pixel) / static_cast<double>(width) * range.getLength() + range.getStart();
+    mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, relEvent.x), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

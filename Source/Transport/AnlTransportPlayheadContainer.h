@@ -25,9 +25,6 @@ namespace Transport
         void mouseDown(juce::MouseEvent const& event) override;
         
     private:
-        int toPixel(double time) const;
-        double toTime(int pixel) const;
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         Zoom::Accessor& mZoomAccessor;
