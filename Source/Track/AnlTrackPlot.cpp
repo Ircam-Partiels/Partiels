@@ -471,7 +471,6 @@ void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
     auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
     auto const tip = Format::secondsToString(time) + " • "+  Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
-    setTooltip(name + ": " + tip);
     mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
 }
 
