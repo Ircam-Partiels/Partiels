@@ -39,7 +39,8 @@ namespace Document
         Decorator mSnapshotDecoration {mSnapshot, 1, 4.0f};
         
         GroupPlot mPlot {mAccessor};
-        Decorator mPlotDecoration {mPlot, 1, 4.0f};
+        GroupPlot::Overlay mPlotOverlay {mPlot};
+        Decorator mPlotDecoration {mPlotOverlay, 1, 4.0f};
         
         Zoom::Accessor zoomAcsr;
         Zoom::Ruler mRuler {zoomAcsr, Zoom::Ruler::Orientation::vertical};
