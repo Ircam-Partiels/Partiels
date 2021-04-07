@@ -100,6 +100,9 @@ Application::AudioSettings::AudioSettings()
 })
 , mPropertyDriverPanel("Audio Device Panel...", "Show audio device panel", []()
 {
+#ifdef JUCE_MAC
+    juce::File("/System/Applications/Utilities/Audio MIDI Setup.app").startAsProcess();
+#else
     auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
     auto* audioDevice = audioDeviceManager.getCurrentAudioDevice();
     if(audioDevice != nullptr && audioDevice->hasControlPanel())
@@ -111,6 +114,7 @@ Application::AudioSettings::AudioSettings()
             audioDeviceManager.restartLastAudioDevice();
         }
     }
+#endif
 })
 {
     addAndMakeVisible(mPropertyDriver);
@@ -204,7 +208,9 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
     mPropertySampleRate.setEnabled(currentAudioDevice != nullptr);
     mPropertyBufferSize.setEnabled(currentAudioDevice != nullptr);
     mPropertyBufferSizeNumber.setEnabled(currentAudioDevice != nullptr);
-    mPropertyDriverPanel.setVisible(currentAudioDevice != nullptr);
+#ifndef JUCE_MAC
+    mPropertyDriverPanel.setEnabled(currentAudioDevice != nullptr);
+#endif
     
     if(currentAudioDevice != nullptr)
     {
@@ -246,7 +252,9 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         mPropertyBufferSizeNumber.entry.setValue(static_cast<double>(currentBufferSize), juce::NotificationType::dontSendNotification);
         mPropertyBufferSizeNumber.entry.setTextValueSuffix(" samples (" + juce::String(currentBufferSize * 1000.0 / currentSampleRate, 1) + " ms)");
         
+#ifndef JUCE_MAC
         mPropertyDriverPanel.setVisible(currentAudioDevice->hasControlPanel());
+#endif
     }
     resized();
 }
