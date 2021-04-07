@@ -29,3 +29,5 @@
 - CI/CD
 - https://github.com/taglib/taglib
 - Add Document::Group::Overview
+- Windows Audio Driver ASIO
+- Linux Audio Driver Jack
