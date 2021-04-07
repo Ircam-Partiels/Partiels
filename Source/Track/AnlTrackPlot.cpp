@@ -407,9 +407,10 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     mTooltip.setInterceptsMouseClicks(false, false);
     mTooltip.setComponentEffect(&mDropShadowEffect);
     addChildComponent(mTooltip);
-    setInterceptsMouseClicks(true, false);
     addAndMakeVisible(mTransportPlayheadContainer);
+    mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
     addMouseListener(&mTransportPlayheadContainer, false);
+    setInterceptsMouseClicks(true, true);
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
