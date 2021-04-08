@@ -36,7 +36,8 @@ namespace Document
         Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
         
         GroupSnapshot mSnapshot {mAccessor,};
-        Decorator mSnapshotDecoration {mSnapshot, 1, 4.0f};
+        GroupSnapshot::Overlay mSnapshotOverlay {mSnapshot};
+        Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 4.0f};
         
         GroupPlot mPlot {mAccessor};
         GroupPlot::Overlay mPlotOverlay {mPlot};
