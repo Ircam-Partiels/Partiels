@@ -26,6 +26,8 @@ namespace Document
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
+        void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
+        void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         
     private:
         class GroupContainer

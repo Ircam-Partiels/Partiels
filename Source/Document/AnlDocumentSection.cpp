@@ -229,7 +229,7 @@ Document::Section::Section(Accessor& accessor)
     };
     
     mViewport.setViewedComponent(&mGroupContainer, false);
-    mViewport.setScrollBarsShown(true, false, true, false);
+    mViewport.setScrollBarsShown(true, false, false, false);
     setSize(480, 200);
     addAndMakeVisible(mZoomTimeRuler);
     addAndMakeVisible(mViewport);
@@ -263,6 +263,37 @@ void Document::Section::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     g.setColour(mZoomTimeRuler.findColour(Zoom::Ruler::backgroundColourId));
     g.fillRect(bounds.removeFromTop(mZoomTimeRuler.getHeight()));
+}
+
+void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
+{
+    juce::ignoreUnused(event);
+    auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const offset = static_cast<double>(wheel.deltaX) * visibleRange.getLength();
+    timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+    
+    auto viewportPosition = mViewport.getViewPosition();
+    viewportPosition.y += static_cast<int>(std::round(wheel.deltaY * 14.0f * 16.0f));
+    mViewport.setViewPosition(viewportPosition);
+}
+
+void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
+{
+    juce::ignoreUnused(event);
+    auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    auto const globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+    auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
+    auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const anchor = std::get<1>(timeZoomAcsr.getAttr<Zoom::AttrType::anchor>());
+
+    auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
+    auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
+    
+    auto const minDistance = timeZoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
+    auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
+    auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
+    timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
