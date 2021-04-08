@@ -187,4 +187,24 @@ PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip
     };
 }
 
+PropertyColourButton::PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& title, std::function<void(juce::Colour)> fn)
+: PropertyComponent<ColourButton>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setTitle(title);
+    entry.setTooltip(juce::translate(tooltip));
+    entry.onColourChanged = [=](juce::Colour const& colour)
+    {
+        if(fn != nullptr)
+        {
+            fn(colour);
+        }
+    };
+}
+
+void PropertyColourButton::resized()
+{
+    PropertyComponent<ColourButton>::resized();
+    entry.setBounds(getLocalBounds().removeFromRight(entry.getHeight()).reduced(2));
+}
+
 ANALYSE_FILE_END

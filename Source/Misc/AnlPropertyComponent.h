@@ -2,6 +2,7 @@
 
 #include "AnlBasics.h"
 #include "AnlNumberField.h"
+#include "AnlColourSelector.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -119,6 +120,17 @@ class PropertyList
 public:
     PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn);
     ~PropertyList() override = default;
+};
+
+class PropertyColourButton
+: public PropertyComponent<ColourButton>
+{
+public:
+    PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& title, std::function<void(juce::Colour)> fn);
+    ~PropertyColourButton() override = default;
+    
+    // juce::Component
+    void resized() override;
 };
 
 ANALYSE_FILE_END
