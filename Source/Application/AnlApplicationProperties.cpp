@@ -129,7 +129,11 @@ void Application::Properties::loadFromFile(PropertyType type)
         {
             auto xml = juce::parseXML(getFile("audio.settings"));
             auto& manager = Instance::get().getAudioDeviceManager();
-            manager.initialise(0, sMaxIONumber, xml.get(), true);
+            auto const error = manager.initialise(0, sMaxIONumber, xml.get(), true);
+            if(error.isNotEmpty())
+            {
+                MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", error);
+            }
         }
             break;
     }
