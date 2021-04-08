@@ -45,7 +45,6 @@ file(GLOB MiscSources
     ${SOURCES_DIRECTORY}/Misc/AnlBoundsListener.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlBoundsListener.h
     ${SOURCES_DIRECTORY}/Misc/AnlNotifier.h
-    ${SOURCES_DIRECTORY}/Misc/AnlBroadcaster.h
     ${SOURCES_DIRECTORY}/Misc/AnlAtomicManager.cpp
     ${SOURCES_DIRECTORY}/Misc/AnlAtomicManager.h
     ${SOURCES_DIRECTORY}/Misc/AnlXmlParser.cpp
