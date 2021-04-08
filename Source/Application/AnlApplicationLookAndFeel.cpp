@@ -378,4 +378,24 @@ bool Application::LookAndFeel::isProgressBarOpaque(juce::ProgressBar& progressBa
     return false;
 }
 
+void Application::LookAndFeel::drawTooltip(juce::Graphics& g, juce::String const& text, int width, int height)
+{
+    juce::Rectangle<float> const bounds(static_cast<float>(width), static_cast<float>(height));
+    auto constexpr cornerSize = 5.0f;
+    
+    g.setColour(findColour(juce::TooltipWindow::ColourIds::backgroundColourId));
+    g.fillRoundedRectangle(bounds, cornerSize);
+    
+    g.setColour(findColour(juce::TooltipWindow::ColourIds::outlineColourId));
+    g.drawRoundedRectangle(bounds.reduced(0.5f, 0.5f), cornerSize, 1.0f);
+    
+    juce::AttributedString attributedString;
+    attributedString.setJustification(juce::Justification::centredLeft);
+    attributedString.append(text, juce::Font(13.0f, juce::Font::bold), findColour(juce::TooltipWindow::ColourIds::textColourId));
+    
+    juce::TextLayout tl;
+    tl.createLayoutWithBalancedLineLengths(attributedString, 400.0f);
+    tl.draw(g, bounds.reduced(4.0f, 4.0f));
+}
+
 ANALYSE_FILE_END
