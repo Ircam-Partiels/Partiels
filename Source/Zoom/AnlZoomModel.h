@@ -35,7 +35,7 @@ namespace Zoom
     < Model::Attr<AttrType::globalRange, Range, Model::Flag::basic>
     , Model::Attr<AttrType::minimumLength, double, Model::Flag::basic>
     , Model::Attr<AttrType::visibleRange, Range, Model::Flag::basic>
-    , Model::Attr<AttrType::anchor, std::tuple<double, bool>, Model::Flag::notifying>
+    , Model::Attr<AttrType::anchor, std::tuple<bool, double>, Model::Flag::notifying>
     >;
     
     class Accessor
