@@ -58,7 +58,7 @@ Tooltip::BubbleWindow::BubbleWindow()
     
     if(juce::Desktop::getInstance().getMainMouseSource().canHover())
     {
-        startTimer (20);
+        startTimer(25);
     }
 }
 
@@ -107,6 +107,7 @@ void Tooltip::BubbleWindow::timerCallback()
         setBounds(getLookAndFeel().getTooltipBounds(mTooltip, mousePosition, parentArea));
         setVisible(true);
         addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary | juce::ComponentPeer::windowIgnoresKeyPresses | juce::ComponentPeer::windowIgnoresMouseClicks);
+        repaint();
     }
 }
 
