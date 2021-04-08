@@ -40,8 +40,8 @@ namespace Track
         
         PropertyList mPropertyColourMap;
         PropertySlider mPropertyColourMapAlpha;
-        PropertyTextButton mPropertyForegroundColour;
-        PropertyTextButton mPropertyBackgroundColour;
+        PropertyColourButton mPropertyForegroundColour;
+        PropertyColourButton mPropertyBackgroundColour;
         PropertyList mPropertyValueRangeMode;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;

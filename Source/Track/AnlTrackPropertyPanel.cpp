@@ -89,46 +89,18 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     colours.background = juce::Colours::black.withAlpha(value);
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
-, mPropertyForegroundColour("Foreground Color", "The foreground current color of the graphical renderer.", [&]()
+, mPropertyForegroundColour("Foreground Color", "The foreground current color of the graphical renderer.", "Select the foreground color", [&](juce::Colour const& colour)
 {
-    ColourSelector colourSelector;
-    colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colours>().foreground, juce::NotificationType::dontSendNotification);
-    colourSelector.onColourChanged = [&](juce::Colour const& colour)
-    {
-        auto colours = mAccessor.getAttr<AttrType::colours>();
-        colours.foreground = colour;
-        mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-    };
-    juce::DialogWindow::LaunchOptions options;
-    options.dialogTitle = juce::translate("Select the foreground color");
-    options.content.setNonOwned(&colourSelector);
-    options.componentToCentreAround = this;
-    options.escapeKeyTriggersCloseButton = true;
-    options.useNativeTitleBar = true;
-    options.resizable = false;
-    options.runModal();
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.foreground = colour;
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
 
-, mPropertyBackgroundColour("Background Color", "The background current color of the graphical renderer.", [&]()
+, mPropertyBackgroundColour("Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
 {
-    ColourSelector colourSelector;
-    colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(mAccessor.getAttr<AttrType::colours>().background, juce::NotificationType::dontSendNotification);
-    colourSelector.onColourChanged = [&](juce::Colour const& colour)
-    {
-        auto colours = mAccessor.getAttr<AttrType::colours>();
-        colours.background = colour;
-        mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-    };
-    juce::DialogWindow::LaunchOptions options;
-    options.dialogTitle = juce::translate("Select the background color");
-    options.content.setNonOwned(&colourSelector);
-    options.componentToCentreAround = this;
-    options.escapeKeyTriggersCloseButton = true;
-    options.useNativeTitleBar = true;
-    options.resizable = false;
-    options.runModal();
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.background = colour;
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
 , mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Plugin", "Results", "Manual"}, [&](size_t index)
 {
@@ -397,6 +369,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::colours:
             {
                 auto const colours = acsr.getAttr<AttrType::colours>();
+                mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
+                mPropertyBackgroundColour.entry.setCurrentColour(colours.background, juce::NotificationType::dontSendNotification);
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
                 mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }
