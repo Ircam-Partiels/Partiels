@@ -54,45 +54,6 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
         }
     };
     
-    mAccessor.getAcsr<AcsrType::transport>().onAttrUpdated = [&](Transport::AttrType attribute, NotificationType notification)
-    {
-        auto& transporAcsr = mAccessor.getAcsr<AcsrType::transport>();
-        switch(attribute)
-        {
-            case Transport::AttrType::playback:
-                break;
-            case Transport::AttrType::startPlayhead:
-            {
-                if(!transporAcsr.getAttr<Transport::AttrType::playback>())
-                {
-                    transporAcsr.setAttr<Transport::AttrType::runningPlayhead>(transporAcsr.getAttr<Transport::AttrType::startPlayhead>(), notification);
-                }
-            }
-                break;
-            case Transport::AttrType::runningPlayhead:
-            {
-                auto const time = transporAcsr.getAttr<Transport::AttrType::runningPlayhead>();
-                auto const numAnlAcsrs = mAccessor.getNumAcsr<AcsrType::tracks>();
-                for(size_t i = 0; i < numAnlAcsrs; ++i)
-                {
-                    auto& trackAcsr  = mAccessor.getAcsr<AcsrType::tracks>(i);
-                    trackAcsr.setAttr<Track::AttrType::time>(time, notification);
-                }
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-                auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                if(!range.contains(time))
-                {
-                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
-                }
-            }
-                break;
-            case Transport::AttrType::looping:
-            case Transport::AttrType::loopRange:
-            case Transport::AttrType::gain:
-                break;
-        }
-    };
-    
     mAccessor.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
     {
         juce::ignoreUnused(notification);
@@ -135,6 +96,47 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 break;
             case AcsrType::transport:
             case AcsrType::timeZoom:
+                break;
+        }
+    };
+    
+    auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+    transportAcsr.onAttrUpdated = [&](Transport::AttrType attribute, NotificationType notification)
+    {
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+        switch(attribute)
+        {
+            case Transport::AttrType::playback:
+                break;
+            case Transport::AttrType::startPlayhead:
+            {
+                auto const time = transportAcsr .getAttr<Transport::AttrType::startPlayhead>();
+                zoomAcsr.setAttr<Zoom::AttrType::anchor>(std::make_tuple(false, time), notification);
+                if(!transportAcsr.getAttr<Transport::AttrType::playback>())
+                {
+                    transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(time, notification);
+                }
+            }
+                break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                auto const time = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+                auto const numAnlAcsrs = mAccessor.getNumAcsr<AcsrType::tracks>();
+                for(size_t i = 0; i < numAnlAcsrs; ++i)
+                {
+                    auto& trackAcsr  = mAccessor.getAcsr<AcsrType::tracks>(i);
+                    trackAcsr.setAttr<Track::AttrType::time>(time, notification);
+                }
+                auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                if(!range.contains(time))
+                {
+                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
+                }
+            }
+                break;
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::gain:
                 break;
         }
     };
