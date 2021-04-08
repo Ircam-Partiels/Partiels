@@ -107,8 +107,7 @@ Document::GroupPlot::~GroupPlot()
 
 void Document::GroupPlot::resized()
 {
-    auto bounds = getLocalBounds();
-    
+    auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)
     {
