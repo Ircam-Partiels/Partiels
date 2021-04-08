@@ -182,7 +182,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         mPropertyDriver.entry.addItem(driverName, i + 1);
         if(driverName == currentDriverName)
         {
-            mPropertyDriver.entry.setSelectedItemIndex(i);
+            mPropertyDriver.entry.setSelectedItemIndex(i, juce::NotificationType::dontSendNotification);
         }
     }
     
@@ -198,7 +198,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
             mPropertyOutputDevice.entry.addItem(outputDeviceNames[i], i + 1);
             if(currentAudioDevice != nullptr && outputDeviceNames[i] == currentAudioDevice->getName())
             {
-                mPropertyOutputDevice.entry.setSelectedItemIndex(i);
+                mPropertyOutputDevice.entry.setSelectedItemIndex(i, juce::NotificationType::dontSendNotification);
             }
         }
         mPropertyOutputDevice.entry.addItem(juce::translate("None"), -1);
@@ -224,7 +224,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
             mPropertySampleRate.entry.addItem(juce::String(static_cast<int>(sampleRate)) + "Hz", static_cast<int>(sampleRate));
         }
         mPropertySampleRate.setEnabled(mPropertySampleRate.entry.getNumItems() > 1);
-        mPropertySampleRate.entry.setSelectedId(static_cast<int>(currentSampleRate));
+        mPropertySampleRate.entry.setSelectedId(static_cast<int>(currentSampleRate), juce::NotificationType::dontSendNotification);
         mPropertySampleRate.entry.setTextWhenNothingSelected(juce::String(static_cast<int>(currentSampleRate)) + "Hz");
         
         auto availableBufferSizes = currentAudioDevice->getAvailableBufferSizes();
@@ -238,7 +238,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
             mPropertyBufferSize.entry.addItem(juce::String(bufferSize) + " samples (" + juce::String(bufferSize * 1000.0 / currentSampleRate, 1) + " ms)", bufferSize);
         }
         mPropertyBufferSize.setEnabled(mPropertyBufferSize.entry.getNumItems() > 1);
-        mPropertyBufferSize.entry.setSelectedId(currentBufferSize);
+        mPropertyBufferSize.entry.setSelectedId(currentBufferSize, juce::NotificationType::dontSendNotification);
         mPropertyBufferSize.entry.setTextWhenNothingSelected(juce::String(currentBufferSize) + " samples (" + juce::String(currentBufferSize * 1000.0 / currentSampleRate, 1) + " ms)");
         
         mPropertyBufferSizeNumber.setEnabled(!availableBufferSizes.isEmpty());
