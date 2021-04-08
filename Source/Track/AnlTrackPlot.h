@@ -19,6 +19,7 @@ namespace Track
         
         class Overlay
         : public juce::Component
+        , public Tooltip::BubbleClient
         {
         public:
             Overlay(Plot& plot);
@@ -37,8 +38,6 @@ namespace Track
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener;
             Transport::PlayheadContainer mTransportPlayheadContainer;
-            juce::Label mTooltip;
-            juce::DropShadowEffect mDropShadowEffect;
         };
         
     private:

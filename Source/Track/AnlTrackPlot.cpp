@@ -403,11 +403,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 , mTransportPlayheadContainer(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
 {
     addAndMakeVisible(mPlot);
-    mTooltip.setEditable(false);
-    mTooltip.setJustificationType(juce::Justification::topLeft);
-    mTooltip.setInterceptsMouseClicks(false, false);
-    mTooltip.setComponentEffect(&mDropShadowEffect);
-    addChildComponent(mTooltip);
     addAndMakeVisible(mTransportPlayheadContainer);
     mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
     addMouseListener(&mTransportPlayheadContainer, false);
@@ -432,9 +427,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
                 break;
             case AttrType::colours:
             {
-                auto const colours = acsr.getAttr<AttrType::colours>();
-                mTooltip.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
-                setOpaque(colours.background.isOpaque());
+                setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
             }
                 break;
             case AttrType::processing:
@@ -455,29 +448,24 @@ void Track::Plot::Overlay::resized()
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
     mTransportPlayheadContainer.setBounds(bounds);
-    mTooltip.setBounds(0, 0, 200, 20);
 }
 
 void Track::Plot::Overlay::paint(juce::Graphics& g)
 {
-    auto const& colours = mAccessor.getAttr<AttrType::colours>();
-    g.setColour(colours.background);
-    g.fillRect(getLocalBounds());
+    g.fillAll(mAccessor.getAttr<AttrType::colours>().background);
 }
 
 void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     if(!getLocalBounds().contains(event.x, event.y))
     {
-        mTooltip.setVisible(false);
+        setTooltip("");
         return;
     }
-    mTooltip.setVisible(true);
-    auto const name = mAccessor.getAttr<AttrType::name>();
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
     auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
-    auto const tip = Format::secondsToString(time) + " • "+  Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
-    mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
+    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
+    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
 void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
@@ -488,7 +476,7 @@ void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    mTooltip.setVisible(false);
+    setTooltip("");
 }
 
 ANALYSE_FILE_END
