@@ -52,7 +52,12 @@ namespace Zoom
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
-            if constexpr(type == AttrType::visibleRange)
+            if constexpr(type == AttrType::anchor)
+            {
+                auto const position = getAttr<AttrType::globalRange>().clipValue(std::get<1>(value));
+                Anl::Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::anchor, value_v>(std::make_tuple(std::get<0>(value), position), notification);
+            }
+            else if constexpr(type == AttrType::visibleRange)
             {
                 auto sanitize = [](Range const& visible, Range const& global, double minLength)
                 {
@@ -64,6 +69,7 @@ namespace Zoom
             {
                 Model::Accessor<Accessor, AttrContainer>::setAttr<type, value_v>(value, notification);
                 setAttr<AttrType::visibleRange, Zoom::Range>(getAttr<AttrType::visibleRange>(), notification);
+                setAttr<AttrType::anchor, std::tuple<bool, double>>(getAttr<AttrType::anchor>(), notification);
             }
         }
         
