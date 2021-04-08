@@ -24,7 +24,7 @@ namespace Document
         {
         public:
             Overlay(GroupPlot& groupPlot);
-            ~Overlay() override = default;
+            ~Overlay() override;
             
             // juce::Component
             void resized() override;
@@ -33,8 +33,11 @@ namespace Document
             void mouseExit(juce::MouseEvent const& event) override;
             
         private:
+            void updateTooltip(juce::Point<int> const& pt);
+            
             GroupPlot& mGroupPlot;
             Accessor& mAccessor;
+            Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadContainer mTransportPlayheadContainer;
         };
         

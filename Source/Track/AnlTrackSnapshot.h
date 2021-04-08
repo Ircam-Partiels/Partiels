@@ -31,7 +31,9 @@ namespace Track
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
             
-        private:            
+        private:
+            void updateTooltip(juce::Point<int> const& pt);
+            
             Snapshot& mSnapshot;
             Accessor& mAccessor;
             Accessor::Listener mListener;

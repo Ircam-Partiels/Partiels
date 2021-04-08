@@ -33,10 +33,13 @@ namespace Track
             void mouseExit(juce::MouseEvent const& event) override;
             
         private:
+            void updateTooltip(juce::Point<int> const& pt);
+            
             Plot& mPlot;
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener;
+            Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadContainer mTransportPlayheadContainer;
         };
         

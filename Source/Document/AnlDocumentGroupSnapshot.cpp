@@ -135,13 +135,7 @@ Document::GroupSnapshot::Overlay::Overlay(GroupSnapshot& groupSnapshot)
                 break;
             case Transport::AttrType::runningPlayhead:
             {
-                for(auto const& mouseSource : juce::Desktop::getInstance().getMouseSources())
-                {
-                    if(mouseSource.getComponentUnderMouse() == this && (mouseSource.isDragging() || !mouseSource.isTouch()))
-                    {
-                        mouseSource.triggerFakeMove();
-                    }
-                }
+                updateTooltip(getMouseXYRelative());
             }
                 break;
             case Transport::AttrType::looping:
@@ -170,7 +164,23 @@ void Document::GroupSnapshot::Overlay::paint(juce::Graphics& g)
 
 void Document::GroupSnapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    if(!getLocalBounds().contains(event.x, event.y))
+    updateTooltip({event.x, event.y});
+}
+
+void Document::GroupSnapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
+{
+    updateTooltip({event.x, event.y});
+}
+
+void Document::GroupSnapshot::Overlay::mouseExit(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    setTooltip("");
+}
+
+void Document::GroupSnapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
+{
+    if(!getLocalBounds().contains(pt))
     {
         setTooltip("");
         return;
@@ -186,23 +196,12 @@ void Document::GroupSnapshot::Overlay::mouseMove(juce::MouseEvent const& event)
         {
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
             auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();
-            auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, event.y);
+            auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, pt.y);
             auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)));
             tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
         }
     }
     setTooltip(tooltip);
-}
-
-void Document::GroupSnapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
-{
-    mouseMove(event);
-}
-
-void Document::GroupSnapshot::Overlay::mouseExit(juce::MouseEvent const& event)
-{
-    juce::ignoreUnused(event);
-    setTooltip("");
 }
 
 ANALYSE_FILE_END

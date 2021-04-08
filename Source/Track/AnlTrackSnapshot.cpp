@@ -288,13 +288,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 break;
             case AttrType::time:
             {
-                for(auto const& mouseSource : juce::Desktop::getInstance().getMouseSources())
-                {
-                    if(mouseSource.getComponentUnderMouse() == this && (mouseSource.isDragging() || !mouseSource.isTouch()))
-                    {
-                        mouseSource.triggerFakeMove();
-                    }
-                }
+                updateTooltip(getMouseXYRelative());
             }
                 break;
             case AttrType::colours:
@@ -328,26 +322,31 @@ void Track::Snapshot::Overlay::paint(juce::Graphics& g)
 
 void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    if(!getLocalBounds().contains(event.x, event.y))
-    {
-        setTooltip("");
-        return;
-    }
-    auto const time = mAccessor.getAttr<AttrType::time>();
-    auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
-    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
-    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
+    updateTooltip({event.x, event.y});
 }
 
 void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    mouseMove(event);
+    updateTooltip({event.x, event.y});
 }
 
 void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     setTooltip("");
+}
+
+void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
+{
+    if(!getLocalBounds().contains(pt))
+    {
+        setTooltip("");
+        return;
+    }
+    auto const time = mAccessor.getAttr<AttrType::time>();
+    auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, pt.y);
+    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
+    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
 ANALYSE_FILE_END

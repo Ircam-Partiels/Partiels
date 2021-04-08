@@ -34,6 +34,8 @@ namespace Document
             void mouseExit(juce::MouseEvent const& event) override;
             
         private:
+            void updateTooltip(juce::Point<int> const& pt);
+            
             GroupSnapshot& mGroupSnapshot;
             Accessor& mAccessor;
             Transport::Accessor::Listener mTransportListener;

@@ -435,12 +435,32 @@ Track::Plot::Overlay::Overlay(Plot& plot)
         }
     };
     
+    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
+                break;
+            case Zoom::AttrType::visibleRange:
+            {
+                updateTooltip(getMouseXYRelative());
+            }
+                break;
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+    
+    mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Track::Plot::Overlay::~Overlay()
 {
     mAccessor.removeListener(mListener);
+    mTimeZoomAccessor.removeListener(mTimeZoomListener);
 }
 
 void Track::Plot::Overlay::resized()
@@ -457,26 +477,31 @@ void Track::Plot::Overlay::paint(juce::Graphics& g)
 
 void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    if(!getLocalBounds().contains(event.x, event.y))
-    {
-        setTooltip("");
-        return;
-    }
-    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
-    auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
-    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
-    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
+    updateTooltip({event.x, event.y});
 }
 
 void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    mouseMove(event);
+    updateTooltip({event.x, event.y});
 }
 
 void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     setTooltip("");
+}
+
+void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
+{
+    if(!getLocalBounds().contains(pt))
+    {
+        setTooltip("");
+        return;
+    }
+    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
+    auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, pt.y);
+    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
+    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
 ANALYSE_FILE_END
