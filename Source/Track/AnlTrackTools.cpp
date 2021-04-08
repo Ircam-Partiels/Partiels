@@ -140,8 +140,9 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size
                 break;
             default:
             {
-                auto const binName = "bin" + juce::String(bin) + (bin < output.binNames.size() && !output.binNames[bin].empty() ? ("(" + output.binNames[bin] + ")") : "");
-                return binName + " • " +  Tools::getGridText(*results, output, time, bin);
+                auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
+                auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");
+                return "(" + binName + ") " +  Tools::getGridText(*results, output, time, bin);
             }
                 break;
         }
