@@ -6,6 +6,7 @@ Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
     addAndMakeVisible(mExportButton);
+    addAndMakeVisible(mGroupStateButton);
     addAndMakeVisible(mExpandButton);
     
     mExportButton.setTooltip(juce::translate("Export the analyses"));
@@ -54,6 +55,8 @@ void Document::GroupThumbnail::resized()
     auto const size = bounds.getWidth() - separator;
     mExpandButton.setVisible(bounds.getHeight() >= size);
     mExpandButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mGroupStateButton.setVisible(bounds.getHeight() >= size);
+    mGroupStateButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
     mExportButton.setVisible(bounds.getHeight() >= size);
     mExportButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
 }

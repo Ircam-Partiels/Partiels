@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentGroupButtonState.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -29,6 +30,7 @@ namespace Document
         Accessor::Listener mListener;
         
         juce::ImageButton mExportButton;
+        GroupStateButton mGroupStateButton {mAccessor};
         juce::ImageButton mExpandButton;
     };
 }
