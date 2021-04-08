@@ -168,9 +168,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
     mPropertyDriver.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertyOutputDevice.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertySampleRate.entry.clear(juce::NotificationType::dontSendNotification);
-#ifdef JUCE_MAC
     mPropertyBufferSize.entry.clear(juce::NotificationType::dontSendNotification);
-#endif
     
     // Update drivers list
     auto const currentDriverName = deviceManager.getCurrentAudioDeviceType();
