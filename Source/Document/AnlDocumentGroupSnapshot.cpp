@@ -1,11 +1,14 @@
 #include "AnlDocumentGroupSnapshot.h"
 #include "AnlDocumentTools.h"
+#include "../Zoom/AnlZoomTools.h"
+#include "../Track/AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
 Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
 : mAccessor(accessor)
 {
+    setInterceptsMouseClicks(false, false);
     auto updateLayout = [&]()
     {
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -115,41 +118,49 @@ void Document::GroupSnapshot::resized()
     }
 }
 
-Document::GroupSnapshot::Overlay::Overlay(GroupSnapshot& snapshot)
-: mSnapshot(snapshot)
-, mAccessor(mSnapshot.mAccessor)
+Document::GroupSnapshot::Overlay::Overlay(GroupSnapshot& groupSnapshot)
+: mGroupSnapshot(groupSnapshot)
+, mAccessor(mGroupSnapshot.mAccessor)
 {
-    addAndMakeVisible(mSnapshot);
-    addChildComponent(mProcessingButton);
+    addAndMakeVisible(mGroupSnapshot);
     setInterceptsMouseClicks(true, true);
     
-    mListener.onAttrChanged = [](Accessor const& acsr, AttrType attribute)
+    mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case AttrType::file:
-            case AttrType::layoutHorizontal:
-            case AttrType::layoutVertical:
-            case AttrType::expanded:
-            case AttrType::layout:
+            case Transport::AttrType::playback:
+            case Transport::AttrType::startPlayhead:
+                break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                for(auto const& mouseSource : juce::Desktop::getInstance().getMouseSources())
+                {
+                    if(mouseSource.getComponentUnderMouse() == this && (mouseSource.isDragging() || !mouseSource.isTouch()))
+                    {
+                        mouseSource.triggerFakeMove();
+                    }
+                }
+            }
+                break;
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::gain:
                 break;
         }
     };
-    
-    mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
 }
 
 Document::GroupSnapshot::Overlay::~Overlay()
 {
-    mAccessor.removeListener(mListener);
+    mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
 }
 
 void Document::GroupSnapshot::Overlay::resized()
 {
-    auto bounds = getLocalBounds();
-    mSnapshot.setBounds(bounds);
-    mProcessingButton.setBounds(8, 8, 20, 20);
+    mGroupSnapshot.setBounds(getLocalBounds());
 }
 
 void Document::GroupSnapshot::Overlay::paint(juce::Graphics& g)
@@ -159,7 +170,28 @@ void Document::GroupSnapshot::Overlay::paint(juce::Graphics& g)
 
 void Document::GroupSnapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    juce::ignoreUnused(event);
+    if(!getLocalBounds().contains(event.x, event.y))
+    {
+        setTooltip("");
+        return;
+    }
+    
+    auto const time = mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::runningPlayhead>();
+    auto tooltip = Format::secondsToString(time);
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto const& identifier : layout)
+    {
+        auto trackAcsr = Tools::getTrack(mAccessor, identifier);
+        if(trackAcsr)
+        {
+            auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
+            auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();
+            auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, event.y);
+            auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)));
+            tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
+        }
+    }
+    setTooltip(tooltip);
 }
 
 void Document::GroupSnapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
@@ -170,6 +202,7 @@ void Document::GroupSnapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 void Document::GroupSnapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
+    setTooltip("");
 }
 
 ANALYSE_FILE_END

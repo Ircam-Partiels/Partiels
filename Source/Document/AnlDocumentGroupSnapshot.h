@@ -18,13 +18,12 @@ namespace Document
         // juce::Component
         void resized() override;
         
-    private:
         class Overlay
         : public juce::Component
-        , public juce::SettableTooltipClient
+        , public Tooltip::BubbleClient
         {
         public:
-            Overlay(GroupSnapshot& snapshot);
+            Overlay(GroupSnapshot& groupSnapshot);
             ~Overlay() override;
             
             // juce::Component
@@ -35,15 +34,12 @@ namespace Document
             void mouseExit(juce::MouseEvent const& event) override;
             
         private:
-            GroupSnapshot& mSnapshot;
+            GroupSnapshot& mGroupSnapshot;
             Accessor& mAccessor;
-            Accessor::Listener mListener;
-            
-            LoadingCircle mProcessingButton;
-            std::vector<juce::Label> mTooltips;
-            juce::DropShadowEffect mDropShadowEffect;
+            Transport::Accessor::Listener mTransportListener;
         };
         
+    private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
