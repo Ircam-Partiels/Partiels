@@ -150,6 +150,32 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size
     return Tools::getSegmentText(*results, output, time);
 }
 
+juce::String Track::Tools::getProcessingTooltip(Accessor const& acsr)
+{
+    auto const& state = acsr.getAttr<AttrType::processing>();
+    auto const& warnings = acsr.getAttr<AttrType::warnings>();
+    
+    auto const name = acsr.getAttr<AttrType::name>() + ": ";
+    if(std::get<0>(state))
+    {
+        return name + juce::translate("analysing... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)");
+    }
+    else if(std::get<2>(state))
+    {
+        return name + juce::translate("rendering... (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)");
+    }
+    switch(warnings)
+    {
+        case WarningType::none:
+            return name + juce::translate("analysis and rendering successfully completed!");
+        case WarningType::plugin:
+            return name + juce::translate("analysis failed: the plugin cannot be found or allocated!");
+        case WarningType::state:
+            return name + juce::translate("analysis failed: the step size or the block size might not be supported!");
+    }
+    return name + juce::translate("analysis and rendering successfully completed!");
+}
+
 std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const& description)
 {
     auto const& output = description.output;
