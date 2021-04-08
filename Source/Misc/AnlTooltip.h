@@ -38,6 +38,29 @@ namespace Tooltip
         juce::Label mLabel;
         Server mServer;
     };
+    
+    class BubbleClient
+    : public juce::SettableTooltipClient
+    {
+    };
+    
+    class BubbleWindow
+    : public juce::Component
+    , private juce::Timer
+    {
+    public:
+        BubbleWindow();
+        ~BubbleWindow() override;
+        
+        // juce::Component
+        void paint(juce::Graphics& g) override;
+        
+    private:
+        // juce::Timer
+        void timerCallback() override;
+        
+        juce::String mTooltip;
+    };
 }
 
 ANALYSE_FILE_END
