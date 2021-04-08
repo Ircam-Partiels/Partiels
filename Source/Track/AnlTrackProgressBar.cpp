@@ -1,4 +1,5 @@
 #include "AnlTrackProgressBar.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -69,28 +70,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                     mMessage = getMessage();
                 }
                 
-                auto getTooltip = [&, state, warnings]() -> juce::String
-                {
-                    if(std::get<0>(state))
-                    {
-                        return "analysing... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)";
-                    }
-                    else if(std::get<2>(state))
-                    {
-                        return "rendering... (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)";
-                    }
-                    switch(warnings)
-                    {
-                        case WarningType::none:
-                            return "analysis and rendering successfully completed!";
-                        case WarningType::plugin:
-                            return "analysis failed: the plugin cannot be found or allocated!";
-                        case WarningType::state:
-                            return "analysis failed: the step size or the block size might not be supported!";
-                    }
-                    return "analysis and rendering successfully completed!";
-                };
-                auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + juce::translate(getTooltip());
+                auto const tooltip = Tools::getProcessingTooltip(acsr);
                 mProgressBar.setTooltip(tooltip);
                 setTooltip(tooltip);
                 
