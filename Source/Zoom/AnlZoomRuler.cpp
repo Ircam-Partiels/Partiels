@@ -13,35 +13,26 @@ Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTi
     
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
-        repaint();
-    };
-    
-    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
-    {
-        juce::ignoreUnused(acsr);
-        switch (signal)
+        switch(attribute)
         {
-            case SignalType::moveAnchorBegin:
-                mZooming = true;
-                break;
-            case SignalType::moveAnchorEnd:
-                mZooming = false;
-                break;
-            case SignalType::moveAnchorPerform:
+            case AttrType::globalRange:
+            case AttrType::minimumLength:
+            case AttrType::visibleRange:
+            case AttrType::anchor:
+            {
+                mAnchor = mFromZoomRange(std::get<0>(acsr.getAttr<AttrType::anchor>()));
+                mZooming = std::get<1>(acsr.getAttr<AttrType::anchor>());
+            }
                 break;
         }
-        mAnchor = mFromZoomRange(static_cast<double>(value));
         repaint();
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.addReceiver(mReceiver);
 }
 
 Zoom::Ruler::~Ruler()
 {
-    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 
@@ -186,7 +177,7 @@ void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
     {
         case NavigationMode::translate:
         {
-            mAccessor.sendSignal(SignalType::moveAnchorBegin, {getAnchorPoint()}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::anchor>(std::make_tuple(true, getAnchorPoint()), NotificationType::synchronous);
             event.source.enableUnboundedMouseMovement(true, false);
             mPrevMousePos = event.position;
         }
@@ -195,7 +186,7 @@ void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
             break;
         case NavigationMode::zoom:
         {
-            mAccessor.sendSignal(SignalType::moveAnchorBegin, {getAnchorPoint()}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::anchor>(std::make_tuple(true, getAnchorPoint()), NotificationType::synchronous);
             event.source.enableUnboundedMouseMovement(true, false);
             
             if(onMouseDown != nullptr)
@@ -240,7 +231,7 @@ void Zoom::Ruler::mouseDrag(juce::MouseEvent const& event)
             auto const rangeEnd = mAnchor + (mInitialValueRange.getEnd() - mAnchor) * zoomFactor;
 
             mAccessor.setAttr<AttrType::visibleRange>(Range{mToZoomRange(rangeStart), mToZoomRange(rangeEnd)}, NotificationType::synchronous);
-            mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::anchor>(std::make_tuple(true, mToZoomRange(mAnchor)), NotificationType::synchronous);
         }
             break;
     }
@@ -259,7 +250,7 @@ void Zoom::Ruler::mouseUp(juce::MouseEvent const& event)
     {
         case NavigationMode::translate:
         {
-            mAccessor.sendSignal(SignalType::moveAnchorEnd, {mToZoomRange(mAnchor)}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::anchor>(std::make_tuple(false, mToZoomRange(mAnchor)), NotificationType::synchronous);
         }
             break;
         case NavigationMode::select:
@@ -267,12 +258,12 @@ void Zoom::Ruler::mouseUp(juce::MouseEvent const& event)
             mSelectedValueRange = calculateSelectedValueRange(event);
             mAccessor.setAttr<AttrType::visibleRange>(mSelectedValueRange, NotificationType::synchronous);
             auto const anchorPos = (mSelectedValueRange.getStart() + mSelectedValueRange.getEnd()) / 2.0;
-            mAccessor.sendSignal(SignalType::moveAnchorPerform, {mToZoomRange(anchorPos)}, NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::anchor>(std::make_tuple(true, mToZoomRange(anchorPos)), NotificationType::synchronous);
         }
             break;
         case NavigationMode::zoom:
         {
-            mAccessor.sendSignal(SignalType::moveAnchorEnd, mToZoomRange(mAnchor), NotificationType::synchronous);
+            mAccessor.setAttr<AttrType::anchor>(std::make_tuple(false, mToZoomRange(mAnchor)), NotificationType::synchronous);
         }
             break;
     }

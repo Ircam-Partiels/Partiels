@@ -32,13 +32,6 @@ namespace Zoom
         , anchor
     };
     
-    enum class SignalType
-    {
-          moveAnchorBegin
-        , moveAnchorEnd
-        , moveAnchorPerform
-    };
-    
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::globalRange, Range, Model::Flag::basic>
     , Model::Attr<AttrType::minimumLength, double, Model::Flag::basic>
@@ -48,7 +41,6 @@ namespace Zoom
     
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer>
-    , public Broadcaster<Accessor, SignalType>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
@@ -74,11 +66,6 @@ namespace Zoom
                 Model::Accessor<Accessor, AttrContainer>::setAttr<type, value_v>(value, notification);
                 setAttr<AttrType::visibleRange, Zoom::Range>(getAttr<AttrType::visibleRange>(), notification);
             }
-        }
-        
-        void sendSignal(SignalType signal, juce::var value, NotificationType const notification)
-        {
-            Broadcaster<Accessor, SignalType>::sendSignal(signal, value, notification);
         }
         
     private:

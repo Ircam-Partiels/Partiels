@@ -98,7 +98,6 @@ namespace Zoom
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        Accessor::Receiver mReceiver;
         
         size_t mPrimaryTickInterval = 3;
         double mTickReferenceValue = 0.0;
