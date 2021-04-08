@@ -18,10 +18,11 @@ Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTi
             case AttrType::globalRange:
             case AttrType::minimumLength:
             case AttrType::visibleRange:
+                break;
             case AttrType::anchor:
             {
-                mAnchor = mFromZoomRange(std::get<0>(acsr.getAttr<AttrType::anchor>()));
-                mZooming = std::get<1>(acsr.getAttr<AttrType::anchor>());
+                mZooming = std::get<0>(acsr.getAttr<AttrType::anchor>());
+                mAnchor = mFromZoomRange(std::get<1>(acsr.getAttr<AttrType::anchor>()));
             }
                 break;
         }
