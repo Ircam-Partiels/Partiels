@@ -164,6 +164,8 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentPlayhead.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentFileInfoPanel.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupButtonState.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupButtonState.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupPlot.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupPlot.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupSection.cpp
