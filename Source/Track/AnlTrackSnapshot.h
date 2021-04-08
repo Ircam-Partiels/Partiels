@@ -18,6 +18,7 @@ namespace Track
 
         class Overlay
         : public juce::Component
+        , public Tooltip::BubbleClient
         {
         public:
             Overlay(Snapshot& snapshot);
@@ -34,9 +35,6 @@ namespace Track
             Snapshot& mSnapshot;
             Accessor& mAccessor;
             Accessor::Listener mListener;
-            
-            juce::Label mTooltip;
-            juce::DropShadowEffect mDropShadowEffect;
         };
         
     private:

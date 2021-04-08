@@ -269,11 +269,6 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 , mAccessor(mSnapshot.mAccessor)
 {
     addAndMakeVisible(mSnapshot);
-    mTooltip.setEditable(false);
-    mTooltip.setJustificationType(juce::Justification::topLeft);
-    mTooltip.setInterceptsMouseClicks(false, false);
-    mTooltip.setComponentEffect(&mDropShadowEffect);
-    addChildComponent(mTooltip);
     setInterceptsMouseClicks(true, true);
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
@@ -304,9 +299,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 break;
             case AttrType::colours:
             {
-                auto const colours = acsr.getAttr<AttrType::colours>();
-                mTooltip.setColour(juce::Label::ColourIds::textColourId, colours.foreground);
-                setOpaque(colours.background.isOpaque());
+                setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
             }
                 break;
             case AttrType::warnings:
@@ -325,31 +318,25 @@ Track::Snapshot::Overlay::~Overlay()
 
 void Track::Snapshot::Overlay::resized()
 {
-    auto const bounds = getLocalBounds();
-    mSnapshot.setBounds(bounds);
-    mTooltip.setBounds(0, 0, getWidth(), 40);
+    mSnapshot.setBounds(getLocalBounds());
 }
 
 void Track::Snapshot::Overlay::paint(juce::Graphics& g)
 {
-    auto const& colours = mAccessor.getAttr<AttrType::colours>();
-    g.setColour(colours.background);
-    g.fillRect(getLocalBounds());
+    g.fillAll(mAccessor.getAttr<AttrType::colours>().background);
 }
 
 void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     if(!getLocalBounds().contains(event.x, event.y))
     {
-        mTooltip.setVisible(false);
+        setTooltip("");
         return;
     }
-    mTooltip.setVisible(true);
-    auto const name = mAccessor.getAttr<AttrType::name>();
     auto const time = mAccessor.getAttr<AttrType::time>();
     auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, event.y);
     auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
-    mTooltip.setText(tip, juce::NotificationType::dontSendNotification);
+    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
 void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
@@ -360,7 +347,7 @@ void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    mTooltip.setVisible(false);
+    setTooltip("");
 }
 
 ANALYSE_FILE_END
