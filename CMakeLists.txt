@@ -173,7 +173,9 @@ file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupThumbnail.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentGroupThumbnail.h
     ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.cpp
-    ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h)
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentSection.h
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentTools.cpp
+    ${SOURCES_DIRECTORY}/Document/AnlDocumentTools.h)
 
 file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationAbout.cpp
