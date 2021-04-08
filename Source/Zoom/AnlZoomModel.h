@@ -29,6 +29,7 @@ namespace Zoom
           globalRange
         , minimumLength
         , visibleRange
+        , anchor
     };
     
     enum class SignalType
@@ -42,6 +43,7 @@ namespace Zoom
     < Model::Attr<AttrType::globalRange, Range, Model::Flag::basic>
     , Model::Attr<AttrType::minimumLength, double, Model::Flag::basic>
     , Model::Attr<AttrType::visibleRange, Range, Model::Flag::basic>
+    , Model::Attr<AttrType::anchor, std::tuple<double, bool>, Model::Flag::notifying>
     >;
     
     class Accessor
@@ -52,7 +54,7 @@ namespace Zoom
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
         
         Accessor(Range const range = {0.0, 0.0}, double const length = 0.0)
-        : Accessor(AttrContainer({range}, {length}, {range}))
+        : Accessor(AttrContainer({range}, {length}, {range}, {{range.getStart(), false}}))
         {
         }
         

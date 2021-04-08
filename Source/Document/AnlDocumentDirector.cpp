@@ -155,6 +155,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             }
                 break;
             case Zoom::AttrType::visibleRange:
+            case Zoom::AttrType::anchor:
                 break;
         }
     };

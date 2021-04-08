@@ -41,6 +41,7 @@ Transport::PlayheadContainer::PlayheadContainer(Accessor& accessor, Zoom::Access
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:
             {

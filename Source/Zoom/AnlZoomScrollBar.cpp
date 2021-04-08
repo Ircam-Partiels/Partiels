@@ -37,6 +37,7 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
                 break;
             
             case AttrType::minimumLength:
+            case AttrType::anchor:
                 break;
         }
     };

@@ -441,6 +441,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertyValueRange.entry.setMinAndMaxValues(range.getStart(), range.getEnd(), juce::NotificationType::dontSendNotification);
             }
                 break;
+            case Zoom::AttrType::anchor:
+                break;
         }
     };
     
@@ -455,8 +457,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             }
                 break;
             case Zoom::AttrType::minimumLength:
-                break;
             case Zoom::AttrType::visibleRange:
+            case Zoom::AttrType::anchor:
                 break;
         }
     };

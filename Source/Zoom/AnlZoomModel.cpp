@@ -6,7 +6,6 @@ class ZoomModelUnitTest
 : public juce::UnitTest
 {
 public:
-    
     ZoomModelUnitTest() : juce::UnitTest("Model - Zoom::State", "Model") {}
     
     ~ZoomModelUnitTest() override = default;
@@ -14,7 +13,7 @@ public:
     void runTest() override
     {
         using namespace Zoom;
-        Accessor acsr{{{Range{0.0, 100.0}}, {1.0}, {Range{0.0, 100.0}}}};
+        Accessor acsr(Range{0.0, 100.0}, 1.0);
         
         beginTest("sanitize");
         {
@@ -36,7 +35,7 @@ public:
             expect(xml != nullptr);
             if(xml != nullptr)
             {
-                Accessor acsr2{{{Range{0.0, 100.0}}, {1.0}, {Range{0.0, 100.0}}}};
+                Accessor acsr2(Range{0.0, 100.0}, 1.0);
                 acsr2.fromXml(*xml.get(), "Test", NotificationType::synchronous);
                 expect(acsr.getAttr<AttrType::visibleRange>() == acsr2.getAttr<AttrType::visibleRange>());
                 expect(acsr.getAttr<AttrType::globalRange>() == acsr2.getAttr<AttrType::globalRange>());
