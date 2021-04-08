@@ -1,4 +1,5 @@
 #include "AnlDocumentGroupSnapshot.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,29 +9,22 @@ Document::GroupSnapshot::GroupSnapshot(Accessor& accessor)
     auto updateLayout = [&]()
     {
         auto const& layout = mAccessor.getAttr<AttrType::layout>();
-        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         std::erase_if(mSnapshots, [&](auto const& pair)
         {
-            return std::binary_search(layout.cbegin(), layout.cend(), pair.first) ||
-            std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-            {
-                return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == pair.first;
-            });
+            return !std::binary_search(layout.cbegin(), layout.cend(), pair.first) || !Tools::hasTrack(mAccessor, pair.first);
         });
         
         removeAllChildren();
+        auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         for(auto const& identifier : layout)
         {
             auto plotIt = mSnapshots.find(identifier);
             if(plotIt == mSnapshots.cend())
             {
-                auto trackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                auto trackAcsr = Tools::getTrack(mAccessor, identifier);
+                if(trackAcsr)
                 {
-                    return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
-                });
-                if(trackIt != trackAcsrs.cend())
-                {
-                    auto plot = std::make_unique<Track::Snapshot>(*trackIt, mAccessor.getAcsr<AcsrType::timeZoom>());
+                    auto plot = std::make_unique<Track::Snapshot>(*trackAcsr, timeZoomAcsr);
                     anlStrongAssert(plot != nullptr);
                     if(plot != nullptr)
                     {
