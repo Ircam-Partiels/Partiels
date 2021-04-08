@@ -125,11 +125,6 @@ Document::GroupPlot::Overlay::Overlay(GroupPlot& groupPlot)
 , mTransportPlayheadContainer(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 {
     addAndMakeVisible(mGroupPlot);
-    mTooltip.setEditable(false);
-    mTooltip.setJustificationType(juce::Justification::topLeft);
-    mTooltip.setInterceptsMouseClicks(false, false);
-    mTooltip.setComponentEffect(&mDropShadowEffect);
-    addChildComponent(mTooltip);
     addAndMakeVisible(mTransportPlayheadContainer);
     mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
     addMouseListener(&mTransportPlayheadContainer, false);
@@ -141,40 +136,32 @@ void Document::GroupPlot::Overlay::resized()
     auto const bounds = getLocalBounds();
     mGroupPlot.setBounds(bounds);
     mTransportPlayheadContainer.setBounds(bounds);
-    mTooltip.setBounds(0, 0, 200, getHeight());
 }
 
 void Document::GroupPlot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     if(!getLocalBounds().contains(event.x, event.y))
     {
-        mTooltip.setVisible(false);
+        setTooltip("");
         return;
     }
     
     auto const time = Zoom::Tools::getScaledValueFromWidth(mAccessor.getAcsr<AcsrType::timeZoom>(), *this, event.x);
-    auto const& tracks = mAccessor.getAcsrs<AcsrType::tracks>();
+    auto tooltip = Format::secondsToString(time);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-
-    auto text = Format::secondsToString(time);
     for(auto const& identifier : layout)
     {
-        auto trackIt = std::find_if(tracks.cbegin(), tracks.cend(), [&](auto const& trackAcsr)
+        auto trackAcsr = Tools::getTrack(mAccessor, identifier);
+        if(trackAcsr)
         {
-            return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
-        });
-        if(trackIt != tracks.cend())
-        {
-            auto const& trackAcsr = trackIt->get();
-            auto const name = trackAcsr.getAttr<Track::AttrType::name>();
-            
-            auto const bin = Zoom::Tools::getScaledValueFromHeight(trackAcsr.getAcsr<Track::AcsrType::binZoom>(), *this, event.y);
-            auto const tip = Track::Tools::getResultText(trackAcsr, time, static_cast<size_t>(std::floor(bin)));
-            text += "\n" + name + ": " + tip;
+            auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
+            auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();
+            auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, event.y);
+            auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)));
+            tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
         }
     }
-
-    mTooltip.setText(text, juce::NotificationType::dontSendNotification);
+    setTooltip(tooltip);
 }
 
 void Document::GroupPlot::Overlay::mouseEnter(juce::MouseEvent const& event)
@@ -185,7 +172,7 @@ void Document::GroupPlot::Overlay::mouseEnter(juce::MouseEvent const& event)
 void Document::GroupPlot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    mTooltip.setVisible(false);
+    setTooltip("");
 }
 
 ANALYSE_FILE_END

@@ -20,6 +20,7 @@ namespace Document
         
         class Overlay
         : public juce::Component
+        , public Tooltip::BubbleClient
         {
         public:
             Overlay(GroupPlot& groupPlot);
@@ -35,8 +36,6 @@ namespace Document
             GroupPlot& mGroupPlot;
             Accessor& mAccessor;
             Transport::PlayheadContainer mTransportPlayheadContainer;
-            juce::Label mTooltip;
-            juce::DropShadowEffect mDropShadowEffect;
         };
         
     private:
