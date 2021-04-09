@@ -10,6 +10,3 @@
 [submodule "tinycolormap"]
 	path = tinycolormap
 	url = https://github.com/yuki-koyama/tinycolormap.git
-[submodule "steinberg-asio-sdk"]
-	path = steinberg-asio-sdk
-	url = git@forge-2.ircam.fr:pierreguillot-group/steinberg-asio-sdk.git
