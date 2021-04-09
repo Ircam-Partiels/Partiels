@@ -233,7 +233,7 @@ Document::Section::~Section()
 
 void Document::Section::resized()
 {
-    auto constexpr leftSize = 98;
+    auto constexpr leftSize = 96;
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
     auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();

@@ -139,9 +139,7 @@ void Track::Section::resized()
     auto resizersBounds = bounds.removeFromBottom(2);
     
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
-    bounds.removeFromLeft(1);
     mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
-    bounds.removeFromLeft(1);
     mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(bounds.getX()).reduced(2, 0));
     
     mValueScrollBar.setBounds(bounds.removeFromRight(8));
