@@ -90,4 +90,43 @@ void Document::FileInfoPanel::resized()
     mViewport.setBounds(getLocalBounds());
 }
 
+Document::FileInfoButton::FileInfoButton(FileInfoPanel& fileInfoPanel)
+: mFileInfoPanel(fileInfoPanel)
+{
+    addAndMakeVisible(mTextButton);
+    addAndMakeVisible(mImageButton);
+    mImageButton.setTooltip(juce::translate("Show file info"));
+    mTextButton.onClick = mImageButton.onClick = [&]()
+    {
+        mFileInfoPanel.show();
+    };
+    
+    mTextButton.onStateChange = [&]
+    {
+        mImageButton.setState(mTextButton.getState());
+    };
+    
+    mImageButton.onStateChange = [&]
+    {
+        mTextButton.setState(mTextButton.getState());
+    };
+}
+
+void Document::FileInfoButton::resized()
+{
+    auto bounds = getLocalBounds();
+    mTextButton.setBounds(bounds);
+    mImageButton.setBounds(bounds.removeFromLeft(getHeight()).withSizeKeepingCentre(18, 18));
+}
+
+void Document::FileInfoButton::lookAndFeelChanged()
+{
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
+    {
+        laf->setButtonIcon(mImageButton, IconManager::IconType::information);
+    }
+}
+
 ANALYSE_FILE_END
