@@ -15,6 +15,7 @@ namespace Document
         {
             auto updateLayout = [&]()
             {
+                updateStarted();
                 auto const& layout = mAccessor.getAttr<AttrType::layout>();
                 auto it = mTrackContents.begin();
                 while(it != mTrackContents.end())
@@ -42,6 +43,7 @@ namespace Document
                         }
                     }
                 }
+                updateEnded();
             };
             
             mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
