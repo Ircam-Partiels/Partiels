@@ -21,8 +21,6 @@ namespace Application
         
         // juce::Component
         void resized() override;
-        void lookAndFeelChanged() override;
-        void parentHierarchyChanged() override;
         
         // juce::FileDragAndDropTarget
         bool isInterestedInFileDrag(juce::StringArray const& files) override;
@@ -34,11 +32,6 @@ namespace Application
         
         // Header
         Transport::Display mTransportDisplay;
-        
-//        juce::ImageButton mNavigate;
-//        juce::ImageButton mInspect;
-//        juce::ImageButton mEdit;
-        
         juce::TextButton mLoad {juce::translate("Load File")};
         
         // Main

@@ -8,15 +8,8 @@ Application::Interface::Interface()
 , mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
 {
     addAndMakeVisible(mTransportDisplay);
-//    addAndMakeVisible(mNavigate);
-//    addAndMakeVisible(mInspect);
-//    addAndMakeVisible(mEdit);
     addAndMakeVisible(mDocumentSection);
     addAndMakeVisible(mToolTipDisplay);
-
-//    mNavigate.setTooltip(juce::translate("Navigate"));
-//    mInspect.setTooltip(juce::translate("Inspect"));
-//    mEdit.setTooltip(juce::translate("Edit"));
     
     mLoad.onClick = []()
     {
@@ -74,33 +67,9 @@ void Application::Interface::resized()
     auto bounds = getLocalBounds();
     
     mTransportDisplay.setBounds(bounds.removeFromTop(40).withSizeKeepingCentre(280, 40));
-//    auto buttons = header.withSizeKeepingCentre(120, 32);
-//    mNavigate.setBounds(buttons.removeFromLeft(32).reduced(4));
-//    buttons.removeFromLeft(12);
-//    mInspect.setBounds(buttons.removeFromLeft(32).reduced(4));
-//    buttons.removeFromLeft(12);
-//    mEdit.setBounds(buttons.removeFromLeft(32).reduced(4));
-    
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
     mLoad.setBounds(bounds.withSizeKeepingCentre(200, 32));
     mDocumentSection.setBounds(bounds);
-}
-
-void Application::Interface::lookAndFeelChanged()
-{
-    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(laf != nullptr);
-    if(laf != nullptr)
-    {
-//        laf->setButtonIcon(mNavigate, IconManager::IconType::navigate);
-//        laf->setButtonIcon(mInspect, IconManager::IconType::search);
-//        laf->setButtonIcon(mEdit, IconManager::IconType::edit);
-    }
-}
-
-void Application::Interface::parentHierarchyChanged()
-{
-    lookAndFeelChanged();
 }
 
 bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& files)
