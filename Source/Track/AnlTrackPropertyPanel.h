@@ -47,7 +47,7 @@ namespace Track
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
         PropertyRangeSlider mPropertyValueRange;
-        PropertyToggle mPropertyValueRangeLink;
+        PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
         ProgressBar mProgressBarRendering {mAccessor, ProgressBar::Mode::rendering};
         

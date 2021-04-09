@@ -138,7 +138,11 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
         {
             case Zoom::AttrType::globalRange:
             {
-                updateLinkedZoom(notification);
+                auto const& output = mAccessor.getAttr<AttrType::description>().output;
+                if(!output.hasFixedBinCount || output.binCount == 1)
+                {
+                    updateLinkedZoom(notification);
+                }
             }
                 break;
             case Zoom::AttrType::minimumLength:
@@ -146,9 +150,34 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case Zoom::AttrType::visibleRange:
             {
                 runRendering();
-                updateLinkedZoom(notification);
+                auto const& output = mAccessor.getAttr<AttrType::description>().output;
+                if(!output.hasFixedBinCount || output.binCount == 1)
+                {
+                    updateLinkedZoom(notification);
+                }
             }
                 break;
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+    
+    auto& binZoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+    binZoomAcsr.onAttrUpdated = [=](Zoom::AttrType attr, NotificationType notification)
+    {
+        switch(attr)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::visibleRange:
+            {
+                auto const& output = mAccessor.getAttr<AttrType::description>().output;
+                if(output.hasFixedBinCount && output.binCount > 1)
+                {
+                    updateLinkedZoom(notification);
+                }
+            }
+                break;
+            case Zoom::AttrType::minimumLength:
             case Zoom::AttrType::anchor:
                 break;
         }
@@ -186,7 +215,6 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
     {
         stopTimer();
         timerCallback();
-        mAccessor.setAttr<AttrType::graphics>(std::vector<juce::Image>{}, NotificationType::synchronous);
     };
     
     runAnalysis(NotificationType::synchronous);

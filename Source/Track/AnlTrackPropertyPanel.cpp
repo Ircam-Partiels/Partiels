@@ -150,7 +150,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
 })
-, mPropertyValueRangeLink("Value Range Link", "Toggle the group link for value range.", [&](bool value)
+, mPropertyRangeLink("Range Link", "Toggle the group link for zoom range.", [&](bool value)
 {
     mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
 })
@@ -276,6 +276,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 }
                 else if(!output.hasFixedBinCount || output.binCount == 1)
                 {
+                    mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
                     mGraphicalSection.setComponents(
                     {
                           mPropertyForegroundColour
@@ -283,11 +284,12 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyValueRangeMode
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
-                        , mPropertyValueRangeLink
+                        , mPropertyRangeLink
                     });
                 }
                 else 
                 {
+                    mPropertyRangeLink.title.setText("Bin Range Link", juce::NotificationType::dontSendNotification);
                     mPropertyNumBins.entry.setEnabled(false);
                     mGraphicalSection.setComponents(
                     {
@@ -297,8 +299,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                         , mPropertyValueRange
-                        , mPropertyValueRangeLink
                         , mPropertyNumBins
+                        , mPropertyRangeLink
                         , mProgressBarRendering
                     });
                 }
@@ -389,7 +391,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 break;
             case AttrType::zoomLink:
             {
-                mPropertyValueRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
+                mPropertyRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
             }
                 break;
         }
