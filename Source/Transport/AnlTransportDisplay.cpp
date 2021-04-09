@@ -115,6 +115,7 @@ void Transport::Display::resized()
     
     mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
     mPosition.setBounds(bounds);
+    mPosition.setFont(juce::Font(static_cast<float>(bounds.getHeight()) * 0.8f));
 }
 
 void Transport::Display::lookAndFeelChanged()
