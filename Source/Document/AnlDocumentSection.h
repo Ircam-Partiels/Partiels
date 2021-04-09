@@ -2,6 +2,7 @@
 
 #include "AnlDocumentModel.h"
 #include "AnlDocumentGroupSection.h"
+#include "AnlDocumentFileInfoPanel.h"
 #include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -18,7 +19,7 @@ namespace Document
               backgroundColourId = 0x2040200
         };
         
-        Section(Accessor& accessor);
+        Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~Section() override;
         
         std::function<void(juce::String const& identifier)> onRemoveTrack = nullptr;
@@ -54,6 +55,10 @@ namespace Document
         
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        
+        FileInfoPanel mFileInfoPanel;
+        FileInfoButton mFileInfoButton {mFileInfoPanel};
+        Decorator mFileInfoButtonDecoration {mFileInfoButton, 1, 2.0f};
         
         Zoom::Ruler mTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration {mTimeRuler, 1, 2.0f};

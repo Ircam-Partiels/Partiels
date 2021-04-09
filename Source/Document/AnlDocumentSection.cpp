@@ -149,8 +149,9 @@ void Document::Section::GroupContainer::resized()
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
 }
 
-Document::Section::Section(Accessor& accessor)
+Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
+, mFileInfoPanel(accessor, audioFormatManager)
 {
     mTimeRuler.setPrimaryTickInterval(0);
     mTimeRuler.setTickReferenceValue(0.0);
@@ -219,6 +220,7 @@ Document::Section::Section(Accessor& accessor)
     mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     setSize(480, 200);
+    addAndMakeVisible(mFileInfoButtonDecoration);
     addAndMakeVisible(mTimeRulerDecoration);
     addAndMakeVisible(mLoopRulerDecoration);
     addAndMakeVisible(mViewport);
@@ -238,6 +240,7 @@ void Document::Section::resized()
     auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
     
+    mFileInfoButtonDecoration.setBounds(0, 0, leftSize, 28);
     auto const timeRuler = bounds.removeFromTop(14).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
     mTimeRulerDecoration.setBounds(timeRuler);
     auto const loopRuler = bounds.removeFromTop(14).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
