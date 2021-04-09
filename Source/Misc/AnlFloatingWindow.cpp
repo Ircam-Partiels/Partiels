@@ -70,4 +70,34 @@ void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
 }
 #endif
 
+FloatingWindowContainer::FloatingWindowContainer(juce::String const& title)
+: mFloatingWindow(title)
+{
+}
+
+void FloatingWindowContainer::show()
+{
+    if(mFloatingWindow.getContentComponent() == nullptr)
+    {
+        auto const& desktop = juce::Desktop::getInstance();
+        auto const mousePosition = desktop.getMainMouseSource().getScreenPosition().toInt();
+        auto const* display = desktop.getDisplays().getDisplayForPoint(mousePosition);
+        anlStrongAssert(display != nullptr);
+        if(display != nullptr)
+        {
+            auto const bounds = display->userArea.withSizeKeepingCentre(mFloatingWindow.getWidth(), mFloatingWindow.getHeight());
+            mFloatingWindow.setBounds(bounds);
+        }
+        mFloatingWindow.setContentNonOwned(this, true);
+    }
+    
+    mFloatingWindow.setVisible(true);
+    mFloatingWindow.toFront(false);
+}
+
+void FloatingWindowContainer::hide()
+{
+    mFloatingWindow.setVisible(false);
+}
+
 ANALYSE_FILE_END

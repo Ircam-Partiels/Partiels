@@ -41,4 +41,18 @@ private:
 #endif
 };
 
+class FloatingWindowContainer
+: public juce::Component
+{
+public:
+    FloatingWindowContainer(juce::String const& title);
+    ~FloatingWindowContainer() override = default;
+    
+    virtual void show();
+    virtual void hide();
+    
+protected:
+    FloatingWindow mFloatingWindow;
+};
+
 ANALYSE_FILE_END
