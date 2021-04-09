@@ -46,7 +46,7 @@ namespace Tooltip
     
     class BubbleWindow
     : public juce::Component
-    , private juce::Timer
+    , public juce::Timer
     {
     public:
         BubbleWindow();
@@ -55,10 +55,10 @@ namespace Tooltip
         // juce::Component
         void paint(juce::Graphics& g) override;
         
-    private:
         // juce::Timer
         void timerCallback() override;
         
+    private:
         juce::String mTooltip;
     };
 }
