@@ -222,10 +222,27 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         }
     };
     
+    mTooltipButton.setClickingTogglesState(true);
+    mTooltipButton.onClick = [&]()
+    {
+        if(mTooltipButton.getToggleState())
+        {
+            mToolTipBubbleWindow.startTimer(23);
+        }
+        else
+        {
+            mToolTipBubbleWindow.stopTimer();
+            mToolTipBubbleWindow.removeFromDesktop();
+            mToolTipBubbleWindow.setVisible(false);
+        }
+    };
+    mTooltipButton.setToggleState(true, juce::NotificationType::sendNotification);
+    
     mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     setSize(480, 200);
     addAndMakeVisible(mFileInfoButtonDecoration);
+    addAndMakeVisible(mTooltipButton);
     addAndMakeVisible(mTimeRulerDecoration);
     addAndMakeVisible(mLoopRulerDecoration);
     addAndMakeVisible(mViewport);
@@ -245,11 +262,11 @@ void Document::Section::resized()
     auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
     
-    mFileInfoButtonDecoration.setBounds(0, 0, leftSize, 28);
-    auto const timeRuler = bounds.removeFromTop(14).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
-    mTimeRulerDecoration.setBounds(timeRuler);
-    auto const loopRuler = bounds.removeFromTop(14).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
-    mLoopRulerDecoration.setBounds(loopRuler);
+    auto topPart = bounds.removeFromTop(28);
+    mFileInfoButtonDecoration.setBounds(topPart.removeFromLeft(leftSize));
+    mTooltipButton.setBounds(topPart.removeFromRight(rightSize).reduced(4));
+    mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
+    mLoopRulerDecoration.setBounds(topPart);
     auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
     mTimeScrollBar.setBounds(timeScrollBarBounds);
     mGroupContainer.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupContainer.getHeight());
@@ -264,6 +281,16 @@ void Document::Section::paint(juce::Graphics& g)
 void Document::Section::colourChanged()
 {
     setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
+}
+
+void Document::Section::lookAndFeelChanged()
+{
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
+    {
+        laf->setButtonIcon(mTooltipButton, IconManager::IconType::conversation);
+    }
 }
 
 void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)

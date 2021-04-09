@@ -28,6 +28,7 @@ namespace Document
         void resized() override;
         void paint(juce::Graphics& g) override;
         void colourChanged() override;
+        void lookAndFeelChanged() override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         
@@ -62,6 +63,7 @@ namespace Document
         FileInfoPanel mFileInfoPanel;
         FileInfoButton mFileInfoButton {mFileInfoPanel};
         Decorator mFileInfoButtonDecoration {mFileInfoButton, 1, 2.0f};
+        juce::ImageButton mTooltipButton;
         
         Zoom::Ruler mTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration {mTimeRuler, 1, 2.0f};
@@ -71,6 +73,8 @@ namespace Document
         GroupContainer mGroupContainer {mAccessor};
         juce::Viewport mViewport;
         Zoom::ScrollBar mTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
+        
+        Tooltip::BubbleWindow mToolTipBubbleWindow;
     };
 }
 
