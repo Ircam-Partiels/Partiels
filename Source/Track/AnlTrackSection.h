@@ -19,7 +19,7 @@ namespace Track
               sectionColourId = 0x2030000
         };
         
-        Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, juce::Component& separator);
+        Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
         ~Section() override;
         
         juce::String getIdentifier() const;
@@ -34,9 +34,7 @@ namespace Track
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        juce::Component& mSeparator;
         Accessor::Listener mListener;
-        BoundsListener mBoundsListener;
         
         Thumbnail mThumbnail {mAccessor};
         Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};

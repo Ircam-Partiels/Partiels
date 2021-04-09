@@ -2,11 +2,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr, juce::Component& separator)
+Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mTransportAccessor(transportAcsr)
-, mSeparator(separator)
 {
     mValueRuler.onDoubleClick = [&]()
     {
@@ -103,15 +102,6 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
         }
     };
     
-    mBoundsListener.onComponentMoved = [&](juce::Component& component)
-    {
-        anlStrongAssert(&component == &mSeparator);
-        if(&component == &mSeparator)
-        {
-            resized();
-        }
-    };
-    
     auto onResizerMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
@@ -130,14 +120,12 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
     addAndMakeVisible(mResizerBarRight);
     setSize(80, 100);
     
-    mBoundsListener.attachTo(mSeparator);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Track::Section::~Section()
 {
     mAccessor.removeListener(mListener);
-    mBoundsListener.detachFrom(mSeparator);
 }
 
 juce::String Track::Section::getIdentifier() const
@@ -148,34 +136,20 @@ juce::String Track::Section::getIdentifier() const
 void Track::Section::resized()
 {
     auto bounds = getLocalBounds();
-    auto const leftSize = mSeparator.getScreenX() - getScreenX();
-    auto const rightSize = getWidth() - leftSize - mSeparator.getWidth();
+    auto resizersBounds = bounds.removeFromBottom(2);
     
-    // Resizers
-    {
-        auto resizersBounds = bounds.removeFromBottom(2);
-        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(leftSize).reduced(4, 0));
-        mResizerBarRight.setBounds(resizersBounds.removeFromRight(rightSize).reduced(4, 0));
-    }
+    mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
+    bounds.removeFromLeft(1);
+    mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
+    bounds.removeFromLeft(1);
+    mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(bounds.getX()).reduced(2, 0));
     
-    // Thumbnail and Snapshot
-    {
-        auto leftSide = bounds.removeFromLeft(leftSize);
-        mThumbnailDecoration.setBounds(leftSide.removeFromLeft(48));
-        mSnapshotDecoration.setBounds(leftSide.withTrimmedLeft(1));
-    }
-    
-    // Plot, Rulers and Scrollbars
-    {
-        auto rightSide = bounds.removeFromRight(rightSize);
-        auto const scrollbarBounds = rightSide.removeFromRight(8).reduced(0, 4);
-        mValueScrollBar.setBounds(scrollbarBounds);
-        mBinScrollBar.setBounds(scrollbarBounds);
-        auto const rulerBounds = rightSide.removeFromRight(16).reduced(0, 4);
-        mValueRuler.setBounds(rulerBounds);
-        mBinRuler.setBounds(rulerBounds);
-        mPlotDecoration.setBounds(rightSide);
-    }
+    mValueScrollBar.setBounds(bounds.removeFromRight(8));
+    mBinScrollBar.setBounds(mValueScrollBar.getBounds());
+    mValueRuler.setBounds(bounds.removeFromRight(16));
+    mBinRuler.setBounds(mValueRuler.getBounds());
+    mPlotDecoration.setBounds(bounds);
+    mResizerBarRight.setBounds(resizersBounds.reduced(2, 0));
 }
 
 void Track::Section::paint(juce::Graphics& g)

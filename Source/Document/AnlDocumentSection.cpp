@@ -68,7 +68,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
                 auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
                 auto& transport = mAccessor.getAcsr<AcsrType::transport>();
                 
-                auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, transport, mResizerBar);
+                auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, transport);
                 anlStrongAssert(newSection != nullptr);
                 if(newSection != nullptr)
                 {
