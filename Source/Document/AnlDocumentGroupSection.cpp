@@ -2,9 +2,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separator)
+Document::GroupSection::GroupSection(Accessor& accessor)
 : mAccessor(accessor)
-, mSeparator(separator)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
@@ -12,7 +11,6 @@ Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separa
         switch(type)
         {
             case AttrType::file:
-            case AttrType::layoutHorizontal:
                 break;
             case AttrType::layoutVertical:
             {
@@ -23,15 +21,6 @@ Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separa
             case AttrType::layout:
             case AttrType::expanded:
                 break;
-        }
-    };
-    
-    mBoundsListener.onComponentMoved = [&](juce::Component& component)
-    {
-        anlStrongAssert(&component == &mSeparator);
-        if(&component == &mSeparator)
-        {
-            resized();
         }
     };
     
@@ -51,43 +40,29 @@ Document::GroupSection::GroupSection(Accessor& accessor, juce::Component& separa
     addAndMakeVisible(mResizerBarRight);
     setSize(80, 100);
     
-    mBoundsListener.attachTo(mSeparator);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::GroupSection::~GroupSection()
 {
     mAccessor.removeListener(mListener);
-    mBoundsListener.detachFrom(mSeparator);
 }
 
 void Document::GroupSection::resized()
 {
     auto bounds = getLocalBounds();
-    auto const leftSize = mSeparator.getScreenX() - getScreenX();
-    auto const rightSize = getWidth() - leftSize - mSeparator.getWidth();
+    auto resizersBounds = bounds.removeFromBottom(2);
     
-    // Resizers
-    {
-        auto resizersBounds = bounds.removeFromBottom(2);
-        mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(leftSize).reduced(4, 0));
-        mResizerBarRight.setBounds(resizersBounds.removeFromRight(rightSize).reduced(4, 0));
-    }
+    mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
+    bounds.removeFromLeft(1);
+    mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
+    bounds.removeFromLeft(1);
+    mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(bounds.getX()).reduced(2, 0));
     
-    // Thumbnail and Snapshot
-    {
-        auto leftSide = bounds.removeFromLeft(leftSize);
-        mThumbnailDecoration.setBounds(leftSide.removeFromLeft(48));
-        mSnapshotDecoration.setBounds(leftSide.withTrimmedLeft(1));
-    }
-    
-    // Plot, Rulers and Scrollbars
-    {
-        auto rightSide = bounds.removeFromRight(rightSize);
-        mScrollBar.setBounds(rightSide.removeFromRight(8).reduced(0, 4));
-        mRuler.setBounds(rightSide.removeFromRight(16).reduced(0, 4));
-        mPlotDecoration.setBounds(rightSide);
-    }
+    mScrollBar.setBounds(bounds.removeFromRight(8));
+    mRuler.setBounds(bounds.removeFromRight(16));
+    mPlotDecoration.setBounds(bounds);
+    mResizerBarRight.setBounds(resizersBounds.reduced(2, 0));
 }
 
 ANALYSE_FILE_END

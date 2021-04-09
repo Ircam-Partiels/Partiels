@@ -20,7 +20,7 @@ namespace Document
               sectionColourId = 0x2040000
         };
         
-        GroupSection(Accessor& accessor, juce::Component& separator);
+        GroupSection(Accessor& accessor);
         ~GroupSection() override;
         
         // juce::Component
@@ -28,9 +28,7 @@ namespace Document
         
     private:
         Accessor& mAccessor;
-        juce::Component& mSeparator;
         Accessor::Listener mListener;
-        BoundsListener mBoundsListener;
 
         GroupThumbnail mThumbnail {mAccessor,};
         Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
