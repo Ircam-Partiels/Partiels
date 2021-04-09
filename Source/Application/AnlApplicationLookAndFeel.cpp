@@ -15,7 +15,12 @@ Application::LookAndFeel::LookAndFeel()
     auto const thumbColour = juce::Colours::white;
     
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
+    
+    setColour(ColourButton::ColourIds::borderOffColourId, rulerColour);
+    setColour(ColourButton::ColourIds::borderOnColourId, rulerColour.brighter());
+    
     setColour(ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
+    
     setColour(FloatingWindow::ColourIds::backgroundColourId, backgroundColour.darker());
 
     setColour(ConcertinaTable::ColourIds::headerBackgroundColourId, juce::Colours::transparentBlack);

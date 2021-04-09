@@ -31,7 +31,7 @@ template <class entry_t> class PropertyComponent
 public:
     enum ColourIds : int
     {
-          backgroundColourId = 0x2000500
+          backgroundColourId = 0x2000700
         , textColourId
     };
     
@@ -126,7 +126,7 @@ class PropertyColourButton
 : public PropertyComponent<ColourButton>
 {
 public:
-    PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& title, std::function<void(juce::Colour)> fn);
+    PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn);
     ~PropertyColourButton() override = default;
     
     // juce::Component

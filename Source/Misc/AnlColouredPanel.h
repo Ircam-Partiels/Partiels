@@ -12,7 +12,7 @@ public:
     
     enum ColourIds : int
     {
-        backgroundColourId = 0x2000000
+        backgroundColourId = 0x2000100
     };
     
     ColouredPanel() = default;

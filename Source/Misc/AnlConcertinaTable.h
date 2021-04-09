@@ -15,7 +15,7 @@ public:
     
     enum ColourIds : int
     {
-          headerBackgroundColourId = 0x2000100
+          headerBackgroundColourId = 0x2000200
         , headerBorderColourId
         , headerTitleColourId
         , headerButtonColourId

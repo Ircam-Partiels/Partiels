@@ -11,7 +11,7 @@ public:
     
     enum ColourIds : int
     {
-          activeColourId = 0x2000600
+          activeColourId = 0x2000800
         , inactiveColourId
     };
     

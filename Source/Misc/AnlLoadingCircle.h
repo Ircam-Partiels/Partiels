@@ -13,7 +13,7 @@ public:
     
     enum ColourIds : int
     {
-          backgroundColourId = 0x2000500
+          backgroundColourId = 0x2000600
         , foregroundColourId
     };
     
