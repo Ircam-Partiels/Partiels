@@ -37,9 +37,9 @@ namespace Application
         Document::FileInfoPanel mDocumentFileInfoPanel;
         Transport::Display mTransportDisplay;
         
-        juce::ImageButton mNavigate;
-        juce::ImageButton mInspect;
-        juce::ImageButton mEdit;
+//        juce::ImageButton mNavigate;
+//        juce::ImageButton mInspect;
+//        juce::ImageButton mEdit;
         
         juce::TextButton mLoad {juce::translate("Load File")};
         
