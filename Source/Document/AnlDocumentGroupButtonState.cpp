@@ -78,9 +78,9 @@ Document::GroupStateButton::GroupStateButton(Accessor& accessor)
 
 Document::GroupStateButton::~GroupStateButton()
 {
-    for(auto& trackAcsrs : getGroupContent())
+    for(auto& trackAcsr : getGroupContent())
     {
-        trackAcsrs.second.get().removeListener(mTrackListener);
+        trackAcsr.second.get().removeListener(mTrackListener);
     }
 }
 
