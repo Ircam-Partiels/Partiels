@@ -24,20 +24,17 @@ Document::GroupSection::GroupSection(Accessor& accessor)
         }
     };
     
-    auto onResizerMoved = [&](int size)
+    mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::layoutVertical>(size, NotificationType::synchronous);
     };
-    mResizerBarLeft.onMoved = onResizerMoved;
-    mResizerBarRight.onMoved = onResizerMoved;
     
     addAndMakeVisible(mRuler);
     addAndMakeVisible(mScrollBar);
     addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
-    addAndMakeVisible(mResizerBarLeft);
-    addAndMakeVisible(mResizerBarRight);
+    addAndMakeVisible(mResizerBar);
     setSize(80, 100);
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -50,17 +47,15 @@ Document::GroupSection::~GroupSection()
 
 void Document::GroupSection::resized()
 {
-    auto bounds = getLocalBounds();
-    auto resizersBounds = bounds.removeFromBottom(2);
+    mResizerBar.setBounds(getLocalBounds().removeFromBottom(1).reduced(2, 0));
     
+    auto bounds = getLocalBounds();
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
     mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
-    mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(bounds.getX()).reduced(2, 0));
     
     mScrollBar.setBounds(bounds.removeFromRight(8));
     mRuler.setBounds(bounds.removeFromRight(16));
     mPlotDecoration.setBounds(bounds);
-    mResizerBarRight.setBounds(resizersBounds.reduced(2, 0));
 }
 
 ANALYSE_FILE_END

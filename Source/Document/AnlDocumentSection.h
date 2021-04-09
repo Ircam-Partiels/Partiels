@@ -27,6 +27,7 @@ namespace Document
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
+        void colourChanged() override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         
@@ -42,6 +43,8 @@ namespace Document
             
             // juce::Component
             void resized() override;
+            void paint(juce::Graphics& g) override;
+            
         private:
             Accessor& mAccessor;
             Accessor::Listener mListener;

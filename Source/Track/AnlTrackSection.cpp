@@ -102,12 +102,10 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
         }
     };
     
-    auto onResizerMoved = [&](int size)
+    mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
     };
-    mResizerBarLeft.onMoved = onResizerMoved;
-    mResizerBarRight.onMoved = onResizerMoved;
     
     addChildComponent(mValueRuler);
     addChildComponent(mValueScrollBar);
@@ -116,8 +114,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
     addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
-    addAndMakeVisible(mResizerBarLeft);
-    addAndMakeVisible(mResizerBarRight);
+    addAndMakeVisible(mResizerBar);
     setSize(80, 100);
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -135,19 +132,17 @@ juce::String Track::Section::getIdentifier() const
 
 void Track::Section::resized()
 {
-    auto bounds = getLocalBounds();
-    auto resizersBounds = bounds.removeFromBottom(2);
+    mResizerBar.setBounds(getLocalBounds().removeFromBottom(1).reduced(2, 0));
     
+    auto bounds = getLocalBounds();
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
     mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
-    mResizerBarLeft.setBounds(resizersBounds.removeFromLeft(bounds.getX()).reduced(2, 0));
     
     mValueScrollBar.setBounds(bounds.removeFromRight(8));
     mBinScrollBar.setBounds(mValueScrollBar.getBounds());
     mValueRuler.setBounds(bounds.removeFromRight(16));
     mBinRuler.setBounds(mValueRuler.getBounds());
     mPlotDecoration.setBounds(bounds);
-    mResizerBarRight.setBounds(resizersBounds.reduced(2, 0));
 }
 
 void Track::Section::paint(juce::Graphics& g)

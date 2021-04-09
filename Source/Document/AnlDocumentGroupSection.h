@@ -45,8 +45,7 @@ namespace Document
         Zoom::Ruler mRuler {zoomAcsr, Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mScrollBar {zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true};
 
-        ResizerBar mResizerBarLeft {ResizerBar::Orientation::horizontal, true, {50, 2000}};
-        ResizerBar mResizerBarRight {ResizerBar::Orientation::horizontal, true, {50, 2000}};
+        ResizerBar mResizerBar {ResizerBar::Orientation::horizontal, true, {50, 2000}};
     };
 }
 

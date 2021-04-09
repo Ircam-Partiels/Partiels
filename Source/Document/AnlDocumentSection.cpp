@@ -149,6 +149,11 @@ void Document::Section::GroupContainer::resized()
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
 }
 
+void Document::Section::GroupContainer::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(ColourIds::backgroundColourId));
+}
+
 Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mFileInfoPanel(accessor, audioFormatManager)
@@ -254,6 +259,11 @@ void Document::Section::resized()
 void Document::Section::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
+}
+
+void Document::Section::colourChanged()
+{
+    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
 }
 
 void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
