@@ -22,6 +22,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
             }
         }
         mDraggableTable.setComponents(components);
+        mGroupSection.setVisible(!components.empty());
         resized();
     };
     
@@ -127,9 +128,7 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
     };
     mBoundsListener.attachTo(mGroupSection);
     mBoundsListener.attachTo(mConcertinaTable);
-    
     mConcertinaTable.setComponents({mDraggableTable});
-    mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
     
     addAndMakeVisible(mGroupSection);
     addAndMakeVisible(mConcertinaTable);
@@ -184,29 +183,6 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
                 break;
         }
     };
-    
-    auto accessorChanged = [this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr, index);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-                break;
-            case AcsrType::tracks:
-            {
-                auto const numTracks = acsr.getNumAcsr<AcsrType::tracks>();
-                mTimeRulerDecoration.setVisible(numTracks > 0);
-                mLoopRulerDecoration.setVisible(numTracks > 0);
-                mViewport.setVisible(numTracks > 0);
-                mTimeScrollBar.setVisible(numTracks > 0);
-            }
-                break;
-        }
-    };
-    
-    mListener.onAccessorInserted = accessorChanged;
-    mListener.onAccessorErased = accessorChanged;
     
     mTimeRuler.onDoubleClick = [&]()
     {
