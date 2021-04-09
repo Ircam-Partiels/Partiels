@@ -13,6 +13,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
         return nullptr;
     }
     
+#if ANALYZE_SUPPORT_MEMORY_MAPPED_READER
     if(auto* format = audioFormatManager.findFormatForFileExtension(file.getFileExtension()))
     {
         if(auto* audioFormatReader = format->createMemoryMappedReader(file))
@@ -25,7 +26,8 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
             }
         }
     }
-   
+#endif
+    
     auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
     if(audioFormatReader == nullptr)
     {
