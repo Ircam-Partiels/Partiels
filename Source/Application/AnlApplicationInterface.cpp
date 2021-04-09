@@ -4,12 +4,9 @@
 ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
-: mDocumentFileInfoPanel(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
-, mTransportDisplay(Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>())
-, mDocumentSection(Instance::get().getDocumentAccessor())
-{    
-    addAndMakeVisible(mDocumentFileInfoPanel);
-    addAndMakeVisible(mFileInfoResizer);
+: mTransportDisplay(Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>())
+, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
+{
     addAndMakeVisible(mTransportDisplay);
 //    addAndMakeVisible(mNavigate);
 //    addAndMakeVisible(mInspect);
@@ -44,7 +41,6 @@ Application::Interface::Interface()
                 auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
                 
                 mTransportDisplay.setEnabled(isDocumentEnable);
-                mDocumentFileInfoPanel.setEnabled(isDocumentEnable);
                 mDocumentSection.setEnabled(isDocumentEnable);
                 if(!isDocumentEnable)
                 {
@@ -63,13 +59,6 @@ Application::Interface::Interface()
         }
     };
     
-    mFileInfoResizer.onMoved = [&](int size)
-    {
-        mDocumentFileInfoPanel.setSize(size, mDocumentFileInfoPanel.getHeight());
-        resized();
-    };
-    
-    mDocumentFileInfoPanel.setSize(240, 100);
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     documentAccessor.addListener(mDocumentListener, NotificationType::synchronous);
 }
@@ -94,8 +83,6 @@ void Application::Interface::resized()
     
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
     mLoad.setBounds(bounds.withSizeKeepingCentre(200, 32));
-    mDocumentFileInfoPanel.setBounds(bounds.removeFromRight(mDocumentFileInfoPanel.getWidth()));
-    mFileInfoResizer.setBounds(bounds.removeFromRight(2));
     mDocumentSection.setBounds(bounds);
 }
 

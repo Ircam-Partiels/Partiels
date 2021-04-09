@@ -33,8 +33,6 @@ namespace Application
         Document::Accessor::Listener mDocumentListener;
         
         // Header
-        ResizerBar mFileInfoResizer {ResizerBar::Orientation::vertical, false, {4, 320}};
-        Document::FileInfoPanel mDocumentFileInfoPanel;
         Transport::Display mTransportDisplay;
         
 //        juce::ImageButton mNavigate;
