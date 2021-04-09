@@ -4,4 +4,6 @@ Conception & Development: Pierre Guillot
 IMR Director: Hugues Vinet
 Copyright 2021 Ircam. All rights reserved
 
-This software is based on the Vamp analysis plugin format, developed at the Centre for Digital Music, Queen Mary, University of London.
+Credits:
+Vamp plugin format is developed at the Centre for Digital Music, Queen Mary, University of London.
+ASIO is a registered trademark of Steinberg Media Technologies GmbH
