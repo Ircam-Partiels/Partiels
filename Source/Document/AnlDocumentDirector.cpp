@@ -69,6 +69,19 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
                 auto director = std::make_unique<Track::Director>(trackAcsr, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
+                if(director != nullptr)
+                {
+                    director->onLinkedZoomChanged = [this](Zoom::Accessor const& zoomAcsr, NotificationType notification)
+                    {
+                        for(auto& track : mTracks)
+                        {
+                            if(track != nullptr)
+                            {
+                                track->setLinkedZoom(zoomAcsr, notification);
+                            }
+                        }
+                    };
+                }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
             }
                 break;
