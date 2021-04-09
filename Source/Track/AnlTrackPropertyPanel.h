@@ -9,7 +9,7 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     class PropertyPanel
-    : public juce::Component
+    : public FloatingWindowContainer
     {
     public:
         PropertyPanel(Accessor& accessor);
@@ -18,7 +18,8 @@ namespace Track
         // juce::Component
         void resized() override;
         
-        void show();
+        // FloatingWindowContainer
+        void show() override;
         
     private:
         Accessor& mAccessor;
@@ -65,7 +66,6 @@ namespace Track
         
         juce::Viewport mViewport;
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
-        FloatingWindow mFloatingWindow {"Properties"};
         static auto constexpr sInnerWidth = 300;
     };
 }
