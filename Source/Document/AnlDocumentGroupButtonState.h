@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentGroupContainer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -9,6 +10,7 @@ namespace Document
     class GroupStateButton
     : public juce::Component
     , public juce::SettableTooltipClient
+    , private GroupContainer<std::reference_wrapper<Track::Accessor>>
     {
     public:
         GroupStateButton(Accessor& accessor);
@@ -18,11 +20,11 @@ namespace Document
         void resized() override;
         
     private:
-        Accessor& mAccessor;
-        Accessor::Listener mListener;
-        Track::Accessor::Listener mTrackListener;
+        // GroupContainer<std::reference_wrapper<Track::Accessor>>
+        void removeFromGroup(std::reference_wrapper<Track::Accessor>& value) override;
+        std::reference_wrapper<Track::Accessor> createForGroup(Track::Accessor& trackAccessor) override;
         
-        std::map<juce::String, std::reference_wrapper<Track::Accessor>> mTrackAccessors;
+        Track::Accessor::Listener mTrackListener;
         LoadingCircle mProcessingButton;
     };
 }

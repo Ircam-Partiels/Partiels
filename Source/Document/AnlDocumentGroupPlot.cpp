@@ -6,116 +6,59 @@
 ANALYSE_FILE_BEGIN
 
 Document::GroupPlot::GroupPlot(Accessor& accessor)
-: mAccessor(accessor)
+: GroupContainer<std::unique_ptr<Track::Plot>>(accessor)
+, mAccessor(accessor)
 {
+    juce::ignoreUnused(mAccessor);
     setInterceptsMouseClicks(false, false);
-    auto updateLayout = [&]()
-    {
-        auto const& layout = mAccessor.getAttr<AttrType::layout>();
-        std::erase_if(mPlots, [&](auto const& pair)
-        {
-            return !std::binary_search(layout.cbegin(), layout.cend(), pair.first) || !Tools::hasTrack(mAccessor, pair.first);
-        });
-        
-        removeAllChildren();
-        auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-        auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
-        for(auto const& identifier : layout)
-        {
-            auto plotIt = mPlots.find(identifier);
-            if(plotIt == mPlots.cend())
-            {
-                auto trackAcsr = Tools::getTrack(mAccessor, identifier);
-                if(trackAcsr)
-                {
-                    auto plot = std::make_unique<Track::Plot>(*trackAcsr, timeZoomAcsr, transportAcsr);
-                    anlStrongAssert(plot != nullptr);
-                    if(plot != nullptr)
-                    {
-                        addAndMakeVisible(plot.get(), 0);
-                        mPlots[identifier] = std::move(plot);
-                    }
-                }
-            }
-            else
-            {
-                addAndMakeVisible(plotIt->second.get(), 0);
-            }
-        }
-
-        resized();
-    };
-    
-    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case AttrType::file:
-            case AttrType::layoutVertical:
-            case AttrType::expanded:
-                break;
-            case AttrType::layout:
-            {
-                updateLayout();
-            }
-                break;
-        }
-    };
-    
-    mListener.onAccessorInserted = [=](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr, index);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-                break;
-            case AcsrType::tracks:
-            {
-                updateLayout();
-            }
-                break;
-        }
-    };
-    
-    mListener.onAccessorErased = [=](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr, index);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-                break;
-            case AcsrType::tracks:
-            {
-                updateLayout();
-            }
-                break;
-        }
-    };
-    
     setSize(100, 80);
-    mAccessor.addListener(mListener, NotificationType::synchronous);
-}
-
-Document::GroupPlot::~GroupPlot()
-{
-    mAccessor.removeListener(mListener);
 }
 
 void Document::GroupPlot::resized()
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const& group = getGroupContent();
     for(auto const& identifier : layout)
     {
-        auto it = mPlots.find(identifier);
-        if(it != mPlots.cend() && it->second != nullptr)
+        auto it = group.find(identifier);
+        if(it != group.cend() && it->second != nullptr)
         {
             it->second->setBounds(bounds);
         }
     }
+}
+
+void Document::GroupPlot::updateStarted()
+{
+    removeAllChildren();
+}
+
+void Document::GroupPlot::updateEnded()
+{
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const& group = getGroupContent();
+    for(auto const& identifier : layout)
+    {
+        auto it = group.find(identifier);
+        if(it != group.cend() && it->second != nullptr)
+        {
+            addAndMakeVisible(it->second.get(), 0);
+        }
+    }
+    resized();
+}
+
+void Document::GroupPlot::removeFromGroup(std::unique_ptr<Track::Plot>& value)
+{
+    removeChildComponent(value.get());
+}
+
+std::unique_ptr<Track::Plot> Document::GroupPlot::createForGroup(Track::Accessor& trackAccessor)
+{
+    auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+    return std::make_unique<Track::Plot>(trackAccessor, timeZoomAcsr, transportAcsr);
 }
 
 Document::GroupPlot::Overlay::Overlay(GroupPlot& groupPlot)

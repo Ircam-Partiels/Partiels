@@ -1,8 +1,8 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentGroupContainer.h"
 #include "../Track/AnlTrackSnapshot.h"
-
 
 ANALYSE_FILE_BEGIN
 
@@ -10,10 +10,11 @@ namespace Document
 {
     class GroupSnapshot
     : public juce::Component
+    , private GroupContainer<std::unique_ptr<Track::Snapshot>>
     {
     public:
         GroupSnapshot(Accessor& accessor);
-        ~GroupSnapshot() override;
+        ~GroupSnapshot() override = default;
         
         // juce::Component
         void resized() override;
@@ -42,10 +43,13 @@ namespace Document
         };
         
     private:
-        Accessor& mAccessor;
-        Accessor::Listener mListener;
+        // GroupContainer<std::unique_ptr<Track::Snapshot>>
+        void updateStarted() override;
+        void updateEnded() override;
+        void removeFromGroup(std::unique_ptr<Track::Snapshot>& value) override;
+        std::unique_ptr<Track::Snapshot> createForGroup(Track::Accessor& trackAccessor) override;
         
-        std::map<juce::String, std::unique_ptr<Track::Snapshot>> mSnapshots;
+        Accessor& mAccessor;
     };
 }
 

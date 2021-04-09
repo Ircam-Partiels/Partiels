@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentGroupContainer.h"
 #include "../Transport/AnlTransportPlayheadContainer.h"
 #include "../Track/AnlTrackPlot.h"
 
@@ -10,10 +11,11 @@ namespace Document
 {
     class GroupPlot
     : public juce::Component
+    , private GroupContainer<std::unique_ptr<Track::Plot>>
     {
     public:
         GroupPlot(Accessor& accessor);
-        ~GroupPlot() override;
+        ~GroupPlot() override  = default;
         
         // juce::Component
         void resized() override;
@@ -42,9 +44,13 @@ namespace Document
         };
         
     private:
+        // GroupContainer<std::unique_ptr<Track::Plot>>
+        void updateStarted() override;
+        void updateEnded() override;
+        void removeFromGroup(std::unique_ptr<Track::Plot>& value) override;
+        std::unique_ptr<Track::Plot> createForGroup(Track::Accessor& trackAccessor) override;
+        
         Accessor& mAccessor;
-        Accessor::Listener mListener;
-        std::map<juce::String, std::unique_ptr<Track::Plot>> mPlots;
     };
 }
 
