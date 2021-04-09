@@ -22,24 +22,16 @@ void ColourSelector::changeListenerCallback(juce::ChangeBroadcaster* source)
     }
 }
 
-ColourButton::ColourButton(juce::Colour const& colour, juce::String const& title)
-: juce::ShapeButton("ColourButton", colour, colour.brighter(), colour.brighter())
+ColourButton::ColourButton(juce::String const& title)
+: juce::Button("ColourButton")
 , mTitle(title)
 {
     setClickingTogglesState(false);
-    setCurrentColour(colour, juce::NotificationType::dontSendNotification);
 }
 
 juce::Colour ColourButton::getCurrentColour() const
 {
     return mColour;
-}
-
-void ColourButton::resized()
-{
-    juce::Path p;
-    p.addRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
-    setShape(p, false, true, false);
 }
 
 void ColourButton::setTitle(juce::String const& title)
@@ -52,7 +44,6 @@ void ColourButton::setCurrentColour(juce::Colour const& newColour, juce::Notific
     if(newColour != mColour)
     {
         mColour = newColour;
-        setColours(mColour, mColour.brighter(), mColour.brighter());
         repaint();
         
         if(notificationType == juce::NotificationType::sendNotificationAsync)
@@ -93,6 +84,24 @@ void ColourButton::clicked()
     options.useNativeTitleBar = true;
     options.resizable = false;
     options.runModal();
+}
+
+void ColourButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    auto constexpr cornerSize = 4.0f;
+    auto constexpr thickness = 1.0f;
+    auto const bounds = getLocalBounds().toFloat().reduced(thickness);
+    g.setColour(mColour);
+    g.fillRoundedRectangle(bounds, cornerSize);
+    if(shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown)
+    {
+        g.setColour(findColour(ColourIds::borderOnColourId));
+    }
+    else
+    {
+        g.setColour(findColour(ColourIds::borderOffColourId));
+    }
+    g.drawRoundedRectangle(bounds, cornerSize, thickness);
 }
 
 ANALYSE_FILE_END

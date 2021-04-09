@@ -20,10 +20,17 @@ private:
 };
 
 class ColourButton
-: public juce::ShapeButton
+: public juce::Button
 {
 public:
-    ColourButton(juce::Colour const& colour = juce::Colours::white, juce::String const& title = "");
+    
+    enum ColourIds
+    {
+          borderOffColourId = 0x2000000
+        , borderOnColourId
+    };
+    
+    ColourButton(juce::String const& title = "");
     ~ColourButton() override = default;
     
     void setTitle(juce::String const& title);
@@ -32,12 +39,10 @@ public:
     
     std::function<void(juce::Colour const& colour)> onColourChanged = nullptr;
     
-    // juce::Component
-    void resized() override;
-    
 private:
-    // juce::ShapeButton
+    // juce::Button
     void clicked() override;
+    void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
     
     juce::String mTitle;
     juce::Colour mColour;
