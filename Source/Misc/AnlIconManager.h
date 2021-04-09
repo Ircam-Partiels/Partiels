@@ -20,6 +20,7 @@ public:
           alert
         , cancel
         , checked
+        , conversation
         , edit
         , expand
         , information
