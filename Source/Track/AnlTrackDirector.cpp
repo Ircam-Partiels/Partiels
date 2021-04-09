@@ -59,6 +59,10 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
                 applyZoom(*resultsRange);
             }
         }
+        
+        auto const& output = mAccessor.getAttr<AttrType::description>().output;
+        auto const zoomLink = mAccessor.getAttr<AttrType::zoomLink>();
+        mAccessor.setAttr<AttrType::zoomLink>(zoomLink && output.binCount > 0, NotificationType::synchronous);
     };
     
     accessor.onAttrUpdated = [=, this](AttrType attr, NotificationType notification)
@@ -96,7 +100,12 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             }
                 break;
             case AttrType::propertyState:
+                break;
             case AttrType::zoomLink:
+            {
+                sanitizeZooms(notification);
+            }
+                break;
             case AttrType::time:
             case AttrType::warnings:
             case AttrType::processing:
