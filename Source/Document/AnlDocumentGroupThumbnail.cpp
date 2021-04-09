@@ -28,8 +28,6 @@ Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::file:
-            case AttrType::layoutHorizontal:
-            case AttrType::layoutVertical:
             case AttrType::layout:
                 break;
             case AttrType::expanded:

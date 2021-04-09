@@ -32,7 +32,6 @@ namespace Document
     enum class AttrType : size_t
     {
           file
-        , layoutHorizontal
         , layoutVertical
         , layout
         , expanded
@@ -47,7 +46,6 @@ namespace Document
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
-    , Model::Attr<AttrType::layoutHorizontal, int, Model::Flag::basic>
     , Model::Attr<AttrType::layoutVertical, int, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::expanded, bool, Model::Flag::basic>
@@ -67,7 +65,6 @@ namespace Document
         
         Accessor()
         : Accessor(AttrContainer(  {juce::File{}}
-                                 , {144}
                                  , {144}
                                  , {}
                                  , {true}))

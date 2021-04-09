@@ -8,7 +8,6 @@ Document::AttrContainer const& Document::FileBased::getDefaultContainer()
     {
           {juce::File{}}
         , {144}
-        , {144}
         , {}
         , {true}
     };

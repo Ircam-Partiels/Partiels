@@ -32,10 +32,6 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
         {
             case AttrType::file:
                 break;
-            case AttrType::layoutHorizontal:
-            {
-                resized();
-            }
             case AttrType::layoutVertical:
             {
                 resized();
@@ -172,7 +168,6 @@ Document::Section::Section(Accessor& accessor)
         {
             case AttrType::file:
                 break;
-            case AttrType::layoutHorizontal:
             case AttrType::layoutVertical:
             case AttrType::expanded:
             {
