@@ -55,11 +55,14 @@ namespace Document
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
-        Zoom::Ruler mZoomTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
+        Zoom::Ruler mTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
+        Decorator mTimeRulerDecoration {mTimeRuler, 1, 2.0f};
+        juce::Component mLoopRuler;
+        Decorator mLoopRulerDecoration {mLoopRuler, 1, 2.0f};
         
         GroupContainer mGroupContainer {mAccessor};
         juce::Viewport mViewport;
-        Zoom::ScrollBar mZoomTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
+        Zoom::ScrollBar mTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
     };
 }
 

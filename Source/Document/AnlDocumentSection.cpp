@@ -152,11 +152,11 @@ void Document::Section::GroupContainer::resized()
 Document::Section::Section(Accessor& accessor)
 : mAccessor(accessor)
 {
-    mZoomTimeRuler.setPrimaryTickInterval(0);
-    mZoomTimeRuler.setTickReferenceValue(0.0);
-    mZoomTimeRuler.setTickPowerInterval(10.0, 2.0);
-    mZoomTimeRuler.setMaximumStringWidth(70.0);
-    mZoomTimeRuler.setValueAsStringMethod([](double value)
+    mTimeRuler.setPrimaryTickInterval(0);
+    mTimeRuler.setTickReferenceValue(0.0);
+    mTimeRuler.setTickPowerInterval(10.0, 2.0);
+    mTimeRuler.setMaximumStringWidth(70.0);
+    mTimeRuler.setValueAsStringMethod([](double value)
     {
         return Format::secondsToString(value, {":", ":", ":", ""});
     });
@@ -190,9 +190,10 @@ Document::Section::Section(Accessor& accessor)
             case AcsrType::tracks:
             {
                 auto const numTracks = acsr.getNumAcsr<AcsrType::tracks>();
-                mZoomTimeRuler.setVisible(numTracks > 0);
+                mTimeRulerDecoration.setVisible(numTracks > 0);
+                mLoopRulerDecoration.setVisible(numTracks > 0);
                 mViewport.setVisible(numTracks > 0);
-                mZoomTimeScrollBar.setVisible(numTracks > 0);
+                mTimeScrollBar.setVisible(numTracks > 0);
             }
                 break;
         }
@@ -201,7 +202,7 @@ Document::Section::Section(Accessor& accessor)
     mListener.onAccessorInserted = accessorChanged;
     mListener.onAccessorErased = accessorChanged;
     
-    mZoomTimeRuler.onDoubleClick = [&]()
+    mTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
@@ -218,9 +219,10 @@ Document::Section::Section(Accessor& accessor)
     mViewport.setViewedComponent(&mGroupContainer, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     setSize(480, 200);
-    addAndMakeVisible(mZoomTimeRuler);
+    addAndMakeVisible(mTimeRulerDecoration);
+    addAndMakeVisible(mLoopRulerDecoration);
     addAndMakeVisible(mViewport);
-    addAndMakeVisible(mZoomTimeScrollBar);
+    addAndMakeVisible(mTimeScrollBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -231,16 +233,17 @@ Document::Section::~Section()
 
 void Document::Section::resized()
 {
-    auto const scrollbarWidth = mViewport.getScrollBarThickness();
     auto constexpr leftSize = 98;
-    auto constexpr rightSize = 24;
+    auto const scrollbarWidth = mViewport.getScrollBarThickness();
+    auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
     
-    auto topBounds = bounds.removeFromTop(14);
-    mZoomTimeRuler.setBounds(topBounds.withTrimmedLeft(leftSize).withTrimmedRight(rightSize + scrollbarWidth));
-    auto bottomBounds = bounds.removeFromBottom(8);
-    mZoomTimeScrollBar.setBounds(bottomBounds.withTrimmedLeft(leftSize).withTrimmedRight(rightSize + scrollbarWidth));
-    bounds.removeFromTop(14); // Loop Section
+    auto const timeRuler = bounds.removeFromTop(14).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
+    mTimeRulerDecoration.setBounds(timeRuler);
+    auto const loopRuler = bounds.removeFromTop(14).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
+    mLoopRulerDecoration.setBounds(loopRuler);
+    auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
+    mTimeScrollBar.setBounds(timeScrollBarBounds);
     mGroupContainer.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupContainer.getHeight());
     mViewport.setBounds(bounds);
 }
@@ -248,9 +251,6 @@ void Document::Section::resized()
 void Document::Section::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
-    auto bounds = getLocalBounds();
-    g.setColour(mZoomTimeRuler.findColour(Zoom::Ruler::backgroundColourId));
-    g.fillRect(bounds.removeFromTop(mZoomTimeRuler.getHeight()));
 }
 
 void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
