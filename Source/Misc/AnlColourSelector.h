@@ -23,7 +23,6 @@ class ColourButton
 : public juce::Button
 {
 public:
-    
     enum ColourIds
     {
           borderOffColourId = 0x2000000
