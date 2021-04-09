@@ -4,7 +4,8 @@
 ANALYSE_FILE_BEGIN
 
 Application::AudioSettings::AudioSettings()
-: mPropertyDriver("Driver", "The current audio device driver", "", {}, [&](size_t index)
+: FloatingWindowContainer("Audio Settings")
+, mPropertyDriver("Driver", "The current audio device driver", "", {}, [&](size_t index)
 {
     auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));
     auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -255,26 +256,6 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
 #endif
     }
     resized();
-}
-
-void Application::AudioSettings::show()
-{
-    if(mFloatingWindow.getContentComponent() == nullptr)
-    {
-        auto const& desktop = juce::Desktop::getInstance();
-        auto const mousePosition = desktop.getMainMouseSource().getScreenPosition().toInt();
-        auto const* display = desktop.getDisplays().getDisplayForPoint(mousePosition);
-        anlStrongAssert(display != nullptr);
-        if(display != nullptr)
-        {
-            auto const bounds = display->userArea.withSizeKeepingCentre(mFloatingWindow.getWidth(), mFloatingWindow.getHeight());
-            mFloatingWindow.setBounds(bounds);
-        }
-        mFloatingWindow.setContentNonOwned(this, true);
-    }
-
-    mFloatingWindow.setVisible(true);
-    mFloatingWindow.toFront(false);
 }
 
 ANALYSE_FILE_END

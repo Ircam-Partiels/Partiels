@@ -7,14 +7,12 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class AudioSettings
-    : public juce::Component
+    : public FloatingWindowContainer
     , private juce::ChangeListener
     {
     public:
         AudioSettings();
         ~AudioSettings() override;
-        
-        void show();
         
         // juce::Component
         void resized() override;
@@ -29,8 +27,6 @@ namespace Application
         PropertyList mPropertyBufferSize;
         PropertyNumber mPropertyBufferSizeNumber;
         PropertyTextButton mPropertyDriverPanel;
-        
-        FloatingWindow mFloatingWindow {"Audio Settings"};
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioSettings)
     };
