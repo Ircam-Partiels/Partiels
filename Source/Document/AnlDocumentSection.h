@@ -45,7 +45,6 @@ namespace Document
             Accessor& mAccessor;
             Accessor::Listener mListener;
             
-            ResizerBar mResizerBar {ResizerBar::Orientation::vertical, true, {50, 300}};
             GroupSection mGroupSection {mAccessor};
             std::vector<std::unique_ptr<Track::Section>> mSections;
             DraggableTable mDraggableTable;

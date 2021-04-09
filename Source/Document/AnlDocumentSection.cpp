@@ -104,11 +104,6 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
         }
     };
     
-    mResizerBar.onMoved = [&](int size)
-    {
-        mAccessor.setAttr<AttrType::layoutHorizontal>(size, NotificationType::synchronous);
-    };
-    
     mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
@@ -142,7 +137,6 @@ Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
     
     addAndMakeVisible(mGroupSection);
     addAndMakeVisible(mConcertinaTable);
-    addAndMakeVisible(mResizerBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -154,8 +148,6 @@ Document::Section::GroupContainer::~GroupContainer()
 
 void Document::Section::GroupContainer::resized()
 {
-    auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>();
-    mResizerBar.setBounds(left, 0, 2, getHeight());
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mGroupSection.setBounds(bounds.removeFromTop(mGroupSection.getHeight()));
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
@@ -245,16 +237,17 @@ Document::Section::~Section()
 void Document::Section::resized()
 {
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
-    auto bounds = getLocalBounds().withTrimmedRight(scrollbarWidth);
-    auto const width = bounds.getWidth();
-    auto const left = mAccessor.getAttr<AttrType::layoutHorizontal>() + 2;
-    auto const right = width - 32;
+    auto constexpr leftSize = 98;
+    auto constexpr rightSize = 24;
+    auto bounds = getLocalBounds();
     
-    mZoomTimeRuler.setBounds(bounds.removeFromTop(14).withLeft(left + 1).withRight(right - 1));
-    mZoomTimeScrollBar.setBounds(bounds.removeFromBottom(8).withLeft(left + 1).withRight(right - 1));
-    bounds.removeFromTop(14);
-    mGroupContainer.setBounds(0, 0, width, mGroupContainer.getHeight());
-    mViewport.setBounds(bounds.withTrimmedRight(-scrollbarWidth));
+    auto topBounds = bounds.removeFromTop(14);
+    mZoomTimeRuler.setBounds(topBounds.withTrimmedLeft(leftSize).withTrimmedRight(rightSize + scrollbarWidth));
+    auto bottomBounds = bounds.removeFromBottom(8);
+    mZoomTimeScrollBar.setBounds(bottomBounds.withTrimmedLeft(leftSize).withTrimmedRight(rightSize + scrollbarWidth));
+    bounds.removeFromTop(14); // Loop Section
+    mGroupContainer.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupContainer.getHeight());
+    mViewport.setBounds(bounds);
 }
 
 void Document::Section::paint(juce::Graphics& g)
