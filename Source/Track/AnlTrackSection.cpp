@@ -87,7 +87,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
                 break;
             case AttrType::height:
             {
-                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 2);
+                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
             }
                 break;
             case AttrType::colours:

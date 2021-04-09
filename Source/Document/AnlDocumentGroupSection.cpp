@@ -15,7 +15,7 @@ Document::GroupSection::GroupSection(Accessor& accessor)
             case AttrType::layoutVertical:
             {
                 auto const size = mAccessor.getAttr<AttrType::layoutVertical>();
-                setSize(getWidth(), size + 2);
+                setSize(getWidth(), size + 1);
             }
                 break;
             case AttrType::layout:
