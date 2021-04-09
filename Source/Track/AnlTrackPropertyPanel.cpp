@@ -150,6 +150,10 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
 })
+, mPropertyValueRangeLink("Value Range Link", "Toggle the group link for value range.", [&](bool value)
+{
+    mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
+})
 , mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 {
     auto updateValueZoomMode = [&]()
@@ -279,6 +283,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyValueRangeMode
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
+                        , mPropertyValueRangeLink
                     });
                 }
                 else 
@@ -292,6 +297,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         , mPropertyValueRangeMin
                         , mPropertyValueRangeMax
                         , mPropertyValueRange
+                        , mPropertyValueRangeLink
                         , mPropertyNumBins
                         , mProgressBarRendering
                     });
@@ -380,7 +386,11 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::propertyState:
+                break;
             case AttrType::zoomLink:
+            {
+                mPropertyValueRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
+            }
                 break;
         }
     };
