@@ -52,6 +52,9 @@ namespace Application
         
         // juce::TooltipWindow::LookAndFeelMethods
         void drawTooltip(juce::Graphics& g, juce::String const& text, int width, int height) override;
+        
+        // juce::Button::LookAndFeelMethods
+        void drawButtonBackground(juce::Graphics& g, juce::Button& button, juce::Colour const& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
     };
 }
 

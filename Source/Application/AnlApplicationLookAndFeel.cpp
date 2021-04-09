@@ -403,4 +403,48 @@ void Application::LookAndFeel::drawTooltip(juce::Graphics& g, juce::String const
     tl.draw(g, bounds.reduced(4.0f, 4.0f));
 }
 
+void Application::LookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& button, juce::Colour const& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    auto constexpr cornerSize = 2.0f;
+    auto const bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
+    
+    auto baseColour = backgroundColour.withMultipliedSaturation(button.hasKeyboardFocus(true) ? 1.3f : 0.9f).withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f);
+    
+    if(shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
+    {
+        baseColour = baseColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
+    }
+    
+    g.setColour(baseColour);
+    
+    auto const flatOnLeft   = button.isConnectedOnLeft();
+    auto const flatOnRight  = button.isConnectedOnRight();
+    auto const flatOnTop    = button.isConnectedOnTop();
+    auto const flatOnBottom = button.isConnectedOnBottom();
+    
+    if(flatOnLeft || flatOnRight || flatOnTop || flatOnBottom)
+    {
+        juce::Path path;
+        path.addRoundedRectangle(bounds.getX(), bounds.getY(),
+                                 bounds.getWidth(), bounds.getHeight(),
+                                 cornerSize, cornerSize,
+                                 !(flatOnLeft  || flatOnTop),
+                                 !(flatOnRight || flatOnTop),
+                                 !(flatOnLeft  || flatOnBottom),
+                                 !(flatOnRight || flatOnBottom));
+        
+        g.fillPath(path);
+        
+        g.setColour(button.findColour(juce::ComboBox::outlineColourId));
+        g.strokePath(path, juce::PathStrokeType(1.0f));
+    }
+    else
+    {
+        g.fillRoundedRectangle(bounds, cornerSize);
+        
+        g.setColour(button.findColour(juce::ComboBox::outlineColourId));
+        g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
+    }
+}
+
 ANALYSE_FILE_END
