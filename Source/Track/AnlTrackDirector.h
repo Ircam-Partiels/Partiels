@@ -17,6 +17,10 @@ namespace Track
         ~Director() override;
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
+        
+        void setLinkedZoom(Zoom::Accessor const& source, NotificationType const notification);
+        std::function<void(Zoom::Accessor const& source, NotificationType const notification)> onLinkedZoomChanged = nullptr;
+        
     private:
         void runAnalysis(NotificationType const notification);
         void runRendering();
