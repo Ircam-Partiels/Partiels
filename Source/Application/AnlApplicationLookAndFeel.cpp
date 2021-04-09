@@ -138,7 +138,7 @@ juce::Font Application::LookAndFeel::getHeaderFont(ConcertinaTable const& panel,
 
 void Application::LookAndFeel::drawHeaderBackground(juce::Graphics& g, ConcertinaTable const& panel, juce::Rectangle<int> area, bool isMouseDown, bool isMouseOver) const
 {
-    auto constexpr corner = 4.0f;
+    auto constexpr corner = 2.0f;
     auto const contrast = isMouseDown || isMouseOver ? 0.1f : 0.0f;
     g.setColour(panel.findColour(ConcertinaTable::headerBackgroundColourId).brighter(contrast));
     g.fillRoundedRectangle(area.toFloat(), corner);

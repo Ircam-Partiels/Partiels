@@ -31,15 +31,15 @@ namespace Document
         Accessor::Listener mListener;
 
         GroupThumbnail mThumbnail {mAccessor,};
-        Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
+        Decorator mThumbnailDecoration {mThumbnail, 1, 2.0f};
         
         GroupSnapshot mSnapshot {mAccessor,};
         GroupSnapshot::Overlay mSnapshotOverlay {mSnapshot};
-        Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 4.0f};
+        Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 2.0f};
         
         GroupPlot mPlot {mAccessor};
         GroupPlot::Overlay mPlotOverlay {mPlot};
-        Decorator mPlotDecoration {mPlotOverlay, 1, 4.0f};
+        Decorator mPlotDecoration {mPlotOverlay, 1, 2.0f};
         
         Zoom::Accessor zoomAcsr;
         Zoom::Ruler mRuler {zoomAcsr, Zoom::Ruler::Orientation::vertical};

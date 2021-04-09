@@ -37,15 +37,15 @@ namespace Track
         Accessor::Listener mListener;
         
         Thumbnail mThumbnail {mAccessor};
-        Decorator mThumbnailDecoration {mThumbnail, 1, 4.0f};
+        Decorator mThumbnailDecoration {mThumbnail, 1, 2.0f};
         
         Snapshot mSnapshot {mAccessor, mTimeZoomAccessor};
         Snapshot::Overlay mSnapshotOverlay {mSnapshot};
-        Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 4.0f};
+        Decorator mSnapshotDecoration {mSnapshotOverlay, 1, 2.0f};
         
         Plot mPlot {mAccessor, mTimeZoomAccessor, mTransportAccessor};
         Plot::Overlay mPlotOverlay {mPlot};
-        Decorator mPlotDecoration {mPlotOverlay, 1, 4.0f};
+        Decorator mPlotDecoration {mPlotOverlay, 1, 2.0f};
         
         Zoom::Ruler mValueRuler {mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mValueScrollBar {mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
