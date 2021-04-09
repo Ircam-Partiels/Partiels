@@ -39,7 +39,6 @@ namespace Application
         
         //Footer
         Tooltip::Display mToolTipDisplay;
-        Tooltip::BubbleWindow mToolTipBubbleWindow;
     };
 }
 
