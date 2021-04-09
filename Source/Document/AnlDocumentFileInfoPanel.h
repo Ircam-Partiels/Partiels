@@ -10,7 +10,7 @@ namespace Document
     //! @todo Implement tag system
     //! @todo Add popup window that diisplays the full text when the mouse is over after a few ms
     class FileInfoPanel
-    : public juce::Component
+    : public FloatingWindowContainer
     {
     public:
         FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);

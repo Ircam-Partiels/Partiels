@@ -3,7 +3,8 @@
 ANALYSE_FILE_BEGIN
 
 Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
-: mAccessor(accessor)
+: FloatingWindowContainer("Audio File Info")
+, mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -74,6 +75,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
     mViewport.setViewedComponent(&mConcertinaTable, false);
     addAndMakeVisible(mViewport);
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    setSize(300, 400);
 }
 
 Document::FileInfoPanel::~FileInfoPanel()
