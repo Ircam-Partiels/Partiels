@@ -315,7 +315,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
     auto const width = getWidth();
     auto const isVerticallyOriented = mOrientation == Orientation::vertical;
     auto const size = isVerticallyOriented ? height - 1 : width - 1;
-    auto const textPadding = isVerticallyOriented ? 0 : 4;
+    auto const textPadding = isVerticallyOriented ? 0 : 2;
     
     // The minimum interval depends on the font height
     auto const font = g.getCurrentFont();
@@ -367,7 +367,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
         }
         else
         {
-            g.drawVerticalLine(static_cast<int>(std::floor(position)) + 1, static_cast<float>(height) - tickLengh, static_cast<float>(height));
+            g.drawVerticalLine(static_cast<int>(std::floor(position)), static_cast<float>(height) - tickLengh, static_cast<float>(height));
         }
 
         if(isPrimaryTick && position < static_cast<float>(size + 1))
@@ -386,7 +386,7 @@ void Zoom::Ruler::paint(juce::Graphics &g)
             }
             else
             {
-                g.drawSingleLineText(valueText, static_cast<int>(std::ceil(position)) + textPadding, height - 1, juce::Justification::left);
+                g.drawSingleLineText(valueText, static_cast<int>(std::floor(position)) + textPadding, height - 1, juce::Justification::left);
             }
         }
     }
