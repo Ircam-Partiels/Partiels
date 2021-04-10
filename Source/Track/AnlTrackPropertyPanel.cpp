@@ -266,43 +266,49 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
                 mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
                 
-                if(output.hasFixedBinCount && output.binCount == 0)
+                switch(Tools::getDisplayType(acsr))
                 {
-                    mGraphicalSection.setComponents(
+                    case Tools::DisplayType::markers:
                     {
-                          mPropertyForegroundColour
-                        , mPropertyBackgroundColour
-                    });
-                }
-                else if(!output.hasFixedBinCount || output.binCount == 1)
-                {
-                    mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
-                    mGraphicalSection.setComponents(
+                        mGraphicalSection.setComponents(
+                        {
+                              mPropertyForegroundColour
+                            , mPropertyBackgroundColour
+                        });
+                    }
+                        break;
+                    case Tools::DisplayType::segments:
                     {
-                          mPropertyForegroundColour
-                        , mPropertyBackgroundColour
-                        , mPropertyValueRangeMode
-                        , mPropertyValueRangeMin
-                        , mPropertyValueRangeMax
-                        , mPropertyRangeLink
-                    });
-                }
-                else 
-                {
-                    mPropertyRangeLink.title.setText("Bin Range Link", juce::NotificationType::dontSendNotification);
-                    mPropertyNumBins.entry.setEnabled(false);
-                    mGraphicalSection.setComponents(
+                        mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
+                        mGraphicalSection.setComponents(
+                        {
+                              mPropertyForegroundColour
+                            , mPropertyBackgroundColour
+                            , mPropertyValueRangeMode
+                            , mPropertyValueRangeMin
+                            , mPropertyValueRangeMax
+                            , mPropertyRangeLink
+                        });
+                    }
+                        break;
+                    case Tools::DisplayType::grid:
                     {
-                          mPropertyColourMap
-                        , mPropertyColourMapAlpha
-                        , mPropertyValueRangeMode
-                        , mPropertyValueRangeMin
-                        , mPropertyValueRangeMax
-                        , mPropertyValueRange
-                        , mPropertyNumBins
-                        , mPropertyRangeLink
-                        , mProgressBarRendering
-                    });
+                        mPropertyRangeLink.title.setText("Bin Range Link", juce::NotificationType::dontSendNotification);
+                        mPropertyNumBins.entry.setEnabled(false);
+                        mGraphicalSection.setComponents(
+                        {
+                              mPropertyColourMap
+                            , mPropertyColourMapAlpha
+                            , mPropertyValueRangeMode
+                            , mPropertyValueRangeMin
+                            , mPropertyValueRangeMax
+                            , mPropertyValueRange
+                            , mPropertyNumBins
+                            , mPropertyRangeLink
+                            , mProgressBarRendering
+                        });
+                    }
+                        break;
                 }
 
                 // Plugin Information Part
