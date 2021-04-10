@@ -74,33 +74,25 @@ void Track::Snapshot::paint(juce::Graphics& g)
         return;
     }
     
-    auto const& output = mAccessor.getAttr<AttrType::description>().output;
     auto const time = mAccessor.getAttr<AttrType::time>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-    if(output.hasFixedBinCount)
+    switch(Tools::getDisplayType(mAccessor))
     {
-        switch(output.binCount)
+        case Tools::DisplayType::markers:
         {
-            case 0:
-            {
-                paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time);
-            }
-                break;
-            case 1:
-            {
-                paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time, valueRange);
-            }
-                break;
-            default:
-            {
-                paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), time, mTimeZoomAccessor, mAccessor.getAcsr<AcsrType::binZoom>());
-            }
-                break;
+            paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time);
         }
-    }
-    else
-    {
-        paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time, valueRange);
+            break;
+        case Tools::DisplayType::segments:
+        {
+            paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time, valueRange);
+        }
+            break;
+        case Tools::DisplayType::grid:
+        {
+            paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), time, mTimeZoomAccessor, mAccessor.getAcsr<AcsrType::binZoom>());
+        }
+            break;
     }
 }
 
