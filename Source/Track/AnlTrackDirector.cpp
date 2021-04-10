@@ -248,7 +248,6 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
 
 void Track::Director::setLinkedZoom(Zoom::Accessor const& source, NotificationType const notification)
 {
-    auto const& output = mAccessor.getAttr<AttrType::description>().output;
     if(!mAccessor.getAttr<AttrType::zoomLink>())
     {
         return;
