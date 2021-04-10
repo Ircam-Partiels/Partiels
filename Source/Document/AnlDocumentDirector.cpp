@@ -71,13 +71,13 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 anlStrongAssert(director != nullptr);
                 if(director != nullptr)
                 {
-                    director->onLinkedZoomChanged = [this](Zoom::Accessor const& zoomAcsr, NotificationType notification)
+                    director->onLinkedZoomChanged = [this](Zoom::Accessor const& zoomAcsr, NotificationType zoomNotification)
                     {
                         for(auto& track : mTracks)
                         {
                             if(track != nullptr)
                             {
-                                track->setLinkedZoom(zoomAcsr, notification);
+                                track->setLinkedZoom(zoomAcsr, zoomNotification);
                             }
                         }
                     };
