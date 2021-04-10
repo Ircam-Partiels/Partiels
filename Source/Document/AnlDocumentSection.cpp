@@ -271,7 +271,10 @@ void Document::Section::lookAndFeelChanged()
 
 void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
 {
-    juce::ignoreUnused(event);
+    if(event.mods.isCommandDown())
+    {
+        return;
+    }
     auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const offset = static_cast<double>(wheel.deltaX) * visibleRange.getLength();
@@ -284,12 +287,17 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
 
 void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
 {
-    juce::ignoreUnused(event);
+    if(event.mods.isCommandDown())
+    {
+        return;
+    }
     auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     auto const globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
     auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const anchor = std::get<1>(timeZoomAcsr.getAttr<Zoom::AttrType::anchor>());
+    
+    auto const& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+    auto const anchor = transportAcsr.getAttr<Transport::AttrType::playback>() ? transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() : transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
 
     auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
     auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
