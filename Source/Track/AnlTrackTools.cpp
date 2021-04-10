@@ -2,6 +2,33 @@
 
 ANALYSE_FILE_BEGIN
 
+Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
+{
+    auto const& output = acsr.getAttr<AttrType::description>().output;
+    if(output.hasFixedBinCount)
+    {
+        switch(output.binCount)
+        {
+            case 0:
+            {
+                return DisplayType::markers;
+            }
+                break;
+            case 1:
+            {
+                return DisplayType::segments;
+            }
+                break;
+            default:
+            {
+                return DisplayType::grid;
+            }
+                break;
+        }
+    }
+    return DisplayType::segments;
+}
+
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
 {
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
@@ -124,30 +151,28 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size
     {
         return "-";
     }
-    if(output.hasFixedBinCount)
+    switch(getDisplayType(acsr))
     {
-        switch(output.binCount)
+        case DisplayType::markers:
         {
-            case 0:
-            {
-                return Tools::getMarkerText(*results, output, time);
-            }
-                break;
-            case 1:
-            {
-                return Tools::getSegmentText(*results, output, time);
-            }
-                break;
-            default:
-            {
-                auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
-                auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");
-                return "(" + binName + ") " +  Tools::getGridText(*results, output, time, bin);
-            }
-                break;
+            return Tools::getMarkerText(*results, output, time);
         }
+            break;
+        case DisplayType::segments:
+        {
+            return Tools::getSegmentText(*results, output, time);
+        }
+            break;
+        case DisplayType::grid:
+        {
+            auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
+            auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");
+            return "(" + binName + ") " +  Tools::getGridText(*results, output, time, bin);
+        }
+            break;
     }
-    return Tools::getSegmentText(*results, output, time);
+    anlStrongAssert(false);
+    return "";
 }
 
 juce::String Track::Tools::getProcessingTooltip(Accessor const& acsr)
