@@ -1,4 +1,5 @@
 #include "AnlTrackSection.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -39,48 +40,10 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
                 break;
             case AttrType::description:
             {
-                auto const& output = acsr.getAttr<AttrType::description>().output;
-                if(output.hasFixedBinCount)
-                {
-                    switch(output.binCount)
-                    {
-                        case 0_z:
-                        {
-                            mBinRuler.setVisible(false);
-                            mBinScrollBar.setVisible(false);
-                            
-                            mValueRuler.setVisible(false);
-                            mValueScrollBar.setVisible(false);
-                        }
-                            break;
-                        case 1_z:
-                        {
-                            mBinRuler.setVisible(false);
-                            mBinScrollBar.setVisible(false);
-                            
-                            mValueRuler.setVisible(true);
-                            mValueScrollBar.setVisible(true);
-                        }
-                            break;
-                        default:
-                        {
-                            mBinRuler.setVisible(true);
-                            mBinScrollBar.setVisible(true);
-                            
-                            mValueRuler.setVisible(false);
-                            mValueScrollBar.setVisible(false);
-                        }
-                            break;
-                    }
-                }
-                else
-                {
-                    mBinRuler.setVisible(false);
-                    mBinScrollBar.setVisible(false);
-                    
-                    mValueRuler.setVisible(true);
-                    mValueScrollBar.setVisible(true);
-                }
+                mValueRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments);
+                mValueScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments);
+                mBinRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid);
+                mBinScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid);
             }
                 break;
             case AttrType::state:
@@ -149,5 +112,70 @@ void Track::Section::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::sectionColourId, true));
 }
+
+void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
+{
+    if(!event.mods.isCommandDown())
+    {
+        Component::mouseWheelMove(event, wheel);
+        return;
+    }
+    
+    switch(Tools::getDisplayType(mAccessor))
+    {
+        case Tools::DisplayType::markers:
+            break;
+        case Tools::DisplayType::segments:
+        {
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+            auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+        }
+            break;
+        case Tools::DisplayType::grid:
+        {
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+            auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+        }
+            break;
+    }
+}
+
+void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
+{
+    if(!event.mods.isCommandDown())
+    {
+        Component::mouseMagnify(event, magnifyAmount);
+        return;
+    }
+    
+    switch(Tools::getDisplayType(mAccessor))
+    {
+        case Tools::DisplayType::markers:
+            break;
+        case Tools::DisplayType::segments:
+        {
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+            auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
+            auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange.expanded(amount), NotificationType::synchronous);
+        }
+            break;
+        case Tools::DisplayType::grid:
+        {
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+            auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
+            auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange.expanded(amount), NotificationType::synchronous);
+        }
+            break;
+    }
+}
+
 
 ANALYSE_FILE_END
