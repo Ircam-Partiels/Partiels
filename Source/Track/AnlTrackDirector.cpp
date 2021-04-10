@@ -60,9 +60,7 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             }
         }
         
-        auto const& output = mAccessor.getAttr<AttrType::description>().output;
-        auto const zoomLink = mAccessor.getAttr<AttrType::zoomLink>();
-        mAccessor.setAttr<AttrType::zoomLink>(zoomLink && (!output.hasFixedBinCount || output.binCount > 0), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::zoomLink>(mAccessor.getAttr<AttrType::zoomLink>() && Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers, NotificationType::synchronous);
     };
     
     auto updateLinkedZoom = [this](NotificationType notification)
@@ -71,14 +69,20 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
         {
             return;
         }
-        auto const& output = mAccessor.getAttr<AttrType::description>().output;
-        if(output.hasFixedBinCount && output.binCount > 1)
+        switch(Tools::getDisplayType(mAccessor))
         {
-            onLinkedZoomChanged(mAccessor.getAcsr<AcsrType::binZoom>(), notification);
-        }
-        else if(!output.hasFixedBinCount || output.binCount == 1)
-        {
-            onLinkedZoomChanged(mAccessor.getAcsr<AcsrType::valueZoom>(), notification);
+            case Tools::DisplayType::markers:
+                break;
+            case Tools::DisplayType::segments:
+            {
+                onLinkedZoomChanged(mAccessor.getAcsr<AcsrType::valueZoom>(), notification);
+            }
+                break;
+            case Tools::DisplayType::grid:
+            {
+                onLinkedZoomChanged(mAccessor.getAcsr<AcsrType::binZoom>(), notification);
+            }
+                break;
         }
     };
     
@@ -138,8 +142,7 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
         {
             case Zoom::AttrType::globalRange:
             {
-                auto const& output = mAccessor.getAttr<AttrType::description>().output;
-                if(!output.hasFixedBinCount || output.binCount == 1)
+                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -150,8 +153,7 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case Zoom::AttrType::visibleRange:
             {
                 runRendering();
-                auto const& output = mAccessor.getAttr<AttrType::description>().output;
-                if(!output.hasFixedBinCount || output.binCount == 1)
+                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -170,8 +172,7 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                auto const& output = mAccessor.getAttr<AttrType::description>().output;
-                if(output.hasFixedBinCount && output.binCount > 1)
+                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -252,25 +253,32 @@ void Track::Director::setLinkedZoom(Zoom::Accessor const& source, NotificationTy
     {
         return;
     }
-    if(output.hasFixedBinCount && output.binCount > 1)
+    switch(Tools::getDisplayType(mAccessor))
     {
-        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-        if(&zoomAcsr == &source)
+        case Tools::DisplayType::markers:
+            break;
+        case Tools::DisplayType::segments:
         {
-            return;
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+            if(&zoomAcsr == &source)
+            {
+                return;
+            }
+            auto const range = Zoom::Tools::getScaledVisibleRange(source, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, notification);
         }
-        auto const range = Zoom::Tools::getScaledVisibleRange(source, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, notification);
-    }
-    else if(!output.hasFixedBinCount || output.binCount == 1)
-    {
-        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-        if(&zoomAcsr == &source)
+            break;
+        case Tools::DisplayType::grid:
         {
-            return;
+            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+            if(&zoomAcsr == &source)
+            {
+                return;
+            }
+            auto const range = Zoom::Tools::getScaledVisibleRange(source, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, notification);
         }
-        auto const range = Zoom::Tools::getScaledVisibleRange(source, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, notification);
+            break;
     }
 }
 
