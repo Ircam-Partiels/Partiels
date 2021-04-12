@@ -103,6 +103,8 @@ file(GLOB TransportSources
     ${SOURCES_DIRECTORY}/Transport/AnlTransportAudioReader.h
     ${SOURCES_DIRECTORY}/Transport/AnlTransportDisplay.cpp
     ${SOURCES_DIRECTORY}/Transport/AnlTransportDisplay.h
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportLoopBar.cpp
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportLoopBar.h
     ${SOURCES_DIRECTORY}/Transport/AnlTransportModel.h
     ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.cpp
     ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.h)
