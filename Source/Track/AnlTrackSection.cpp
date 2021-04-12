@@ -88,11 +88,6 @@ Track::Section::~Section()
     mAccessor.removeListener(mListener);
 }
 
-juce::String Track::Section::getIdentifier() const
-{
-    return mAccessor.getAttr<AttrType::identifier>();
-}
-
 void Track::Section::resized()
 {
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(1).reduced(2, 0));

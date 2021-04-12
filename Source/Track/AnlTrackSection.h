@@ -22,8 +22,6 @@ namespace Track
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
         ~Section() override;
         
-        juce::String getIdentifier() const;
-        
         std::function<void(void)> onRemove = nullptr;
         
         // juce::Component
