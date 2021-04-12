@@ -3,6 +3,7 @@
 #include "AnlDocumentModel.h"
 #include "AnlDocumentGroupSection.h"
 #include "AnlDocumentFileInfoPanel.h"
+#include "../Transport/AnlTransportLoopBar.h"
 #include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -67,8 +68,8 @@ namespace Document
         
         Zoom::Ruler mTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration {mTimeRuler, 1, 2.0f};
-        juce::Component mLoopRuler;
-        Decorator mLoopRulerDecoration {mLoopRuler, 1, 2.0f};
+        Transport::LoopBar mLoopBar {mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
+        Decorator mLoopBarDecoration {mLoopBar, 1, 2.0f};
         
         GroupContainer mGroupContainer {mAccessor};
         juce::Viewport mViewport;

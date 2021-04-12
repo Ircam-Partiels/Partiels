@@ -220,7 +220,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     addAndMakeVisible(mFileInfoButtonDecoration);
     addAndMakeVisible(mTooltipButton);
     addAndMakeVisible(mTimeRulerDecoration);
-    addAndMakeVisible(mLoopRulerDecoration);
+    addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mTimeScrollBar);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -242,7 +242,7 @@ void Document::Section::resized()
     mFileInfoButtonDecoration.setBounds(topPart.removeFromLeft(leftSize));
     mTooltipButton.setBounds(topPart.removeFromRight(rightSize).reduced(4));
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
-    mLoopRulerDecoration.setBounds(topPart);
+    mLoopBarDecoration.setBounds(topPart);
     auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
     mTimeScrollBar.setBounds(timeScrollBarBounds);
     mGroupContainer.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupContainer.getHeight());
