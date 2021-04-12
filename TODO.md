@@ -1,33 +1,20 @@
 - Change the Font (Metropolis might be more adapted)
-- Rename Analyzer to Track
-- Rename and Split Document to Group and Document
-- Add loop support
 - Add container table
-- Zoom replace signal approach with model
 - Zoom fix rulers
 - Add program support
 - Use a colour scheme for look and feel
 - Improve plugin blacklist support
 - Clean exporter
-- The Analyzer director doesn't manage key changes
 - Add push notification support
 
-- Check move track
-- Add percent for analysing/rendering
-- Improve zoom support using modes
-- Improve section mouse down (results) - Move Section::Container
 - Notarization
 - Fix export state
-- FAcultative shadow ?
 - Fix colour management
 
 - Look And Feel
 - Translations
-- Debug
-- remove magic enum
-- remove ILF?
-- CI/CD
 - https://github.com/taglib/taglib
-- Add Document::Group::Overview
-- Windows Audio Driver ASIO
-- Linux Audio Driver Jack
+
+- Add Document::StrechableGroupSection
+- Optimize result representation
+  -
