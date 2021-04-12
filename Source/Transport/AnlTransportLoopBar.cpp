@@ -74,11 +74,11 @@ void Transport::LoopBar::paint(juce::Graphics& g)
     auto const x2 = Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mLoopRange.getEnd());
     if(mAccessor.getAttr<AttrType::looping>())
     {
-        g.fillRoundedRectangle(x1, 0, x2 - x1, getHeight(), 2.0f);
+        g.fillRoundedRectangle(static_cast<float>(x1), 0.0f, static_cast<float>(x2 - x1), static_cast<float>(getHeight()), 2.0f);
     }
     else
     {
-        g.drawRoundedRectangle(x1, 0, x2 - x1, getHeight(), 2.0f, 1.0f);
+        g.drawRoundedRectangle(static_cast<float>(x1), 0.0f, static_cast<float>(x2 - x1), static_cast<float>(getHeight()), 2.0f, 1.0f);
     }
 }
 
