@@ -2,157 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::GroupContainer::GroupContainer(Accessor& accessor)
-: mAccessor(accessor)
-{
-    auto updateComponents = [&]()
-    {
-        std::vector<ConcertinaTable::ComponentRef> components;
-        components.reserve(mSections.size());
-        auto const& layout = mAccessor.getAttr<AttrType::layout>();
-        for(auto const& identifier : layout)
-        {
-            auto it = std::find_if(mSections.cbegin(), mSections.cend(), [&](auto const& section)
-            {
-                return section->getIdentifier() == identifier;
-            });
-            if(it != mSections.cend())
-            {
-                components.push_back(*it->get());
-            }
-        }
-        mDraggableTable.setComponents(components);
-        mGroupSection.setVisible(!components.empty());
-        resized();
-    };
-    
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case AttrType::file:
-                break;
-            case AttrType::layoutVertical:
-            {
-                resized();
-            }
-                break;
-            case AttrType::layout:
-            {
-                updateComponents();
-            }
-                break;
-            case AttrType::expanded:
-            {
-                mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
-            }
-                break;
-        }
-    };
-    
-    mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-                break;
-            case AcsrType::tracks:
-            {
-                auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
-                auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-                auto& transport = mAccessor.getAcsr<AcsrType::transport>();
-                
-                auto newSection = std::make_unique<Track::Section>(trackAcsr, timeZoomAcsr, transport);
-                anlStrongAssert(newSection != nullptr);
-                if(newSection != nullptr)
-                {
-                    newSection->onRemove = [this, ptr = newSection.get()]()
-                    {
-                        if(onRemoveTrack != nullptr)
-                        {
-                            onRemoveTrack(ptr->getIdentifier());
-                        }
-                    };
-                }
-                mSections.insert(mSections.begin() + static_cast<long>(index), std::move(newSection));
-                updateComponents();
-            }
-                break;
-        }
-    };
-    
-    mListener.onAccessorErased = [=, this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-                break;
-            case AcsrType::tracks:
-            {
-                mSections.erase(mSections.begin() + static_cast<long>(index));
-                updateComponents();
-            }
-                break;
-        }
-    };
-    
-    mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
-    {
-        auto layout = mAccessor.getAttr<AttrType::layout>();
-        auto const identifier = layout[previousIndex];
-        std::erase(layout, identifier);
-        layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
-        
-        auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        std::erase_if(layout, [&](auto const& trackIdentifier)
-        {
-            return std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-            {
-                return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == trackIdentifier;
-            });
-        });
-        anlWeakAssert(layout.size() == trackAcsrs.size());
-        mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
-    };
-    
-    mBoundsListener.onComponentResized = [&](juce::Component& component)
-    {
-        juce::ignoreUnused(component);
-        auto const height = mGroupSection.getHeight() + mConcertinaTable.getHeight();
-        setSize(getWidth(), height);
-    };
-    mBoundsListener.attachTo(mGroupSection);
-    mBoundsListener.attachTo(mConcertinaTable);
-    mConcertinaTable.setComponents({mDraggableTable});
-    
-    addAndMakeVisible(mGroupSection);
-    addAndMakeVisible(mConcertinaTable);
-    mAccessor.addListener(mListener, NotificationType::synchronous);
-}
-
-Document::Section::GroupContainer::~GroupContainer()
-{
-    mBoundsListener.detachFrom(mConcertinaTable);
-    mAccessor.removeListener(mListener);
-}
-
-void Document::Section::GroupContainer::resized()
-{
-    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    mGroupSection.setBounds(bounds.removeFromTop(mGroupSection.getHeight()));
-    mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
-}
-
-void Document::Section::GroupContainer::paint(juce::Graphics& g)
-{
-    g.fillAll(findColour(ColourIds::backgroundColourId));
-}
-
 Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
 , mFileInfoPanel(accessor, audioFormatManager)
@@ -190,7 +39,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     
-    mGroupContainer.onRemoveTrack = [&](juce::String const& identifier)
+    mGroupStrechableSection.onRemoveTrack = [&](juce::String const& identifier)
     {
         if(onRemoveTrack != nullptr)
         {
@@ -214,7 +63,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     };
     mTooltipButton.setToggleState(true, juce::NotificationType::sendNotification);
     
-    mViewport.setViewedComponent(&mGroupContainer, false);
+    mViewport.setViewedComponent(&mGroupStrechableSection, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     setSize(480, 200);
     addAndMakeVisible(mFileInfoButtonDecoration);
@@ -245,7 +94,7 @@ void Document::Section::resized()
     mLoopBarDecoration.setBounds(topPart);
     auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
     mTimeScrollBar.setBounds(timeScrollBarBounds);
-    mGroupContainer.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupContainer.getHeight());
+    mGroupStrechableSection.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupStrechableSection.getHeight());
     mViewport.setBounds(bounds);
 }
 

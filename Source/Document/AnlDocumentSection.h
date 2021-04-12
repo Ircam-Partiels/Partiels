@@ -1,10 +1,7 @@
 #pragma once
 
-#include "AnlDocumentModel.h"
-#include "AnlDocumentGroupSection.h"
-#include "AnlDocumentFileInfoPanel.h"
+#include "AnlDocumentGroupStrechableSection.h"
 #include "../Transport/AnlTransportLoopBar.h"
-#include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,30 +31,6 @@ namespace Document
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         
     private:
-        class GroupContainer
-        : public juce::Component
-        {
-        public:
-            GroupContainer(Accessor& accessor);
-            ~GroupContainer() override;
-            
-            std::function<void(juce::String const& identifier)> onRemoveTrack = nullptr;
-            
-            // juce::Component
-            void resized() override;
-            void paint(juce::Graphics& g) override;
-            
-        private:
-            Accessor& mAccessor;
-            Accessor::Listener mListener;
-            
-            GroupSection mGroupSection {mAccessor};
-            std::vector<std::unique_ptr<Track::Section>> mSections;
-            DraggableTable mDraggableTable;
-            ConcertinaTable mConcertinaTable {"", false};
-            BoundsListener mBoundsListener;
-        };
-        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
@@ -71,7 +44,7 @@ namespace Document
         Transport::LoopBar mLoopBar {mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Decorator mLoopBarDecoration {mLoopBar, 1, 2.0f};
         
-        GroupContainer mGroupContainer {mAccessor};
+        GroupStrechableSection mGroupStrechableSection {mAccessor};
         juce::Viewport mViewport;
         Zoom::ScrollBar mTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
         
