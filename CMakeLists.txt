@@ -339,6 +339,11 @@ if(CMAKE_GENERATOR STREQUAL Xcode)
    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_GCC_WARN_UNUSED_FUNCTION "YES")
 endif()
 
+if(WIN32)
+target_compile_options(Partiels PRIVATE /wd4244)
+target_compile_options(PartielsTest PRIVATE /wd4244)
+endif()
+
 if(UNIX AND NOT APPLE)
     target_link_libraries(Partiels PRIVATE atomic)
     target_link_libraries(PartielsTest PRIVATE atomic)
