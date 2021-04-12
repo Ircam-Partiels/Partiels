@@ -15,16 +15,16 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
                 break;
             case AttrType::startPlayhead:
             {
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
                 mStartPlayhead = acsr.getAttr<AttrType::startPlayhead>();
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
             }
                 break;
             case AttrType::runningPlayhead:
             {
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
                 mRunningPlayhead = acsr.getAttr<AttrType::runningPlayhead>();
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
+                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
             }
                 break;
             case AttrType::looping:
@@ -64,15 +64,15 @@ Transport::PlayheadBar::~PlayheadBar()
 void Transport::PlayheadBar::paint(juce::Graphics& g)
 {
     g.setColour(findColour(ColourIds::startPlayheadColourId));
-    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
+    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
     g.setColour(findColour(ColourIds::runningPlayheadColourId));
-    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
+    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
 }
 
 void Transport::PlayheadBar::mouseDown(juce::MouseEvent const& event)
 {
     auto const relEvent = event.getEventRelativeTo(this);
-    mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, relEvent.x), NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, relEvent.x), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
