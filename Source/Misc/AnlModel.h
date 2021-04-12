@@ -282,7 +282,7 @@ namespace Model
                 auto& lvalue = std::get<static_cast<size_t>(type)>(mAttributes).value;
                 if(isEquivalentTo(lvalue, value) == false)
                 {
-                    setValue<value_type>(lvalue, value);
+                    lvalue = value;
                     if(onAttrUpdated != nullptr)
                     {
                         lock.store(true);
@@ -724,42 +724,16 @@ namespace Model
                     return isEquivalentTo(slhs, srhs);
                 });
             }
+            else if constexpr(is_specialization<T, std::reference_wrapper>::value)
+            {
+                return std::addressof(lhs) == std::addressof(rhs);
+            }
             else
             {
                 return lhs == rhs;
             }
         }
 
-        
-        // This is a specific assignement method that manage containers and unique pointer
-        template <typename T> static
-        void setValue(T& lhs, T const& rhs)
-        {
-            if constexpr(is_specialization<T, std::vector>::value)
-            {
-                lhs.resize(rhs.size());
-                for(size_t i = 0; i < lhs.size(); ++i)
-                {
-                    setValue(lhs[i], rhs[i]);
-                }
-            }
-            else if constexpr(is_specialization<T, std::vector>::value)
-            {
-                std::erase_if(lhs, [&](auto const& pair)
-                {
-                    return rhs.count(pair.first) == 0;
-                });
-                for(auto const& pair : rhs)
-                {
-                    setValue(lhs[pair.first], pair.second);
-                }
-            }
-            else
-            {
-                lhs = rhs;
-            }
-        }
-        
         attr_container_type mAttributes;
         acsr_container_type mAccessors;
         
