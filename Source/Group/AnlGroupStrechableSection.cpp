@@ -34,11 +34,6 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
         auto const identifier = layout[previousIndex];
         std::erase(layout, identifier);
         layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
-        
-        std::erase_if(layout, [&](auto const& trackIdentifier)
-        {
-            return !hasTrack(trackIdentifier);
-        });
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
     
