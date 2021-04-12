@@ -96,7 +96,8 @@ file(GLOB ZoomSources
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.cpp
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomScrollBar.h
     ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.cpp
-    ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.h)
+    ${SOURCES_DIRECTORY}/Zoom/AnlZoomTools.h
+    )
 
 file(GLOB TransportSources
     ${SOURCES_DIRECTORY}/Transport/AnlTransportAudioReader.cpp
@@ -107,7 +108,8 @@ file(GLOB TransportSources
     ${SOURCES_DIRECTORY}/Transport/AnlTransportLoopBar.h
     ${SOURCES_DIRECTORY}/Transport/AnlTransportModel.h
     ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.cpp
-    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.h)
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.h
+    )
 
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp
@@ -119,7 +121,8 @@ file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.cpp
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListScanner.h
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.cpp
-    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h)
+    ${SOURCES_DIRECTORY}/Plugin/AnlPluginListTable.h
+    )
 
 file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackDirector.cpp
@@ -147,7 +150,8 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.cpp
     ${SOURCES_DIRECTORY}/Track/AnlTrackThumbnail.h
     ${SOURCES_DIRECTORY}/Track/AnlTrackTools.cpp
-    ${SOURCES_DIRECTORY}/Track/AnlTrackTools.h)
+    ${SOURCES_DIRECTORY}/Track/AnlTrackTools.h
+    )
 
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
@@ -210,12 +214,14 @@ file(GLOB ApplicationSources
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.cpp
     ${SOURCES_DIRECTORY}/Application/AnlApplicationInstance.h
     ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.cpp
-    ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.h)
+    ${SOURCES_DIRECTORY}/Application/AnlApplicationWindow.h
+    )
 
 file(GLOB TranslationsSources
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Fr.txt
     ${BINARYDATA_DIRECTORY}/Translations/Fr/Plugin.txt
-    ${BINARYDATA_DIRECTORY}/Translations/Fr/Track.txt)
+    ${BINARYDATA_DIRECTORY}/Translations/Fr/Track.txt
+    )
 
 source_group("Source/Global" FILES ${GlobalSources})
 source_group("Source/Misc" FILES ${MiscSources})
