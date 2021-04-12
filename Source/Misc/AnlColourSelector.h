@@ -40,6 +40,7 @@ public:
     
 private:
     // juce::Button
+    using juce::Button::clicked;
     void clicked() override;
     void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
     
