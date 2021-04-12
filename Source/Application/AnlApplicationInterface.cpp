@@ -45,10 +45,6 @@ Application::Interface::Interface()
                 }
             }
                 break;
-            case Document::AttrType::layoutVertical:
-            case Document::AttrType::layout:
-            case Document::AttrType::expanded:
-                break;
         }
     };
     

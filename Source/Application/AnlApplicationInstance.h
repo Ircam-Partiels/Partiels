@@ -68,7 +68,7 @@ namespace Application
         Properties mProperties;
         AudioReader mAudioReader;
         LookAndFeel mLookAndFeel;
-        Document::FileBased mDocumentFileBased {mDocumentAccessor, getFileExtension(), getFileWildCard(), "Open a document", "Save the document"};
+        Document::FileBased mDocumentFileBased {mDocumentAccessor, mDocumentDirector, getFileExtension(), getFileWildCard(), "Open a document", "Save the document"};
         
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;

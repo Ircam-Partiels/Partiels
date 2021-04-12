@@ -14,8 +14,11 @@ namespace Document
         Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager);
         ~Director();
         
+        void sanitize(NotificationType const notification);
+        
         void addTrack(AlertType const alertType, NotificationType const notification);
         void removeTrack(juce::String const identifier, NotificationType const notification);
+        void addGroup(AlertType const alertType, NotificationType const notification);
         
     private:
         Accessor& mAccessor;

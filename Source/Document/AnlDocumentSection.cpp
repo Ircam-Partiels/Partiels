@@ -15,36 +15,10 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         return Format::secondsToString(value, {":", ":", ":", ""});
     });
     
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case AttrType::file:
-                break;
-            case AttrType::layoutVertical:
-            case AttrType::expanded:
-            {
-                resized();
-            }
-                break;
-            case AttrType::layout:
-                break;
-        }
-    };
-    
     mTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
-    };
-    
-    mGroupStrechableSection.onRemoveTrack = [&](juce::String const& identifier)
-    {
-        if(onRemoveTrack != nullptr)
-        {
-            onRemoveTrack(identifier);
-        }
     };
     
     mTooltipButton.setClickingTogglesState(true);
@@ -63,7 +37,6 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     };
     mTooltipButton.setToggleState(true, juce::NotificationType::sendNotification);
     
-    mViewport.setViewedComponent(&mGroupStrechableSection, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     setSize(480, 200);
     addAndMakeVisible(mFileInfoButtonDecoration);
@@ -72,6 +45,66 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mTimeScrollBar);
+    
+    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+                break;
+            case AcsrType::tracks:
+            {
+                resized();
+            }
+                break;
+            case AcsrType::groups:
+            {
+                auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
+                auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+                auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+                auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
+                if(groupSection != nullptr)
+                {
+                    groupSection->onRemoveTrack = [&](juce::String const& identifier)
+                    {
+                        if(onRemoveTrack != nullptr)
+                        {
+                            onRemoveTrack(identifier);
+                        }
+                    };
+                    mViewport.setViewedComponent(groupSection.get(), false);
+                }
+                mGroupStrechableSection = std::move(groupSection);
+                resized();
+            }
+                break;
+        }
+    };
+    
+    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        switch(type)
+        {
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+                break;
+            case AcsrType::tracks:
+            {
+                resized();
+            }
+                break;
+            case AcsrType::groups:
+            {
+                mViewport.setViewedComponent(nullptr, false);
+                mGroupStrechableSection.reset();
+                resized();
+            }
+                break;
+        }
+    };
+    
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -94,7 +127,10 @@ void Document::Section::resized()
     mLoopBarDecoration.setBounds(topPart);
     auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
     mTimeScrollBar.setBounds(timeScrollBarBounds);
-    mGroupStrechableSection.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupStrechableSection.getHeight());
+    if(mGroupStrechableSection != nullptr)
+    {
+        mGroupStrechableSection->setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupStrechableSection->getHeight());
+    }
     mViewport.setBounds(bounds);
 }
 

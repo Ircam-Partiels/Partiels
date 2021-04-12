@@ -1,7 +1,9 @@
 #pragma once
 
-#include "AnlDocumentGroupStrechableSection.h"
+#include "AnlDocumentModel.h"
+#include "AnlDocumentFileInfoPanel.h"
 #include "../Transport/AnlTransportLoopBar.h"
+#include "../Group/AnlGroupStrechableSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -14,7 +16,7 @@ namespace Document
     public:
         enum ColourIds : int
         {
-              backgroundColourId = 0x2040200
+              backgroundColourId = 0x2050000
         };
         
         Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
@@ -44,7 +46,7 @@ namespace Document
         Transport::LoopBar mLoopBar {mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Decorator mLoopBarDecoration {mLoopBar, 1, 2.0f};
         
-        GroupStrechableSection mGroupStrechableSection {mAccessor};
+        std::unique_ptr<Group::StrechableSection> mGroupStrechableSection;
         juce::Viewport mViewport;
         Zoom::ScrollBar mTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
         

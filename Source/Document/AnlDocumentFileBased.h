@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentDirector.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -11,7 +12,7 @@ namespace Document
     , private juce::AsyncUpdater
     {
     public:
-        FileBased(Accessor& accessor, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
+        FileBased(Accessor& accessor, Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
         ~FileBased() override;
 
         static Document::AttrContainer const& getDefaultContainer();
@@ -29,6 +30,7 @@ namespace Document
         void handleAsyncUpdate() override;
         
         Accessor& mAccessor;
+        Director& mDirector;
         Accessor::Listener mListener;
         juce::File mLastFile;
         Accessor mSavedStateAccessor;

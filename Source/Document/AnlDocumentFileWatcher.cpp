@@ -22,10 +22,6 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
                 }
             }
                 break;
-            case AttrType::layoutVertical:
-            case AttrType::layout:
-            case AttrType::expanded:
-                break;
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);

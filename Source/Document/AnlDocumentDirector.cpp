@@ -9,7 +9,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginListAccessor, pluginListScanner)
-{
+{    
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
     {
         switch(attribute)
@@ -46,10 +46,6 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
             }
                 break;
-            case AttrType::layoutVertical:
-            case AttrType::layout:
-            case AttrType::expanded:
-                break;
         }
     };
     
@@ -60,12 +56,13 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
         {
             case AcsrType::tracks:
             {
-                anlStrongAssert(index <= mTracks.size());
-                if(index > mTracks.size())
+                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+                anlStrongAssert(index <= mTracks.size() && index < trackAcsrs.size());
+                if(index > mTracks.size() || index >= trackAcsrs.size())
                 {
                     return;
                 }
-                auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
+                auto& trackAcsr = trackAcsrs[index].get();
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
                 auto director = std::make_unique<Track::Director>(trackAcsr, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
@@ -83,8 +80,23 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     };
                 }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
+                
+                auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+                for(auto& groupAcsr : groupAcsrs)
+                {
+                    groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
+                }
             }
                 break;
+            case AcsrType::groups:
+            {
+                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+                auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+                for(auto& groupAcsr : groupAcsrs)
+                {
+                    groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
+                }
+            }
             case AcsrType::transport:
             case AcsrType::timeZoom:
                 break;
@@ -104,8 +116,24 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     return;
                 }
                 mTracks.erase(mTracks.begin() + static_cast<long>(index));
+                
+                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+                auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+                for(auto& groupAcsr : groupAcsrs)
+                {
+                    groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
+                }
             }
                 break;
+            case AcsrType::groups:
+            {
+                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+                auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+                for(auto& groupAcsr : groupAcsrs)
+                {
+                    groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
+                }
+            }
             case AcsrType::transport:
             case AcsrType::timeZoom:
                 break;
@@ -222,10 +250,16 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         trackAcsr.setAttr<Track::AttrType::state>(description.defaultState, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::key>(key, notification);
         
-        auto layout = mAccessor.getAttr<AttrType::layout>();
-        layout.push_back(identifier);
-        mAccessor.setAttr<AttrType::layout>(layout, notification);
-        anlStrongAssert(layout.size() == mAccessor.getNumAcsr<AcsrType::tracks>());
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        anlWeakAssert(!groupAcsrs.empty());
+        if(groupAcsrs.empty())
+        {
+            return;
+        }
+        auto& lastAcsr = groupAcsrs.back().get();
+        auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
+        groupLayout.push_back(identifier);
+        lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
     };
     
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -267,13 +301,74 @@ void Document::Director::removeTrack(juce::String const identifier, Notification
     {
         return;
     }
-        
-    auto layout = mAccessor.getAttr<AttrType::layout>();
-    std::erase(layout, identifier);
-    mAccessor.setAttr<AttrType::layout>(layout, notification);
+  
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    for(auto& groupAcsr : groupAcsrs)
+    {
+        auto gIds = groupAcsr.get().getAttr<Group::AttrType::layout>();
+        std::erase(gIds, identifier);
+        groupAcsrs.back().get().setAttr<Group::AttrType::layout>(gIds, NotificationType::synchronous);
+    }
+
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
-    anlStrongAssert(layout.size() == mAccessor.getNumAcsr<AcsrType::tracks>());
+}
+
+void Document::Director::addGroup(AlertType const alertType, NotificationType const notification)
+{
+    auto const index = mAccessor.getNumAcsr<AcsrType::groups>();
+    if(!mAccessor.insertAcsr<AcsrType::groups>(index, notification))
+    {
+        if(alertType == AlertType::window)
+        {
+            auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
+            auto const title = juce::translate("Group cannot be created!");
+            auto const message = juce::translate("The group cannot be inserted into the document.");
+            juce::AlertWindow::showMessageBox(icon, title, message);
+        }
+        return;
+    }
+    
+    auto const identifier = juce::Uuid().toString();
+    
+    auto& groupAcsr = mAccessor.getAcsr<Document::AcsrType::groups>(index);
+    groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
+    groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index), NotificationType::synchronous);
+    
+    JUCE_COMPILER_WARNING("Todo: add group to document layout")
+}
+
+void Document::Director::sanitize(NotificationType const notification)
+{
+    if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
+    {
+        addGroup(AlertType::silent, notification);
+    }
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    anlWeakAssert(!groupAcsrs.empty());
+    if(groupAcsrs.empty())
+    {
+        return;
+    }
+    auto& lastAcsr = groupAcsrs.back().get();
+    auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        auto const trackIdentifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+        if(std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+        {
+            auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
+            return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+            {
+                return identifier == trackIdentifier;
+            });
+        }))
+        {
+            auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
+            groupLayout.push_back(trackIdentifier);
+            lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
+        }
+    }
 }
 
 ANALYSE_FILE_END

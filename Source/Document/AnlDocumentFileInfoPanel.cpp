@@ -65,10 +65,6 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 resized();
             }
                 break;
-            case AttrType::layoutVertical:
-            case AttrType::layout:
-            case AttrType::expanded:
-                break;
         }
     };
     

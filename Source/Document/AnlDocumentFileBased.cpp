@@ -7,16 +7,14 @@ Document::AttrContainer const& Document::FileBased::getDefaultContainer()
     static AttrContainer const document
     {
           {juce::File{}}
-        , {144}
-        , {}
-        , {true}
     };
     return document;
 }
 
-Document::FileBased::FileBased(Accessor& accessor, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
+Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
 : juce::FileBasedDocument(fileExtension, fileWildCard, openFileDialogTitle, saveFileDialogTitle)
 , mAccessor(accessor)
+, mDirector(director)
 {
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -58,6 +56,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     }
     mAccessor.copyFrom({getDefaultContainer()}, NotificationType::synchronous);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
+    mDirector.sanitize(NotificationType::synchronous);
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     triggerAsyncUpdate();
     return juce::Result::ok();
