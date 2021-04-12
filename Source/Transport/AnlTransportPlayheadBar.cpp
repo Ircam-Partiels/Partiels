@@ -1,9 +1,9 @@
-#include "AnlTransportPlayheadContainer.h"
+#include "AnlTransportPlayheadBar.h"
 #include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
-Transport::PlayheadContainer::PlayheadContainer(Accessor& accessor, Zoom::Accessor& zoomAcsr)
+Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
 : mAccessor(accessor)
 , mZoomAccessor(zoomAcsr)
 {
@@ -55,13 +55,13 @@ Transport::PlayheadContainer::PlayheadContainer(Accessor& accessor, Zoom::Access
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
-Transport::PlayheadContainer::~PlayheadContainer()
+Transport::PlayheadBar::~PlayheadBar()
 {
     mZoomAccessor.removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
-void Transport::PlayheadContainer::paint(juce::Graphics& g)
+void Transport::PlayheadBar::paint(juce::Graphics& g)
 {
     g.setColour(findColour(ColourIds::startPlayheadColourId));
     g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mStartPlayhead), 0, 1, getHeight());
@@ -69,7 +69,7 @@ void Transport::PlayheadContainer::paint(juce::Graphics& g)
     g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, mRunningPlayhead), 0, 1, getHeight());
 }
 
-void Transport::PlayheadContainer::mouseDown(juce::MouseEvent const& event)
+void Transport::PlayheadBar::mouseDown(juce::MouseEvent const& event)
 {
     auto const relEvent = event.getEventRelativeTo(this);
     mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), *this, relEvent.x), NotificationType::synchronous);

@@ -64,12 +64,12 @@ std::unique_ptr<Track::Plot> Document::GroupPlot::createForGroup(Track::Accessor
 Document::GroupPlot::Overlay::Overlay(GroupPlot& groupPlot)
 : mGroupPlot(groupPlot)
 , mAccessor(mGroupPlot.mAccessor)
-, mTransportPlayheadContainer(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
+, mTransportPlayheadBar(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 {
     addAndMakeVisible(mGroupPlot);
-    addAndMakeVisible(mTransportPlayheadContainer);
-    mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
-    addMouseListener(&mTransportPlayheadContainer, false);
+    addAndMakeVisible(mTransportPlayheadBar);
+    mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
+    addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
     
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
@@ -102,7 +102,7 @@ void Document::GroupPlot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mGroupPlot.setBounds(bounds);
-    mTransportPlayheadContainer.setBounds(bounds);
+    mTransportPlayheadBar.setBounds(bounds);
 }
 
 void Document::GroupPlot::Overlay::mouseMove(juce::MouseEvent const& event)

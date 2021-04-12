@@ -2,7 +2,7 @@
 
 #include "AnlDocumentModel.h"
 #include "AnlDocumentGroupContainer.h"
-#include "../Transport/AnlTransportPlayheadContainer.h"
+#include "../Transport/AnlTransportPlayheadBar.h"
 #include "../Track/AnlTrackPlot.h"
 
 ANALYSE_FILE_BEGIN
@@ -40,7 +40,7 @@ namespace Document
             GroupPlot& mGroupPlot;
             Accessor& mAccessor;
             Zoom::Accessor::Listener mTimeZoomListener;
-            Transport::PlayheadContainer mTransportPlayheadContainer;
+            Transport::PlayheadBar mTransportPlayheadBar;
         };
         
     private:

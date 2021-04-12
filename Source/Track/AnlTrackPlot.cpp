@@ -370,12 +370,12 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mTransportPlayheadContainer(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
+, mTransportPlayheadBar(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
 {
     addAndMakeVisible(mPlot);
-    addAndMakeVisible(mTransportPlayheadContainer);
-    mTransportPlayheadContainer.setInterceptsMouseClicks(false, false);
-    addMouseListener(&mTransportPlayheadContainer, false);
+    addAndMakeVisible(mTransportPlayheadBar);
+    mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
+    addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
     
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -437,7 +437,7 @@ void Track::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
-    mTransportPlayheadContainer.setBounds(bounds);
+    mTransportPlayheadBar.setBounds(bounds);
 }
 
 void Track::Plot::Overlay::paint(juce::Graphics& g)

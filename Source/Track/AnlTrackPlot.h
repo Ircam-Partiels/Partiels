@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlTrackModel.h"
-#include "../Transport/AnlTransportPlayheadContainer.h"
+#include "../Transport/AnlTransportPlayheadBar.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -40,7 +40,7 @@ namespace Track
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener;
             Zoom::Accessor::Listener mTimeZoomListener;
-            Transport::PlayheadContainer mTransportPlayheadContainer;
+            Transport::PlayheadBar mTransportPlayheadBar;
         };
         
     private:

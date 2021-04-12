@@ -104,8 +104,8 @@ file(GLOB TransportSources
     ${SOURCES_DIRECTORY}/Transport/AnlTransportDisplay.cpp
     ${SOURCES_DIRECTORY}/Transport/AnlTransportDisplay.h
     ${SOURCES_DIRECTORY}/Transport/AnlTransportModel.h
-    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadContainer.cpp
-    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadContainer.h)
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.cpp
+    ${SOURCES_DIRECTORY}/Transport/AnlTransportPlayheadBar.h)
 
 file(GLOB PluginSources
     ${SOURCES_DIRECTORY}/Plugin/AnlPluginModel.cpp

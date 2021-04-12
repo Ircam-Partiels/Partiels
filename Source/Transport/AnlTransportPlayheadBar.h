@@ -7,18 +7,18 @@ ANALYSE_FILE_BEGIN
 
 namespace Transport
 {
-    class PlayheadContainer
+    class PlayheadBar
     : public juce::Component
     {
     public:
         enum ColourIds : int
         {
-              startPlayheadColourId = 0x2020000
+              startPlayheadColourId = 0x2020100
             , runningPlayheadColourId
         };
         
-        PlayheadContainer(Accessor& accessor, Zoom::Accessor& zoomAcsr);
-        ~PlayheadContainer() override;
+        PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr);
+        ~PlayheadBar() override;
         
         // juce::Component
         void paint(juce::Graphics& g) override;
