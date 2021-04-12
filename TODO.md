@@ -15,6 +15,8 @@
 - Translations
 - https://github.com/taglib/taglib
 
-- Add Document::StrechableGroupSection
 - Optimize result representation
-  -
+  - 256b interger for grid
+
+- Document::section
+  - Add multi-Group support
