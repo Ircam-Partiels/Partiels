@@ -38,9 +38,10 @@ namespace Transport
             void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
             
             void setPlaying(bool shouldPlay);
-            void setLooping(bool shouldLoop);
             void setGain(float gain);
             void setStartPlayheadPosition(double position);
+            void setLooping(bool shouldLoop);
+            void setLoopRange(juce::Range<double> const& loopRange);
             
             double getSampleRate() const;
             bool isPlaying() const;
@@ -52,9 +53,10 @@ namespace Transport
             juce::AudioFormatReaderSource mAudioFormatReaderSource;
             
             std::atomic<bool> mIsPlaying {false};
-            std::atomic<bool> mIsLooping {false};
             std::atomic<juce::int64> mReadPosition {0};
             std::atomic<juce::int64> mStartPosition {0};
+            std::atomic<bool> mIsLooping {false};
+            std::atomic<juce::Range<juce::int64>> mLoopRange {};
             juce::LinearSmoothedValue<float> mVolume;
             std::atomic<float> mVolumeTargetValue;
         };
@@ -73,9 +75,10 @@ namespace Transport
             void getNextAudioBlock(juce::AudioSourceChannelInfo const& bufferToFill) override;
             
             void setPlaying(bool shouldPlay);
-            void setLooping(bool shouldLoop);
             void setGain(float gain);
             void setStartPlayheadPosition(double position);
+            void setLooping(bool shouldLoop);
+            void setLoopRange(juce::Range<double> const& loopRange);
             
             bool isPlaying() const;
             double getReadPlayheadPosition() const;
