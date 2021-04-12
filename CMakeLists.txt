@@ -300,5 +300,10 @@ target_link_libraries(PartielsTest PRIVATE
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
+if(UNIX AND NOT APPLE)
+    target_link_libraries(Partiels PRIVATE atomic)
+    target_link_libraries(PartielsTest PRIVATE atomic)
+endif()
+
 enable_testing()
 add_test(NAME AllTest COMMAND PartielsTest)
