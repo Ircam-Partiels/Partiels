@@ -2,7 +2,7 @@
 
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
-#include "../Transport/AnlTransportPlayheadContainer.h"
+#include "../Transport/AnlTransportPlayheadBar.h"
 #include "AnlDocumentGroupThumbnail.h"
 #include "AnlDocumentGroupSnapshot.h"
 #include "AnlDocumentGroupPlot.h"
