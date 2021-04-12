@@ -29,6 +29,7 @@ Document::GroupThumbnail::GroupThumbnail(Accessor& accessor)
         {
             case AttrType::file:
             case AttrType::layout:
+            case AttrType::layoutVertical:
                 break;
             case AttrType::expanded:
             {
