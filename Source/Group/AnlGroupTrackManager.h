@@ -78,7 +78,10 @@ namespace Group
             auto it = mContents.begin();
             while(it != mContents.end())
             {
-                if(!std::binary_search(layout.cbegin(), layout.cend(), it->first) || !hasTrack(it->first))
+                if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const& identifer)
+                {
+                    return identifer == it->first;
+                }) || !hasTrack(it->first))
                 {
                     removeFromContents(it->second);
                     it = mContents.erase(it);
