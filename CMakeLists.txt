@@ -153,6 +153,23 @@ file(GLOB TrackSources
     ${SOURCES_DIRECTORY}/Track/AnlTrackTools.h
     )
 
+file(GLOB GroupSources
+    ${SOURCES_DIRECTORY}/Group/AnlGroupButtonState.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupButtonState.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupModel.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupSection.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupSection.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupSnapshot.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupSnapshot.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupStrechableSection.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupStrechableSection.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupThumbnail.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupThumbnail.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupTrackManager.h
+    )
+
 file(GLOB DocumentSources
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.cpp
     ${SOURCES_DIRECTORY}/Document/AnlDocumentModel.h
