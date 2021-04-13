@@ -1,7 +1,7 @@
 #include "AnlDocumentDirector.h"
 #include "AnlDocumentAudioReader.h"
-#include "../Plugin/AnlPluginListScanner.h"
-#include "../Track/AnlTrackPropertyPanel.h"
+#include "../Zoom/AnlZoomTools.h"
+#include "../Group/AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -70,14 +70,20 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 anlStrongAssert(director != nullptr);
                 if(director != nullptr)
                 {
-                    director->onLinkedZoomChanged = [this](Zoom::Accessor const& zoomAcsr, NotificationType zoomNotification)
+                    director->onLinkedZoomChanged = [&](Zoom::Accessor const& zoomAcsr, NotificationType zoomNotification)
                     {
-                        for(auto& track : mTracks)
+                        auto const identifier = trackAcsr.getAttr<Track::AttrType::identifier>();
+                        auto const& groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+                        auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
                         {
-                            if(track != nullptr)
-                            {
-                                track->setLinkedZoom(zoomAcsr, zoomNotification);
-                            }
+                            return Group::Tools::hasTrackAcsr(groupAcsr.get(), identifier);
+                        });
+                        anlWeakAssert(groupIt != groupAcsrs.cend());
+                        if(groupIt != groupAcsrs.end())
+                        {
+                            auto& groupZoomAcsr = groupIt->get().getAcsr<Group::AcsrType::zoom>();
+                            auto const scaledRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, groupZoomAcsr.getAttr<Zoom::AttrType::globalRange>());
+                            groupZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(scaledRange, zoomNotification);
                         }
                     };
                 }
@@ -92,12 +98,51 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 break;
             case AcsrType::groups:
             {
-                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-                auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-                for(auto& groupAcsr : groupAcsrs)
+                auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+                anlStrongAssert(index < groupAcsrs.size());
+                if(index >= groupAcsrs.size())
                 {
-                    groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
+                    return;
                 }
+                
+                auto& groupAcsr = groupAcsrs[index].get();
+                groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
+                auto& groupZoomAcsr = groupAcsr.getAcsr<Group::AcsrType::zoom>();
+                groupZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
+                groupZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
+                groupZoomAcsr.onAttrUpdated = [&](Zoom::AttrType attribute, NotificationType zoomNotification)
+                {
+                    switch(attribute)
+                    {
+                        case Zoom::AttrType::globalRange:
+                        case Zoom::AttrType::visibleRange:
+                        {
+                            auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+                            auto const layout = groupAcsr.getAttr<Group::AttrType::layout>();
+                            for(auto const& identifier : layout)
+                            {
+                                auto it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                                {
+                                    return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
+                                });
+                                anlStrongAssert(it != trackAcsrs.cend());
+                                if(it != trackAcsrs.cend())
+                                {
+                                    auto const trackIndex = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
+                                    anlStrongAssert(trackIndex < mTracks.size() && mTracks[trackIndex] != nullptr);
+                                    if(trackIndex < mTracks.size() && mTracks[trackIndex] != nullptr)
+                                    {
+                                        mTracks[trackIndex]->setLinkedZoom(groupZoomAcsr, zoomNotification);
+                                    }
+                                }
+                            }
+                        }
+                            break;
+                        case Zoom::AttrType::minimumLength:
+                        case Zoom::AttrType::anchor:
+                            break;
+                    }
+                };
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
@@ -128,14 +173,6 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             }
                 break;
             case AcsrType::groups:
-            {
-                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-                auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-                for(auto& groupAcsr : groupAcsrs)
-                {
-                    groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
-                }
-            }
             case AcsrType::transport:
             case AcsrType::timeZoom:
                 break;
