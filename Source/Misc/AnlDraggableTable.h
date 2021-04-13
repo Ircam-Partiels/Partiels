@@ -24,8 +24,8 @@ public:
     void resized() override;
 
     static juce::var createDescription(juce::MouseEvent const& event);
-private:
     
+private:
     // juce::ComponentListener
     void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
     
