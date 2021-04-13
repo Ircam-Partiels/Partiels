@@ -115,7 +115,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 {
     auto const& docAcsr = Instance::get().getDocumentAccessor();
     auto const& transportAcsr = docAcsr.getAcsr<Document::AcsrType::transport>();
-    switch (commandID)
+    switch(commandID)
     {
         case CommandIDs::DocumentNew:
         {
@@ -333,7 +333,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     auto& fileBased = Instance::get().getDocumentFileBased();
     auto& docAcsr = Instance::get().getDocumentAccessor();
     auto& transportAcsr = docAcsr.getAcsr<Document::AcsrType::transport>();
-    switch (info.commandID)
+    switch(info.commandID)
     {
         case CommandIDs::DocumentNew:
         {

@@ -269,7 +269,7 @@ void Application::LookAndFeel::drawTableHeaderColumn(juce::Graphics& g, juce::Ta
     g.setColour(header.findColour(juce::TableHeaderComponent::textColourId));
     auto area = juce::Rectangle<int>(width, height).reduced(4, 0);
     using ColumnPropertyFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
-    if ((columnFlags & (ColumnPropertyFlags::sortedForwards | ColumnPropertyFlags::sortedBackwards)) != 0)
+    if((columnFlags & (ColumnPropertyFlags::sortedForwards | ColumnPropertyFlags::sortedBackwards)) != 0)
     {
         juce::Path sortArrow;
         sortArrow.addTriangle(0.0f, 0.0f, 0.5f, (columnFlags & ColumnPropertyFlags::sortedForwards) != 0 ? -0.8f : 0.8f, 1.0f, 0.0f);
