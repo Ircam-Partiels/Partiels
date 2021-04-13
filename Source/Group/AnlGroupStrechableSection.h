@@ -14,6 +14,7 @@ namespace Group
         StrechableSection(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~StrechableSection() override;
         
+        std::function<void(juce::String const& identifier)> onRemoveGroup = nullptr;
         std::function<void(juce::String const& identifier)> onRemoveTrack = nullptr;
         
         // juce::Component

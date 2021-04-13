@@ -62,6 +62,14 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
         }
     };
     
+    mSection.onRemove = [&]()
+    {
+        if(onRemoveGroup != nullptr)
+        {
+            onRemoveGroup(mAccessor.getAttr<AttrType::identifier>());
+        }
+    };
+    
     mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
