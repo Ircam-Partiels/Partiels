@@ -51,13 +51,12 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
                     }
                 }
                 mDraggableTable.setComponents(components);
-                mSection.setVisible(!components.empty());
                 resized();
             }
                 break;
             case AttrType::expanded:
             {
-                mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
+                mConcertinaTable.setOpen(acsr.getAttr<AttrType::expanded>(), true);
             }
                 break;
         }
@@ -81,6 +80,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
     mBoundsListener.attachTo(mSection);
     mBoundsListener.attachTo(mConcertinaTable);
     mConcertinaTable.setComponents({mDraggableTable});
+    mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
     
     addAndMakeVisible(mSection);
     addAndMakeVisible(mConcertinaTable);
