@@ -8,9 +8,19 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
 {
     addAndMakeVisible(mExportButton);
     addAndMakeVisible(mStateButton);
+    addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mExpandButton);
     
     mExportButton.setTooltip(juce::translate("Export the analyses"));
+    mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
+    
+    mRemoveButton.onClick = [&]()
+    {
+        if(onRemove != nullptr)
+        {
+            onRemove();
+        }
+    };
     
     mExpandButton.onClick = [&]()
     {
@@ -63,6 +73,8 @@ void Group::Thumbnail::resized()
     auto const size = bounds.getWidth() - separator;
     mExpandButton.setVisible(bounds.getHeight() >= size);
     mExpandButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    mRemoveButton.setVisible(bounds.getHeight() >= size);
+    mRemoveButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
     mStateButton.setVisible(bounds.getHeight() >= size);
     mStateButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
     mExportButton.setVisible(bounds.getHeight() >= size);
@@ -91,6 +103,7 @@ void Group::Thumbnail::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
+        laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
         if(mAccessor.getAttr<AttrType::expanded>())
         {
             laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);
