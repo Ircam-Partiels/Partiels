@@ -38,9 +38,8 @@ namespace Group
         Plot::Overlay mPlotOverlay {mPlot};
         Decorator mPlotDecoration {mPlotOverlay, 1, 2.0f};
         
-        Zoom::Accessor zoomAcsr;
-        Zoom::Ruler mRuler {zoomAcsr, Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mScrollBar {zoomAcsr, Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::Ruler mRuler {mAccessor.getAcsr<AcsrType::zoom>(), Zoom::Ruler::Orientation::vertical};
+        Zoom::ScrollBar mScrollBar {mAccessor.getAcsr<AcsrType::zoom>(), Zoom::ScrollBar::Orientation::vertical, true};
 
         ResizerBar mResizerBar {ResizerBar::Orientation::horizontal, true, {50, 2000}};
     };
