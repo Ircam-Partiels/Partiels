@@ -346,7 +346,7 @@ void Document::Director::removeTrack(juce::String const identifier, Notification
     {
         auto gIds = groupAcsr.get().getAttr<Group::AttrType::layout>();
         std::erase(gIds, identifier);
-        groupAcsrs.back().get().setAttr<Group::AttrType::layout>(gIds, NotificationType::synchronous);
+        groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, NotificationType::synchronous);
     }
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
