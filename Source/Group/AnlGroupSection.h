@@ -18,6 +18,8 @@ namespace Group
         Section(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~Section() override;
         
+        std::function<void(void)> onRemove = nullptr;
+        
         // juce::Component
         void resized() override;
         

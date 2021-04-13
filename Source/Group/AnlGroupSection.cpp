@@ -29,6 +29,14 @@ Group::Section::Section(Accessor& accessor, Transport::Accessor& transportAcsr, 
         }
     };
     
+    mThumbnail.onRemove = [&]()
+    {
+        if(onRemove != nullptr)
+        {
+            onRemove();
+        }
+    };
+    
     mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
