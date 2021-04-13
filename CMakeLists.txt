@@ -167,7 +167,8 @@ file(GLOB GroupSources
     ${SOURCES_DIRECTORY}/Group/AnlGroupStrechableSection.h
     ${SOURCES_DIRECTORY}/Group/AnlGroupThumbnail.cpp
     ${SOURCES_DIRECTORY}/Group/AnlGroupThumbnail.h
-    ${SOURCES_DIRECTORY}/Group/AnlGroupTrackManager.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupTools.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupTools.h
     )
 
 file(GLOB DocumentSources

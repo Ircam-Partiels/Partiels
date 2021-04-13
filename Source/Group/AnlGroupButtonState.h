@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlGroupTrackManager.h"
+#include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -9,7 +9,6 @@ namespace Group
     class StateButton
     : public juce::Component
     , public juce::SettableTooltipClient
-    , private TrackManager<std::reference_wrapper<Track::Accessor>>
     {
     public:
         StateButton(Accessor& groupAccessor);
@@ -19,9 +18,9 @@ namespace Group
         void resized() override;
         
     private:
-        // TrackManager<std::reference_wrapper<Track::Accessor>>
-        void removeFromContents(std::reference_wrapper<Track::Accessor>& content) override;
-        std::reference_wrapper<Track::Accessor> createForContents(Track::Accessor& trackAccessor) override;
+        Accessor& mAccessor;
+        Accessor::Listener mListener;
+        TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         
         Track::Accessor::Listener mTrackListener;
         LoadingCircle mProcessingButton;

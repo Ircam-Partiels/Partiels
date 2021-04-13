@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Group::StateButton::StateButton(Accessor& accessor)
-: TrackManager<std::reference_wrapper<Track::Accessor>>(accessor)
+: mAccessor(accessor)
 {
     addAndMakeVisible(mProcessingButton);
     
@@ -16,7 +16,7 @@ Group::StateButton::StateButton(Accessor& accessor)
             case Track::AttrType::processing:
             case Track::AttrType::warnings:
             {
-                auto const& contents = getGroupContents();
+                auto const& contents = mTrackAccessors.getContents();
                 auto const valid = std::all_of(contents.cbegin(), contents.cend(), [](auto const& pair)
                 {
                     return pair.second.get().template getAttr<Track::AttrType::warnings>() == Track::WarningType::none;
@@ -74,11 +74,43 @@ Group::StateButton::StateButton(Accessor& accessor)
                 break;
         }
     };
+    
+    mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::colour:
+            case AttrType::expanded:
+                break;
+            case AttrType::layout:
+            case AttrType::tracks:
+            {
+                mTrackAccessors.updateContents(mAccessor,
+                [this](Track::Accessor& trackAccessor)
+                {
+                    trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
+                    return std::ref(trackAccessor);
+                },
+                [this](std::reference_wrapper<Track::Accessor>& content)
+                {
+                    content.get().removeListener(mTrackListener);
+                });
+            }
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::StateButton::~StateButton()
 {
-    for(auto& trackAcsr : getGroupContents())
+    mAccessor.removeListener(mListener);
+    for(auto& trackAcsr : mTrackAccessors.getContents())
     {
         trackAcsr.second.get().removeListener(mTrackListener);
     }
@@ -87,17 +119,6 @@ Group::StateButton::~StateButton()
 void Group::StateButton::resized()
 {
     mProcessingButton.setBounds(getLocalBounds());
-}
-
-void Group::StateButton::removeFromContents(std::reference_wrapper<Track::Accessor>& content)
-{
-    content.get().removeListener(mTrackListener);
-}
-
-std::reference_wrapper<Track::Accessor> Group::StateButton::createForContents(Track::Accessor& trackAccessor)
-{
-    trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
-    return trackAccessor;
 }
 
 ANALYSE_FILE_END

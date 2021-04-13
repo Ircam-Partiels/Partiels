@@ -3,8 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
-: TrackManager<std::unique_ptr<Track::Section>>(accessor)
-, mAccessor(accessor)
+: mAccessor(accessor)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 {
@@ -17,15 +16,51 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
             case AttrType::name:
             case AttrType::height:
             case AttrType::colour:
+                break;
             case AttrType::layout:
             case AttrType::tracks:
+            {
+                mTrackSections.updateContents(mAccessor,
+                [this](Track::Accessor& trackAccessor)
+                {
+                    auto newSection = std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+                    anlStrongAssert(newSection != nullptr);
+                    if(newSection != nullptr)
+                    {
+                        newSection->onRemove = [&]()
+                        {
+                            if(onRemoveTrack != nullptr)
+                            {
+                                onRemoveTrack(trackAccessor.getAttr<Track::AttrType::identifier>());
+                            }
+                        };
+                    }
+                    return newSection;
+                }, nullptr);
+                
+                auto const& contents = mTrackSections.getContents();
+                std::vector<ConcertinaTable::ComponentRef> components;
+                components.reserve(contents.size());
+                auto const& layout = mAccessor.getAttr<AttrType::layout>();
+                for(auto const& identifier : layout)
+                {
+                    auto it = contents.find(identifier);
+                    if(it != contents.cend())
+                    {
+                        components.push_back(*it->second.get());
+                    }
+                }
+                mDraggableTable.setComponents(components);
+                mSection.setVisible(!components.empty());
+                resized();
+            }
                 break;
             case AttrType::expanded:
             {
                 mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), true);
             }
                 break;
-}
+        }
     };
     
     mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
@@ -63,47 +98,6 @@ void Group::StrechableSection::resized()
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mSection.setBounds(bounds.removeFromTop(mSection.getHeight()));
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
-}
-
-void Group::StrechableSection::updateContentsEnded()
-{
-    auto const& groupContent = getGroupContents();
-    std::vector<ConcertinaTable::ComponentRef> components;
-    components.reserve(groupContent.size());
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    for(auto const& identifier : layout)
-    {
-        auto it = groupContent.find(identifier);
-        if(it != groupContent.cend())
-        {
-            components.push_back(*it->second.get());
-        }
-    }
-    mDraggableTable.setComponents(components);
-    mSection.setVisible(!components.empty());
-    resized();
-}
-
-void Group::StrechableSection::removeFromContents(std::unique_ptr<Track::Section>& content)
-{
-    juce::ignoreUnused(content);
-}
-
-std::unique_ptr<Track::Section> Group::StrechableSection::createForContents(Track::Accessor& trackAccessor)
-{
-    auto newSection = std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
-    anlStrongAssert(newSection != nullptr);
-    if(newSection != nullptr)
-    {
-        newSection->onRemove = [&]()
-        {
-            if(onRemoveTrack != nullptr)
-            {
-                onRemoveTrack(trackAccessor.getAttr<Track::AttrType::identifier>());
-            }
-        };
-    }
-    return newSection;
 }
 
 ANALYSE_FILE_END

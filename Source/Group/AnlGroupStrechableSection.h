@@ -9,7 +9,6 @@ namespace Group
 {
     class StrechableSection
     : public juce::Component
-    , private TrackManager<std::unique_ptr<Track::Section>>
     {
     public:
         StrechableSection(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
@@ -21,17 +20,13 @@ namespace Group
         void resized() override;
         
     private:
-        // TrackManager<std::unique_ptr<Track::Section>>
-        void updateContentsEnded() override;
-        void removeFromContents(std::unique_ptr<Track::Section>& content) override;
-        std::unique_ptr<Track::Section> createForContents(Track::Accessor& trackAccessor) override;
-        
         Accessor& mAccessor;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
         
         Section mSection {mAccessor, mTransportAccessor, mTimeZoomAccessor};
+        TrackMap<std::unique_ptr<Track::Section>> mTrackSections;
         DraggableTable mDraggableTable;
         ConcertinaTable mConcertinaTable {"", false};
         BoundsListener mBoundsListener;

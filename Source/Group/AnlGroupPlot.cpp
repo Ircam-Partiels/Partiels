@@ -5,8 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
-: TrackManager<std::unique_ptr<Track::Plot>>(accessor)
-, mAccessor(accessor)
+: mAccessor(accessor)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 {
@@ -15,13 +14,57 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
     juce::ignoreUnused(mTimeZoomAccessor);
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
+    
+    mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::colour:
+            case AttrType::expanded:
+                break;
+            case AttrType::layout:
+            case AttrType::tracks:
+            {
+                removeAllChildren();
+                mTrackPlots.updateContents(mAccessor,
+                [this](Track::Accessor& trackAccessor)
+                {
+                    return std::make_unique<Track::Plot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+                }, nullptr);
+                
+                auto const& layout = mAccessor.getAttr<AttrType::layout>();
+                auto const& group = mTrackPlots.getContents();
+                for(auto const& identifier : layout)
+                {
+                    auto it = group.find(identifier);
+                    if(it != group.cend() && it->second != nullptr)
+                    {
+                        addAndMakeVisible(it->second.get(), 0);
+                    }
+                }
+                resized();
+            }
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Group::Plot::~Plot()
+{
+    mAccessor.removeListener(mListener);
 }
 
 void Group::Plot::resized()
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& contents = getGroupContents();
+    auto const& contents = mTrackPlots.getContents();
     for(auto const& identifier : layout)
     {
         auto it = contents.find(identifier);
@@ -30,36 +73,6 @@ void Group::Plot::resized()
             it->second->setBounds(bounds);
         }
     }
-}
-
-void Group::Plot::updateContentsStarted()
-{
-    removeAllChildren();
-}
-
-void Group::Plot::updateContentsEnded()
-{
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& group = getGroupContents();
-    for(auto const& identifier : layout)
-    {
-        auto it = group.find(identifier);
-        if(it != group.cend() && it->second != nullptr)
-        {
-            addAndMakeVisible(it->second.get(), 0);
-        }
-    }
-    resized();
-}
-
-void Group::Plot::removeFromContents(std::unique_ptr<Track::Plot>& content)
-{
-    removeChildComponent(content.get());
-}
-
-std::unique_ptr<Track::Plot> Group::Plot::createForContents(Track::Accessor& trackAccessor)
-{
-    return std::make_unique<Track::Plot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
 }
 
 Group::Plot::Overlay::Overlay(Plot& plot)
@@ -136,8 +149,8 @@ void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)
     {
-        auto trackAcsr = mPlot.getTrack(identifier);
-        if(trackAcsr)
+        auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        if(trackAcsr.has_value())
         {
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
             auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();

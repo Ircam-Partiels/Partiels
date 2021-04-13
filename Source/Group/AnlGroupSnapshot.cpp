@@ -5,21 +5,65 @@
 ANALYSE_FILE_BEGIN
 
 Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
-: TrackManager<std::unique_ptr<Track::Snapshot>>(accessor)
-, mAccessor(accessor)
+: mAccessor(accessor)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 {
     juce::ignoreUnused(mTransportAccessor);
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
+    
+    mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::colour:
+            case AttrType::expanded:
+                break;
+            case AttrType::layout:
+            case AttrType::tracks:
+            {
+                removeAllChildren();
+                mTrackSnapshots.updateContents(mAccessor,
+                [this](Track::Accessor& trackAccessor)
+                {
+                    return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor);
+                },
+                nullptr);
+                
+                auto const& layout = mAccessor.getAttr<AttrType::layout>();
+                auto const& group = mTrackSnapshots.getContents();
+                for(auto const& identifier : layout)
+                {
+                    auto it = group.find(identifier);
+                    if(it != group.cend() && it->second != nullptr)
+                    {
+                        addAndMakeVisible(it->second.get(), 0);
+                    }
+                }
+                resized();
+            }
+                break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Group::Snapshot::~Snapshot()
+{
+    mAccessor.removeListener(mListener);
 }
 
 void Group::Snapshot::resized()
 {
     auto bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& group = getGroupContents();
+    auto const& group = mTrackSnapshots.getContents();
     for(auto const& identifier : layout)
     {
         auto it = group.find(identifier);
@@ -28,36 +72,6 @@ void Group::Snapshot::resized()
             it->second->setBounds(bounds);
         }
     }
-}
-
-void Group::Snapshot::updateContentsStarted()
-{
-    removeAllChildren();
-}
-
-void Group::Snapshot::updateContentsEnded()
-{
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& group = getGroupContents();
-    for(auto const& identifier : layout)
-    {
-        auto it = group.find(identifier);
-        if(it != group.cend() && it->second != nullptr)
-        {
-            addAndMakeVisible(it->second.get(), 0);
-        }
-    }
-    resized();
-}
-
-void Group::Snapshot::removeFromContents(std::unique_ptr<Track::Snapshot>& content)
-{
-    removeChildComponent(content.get());
-}
-
-std::unique_ptr<Track::Snapshot> Group::Snapshot::createForContents(Track::Accessor& trackAccessor)
-{
-    return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor);
 }
 
 Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
@@ -135,8 +149,8 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)
     {
-        auto trackAcsr = mSnapshot.getTrack(identifier);
-        if(trackAcsr)
+        auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        if(trackAcsr.has_value())
         {
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
             auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();

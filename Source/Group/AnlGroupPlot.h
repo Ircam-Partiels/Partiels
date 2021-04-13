@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlGroupTrackManager.h"
+#include "AnlGroupTools.h"
 #include "../Zoom/AnlZoomModel.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
 #include "../Track/AnlTrackPlot.h"
@@ -11,11 +11,10 @@ namespace Group
 {
     class Plot
     : public juce::Component
-    , private TrackManager<std::unique_ptr<Track::Plot>>
     {
     public:
         Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
-        ~Plot() override  = default;
+        ~Plot() override;
         
         // juce::Component
         void resized() override;
@@ -45,15 +44,11 @@ namespace Group
         };
         
     private:
-        // TrackManager<std::unique_ptr<Track::Plot>>
-        void updateContentsStarted() override;
-        void updateContentsEnded() override;
-        void removeFromContents(std::unique_ptr<Track::Plot>& content) override;
-        std::unique_ptr<Track::Plot> createForContents(Track::Accessor& trackAccessor) override;
-        
         Accessor& mAccessor;
+        Accessor::Listener mListener;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
+        TrackMap<std::unique_ptr<Track::Plot>> mTrackPlots;
     };
 }
 

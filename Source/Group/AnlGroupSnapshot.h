@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlGroupTrackManager.h"
+#include "AnlGroupTools.h"
 #include "../Zoom/AnlZoomModel.h"
 #include "../Transport/AnlTransportModel.h"
 #include "../Track/AnlTrackSnapshot.h"
@@ -11,11 +11,10 @@ namespace Group
 {
     class Snapshot
     : public juce::Component
-    , private TrackManager<std::unique_ptr<Track::Snapshot>>
     {
     public:
         Snapshot(Accessor& groupAccessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
-        ~Snapshot() override = default;
+        ~Snapshot() override;
         
         // juce::Component
         void resized() override;
@@ -45,15 +44,11 @@ namespace Group
         };
         
     private:
-        // TrackManager<std::unique_ptr<Track::Snapshot>>
-        void updateContentsStarted() override;
-        void updateContentsEnded() override;
-        void removeFromContents(std::unique_ptr<Track::Snapshot>& content) override;
-        std::unique_ptr<Track::Snapshot> createForContents(Track::Accessor& trackAccessor) override;
-        
         Accessor& mAccessor;
+        Accessor::Listener mListener;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
+        TrackMap<std::unique_ptr<Track::Snapshot>> mTrackSnapshots;
     };
 }
 
