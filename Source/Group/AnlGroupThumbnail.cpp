@@ -29,7 +29,12 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
         switch(attribute)
         {
             case AttrType::identifier:
+                break;
             case AttrType::name:
+            {
+                repaint();
+            }
+                break;
             case AttrType::height:
             case AttrType::colour:
             case AttrType::layout:
@@ -76,7 +81,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
-    g.drawFittedText("Overview", 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
+    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
 }
 
 void Group::Thumbnail::lookAndFeelChanged()
