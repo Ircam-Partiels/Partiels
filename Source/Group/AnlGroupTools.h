@@ -8,6 +8,7 @@ namespace Group
 {
     namespace Tools
     {
+        bool hasTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         std::optional<std::reference_wrapper<Track::Accessor>> getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
     }
     
@@ -25,28 +26,11 @@ namespace Group
         
         void updateContents(Accessor const& accessor, std::function<T(Track::Accessor&)> createContent, std::function<void(T&)> removeContent)
         {
-            auto hasTrack = [&](juce::String const& identifier)
-            {
-                auto const& layout = accessor.getAttr<AttrType::layout>();
-                if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const& layoutId)
-                {
-                    return layoutId == identifier;
-                }))
-                {
-                    return false;
-                }
-                auto const trackAcsrs = accessor.getAttr<AttrType::tracks>();
-                return std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-                {
-                    return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
-                });
-            };
-            
             auto const& layout = accessor.getAttr<AttrType::layout>();
             auto it = mContents.begin();
             while(it != mContents.end())
             {
-                if(!hasTrack(it->first))
+                if(!Tools::hasTrackAcsr(accessor, it->first))
                 {
                     if(removeContent != nullptr)
                     {
