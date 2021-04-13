@@ -1,4 +1,5 @@
 #include "AnlGroupThumbnail.h"
+#include "AnlGroupStrechableSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -101,6 +102,24 @@ void Group::Thumbnail::lookAndFeelChanged()
 void Group::Thumbnail::parentHierarchyChanged()
 {
     lookAndFeelChanged();
+}
+
+void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
+{
+    auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
+    auto* parent = findParentComponentOfClass<StrechableSection>();
+    anlWeakAssert(dragContainer != nullptr && parent != nullptr);
+    if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
+    {
+        juce::Image snapshot(juce::Image::ARGB, parent->getWidth(), parent->getHeight(), true);
+        juce::Graphics g(snapshot);
+        g.beginTransparencyLayer(0.6f);
+        parent->paintEntireComponent(g, false);
+        g.endTransparencyLayer();
+        
+        auto const p = -event.getMouseDownPosition();
+        dragContainer->startDragging(DraggableTable::createDescription(event), parent, snapshot, true, &p, &event.source);
+    }
 }
 
 ANALYSE_FILE_END

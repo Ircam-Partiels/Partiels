@@ -23,6 +23,7 @@ namespace Group
         void paint(juce::Graphics& g) override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
+        void mouseDrag(juce::MouseEvent const& event) override;
         
     private:
         Accessor& mAccessor;
