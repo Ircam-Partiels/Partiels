@@ -379,6 +379,31 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
 }
 
+void Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
+{
+    auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
+    {
+        return acsr.getAttr<Group::AttrType::identifier>() == identifier;
+    });
+    anlWeakAssert(it != groupAcsrs.cend());
+    if(it == groupAcsrs.cend())
+    {
+        return;
+    }
+    
+    auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+    auto const title = juce::translate("Remove Group");
+    auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" group from the project? This will delete all the analysis and lose everything!!!!!").replace("ANLNAME", it->get().getAttr<Group::AttrType::name>());
+    if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+    {
+        return;
+    }
+    
+    auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
+    mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
+}
+
 void Document::Director::sanitize(NotificationType const notification)
 {
     if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
