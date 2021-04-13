@@ -77,7 +77,7 @@ bool DraggableTable::isInterestedInDragSource(juce::DragAndDropTarget::SourceDet
     }
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
-    if(source == nullptr || obj == nullptr)
+    if(source == nullptr || obj == nullptr || source->findParentComponentOfClass<DraggableTable>() != this)
     {
         return false;
     }
