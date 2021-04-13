@@ -120,7 +120,7 @@ void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alert
 void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Export to image"), {}, "*.png;*.jpeg;*.jpg");
-    if (!fc.browseForFileToSave(true))
+    if(!fc.browseForFileToSave(true))
     {
         return;
     }

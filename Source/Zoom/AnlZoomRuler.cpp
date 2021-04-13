@@ -174,7 +174,7 @@ void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
     };
 
     mNavigationMode = getNavigationMode();
-    switch (mNavigationMode)
+    switch(mNavigationMode)
     {
         case NavigationMode::translate:
         {

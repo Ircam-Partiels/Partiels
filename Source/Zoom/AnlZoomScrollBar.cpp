@@ -12,7 +12,7 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
     
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        switch (attribute)
+        switch(attribute)
         {
             case AttrType::globalRange:
             {
