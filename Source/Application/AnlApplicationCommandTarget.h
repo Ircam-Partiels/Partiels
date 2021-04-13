@@ -27,6 +27,7 @@ namespace Application
             
             , EditUndo
             , EditRedo
+            , GroupNew
             , AnalysisNew
             
             , PointsNew

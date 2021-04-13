@@ -86,6 +86,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
+        , CommandIDs::GroupNew
         , CommandIDs::AnalysisNew
         
         , CommandIDs::PointsNew
@@ -187,9 +188,16 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
             break;
         
+        case CommandIDs::GroupNew:
+        {
+            result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
         case CommandIDs::AnalysisNew:
         {
-            result.setInfo(juce::translate("Add New Analysis"), juce::translate("Adds a new analysis"), "Analysis", 0);
+            result.setInfo(juce::translate("Add New Analysis"), juce::translate("Adds a new analysis"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
@@ -386,6 +394,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::EditRedo:
         {
             showUnsupportedAction();
+            return true;
+        }
+        case CommandIDs::GroupNew:
+        {
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.addGroup(AlertType::window, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::AnalysisNew:
