@@ -13,6 +13,7 @@ namespace Document
     enum class AttrType : size_t
     {
           file
+        , layout
     };
     
     enum class AcsrType : size_t
@@ -25,6 +26,7 @@ namespace Document
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     >;
     
     using AcsrContainer = Model::Container
@@ -41,7 +43,7 @@ namespace Document
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
         
         Accessor()
-        : Accessor(AttrContainer({juce::File{}}))
+        : Accessor(AttrContainer({juce::File{}} , {}))
         {
         }
     };

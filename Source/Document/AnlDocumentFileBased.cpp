@@ -4,10 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::AttrContainer const& Document::FileBased::getDefaultContainer()
 {
-    static AttrContainer const document
-    {
-          {juce::File{}}
-    };
+    static AttrContainer const document {{juce::File{}}, {}};
     return document;
 }
 

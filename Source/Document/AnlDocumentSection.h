@@ -33,6 +33,8 @@ namespace Document
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         
     private:
+        void updateLayout();
+        
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
@@ -46,7 +48,8 @@ namespace Document
         Transport::LoopBar mLoopBar {mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Decorator mLoopBarDecoration {mLoopBar, 1, 2.0f};
         
-        std::unique_ptr<Group::StrechableSection> mGroupStrechableSection;
+        std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
+        DraggableTable mDraggableTable;
         juce::Viewport mViewport;
         Zoom::ScrollBar mTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
         

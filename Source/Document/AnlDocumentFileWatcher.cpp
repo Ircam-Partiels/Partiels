@@ -9,7 +9,7 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        switch (attribute)
+        switch(attribute)
         {
             case AttrType::file:
             {
@@ -22,6 +22,9 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
                 }
             }
                 break;
+            case AttrType::layout:
+                break;
+                
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);

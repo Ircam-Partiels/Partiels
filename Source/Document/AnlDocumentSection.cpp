@@ -37,7 +37,9 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     };
     mTooltipButton.setToggleState(true, juce::NotificationType::sendNotification);
     
+    mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
+    
     setSize(480, 200);
     addAndMakeVisible(mFileInfoButtonDecoration);
     addAndMakeVisible(mTooltipButton);
@@ -46,60 +48,33 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mTimeScrollBar);
     
-    mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
-        switch(type)
+        switch(attribute)
         {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
+            case AttrType::file:
                 break;
-            case AcsrType::tracks:
+            case AttrType::layout:
             {
-                resized();
-            }
-                break;
-            case AcsrType::groups:
-            {
-                auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
-                auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
-                auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-                auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
-                if(groupSection != nullptr)
-                {
-                    groupSection->onRemoveTrack = [&](juce::String const& identifier)
-                    {
-                        if(onRemoveTrack != nullptr)
-                        {
-                            onRemoveTrack(identifier);
-                        }
-                    };
-                    mViewport.setViewedComponent(groupSection.get(), false);
-                }
-                mGroupStrechableSection = std::move(groupSection);
-                resized();
+                updateLayout();
             }
                 break;
         }
     };
     
-    mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
+        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::timeZoom:
             case AcsrType::transport:
-                break;
             case AcsrType::tracks:
-            {
-                resized();
-            }
                 break;
             case AcsrType::groups:
             {
-                mViewport.setViewedComponent(nullptr, false);
-                mGroupStrechableSection.reset();
-                resized();
+                updateLayout();
             }
                 break;
         }
@@ -127,11 +102,8 @@ void Document::Section::resized()
     mLoopBarDecoration.setBounds(topPart);
     auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
     mTimeScrollBar.setBounds(timeScrollBarBounds);
-    if(mGroupStrechableSection != nullptr)
-    {
-        mGroupStrechableSection->setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mGroupStrechableSection->getHeight());
-    }
     mViewport.setBounds(bounds);
+    mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
 }
 
 void Document::Section::paint(juce::Graphics& g)
@@ -191,6 +163,80 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
     auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
     auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
     timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
+}
+
+void Document::Section::updateLayout()
+{
+    auto createGroupSection = [&](Group::Accessor& groupAcsr)
+    {
+        auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+        auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+        auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
+        if(groupSection != nullptr)
+        {
+            groupSection->onRemoveTrack = [&](juce::String const& identifier)
+            {
+                if(onRemoveTrack != nullptr)
+                {
+                    onRemoveTrack(identifier);
+                }
+            };
+        }
+        return groupSection;
+    };
+    
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto it = mGroupSections.begin();
+    while(it != mGroupSections.end())
+    {
+        if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const& identifer)
+        {
+            return identifer == it->first;
+        }))
+        {
+            it = mGroupSections.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    
+    std::vector<ConcertinaTable::ComponentRef> components;
+    components.reserve(layout.size());
+    for(auto const& identifier : layout)
+    {
+        auto sectionIt = mGroupSections.find(identifier);
+        if(sectionIt == mGroupSections.cend())
+        {
+            auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+            auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+            {
+                return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
+            });
+            if(groupIt != groupAcsrs.cend())
+            {
+                auto groupSection = createGroupSection(groupIt->get());
+                anlStrongAssert(groupSection != nullptr);
+                if(groupSection != nullptr)
+                {
+                    auto const result = mGroupSections.emplace(identifier, std::move(groupSection));
+                    anlStrongAssert(result.second);
+                    if(result.second)
+                    {
+                        components.push_back(*result.first->second.get());
+                    }
+                }
+            }
+        }
+        else
+        {
+            components.push_back(*sectionIt->second.get());
+        }
+    }
+    
+    mDraggableTable.setComponents(components);
+    resized();
 }
 
 ANALYSE_FILE_END

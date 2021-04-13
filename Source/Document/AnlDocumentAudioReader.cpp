@@ -60,6 +60,8 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                 mTransportAudioReader.setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window));
             }
                 break;
+            case AttrType::layout:
+                break;
         }
     };
     

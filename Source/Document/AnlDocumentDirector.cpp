@@ -46,6 +46,8 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
             }
                 break;
+            case AttrType::layout:
+                break;
         }
     };
     
@@ -335,7 +337,9 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
     groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index), NotificationType::synchronous);
     
-    JUCE_COMPILER_WARNING("Todo: add group to document layout")
+    auto layout = mAccessor.getAttr<AttrType::layout>();
+    layout.push_back(identifier);
+    mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
 }
 
 void Document::Director::sanitize(NotificationType const notification)
@@ -350,6 +354,7 @@ void Document::Director::sanitize(NotificationType const notification)
     {
         return;
     }
+    
     auto& lastAcsr = groupAcsrs.back().get();
     auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     for(auto const& trackAcsr : trackAcsrs)
@@ -369,6 +374,20 @@ void Document::Director::sanitize(NotificationType const notification)
             lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
         }
     }
+    
+    auto layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto const& groupAcsr : groupAcsrs)
+    {
+        auto const groupIdentifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+        if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
+        {
+            return identifier == groupIdentifier;
+        }))
+        {
+            layout.push_back(groupIdentifier);
+        }
+    }
+    mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

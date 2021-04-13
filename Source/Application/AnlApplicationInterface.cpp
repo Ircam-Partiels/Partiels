@@ -45,6 +45,8 @@ Application::Interface::Interface()
                 }
             }
                 break;
+            case Document::AttrType::layout:
+                break;
         }
     };
     

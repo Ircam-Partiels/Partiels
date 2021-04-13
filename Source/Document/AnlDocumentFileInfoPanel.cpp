@@ -9,7 +9,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        switch (attribute)
+        switch(attribute)
         {
             case AttrType::file:
             {
@@ -64,6 +64,8 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 mConcertinaTable.setComponents(panels);
                 resized();
             }
+                break;
+            case AttrType::layout:
                 break;
         }
     };
