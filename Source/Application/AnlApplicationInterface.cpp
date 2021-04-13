@@ -17,6 +17,12 @@ Application::Interface::Interface()
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
     
+    mDocumentSection.onRemoveGroup = [](juce::String const& identifier)
+    {
+        auto& documentDir = Instance::get().getDocumentDirector();
+        documentDir.removeGroup(identifier, NotificationType::synchronous);
+    };
+    
     mDocumentSection.onRemoveTrack = [](juce::String const& identifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
