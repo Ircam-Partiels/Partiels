@@ -27,7 +27,7 @@ namespace Group
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::identifier, juce::File, Model::Flag::basic>
+    < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::height, int, Model::Flag::basic>
     , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
