@@ -68,6 +68,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::EditUndo);
         menu.addCommandItem(&commandManager, CommandIDs::EditRedo);
         menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::GroupNew);
         menu.addCommandItem(&commandManager, CommandIDs::AnalysisNew);
     }
     else if(menuName == "Points")
