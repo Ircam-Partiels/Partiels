@@ -22,6 +22,7 @@ namespace Document
         Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~Section() override;
         
+        std::function<void(juce::String const& identifier)> onRemoveGroup = nullptr;
         std::function<void(juce::String const& identifier)> onRemoveTrack = nullptr;
         
         // juce::Component

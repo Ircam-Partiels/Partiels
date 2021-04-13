@@ -183,6 +183,13 @@ void Document::Section::updateLayout()
         auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
+            groupSection->onRemoveGroup = [&](juce::String const& identifier)
+            {
+                if(onRemoveGroup != nullptr)
+                {
+                    onRemoveGroup(identifier);
+                }
+            };
             groupSection->onRemoveTrack = [&](juce::String const& identifier)
             {
                 if(onRemoveTrack != nullptr)
