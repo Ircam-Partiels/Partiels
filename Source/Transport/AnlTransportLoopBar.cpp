@@ -78,7 +78,7 @@ void Transport::LoopBar::paint(juce::Graphics& g)
     }
     else
     {
-        g.drawRoundedRectangle(static_cast<float>(x1), 0.0f, static_cast<float>(x2 - x1), static_cast<float>(getHeight()), 2.0f, 1.0f);
+        g.drawRoundedRectangle(static_cast<float>(x1 + 1), 1.0f, static_cast<float>(x2 - x1 - 2), static_cast<float>(getHeight() - 2), 2.0f, 1.0f);
     }
 }
 

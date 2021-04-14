@@ -50,8 +50,8 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Transport::LoopBar::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Transport::LoopBar::ColourIds::thumbCoulourId, thumbColour);
     
-    setColour(Transport::PlayheadBar::ColourIds::startPlayheadColourId, textColour);
-    setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, thumbColour);
+    setColour(Transport::PlayheadBar::ColourIds::startPlayheadColourId, thumbColour);
+    setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, rulerColour);
     
     setColour(Track::Thumbnail::ColourIds::textColourId, textColour);
     setColour(Track::Section::ColourIds::backgroundColourId, backgroundColour.darker());

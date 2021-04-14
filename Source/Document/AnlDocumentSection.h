@@ -3,6 +3,7 @@
 #include "AnlDocumentModel.h"
 #include "AnlDocumentFileInfoPanel.h"
 #include "../Transport/AnlTransportLoopBar.h"
+#include "../Transport/AnlTransportPlayheadBar.h"
 #include "../Group/AnlGroupStrechableSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -48,6 +49,7 @@ namespace Document
         Zoom::Ruler mTimeRuler {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration {mTimeRuler, 1, 2.0f};
         Transport::LoopBar mLoopBar {mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
+        Transport::PlayheadBar mPlayheadBar {mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Decorator mLoopBarDecoration {mLoopBar, 1, 2.0f};
         
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
