@@ -13,6 +13,7 @@ namespace Group
 {
     class Section
     : public juce::Component
+    , public juce::SettableTooltipClient
     {
     public:
         Section(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
