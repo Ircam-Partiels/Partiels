@@ -32,7 +32,9 @@ namespace Track
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        
         PropertyPanel mPropertyPanel {mAccessor};
+        juce::ImageButton mDropdownButton;
         juce::ImageButton mPropertiesButton;
         juce::ImageButton mExportButton;
         StateButton mStateButton {mAccessor};

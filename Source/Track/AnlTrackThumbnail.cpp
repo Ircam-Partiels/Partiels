@@ -11,10 +11,12 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mExportButton);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mStateButton);
+    addAndMakeVisible(mDropdownButton);
     
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
     mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
+    mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
     
     mRemoveButton.onClick = [&]()
     {
@@ -58,6 +60,22 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
     
+    mDropdownButton.onClick = [&]()
+    {
+        juce::PopupMenu menu;
+        auto addItem = [&](juce::Button& button)
+        {
+            if(!button.isVisible())
+            {
+                menu.addItem(button.getTooltip(), button.onClick);
+            }
+        };
+        addItem(mPropertiesButton);
+        addItem(mExportButton);
+        addItem(mRemoveButton);
+        menu.showAt(&mDropdownButton);
+    };
+    
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -96,17 +114,30 @@ Track::Thumbnail::~Thumbnail()
 
 void Track::Thumbnail::resized()
 {
+    bool useDropdown = false;
     auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
-    mRemoveButton.setVisible(bounds.getHeight() >= size);
-    mRemoveButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mStateButton.setVisible(bounds.getHeight() >= size);
-    mStateButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mExportButton.setVisible(bounds.getHeight() >= size);
-    mExportButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mPropertiesButton.setVisible(bounds.getHeight() >= size);
-    mPropertiesButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+
+    auto layoutButton = [&](juce::Component& component)
+    {
+        useDropdown = bounds.getHeight() < size * 2;
+        component.setVisible(!useDropdown);
+        if(!useDropdown)
+        {
+            component.setBounds(bounds.removeFromBottom(size).reduced(separator));
+        }
+    };
+    
+    layoutButton(mRemoveButton);
+    layoutButton(mStateButton);
+    layoutButton(mExportButton);
+    layoutButton(mPropertiesButton);
+    mDropdownButton.setVisible(useDropdown);
+    if(useDropdown)
+    {
+        mDropdownButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    }
 }
 
 void Track::Thumbnail::paint(juce::Graphics& g)
@@ -130,6 +161,7 @@ void Track::Thumbnail::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
+        laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
         laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
         laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
