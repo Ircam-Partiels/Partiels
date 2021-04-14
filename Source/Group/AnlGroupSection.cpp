@@ -1,5 +1,6 @@
 #include "AnlGroupSection.h"
 #include "AnlGroupStrechableSection.h"
+#include "../Zoom/AnlZoomTools.h"
 #include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -182,7 +183,16 @@ void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
     auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange.expanded(amount), NotificationType::synchronous);
+    
+    auto const anchor = Zoom::Tools::getScaledValueFromHeight(zoomAcsr, *this, event.y);
+    auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
+    auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
+    
+    auto const minDistance = zoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
+    auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
+    auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
+    
+    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
