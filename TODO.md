@@ -1,4 +1,3 @@
-- Change the Font (Metropolis might be more adapted)
 - Zoom fix rulers
 - Add program support
 - Use a colour scheme for look and feel
