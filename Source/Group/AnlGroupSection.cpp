@@ -13,12 +13,7 @@ Group::Section::Section(Accessor& accessor, Transport::Accessor& transportAcsr, 
         switch(type)
         {
             case AttrType::identifier:
-                break;
             case AttrType::name:
-            {
-                setTooltip(acsr.getAttr<AttrType::name>());
-            }
-                break;
             case AttrType::colour:
             case AttrType::expanded:
             case AttrType::layout:
