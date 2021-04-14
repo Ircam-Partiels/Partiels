@@ -12,7 +12,8 @@ namespace Group
     public:
         enum ColourIds : int
         {
-              textColourId = 0x2040000
+              textColourId = 0x2040100
+            , titleBackgroundColourId
         };
         
         Thumbnail(Accessor& accessor);

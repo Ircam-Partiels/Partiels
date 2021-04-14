@@ -57,6 +57,8 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Track::Section::ColourIds::backgroundColourId, backgroundColour.darker());
     
     setColour(Group::Thumbnail::ColourIds::textColourId, textColour);
+    setColour(Group::Thumbnail::ColourIds::titleBackgroundColourId, backgroundColour);
+    
     
     setColour(Document::Section::ColourIds::backgroundColourId, backgroundColour.darker());
     

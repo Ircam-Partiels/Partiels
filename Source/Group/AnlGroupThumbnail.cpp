@@ -91,6 +91,9 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     auto const bottom = height - 2 * separator;
     auto const size = height - 4 * separator;
     
+    g.setColour(findColour(ColourIds::titleBackgroundColourId));
+    g.fillRoundedRectangle(getLocalBounds().removeFromLeft(width).toFloat(), 2.0f);
+    
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
