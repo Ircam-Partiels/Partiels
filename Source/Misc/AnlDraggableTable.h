@@ -18,12 +18,12 @@ public:
     
     void setComponents(std::vector<ComponentRef> const& component);
     
-    std::function<void(size_t, size_t)> onComponentDragged = nullptr;
+    std::function<void(juce::String const& identifier, size_t index)> onComponentDragged = nullptr;
     
     // juce::Component
     void resized() override;
 
-    static juce::var createDescription(juce::MouseEvent const& event, juce::String const& type);
+    static juce::var createDescription(juce::MouseEvent const& event, juce::String const& type, juce::String const& identifier);
     
 private:
     // juce::ComponentListener
@@ -39,6 +39,7 @@ private:
     std::vector<juce::Component::SafePointer<juce::Component>> mContents;
     
     juce::String const mType;
+    bool mIsDragging {false};
 };
 
 ANALYSE_FILE_END

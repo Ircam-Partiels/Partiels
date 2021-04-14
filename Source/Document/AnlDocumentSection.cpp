@@ -21,12 +21,11 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     
-    mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
+    mDraggableTable.onComponentDragged = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
-        auto const identifier = layout[previousIndex];
         std::erase(layout, identifier);
-        layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
+        layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
     
@@ -183,11 +182,11 @@ void Document::Section::updateLayout()
         auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
-            groupSection->onRemoveGroup = [&](juce::String const& identifier)
+            groupSection->onRemoveGroup = [&]()
             {
                 if(onRemoveGroup != nullptr)
                 {
-                    onRemoveGroup(identifier);
+                    onRemoveGroup(groupAcsr.getAttr<Group::AttrType::identifier>());
                 }
             };
             groupSection->onRemoveTrack = [&](juce::String const& identifier)
@@ -195,6 +194,13 @@ void Document::Section::updateLayout()
                 if(onRemoveTrack != nullptr)
                 {
                     onRemoveTrack(identifier);
+                }
+            };
+            groupSection->onTrackInserted = [&](juce::String const& identifier)
+            {
+                if(onTrackInserted != nullptr)
+                {
+                    onTrackInserted(groupAcsr.getAttr<Group::AttrType::identifier>(), identifier);
                 }
             };
         }

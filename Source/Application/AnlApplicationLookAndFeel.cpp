@@ -59,6 +59,8 @@ Application::LookAndFeel::LookAndFeel()
     setColour(Group::Thumbnail::ColourIds::textColourId, textColour);
     setColour(Group::Thumbnail::ColourIds::titleBackgroundColourId, backgroundColour);
     
+    setColour(Group::Section::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Group::Section::ColourIds::highlightedColourId, rulerColour.withAlpha(0.4f));
     
     setColour(Document::Section::ColourIds::backgroundColourId, backgroundColour.darker());
     

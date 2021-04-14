@@ -18,6 +18,7 @@ namespace Document
         
         void addTrack(AlertType const alertType, NotificationType const notification);
         void removeTrack(AlertType const alertType, juce::String const identifier, NotificationType const notification);
+        void moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
         void addGroup(AlertType const alertType, NotificationType const notification);
         void removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification);
         

@@ -1,4 +1,6 @@
 #include "AnlGroupSection.h"
+#include "AnlGroupStrechableSection.h"
+#include "../Track/AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -69,6 +71,89 @@ void Group::Section::resized()
     mScrollBar.setBounds(bounds.removeFromRight(8));
     mRuler.setBounds(bounds.removeFromRight(16));
     mPlotDecoration.setBounds(bounds);
+}
+
+void Group::Section::paint(juce::Graphics& g)
+{
+    g.fillAll(findColour(ColourIds::backgroundColourId));
+}
+
+void Group::Section::paintOverChildren(juce::Graphics& g)
+{
+    if(mIsItemDragged)
+    {
+        g.fillAll(findColour(ColourIds::highlightedColourId));
+    }
+}
+
+void Group::Section::colourChanged()
+{
+    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
+}
+
+bool Group::Section::isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
+{
+    auto* source = dragSourceDetails.sourceComponent.get();
+    auto* obj = dragSourceDetails.description.getDynamicObject();
+    auto* parent = findParentComponentOfClass<StrechableSection>();
+    if(source == nullptr || obj == nullptr || dynamic_cast<Track::Section*>(source) == nullptr || source->findParentComponentOfClass<StrechableSection>() == parent)
+    {
+        return false;
+    }
+    return obj->getProperty("type").toString() == "Track";
+}
+
+void Group::Section::itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
+{
+    auto* source = dragSourceDetails.sourceComponent.get();
+    auto* obj = dragSourceDetails.description.getDynamicObject();
+    anlWeakAssert(obj != nullptr && source != nullptr);
+    if(obj == nullptr || source == nullptr)
+    {
+        mIsItemDragged = false;
+        repaint();
+        return;
+    }
+    source->setAlpha(0.4f);
+    mIsItemDragged = true;
+    repaint();
+}
+
+void Group::Section::itemDragMove(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
+{
+    juce::ignoreUnused(dragSourceDetails);
+}
+
+void Group::Section::itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
+{
+    auto* source = dragSourceDetails.sourceComponent.get();
+    anlWeakAssert(source != nullptr);
+    if(source != nullptr)
+    {
+        source->setAlpha(1.0f);
+    }
+    mIsItemDragged = false;
+    repaint();
+}
+
+void Group::Section::itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
+{
+    mIsItemDragged = false;
+    repaint();
+    
+    auto* source = dragSourceDetails.sourceComponent.get();
+    auto* obj = dragSourceDetails.description.getDynamicObject();
+    anlWeakAssert(obj != nullptr && source != nullptr);
+    if(obj == nullptr || source == nullptr)
+    {
+        return;
+    }
+    
+    source->setAlpha(1.0f);
+    if(onTrackInserted != nullptr)
+    {
+        onTrackInserted(obj->getProperty("identifier"));
+    }
 }
 
 ANALYSE_FILE_END

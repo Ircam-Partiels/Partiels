@@ -13,17 +13,35 @@ namespace Group
 {
     class Section
     : public juce::Component
+    , public juce::DragAndDropTarget
     {
     public:
+        enum ColourIds : int
+        {
+              backgroundColourId = 0x2040000
+            , highlightedColourId
+        };
+        
         Section(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~Section() override;
         
         std::function<void(void)> onRemove = nullptr;
+        std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
         
         // juce::Component
         void resized() override;
+        void paint(juce::Graphics& g) override;
+        void paintOverChildren(juce::Graphics& g) override;
+        void colourChanged() override;
         
     private:
+        // juce::DragAndDropTarget
+        bool isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+        void itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+        void itemDragMove(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+        void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+        void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+        
         Accessor& mAccessor;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
@@ -44,6 +62,7 @@ namespace Group
         Zoom::ScrollBar mScrollBar {mAccessor.getAcsr<AcsrType::zoom>(), Zoom::ScrollBar::Orientation::vertical, true};
 
         ResizerBar mResizerBar {ResizerBar::Orientation::horizontal, true, {23, 2000}};
+        bool mIsItemDragged {false};
     };
 }
 

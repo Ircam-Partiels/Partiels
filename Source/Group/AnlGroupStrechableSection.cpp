@@ -66,16 +66,23 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
     {
         if(onRemoveGroup != nullptr)
         {
-            onRemoveGroup(mAccessor.getAttr<AttrType::identifier>());
+            onRemoveGroup();
         }
     };
     
-    mDraggableTable.onComponentDragged = [&](size_t previousIndex, size_t nextIndex)
+    mSection.onTrackInserted = [&](juce::String const& identifier)
+    {
+        if(onTrackInserted != nullptr)
+        {
+            onTrackInserted(identifier);
+        }
+    };
+    
+    mDraggableTable.onComponentDragged = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
-        auto const identifier = layout[previousIndex];
         std::erase(layout, identifier);
-        layout.insert(layout.begin() + static_cast<long>(nextIndex), identifier);
+        layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
     
@@ -85,6 +92,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
         auto const height = mSection.getHeight() + mConcertinaTable.getHeight();
         setSize(getWidth(), height);
     };
+    
     mBoundsListener.attachTo(mSection);
     mBoundsListener.attachTo(mConcertinaTable);
     mConcertinaTable.setComponents({mDraggableTable});

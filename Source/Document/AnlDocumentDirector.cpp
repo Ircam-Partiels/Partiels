@@ -353,6 +353,56 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
 }
 
+
+void Document::Director::moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
+{
+    juce::ignoreUnused(alertType);
+    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
+    {
+        return acsr.getAttr<Track::AttrType::identifier>() == trackIdentifier;
+    });
+    anlWeakAssert(it != trackAcsrs.cend());
+    if(it == trackAcsrs.cend())
+    {
+        return;
+    }
+    
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    auto goupIt = std::find_if(groupAcsrs.begin(), groupAcsrs.end(), [&](auto const& groupAcsr)
+    {
+        return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == groupIdentifier;
+    });
+    anlWeakAssert(goupIt != groupAcsrs.end());
+    if(goupIt == groupAcsrs.end())
+    {
+        return;
+    }
+    for(auto& groupAcsr : groupAcsrs)
+    {
+        auto gIds = groupAcsr.get().getAttr<Group::AttrType::layout>();
+        if(std::addressof(*goupIt) == std::addressof(groupAcsr))
+        {
+            if(std::none_of(gIds.cbegin(), gIds.cend(), [&](auto const& identifier)
+            {
+                return identifier == trackIdentifier;
+            }))
+            {
+                gIds.push_back(trackIdentifier);
+            }
+            else
+            {
+                anlWeakAssert(false);
+            }
+        }
+        else
+        {
+            std::erase(gIds, trackIdentifier);
+        }
+        groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
+    }
+}
+
 void Document::Director::addGroup(AlertType const alertType, NotificationType const notification)
 {
     auto const index = mAccessor.getNumAcsr<AcsrType::groups>();
@@ -372,11 +422,11 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     
     auto& groupAcsr = mAccessor.getAcsr<Document::AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
-    groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index), NotificationType::synchronous);
+    groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index), notification);
     
     auto layout = mAccessor.getAttr<AttrType::layout>();
     layout.push_back(identifier);
-    mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::layout>(layout, notification);
 }
 
 void Document::Director::removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification)
@@ -439,7 +489,7 @@ void Document::Director::sanitize(NotificationType const notification)
         {
             auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
             groupLayout.push_back(trackIdentifier);
-            lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
+            lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, notification);
         }
     }
     
@@ -455,7 +505,7 @@ void Document::Director::sanitize(NotificationType const notification)
             layout.push_back(groupIdentifier);
         }
     }
-    mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::layout>(layout, notification);
 }
 
 ANALYSE_FILE_END

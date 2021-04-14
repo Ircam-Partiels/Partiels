@@ -2,13 +2,14 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::var DraggableTable::createDescription(juce::MouseEvent const& event, juce::String const& type)
+juce::var DraggableTable::createDescription(juce::MouseEvent const& event, juce::String const& type, juce::String const& identifier)
 {
     auto description = std::make_unique<juce::DynamicObject>();
     anlWeakAssert(description != nullptr);
     if(description != nullptr)
     {
         description->setProperty("type", type);
+        description->setProperty("identifier", identifier);
         description->setProperty("offset", -event.getMouseDownY());
     }
     return {description.release()};
@@ -59,8 +60,7 @@ void DraggableTable::setComponents(std::vector<ComponentRef> const& components)
 void DraggableTable::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
 {
     juce::ignoreUnused(component, wasMoved);
-    auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
-    if(wasResized && (dragContainer == nullptr || !dragContainer->isDragAndDropActive()))
+    if(wasResized && !mIsDragging)
     {
         auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
         {
@@ -92,8 +92,10 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
     anlWeakAssert(obj != nullptr && source != nullptr);
     if(obj == nullptr || source == nullptr)
     {
+        mIsDragging = false;
         return;
     }
+    mIsDragging = true;
     auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
     {
         return (content != nullptr) ? value + content->getHeight() : value;
@@ -158,6 +160,7 @@ void DraggableTable::itemDragExit(juce::DragAndDropTarget::SourceDetails const& 
     {
         source->setAlpha(1.0f);
     }
+    mIsDragging = false;
 }
 
 void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
@@ -167,6 +170,7 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     anlWeakAssert(obj != nullptr && source != nullptr);
     if(obj == nullptr || source == nullptr)
     {
+        mIsDragging = false;
         return;
     }
     
@@ -178,6 +182,7 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     anlWeakAssert(it != mContents.cend());
     if(it == mContents.cend())
     {
+        mIsDragging = false;
         return;
     }
     
@@ -210,7 +215,7 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     auto const newIndex = getNewIndex();
     if(index != newIndex && onComponentDragged != nullptr)
     {
-        onComponentDragged(index, newIndex);
+        onComponentDragged(obj->getProperty("identifier"), newIndex);
     }
     itemDragExit(dragSourceDetails);
 }

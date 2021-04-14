@@ -17,16 +17,22 @@ Application::Interface::Interface()
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
     
-    mDocumentSection.onRemoveGroup = [](juce::String const& identifier)
+    mDocumentSection.onRemoveGroup = [](juce::String const& groupIdentifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeGroup(AlertType::window, identifier, NotificationType::synchronous);
+        documentDir.removeGroup(AlertType::window, groupIdentifier, NotificationType::synchronous);
     };
     
-    mDocumentSection.onRemoveTrack = [](juce::String const& identifier)
+    mDocumentSection.onRemoveTrack = [](juce::String const& trackIdentifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeTrack(AlertType::window, identifier, NotificationType::synchronous);
+        documentDir.removeTrack(AlertType::window, trackIdentifier, NotificationType::synchronous);
+    };
+    
+    mDocumentSection.onTrackInserted = [](juce::String const& groupIdentifier, juce::String const& trackIdentifier)
+    {
+        auto& documentDir = Instance::get().getDocumentDirector();
+        documentDir.moveTrack(AlertType::window, groupIdentifier, trackIdentifier, NotificationType::synchronous);
     };
     
     mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
