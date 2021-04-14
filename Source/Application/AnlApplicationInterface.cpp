@@ -20,13 +20,13 @@ Application::Interface::Interface()
     mDocumentSection.onRemoveGroup = [](juce::String const& identifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeGroup(identifier, NotificationType::synchronous);
+        documentDir.removeGroup(AlertType::window, identifier, NotificationType::synchronous);
     };
     
     mDocumentSection.onRemoveTrack = [](juce::String const& identifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeTrack(identifier, NotificationType::synchronous);
+        documentDir.removeTrack(AlertType::window, identifier, NotificationType::synchronous);
     };
     
     mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)

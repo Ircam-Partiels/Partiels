@@ -17,9 +17,9 @@ namespace Document
         void sanitize(NotificationType const notification);
         
         void addTrack(AlertType const alertType, NotificationType const notification);
-        void removeTrack(juce::String const identifier, NotificationType const notification);
+        void removeTrack(AlertType const alertType, juce::String const identifier, NotificationType const notification);
         void addGroup(AlertType const alertType, NotificationType const notification);
-        void removeGroup(juce::String const identifier, NotificationType const notification);
+        void removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification);
         
     private:
         Accessor& mAccessor;

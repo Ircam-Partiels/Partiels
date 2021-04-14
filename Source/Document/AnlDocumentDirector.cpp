@@ -320,7 +320,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
     }
 }
 
-void Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
+void Document::Director::removeTrack(AlertType const alertType, juce::String const identifier, NotificationType const notification)
 {
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
@@ -336,7 +336,7 @@ void Document::Director::removeTrack(juce::String const identifier, Notification
     auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
     auto const title = juce::translate("Remove Analysis");
     auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Track::AttrType::name>());
-    if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+    if(alertType == AlertType::window && !juce::AlertWindow::showOkCancelBox(icon, title, message))
     {
         return;
     }
@@ -379,7 +379,7 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
 }
 
-void Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
+void Document::Director::removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification)
 {
     auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
@@ -395,9 +395,15 @@ void Document::Director::removeGroup(juce::String const identifier, Notification
     auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
     auto const title = juce::translate("Remove Group");
     auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" group from the project? This will delete all the analysis and lose everything!!!!!").replace("ANLNAME", it->get().getAttr<Group::AttrType::name>());
-    if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+    if(alertType == AlertType::window && !juce::AlertWindow::showOkCancelBox(icon, title, message))
     {
         return;
+    }
+    
+    auto const layout = it->get().getAttr<Group::AttrType::layout>();
+    for(auto const& tarckIdentifier : layout)
+    {
+        removeTrack(AlertType::silent, tarckIdentifier, notification);
     }
     
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
