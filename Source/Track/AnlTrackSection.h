@@ -53,7 +53,7 @@ namespace Track
         Zoom::Ruler mBinRuler  {mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mBinScrollBar {mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
         
-        ResizerBar mResizerBar {ResizerBar::Orientation::horizontal, true, {50, 2000}};
+        ResizerBar mResizerBar {ResizerBar::Orientation::horizontal, true, {23, 2000}};
     };
 }
 
