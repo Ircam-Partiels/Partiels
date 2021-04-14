@@ -274,7 +274,7 @@ juce_add_binary_data(IconsData HEADER_NAME "IconsData.h" NAMESPACE IconsData SOU
 file(GLOB TranslationsDataSources ${TranslationsSources})
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
-file(GLOB FontsDataSources ${BINARYDATA_DIRECTORY}/Fonts/*.otf)
+file(GLOB FontsDataSources ${BINARYDATA_DIRECTORY}/Fonts/*.ttf)
 juce_add_binary_data(FontsData HEADER_NAME "FontsData.h" NAMESPACE FontsData SOURCES ${FontsDataSources})
 
 file(GLOB MiscDataSources ${BINARYDATA_DIRECTORY}/Misc/About.txt)

@@ -36,7 +36,7 @@ Application::FontManager::FontManager()
 
 juce::Typeface::Ptr Application::FontManager::getDefaultSansSerifTypeface()
 {
-    static auto typeface = juce::Typeface::createSystemTypefaceFor(FontsData::FallingSkyLightK2EX_otf, FontsData::FallingSkyLightK2EX_otfSize);
+    static auto typeface = juce::Typeface::createSystemTypefaceFor(FontsData::NunitoSansRegular_ttf, FontsData::NunitoSansRegular_ttfSize);
     return typeface;
 }
 
