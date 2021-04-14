@@ -156,4 +156,33 @@ void Group::Section::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     }
 }
 
+void Group::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
+{
+    if(!event.mods.isCommandDown())
+    {
+        Component::mouseWheelMove(event, wheel);
+        return;
+    }
+    
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
+    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+}
+
+void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
+{
+    if(!event.mods.isCommandDown())
+    {
+        Component::mouseMagnify(event, magnifyAmount);
+        return;
+    }
+    
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
+    auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+    auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
+    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange.expanded(amount), NotificationType::synchronous);
+}
+
 ANALYSE_FILE_END

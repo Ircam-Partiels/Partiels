@@ -33,6 +33,8 @@ namespace Group
         void paint(juce::Graphics& g) override;
         void paintOverChildren(juce::Graphics& g) override;
         void colourChanged() override;
+        void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
+        void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         
     private:
         // juce::DragAndDropTarget
