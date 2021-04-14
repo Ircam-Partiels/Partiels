@@ -20,6 +20,7 @@ public:
           alert
         , cancel
         , checked
+        , chevron
         , conversation
         , edit
         , expand

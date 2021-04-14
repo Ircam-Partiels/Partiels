@@ -16,6 +16,9 @@ juce::Image IconManager::getIcon(IconType const type)
         case IconType::checked:
             return juce::ImageCache::getFromMemory(IconsData::checked_png, IconsData::checked_pngSize);
             break;
+        case IconType::chevron:
+            return juce::ImageCache::getFromMemory(IconsData::chevron_png, IconsData::chevron_pngSize);
+            break;
         case IconType::conversation:
             return juce::ImageCache::getFromMemory(IconsData::conversation_png, IconsData::conversation_pngSize);
             break;
