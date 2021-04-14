@@ -61,6 +61,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
                 break;
             case AttrType::name:
             {
+                setTooltip(acsr.getAttr<AttrType::name>());
                 repaint();
             }
                 break;
