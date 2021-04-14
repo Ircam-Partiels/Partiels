@@ -32,6 +32,7 @@ namespace Group
         Accessor& mAccessor;
         Accessor::Listener mListener;
         
+        juce::ImageButton mDropdownButton;
         juce::ImageButton mExportButton;
         StateButton mStateButton {mAccessor};
         juce::ImageButton mExpandButton;

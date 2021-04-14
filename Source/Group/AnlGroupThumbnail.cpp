@@ -10,9 +10,12 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mStateButton);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mExpandButton);
+    addAndMakeVisible(mDropdownButton);
     
-    mExportButton.setTooltip(juce::translate("Export the analyses"));
-    mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
+    mExportButton.setTooltip(juce::translate("Export the group"));
+    mRemoveButton.setTooltip(juce::translate("Remove the group"));
+    mExpandButton.setTooltip(juce::translate("Expand the group"));
+    mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
     
     mRemoveButton.onClick = [&]()
     {
@@ -31,6 +34,22 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
     {
         // Force to repaint to update the state
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
+    };
+    
+    mDropdownButton.onClick = [&]()
+    {
+        juce::PopupMenu menu;
+        auto addItem = [&](juce::Button& button)
+        {
+            if(!button.isVisible())
+            {
+                menu.addItem(button.getTooltip(), button.onClick);
+            }
+        };
+        addItem(mExportButton);
+        addItem(mRemoveButton);
+        addItem(mExpandButton);
+        menu.showAt(&mDropdownButton);
     };
     
     mListener.onAttrChanged = [&](Group::Accessor const& acsr, AttrType const attribute)
@@ -68,17 +87,30 @@ Group::Thumbnail::~Thumbnail()
 
 void Group::Thumbnail::resized()
 {
+    bool useDropdown = false;
     auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
-    mExpandButton.setVisible(bounds.getHeight() >= size);
-    mExpandButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mRemoveButton.setVisible(bounds.getHeight() >= size);
-    mRemoveButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mStateButton.setVisible(bounds.getHeight() >= size);
-    mStateButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
-    mExportButton.setVisible(bounds.getHeight() >= size);
-    mExportButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    
+    auto layoutButton = [&](juce::Component& component)
+    {
+        useDropdown = bounds.getHeight() < size * 2;
+        component.setVisible(!useDropdown);
+        if(!useDropdown)
+        {
+            component.setBounds(bounds.removeFromBottom(size).reduced(separator));
+        }
+    };
+    
+    layoutButton(mExpandButton);
+    layoutButton(mRemoveButton);
+    layoutButton(mStateButton);
+    layoutButton(mExportButton);
+    mDropdownButton.setVisible(useDropdown);
+    if(useDropdown)
+    {
+        mDropdownButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+    }
 }
 
 void Group::Thumbnail::paint(juce::Graphics& g)
@@ -105,6 +137,7 @@ void Group::Thumbnail::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
+        laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
         laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
         if(mAccessor.getAttr<AttrType::expanded>())
