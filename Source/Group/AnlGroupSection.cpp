@@ -60,7 +60,7 @@ Group::Section::~Section()
 
 void Group::Section::resized()
 {
-    mResizerBar.setBounds(getLocalBounds().removeFromBottom(1).reduced(2, 0));
+    mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));
     
     auto bounds = getLocalBounds();
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));

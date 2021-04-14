@@ -38,8 +38,8 @@ Application::LookAndFeel::LookAndFeel()
     setColour(LoadingCircle::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(LoadingCircle::ColourIds::foregroundColourId, rulerColour);
     
-    setColour(ResizerBar::ColourIds::activeColourId, rulerColour.brighter());
-    setColour(ResizerBar::ColourIds::inactiveColourId, backgroundColour.darker());
+    setColour(ResizerBar::ColourIds::activeColourId, juce::Colours::transparentBlack);
+    setColour(ResizerBar::ColourIds::inactiveColourId, juce::Colours::transparentBlack);
     
     setColour(Zoom::Ruler::ColourIds::backgroundColourId, backgroundColour.darker());
     setColour(Zoom::Ruler::ColourIds::tickColourId, textColour);
