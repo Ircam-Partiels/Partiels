@@ -136,7 +136,7 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
         g.endTransparencyLayer();
         
         auto const p = -event.getMouseDownPosition();
-        dragContainer->startDragging(DraggableTable::createDescription(event), parent, snapshot, true, &p, &event.source);
+        dragContainer->startDragging(DraggableTable::createDescription(event, "Group"), parent, snapshot, true, &p, &event.source);
     }
 }
 

@@ -2,19 +2,20 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::var DraggableTable::createDescription(juce::MouseEvent const& event)
+juce::var DraggableTable::createDescription(juce::MouseEvent const& event, juce::String const& type)
 {
     auto description = std::make_unique<juce::DynamicObject>();
     anlWeakAssert(description != nullptr);
     if(description != nullptr)
     {
-        description->setProperty("type", "DraggableTable::Content");
+        description->setProperty("type", type);
         description->setProperty("offset", -event.getMouseDownY());
     }
     return {description.release()};
 }
 
-DraggableTable::DraggableTable(juce::String const& tooltip)
+DraggableTable::DraggableTable(juce::String const type, juce::String const& tooltip)
+: mType(type)
 {
     setTooltip(tooltip);
 }
@@ -81,7 +82,7 @@ bool DraggableTable::isInterestedInDragSource(juce::DragAndDropTarget::SourceDet
     {
         return false;
     }
-    return obj->getProperty("type").toString() == "DraggableTable::Content";
+    return obj->getProperty("type").toString() == mType;
 }
 
 void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)

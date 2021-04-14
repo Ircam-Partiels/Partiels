@@ -50,7 +50,7 @@ namespace Document
         Decorator mLoopBarDecoration {mLoopBar, 1, 2.0f};
         
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
-        DraggableTable mDraggableTable;
+        DraggableTable mDraggableTable {"Group"};
         juce::Viewport mViewport;
         Zoom::ScrollBar mTimeScrollBar {mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
         

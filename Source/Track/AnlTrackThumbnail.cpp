@@ -154,7 +154,7 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
         g.endTransparencyLayer();
         
         auto const p = -event.getMouseDownPosition();
-        dragContainer->startDragging(DraggableTable::createDescription(event), parent, snapshot, true, &p, &event.source);
+        dragContainer->startDragging(DraggableTable::createDescription(event, "Track"), parent, snapshot, true, &p, &event.source);
     }
 }
 

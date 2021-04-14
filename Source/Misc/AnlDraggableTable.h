@@ -13,7 +13,7 @@ class DraggableTable
 public:
     using ComponentRef = std::reference_wrapper<juce::Component>;
     
-    DraggableTable(juce::String const& tooltip = {});
+    DraggableTable(juce::String const type, juce::String const& tooltip = {});
     ~DraggableTable() override = default;
     
     void setComponents(std::vector<ComponentRef> const& component);
@@ -23,7 +23,7 @@ public:
     // juce::Component
     void resized() override;
 
-    static juce::var createDescription(juce::MouseEvent const& event);
+    static juce::var createDescription(juce::MouseEvent const& event, juce::String const& type);
     
 private:
     // juce::ComponentListener
@@ -37,6 +37,8 @@ private:
     void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     
     std::vector<juce::Component::SafePointer<juce::Component>> mContents;
+    
+    juce::String const mType;
 };
 
 ANALYSE_FILE_END

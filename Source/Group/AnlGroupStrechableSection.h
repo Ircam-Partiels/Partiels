@@ -28,7 +28,7 @@ namespace Group
         
         Section mSection {mAccessor, mTransportAccessor, mTimeZoomAccessor};
         TrackMap<std::unique_ptr<Track::Section>> mTrackSections;
-        DraggableTable mDraggableTable;
+        DraggableTable mDraggableTable {"Track"};
         ConcertinaTable mConcertinaTable {"", false};
         BoundsListener mBoundsListener;
     };
