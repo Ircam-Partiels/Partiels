@@ -16,7 +16,7 @@ namespace Track
     public:
         enum ColourIds : int
         {
-              sectionColourId = 0x2030000
+              backgroundColourId = 0x2030000
         };
         
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
@@ -27,6 +27,7 @@ namespace Track
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
+        void colourChanged() override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         

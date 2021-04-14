@@ -105,7 +105,12 @@ void Track::Section::resized()
 
 void Track::Section::paint(juce::Graphics& g)
 {
-    g.fillAll(findColour(ColourIds::sectionColourId, true));
+    g.fillAll(findColour(ColourIds::backgroundColourId));
+}
+
+void Track::Section::colourChanged()
+{
+    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
 }
 
 void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
