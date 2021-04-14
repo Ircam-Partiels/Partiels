@@ -202,12 +202,17 @@ void Document::Section::updateLayout()
     };
     
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto it = mGroupSections.begin();
     while(it != mGroupSections.end())
     {
         if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const& identifer)
         {
             return identifer == it->first;
+        })
+        || std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+        {
+            return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == it->first;
         }))
         {
             it = mGroupSections.erase(it);
@@ -225,7 +230,6 @@ void Document::Section::updateLayout()
         auto sectionIt = mGroupSections.find(identifier);
         if(sectionIt == mGroupSections.cend())
         {
-            auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
             auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
             {
                 return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
