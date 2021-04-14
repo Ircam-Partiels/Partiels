@@ -65,6 +65,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         {
             case AttrType::name:
             {
+                setTooltip(acsr.getAttr<AttrType::name>());
                 repaint();
             }
                 break;

@@ -9,6 +9,7 @@ namespace Track
 {
     class Thumbnail
     : public juce::Component
+    , public juce::SettableTooltipClient
     {
     public:
         enum ColourIds : int
