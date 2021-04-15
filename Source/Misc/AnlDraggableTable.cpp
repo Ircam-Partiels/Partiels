@@ -41,7 +41,10 @@ void DraggableTable::setComponents(std::vector<ComponentRef> const& components)
 {
     for(auto& content : mContents)
     {
-        if(content != nullptr)
+        if(content != nullptr && std::none_of(components.cbegin(), components.cend(), [&](auto const& component)
+        {
+            return std::addressof(component.get()) == content.getComponent();
+        }))
         {
             content->removeComponentListener(this);
             removeChildComponent(content);
