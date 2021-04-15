@@ -117,13 +117,6 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                             break;
                     }
                 };
-                groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
-                auto& groupZoomAcsr = groupAcsr.getAcsr<Group::AcsrType::zoom>();
-                if(groupZoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty())
-                {
-                    groupZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
-                    groupZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
-                }
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:

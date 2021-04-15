@@ -56,6 +56,15 @@ namespace Group
                                  , {}))
         {
         }
+        
+        template <acsr_enum_type type>
+        bool insertAcsr(size_t index, NotificationType const notification)
+        {
+            if constexpr(type == AcsrType::zoom)
+            {
+                return Model::Accessor<Accessor, AttrContainer, AcsrContainer>::insertAcsr<AcsrType::zoom>(index, std::make_unique<Zoom::Accessor>(Zoom::Range{0.0, 1.0}), notification);
+            }
+        }
     };
 }
 
