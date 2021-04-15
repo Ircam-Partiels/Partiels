@@ -387,6 +387,35 @@ namespace Model
                 }
             });
             
+            detail::for_each_inv(mAccessors, [&](auto const& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr acsr_type = element_type::type;
+                    auto const enumname = std::string(magic_enum::enum_name(acsr_type));
+                    
+                    std::vector<juce::XmlElement const*> childs;
+                    for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
+                    {
+                        childs.push_back(child);
+                    }
+                    
+                    auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
+                    anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
+                    
+                    if constexpr(element_type::size_flags == 0)
+                    {
+                        while(accessors.size() > childs.size())
+                        {
+                            auto const index = accessors.size() - 1;
+                            static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
+                        }
+                    }
+                }
+            });
+            
+            
             detail::for_each(mAccessors, [&](auto& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -403,14 +432,6 @@ namespace Model
                     
                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
                     anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
-                    if constexpr(element_type::size_flags == 0)
-                    {
-                        while(accessors.size() > childs.size())
-                        {
-                            auto const index = accessors.size() - 1;
-                            static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
-                        }
-                    }
                     
                     for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
                     {
@@ -420,6 +441,25 @@ namespace Model
                             accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
                         }
                     }
+                }
+            });
+            
+            detail::for_each(mAccessors, [&](auto& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr acsr_type = element_type::type;
+                    auto const enumname = std::string(magic_enum::enum_name(acsr_type));
+                    
+                    std::vector<juce::XmlElement const*> childs;
+                    for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
+                    {
+                        childs.push_back(child);
+                    }
+                
+                    auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
+                    anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
                     
                     if constexpr(element_type::size_flags == 0)
                     {
@@ -461,7 +501,7 @@ namespace Model
                 }
             });
             
-            detail::for_each(accessor.mAccessors, [&](auto const& d)
+            detail::for_each_inv(accessor.mAccessors, [&](auto const& d)
             {
                 using element_type = typename std::remove_reference<decltype(d)>::type;
                 if constexpr((element_type::flags & Flag::saveable) != 0)
@@ -477,6 +517,17 @@ namespace Model
                             static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
                         }
                     }
+                }
+            });
+            
+            detail::for_each(accessor.mAccessors, [&](auto const& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr acsr_type = element_type::type;
+                    auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
+                    anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
                     for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
                     {
                         anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
@@ -485,6 +536,17 @@ namespace Model
                             accessors[index]->copyFrom(*(d.accessors[index].get()), notification);
                         }
                     }
+                }
+            });
+            
+            detail::for_each(accessor.mAccessors, [&](auto const& d)
+            {
+                using element_type = typename std::remove_reference<decltype(d)>::type;
+                if constexpr((element_type::flags & Flag::saveable) != 0)
+                {
+                    auto constexpr acsr_type = element_type::type;
+                    auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
+                    anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
                     if constexpr(element_type::size_flags == 0)
                     {
                         while(d.accessors.size() > accessors.size())
@@ -511,7 +573,6 @@ namespace Model
                             }
                         }
                     }
-                    
                 }
             });
         }
@@ -700,12 +761,24 @@ namespace Model
         struct detail
         {
             // https://stackoverflow.com/questions/16387354/template-tuple-calling-a-function-on-each-element
-            template<int... Is> struct seq {};
-            template<int N, int... Is> struct gen_seq : gen_seq<N - 1, N - 1, Is...> {};
-            template<int... Is> struct gen_seq<0, Is...> : seq<Is...> {};
-            template<typename T, typename F, int... Is> static void for_each(T&& t, F f, seq<Is...>) {auto l = { (f(std::get<Is>(t)), 0)... }; juce::ignoreUnused(l);}
-            template<typename... Ts, typename F> static void for_each(std::tuple<Ts...> const& t, F f) {for_each(t, f, gen_seq<sizeof...(Ts)>());}
-            template<typename... Ts, typename F> static void for_each(std::tuple<Ts...>& t, F f) {for_each(t, f, gen_seq<sizeof...(Ts)>());}
+            template<typename T, typename F, size_t... Is>
+            static void for_each(T&& t, F f, std::integer_sequence<size_t, Is...>)
+            {
+                auto l = { (f(std::get<Is>(t)), 0)... };
+                juce::ignoreUnused(l);
+            }
+            
+            template<typename... Ts, typename F>
+            static void for_each(std::tuple<Ts...> const& t, F f)
+            {
+                detail::for_each(t, f, std::make_integer_sequence<size_t, sizeof...(Ts)>());
+            }
+            
+            template<typename... Ts, typename F>
+            static void for_each_inv(std::tuple<Ts...> const& t, F f)
+            {
+                detail::for_each(t, f, make_index_sequence_reverse<sizeof...(Ts)>());
+            }
         };
                 
         // This is a specific compare method that manage containers and unique pointer

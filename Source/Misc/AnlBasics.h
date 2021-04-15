@@ -90,3 +90,7 @@ template<typename T, template<typename...> class Ref> struct is_specialization :
 template<template<typename...> class Ref, typename... Args> struct is_specialization<Ref<Args...>, Ref> : std::true_type {};
 
 constexpr std::size_t operator ""_z (unsigned long long n) { return static_cast<std::size_t>(n); }
+
+// https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
+template <std::size_t ... Is> constexpr auto index_sequence_reverse (std::index_sequence<Is...> const &) -> decltype(std::index_sequence<sizeof...(Is)-1U-Is...>{});
+template <std::size_t N> using make_index_sequence_reverse = decltype(index_sequence_reverse(std::make_index_sequence<N>{}));
