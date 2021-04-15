@@ -175,8 +175,18 @@ void Track::Thumbnail::parentHierarchyChanged()
     lookAndFeelChanged();
 }
 
+void Track::Thumbnail::mouseDown(juce::MouseEvent const& event)
+{
+    event.source.triggerFakeMove();
+}
+
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
+    event.source.triggerFakeMove();
+    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(250))
+    {
+        return;
+    }
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* parent = findParentComponentOfClass<Section>();
     anlWeakAssert(dragContainer != nullptr && parent != nullptr);
