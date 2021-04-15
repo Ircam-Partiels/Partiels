@@ -28,8 +28,8 @@ namespace Document
         juce::AudioFormatManager& mAudioFormatManager;
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
-        std::vector<std::unique_ptr<Track::Director>> mTracks;
         std::vector<std::unique_ptr<Group::Director>> mGroups;
+        std::vector<std::unique_ptr<Track::Director>> mTracks;
         double mSampleRate = 44100.0;
         double mDuration = 0.0;
         
