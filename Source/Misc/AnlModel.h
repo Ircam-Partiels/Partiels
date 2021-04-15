@@ -728,6 +728,10 @@ namespace Model
             {
                 return std::addressof(lhs) == std::addressof(rhs);
             }
+            else if constexpr(is_specialization<T, std::optional>::value)
+            {
+                return lhs.has_value() == rhs.has_value() && (!lhs.has_value() || isEquivalentTo(*lhs, *rhs));
+            }
             else
             {
                 return lhs == rhs;
