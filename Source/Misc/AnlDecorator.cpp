@@ -10,6 +10,15 @@ Decorator::Decorator(juce::Component& content, int borderThickness, float corner
     addAndMakeVisible(mContent);
 }
 
+void Decorator::setHighlighted(bool state)
+{
+    if(state != mIsHighlighted)
+    {
+        mIsHighlighted = state;
+        repaint();
+    }
+}
+
 void Decorator::resized()
 {
     auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 1.5f));
@@ -26,7 +35,7 @@ void Decorator::paint(juce::Graphics& g)
 void Decorator::paintOverChildren(juce::Graphics& g)
 {
     auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 0.5f));
-    g.setColour(findColour(ColourIds::borderColourId));
+    g.setColour(findColour(mIsHighlighted ? ColourIds::highlightedBorderColourId : ColourIds::normalBorderColourId));
     g.drawRoundedRectangle(getLocalBounds().reduced(offset).toFloat(), mCornerSize, static_cast<float>(mBorderThickness));
 }
 

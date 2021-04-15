@@ -23,6 +23,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case AttrType::height:
             case AttrType::colour:
             case AttrType::expanded:
+            case AttrType::focused:
                 break;
             case AttrType::layout:
             case AttrType::tracks:

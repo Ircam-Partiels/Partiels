@@ -25,6 +25,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case AttrType::height:
             case AttrType::colour:
             case AttrType::expanded:
+            case AttrType::focused:
                 break;
             case AttrType::layout:
             case AttrType::tracks:

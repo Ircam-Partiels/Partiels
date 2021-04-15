@@ -63,7 +63,14 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+                break;
             case AttrType::focused:
+            {
+                auto const focused = mAccessor.getAttr<AttrType::focused>();
+                mThumbnailDecoration.setHighlighted(focused);
+                mSnapshotDecoration.setHighlighted(focused);
+                mPlotDecoration.setHighlighted(focused);
+            }
                 break;
         }
     };
@@ -198,5 +205,10 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
     }
 }
 
+void Track::Section::focusOfChildComponentChanged(juce::Component::FocusChangeType cause)
+{
+    juce::ignoreUnused(cause);
+    mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
+}
 
 ANALYSE_FILE_END

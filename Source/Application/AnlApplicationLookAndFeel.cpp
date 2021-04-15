@@ -29,7 +29,8 @@ Application::LookAndFeel::LookAndFeel()
     setColour(ConcertinaTable::ColourIds::headerButtonColourId, textColour);
     
     setColour(Decorator::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(Decorator::ColourIds::borderColourId, backgroundColour);
+    setColour(Decorator::ColourIds::normalBorderColourId, backgroundColour);
+    setColour(Decorator::ColourIds::highlightedBorderColourId, rulerColour.brighter());
 
     setColour(IconManager::ColourIds::normalColourId, rulerColour);
     setColour(IconManager::ColourIds::overColourId, rulerColour.brighter());

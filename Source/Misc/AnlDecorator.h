@@ -12,11 +12,14 @@ public:
     enum ColourIds : int
     {
           backgroundColourId = 0x2000300
-        , borderColourId
+        , normalBorderColourId
+        , highlightedBorderColourId
     };
     
     Decorator(juce::Component& content, int borderThickness, float cornerSize);
     ~Decorator() override = default;
+    
+    void setHighlighted(bool state);
     
     // juce::Component
     void resized() override;
@@ -27,6 +30,7 @@ private:
     juce::Component& mContent;
     int const mBorderThickness;
     float const  mCornerSize;
+    bool mIsHighlighted {false};
 };
 
 ANALYSE_FILE_END

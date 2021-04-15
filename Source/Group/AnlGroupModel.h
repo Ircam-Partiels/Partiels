@@ -19,6 +19,7 @@ namespace Group
         , expanded
         , layout
         , tracks
+        , focused
     };
     
     enum class AcsrType : size_t
@@ -34,6 +35,7 @@ namespace Group
     , Model::Attr<AttrType::expanded, bool, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::tracks, TrackList, Model::Flag::notifying>
+    , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -53,7 +55,9 @@ namespace Group
                                  , {juce::Colours::black}
                                  , {true}
                                  , {}
-                                 , {}))
+                                 , {}
+                                 , {false}
+                                 ))
         {
         }
         

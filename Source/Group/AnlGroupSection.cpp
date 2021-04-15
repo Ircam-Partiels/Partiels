@@ -28,7 +28,13 @@ Group::Section::Section(Accessor& accessor, Transport::Accessor& transportAcsr, 
                 setSize(getWidth(), size + 1);
             }
                 break;
-
+            case AttrType::focused:
+            {
+                auto const focused = mAccessor.getAttr<AttrType::focused>();
+                mThumbnailDecoration.setHighlighted(focused);
+                mSnapshotDecoration.setHighlighted(focused);
+                mPlotDecoration.setHighlighted(focused);
+            }
         }
     };
     
@@ -193,6 +199,12 @@ void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
     auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
     
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
+}
+
+void Group::Section::focusOfChildComponentChanged(juce::Component::FocusChangeType cause)
+{
+    juce::ignoreUnused(cause);
+    mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END

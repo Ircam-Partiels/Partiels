@@ -16,6 +16,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
             case AttrType::name:
             case AttrType::height:
             case AttrType::colour:
+            case AttrType::focused:
                 break;
             case AttrType::layout:
             case AttrType::tracks:

@@ -69,6 +69,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::colour:
             case AttrType::layout:
             case AttrType::tracks:
+            case AttrType::focused:
                 break;
             case AttrType::expanded:
             {
