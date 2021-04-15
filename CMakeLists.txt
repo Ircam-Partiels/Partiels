@@ -156,6 +156,8 @@ file(GLOB TrackSources
 file(GLOB GroupSources
     ${SOURCES_DIRECTORY}/Group/AnlGroupButtonState.cpp
     ${SOURCES_DIRECTORY}/Group/AnlGroupButtonState.h
+    ${SOURCES_DIRECTORY}/Group/AnlGroupDirector.cpp
+    ${SOURCES_DIRECTORY}/Group/AnlGroupDirector.h
     ${SOURCES_DIRECTORY}/Group/AnlGroupModel.h
     ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.cpp
     ${SOURCES_DIRECTORY}/Group/AnlGroupPlot.h
