@@ -62,6 +62,8 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::time:
             case AttrType::warnings:
             case AttrType::processing:
+            case AttrType::zoomAcsr:
+            case AttrType::focused:
                 break;
         }
     };

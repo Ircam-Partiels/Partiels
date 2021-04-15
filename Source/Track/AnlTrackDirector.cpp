@@ -148,6 +148,7 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case AttrType::time:
             case AttrType::warnings:
             case AttrType::processing:
+            case AttrType::focused:
                 break;
         }
     };

@@ -394,6 +394,8 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::propertyState:
+            case AttrType::zoomAcsr:
+            case AttrType::focused:
                 break;
             case AttrType::zoomLink:
             {
