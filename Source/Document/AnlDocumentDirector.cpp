@@ -81,42 +81,16 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             {
                 auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
                 anlStrongAssert(index < groupAcsrs.size());
-                if(index >= groupAcsrs.size())
+                if(index > mGroups.size() || index >= groupAcsrs.size())
                 {
                     return;
                 }
-                
                 auto& groupAcsr = groupAcsrs[index].get();
-                groupAcsr.onAttrUpdated = [&](Group::AttrType attribute, NotificationType notification)
-                {
-                    switch(attribute)
-                    {
-                        case Group::AttrType::identifier:
-                        case Group::AttrType::name:
-                        case Group::AttrType::height:
-                        case Group::AttrType::colour:
-                        case Group::AttrType::expanded:
-                            break;
-                        case Group::AttrType::layout:
-                        case Group::AttrType::tracks:
-                        {
-                            auto trackAcsrs = groupAcsr.getAttr<Group::AttrType::tracks>();
-                            auto const layout = groupAcsr.getAttr<Group::AttrType::layout>();
-                            for(size_t i = 0; i < trackAcsrs.size(); ++i)
-                            {
-                                auto const trackIdentifier = trackAcsrs[i].get().getAttr<Track::AttrType::identifier>();
-                                if(std::any_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
-                                {
-                                    return identifier == trackIdentifier;
-                                }))
-                                {
-                                    mTracks[i]->setLinkedZoom(&groupAcsr.getAcsr<Group::AcsrType::zoom>(), notification);
-                                }
-                            };
-                        }
-                            break;
-                    }
-                };
+                auto director = std::make_unique<Group::Director>(groupAcsr);
+                anlStrongAssert(director != nullptr);
+                mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
+                
+                groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
@@ -147,6 +121,14 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             }
                 break;
             case AcsrType::groups:
+            {
+                anlStrongAssert(index < mGroups.size());
+                if(index >= mGroups.size())
+                {
+                    return;
+                }
+                mGroups.erase(mGroups.begin() + static_cast<long>(index));
+            }
             case AcsrType::transport:
             case AcsrType::timeZoom:
                 break;

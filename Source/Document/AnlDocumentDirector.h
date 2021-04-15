@@ -2,6 +2,7 @@
 
 #include "AnlDocumentModel.h"
 #include "../Track/AnlTrackDirector.h"
+#include "../Group/AnlGroupDirector.h"
 #include "../Plugin/AnlPluginListTable.h"
 
 ANALYSE_FILE_BEGIN
@@ -28,6 +29,7 @@ namespace Document
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
         std::vector<std::unique_ptr<Track::Director>> mTracks;
+        std::vector<std::unique_ptr<Group::Director>> mGroups;
         double mSampleRate = 44100.0;
         double mDuration = 0.0;
         
