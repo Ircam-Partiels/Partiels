@@ -25,6 +25,7 @@ namespace Group
         void paint(juce::Graphics& g) override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
+        void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
         
         std::function<void(void)> onRemove = nullptr;

@@ -159,21 +159,47 @@ void Group::Thumbnail::parentHierarchyChanged()
     lookAndFeelChanged();
 }
 
+void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
+{
+    event.source.triggerFakeMove();
+}
+
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
+    event.source.triggerFakeMove();
+    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(250))
+    {
+        return;
+    }
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
+    auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StrechableSection>();
     anlWeakAssert(dragContainer != nullptr && parent != nullptr);
-    if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
+    if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && section != nullptr && parent != nullptr)
     {
-        juce::Image snapshot(juce::Image::ARGB, parent->getWidth(), parent->getHeight(), true);
+        juce::Image snapshot(juce::Image::ARGB, section->getWidth(), section->getHeight(), true);
         juce::Graphics g(snapshot);
         g.beginTransparencyLayer(0.6f);
-        parent->paintEntireComponent(g, false);
+        section->paintEntireComponent(g, false);
         g.endTransparencyLayer();
         
         auto const p = -event.getMouseDownPosition();
-        dragContainer->startDragging(DraggableTable::createDescription(event, "Group", mAccessor.getAttr<AttrType::identifier>()), parent, snapshot, true, &p, &event.source);
+        auto const expanded = mAccessor.getAttr<AttrType::expanded>();
+        dragContainer->startDragging(DraggableTable::createDescription(event, "Group", mAccessor.getAttr<AttrType::identifier>(), section->getHeight()
+        , [=, this]()
+        {
+            if(expanded)
+            {
+                mAccessor.setAttr<AttrType::expanded>(false, NotificationType::synchronous);
+            }
+        }
+        , [=, this]()
+        {
+            if(expanded)
+            {
+                mAccessor.setAttr<AttrType::expanded>(true, NotificationType::synchronous);
+            }
+        }), parent, snapshot, true, &p, &event.source);
     }
 }
 

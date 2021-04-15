@@ -2,15 +2,18 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::var DraggableTable::createDescription(juce::MouseEvent const& event, juce::String const& type, juce::String const& identifier)
+juce::var DraggableTable::createDescription(juce::MouseEvent const& event, juce::String const& type, juce::String const& identifier, int height, std::function<void(void)> onEnter, std::function<void(void)> onExit)
 {
-    auto description = std::make_unique<juce::DynamicObject>();
+    auto description = std::make_unique<Description>();
     anlWeakAssert(description != nullptr);
     if(description != nullptr)
     {
         description->setProperty("type", type);
         description->setProperty("identifier", identifier);
+        description->setProperty("height", height);
         description->setProperty("offset", -event.getMouseDownY());
+        description->onEnter = onEnter;
+        description->onExit = onExit;
     }
     return {description.release()};
 }
@@ -102,6 +105,14 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
     });
     setSize(getWidth(), fullSize + source->getHeight());
     source->setAlpha(0.4f);
+    
+    if(auto* description = dynamic_cast<Description*>(obj))
+    {
+        if(description->onEnter != nullptr)
+        {
+            description->onEnter();
+        }
+    }
 }
 
 void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
@@ -113,6 +124,12 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
     {
         return;
     }
+    
+    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [&](int value, auto const& content)
+    {
+        return (content != nullptr) ? value + content->getHeight() : value;
+    });
+    setSize(getWidth(), fullSize + source->getHeight());
     
     auto offset = static_cast<int>(obj->getProperty("offset"));
     auto const it = std::find_if(mContents.cbegin(), mContents.cend(), [source](auto const& content)
@@ -127,7 +144,8 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
     
     auto constexpr pi = 3.14159265358979323846;
     auto const position = dragSourceDetails.localPosition.getY() + offset;
-    auto const sourceHeight = static_cast<double>(source->getHeight() + 2);
+    auto const height = static_cast<int>(obj->getProperty("height"));
+    auto const sourceHeight = static_cast<double>(height + 2);
     auto const index = static_cast<size_t>(std::distance(mContents.cbegin(), it));
     
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
@@ -161,6 +179,13 @@ void DraggableTable::itemDragExit(juce::DragAndDropTarget::SourceDetails const& 
         source->setAlpha(1.0f);
     }
     mIsDragging = false;
+    if(auto* description = dynamic_cast<Description*>(dragSourceDetails.description.getDynamicObject()))
+    {
+        if(description->onExit != nullptr)
+        {
+            description->onExit();
+        }
+    }
 }
 
 void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
@@ -212,12 +237,27 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
         return index;
     };
     
+    if(auto* description = dynamic_cast<Description*>(obj))
+    {
+        if(description->onExit != nullptr)
+        {
+            description->onExit();
+        }
+    }
+    
     auto const newIndex = getNewIndex();
     if(index != newIndex && onComponentDropped != nullptr)
     {
         onComponentDropped(obj->getProperty("identifier"), newIndex);
     }
-    itemDragExit(dragSourceDetails);
+    
+    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
+    {
+        return (content != nullptr) ? value + content->getHeight() : value;
+    });
+    setSize(getWidth(), fullSize);
+    source->setAlpha(1.0f);
+    mIsDragging = false;
 }
 
 ANALYSE_FILE_END

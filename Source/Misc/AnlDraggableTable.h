@@ -23,9 +23,17 @@ public:
     // juce::Component
     void resized() override;
 
-    static juce::var createDescription(juce::MouseEvent const& event, juce::String const& type, juce::String const& identifier);
+    static juce::var createDescription(juce::MouseEvent const& event, juce::String const& type, juce::String const& identifier, int height, std::function<void(void)> onEnter = nullptr, std::function<void(void)> onExit = nullptr);
     
 private:
+    struct Description
+    : public juce::DynamicObject
+    {
+        std::function<void(void)> onEnter = nullptr;
+        std::function<void(void)> onExit = nullptr;
+    };
+    
+    
     // juce::ComponentListener
     void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
     
