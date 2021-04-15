@@ -204,7 +204,14 @@ void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
 void Group::Section::focusOfChildComponentChanged(juce::Component::FocusChangeType cause)
 {
     juce::ignoreUnused(cause);
-    mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
+    juce::WeakReference<juce::Component> target(this);
+    juce::MessageManager::callAsync([=, this]
+    {
+        if(target.get() != nullptr)
+        {
+            mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
+        }
+    });
 }
 
 void Group::Section::visibilityChanged()
