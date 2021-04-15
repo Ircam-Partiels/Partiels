@@ -208,6 +208,11 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const
     {
         return std::optional<Zoom::Range>();
     }
+    anlWeakAssert(std::isfinite(output.minValue) && std::isfinite(output.maxValue));
+    if(!std::isfinite(output.minValue) || !std::isfinite(output.maxValue))
+    {
+        return std::optional<Zoom::Range>();
+    }
     return Zoom::Range(static_cast<double>(output.minValue), static_cast<double>(output.maxValue));
 }
 
