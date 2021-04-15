@@ -215,12 +215,68 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         mModalWindow = nullptr;
     }
     
-    mPluginListTable.onPluginSelected = [this, alertType, notification](Plugin::Key const& key, Plugin::Description const& description)
+    auto getTrackPosition = [&]() -> std::optional<std::tuple<std::reference_wrapper<Group::Accessor>, long>>
+    {
+        auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+        auto trackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+        {
+            return trackAcsr.get().template getAttr<Track::AttrType::focused>();
+        });
+        if(trackIt != trackAcsrs.cend())
+        {
+            auto const trackIdentifier = trackIt->get().getAttr<Track::AttrType::identifier>();
+            auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+            {
+                auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
+                return std::find_if(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+                {
+                    return identifier == trackIdentifier;
+                }) != groupLayout.cend();
+            });
+            anlStrongAssert(groupIt != groupAcsrs.cend());
+            if(groupIt != groupAcsrs.cend())
+            {
+                auto const& groupLayout = groupIt->get().template getAttr<Group::AttrType::layout>();
+                auto layoutIt = std::find_if(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+                {
+                    return identifier == trackIdentifier;
+                });
+                return std::make_tuple(*groupIt, std::distance(groupLayout.cbegin(), layoutIt) + 1l);
+            }
+            return std::optional<std::tuple<std::reference_wrapper<Group::Accessor>, long>>{};
+        }
+        auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+        {
+            return groupAcsr.get().template getAttr<Group::AttrType::focused>();
+        });
+        if(groupIt != groupAcsrs.cend())
+        {
+            return std::make_tuple(*groupIt, 0l);
+        }
+        return std::optional<std::tuple<std::reference_wrapper<Group::Accessor>, long>>{};
+    };
+    
+    auto const position = getTrackPosition();
+    
+    mPluginListTable.onPluginSelected = [this, position, alertType, notification](Plugin::Key const& key, Plugin::Description const& description)
     {
         if(mModalWindow != nullptr)
         {
             mModalWindow->exitModalState(0);
             mModalWindow = nullptr;
+        }
+        
+        if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
+        {
+            addGroup(AlertType::silent, notification);
+        }
+        
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        anlStrongAssert(!groupAcsrs.empty());
+        if(groupAcsrs.empty())
+        {
+            return;
         }
         
         auto const index = mAccessor.getNumAcsr<AcsrType::tracks>();
@@ -238,24 +294,19 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         
         auto const identifier = juce::Uuid().toString();
 
-        auto& trackAcsr = mAccessor.getAcsr<Document::AcsrType::tracks>(index);
+        auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
         trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
         trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::state>(description.defaultState, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::key>(key, notification);
         
-        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-        anlWeakAssert(!groupAcsrs.empty());
-        if(groupAcsrs.empty())
-        {
-            return;
-        }
-        auto& lastAcsr = groupAcsrs.back().get();
-        auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
-        groupLayout.insert(groupLayout.cbegin(), identifier);
-        lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
-        lastAcsr.setAttr<Group::AttrType::expanded>(true, notification);
+        auto& groupAcsr = position.has_value() ? std::get<0>(*position).get() : groupAcsrs.back().get();
+        auto const layoutIndex = position.has_value() ? std::get<1>(*position) : 0l;
+        auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
+        groupLayout.insert(groupLayout.cbegin() + layoutIndex, identifier);
+        groupAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
+        groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
     };
     
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -379,7 +430,7 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     
     auto const identifier = juce::Uuid().toString();
     
-    auto& groupAcsr = mAccessor.getAcsr<Document::AcsrType::groups>(index);
+    auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
     groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index), notification);
     
