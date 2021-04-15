@@ -21,7 +21,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
     
-    mDraggableTable.onComponentDragged = [&](juce::String const& identifier, size_t index)
+    mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
         std::erase(layout, identifier);

@@ -213,9 +213,9 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     };
     
     auto const newIndex = getNewIndex();
-    if(index != newIndex && onComponentDragged != nullptr)
+    if(index != newIndex && onComponentDropped != nullptr)
     {
-        onComponentDragged(obj->getProperty("identifier"), newIndex);
+        onComponentDropped(obj->getProperty("identifier"), newIndex);
     }
     itemDragExit(dragSourceDetails);
 }

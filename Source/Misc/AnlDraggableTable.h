@@ -18,7 +18,7 @@ public:
     
     void setComponents(std::vector<ComponentRef> const& component);
     
-    std::function<void(juce::String const& identifier, size_t index)> onComponentDragged = nullptr;
+    std::function<void(juce::String const& identifier, size_t index)> onComponentDropped = nullptr;
     
     // juce::Component
     void resized() override;

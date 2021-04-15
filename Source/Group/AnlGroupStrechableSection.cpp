@@ -78,7 +78,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
         }
     };
     
-    mDraggableTable.onComponentDragged = [&](juce::String const& identifier, size_t index)
+    mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
         std::erase(layout, identifier);
