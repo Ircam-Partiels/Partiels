@@ -432,7 +432,7 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     
     auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
-    groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index), notification);
+    groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index + 1_z), notification);
     
     auto layout = mAccessor.getAttr<AttrType::layout>();
     layout.push_back(identifier);
