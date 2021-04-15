@@ -307,6 +307,8 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         groupLayout.insert(groupLayout.cbegin() + layoutIndex, identifier);
         groupAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
+        
+        sanitize(notification);
     };
     
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -359,6 +361,7 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
+    sanitize(notification);
 }
 
 
@@ -411,6 +414,7 @@ void Document::Director::moveTrack(AlertType const alertType, juce::String const
             groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
         }
     }
+    sanitize(notification);
 }
 
 void Document::Director::addGroup(AlertType const alertType, NotificationType const notification)
@@ -437,6 +441,7 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
     auto layout = mAccessor.getAttr<AttrType::layout>();
     layout.push_back(identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
+    sanitize(notification);
 }
 
 void Document::Director::removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification)
@@ -468,38 +473,42 @@ void Document::Director::removeGroup(AlertType const alertType, juce::String con
     
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
+    sanitize(notification);
 }
 
 void Document::Director::sanitize(NotificationType const notification)
 {
-    if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
-    {
-        addGroup(AlertType::silent, notification);
-    }
-    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-    anlWeakAssert(!groupAcsrs.empty());
-    if(groupAcsrs.empty())
+    if(mAccessor.getNumAcsr<AcsrType::tracks>() == 0_z && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
     {
         return;
     }
     
-    auto& lastAcsr = groupAcsrs.back().get();
     auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-    for(auto const& trackAcsr : trackAcsrs)
+    anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
+    if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
     {
-        auto const trackIdentifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-        if(std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+        addGroup(AlertType::silent, notification);
+    }
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    if(!groupAcsrs.empty())
+    {
+        auto& lastAcsr = groupAcsrs.back().get();
+        for(auto const& trackAcsr : trackAcsrs)
         {
-            auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
-            return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+            auto const trackIdentifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+            if(std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
             {
-                return identifier == trackIdentifier;
-            });
-        }))
-        {
-            auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
-            groupLayout.push_back(trackIdentifier);
-            lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, notification);
+                auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
+                return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+                {
+                    return identifier == trackIdentifier;
+                });
+            }))
+            {
+                auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
+                groupLayout.push_back(trackIdentifier);
+                lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, notification);
+            }
         }
     }
     
