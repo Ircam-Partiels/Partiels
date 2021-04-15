@@ -280,6 +280,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
         groupLayout.push_back(identifier);
         lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
+        lastAcsr.setAttr<Group::AttrType::expanded>(true, notification);
     };
     
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
@@ -375,12 +376,14 @@ void Document::Director::moveTrack(AlertType const alertType, juce::String const
             {
                 anlWeakAssert(false);
             }
+            groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
+            groupAcsr.get().setAttr<Group::AttrType::expanded>(true, notification);
         }
         else
         {
             std::erase(gIds, trackIdentifier);
+            groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
         }
-        groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
     }
 }
 
