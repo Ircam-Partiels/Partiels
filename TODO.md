@@ -12,4 +12,6 @@
 - Optimize result representation
   - 256b interger for grid
 - Select group to insert track
-- Use a group director
+- Add Unit Tests
+  - Group Model
+  - Document Model
