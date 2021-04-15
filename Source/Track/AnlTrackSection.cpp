@@ -215,7 +215,7 @@ void Track::Section::visibilityChanged()
 {
     juce::WeakReference<juce::Component> target(this);
     juce::MessageManager::callAsync([=, this]
-                                    {
+    {
         if(target.get() != nullptr && isVisible() && (isShowing() || isOnDesktop()))
         {
             grabKeyboardFocus();
