@@ -253,7 +253,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         }
         auto& lastAcsr = groupAcsrs.back().get();
         auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
-        groupLayout.push_back(identifier);
+        groupLayout.insert(groupLayout.cbegin(), identifier);
         lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
         lastAcsr.setAttr<Group::AttrType::expanded>(true, notification);
     };
@@ -345,7 +345,7 @@ void Document::Director::moveTrack(AlertType const alertType, juce::String const
                 return identifier == trackIdentifier;
             }))
             {
-                gIds.push_back(trackIdentifier);
+                gIds.insert(gIds.cbegin(), trackIdentifier);
             }
             else
             {
