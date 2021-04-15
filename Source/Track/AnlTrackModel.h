@@ -50,6 +50,7 @@ namespace Track
         , colours
         , propertyState
         , zoomLink
+        , zoomAcsr
         
         , results
         , graphics
@@ -75,6 +76,7 @@ namespace Track
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
     , Model::Attr<AttrType::propertyState, WindowState, Model::Flag::basic>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
     , Model::Attr<AttrType::results, std::shared_ptr<const std::vector<Plugin::Result>>, Model::Flag::notifying>
     , Model::Attr<AttrType::graphics, std::vector<juce::Image>, Model::Flag::notifying>
@@ -100,10 +102,13 @@ namespace Track
                                  , {}
                                  , {}
                                  , {}
+                                 
                                  , {120}
                                  , {}
                                  , {}
                                  , {true}
+                                 , {}
+                                 
                                  , {}
                                  , {}
                                  , {0.0}

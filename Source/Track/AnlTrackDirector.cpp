@@ -63,15 +63,17 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
     
     auto updateLinkedZoom = [this](NotificationType notification)
     {
+        if(!mAccessor.getAttr<AttrType::zoomLink>() || !mSharedZoomAccessor.has_value())
+        {
+            return;
+        }
         std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
         if(!lock.owns_lock())
         {
             return;
         }
-        if(!mAccessor.getAttr<AttrType::zoomLink>() || mSharedZoom == nullptr)
-        {
-            return;
-        }
+        
+        auto& sharedZoom = mSharedZoomAccessor->get();
         switch(Tools::getDisplayType(mAccessor))
         {
             case Tools::DisplayType::markers:
@@ -79,15 +81,15 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case Tools::DisplayType::segments:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, mSharedZoom->getAttr<Zoom::AttrType::globalRange>());
-                mSharedZoom->setAttr<Zoom::AttrType::visibleRange>(range, notification);
+                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
+                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
             }
                 break;
             case Tools::DisplayType::grid:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, mSharedZoom->getAttr<Zoom::AttrType::globalRange>());
-                mSharedZoom->setAttr<Zoom::AttrType::visibleRange>(range, notification);
+                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
+                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
             }
                 break;
         }
@@ -130,14 +132,16 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case AttrType::propertyState:
                 break;
             case AttrType::zoomLink:
+            case AttrType::zoomAcsr:
             {
-                if(mSharedZoom != nullptr && mAccessor.getAttr<AttrType::zoomLink>())
+                if(mSharedZoomAccessor.has_value() && !mAccessor.getAttr<AttrType::zoomLink>())
                 {
-                    mSharedZoom->addListener(mSharedZoomListener, NotificationType::synchronous);
+                    mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
                 }
-                else if(mSharedZoom != nullptr && !mAccessor.getAttr<AttrType::zoomLink>())
+                mSharedZoomAccessor = mAccessor.getAttr<AttrType::zoomAcsr>();
+                if(mSharedZoomAccessor.has_value() && mAccessor.getAttr<AttrType::zoomLink>())
                 {
-                    mSharedZoom->removeListener(mSharedZoomListener);
+                    mSharedZoomAccessor->get().addListener(mSharedZoomListener, NotificationType::synchronous);
                 }
             }
                 break;
@@ -275,7 +279,11 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
 
 Track::Director::~Director()
 {
-    setLinkedZoom(nullptr, NotificationType::synchronous);
+    if(mSharedZoomAccessor.has_value())
+    {
+        mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
+    }
+    
     mGraphics.onRenderingAborted = nullptr;
     mGraphics.onRenderingEnded = nullptr;
     mProcessor.onAnalysisAborted = nullptr;
@@ -285,6 +293,8 @@ Track::Director::~Director()
     mAccessor.onAccessorErased = nullptr;
     auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     valueZoomAcsr.onAttrUpdated = nullptr;
+    auto& binZoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+    binZoomAcsr.onAttrUpdated = nullptr;
 }
 
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -297,22 +307,6 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     
     std::swap(mAudioFormatReaderManager, audioFormatReader);
     runAnalysis(notification);
-}
-
-void Track::Director::setLinkedZoom(Zoom::Accessor* source, NotificationType notification)
-{
-    if(mSharedZoom != source)
-    {
-        if(mSharedZoom != nullptr)
-        {
-            mSharedZoom->removeListener(mSharedZoomListener);
-        }
-        mSharedZoom = source;
-        if(mSharedZoom != nullptr && mAccessor.getAttr<AttrType::zoomLink>())
-        {
-            mSharedZoom->addListener(mSharedZoomListener, notification);
-        }
-    }
 }
 
 void Track::Director::runAnalysis(NotificationType const notification)

@@ -18,8 +18,6 @@ namespace Track
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
         
-        void setLinkedZoom(Zoom::Accessor* source, NotificationType notification);
-        
     private:
         void runAnalysis(NotificationType const notification);
         void runRendering();
@@ -31,7 +29,7 @@ namespace Track
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         Processor mProcessor;
         Graphics mGraphics;
-        Zoom::Accessor* mSharedZoom = nullptr;
+        std::optional<std::reference_wrapper<Zoom::Accessor>> mSharedZoomAccessor;
         Zoom::Accessor::Listener mSharedZoomListener;
         std::mutex mSharedZoomMutex;
         
