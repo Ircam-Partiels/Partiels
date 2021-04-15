@@ -18,8 +18,7 @@ namespace Track
         
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
         
-        void setLinkedZoom(Zoom::Accessor const& source, NotificationType const notification);
-        std::function<void(Zoom::Accessor const& source, NotificationType const notification)> onLinkedZoomChanged = nullptr;
+        void setLinkedZoom(Zoom::Accessor* source, NotificationType notification);
         
     private:
         void runAnalysis(NotificationType const notification);
@@ -32,6 +31,9 @@ namespace Track
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         Processor mProcessor;
         Graphics mGraphics;
+        Zoom::Accessor* mSharedZoom = nullptr;
+        Zoom::Accessor::Listener mSharedZoomListener;
+        std::mutex mSharedZoomMutex;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

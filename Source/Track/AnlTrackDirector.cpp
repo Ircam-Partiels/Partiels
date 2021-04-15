@@ -59,13 +59,16 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
                 applyZoom(*resultsRange);
             }
         }
-        
-        mAccessor.setAttr<AttrType::zoomLink>(mAccessor.getAttr<AttrType::zoomLink>() && Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers, NotificationType::synchronous);
     };
     
     auto updateLinkedZoom = [this](NotificationType notification)
     {
-        if(!mAccessor.getAttr<AttrType::zoomLink>() || onLinkedZoomChanged == nullptr)
+        std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
+        if(!lock.owns_lock())
+        {
+            return;
+        }
+        if(!mAccessor.getAttr<AttrType::zoomLink>() || mSharedZoom == nullptr)
         {
             return;
         }
@@ -75,12 +78,16 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
                 break;
             case Tools::DisplayType::segments:
             {
-                onLinkedZoomChanged(mAccessor.getAcsr<AcsrType::valueZoom>(), notification);
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, mSharedZoom->getAttr<Zoom::AttrType::globalRange>());
+                mSharedZoom->setAttr<Zoom::AttrType::visibleRange>(range, notification);
             }
                 break;
             case Tools::DisplayType::grid:
             {
-                onLinkedZoomChanged(mAccessor.getAcsr<AcsrType::binZoom>(), notification);
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, mSharedZoom->getAttr<Zoom::AttrType::globalRange>());
+                mSharedZoom->setAttr<Zoom::AttrType::visibleRange>(range, notification);
             }
                 break;
         }
@@ -124,8 +131,14 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
                 break;
             case AttrType::zoomLink:
             {
-                sanitizeZooms(notification);
-                updateLinkedZoom(notification);
+                if(mSharedZoom != nullptr && mAccessor.getAttr<AttrType::zoomLink>())
+                {
+                    mSharedZoom->addListener(mSharedZoomListener, NotificationType::synchronous);
+                }
+                else if(mSharedZoom != nullptr && !mAccessor.getAttr<AttrType::zoomLink>())
+                {
+                    mSharedZoom->removeListener(mSharedZoomListener);
+                }
             }
                 break;
             case AttrType::time:
@@ -184,6 +197,45 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
         }
     };
     
+    mSharedZoomListener.onAttrChanged = [=](Zoom::Accessor const& sharedZoomAcsr, Zoom::AttrType attribute)
+    {
+        std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
+        if(!lock.owns_lock())
+        {
+            return;
+        }
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::visibleRange:
+            {
+                switch(Tools::getDisplayType(mAccessor))
+                {
+                    case Tools::DisplayType::markers:
+                        break;
+                    case Tools::DisplayType::segments:
+                    {
+                        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                        auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
+                        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                    }
+                        break;
+                    case Tools::DisplayType::grid:
+                    {
+                        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                        auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
+                        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                    }
+                        break;
+                }
+            }
+                break;
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+    
     mProcessor.onAnalysisEnded = [&](std::shared_ptr<std::vector<Plugin::Result>> results)
     {
         stopTimer();
@@ -223,6 +275,7 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
 
 Track::Director::~Director()
 {
+    setLinkedZoom(nullptr, NotificationType::synchronous);
     mGraphics.onRenderingAborted = nullptr;
     mGraphics.onRenderingEnded = nullptr;
     mProcessor.onAnalysisAborted = nullptr;
@@ -246,38 +299,19 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     runAnalysis(notification);
 }
 
-void Track::Director::setLinkedZoom(Zoom::Accessor const& source, NotificationType const notification)
+void Track::Director::setLinkedZoom(Zoom::Accessor* source, NotificationType notification)
 {
-    if(!mAccessor.getAttr<AttrType::zoomLink>())
+    if(mSharedZoom != source)
     {
-        return;
-    }
-    switch(Tools::getDisplayType(mAccessor))
-    {
-        case Tools::DisplayType::markers:
-            break;
-        case Tools::DisplayType::segments:
+        if(mSharedZoom != nullptr)
         {
-            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-            if(&zoomAcsr == &source)
-            {
-                return;
-            }
-            auto const range = Zoom::Tools::getScaledVisibleRange(source, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, notification);
+            mSharedZoom->removeListener(mSharedZoomListener);
         }
-            break;
-        case Tools::DisplayType::grid:
+        mSharedZoom = source;
+        if(mSharedZoom != nullptr && mAccessor.getAttr<AttrType::zoomLink>())
         {
-            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-            if(&zoomAcsr == &source)
-            {
-                return;
-            }
-            auto const range = Zoom::Tools::getScaledVisibleRange(source, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, notification);
+            mSharedZoom->addListener(mSharedZoomListener, notification);
         }
-            break;
     }
 }
 

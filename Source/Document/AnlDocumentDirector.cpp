@@ -68,25 +68,6 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
                 auto director = std::make_unique<Track::Director>(trackAcsr, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
-                if(director != nullptr)
-                {
-                    director->onLinkedZoomChanged = [&](Zoom::Accessor const& zoomAcsr, NotificationType zoomNotification)
-                    {
-                        auto const identifier = trackAcsr.getAttr<Track::AttrType::identifier>();
-                        auto const& groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-                        auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-                        {
-                            return Group::Tools::hasTrackAcsr(groupAcsr.get(), identifier);
-                        });
-                        anlWeakAssert(groupIt != groupAcsrs.cend());
-                        if(groupIt != groupAcsrs.end())
-                        {
-                            auto& groupZoomAcsr = groupIt->get().getAcsr<Group::AcsrType::zoom>();
-                            auto const scaledRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, groupZoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-                            groupZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(scaledRange, zoomNotification);
-                        }
-                    };
-                }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
                 
                 auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -106,43 +87,43 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 }
                 
                 auto& groupAcsr = groupAcsrs[index].get();
-                groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
-                auto& groupZoomAcsr = groupAcsr.getAcsr<Group::AcsrType::zoom>();
-                groupZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
-                groupZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
-                groupZoomAcsr.onAttrUpdated = [&](Zoom::AttrType attribute, NotificationType zoomNotification)
+                groupAcsr.onAttrUpdated = [&](Group::AttrType attribute, NotificationType notification)
                 {
                     switch(attribute)
                     {
-                        case Zoom::AttrType::globalRange:
-                        case Zoom::AttrType::visibleRange:
-                        {
-                            auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-                            auto const layout = groupAcsr.getAttr<Group::AttrType::layout>();
-                            for(auto const& identifier : layout)
-                            {
-                                auto it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-                                {
-                                    return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
-                                });
-                                anlStrongAssert(it != trackAcsrs.cend());
-                                if(it != trackAcsrs.cend())
-                                {
-                                    auto const trackIndex = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
-                                    anlStrongAssert(trackIndex < mTracks.size() && mTracks[trackIndex] != nullptr);
-                                    if(trackIndex < mTracks.size() && mTracks[trackIndex] != nullptr)
-                                    {
-                                        mTracks[trackIndex]->setLinkedZoom(groupZoomAcsr, zoomNotification);
-                                    }
-                                }
-                            }
-                        }
+                        case Group::AttrType::identifier:
+                        case Group::AttrType::name:
+                        case Group::AttrType::height:
+                        case Group::AttrType::colour:
+                        case Group::AttrType::expanded:
                             break;
-                        case Zoom::AttrType::minimumLength:
-                        case Zoom::AttrType::anchor:
+                        case Group::AttrType::layout:
+                        case Group::AttrType::tracks:
+                        {
+                            auto trackAcsrs = groupAcsr.getAttr<Group::AttrType::tracks>();
+                            auto const layout = groupAcsr.getAttr<Group::AttrType::layout>();
+                            for(size_t i = 0; i < trackAcsrs.size(); ++i)
+                            {
+                                auto const trackIdentifier = trackAcsrs[i].get().getAttr<Track::AttrType::identifier>();
+                                if(std::any_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
+                                {
+                                    return identifier == trackIdentifier;
+                                }))
+                                {
+                                    mTracks[i]->setLinkedZoom(&groupAcsr.getAcsr<Group::AcsrType::zoom>(), notification);
+                                }
+                            };
+                        }
                             break;
                     }
                 };
+                groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
+                auto& groupZoomAcsr = groupAcsr.getAcsr<Group::AcsrType::zoom>();
+                if(groupZoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty())
+                {
+                    groupZoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
+                    groupZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
+                }
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
