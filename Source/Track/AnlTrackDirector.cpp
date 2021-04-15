@@ -134,11 +134,12 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             {
-                if(mSharedZoomAccessor.has_value() && !mAccessor.getAttr<AttrType::zoomLink>())
+                auto sharedZoomAcsr = mAccessor.getAttr<AttrType::zoomAcsr>();
+                if(mSharedZoomAccessor.has_value() && (!mAccessor.getAttr<AttrType::zoomLink>() || !sharedZoomAcsr.has_value() || std::addressof(*mSharedZoomAccessor) != std::addressof(*sharedZoomAcsr)))
                 {
                     mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
                 }
-                mSharedZoomAccessor = mAccessor.getAttr<AttrType::zoomAcsr>();
+                mSharedZoomAccessor = sharedZoomAcsr;
                 if(mSharedZoomAccessor.has_value() && mAccessor.getAttr<AttrType::zoomLink>())
                 {
                     mSharedZoomAccessor->get().addListener(mSharedZoomListener, NotificationType::synchronous);
