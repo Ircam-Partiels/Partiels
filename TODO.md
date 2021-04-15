@@ -11,3 +11,5 @@
 - https://github.com/taglib/taglib
 - Optimize result representation
   - 256b interger for grid
+- Select group to insert track
+- Use a group director
