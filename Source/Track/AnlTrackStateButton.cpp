@@ -37,7 +37,6 @@ Track::StateButton::StateButton(Accessor& accessor)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:
-            case AttrType::propertyState:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::focused:

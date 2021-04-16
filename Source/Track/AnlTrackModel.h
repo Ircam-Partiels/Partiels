@@ -10,7 +10,6 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     using ColourMap = tinycolormap::ColormapType;
-    using WindowState = juce::String;
     
     struct ColourSet
     {
@@ -48,7 +47,6 @@ namespace Track
         
         , height
         , colours
-        , propertyState
         , zoomLink
         , zoomAcsr
         
@@ -75,7 +73,6 @@ namespace Track
     
     , Model::Attr<AttrType::height, int, Model::Flag::basic>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
-    , Model::Attr<AttrType::propertyState, WindowState, Model::Flag::basic>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
@@ -106,7 +103,6 @@ namespace Track
                                  , {}
                                  
                                  , {120}
-                                 , {}
                                  , {}
                                  , {true}
                                  , {}

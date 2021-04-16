@@ -69,7 +69,6 @@ Group::StateButton::StateButton(Accessor& accessor)
             case Track::AttrType::identifier:
             case Track::AttrType::height:
             case Track::AttrType::colours:
-            case Track::AttrType::propertyState:
             case Track::AttrType::zoomLink:
             case Track::AttrType::zoomAcsr:
             case Track::AttrType::focused:

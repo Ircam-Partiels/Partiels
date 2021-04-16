@@ -129,8 +129,6 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
                 runRendering();
             }
                 break;
-            case AttrType::propertyState:
-                break;
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             {

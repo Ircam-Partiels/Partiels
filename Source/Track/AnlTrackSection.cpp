@@ -55,7 +55,6 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
             }
                 break;
             case AttrType::colours:
-            case AttrType::propertyState:
             case AttrType::zoomLink:
             case AttrType::results:
             case AttrType::graphics:

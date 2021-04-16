@@ -21,7 +21,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
-            case AttrType::propertyState:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::warnings:
@@ -390,7 +389,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
-            case AttrType::propertyState:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::results:
