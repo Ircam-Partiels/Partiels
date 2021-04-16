@@ -13,7 +13,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mExpandButton);
     addAndMakeVisible(mDropdownButton);
     
-    mExportButton.setTooltip(juce::translate("Change the name of the group"));
+    mNameButton.setTooltip(juce::translate("Change the name of the group"));
     mExportButton.setTooltip(juce::translate("Export the group"));
     mRemoveButton.setTooltip(juce::translate("Remove the group"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
