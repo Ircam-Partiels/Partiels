@@ -6,12 +6,14 @@ ANALYSE_FILE_BEGIN
 Group::Thumbnail::Thumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
+    addAndMakeVisible(mNameButton);
     addAndMakeVisible(mExportButton);
     addAndMakeVisible(mStateButton);
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mExpandButton);
     addAndMakeVisible(mDropdownButton);
     
+    mExportButton.setTooltip(juce::translate("Change the name of the group"));
     mExportButton.setTooltip(juce::translate("Export the group"));
     mRemoveButton.setTooltip(juce::translate("Remove the group"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
@@ -36,6 +38,54 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
     
+    mNameButton.onClick = [&]()
+    {
+        class Editor
+        : public juce::TextEditor
+        {
+        public:
+            Editor(Accessor& accessor)
+            : mAccessor(accessor)
+            {
+                setMultiLine(false);
+                setJustification(juce::Justification::left);
+                setText(mAccessor.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                onTextChange = [&]()
+                {
+                    mAccessor.setAttr<AttrType::name>(getText(), NotificationType::synchronous);
+                };
+                onReturnKey = [&]()
+                {
+                    exitModalState(0);
+                };
+                onEscapeKey = [&]()
+                {
+                    exitModalState(0);
+                };
+                onFocusLost = [&]()
+                {
+                    exitModalState(0);
+                };
+                setColour(juce::TextEditor::ColourIds::backgroundColourId, getLookAndFeel().findColour(FloatingWindow::ColourIds::backgroundColourId));
+            }
+            
+            void inputAttemptWhenModal() override
+            {
+                exitModalState(0);
+            }
+            
+        private:
+            Accessor& mAccessor;
+        };
+        
+        Editor editor(mAccessor);
+        auto const buttonBounds = mNameButton.getScreenBounds();
+        editor.setBounds(buttonBounds.getRight(), buttonBounds.getY(), 80, 22);
+        editor.addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary);
+        editor.enterModalState(true, nullptr, false);
+        editor.runModalLoop();
+    };
+    
     mDropdownButton.onClick = [&]()
     {
         juce::PopupMenu menu;
@@ -46,6 +96,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
                 menu.addItem(button.getTooltip(), button.onClick);
             }
         };
+        addItem(mNameButton);
         addItem(mExportButton);
         addItem(mRemoveButton);
         addItem(mExpandButton);
@@ -108,6 +159,7 @@ void Group::Thumbnail::resized()
     layoutButton(mRemoveButton);
     layoutButton(mStateButton);
     layoutButton(mExportButton);
+    layoutButton(mNameButton);
     mDropdownButton.setVisible(useDropdown);
     if(useDropdown)
     {
@@ -140,6 +192,7 @@ void Group::Thumbnail::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
+        laf->setButtonIcon(mNameButton, IconManager::IconType::properties);
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
         laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
         if(mAccessor.getAttr<AttrType::expanded>())
