@@ -29,6 +29,9 @@ namespace Application
         
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         Interface mInterface;
+#ifndef JUCE_MAC
+        juce::OpenGLContext mOpenGLContext;
+#endif
     };
 }
 

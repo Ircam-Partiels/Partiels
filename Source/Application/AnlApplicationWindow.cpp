@@ -6,6 +6,11 @@ ANALYSE_FILE_BEGIN
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
+#ifndef JUCE_MAC
+    mOpenGLContext.setComponentPaintingEnabled(true);
+    mOpenGLContext.attachTo(*this);
+#endif
+    
     if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
     {
         centreWithSize(1024, 768);
@@ -27,6 +32,9 @@ Application::Window::~Window()
 {
     Instance::get().getDocumentFileBased().removeChangeListener(this);
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
+#ifndef JUCE_MAC
+    mOpenGLContext.detach();
+#endif
 }
 
 void Application::Window::closeButtonPressed()

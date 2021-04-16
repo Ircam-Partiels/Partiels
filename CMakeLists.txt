@@ -296,6 +296,10 @@ target_link_libraries(Partiels PRIVATE
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
+if(NOT APPLE)
+    target_link_libraries(Partiels PRIVATE juce::juce_opengl)
+endif()
+
 target_link_libraries(PartielsTest PRIVATE
     vamp
     ImagesData
@@ -312,6 +316,10 @@ target_link_libraries(PartielsTest PRIVATE
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
+
+if(NOT APPLE)
+    target_link_libraries(PartielsTest PRIVATE juce::juce_opengl)
+endif()
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "3BD2P55TR2")
