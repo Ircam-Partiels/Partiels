@@ -40,7 +40,7 @@ Build::Windows:
     - cd $CI_PROJECT_DIR
     - mkdir release
     - cd release
-    - cmake .. -G"Visual Studio 16 2019" -A x64
+    - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Release
     - ctest -C Release
   artifacts:
