@@ -231,6 +231,10 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(std::shared_ptr<const std
         return std::optional<Zoom::Range>();
     }
     auto const [min, max] = std::minmax_element(it->values.cbegin(), it->values.cend());
+    if(it->values.size() == 1)
+    {
+        return Zoom::Range{static_cast<double>(*min), static_cast<double>(std::max(*max, *min + std::numeric_limits<float>::epsilon()))};
+    }
     auto const firstRange = Zoom::Range{static_cast<double>(*min), static_cast<double>(*max)};
     return std::accumulate(results->cbegin() + 1, results->cend(), firstRange, [](auto const r, auto const& v)
     {

@@ -113,6 +113,12 @@ void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> cons
 
 void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange)
 {
+    anlWeakAssert(!valueRange.isEmpty());
+    if(valueRange.isEmpty())
+    {
+        return;
+    }
+    
     auto const rt = Tools::secondsToRealTime(time);
     auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
     {

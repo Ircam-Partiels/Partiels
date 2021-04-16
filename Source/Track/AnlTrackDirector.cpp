@@ -27,13 +27,17 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
             auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
-            if(globalRange.isEmpty() && pluginRange.has_value())
+            if(globalRange.isEmpty() && pluginRange.has_value() && !pluginRange->isEmpty())
             {
                 applyZoom(*pluginRange);
             }
-            else if(globalRange.isEmpty() && resultsRange.has_value())
+            else if(globalRange.isEmpty() && resultsRange.has_value() && !resultsRange->isEmpty())
             {
                 applyZoom(*resultsRange);
+            }
+            else if(globalRange.isEmpty())
+            {
+                applyZoom({0.0, 1.0});
             }
         }
         
@@ -50,11 +54,11 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             
             auto const pluginRange = Tools::getBinRange(mAccessor.getAttr<AttrType::description>());
             auto const resultsRange = Tools::getBinRange(mAccessor.getAttr<AttrType::results>());
-            if(pluginRange.has_value())
+            if(pluginRange.has_value() && !pluginRange->isEmpty())
             {
                 applyZoom(*pluginRange);
             }
-            else if(resultsRange.has_value())
+            else if(resultsRange.has_value() &&  !resultsRange->isEmpty())
             {
                 applyZoom(*resultsRange);
             }

@@ -164,6 +164,11 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
 
 void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
 {
+    anlWeakAssert(!valueRange.isEmpty());
+    if(valueRange.isEmpty())
+    {
+        return;
+    }
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
     auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
