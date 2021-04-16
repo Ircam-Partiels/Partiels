@@ -30,8 +30,8 @@ namespace Document
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::basic, 1>
-    , Model::Acsr<AcsrType::transport, Transport::Accessor, Model::Flag::basic, 1>
+    < Model::Acsr<AcsrType::timeZoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    , Model::Acsr<AcsrType::transport, Transport::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     , Model::Acsr<AcsrType::groups, Group::Accessor, Model::Flag::basic, Model::resizable>
     , Model::Acsr<AcsrType::tracks, Track::Accessor, Model::Flag::basic, Model::resizable>
     >;
