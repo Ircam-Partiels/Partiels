@@ -177,22 +177,16 @@ void Track::Thumbnail::parentHierarchyChanged()
 void Track::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    juce::MessageManager::callAsync([]
-    {
-        juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
-    });
+    startTimer(5);
 }
 
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
-    juce::MessageManager::callAsync([]
-    {
-        juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
-    });
-    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(250))
+    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(100))
     {
         return;
     }
+    stopTimer();
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* parent = findParentComponentOfClass<Section>();
     anlWeakAssert(dragContainer != nullptr && parent != nullptr);
@@ -207,6 +201,17 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
         auto const p = -event.getMouseDownPosition();
         dragContainer->startDragging(DraggableTable::createDescription(event, "Track", mAccessor.getAttr<AttrType::identifier>(), parent->getHeight()), parent, snapshot, true, &p, &event.source);
     }
+}
+
+void Track::Thumbnail::mouseUp(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    stopTimer();
+}
+
+void Track::Thumbnail::timerCallback()
+{
+    juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
 }
 
 ANALYSE_FILE_END

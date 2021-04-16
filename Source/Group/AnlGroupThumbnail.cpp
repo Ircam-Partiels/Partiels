@@ -221,10 +221,11 @@ void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
-    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(250))
+    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(100))
     {
         return;
     }
+    stopTimer();
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StrechableSection>();
@@ -265,7 +266,6 @@ void Group::Thumbnail::mouseUp(juce::MouseEvent const& event)
 
 void Group::Thumbnail::timerCallback()
 {
-    
     juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
 }
 
