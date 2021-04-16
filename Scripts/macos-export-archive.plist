@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>mac-application</string>
+    <key>teamID</key>
+    <string>3BD2P55TR2</string>
+    <key>teamName</key>
+    <string>INST RECHER COORD ACOUST MUSICALE</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>fr.ircam.dev.partiels</key>
+        <string>Application Partiels</string>
+    </dict>
+    <key>signingCertificate</key>
+    <string>Developer ID Application: INST RECHER COORD ACOUST MUSICALE (3BD2P55TR2)</string>
+</dict>
+</plist>
