@@ -95,11 +95,13 @@ void Document::FileBased::changed()
 {
     if(getFile() == juce::File{})
     {
-        setChangedFlag(!mAccessor.isEquivalentTo(getDefaultContainer()));
+        auto const state = mAccessor.isEquivalentTo(getDefaultContainer());
+        setChangedFlag(!state);
     }
     else
     {
-        setChangedFlag(!mAccessor.isEquivalentTo(mSavedStateAccessor));
+        auto const state = mAccessor.isEquivalentTo(mSavedStateAccessor);
+        setChangedFlag(!state);
     }
 }
 
