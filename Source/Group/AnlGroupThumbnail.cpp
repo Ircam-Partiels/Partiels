@@ -215,12 +215,19 @@ void Group::Thumbnail::parentHierarchyChanged()
 
 void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
-    event.source.triggerFakeMove();
+    juce::ignoreUnused(event);
+    juce::MessageManager::callAsync([]
+    {
+        juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
+    });
 }
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
-    event.source.triggerFakeMove();
+    juce::MessageManager::callAsync([]
+    {
+        juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
+    });
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(250))
     {
         return;
