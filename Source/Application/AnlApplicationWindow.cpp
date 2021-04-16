@@ -70,4 +70,3 @@ void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source
 }
 
 ANALYSE_FILE_END
-
