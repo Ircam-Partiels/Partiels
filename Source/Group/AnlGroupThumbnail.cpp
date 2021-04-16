@@ -216,18 +216,11 @@ void Group::Thumbnail::parentHierarchyChanged()
 void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    juce::MessageManager::callAsync([]
-    {
-        juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
-    });
+    startTimer(5);
 }
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
-    juce::MessageManager::callAsync([]
-    {
-        juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
-    });
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(250))
     {
         return;
@@ -262,6 +255,18 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
             }
         }), parent, snapshot, true, &p, &event.source);
     }
+}
+
+void Group::Thumbnail::mouseUp(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    stopTimer();
+}
+
+void Group::Thumbnail::timerCallback()
+{
+    
+    juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
 }
 
 ANALYSE_FILE_END
