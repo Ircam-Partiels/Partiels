@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
-: FloatingWindowContainer("Audio File Info")
+: FloatingWindowContainer("Audio File Info", *this)
 , mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 {
@@ -96,7 +96,7 @@ Document::FileInfoButton::FileInfoButton(FileInfoPanel& fileInfoPanel)
     mImageButton.setTooltip(juce::translate("Show file info"));
     mTextButton.onClick = mImageButton.onClick = [&]()
     {
-        mFileInfoPanel.show();
+        mFileInfoPanel.show(getScreenBounds().getCentre());
     };
     
     mTextButton.onStateChange = [&]

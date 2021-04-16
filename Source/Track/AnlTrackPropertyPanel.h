@@ -18,9 +18,6 @@ namespace Track
         // juce::Component
         void resized() override;
         
-        // FloatingWindowContainer
-        void show() override;
-        
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;

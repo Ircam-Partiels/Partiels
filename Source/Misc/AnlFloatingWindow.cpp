@@ -70,25 +70,37 @@ void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
 }
 #endif
 
-FloatingWindowContainer::FloatingWindowContainer(juce::String const& title)
-: mFloatingWindow(title)
+FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce::Component& content)
+: mContent(content)
+, mFloatingWindow(title)
 {
 }
 
 void FloatingWindowContainer::show()
 {
+    auto const& desktop = juce::Desktop::getInstance();
+    auto const mousePosition = desktop.getMainMouseSource().getScreenPosition().toInt();
+    auto const* display = desktop.getDisplays().getDisplayForPoint(mousePosition);
+    anlStrongAssert(display != nullptr);
+    if(display != nullptr)
+    {
+        show(display->userArea.getCentre().translated(-mFloatingWindow.getWidth() / 2, -mFloatingWindow.getHeight() / 2));
+    }
+}
+
+void FloatingWindowContainer::show(juce::Point<int> const& pt)
+{
     if(mFloatingWindow.getContentComponent() == nullptr)
     {
         auto const& desktop = juce::Desktop::getInstance();
-        auto const mousePosition = desktop.getMainMouseSource().getScreenPosition().toInt();
-        auto const* display = desktop.getDisplays().getDisplayForPoint(mousePosition);
+        juce::Rectangle<int> const bounds {pt.x, pt.y, mFloatingWindow.getWidth(), mFloatingWindow.getHeight()};
+        auto const* display = desktop.getDisplays().getDisplayForPoint(pt);
         anlStrongAssert(display != nullptr);
         if(display != nullptr)
         {
-            auto const bounds = display->userArea.withSizeKeepingCentre(mFloatingWindow.getWidth(), mFloatingWindow.getHeight());
-            mFloatingWindow.setBounds(bounds);
+            mFloatingWindow.setBounds(bounds.constrainedWithin(display->userArea));
         }
-        mFloatingWindow.setContentNonOwned(this, true);
+        mFloatingWindow.setContentNonOwned(&mContent, true);
     }
     
     mFloatingWindow.setVisible(true);

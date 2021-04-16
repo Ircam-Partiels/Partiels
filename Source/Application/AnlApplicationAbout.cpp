@@ -6,7 +6,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::About::About()
-: FloatingWindowContainer("About Partiels - v" + juce::String(ProjectInfo::versionString))
+: FloatingWindowContainer("About Partiels - v" + juce::String(ProjectInfo::versionString), *this)
 , mImage(juce::Drawable::createFromImageData(IconsData::icon_png, IconsData::icon_pngSize))
 {
     setSize(400, 400);

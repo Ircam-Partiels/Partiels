@@ -28,7 +28,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     
     mPropertiesButton.onClick = [&]()
     {
-        mPropertyPanel.show();
+        mPropertyPanel.show(mPropertiesButton.getScreenBounds().getCentre().translated(0, -mPropertyPanel.getHeight() / 2));
     };
     
     mExportButton.onClick = [&]()

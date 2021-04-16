@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::AudioSettings::AudioSettings()
-: FloatingWindowContainer("Audio Settings")
+: FloatingWindowContainer("Audio Settings", *this)
 , mPropertyDriver("Driver", "The current audio device driver", "", {}, [&](size_t index)
 {
     auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));

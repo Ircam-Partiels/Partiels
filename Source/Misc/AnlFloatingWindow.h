@@ -45,13 +45,15 @@ class FloatingWindowContainer
 : public juce::Component
 {
 public:
-    FloatingWindowContainer(juce::String const& title);
+    FloatingWindowContainer(juce::String const& title, juce::Component& content);
     ~FloatingWindowContainer() override = default;
     
     virtual void show();
+    virtual void show(juce::Point<int> const& pt);
     virtual void hide();
     
 protected:
+    juce::Component& mContent;
     FloatingWindow mFloatingWindow;
 };
 
