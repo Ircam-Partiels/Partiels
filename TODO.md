@@ -11,7 +11,7 @@
 - https://github.com/taglib/taglib
 - Optimize result representation
   - 256b interger for grid
-- Select group to insert track
 - Add Unit Tests
   - Group Model
   - Document Model
+- Improve support of 1 value analysis  
