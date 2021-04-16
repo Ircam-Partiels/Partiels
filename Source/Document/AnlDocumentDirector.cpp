@@ -226,18 +226,18 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
         if(trackIt != trackAcsrs.cend())
         {
             auto const trackIdentifier = trackIt->get().getAttr<Track::AttrType::identifier>();
-            auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+            auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](std::reference_wrapper<Group::Accessor> const& groupAcsr)
             {
-                auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
-                return std::find_if(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+                auto const groupLayout = groupAcsr.get().getAttr<Group::AttrType::layout>();
+                return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const& identifier)
                 {
                     return identifier == trackIdentifier;
-                }) != groupLayout.cend();
+                });
             });
             anlStrongAssert(groupIt != groupAcsrs.cend());
             if(groupIt != groupAcsrs.cend())
             {
-                auto const& groupLayout = groupIt->get().template getAttr<Group::AttrType::layout>();
+                auto const& groupLayout = groupIt->get().getAttr<Group::AttrType::layout>();
                 auto layoutIt = std::find_if(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
                 {
                     return identifier == trackIdentifier;
