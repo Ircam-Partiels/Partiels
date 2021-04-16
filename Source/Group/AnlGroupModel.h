@@ -39,7 +39,7 @@ namespace Group
     >;
     
     using AcsrContainer = Model::Container
-    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::basic, 1>
+    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     >;
     
     class Accessor
