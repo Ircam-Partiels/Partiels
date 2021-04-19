@@ -189,7 +189,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     {
         return;
     }
-    auto constexpr epsilonPixel = 1.0f;
+    auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
     auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
@@ -223,7 +223,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             shouldStartSubPath = true;
             it = std::next(it);
         }
-        else if(!it->hasDuration || it->duration <= minDiffTime)
+        else if(!it->hasDuration || it->duration < minDiffTime)
         {
             auto const end = Tools::getEndRealTime(*it);
             auto const limit = end + minDiffTime;
@@ -234,7 +234,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto max = value;
             auto const next = std::prev(std::find_if(std::next(it), results.cend(), [&](Plugin::Result const& result)
             {
-                if(result.values.empty() || !result.hasTimestamp || result.timestamp > limit)
+                if(result.values.empty() || !result.hasTimestamp || result.timestamp >= limit)
                 {
                     return true;
                 }
