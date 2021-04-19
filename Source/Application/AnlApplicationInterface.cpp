@@ -75,8 +75,7 @@ Application::Interface::~Interface()
 void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
-    
-    mTransportDisplay.setBounds(bounds.removeFromTop(40).withSizeKeepingCentre(280, 40));
+    mTransportDisplay.setBounds(bounds.removeFromTop(40).withSizeKeepingCentre(284, 40));
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
     mLoad.setBounds(bounds.withSizeKeepingCentre(200, 32));
     mDocumentSection.setBounds(bounds);
