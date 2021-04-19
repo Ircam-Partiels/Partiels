@@ -103,6 +103,12 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     colours.background = colour;
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
+, mPropertyShadowColour("Shadow Color", "The shadow current color of the graphical renderer.", "Select the shadow color", [&](juce::Colour const& colour)
+{
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.shadow = colour;
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+})
 , mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Plugin", "Results", "Manual"}, [&](size_t index)
 {
     auto applyRange = [&](std::optional<Zoom::Range> const& globalRange)
@@ -274,6 +280,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         {
                               mPropertyForegroundColour
                             , mPropertyBackgroundColour
+                            , mPropertyShadowColour
                         });
                     }
                         break;
@@ -284,6 +291,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         {
                               mPropertyForegroundColour
                             , mPropertyBackgroundColour
+                            , mPropertyShadowColour
                             , mPropertyValueRangeMode
                             , mPropertyValueRangeMin
                             , mPropertyValueRangeMax
@@ -386,6 +394,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 auto const colours = acsr.getAttr<AttrType::colours>();
                 mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
                 mPropertyBackgroundColour.entry.setCurrentColour(colours.background, juce::NotificationType::dontSendNotification);
+                mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
                 mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }

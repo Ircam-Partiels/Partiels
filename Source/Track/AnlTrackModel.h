@@ -16,12 +16,14 @@ namespace Track
         ColourMap map = ColourMap::Inferno;
         juce::Colour foreground = juce::Colours::aliceblue;
         juce::Colour background = juce::Colours::black;
+        juce::Colour shadow = juce::Colours::black;
         
         inline bool operator==(ColourSet const& rhd) const noexcept
         {
             return map == rhd.map &&
             foreground == rhd.foreground &&
-            background == rhd.background;
+            background == rhd.background &&
+            shadow == rhd.shadow;
         }
         
         inline bool operator!=(ColourSet const& rhd) const noexcept

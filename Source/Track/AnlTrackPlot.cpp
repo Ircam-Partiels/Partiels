@@ -86,16 +86,17 @@ void Track::Plot::paint(juce::Graphics& g)
     
     auto const& timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
+    auto const& colours = mAccessor.getAttr<AttrType::colours>();
     switch(Tools::getDisplayType(mAccessor))
     {
         case Tools::DisplayType::markers:
         {
-            paintMarkers(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *resultsPtr, timeRange);
+            paintMarkers(g, bounds.toFloat(), colours.foreground, colours.shadow, *resultsPtr, timeRange);
         }
             break;
         case Tools::DisplayType::segments:
         {
-            paintSegments(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *resultsPtr, timeRange, valueRange);
+            paintSegments(g, bounds.toFloat(), colours.foreground, colours.shadow, *resultsPtr, timeRange, valueRange);
         }
             break;
         case Tools::DisplayType::grid:
@@ -106,7 +107,7 @@ void Track::Plot::paint(juce::Graphics& g)
     }
 }
 
-void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
+void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& valueColour, juce::Colour const& shadowColour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
 {
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
@@ -157,19 +158,19 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
         it = std::next(it);
     }
     
-    // Shadow
+    if(!shadowColour.isTransparent())
     {
         rectangles.offsetAll(-2.0f, 0.0f);
         
-        g.setColour(colour.withAlpha(0.5f));
+        g.setColour(shadowColour.withMultipliedAlpha(0.5f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
         
-        g.setColour(colour.withAlpha(0.75f));
+        g.setColour(shadowColour.withMultipliedAlpha(0.75f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
     }
-    g.setColour(colour);
+    g.setColour(valueColour);
     g.fillRectList(rectangles);
     
     for(auto const& label : labels)
@@ -178,7 +179,7 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     }
 }
 
-void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
+void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& valueColour, juce::Colour const& shadowColour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
 {
     anlWeakAssert(!valueRange.isEmpty());
     if(valueRange.isEmpty())
@@ -359,15 +360,15 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         {
             rectangles.offsetAll(0.0f, 2.0f);
             
-            g.setColour(juce::Colours::black.withAlpha(0.5f));
+            g.setColour(shadowColour.withMultipliedAlpha(0.5f));
             g.fillRectList(rectangles);
             rectangles.offsetAll(0.0f, -1.0f);
             
-            g.setColour(juce::Colours::black.withAlpha(0.75f));
+            g.setColour(shadowColour.withMultipliedAlpha(0.75f));
             g.fillRectList(rectangles);
             rectangles.offsetAll(0.0f, -1.0f);
         }
-        g.setColour(colour);
+        g.setColour(valueColour);
         g.fillRectList(rectangles);
     }
     if(!path.isEmpty())
@@ -376,16 +377,16 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         pathStrokeType.createStrokedPath(path, path);
         // Shadow
         {
-            g.setColour(juce::Colours::black.withAlpha(0.5f));
+            g.setColour(shadowColour.withMultipliedAlpha(0.5f));
             g.fillPath(path, juce::AffineTransform::translation(0.0f, 2.0f));
-            g.setColour(juce::Colours::black.withAlpha(0.75f));
+            g.setColour(shadowColour.withMultipliedAlpha(0.75f));
             g.fillPath(path, juce::AffineTransform::translation(1.0f, 1.0f));
         }
-        g.setColour(colour);
+        g.setColour(valueColour);
         g.fillPath(path);
     }
     
-    g.setColour(colour);
+    g.setColour(valueColour);
     for(auto const& label : labels)
     {
         g.drawSingleLineText(std::get<0>(label), std::get<1>(label), static_cast<int>(std::round(std::get<3>(label))), juce::Justification::left);
