@@ -96,11 +96,16 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     colours.foreground = colour;
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
-
 , mPropertyBackgroundColour("Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
 {
     auto colours = mAccessor.getAttr<AttrType::colours>();
     colours.background = colour;
+    mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+})
+, mPropertyTextColour("Text Color", "The text current color of the graphical renderer.", "Select the text color", [&](juce::Colour const& colour)
+{
+    auto colours = mAccessor.getAttr<AttrType::colours>();
+    colours.text = colour;
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
 })
 , mPropertyShadowColour("Shadow Color", "The shadow current color of the graphical renderer.", "Select the shadow color", [&](juce::Colour const& colour)
@@ -279,6 +284,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         mGraphicalSection.setComponents(
                         {
                               mPropertyForegroundColour
+                            , mPropertyTextColour
                             , mPropertyBackgroundColour
                             , mPropertyShadowColour
                         });
@@ -290,6 +296,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                         mGraphicalSection.setComponents(
                         {
                               mPropertyForegroundColour
+                            , mPropertyTextColour
                             , mPropertyBackgroundColour
                             , mPropertyShadowColour
                             , mPropertyValueRangeMode
@@ -392,8 +399,9 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
             case AttrType::colours:
             {
                 auto const colours = acsr.getAttr<AttrType::colours>();
-                mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
                 mPropertyBackgroundColour.entry.setCurrentColour(colours.background, juce::NotificationType::dontSendNotification);
+                mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
+                mPropertyTextColour.entry.setCurrentColour(colours.text, juce::NotificationType::dontSendNotification);
                 mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
                 mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);

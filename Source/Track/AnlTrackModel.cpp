@@ -10,8 +10,9 @@ void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier 
     if(child != nullptr)
     {
         toXml(*child, "map", value.map);
-        toXml(*child, "foreground", value.foreground);
         toXml(*child, "background", value.background);
+        toXml(*child, "foreground", value.foreground);
+        toXml(*child, "text", value.text);
         toXml(*child, "shadow", value.shadow);
         xml.addChildElement(child.release());
     }
@@ -29,8 +30,9 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     }
     Track::ColourSet value;
     value.map = fromXml(*child, "map", defaultValue.map);
-    value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
     value.background = fromXml(*child, "background", defaultValue.background);
+    value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
+    value.text = fromXml(*child, "text", defaultValue.text);
     value.shadow = fromXml(*child, "shadow", defaultValue.shadow);
     return value;
 }

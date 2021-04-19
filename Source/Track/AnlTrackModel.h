@@ -14,15 +14,17 @@ namespace Track
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
-        juce::Colour foreground = juce::Colours::aliceblue;
         juce::Colour background = juce::Colours::black;
+        juce::Colour foreground = juce::Colours::white;
+        juce::Colour text = juce::Colours::white;
         juce::Colour shadow = juce::Colours::black;
         
         inline bool operator==(ColourSet const& rhd) const noexcept
         {
             return map == rhd.map &&
-            foreground == rhd.foreground &&
             background == rhd.background &&
+            foreground == rhd.foreground &&
+            text == rhd.text &&
             shadow == rhd.shadow;
         }
         
