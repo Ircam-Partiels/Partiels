@@ -12,15 +12,17 @@ namespace Group
     , private juce::Timer
     {
     public:
+        // clang-format off
         enum ColourIds : int
         {
               textColourId = 0x2040100
             , titleBackgroundColourId
         };
-        
+        // clang-format on
+
         Thumbnail(Accessor& accessor);
         ~Thumbnail() override;
-        
+
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
@@ -29,22 +31,22 @@ namespace Group
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
         void mouseUp(juce::MouseEvent const& event) override;
-        
+
         std::function<void(void)> onRemove = nullptr;
-        
+
     private:
         void timerCallback() override;
-        
+
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        
+
         juce::ImageButton mDropdownButton;
         juce::ImageButton mNameButton;
         juce::ImageButton mExportButton;
-        StateButton mStateButton {mAccessor};
+        StateButton mStateButton{mAccessor};
         juce::ImageButton mExpandButton;
         juce::ImageButton mRemoveButton;
     };
-}
+} // namespace Group
 
 ANALYSE_FILE_END

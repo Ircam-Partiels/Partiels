@@ -12,13 +12,13 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mExpandButton);
     addAndMakeVisible(mDropdownButton);
-    
+
     mNameButton.setTooltip(juce::translate("Change the name of the group"));
     mExportButton.setTooltip(juce::translate("Export the group"));
     mRemoveButton.setTooltip(juce::translate("Remove the group"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
-    
+
     mRemoveButton.onClick = [&]()
     {
         if(onRemove != nullptr)
@@ -26,18 +26,18 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
             onRemove();
         }
     };
-    
+
     mExpandButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
-    
+
     mExportButton.onClick = [&]()
     {
         // Force to repaint to update the state
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
-    
+
     mNameButton.onClick = [&]()
     {
         class Editor
@@ -68,16 +68,16 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
                 };
                 setColour(juce::TextEditor::ColourIds::backgroundColourId, getLookAndFeel().findColour(FloatingWindow::ColourIds::backgroundColourId));
             }
-            
+
             void inputAttemptWhenModal() override
             {
                 exitModalState(0);
             }
-            
+
         private:
             Accessor& mAccessor;
         };
-        
+
         Editor editor(mAccessor);
         auto const buttonBounds = mNameButton.getScreenBounds();
         editor.setBounds(buttonBounds.getRight(), buttonBounds.getY(), 80, 22);
@@ -85,7 +85,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
         editor.enterModalState(true, nullptr, false);
         editor.runModalLoop();
     };
-    
+
     mDropdownButton.onClick = [&]()
     {
         juce::PopupMenu menu;
@@ -102,7 +102,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
         addItem(mExpandButton);
         menu.showAt(&mDropdownButton);
     };
-    
+
     mListener.onAttrChanged = [&](Group::Accessor const& acsr, AttrType const attribute)
     {
         juce::ignoreUnused(acsr);
@@ -115,7 +115,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
                 setTooltip(acsr.getAttr<AttrType::name>());
                 repaint();
             }
-                break;
+            break;
             case AttrType::height:
             case AttrType::colour:
             case AttrType::layout:
@@ -126,10 +126,10 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
             {
                 lookAndFeelChanged();
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -144,7 +144,7 @@ void Group::Thumbnail::resized()
     auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
-    
+
     auto layoutButton = [&](juce::Component& component)
     {
         useDropdown = bounds.getHeight() < size * 2;
@@ -154,7 +154,7 @@ void Group::Thumbnail::resized()
             component.setBounds(bounds.removeFromBottom(size).reduced(separator));
         }
     };
-    
+
     layoutButton(mExpandButton);
     layoutButton(mRemoveButton);
     layoutButton(mStateButton);
@@ -171,7 +171,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
 {
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
-    
+
     auto const width = getWidth() / 2;
     auto const height = getHeight();
     auto const bottom = height - 2 * separator;
@@ -237,24 +237,25 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
         g.beginTransparencyLayer(0.6f);
         section->paintEntireComponent(g, false);
         g.endTransparencyLayer();
-        
+
         auto const p = -event.getMouseDownPosition();
         auto const expanded = mAccessor.getAttr<AttrType::expanded>();
-        dragContainer->startDragging(DraggableTable::createDescription(event, "Group", mAccessor.getAttr<AttrType::identifier>(), section->getHeight()
-        , [=, this]()
-        {
-            if(expanded)
-            {
-                mAccessor.setAttr<AttrType::expanded>(false, NotificationType::synchronous);
-            }
-        }
-        , [=, this]()
-        {
-            if(expanded)
-            {
-                mAccessor.setAttr<AttrType::expanded>(true, NotificationType::synchronous);
-            }
-        }), parent, snapshot, true, &p, &event.source);
+        dragContainer->startDragging(DraggableTable::createDescription(
+                                         event, "Group", mAccessor.getAttr<AttrType::identifier>(), section->getHeight(), [=, this]()
+                                         {
+                                             if(expanded)
+                                             {
+                                                 mAccessor.setAttr<AttrType::expanded>(false, NotificationType::synchronous);
+                                             }
+                                         },
+                                         [=, this]()
+                                         {
+                                             if(expanded)
+                                             {
+                                                 mAccessor.setAttr<AttrType::expanded>(true, NotificationType::synchronous);
+                                             }
+                                         }),
+                                     parent, snapshot, true, &p, &event.source);
     }
 }
 
