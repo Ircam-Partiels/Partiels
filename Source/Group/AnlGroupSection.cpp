@@ -10,6 +10,13 @@ Group::Section::Section(Accessor& accessor, Transport::Accessor& transportAcsr, 
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 {
+    mRuler.onDoubleClick = [&]()
+    {
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
+        auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+    };
+    
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         juce::ignoreUnused(acsr);
