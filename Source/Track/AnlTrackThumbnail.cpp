@@ -1,6 +1,6 @@
 #include "AnlTrackThumbnail.h"
-#include "AnlTrackSection.h"
 #include "AnlTrackExporter.h"
+#include "AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -12,12 +12,12 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mRemoveButton);
     addAndMakeVisible(mStateButton);
     addAndMakeVisible(mDropdownButton);
-    
+
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
     mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
-    
+
     mRemoveButton.onClick = [&]()
     {
         if(onRemove != nullptr)
@@ -25,12 +25,12 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
             onRemove();
         }
     };
-    
+
     mPropertiesButton.onClick = [&]()
     {
         mPropertyPanel.show(mPropertiesButton.getScreenBounds().getCentre().translated(0, -mPropertyPanel.getHeight() / 2));
     };
-    
+
     mExportButton.onClick = [&]()
     {
         JUCE_COMPILER_WARNING("these conditions should be fixed")
@@ -40,26 +40,26 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         auto const graphicsAreReady = !std::get<2>(processing) && results != nullptr && !results->empty();
         juce::PopupMenu menu;
         menu.addItem(juce::translate("Export as template..."), true, false, [this]()
-        {
-            Exporter::toTemplate(mAccessor, AlertType::window);
-        });
+                     {
+                         Exporter::toTemplate(mAccessor, AlertType::window);
+                     });
         menu.addItem("Export as image", graphicsAreReady, false, [this]()
-        {
-            Exporter::toImage(mAccessor, AlertType::window);
-        });
+                     {
+                         Exporter::toImage(mAccessor, AlertType::window);
+                     });
         menu.addItem("Export as CSV...", resultsAreReady, false, [this]()
-        {
-            Exporter::toCsv(mAccessor, AlertType::window);
-        });
+                     {
+                         Exporter::toCsv(mAccessor, AlertType::window);
+                     });
         menu.addItem("Export as XML...", resultsAreReady, false, [this]()
-        {
-            Exporter::toXml(mAccessor, AlertType::window);
-        });
+                     {
+                         Exporter::toXml(mAccessor, AlertType::window);
+                     });
         menu.showAt(&mExportButton);
         // Force to repaint to update the state
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
-    
+
     mDropdownButton.onClick = [&]()
     {
         juce::PopupMenu menu;
@@ -75,7 +75,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         addItem(mRemoveButton);
         menu.showAt(&mDropdownButton);
     };
-    
+
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -86,7 +86,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
                 setTooltip(acsr.getAttr<AttrType::name>());
                 repaint();
             }
-                break;
+            break;
             case AttrType::processing:
             case AttrType::warnings:
             case AttrType::key:
@@ -102,7 +102,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::zoomAcsr:
             case AttrType::focused:
                 break;
-}
+        }
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -129,7 +129,7 @@ void Track::Thumbnail::resized()
             component.setBounds(bounds.removeFromBottom(size).reduced(separator));
         }
     };
-    
+
     layoutButton(mRemoveButton);
     layoutButton(mStateButton);
     layoutButton(mExportButton);
@@ -145,12 +145,12 @@ void Track::Thumbnail::paint(juce::Graphics& g)
 {
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
-    
+
     auto const width = getWidth() / 2;
     auto const height = getHeight();
     auto const bottom = height - 2 * separator;
     auto const size = height - 4 * separator;
-    
+
     g.setColour(findColour(ColourIds::titleBackgroundColourId));
     g.fillRoundedRectangle(getLocalBounds().removeFromLeft(width).toFloat(), 2.0f);
 
@@ -200,7 +200,7 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
         g.beginTransparencyLayer(0.6f);
         parent->paintEntireComponent(g, false);
         g.endTransparencyLayer();
-        
+
         auto const p = -event.getMouseDownPosition();
         dragContainer->startDragging(DraggableTable::createDescription(event, "Track", mAccessor.getAttr<AttrType::identifier>(), parent->getHeight()), parent, snapshot, true, &p, &event.source);
     }
