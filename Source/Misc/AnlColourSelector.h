@@ -21,6 +21,7 @@ private:
 
 class ColourButton
 : public juce::Button
+, public juce::DragAndDropTarget
 {
 public:
     enum ColourIds
@@ -38,14 +39,26 @@ public:
     
     std::function<void(juce::Colour const& colour)> onColourChanged = nullptr;
     
+    // juce::Component
+    void mouseDown(juce::MouseEvent const& event) override;
+    void mouseDrag(juce::MouseEvent const& event) override;
+    void mouseUp(juce::MouseEvent const& event) override;
+    
 private:
     // juce::Button
     using juce::Button::clicked;
     void clicked() override;
     void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
     
+    // juce::DragAndDropTarget
+    bool isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+    void itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+    void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+    void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+    
     juce::String mTitle;
     juce::Colour mColour;
+    juce::Component::SafePointer<ColourButton> mDraggedColour;
 };
 
 ANALYSE_FILE_END
