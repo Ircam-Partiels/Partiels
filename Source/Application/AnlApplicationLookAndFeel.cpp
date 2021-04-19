@@ -130,6 +130,10 @@ Application::LookAndFeel::LookAndFeel()
 
     // juce::HyperlinkButton
     setColour(juce::HyperlinkButton::ColourIds::textColourId, juce::Colour(0xFF16A4DB));
+    
+    // juce::ColourSelector
+    setColour(juce::ColourSelector::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(juce::ColourSelector::ColourIds::labelTextColourId, textColour);
 
     setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());
     setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
