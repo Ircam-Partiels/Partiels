@@ -15,3 +15,4 @@
   - Group Model
   - Document Model
 - Improve support of 1 value analysis  
+- Windows time code width
