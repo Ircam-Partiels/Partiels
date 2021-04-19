@@ -69,7 +69,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     mChrono.start();
     mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> std::shared_ptr<std::vector<Plugin::Result>>
     {
-        juce::Thread::setCurrentThreadName("Track::Director::runAnalysis");
+        juce::Thread::setCurrentThreadName("Track::Processor::Process");
         juce::Thread::setCurrentThreadPriority(10);
         
         auto expected = ProcessState::available;
