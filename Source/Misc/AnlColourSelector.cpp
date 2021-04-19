@@ -3,6 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 ColourSelector::ColourSelector()
+: juce::ColourSelector((showAlphaChannel | showColourAtTop | editableColour | showSliders | showColourspace))
 {
     addChangeListener(this);
 }
