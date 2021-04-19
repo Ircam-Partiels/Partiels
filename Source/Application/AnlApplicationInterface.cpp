@@ -10,31 +10,31 @@ Application::Interface::Interface()
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mDocumentSection);
     addAndMakeVisible(mToolTipDisplay);
-    
+
     mLoad.onClick = []()
     {
         using CommandIDs = CommandTarget::CommandIDs;
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
-    
+
     mDocumentSection.onRemoveGroup = [](juce::String const& groupIdentifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
         documentDir.removeGroup(AlertType::window, groupIdentifier, NotificationType::synchronous);
     };
-    
+
     mDocumentSection.onRemoveTrack = [](juce::String const& trackIdentifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
         documentDir.removeTrack(AlertType::window, trackIdentifier, NotificationType::synchronous);
     };
-    
+
     mDocumentSection.onTrackInserted = [](juce::String const& groupIdentifier, juce::String const& trackIdentifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
         documentDir.moveTrack(AlertType::window, groupIdentifier, trackIdentifier, NotificationType::synchronous);
     };
-    
+
     mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
         switch(attribute)
@@ -44,7 +44,7 @@ Application::Interface::Interface()
                 auto const file = acsr.getAttr<Document::AttrType::file>();
                 auto const& audioFormatManager = Instance::get().getAudioFormatManager();
                 auto const isDocumentEnable = file.existsAsFile() && audioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension());
-                
+
                 mTransportDisplay.setEnabled(isDocumentEnable);
                 mDocumentSection.setEnabled(isDocumentEnable);
                 if(!isDocumentEnable)
@@ -56,12 +56,12 @@ Application::Interface::Interface()
                     removeChildComponent(&mLoad);
                 }
             }
-                break;
+            break;
             case Document::AttrType::layout:
                 break;
         }
     };
-    
+
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     documentAccessor.addListener(mDocumentListener, NotificationType::synchronous);
 }
