@@ -161,11 +161,11 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     {
         rectangles.offsetAll(-2.0f, 0.0f);
         
-        g.setColour(colour.withAlpha(0.25f));
+        g.setColour(colour.withAlpha(0.5f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
         
-        g.setColour(colour.withAlpha(0.5f));
+        g.setColour(colour.withAlpha(0.75f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
     }
@@ -296,6 +296,18 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     
     if(!rectangles.isEmpty())
     {
+        // Shadow
+        {
+            rectangles.offsetAll(0.0f, 2.0f);
+            
+            g.setColour(juce::Colours::black.withAlpha(0.5f));
+            g.fillRectList(rectangles);
+            rectangles.offsetAll(0.0f, -1.0f);
+            
+            g.setColour(juce::Colours::black.withAlpha(0.75f));
+            g.fillRectList(rectangles);
+            rectangles.offsetAll(0.0f, -1.0f);
+        }
         g.setColour(colour);
         g.fillRectList(rectangles);
     }
