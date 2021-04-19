@@ -91,16 +91,16 @@ juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& res
     {
         if(!second->values.empty())
         {
-            auto const label = second->label.empty() ? output.unit : second->label;
-            return juce::String(second->values[0], 2) + label;
+            auto const label = second->label.empty() ? "" : (" (" + second->label + ")");
+            return juce::String(second->values[0], 2) + output.unit + label;
         }
     }
     else if(first->timestamp <= rt && getEndRealTime(*first) >= rt)
     {
         if(!first->values.empty())
         {
-            auto const label = first->label.empty() ? output.unit : first->label;
-            return juce::String(first->values[0], 2) + label;
+            auto const label = second->label.empty() ? "" : (" (" + second->label + ")");
+            return juce::String(first->values[0], 2) + output.unit + label;
         }
     }
     else if(first != second && first->hasTimestamp)
@@ -116,8 +116,8 @@ juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& res
             }
             auto const ratio = static_cast<float>((time - start) / (end - start));
             auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
-            auto const label = second->label.empty() ? output.unit : second->label;
-            return juce::String(value, 2) + label;
+            auto const label = second->label.empty() ? "" : (" (" + second->label + ")");
+            return juce::String(value, 2) + output.unit + label;
         }
     }
     return "-";

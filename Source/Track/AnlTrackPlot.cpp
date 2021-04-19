@@ -87,16 +87,17 @@ void Track::Plot::paint(juce::Graphics& g)
     auto const& timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
+    auto const& output = mAccessor.getAttr<AttrType::description>().output;
     switch(Tools::getDisplayType(mAccessor))
     {
         case Tools::DisplayType::markers:
         {
-            paintMarkers(g, bounds.toFloat(), colours, *resultsPtr, timeRange);
+            paintMarkers(g, bounds.toFloat(), colours, output.unit, *resultsPtr, timeRange);
         }
             break;
         case Tools::DisplayType::segments:
         {
-            paintSegments(g, bounds.toFloat(), colours, *resultsPtr, timeRange, valueRange);
+            paintSegments(g, bounds.toFloat(), colours, output.unit, *resultsPtr, timeRange, valueRange);
         }
             break;
         case Tools::DisplayType::grid:
@@ -107,7 +108,7 @@ void Track::Plot::paint(juce::Graphics& g)
     }
 }
 
-void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
+void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
 {
     auto constexpr epsilonPixel = 2.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
@@ -150,7 +151,7 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
             
             if(showLabel && !it->label.empty() && (labels.empty() || (std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
             {
-                juce::String const text(it->label);
+                auto const text = juce::String(it->label) + unit;
                 auto const textWidth = font.getStringWidth(text) + 2;
                 auto const textX = static_cast<int>(std::round(x2)) + 2;
                 labels.push_back(std::make_tuple(text, textX, textWidth));
@@ -184,7 +185,7 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     }
 }
 
-void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
+void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
 {
     anlWeakAssert(!valueRange.isEmpty());
     if(valueRange.isEmpty())
@@ -252,7 +253,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         }
         if(std::get<0>(labelInfoHigh).isEmpty() || y < std::get<3>(labelInfoHigh))
         {
-            auto const text = juce::String(value, 2) + juce::String(label);
+            auto const text = juce::String(value, 2) + unit + (label.empty() ? "" : (" (" + juce::String(label) + ")"));
             auto const textWidth = font.getStringWidth(text) + 2;
             labelInfoHigh = std::make_tuple(text, x, textWidth, y);
         }
@@ -269,7 +270,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         }
         if(std::get<0>(labelInfoLow).isEmpty() || y > std::get<3>(labelInfoLow))
         {
-            auto const text = juce::String(value, 2) + juce::String(label);
+            auto const text = juce::String(value, 2) + unit + (label.empty() ? "" : (" (" + juce::String(label) + ")"));
             auto const textWidth = font.getStringWidth(text) + 2;
             labelInfoLow = std::make_tuple(text, x, textWidth, y);
         }
