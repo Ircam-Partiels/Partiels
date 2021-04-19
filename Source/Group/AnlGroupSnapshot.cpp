@@ -156,7 +156,7 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
             auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();
             auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, pt.y);
-            auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)));
+            auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)), 0.0);
             tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
         }
     }

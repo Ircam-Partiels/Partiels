@@ -345,7 +345,7 @@ void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
     }
     auto const time = mAccessor.getAttr<AttrType::time>();
     auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, pt.y);
-    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
+    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)), 0.0);
     setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 

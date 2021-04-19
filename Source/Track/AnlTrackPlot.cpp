@@ -491,9 +491,10 @@ void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
+    auto const epsilon = 3.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     auto const bin = Zoom::Tools::getScaledValueFromHeight(mAccessor.getAcsr<AcsrType::binZoom>(), *this, pt.y);
-    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)));
+    auto const tip = Tools::getResultText(mAccessor, time, static_cast<size_t>(std::floor(bin)), epsilon);
     setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 

@@ -144,7 +144,7 @@ void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
-    
+    auto const epsilon = 3.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     auto tooltip = Format::secondsToString(time);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -156,7 +156,7 @@ void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
             auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();
             auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, pt.y);
-            auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)));
+            auto const tip = Track::Tools::getResultText(trackAcsr->get(), time, static_cast<size_t>(std::floor(bin)), epsilon);
             tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
         }
     }

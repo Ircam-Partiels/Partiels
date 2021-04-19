@@ -61,16 +61,16 @@ Vamp::RealTime Track::Tools::getEndRealTime(Plugin::Result const& rt)
     return rt.hasDuration ? rt.timestamp + rt.duration : rt.timestamp;
 }
 
-juce::String Track::Tools::getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time)
+juce::String Track::Tools::getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, double timeEpsilon)
 {
-    auto const rt = secondsToRealTime(time);
+    auto const rt = secondsToRealTime(time - timeEpsilon);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
     {
         return result.hasTimestamp && getEndRealTime(result) >= rt;
     });
-    if(it != results.cend() && getEndRealTime(*it) <= rt)
+    if(it != results.cend() && getEndRealTime(*it) <= secondsToRealTime(time))
     {
-        return it->label.empty() ? output.unit : it->label;
+        return it->label.empty() ? output.unit : (it->label + output.unit);
     }
     return "";
 }
@@ -143,7 +143,7 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
     return juce::String(it->values[bin], 2) + label;
 }
 
-juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size_t bin)
+juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size_t bin, double timeEpsilon)
 {
     auto const results = acsr.getAttr<AttrType::results>();
     auto const& output = acsr.getAttr<AttrType::description>().output;
@@ -155,7 +155,7 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size
     {
         case DisplayType::markers:
         {
-            return Tools::getMarkerText(*results, output, time);
+            return Tools::getMarkerText(*results, output, time, timeEpsilon);
         }
             break;
         case DisplayType::segments:
