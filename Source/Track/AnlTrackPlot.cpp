@@ -144,7 +144,7 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
             auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*it));
             auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
             auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x1;
-            rectangles.add({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
+            rectangles.addWithoutMerging({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
             
             if(!it->label.empty() && (labels.empty() || (std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
             {
