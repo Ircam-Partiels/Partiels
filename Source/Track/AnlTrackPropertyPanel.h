@@ -10,6 +10,7 @@ namespace Track
 {
     class PropertyPanel
     : public FloatingWindowContainer
+    , public juce::DragAndDropContainer
     {
     public:
         PropertyPanel(Accessor& accessor);
