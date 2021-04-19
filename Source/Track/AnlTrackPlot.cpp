@@ -174,7 +174,7 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     
     for(auto const& label : labels)
     {
-        g.drawText(std::get<0>(label), std::get<1>(label), 2, std::get<2>(label), 20, juce::Justification::centredLeft);
+        g.drawSingleLineText(std::get<0>(label), std::get<1>(label), 22, juce::Justification::left);
     }
 }
 
@@ -210,6 +210,60 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     auto const minDiffTime = Tools::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
     juce::Path path;
     juce::RectangleList<float> rectangles;
+    using labelInfo = std::tuple<juce::String, int, int, float>;
+    labelInfo labelInfoLow;
+    labelInfo labelInfoHigh;
+    std::vector<labelInfo> labels;
+    
+    auto const font = g.getCurrentFont();
+    auto const fontAscent = font.getAscent();
+    auto const fontDescent = font.getDescent();
+    auto insertLabelIfPossible = [&](int x, float y, float value, std::string const& label)
+    {
+        auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
+        auto canInsertLow = !std::get<0>(labelInfoLow).isEmpty() && x > std::get<1>(labelInfoLow) + std::get<2>(labelInfoLow) + 2;
+        
+        if(canInsertHight && canInsertLow && labelInfoHigh == labelInfoLow)
+        {
+            canInsertHight = y >= std::get<3>(labelInfoHigh);
+            canInsertLow = !canInsertHight;
+        }
+        
+        if(canInsertHight)
+        {
+            if(labelInfoHigh == labelInfoLow)
+            {
+                std::get<0>(labelInfoLow).clear();
+            }
+            std::get<3>(labelInfoHigh) -= fontDescent - 2.0f;
+            labels.push_back(labelInfoHigh);
+            std::get<0>(labelInfoHigh).clear();
+        }
+        if(std::get<0>(labelInfoHigh).isEmpty() || y < std::get<3>(labelInfoHigh))
+        {
+            auto const text = juce::String(value, 2) + juce::String(label);
+            auto const textWidth = font.getStringWidth(text) + 2;
+            labelInfoHigh = std::make_tuple(text, x, textWidth, y);
+        }
+        
+        if(canInsertLow)
+        {
+            if(labelInfoLow == labelInfoHigh)
+            {
+                std::get<0>(labelInfoHigh).clear();
+            }
+            std::get<3>(labelInfoLow) += fontAscent + 2.0f;
+            labels.push_back(labelInfoLow);
+            std::get<0>(labelInfoLow).clear();
+        }
+        if(std::get<0>(labelInfoLow).isEmpty() || y > std::get<3>(labelInfoLow))
+        {
+            auto const text = juce::String(value, 2) + juce::String(label);
+            auto const textWidth = font.getStringWidth(text) + 2;
+            labelInfoLow = std::make_tuple(text, x, textWidth, y);
+        }
+    };
+    
     auto shouldStartSubPath = true;
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != results.cend())
@@ -248,7 +302,10 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
                 auto const x2 = Tools::secondsToPixel(Tools::realTimeToSeconds(nend), timeRange, bounds);
                 auto const y1 = Tools::valueToPixel(min, valueRange, bounds);
                 auto const y2 = Tools::valueToPixel(max, valueRange, bounds);
-                rectangles.addWithoutMerging({x, y1 < y2 ? y1 : y2, std::max(x2 - x, 1.0f), std::max(std::abs(y2 - y1), 1.0f)});
+                rectangles.addWithoutMerging({x, y2, std::max(x2 - x, 1.0f), std::max(y1 - y2, 1.0f)});
+                insertLabelIfPossible(static_cast<int>(x), y1, min, it->label);
+                insertLabelIfPossible(static_cast<int>(x), y2, max, it->label);
+                
                 shouldStartSubPath = true;
                 hasExceededEnd = nend >= rtEnd;
                 it = next;
@@ -256,6 +313,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             else
             {
                 auto const y = Tools::valueToPixel(value, valueRange, bounds);
+                insertLabelIfPossible(static_cast<int>(x), y, value, it->label);
                 if(std::exchange(shouldStartSubPath, false))
                 {
                     path.startNewSubPath(x, y);
@@ -278,6 +336,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto const value = it->values[0];
             auto const x = Tools::secondsToPixel(Tools::realTimeToSeconds(it->timestamp), timeRange, bounds);
             auto const y = Tools::valueToPixel(value, valueRange, bounds);
+            insertLabelIfPossible(static_cast<int>(x), y, value, it->label);
             if(std::exchange(shouldStartSubPath, false))
             {
                 path.startNewSubPath(x, y);
@@ -324,6 +383,12 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         }
         g.setColour(colour);
         g.fillPath(path);
+    }
+    
+    g.setColour(colour);
+    for(auto const& label : labels)
+    {
+        g.drawSingleLineText(std::get<0>(label), std::get<1>(label), static_cast<int>(std::round(std::get<3>(label))), juce::Justification::left);
     }
 }
 
