@@ -125,13 +125,15 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     });
     
     juce::RectangleList<float> rectangles;
+    std::vector<std::tuple<juce::String, int, int>> labels;
+    auto const font = g.getCurrentFont();
     while(it != results.cend() && it->timestamp < rtEnd)
     {
         if(it->hasTimestamp)
         {
             auto const start = Tools::realTimeToSeconds(it->timestamp);
-            auto const x = Tools::secondsToPixel(start, timeRange, bounds);
-            
+            auto const x1 = Tools::secondsToPixel(start, timeRange, bounds);
+
             // Skip any adjacent result with a distance inferior to epsilon pixels
             auto next = std::next(it);
             while(next != results.cend() && next->timestamp < rtEnd && next->hasTimestamp && next->timestamp < Tools::getEndRealTime(*it) + minDiffTime)
@@ -140,26 +142,40 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
             }
             
             auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*it));
-            auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x;
-            rectangles.add({x, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
+            auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
+            auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x1;
+            rectangles.add({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
+            
+            if(!it->label.empty() && (labels.empty() || (std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
+            {
+                juce::String const text(it->label);
+                auto const textWidth = font.getStringWidth(text) + 2;
+                auto const textX = static_cast<int>(std::round(x2)) + 2;
+                labels.push_back(std::make_tuple(text, textX, textWidth));
+            }
         }
         it = std::next(it);
     }
     
     // Shadow
     {
-        g.setColour(juce::Colours::black.withAlpha(0.5f));
         rectangles.offsetAll(-2.0f, 0.0f);
-        g.fillRectList(rectangles);
-        rectangles.offsetAll(2.0f, 0.0f);
         
-        g.setColour(juce::Colours::black.withAlpha(0.25f));
-        rectangles.offsetAll(-1.0f, 0.0f);
+        g.setColour(colour.withAlpha(0.25f));
+        g.fillRectList(rectangles);
+        rectangles.offsetAll(1.0f, 0.0f);
+        
+        g.setColour(colour.withAlpha(0.5f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
     }
     g.setColour(colour);
     g.fillRectList(rectangles);
+    
+    for(auto const& label : labels)
+    {
+        g.drawText(std::get<0>(label), std::get<1>(label), 2, std::get<2>(label), 20, juce::Justification::centredLeft);
+    }
 }
 
 void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
