@@ -1,0 +1,41 @@
+---
+Language:        Cpp
+
+NamespaceIndentation: All
+CompactNamespaces: false
+AccessModifierOffset: -4
+SpaceBeforeCaseColon: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeParens: Never
+
+AlwaysBreakAfterReturnType: None
+BreakBeforeBraces: Allman
+IndentCaseLabels: true
+
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
+AllowAllConstructorInitializersOnNextLine: true
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 0
+
+BreakInheritanceList: BeforeComma
+BreakBeforeInheritanceComma: true
+
+EmptyLineBeforeAccessModifier: Always
+
+AllowShortEnumsOnASingleLine: false
+
+PointerAlignment: Left
+ColumnLimit: 0
+BitFieldColonSpacing: Both
+Standard: Latest
+TabWidth: 8
+IndentWidth: 4
+UseCRLF: false
+UseTab: Never
+...
