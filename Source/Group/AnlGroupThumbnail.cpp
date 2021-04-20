@@ -13,7 +13,7 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
     addAndMakeVisible(mExpandButton);
     addAndMakeVisible(mDropdownButton);
 
-    mNameButton.setTooltip(juce::translate("Change the name of the group"));
+    mNameButton.setTooltip(juce::translate("Change the name of the group or the tracks' properties"));
     mExportButton.setTooltip(juce::translate("Export the group"));
     mRemoveButton.setTooltip(juce::translate("Remove the group"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
@@ -38,57 +38,83 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
         mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
 
-    mNameButton.onClick = [&]()
-    {
-        class Editor
-        : public juce::TextEditor
-        {
-        public:
-            Editor(Accessor& accessor)
-            : mAccessor(accessor)
-            {
-                setMultiLine(false);
-                setJustification(juce::Justification::left);
-                setText(mAccessor.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
-                onTextChange = [&]()
-                {
-                    mAccessor.setAttr<AttrType::name>(getText(), NotificationType::synchronous);
-                };
-                onReturnKey = [&]()
-                {
-                    exitModalState(0);
-                };
-                onEscapeKey = [&]()
-                {
-                    exitModalState(0);
-                };
-                onFocusLost = [&]()
-                {
-                    exitModalState(0);
-                };
-                setColour(juce::TextEditor::ColourIds::backgroundColourId, getLookAndFeel().findColour(FloatingWindow::ColourIds::backgroundColourId));
-            }
-
-            void inputAttemptWhenModal() override
-            {
-                exitModalState(0);
-            }
-
-        private:
-            Accessor& mAccessor;
-        };
-
-        Editor editor(mAccessor);
-        auto const buttonBounds = mNameButton.getScreenBounds();
-        editor.setBounds(buttonBounds.getRight(), buttonBounds.getY(), 80, 22);
-        editor.addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary);
-        editor.enterModalState(true, nullptr, false);
-        editor.runModalLoop();
-    };
-
-    mDropdownButton.onClick = [&]()
+    auto getNameMenu = [&]()
     {
         juce::PopupMenu menu;
+        menu.addItem("Change Group Name", [&]()
+                     {
+                         class Editor
+                         : public juce::TextEditor
+                         {
+                         public:
+                             Editor(Accessor& accessor)
+                             : mAccessor(accessor)
+                             {
+                                 setMultiLine(false);
+                                 setJustification(juce::Justification::left);
+                                 setText(mAccessor.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                                 onTextChange = [&]()
+                                 {
+                                     mAccessor.setAttr<AttrType::name>(getText(), NotificationType::synchronous);
+                                 };
+                                 onReturnKey = onEscapeKey = onFocusLost = [&]()
+                                 {
+                                     exitModalState(0);
+                                 };
+                                 setColour(juce::TextEditor::ColourIds::backgroundColourId, getLookAndFeel().findColour(FloatingWindow::ColourIds::backgroundColourId));
+                             }
+
+                             void inputAttemptWhenModal() override
+                             {
+                                 exitModalState(0);
+                             }
+
+                         private:
+                             Accessor& mAccessor;
+                         };
+
+                         Editor editor(mAccessor);
+                         auto const buttonBounds = mNameButton.getScreenBounds();
+                         editor.setBounds(buttonBounds.getRight(), buttonBounds.getY(), 80, 22);
+                         editor.addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary);
+                         editor.enterModalState(true, nullptr, false);
+                         editor.runModalLoop();
+                     });
+        auto const layout = mAccessor.getAttr<AttrType::layout>();
+        for(auto const& identifier : layout)
+        {
+            auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+            if(trackAcsr.has_value())
+            {
+                auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+                menu.addItem("Show " + trackName + " properties", [=]
+                             {
+                                 auto var = std::make_unique<juce::DynamicObject>();
+                                 if(var != nullptr)
+                                 {
+                                     auto const position = juce::Desktop::getInstance().getMousePosition();
+                                     var->setProperty("x", position.x);
+                                     var->setProperty("y", position.y - 40);
+                                     trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                                 }
+                             });
+            }
+        }
+        return menu;
+    };
+
+    mNameButton.onClick = [=, this]()
+    {
+        getNameMenu().showAt(&mNameButton);
+    };
+
+    mDropdownButton.onClick = [=, this]()
+    {
+        juce::PopupMenu menu;
+        if(!mNameButton.isVisible())
+        {
+            menu.addSubMenu(mNameButton.getTooltip(), getNameMenu());
+        }
         auto addItem = [&](juce::Button& button)
         {
             if(!button.isVisible())
@@ -176,10 +202,10 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     auto const height = getHeight();
     auto const bottom = height - 2 * separator;
     auto const size = height - 4 * separator;
-    
+
     g.setColour(findColour(ColourIds::titleBackgroundColourId));
     g.fillRoundedRectangle(getLocalBounds().removeFromLeft(width).toFloat(), 2.0f);
-    
+
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
