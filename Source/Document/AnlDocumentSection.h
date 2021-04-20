@@ -36,7 +36,8 @@ namespace Document
         void lookAndFeelChanged() override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
-        
+        juce::KeyboardFocusTraverser* createFocusTraverser() override;
+
     private:
         void updateLayout();
 

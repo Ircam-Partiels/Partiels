@@ -272,4 +272,47 @@ void Document::Section::updateLayout()
     resized();
 }
 
+juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
+{
+    class FocusTraverser
+    : public juce::KeyboardFocusTraverser
+    {
+    public:
+        FocusTraverser(Section& section)
+        : mSection(section)
+        {
+        }
+
+        ~FocusTraverser() override = default;
+
+        juce::Component* getNextComponent(juce::Component* current) override
+        {
+            auto const wcontents = mSection.mDraggableTable.getComponents();
+            if(current == nullptr || wcontents.empty())
+            {
+                return juce::KeyboardFocusTraverser::getNextComponent(current);
+            }
+            auto it = std::find_if(wcontents.begin(), wcontents.end(), [&](auto const& wcontent)
+                                   {
+                                       auto* content = wcontent.getComponent();
+                                       return content != nullptr && (content == current || content->isParentOf(current));
+                                   });
+            if(it != wcontents.end() && std::next(it) != wcontents.end())
+            {
+                return std::next(it)->getComponent();
+            }
+            else
+            {
+                return wcontents.begin()->getComponent();
+            }
+            return juce::KeyboardFocusTraverser::getNextComponent(current);
+        }
+
+    private:
+        Section& mSection;
+    };
+
+    return std::make_unique<FocusTraverser>(*this).release();
+}
+
 ANALYSE_FILE_END
