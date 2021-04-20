@@ -109,13 +109,13 @@ void NumberField::setRange(juce::Range<double> const& range, double interval, ju
             }
             return numDecimals;
         };
-        auto numDecimals = getNumDecimals();
+        auto const numDecimals = getNumDecimals();
         if(mNumEditedDecimals != numDecimals)
         {
             mNumEditedDecimals = numDecimals;
             if(auto* editor = mLabel.getCurrentTextEditor())
             {
-                editor->setText(juce::String(mValue, mNumEditedDecimals));
+                editor->setText(juce::String(mValue, mNumEditedDecimals), false);
             }
         }
     }
@@ -173,7 +173,7 @@ juce::Justification NumberField::getJustificationType() const
 juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String const& newInput)
 {
     juce::ignoreUnused(editor);
-    if(mNumEditedDecimals < 0)
+    if(mNumEditedDecimals <= 0)
     {
         if(!newInput.containsOnly("-0123456789"))
         {
