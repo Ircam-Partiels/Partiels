@@ -179,15 +179,15 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
         mPropertyValueRangeMode.entry.setItemEnabled(3, false);
         if(pluginRange.has_value() && range == *pluginRange)
         {
-            mPropertyValueRangeMode.entry.setSelectedId(1);
+            mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
         }
         else if(resultsRange.has_value() && range == *resultsRange)
         {
-            mPropertyValueRangeMode.entry.setSelectedId(2);
+            mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
         }
         else
         {
-            mPropertyValueRangeMode.entry.setSelectedId(3);
+            mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
         }
     };
     
