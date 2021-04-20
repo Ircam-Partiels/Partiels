@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 
 namespace XmlParser
 {
-    template<typename T>
+    template <typename T>
     void toXml(juce::XmlElement& xml, juce::Identifier const& attributeName, T const& value)
     {
         if constexpr(std::is_same<T, int>::value)
@@ -80,16 +80,16 @@ namespace XmlParser
             xml.setAttribute(attributeName, juce::String(stream.str()));
         }
     }
-    
-    template<>
+
+    template <>
     void toXml<juce::Range<double>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Range<double> const& value);
-    
-    template<>
+
+    template <>
     void toXml<juce::File>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::File const& value);
-    
-    template<typename T>
+
+    template <typename T>
     auto fromXml(juce::XmlElement const& xml, juce::Identifier const& attributeName, T const& defaultValue)
-    -> T
+        -> T
     {
         if constexpr(std::is_same<T, int>::value)
         {
@@ -175,15 +175,14 @@ namespace XmlParser
             return defaultValue;
         }
     }
-    
-    template<>
+
+    template <>
     auto fromXml<juce::Range<double>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Range<double> const& defaultValue)
-    -> juce::Range<double>;
-    
-    
-    template<>
+        -> juce::Range<double>;
+
+    template <>
     auto fromXml<juce::File>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::File const& defaultValue)
-    -> juce::File;
-}
+        -> juce::File;
+} // namespace XmlParser
 
 ANALYSE_FILE_END
