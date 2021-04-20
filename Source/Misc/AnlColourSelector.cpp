@@ -46,17 +46,17 @@ void ColourButton::setCurrentColour(juce::Colour const& newColour, juce::Notific
     {
         mColour = newColour;
         repaint();
-        
+
         if(notificationType == juce::NotificationType::sendNotificationAsync)
         {
             juce::WeakReference<juce::Component> target(this);
             juce::MessageManager::callAsync([=, this]
-            {
-                if(target.get() != nullptr && onColourChanged != nullptr)
-                {
-                    onColourChanged(getCurrentColour());
-                }
-            });
+                                            {
+                                                if(target.get() != nullptr && onColourChanged != nullptr)
+                                                {
+                                                    onColourChanged(getCurrentColour());
+                                                }
+                                            });
         }
         else if(notificationType != juce::NotificationType::dontSendNotification)
         {
@@ -81,7 +81,7 @@ void ColourButton::mouseDrag(juce::MouseEvent const& event)
         juce::Button::mouseDrag(event);
         return;
     }
-    
+
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     if(dragContainer != nullptr && !dragContainer->isDragAndDropActive())
     {
@@ -90,7 +90,7 @@ void ColourButton::mouseDrag(juce::MouseEvent const& event)
         g.beginTransparencyLayer(0.6f);
         paintEntireComponent(g, false);
         g.endTransparencyLayer();
-        
+
         auto const p = -event.getMouseDownPosition();
         dragContainer->startDragging({}, this, snapshot, true, &p, &event.source);
     }
@@ -147,7 +147,7 @@ void ColourButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlig
         }
         g.restoreState();
     }
-    
+
     if(shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown)
     {
         g.setColour(findColour(ColourIds::borderOnColourId));
@@ -197,7 +197,7 @@ void ColourButton::itemDropped(juce::DragAndDropTarget::SourceDetails const& dra
         mDraggedColour = nullptr;
         return;
     }
-    
+
     setCurrentColour(mDraggedColour->mColour, juce::NotificationType::sendNotificationSync);
     itemDragExit(dragSourceDetails);
 }
