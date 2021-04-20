@@ -140,7 +140,15 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
             auto const wcontents = mStrechableSection.mDraggableTable.getComponents();
             if(current == nullptr || !isOpen || wcontents.empty())
             {
-                return juce::KeyboardFocusTraverser::getNextComponent(current);
+                auto* parent = mStrechableSection.getParentComponent();
+                if(parent != nullptr)
+                {
+                    if(auto* parentFocusTraverser = parent->createFocusTraverser())
+                    {
+                        return parentFocusTraverser->getNextComponent(&mStrechableSection);
+                    }
+                }
+                return juce::KeyboardFocusTraverser::getNextComponent(&mStrechableSection);
             }
             auto& section = mStrechableSection.mSection;
             if(current == &section || section.isParentOf(current))
@@ -163,7 +171,15 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
                     return std::next(it)->getComponent();
                 }
             }
-            return juce::KeyboardFocusTraverser::getNextComponent(current);
+            auto* parent = mStrechableSection.getParentComponent();
+            if(parent != nullptr)
+            {
+                if(auto* parentFocusTraverser = parent->createFocusTraverser())
+                {
+                    return parentFocusTraverser->getNextComponent(&mStrechableSection);
+                }
+            }
+            return juce::KeyboardFocusTraverser::getNextComponent(&mStrechableSection);
         }
 
     private:
