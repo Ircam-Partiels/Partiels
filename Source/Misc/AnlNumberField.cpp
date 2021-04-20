@@ -41,7 +41,7 @@ NumberField::NumberField()
     {
         setValue(mLabel.getText().getDoubleValue(), juce::NotificationType::sendNotificationSync);
     };
-    
+
     addAndMakeVisible(mLabel);
 }
 
@@ -52,7 +52,7 @@ void NumberField::setValue(double value, juce::NotificationType const notificati
         value = std::round((value - mRange.getStart()) / mInterval) * mInterval + mRange.getStart();
     }
     value = mRange.clipValue(value);
-    auto const numDecimals = mNumDisplayedDecimals >= 0 ? mNumDisplayedDecimals : (mNumEditedDecimals > 0 ? 2 : 0 );
+    auto const numDecimals = mNumDisplayedDecimals >= 0 ? mNumDisplayedDecimals : (mNumEditedDecimals > 0 ? 2 : 0);
     mLabel.setText(juce::String(value, numDecimals) + mSuffix, juce::NotificationType::dontSendNotification);
     if(std::abs(value - mValue) > std::numeric_limits<double>::epsilon())
     {
@@ -68,12 +68,12 @@ void NumberField::setValue(double value, juce::NotificationType const notificati
         {
             juce::WeakReference<juce::Component> target(this);
             juce::MessageManager::callAsync([=, this]
-            {
-                if(target.get() != nullptr && onValueChanged != nullptr)
-                {
-                    onValueChanged(getValue());
-                }
-            });
+                                            {
+                                                if(target.get() != nullptr && onValueChanged != nullptr)
+                                                {
+                                                    onValueChanged(getValue());
+                                                }
+                                            });
         }
     }
 }
@@ -92,7 +92,7 @@ void NumberField::setRange(juce::Range<double> const& range, double interval, ju
         mRange = range;
         mInterval = interval;
         setValue(mValue, notification);
-        
+
         auto getNumDecimals = [&]()
         {
             if(interval <= 0.0)

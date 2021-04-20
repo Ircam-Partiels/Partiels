@@ -15,25 +15,25 @@ public:
     //! @brief The constructor.
     NumberField();
     ~NumberField() override = default;
-    
+
     void setValue(double value, juce::NotificationType const notification);
     double getValue() const;
-    
+
     void setRange(juce::Range<double> const& range, double newInterval, juce::NotificationType const notification);
     juce::Range<double> getRange() const;
     double getInterval() const;
 
     void setTextValueSuffix(juce::String const& suffix);
     juce::String getTextValueSuffix() const;
-    
+
     void setNumDecimalsDisplayed(int numDecimals);
     int getNumDecimalsDisplayed() const;
-    
+
     void setJustificationType(juce::Justification newJustification);
     juce::Justification getJustificationType() const;
 
     std::function<void(double)> onValueChanged = nullptr;
-    
+
     // Forward to internal juce::Label
     bool isBeingEdited() const;
     void setEditable(bool editOnSingleClick, bool editOnDoubleClick, bool lossOfFocusDiscards);
@@ -41,18 +41,17 @@ public:
     void setFont(juce::Font const& newFont);
     std::function<void()> onEditorShow = nullptr;
     std::function<void()> onEditorHide = nullptr;
-    
+
     // juce::Component
     void resized() override;
-    
+
     // juce::SettableTooltipClient
     void setTooltip(juce::String const& newTooltip) override;
-    
+
 private:
-    
     // juce::TextEditor::InputFilter
     juce::String filterNewText(juce::TextEditor& editor, juce::String const& newInput) override;
-    
+
     juce::Label mLabel;
     juce::String mSuffix;
     juce::Range<double> mRange = {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()};
