@@ -63,6 +63,11 @@ void DraggableTable::setComponents(std::vector<ComponentRef> const& components)
     resized();
 }
 
+std::vector<juce::Component::SafePointer<juce::Component>> DraggableTable::getComponents()
+{
+    return mContents;
+}
+
 void DraggableTable::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
 {
     juce::ignoreUnused(component, wasMoved);

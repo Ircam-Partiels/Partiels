@@ -17,6 +17,7 @@ public:
     ~DraggableTable() override = default;
 
     void setComponents(std::vector<ComponentRef> const& component);
+    std::vector<juce::Component::SafePointer<juce::Component>> getComponents();
 
     std::function<void(juce::String const& identifier, size_t index)> onComponentDropped = nullptr;
 
