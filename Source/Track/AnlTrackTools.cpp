@@ -13,17 +13,17 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
             {
                 return DisplayType::markers;
             }
-                break;
+            break;
             case 1:
             {
                 return DisplayType::segments;
             }
-                break;
+            break;
             default:
             {
                 return DisplayType::grid;
             }
-                break;
+            break;
         }
     }
     return DisplayType::segments;
@@ -65,9 +65,9 @@ juce::String Track::Tools::getMarkerText(std::vector<Plugin::Result> const& resu
 {
     auto const rt = secondsToRealTime(time - timeEpsilon);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-    {
-        return result.hasTimestamp && getEndRealTime(result) >= rt;
-    });
+                           {
+                               return result.hasTimestamp && getEndRealTime(result) >= rt;
+                           });
     if(it != results.cend() && getEndRealTime(*it) <= secondsToRealTime(time))
     {
         return it->label.empty() ? output.unit : (it->label + output.unit);
@@ -79,9 +79,9 @@ juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& res
 {
     auto const rt = secondsToRealTime(time);
     auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-    {
-        return result.hasTimestamp && getEndRealTime(result) >= rt;
-    });
+                                     {
+                                         return result.hasTimestamp && getEndRealTime(result) >= rt;
+                                     });
     if(second == results.cend())
     {
         return "-";
@@ -127,9 +127,9 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
 {
     auto const rt = secondsToRealTime(time);
     auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-    {
-        return result.hasTimestamp && getEndRealTime(result) >= rt;
-    });
+                           {
+                               return result.hasTimestamp && getEndRealTime(result) >= rt;
+                           });
     if(it == results.cend() || it->values.empty())
     {
         return "-";
@@ -157,19 +157,19 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size
         {
             return Tools::getMarkerText(*results, output, time, timeEpsilon);
         }
-            break;
+        break;
         case DisplayType::segments:
         {
             return Tools::getSegmentText(*results, output, time);
         }
-            break;
+        break;
         case DisplayType::grid:
         {
             auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
             auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");
-            return "(" + binName + ") " +  Tools::getGridText(*results, output, time, bin);
+            return "(" + binName + ") " + Tools::getGridText(*results, output, time, bin);
         }
-            break;
+        break;
     }
     anlStrongAssert(false);
     return "";
@@ -179,7 +179,7 @@ juce::String Track::Tools::getProcessingTooltip(Accessor const& acsr)
 {
     auto const& state = acsr.getAttr<AttrType::processing>();
     auto const& warnings = acsr.getAttr<AttrType::warnings>();
-    
+
     auto const name = acsr.getAttr<AttrType::name>() + ": ";
     if(std::get<0>(state))
     {
@@ -265,9 +265,9 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(std::shared_ptr<const std::
     }
     auto const firstRange = Zoom::Range::emptyRange(static_cast<double>(results->front().values.size()));
     return std::accumulate(results->cbegin() + 1, results->cend(), firstRange, [](auto const r, auto const& v)
-    {
-        return r.getUnionWith({static_cast<double>(v.values.size()), static_cast<double>(v.values.size())});
-    });
+                           {
+                               return r.getUnionWith({static_cast<double>(v.values.size()), static_cast<double>(v.values.size())});
+                           });
 }
 
 ANALYSE_FILE_END
