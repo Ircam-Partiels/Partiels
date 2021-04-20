@@ -94,6 +94,11 @@ void ConcertinaTable::setComponents(std::vector<ComponentRef> const& components)
     resized();
 }
 
+std::vector<juce::Component::SafePointer<juce::Component>> ConcertinaTable::getComponents()
+{
+    return mContents;
+}
+
 void ConcertinaTable::setOpen(bool isOpen, bool shouldAnimate)
 {
     mOpened = isOpen;
@@ -115,6 +120,11 @@ void ConcertinaTable::setOpen(bool isOpen, bool shouldAnimate)
         mSizeRatio = newRatio;
         componentMovedOrResized(*this, false, true);
     }
+}
+
+bool ConcertinaTable::isOpen() const
+{
+    return mOpened;
 }
 
 void ConcertinaTable::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)

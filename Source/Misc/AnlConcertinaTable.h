@@ -29,7 +29,9 @@ public:
 
     juce::String getTitle() const;
     void setComponents(std::vector<ComponentRef> const& component);
+    std::vector<juce::Component::SafePointer<juce::Component>> getComponents();
     void setOpen(bool isOpen, bool shouldAnimate = false);
+    bool isOpen() const;
 
     // juce::Component
     void resized() override;
