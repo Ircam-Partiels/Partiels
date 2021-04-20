@@ -1,7 +1,8 @@
 #include "AnlDocumentDirector.h"
-#include "AnlDocumentAudioReader.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "../Group/AnlGroupTools.h"
+#include "../Zoom/AnlZoomTools.h"
+#include "AnlDocumentAudioReader.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -9,7 +10,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 , mPluginListTable(pluginListAccessor, pluginListScanner)
-{    
+{
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
     {
         switch(attribute)
@@ -36,7 +37,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 {
                     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
                 }
-                
+
                 for(auto const& anl : mTracks)
                 {
                     if(anl != nullptr)
@@ -45,12 +46,12 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     }
                 }
             }
-                break;
+            break;
             case AttrType::layout:
                 break;
         }
     };
-    
+
     mAccessor.onAccessorInserted = [&](AcsrType type, size_t index, NotificationType notification)
     {
         juce::ignoreUnused(notification);
@@ -69,14 +70,14 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 auto director = std::make_unique<Track::Director>(trackAcsr, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
-                
+
                 auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
                 for(auto& groupAcsr : groupAcsrs)
                 {
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
             }
-                break;
+            break;
             case AcsrType::groups:
             {
                 auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -89,7 +90,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 auto director = std::make_unique<Group::Director>(groupAcsr);
                 anlStrongAssert(director != nullptr);
                 mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
-                
+
                 groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
             }
             case AcsrType::transport:
@@ -97,7 +98,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 break;
         }
     };
-    
+
     mAccessor.onAccessorErased = [&](AcsrType type, size_t index, NotificationType notification)
     {
         juce::ignoreUnused(notification);
@@ -111,7 +112,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     return;
                 }
                 mTracks.erase(mTracks.begin() + static_cast<long>(index));
-                
+
                 auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
                 auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
                 for(auto& groupAcsr : groupAcsrs)
@@ -119,7 +120,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
             }
-                break;
+            break;
             case AcsrType::groups:
             {
                 anlStrongAssert(index < mGroups.size());
@@ -134,7 +135,7 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 break;
         }
     };
-    
+
     auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     transportAcsr.onAttrUpdated = [&](Transport::AttrType attribute, NotificationType notification)
     {
@@ -145,21 +146,21 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                 break;
             case Transport::AttrType::startPlayhead:
             {
-                auto const time = transportAcsr .getAttr<Transport::AttrType::startPlayhead>();
+                auto const time = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
                 zoomAcsr.setAttr<Zoom::AttrType::anchor>(std::make_tuple(false, time), notification);
                 if(!transportAcsr.getAttr<Transport::AttrType::playback>())
                 {
                     transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(time, notification);
                 }
             }
-                break;
+            break;
             case Transport::AttrType::runningPlayhead:
             {
                 auto const time = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
                 auto const numAnlAcsrs = mAccessor.getNumAcsr<AcsrType::tracks>();
                 for(size_t i = 0; i < numAnlAcsrs; ++i)
                 {
-                    auto& trackAcsr  = mAccessor.getAcsr<AcsrType::tracks>(i);
+                    auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(i);
                     trackAcsr.setAttr<Track::AttrType::time>(time, notification);
                 }
                 auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -168,14 +169,14 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
                     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
                 }
             }
-                break;
+            break;
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
             case Transport::AttrType::gain:
                 break;
         }
     };
-    
+
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = [&](Zoom::AttrType attribute, NotificationType notification)
     {
@@ -185,12 +186,12 @@ Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginLis
             {
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
             }
-                break;
+            break;
             case Zoom::AttrType::minimumLength:
             {
                 zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / mSampleRate, notification);
             }
-                break;
+            break;
             case Zoom::AttrType::visibleRange:
             case Zoom::AttrType::anchor:
                 break;
@@ -223,19 +224,19 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
             mModalWindow->exitModalState(0);
             mModalWindow = nullptr;
         }
-        
+
         if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
         {
             addGroup(AlertType::silent, notification);
         }
-        
+
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
         anlStrongAssert(!groupAcsrs.empty());
         if(groupAcsrs.empty())
         {
             return;
         }
-        
+
         auto const index = mAccessor.getNumAcsr<AcsrType::tracks>();
         if(!mAccessor.insertAcsr<AcsrType::tracks>(index, notification))
         {
@@ -248,7 +249,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
             }
             return;
         }
-        
+
         auto const identifier = juce::Uuid().toString();
 
         auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
@@ -286,10 +287,10 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
 
         sanitize(notification);
     };
-    
+
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
     auto const bgColor = laf.findColour(juce::ResizableWindow::backgroundColourId);
-    
+
     juce::DialogWindow::LaunchOptions o;
     o.dialogTitle = juce::translate("Add Analysis...");
     o.content.setNonOwned(&mPluginListTable);
@@ -310,15 +311,15 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
 {
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
-    {
-        return acsr.getAttr<Track::AttrType::identifier>() == identifier;
-    });
+                                 {
+                                     return acsr.getAttr<Track::AttrType::identifier>() == identifier;
+                                 });
     anlWeakAssert(it != trackAcsrs.cend());
     if(it == trackAcsrs.cend())
     {
         return;
     }
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
     auto const title = juce::translate("Remove Analysis");
     auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Track::AttrType::name>());
@@ -326,7 +327,7 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
     {
         return;
     }
-  
+
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     for(auto& groupAcsr : groupAcsrs)
     {
@@ -337,29 +338,29 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
+
     sanitize(notification);
 }
-
 
 void Document::Director::moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
 {
     juce::ignoreUnused(alertType);
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
-    {
-        return acsr.getAttr<Track::AttrType::identifier>() == trackIdentifier;
-    });
+                                 {
+                                     return acsr.getAttr<Track::AttrType::identifier>() == trackIdentifier;
+                                 });
     anlWeakAssert(it != trackAcsrs.cend());
     if(it == trackAcsrs.cend())
     {
         return;
     }
-    
+
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto goupIt = std::find_if(groupAcsrs.begin(), groupAcsrs.end(), [&](auto const& groupAcsr)
-    {
-        return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == groupIdentifier;
-    });
+                               {
+                                   return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == groupIdentifier;
+                               });
     anlWeakAssert(goupIt != groupAcsrs.end());
     if(goupIt == groupAcsrs.end())
     {
@@ -371,9 +372,9 @@ void Document::Director::moveTrack(AlertType const alertType, juce::String const
         if(std::addressof(*goupIt) == std::addressof(groupAcsr))
         {
             if(std::none_of(gIds.cbegin(), gIds.cend(), [&](auto const& identifier)
-            {
-                return identifier == trackIdentifier;
-            }))
+                            {
+                                return identifier == trackIdentifier;
+                            }))
             {
                 gIds.insert(gIds.cbegin(), trackIdentifier);
             }
@@ -407,13 +408,13 @@ void Document::Director::addGroup(AlertType const alertType, NotificationType co
         }
         return;
     }
-    
+
     auto const identifier = juce::Uuid().toString();
-    
+
     auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
     groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index + 1_z), notification);
-    
+
     auto layout = mAccessor.getAttr<AttrType::layout>();
     layout.push_back(identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
@@ -424,15 +425,15 @@ void Document::Director::removeGroup(AlertType const alertType, juce::String con
 {
     auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
-    {
-        return acsr.getAttr<Group::AttrType::identifier>() == identifier;
-    });
+                                 {
+                                     return acsr.getAttr<Group::AttrType::identifier>() == identifier;
+                                 });
     anlWeakAssert(it != groupAcsrs.cend());
     if(it == groupAcsrs.cend())
     {
         return;
     }
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
     auto const title = juce::translate("Remove Group");
     auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" group from the project? This will delete all the analysis and lose everything!!!!!").replace("ANLNAME", it->get().getAttr<Group::AttrType::name>());
@@ -440,15 +441,16 @@ void Document::Director::removeGroup(AlertType const alertType, juce::String con
     {
         return;
     }
-    
+
     auto const layout = it->get().getAttr<Group::AttrType::layout>();
     for(auto const& tarckIdentifier : layout)
     {
         removeTrack(AlertType::silent, tarckIdentifier, notification);
     }
-    
+
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
+
     sanitize(notification);
 }
 
@@ -458,7 +460,7 @@ void Document::Director::sanitize(NotificationType const notification)
     {
         return;
     }
-    
+
     auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
     if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
@@ -473,13 +475,13 @@ void Document::Director::sanitize(NotificationType const notification)
         {
             auto const trackIdentifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
             if(std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-            {
-                auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
-                return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
-                {
-                    return identifier == trackIdentifier;
-                });
-            }))
+                            {
+                                auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
+                                return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
+                                                   {
+                                                       return identifier == trackIdentifier;
+                                                   });
+                            }))
             {
                 auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
                 groupLayout.push_back(trackIdentifier);
@@ -487,15 +489,15 @@ void Document::Director::sanitize(NotificationType const notification)
             }
         }
     }
-    
+
     auto layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& groupAcsr : groupAcsrs)
     {
         auto const groupIdentifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
         if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
-        {
-            return identifier == groupIdentifier;
-        }))
+                        {
+                            return identifier == groupIdentifier;
+                        }))
         {
             layout.push_back(groupIdentifier);
         }
