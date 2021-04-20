@@ -11,16 +11,16 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     mTimeRuler.setTickPowerInterval(10.0, 2.0);
     mTimeRuler.setMaximumStringWidth(70.0);
     mTimeRuler.setValueAsStringMethod([](double value)
-    {
-        return Format::secondsToString(value, {":", ":", ":", ""});
-    });
-    
+                                      {
+                                          return Format::secondsToString(value, {":", ":", ":", ""});
+                                      });
+
     mTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
-    
+
     mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
@@ -28,7 +28,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
-    
+
     mTooltipButton.setClickingTogglesState(true);
     mTooltipButton.onClick = [&]()
     {
@@ -44,10 +44,13 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
         }
     };
     mTooltipButton.setToggleState(true, juce::NotificationType::sendNotification);
-    
+
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
-    
+
+    setWantsKeyboardFocus(true);
+    setFocusContainer(true);
+
     setSize(480, 200);
     addAndMakeVisible(mFileInfoButtonDecoration);
     addAndMakeVisible(mTooltipButton);
@@ -58,7 +61,7 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mTimeScrollBar);
-    
+
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -70,10 +73,10 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
             {
                 updateLayout();
             }
-                break;
+            break;
         }
     };
-    
+
     mListener.onAccessorInserted = mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr, index);
@@ -87,10 +90,10 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
             {
                 updateLayout();
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -105,7 +108,7 @@ void Document::Section::resized()
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
     auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
-    
+
     auto topPart = bounds.removeFromTop(28);
     mFileInfoButtonDecoration.setBounds(topPart.removeFromLeft(leftSize));
     mTooltipButton.setBounds(topPart.removeFromRight(rightSize).reduced(4));
@@ -148,7 +151,7 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
     auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const offset = static_cast<double>(wheel.deltaX) * visibleRange.getLength();
     timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
-    
+
     auto viewportPosition = mViewport.getViewPosition();
     viewportPosition.y += static_cast<int>(std::round(wheel.deltaY * 14.0f * 16.0f));
     mViewport.setViewPosition(viewportPosition);
@@ -164,13 +167,13 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
     auto const globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
     auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    
+
     auto const& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     auto const anchor = transportAcsr.getAttr<Transport::AttrType::playback>() ? transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() : transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
 
     auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
     auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
-    
+
     auto const minDistance = timeZoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
     auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
     auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
@@ -210,20 +213,20 @@ void Document::Section::updateLayout()
         }
         return groupSection;
     };
-    
+
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto it = mGroupSections.begin();
     while(it != mGroupSections.end())
     {
         if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const& identifer)
-        {
-            return identifer == it->first;
-        })
-        || std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-        {
-            return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == it->first;
-        }))
+                        {
+                            return identifer == it->first;
+                        }) ||
+           std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+                        {
+                            return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == it->first;
+                        }))
         {
             it = mGroupSections.erase(it);
         }
@@ -232,7 +235,7 @@ void Document::Section::updateLayout()
             ++it;
         }
     }
-    
+
     std::vector<ConcertinaTable::ComponentRef> components;
     components.reserve(layout.size());
     for(auto const& identifier : layout)
@@ -241,9 +244,9 @@ void Document::Section::updateLayout()
         if(sectionIt == mGroupSections.cend())
         {
             auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-            {
-                return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
-            });
+                                        {
+                                            return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
+                                        });
             if(groupIt != groupAcsrs.cend())
             {
                 auto groupSection = createGroupSection(groupIt->get());
@@ -264,7 +267,7 @@ void Document::Section::updateLayout()
             components.push_back(*sectionIt->second.get());
         }
     }
-    
+
     mDraggableTable.setComponents(components);
     resized();
 }
