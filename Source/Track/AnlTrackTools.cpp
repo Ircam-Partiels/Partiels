@@ -223,28 +223,39 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(std::shared_ptr<const std
         return std::optional<Zoom::Range>();
     }
     auto it = std::find_if(results->cbegin(), results->cend(), [](auto const& v)
-    {
-        return !v.values.empty();
-    });
+                           {
+                               if(v.values.empty())
+                               {
+                                   return false;
+                               }
+                               auto const [min, max] = std::minmax_element(v.values.cbegin(), v.values.cend());
+                               anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
+                               if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
+                               {
+                                   return false;
+                               }
+                               return true;
+                           });
     if(it == results->cend())
     {
         return std::optional<Zoom::Range>();
     }
     auto const [min, max] = std::minmax_element(it->values.cbegin(), it->values.cend());
-    if(it->values.size() == 1)
-    {
-        return Zoom::Range{static_cast<double>(*min), static_cast<double>(std::max(*max, *min + std::numeric_limits<float>::epsilon()))};
-    }
     auto const firstRange = Zoom::Range{static_cast<double>(*min), static_cast<double>(*max)};
-    return std::accumulate(results->cbegin() + 1, results->cend(), firstRange, [](auto const r, auto const& v)
-    {
-        if(v.values.empty())
-        {
-            return r;
-        }
-        auto const [min, max] = std::minmax_element(v.values.cbegin(), v.values.cend());
-        return r.getUnionWith({static_cast<double>(*min), static_cast<double>(*max)});
-    });
+    return std::accumulate(std::next(it), results->cend(), firstRange, [](auto const r, auto const& v)
+                           {
+                               if(v.values.empty())
+                               {
+                                   return r;
+                               }
+                               auto const [min, max] = std::minmax_element(v.values.cbegin(), v.values.cend());
+                               anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
+                               if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
+                               {
+                                   return r;
+                               }
+                               return r.getUnionWith({static_cast<double>(*min), static_cast<double>(*max)});
+                           });
 }
 
 std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& description)
