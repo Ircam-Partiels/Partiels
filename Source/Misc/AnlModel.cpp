@@ -10,38 +10,41 @@ struct DummyAttr
 
 namespace XmlParser
 {
-    template<>
+    template <>
     void toXml<DummyAttr>(juce::XmlElement& xml, juce::Identifier const& attributeName, DummyAttr const& value)
     {
         juce::ignoreUnused(value);
         xml.setAttribute(attributeName, "DummyAttr");
     }
-    
-    template<>
+
+    template <>
     auto fromXml<DummyAttr>(juce::XmlElement const& xml, juce::Identifier const& attributeName, DummyAttr const& value)
-    -> DummyAttr
+        -> DummyAttr
     {
         juce::ignoreUnused(xml, attributeName, value);
         anlWeakAssert(xml.hasAttribute(attributeName));
         anlWeakAssert(xml.getStringAttribute(attributeName) == "DummyAttr");
         return DummyAttr();
     }
-}
+} // namespace XmlParser
 
 class ModelUnitTest
 : public juce::UnitTest
 {
 public:
-    
-    ModelUnitTest() : juce::UnitTest("Model", "Model") {}
-    
+    ModelUnitTest()
+    : juce::UnitTest("Model", "Model")
+    {
+    }
+
     ~ModelUnitTest() override = default;
-    
+
     void runTest() override
     {
         std::vector<std::unique_ptr<std::monostate>> vec;
-        
+
         // Declare the name (type) of the attributes of the data model
+        // clang-format off
         enum AttrType : size_t
         {
               attr0
@@ -52,8 +55,10 @@ public:
             , attr5
             , attr6
         };
-        
+        // clang-format on
+
         // Declare the data model container
+        // clang-format off
         using ModelCtnr = Model::Container
         < Model::Attr<AttrType::attr0, int, Model::Flag::basic>
         , Model::Attr<AttrType::attr1, int, Model::Flag::notifying>
@@ -63,17 +68,18 @@ public:
         , Model::Attr<AttrType::attr5, std::vector<double>, Model::Flag::saveable | Model::Flag::comparable>
         , Model::Attr<AttrType::attr6, DummyAttr, Model::Flag::basic>
         >;
-        
+        // clang-format on
+
         // Declare the data model accessor
         class ModelAcsr
         : public Model::Accessor<ModelAcsr, ModelCtnr>
         {
             using Model::Accessor<ModelAcsr, ModelCtnr>::Accessor;
         };
-        
+
         // Declare the data model listener
         using ModelLtnr = ModelAcsr::Listener;
-        
+
         beginTest("attribute flags");
         {
             expect(magic_enum::enum_integer(Model::Flag::ignored) == 0);
@@ -82,11 +88,11 @@ public:
             expect(magic_enum::enum_integer(Model::Flag::comparable) == 4);
             expect(magic_enum::enum_integer(Model::Flag::basic) == 7);
         }
-        
+
         beginTest("accessor default constructor");
         {
             ModelCtnr ctnr;
-            ModelAcsr acsr {ctnr};
+            ModelAcsr acsr{ctnr};
             expectEquals(acsr.getAttr<AttrType::attr0>(), 0);
             expectEquals(acsr.getAttr<AttrType::attr1>(), 0);
             expectEquals(acsr.getAttr<AttrType::attr2>(), 0.0f);
@@ -94,7 +100,7 @@ public:
             expectEquals(acsr.getAttr<AttrType::attr4>(), std::string{});
             expect(acsr.getAttr<AttrType::attr5>() == std::vector<double>{});
         }
-        
+
         beginTest("accessor constructor with model");
         {
             ModelCtnr ctnr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
@@ -106,7 +112,7 @@ public:
             expectEquals(acsr.getAttr<AttrType::attr4>(), std::string{"Jules"});
             expect(acsr.getAttr<AttrType::attr5>() == std::vector<double>{7.0, 8.0});
         }
-        
+
         beginTest("accessor setting attribute");
         {
             ModelCtnr ctnr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
@@ -124,7 +130,7 @@ public:
             expectEquals(acsr.getAttr<AttrType::attr4>(), std::string{"Jim"});
             expect(acsr.getAttr<AttrType::attr5>() == std::vector<double>{8.0, 9.0});
         }
-        
+
         beginTest("accessor from container");
         {
             ModelCtnr ctnr1;
@@ -139,7 +145,7 @@ public:
             expectNotEquals(acsr1.getAttr<AttrType::attr4>(), acsr2.getAttr<AttrType::attr4>());
             expect(acsr1.getAttr<AttrType::attr5>() == acsr2.getAttr<AttrType::attr5>());
         }
-        
+
         beginTest("accessor xml");
         {
             ModelCtnr ctnr1;
@@ -159,7 +165,7 @@ public:
             expectNotEquals(acsr1.getAttr<AttrType::attr4>(), acsr2.getAttr<AttrType::attr4>());
             expect(acsr1.getAttr<AttrType::attr5>() == acsr2.getAttr<AttrType::attr5>());
         }
-            
+
         beginTest("is equivalent");
         {
             ModelCtnr ctnr1;
@@ -172,20 +178,20 @@ public:
             expect(acsr1.isEquivalentTo(acsr2) == true);
             expect(acsr2.isEquivalentTo(acsr1) == true);
         }
-        
+
         beginTest("accessor listener");
         {
             std::array<bool, magic_enum::enum_count<AttrType>()> notifications;
-            
+
             ModelLtnr ltnr;
             ltnr.onAttrChanged = [&](ModelAcsr const& acsr, AttrType attribute)
             {
                 juce::ignoreUnused(acsr);
                 notifications[magic_enum::enum_integer(attribute)] = true;
             };
-            
+
             ModelAcsr acsr({{1}, {2}, {3.0f}, {{4, 5, 6}}, {"Jules"}, {{7.0, 8.0}}, {}});
-            
+
             std::fill(notifications.begin(), notifications.end(), false);
             acsr.addListener(ltnr, NotificationType::synchronous);
             expect(notifications[magic_enum::enum_integer(AttrType::attr0)] == true);
@@ -194,7 +200,7 @@ public:
             expect(notifications[magic_enum::enum_integer(AttrType::attr3)] == false);
             expect(notifications[magic_enum::enum_integer(AttrType::attr4)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr5)] == false);
-            
+
             std::fill(notifications.begin(), notifications.end(), false);
             acsr.setAttr<AttrType::attr0>(2, NotificationType::synchronous);
             acsr.setAttr<AttrType::attr1>(3, NotificationType::synchronous);
@@ -208,7 +214,7 @@ public:
             expect(notifications[magic_enum::enum_integer(AttrType::attr3)] == false);
             expect(notifications[magic_enum::enum_integer(AttrType::attr4)] == true);
             expect(notifications[magic_enum::enum_integer(AttrType::attr5)] == false);
-            
+
             acsr.removeListener(ltnr);
         }
     }
