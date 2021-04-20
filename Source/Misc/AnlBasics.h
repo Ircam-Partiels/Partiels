@@ -1,28 +1,29 @@
 #pragma once
 
-#define ANALYSE_FILE_BEGIN namespace Anl {
-    
-#define ANALYSE_FILE_END }
-
 #include "JuceHeader.h"
 
-#include <mutex>
-#include <set>
-#include <utility>
 #include <atomic>
-#include <memory>
-#include <thread>
-#include <future>
-#include <functional>
-#include <type_traits>
-#include <tuple>
-#include <variant>
-#include <numeric>
 #include <cassert>
+#include <functional>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <numeric>
 #include <optional>
+#include <set>
+#include <thread>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+// clang-format off
+#define ANALYSE_FILE_BEGIN namespace Anl {
+#define ANALYSE_FILE_END }
 
 #define anlStrongAssert(condition) juce::ignoreUnused(condition); assert(condition)
 #define anlWeakAssert jassert
+// clang-format on
 
 ANALYSE_FILE_BEGIN
 
@@ -32,7 +33,7 @@ namespace Logger
     {
         juce::Logger::writeToLog(juce::String("[") + level + "]" + "[" + domain + "]" + "[" + functionName + ":" + juce::String(line) + "] " + message);
     }
-}
+} // namespace Logger
 
 namespace Format
 {
@@ -47,7 +48,7 @@ namespace Format
         auto const ms = static_cast<int>(std::floor(time * 1000.0));
         return juce::String::formatted("%02d" + separators[0] + "%02d" + separators[1] + "%02d" + separators[2] + "%03d" + separators[3], h, m, s, ms);
     }
-}
+} // namespace Format
 
 namespace App
 {
@@ -55,24 +56,26 @@ namespace App
     {
         return juce::String(".") + APP_DOC_PREFIX + suffix;
     }
-    
+
     inline juce::String getFileWildCardFor(juce::String const& suffix)
     {
         return "*" + getFileExtensionFor(suffix);
     }
-}
+} // namespace App
 
+// clang-format off
 enum class NotificationType : bool
 {
-    synchronous = false,
-    asynchronous = true
+      synchronous = false
+    , asynchronous = true
 };
 
 enum class AlertType : bool
 {
-    silent = false,
-    window = true
+      silent = false
+    , window = true
 };
+// clang-format on
 
 ANALYSE_FILE_END
 
@@ -86,11 +89,22 @@ ANALYSE_FILE_END
 
 // This method can be used to test if a class/struct is a specialization of template class
 // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
-template<typename T, template<typename...> class Ref> struct is_specialization : std::false_type {};
-template<template<typename...> class Ref, typename... Args> struct is_specialization<Ref<Args...>, Ref> : std::true_type {};
+template <typename T, template <typename...> class Ref>
+struct is_specialization : std::false_type
+{
+};
+template <template <typename...> class Ref, typename... Args>
+struct is_specialization<Ref<Args...>, Ref> : std::true_type
+{
+};
 
-constexpr std::size_t operator ""_z (unsigned long long n) { return static_cast<std::size_t>(n); }
+constexpr std::size_t operator""_z(unsigned long long n)
+{
+    return static_cast<std::size_t>(n);
+}
 
 // https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
-template <std::size_t ... Is> constexpr auto index_sequence_reverse (std::index_sequence<Is...> const &) -> decltype(std::index_sequence<sizeof...(Is)-1U-Is...>{});
-template <std::size_t N> using make_index_sequence_reverse = decltype(index_sequence_reverse(std::make_index_sequence<N>{}));
+template <std::size_t... Is>
+constexpr auto index_sequence_reverse(std::index_sequence<Is...> const&) -> decltype(std::index_sequence<sizeof...(Is) - 1U - Is...>{});
+template <std::size_t N>
+using make_index_sequence_reverse = decltype(index_sequence_reverse(std::make_index_sequence<N>{}));
