@@ -93,7 +93,7 @@ void FloatingWindowContainer::show(juce::Point<int> const& pt)
     if(mFloatingWindow.getContentComponent() == nullptr)
     {
         auto const& desktop = juce::Desktop::getInstance();
-        juce::Rectangle<int> const bounds {pt.x, pt.y, mFloatingWindow.getWidth(), mFloatingWindow.getHeight()};
+        juce::Rectangle<int> const bounds{pt.x, pt.y, mFloatingWindow.getWidth(), mFloatingWindow.getHeight()};
         auto const* display = desktop.getDisplays().getDisplayForPoint(pt);
         anlStrongAssert(display != nullptr);
         if(display != nullptr)
@@ -102,7 +102,7 @@ void FloatingWindowContainer::show(juce::Point<int> const& pt)
         }
         mFloatingWindow.setContentNonOwned(&mContent, true);
     }
-    
+
     mFloatingWindow.setVisible(true);
     mFloatingWindow.toFront(false);
 }
