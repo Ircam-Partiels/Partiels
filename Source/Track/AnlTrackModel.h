@@ -34,13 +34,14 @@ namespace Track
         }
     };
     
+    // clang-format off
     enum class WarningType
     {
           none
         , plugin
         , state
     };
-    
+
     enum class AttrType : size_t
     {
           identifier
@@ -61,13 +62,18 @@ namespace Track
         , processing
         , focused
     };
-    
+
     enum class AcsrType : size_t
     {
           valueZoom
         , binZoom
     };
-    
+
+    enum class SignalType
+    {
+          showProperties
+    };
+
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
@@ -92,9 +98,11 @@ namespace Track
     < Model::Acsr<AcsrType::valueZoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     , Model::Acsr<AcsrType::binZoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
     >;
+    // clang-format on
 
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
+    , public Broadcaster<Accessor, SignalType>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
