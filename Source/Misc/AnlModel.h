@@ -602,24 +602,24 @@ namespace Model
 
             detail::for_each(accessor.mAccessors, [&](auto& d)
                              {
-                                 if(!result)
-                                 {
-                                     return;
-                                 }
                                  using element_type = typename std::remove_reference<decltype(d)>::type;
                                  if constexpr((element_type::flags & Flag::comparable) != 0)
                                  {
+                                     if(!result)
+                                     {
+                                         return;
+                                     }
                                      auto constexpr acsr_type = element_type::type;
                                      auto const acsrs = getAcsrs<acsr_type>();
-                                    result = acsrs.size() == d.accessors.size());
-                                    if(!result)
-                                    {
-                                        return;
-                                    }
-                                    result = std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
-                                                        {
-                                                            return ctnr != nullptr && acsr.get().isEquivalentTo(*(ctnr.get()));
-                                                        });
+                                     result = acsrs.size() == d.accessors.size();
+                                     if(!result)
+                                     {
+                                         return;
+                                     }
+                                     result = std::equal(acsrs.cbegin(), acsrs.cend(), d.accessors.cbegin(), [](auto const& acsr, auto const& ctnr)
+                                                         {
+                                                             return ctnr != nullptr && acsr.get().isEquivalentTo(*(ctnr.get()));
+                                                         });
                                  }
                              });
             return result;
