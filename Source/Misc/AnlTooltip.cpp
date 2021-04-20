@@ -6,7 +6,7 @@ void Tooltip::Server::timerCallback()
 {
     auto getTipFor = [](juce::Component* component) -> juce::String
     {
-        if(component != nullptr && !component->isCurrentlyBlockedByAnotherModalComponent() &&  juce::Process::isForegroundProcess())
+        if(component != nullptr && !component->isCurrentlyBlockedByAnotherModalComponent() && juce::Process::isForegroundProcess())
         {
             if(dynamic_cast<BubbleClient*>(component) != nullptr)
             {
@@ -19,7 +19,7 @@ void Tooltip::Server::timerCallback()
         }
         return {};
     };
-    
+
     auto mouseSource = juce::Desktop::getInstance().getMainMouseSource();
     auto const newTip = getTipFor(mouseSource.isTouch() ? nullptr : mouseSource.getComponentUnderMouse());
     if(newTip != mTip)
@@ -55,7 +55,7 @@ Tooltip::BubbleWindow::BubbleWindow()
 {
     setAlwaysOnTop(true);
     setOpaque(true);
-    
+
     if(juce::Desktop::getInstance().getMainMouseSource().canHover())
     {
         startTimer(25);
@@ -77,7 +77,7 @@ void Tooltip::BubbleWindow::timerCallback()
 {
     auto getTipFor = [](juce::Component* component) -> juce::String
     {
-        if(component != nullptr && !component->isCurrentlyBlockedByAnotherModalComponent() &&  juce::Process::isForegroundProcess())
+        if(component != nullptr && !component->isCurrentlyBlockedByAnotherModalComponent() && juce::Process::isForegroundProcess())
         {
             if(auto* client = dynamic_cast<BubbleClient*>(component))
             {
@@ -86,11 +86,11 @@ void Tooltip::BubbleWindow::timerCallback()
         }
         return {};
     };
-    
+
     auto& desktop = juce::Desktop::getInstance();
     auto mouseSource = desktop.getMainMouseSource();
     mTooltip = getTipFor(mouseSource.isTouch() ? nullptr : mouseSource.getComponentUnderMouse());
-    
+
     if(mouseSource.isDragging() || mTooltip.isEmpty())
     {
         if(isVisible())
