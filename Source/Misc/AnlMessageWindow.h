@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 class MessageWindow
 {
 public:
+    // clang-format off
     enum class MessageType
     {
           unknown = juce::AlertWindow::AlertIconType::NoIcon
@@ -14,7 +15,8 @@ public:
         , warning = juce::AlertWindow::AlertIconType::WarningIcon
         , info = juce::AlertWindow::AlertIconType::InfoIcon
     };
-    
+    // clang-format on
+
     static void show(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements = {});
 };
 
