@@ -11,14 +11,14 @@ PropertyComponentBase::PropertyComponentBase(std::unique_ptr<juce::Component> c,
     title.setInterceptsMouseClicks(false, false);
     auto const& borderSize = title.getBorderSize();
     title.setBorderSize({borderSize.getTop(), borderSize.getLeft(), borderSize.getBottom(), 0});
-    
+
     addAndMakeVisible(title);
     addAndMakeVisible(content.get());
     if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(content.get()))
     {
         tooltipClient->setTooltip(tooltip);
     }
-    
+
     setTooltip(tooltip);
     setSize(200, 24);
 }
@@ -29,7 +29,7 @@ void PropertyComponentBase::resized()
     auto const minimumHorizontalScale = title.getMinimumHorizontalScale();
     auto const font = titleLookAndFeel.getLabelFont(title).withHorizontalScale(minimumHorizontalScale);
     auto const bdSize = titleLookAndFeel.getLabelBorderSize(title);
-    
+
     auto bounds = getLocalBounds();
     auto const textWidth = font.getStringWidth(title.getText());
     auto const textSize = textWidth + bdSize.getLeft() + bdSize.getRight();
@@ -174,7 +174,7 @@ PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip
     juce::StringArray items;
     for(auto const& value : values)
     {
-        items.add(juce::String(value)+suffix);
+        items.add(juce::String(value) + suffix);
     }
     entry.addItemList(items, 1);
     entry.setJustificationType(juce::Justification::centredRight);

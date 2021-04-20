@@ -1,8 +1,8 @@
 #pragma once
 
 #include "AnlBasics.h"
-#include "AnlNumberField.h"
 #include "AnlColourSelector.h"
+#include "AnlNumberField.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -12,43 +12,45 @@ class PropertyComponentBase
 , public juce::SettableTooltipClient
 {
 public:
-    
     juce::Label title;
-    
+
     PropertyComponentBase(std::unique_ptr<juce::Component> c, juce::String const& name, juce::String const& tooltip = {});
     ~PropertyComponentBase() override = default;
-    
+
     // juce::Component
     void resized() override;
-    
+
 protected:
     std::unique_ptr<juce::Component> content;
 };
 
-template <class entry_t> class PropertyComponent
+template <class entry_t>
+class PropertyComponent
 : public PropertyComponentBase
 {
 public:
+    // clang-format off
     enum ColourIds : int
     {
           backgroundColourId = 0x2000700
         , textColourId
     };
-    
+    // clang-format on
+
     static_assert(std::is_base_of<juce::Component, entry_t>::value, "Entry should inherit from juce::Component");
     using entry_type = entry_t;
     using callback_type = std::function<void(entry_type const&)>;
-    
+
     entry_type& entry;
     callback_type callback = nullptr;
-    
+
     PropertyComponent(juce::String const& name, juce::String const& tooltip = {}, callback_type fn = nullptr)
     : PropertyComponentBase(std::make_unique<entry_type>(), name, tooltip)
     , entry(*static_cast<entry_type*>(content.get()))
     , callback(fn)
     {
     }
-    
+
     ~PropertyComponent() override = default;
 };
 
@@ -58,7 +60,7 @@ class PropertyTextButton
 public:
     PropertyTextButton(juce::String const& name, juce::String const& tooltip, std::function<void(void)> fn);
     ~PropertyTextButton() override = default;
-    
+
     // juce::Component
     void resized() override;
 };
@@ -109,7 +111,7 @@ class PropertyToggle
 public:
     PropertyToggle(juce::String const& name, juce::String const& tooltip, std::function<void(bool)> fn);
     ~PropertyToggle() override = default;
-    
+
     // juce::Component
     void resized() override;
 };
@@ -128,7 +130,7 @@ class PropertyColourButton
 public:
     PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn);
     ~PropertyColourButton() override = default;
-    
+
     // juce::Component
     void resized() override;
 };
