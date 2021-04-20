@@ -42,15 +42,15 @@ void DraggableTable::setComponents(std::vector<ComponentRef> const& components)
     for(auto& content : mContents)
     {
         if(content != nullptr && std::none_of(components.cbegin(), components.cend(), [&](auto const& component)
-        {
-            return std::addressof(component.get()) == content.getComponent();
-        }))
+                                              {
+                                                  return std::addressof(component.get()) == content.getComponent();
+                                              }))
         {
             content->removeComponentListener(this);
             removeChildComponent(content);
         }
     }
-    
+
     mContents.clear();
     mContents.reserve(components.size());
     for(auto& content : components)
@@ -69,9 +69,9 @@ void DraggableTable::componentMovedOrResized(juce::Component& component, bool wa
     if(wasResized && !mIsDragging)
     {
         auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-        {
-            return (content != nullptr) ? value + content->getHeight() : value;
-        });
+                                              {
+                                                  return (content != nullptr) ? value + content->getHeight() : value;
+                                              });
         setSize(getWidth(), fullSize);
     }
 }
@@ -103,12 +103,12 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
     }
     mIsDragging = true;
     auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-    {
-        return (content != nullptr) ? value + content->getHeight() : value;
-    });
+                                          {
+                                              return (content != nullptr) ? value + content->getHeight() : value;
+                                          });
     setSize(getWidth(), fullSize + source->getHeight());
     source->setAlpha(0.4f);
-    
+
     if(auto* description = dynamic_cast<Description*>(obj))
     {
         if(description->onEnter != nullptr)
@@ -127,30 +127,30 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
     {
         return;
     }
-    
+
     auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [&](int value, auto const& content)
-    {
-        return (content != nullptr) ? value + content->getHeight() : value;
-    });
+                                          {
+                                              return (content != nullptr) ? value + content->getHeight() : value;
+                                          });
     setSize(getWidth(), fullSize + source->getHeight());
-    
+
     auto offset = static_cast<int>(obj->getProperty("offset"));
     auto const it = std::find_if(mContents.cbegin(), mContents.cend(), [source](auto const& content)
-    {
-        return content.getComponent() == source;
-    });
+                                 {
+                                     return content.getComponent() == source;
+                                 });
     anlWeakAssert(it != mContents.cend());
     if(it == mContents.cend())
     {
         return;
     }
-    
+
     auto constexpr pi = 3.14159265358979323846;
     auto const position = dragSourceDetails.localPosition.getY() + offset;
     auto const height = static_cast<int>(obj->getProperty("height"));
     auto const sourceHeight = static_cast<double>(height + 2);
     auto const index = static_cast<size_t>(std::distance(mContents.cbegin(), it));
-    
+
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     for(size_t i = 0; i < mContents.size(); ++i)
     {
@@ -171,9 +171,9 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
 void DraggableTable::itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
 {
     auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-    {
-        return (content != nullptr) ? value + content->getHeight() : value;
-    });
+                                          {
+                                              return (content != nullptr) ? value + content->getHeight() : value;
+                                          });
     setSize(getWidth(), fullSize);
     auto* source = dragSourceDetails.sourceComponent.get();
     anlWeakAssert(source != nullptr);
@@ -201,19 +201,19 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
         mIsDragging = false;
         return;
     }
-    
+
     auto offset = static_cast<int>(obj->getProperty("offset"));
     auto const it = std::find_if(mContents.cbegin(), mContents.cend(), [source](auto const& content)
-    {
-        return content.getComponent() == source;
-    });
+                                 {
+                                     return content.getComponent() == source;
+                                 });
     anlWeakAssert(it != mContents.cend());
     if(it == mContents.cend())
     {
         mIsDragging = false;
         return;
     }
-    
+
     auto const index = static_cast<size_t>(std::distance(mContents.cbegin(), it));
     auto getNewIndex = [&]()
     {
@@ -239,7 +239,7 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
         }
         return index;
     };
-    
+
     if(auto* description = dynamic_cast<Description*>(obj))
     {
         if(description->onExit != nullptr)
@@ -247,17 +247,17 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
             description->onExit();
         }
     }
-    
+
     auto const newIndex = getNewIndex();
     if(index != newIndex && onComponentDropped != nullptr)
     {
         onComponentDropped(obj->getProperty("identifier"), newIndex);
     }
-    
+
     auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-    {
-        return (content != nullptr) ? value + content->getHeight() : value;
-    });
+                                          {
+                                              return (content != nullptr) ? value + content->getHeight() : value;
+                                          });
     setSize(getWidth(), fullSize);
     source->setAlpha(1.0f);
     mIsDragging = false;
