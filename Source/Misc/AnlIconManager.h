@@ -7,14 +7,16 @@ ANALYSE_FILE_BEGIN
 class IconManager
 {
 public:
-    
+    // clang-format off
     enum ColourIds : int
     {
           normalColourId = 0x2000500
         , overColourId
         , downColourId
     };
-    
+    // clang-format on
+
+    // clang-format off
     enum class IconType
     {
           alert
@@ -37,9 +39,10 @@ public:
         , share
         , shrink
     };
-    
+    // clang-format off
+
     static juce::Image getIcon(IconType const type);
-    
+
     struct LookAndFeelMethods
     {
         virtual ~LookAndFeelMethods() = default;
