@@ -171,7 +171,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     {
         auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
         auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        
+        anlWeakAssert(!range.isEmpty() && std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
         auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
         auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
         mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
@@ -436,6 +436,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
                 mPropertyValueRange.entry.setEnabled(isEnable);
                 if(isEnable)
                 {
+                    anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
                     auto const interval = acsr.getAttr<Zoom::AttrType::minimumLength>();
                     mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
                     mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
