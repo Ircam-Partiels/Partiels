@@ -40,6 +40,7 @@ namespace Track
 
         Accessor& mAccessor;
         Accessor::Listener mListener;
+        Accessor::Receiver mReceiver;
 
         PropertyPanel mPropertyPanel{mAccessor};
         juce::ImageButton mDropdownButton;

@@ -28,7 +28,14 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
 
     mPropertiesButton.onClick = [&]()
     {
-        mPropertyPanel.show(mPropertiesButton.getScreenBounds().getCentre().translated(0, -mPropertyPanel.getHeight() / 2));
+        auto var = std::make_unique<juce::DynamicObject>();
+        if(var != nullptr)
+        {
+            auto const center = mPropertiesButton.getScreenBounds().getCentre();
+            var->setProperty("x", center.x);
+            var->setProperty("y", center.y - 40);
+            mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
+        }
     };
 
     mExportButton.onClick = [&]()
@@ -105,11 +112,28 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         }
     };
 
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    {
+        juce::ignoreUnused(acsr);
+        switch(signal)
+        {
+            case SignalType::showProperties:
+            {
+                auto const x = static_cast<int>(value.getProperty("x", 0.0));
+                auto const y = static_cast<int>(value.getProperty("y", 0.0));
+                mPropertyPanel.show({x, y});
+            }
+            break;
+        }
+    };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.addReceiver(mReceiver);
 }
 
 Track::Thumbnail::~Thumbnail()
 {
+    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 
