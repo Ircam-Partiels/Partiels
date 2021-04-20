@@ -3,6 +3,7 @@
 #include "AnlAtomicManager.h"
 #include "AnlBasics.h"
 #include "AnlBoundsListener.h"
+#include "AnlBroadcaster.h"
 #include "AnlChrono.h"
 #include "AnlColourSelector.h"
 #include "AnlColouredPanel.h"
