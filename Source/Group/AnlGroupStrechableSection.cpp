@@ -21,24 +21,26 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
             case AttrType::layout:
             case AttrType::tracks:
             {
-                mTrackSections.updateContents(mAccessor,
-                [this](Track::Accessor& trackAccessor)
-                {
-                    auto newSection = std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
-                    anlStrongAssert(newSection != nullptr);
-                    if(newSection != nullptr)
+                mTrackSections.updateContents(
+                    mAccessor,
+                    [this](Track::Accessor& trackAccessor)
                     {
-                        newSection->onRemove = [&]()
+                        auto newSection = std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+                        anlStrongAssert(newSection != nullptr);
+                        if(newSection != nullptr)
                         {
-                            if(onRemoveTrack != nullptr)
+                            newSection->onRemove = [&]()
                             {
-                                onRemoveTrack(trackAccessor.getAttr<Track::AttrType::identifier>());
-                            }
-                        };
-                    }
-                    return newSection;
-                }, nullptr);
-                
+                                if(onRemoveTrack != nullptr)
+                                {
+                                    onRemoveTrack(trackAccessor.getAttr<Track::AttrType::identifier>());
+                                }
+                            };
+                        }
+                        return newSection;
+                    },
+                    nullptr);
+
                 auto const& contents = mTrackSections.getContents();
                 std::vector<ConcertinaTable::ComponentRef> components;
                 components.reserve(contents.size());
@@ -54,15 +56,15 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
                 mDraggableTable.setComponents(components);
                 resized();
             }
-                break;
+            break;
             case AttrType::expanded:
             {
                 mConcertinaTable.setOpen(acsr.getAttr<AttrType::expanded>(), true);
             }
-                break;
+            break;
         }
     };
-    
+
     mSection.onRemove = [&]()
     {
         if(onRemoveGroup != nullptr)
@@ -70,7 +72,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
             onRemoveGroup();
         }
     };
-    
+
     mSection.onTrackInserted = [&](juce::String const& identifier)
     {
         if(onTrackInserted != nullptr)
@@ -78,7 +80,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
             onTrackInserted(identifier);
         }
     };
-    
+
     mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
@@ -86,7 +88,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
         layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
-    
+
     mBoundsListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
@@ -98,7 +100,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
     mBoundsListener.attachTo(mConcertinaTable);
     mConcertinaTable.setComponents({mDraggableTable});
     mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
-    
+
     addAndMakeVisible(mSection);
     addAndMakeVisible(mConcertinaTable);
     mAccessor.addListener(mListener, NotificationType::synchronous);
