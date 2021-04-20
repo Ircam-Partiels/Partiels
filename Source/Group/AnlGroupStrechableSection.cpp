@@ -95,7 +95,9 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
         auto const height = mSection.getHeight() + mConcertinaTable.getHeight();
         setSize(getWidth(), height);
     };
-    
+
+    setFocusContainer(true);
+
     mBoundsListener.attachTo(mSection);
     mBoundsListener.attachTo(mConcertinaTable);
     mConcertinaTable.setComponents({mDraggableTable});
@@ -117,6 +119,58 @@ void Group::StrechableSection::resized()
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mSection.setBounds(bounds.removeFromTop(mSection.getHeight()));
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
+}
+
+juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
+{
+    class FocusTraverser
+    : public juce::KeyboardFocusTraverser
+    {
+    public:
+        FocusTraverser(StrechableSection& strechableSection)
+        : mStrechableSection(strechableSection)
+        {
+        }
+
+        ~FocusTraverser() override = default;
+
+        juce::Component* getNextComponent(juce::Component* current) override
+        {
+            auto const isOpen = mStrechableSection.mConcertinaTable.isOpen();
+            auto const wcontents = mStrechableSection.mDraggableTable.getComponents();
+            if(current == nullptr || !isOpen || wcontents.empty())
+            {
+                return juce::KeyboardFocusTraverser::getNextComponent(current);
+            }
+            auto& section = mStrechableSection.mSection;
+            if(current == &section || section.isParentOf(current))
+            {
+                auto next = wcontents.begin()->getComponent();
+                if(next != nullptr)
+                {
+                    return next;
+                }
+            }
+            else
+            {
+                auto it = std::find_if(wcontents.begin(), wcontents.end(), [&](auto const& wcontent)
+                                       {
+                                           auto* content = wcontent.getComponent();
+                                           return content != nullptr && (content == current || content->isParentOf(current));
+                                       });
+                if(it != wcontents.end() && std::next(it) != wcontents.end())
+                {
+                    return std::next(it)->getComponent();
+                }
+            }
+            return juce::KeyboardFocusTraverser::getNextComponent(current);
+        }
+
+    private:
+        StrechableSection& mStrechableSection;
+    };
+
+    return std::make_unique<FocusTraverser>(*this).release();
 }
 
 ANALYSE_FILE_END

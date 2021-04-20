@@ -20,6 +20,8 @@ namespace Group
 
         // juce::Component
         void resized() override;
+        juce::KeyboardFocusTraverser* createFocusTraverser() override;
+
     private:
         Accessor& mAccessor;
         Transport::Accessor& mTransportAccessor;
