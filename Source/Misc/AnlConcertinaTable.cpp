@@ -10,7 +10,7 @@ void ConcertinaTable::Header::paint(juce::Graphics& g)
     {
         return;
     }
-    
+
     auto bounds = getLocalBounds();
     auto const isMouseDown = isMouseButtonDown();
     auto const isMouseOver = juce::Component::isMouseOver();
@@ -48,13 +48,13 @@ void ConcertinaTable::resized()
 {
     auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
     anlWeakAssert(laf != nullptr);
-    
+
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     if(mHeader.isVisible())
     {
         mHeader.setBounds(bounds.removeFromTop(laf != nullptr ? laf->getHeaderHeight(*this) : 20));
     }
-    
+
     for(auto& content : mContents)
     {
         anlWeakAssert(content != nullptr);
@@ -81,7 +81,7 @@ void ConcertinaTable::setComponents(std::vector<ComponentRef> const& components)
             removeChildComponent(content);
         }
     }
-    
+
     mContents.clear();
     mContents.reserve(components.size());
     for(auto content : components)
@@ -124,17 +124,17 @@ void ConcertinaTable::componentMovedOrResized(juce::Component& component, bool w
     {
         auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
         anlWeakAssert(laf != nullptr);
-        
+
         auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-        {
-            anlWeakAssert(content != nullptr);
-            if(content != nullptr)
-            {
-                return value + content->getHeight();
-            }
-            return value;
-        });
-        
+                                              {
+                                                  anlWeakAssert(content != nullptr);
+                                                  if(content != nullptr)
+                                                  {
+                                                      return value + content->getHeight();
+                                                  }
+                                                  return value;
+                                              });
+
         auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(fullSize) * mSizeRatio));
         auto const headerHeight = laf != nullptr ? laf->getHeaderHeight(*this) : 20;
         setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
