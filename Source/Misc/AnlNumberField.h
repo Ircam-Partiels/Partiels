@@ -58,7 +58,7 @@ private:
     double mInterval = 0.0;
     int mNumDisplayedDecimals = -1;
     int mNumEditedDecimals = 0;
-    double mValue;
+    double mValue = 0.0;
 };
 
 ANALYSE_FILE_END

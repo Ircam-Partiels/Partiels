@@ -47,6 +47,7 @@ NumberField::NumberField()
 
 void NumberField::setValue(double value, juce::NotificationType const notification)
 {
+    anlWeakAssert(!std::isnan(value) && std::isfinite(value));
     if(mInterval > 0.0)
     {
         value = std::round((value - mRange.getStart()) / mInterval) * mInterval + mRange.getStart();
