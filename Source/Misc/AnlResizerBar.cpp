@@ -46,7 +46,7 @@ void ResizerBar::mouseDrag(juce::MouseEvent const& event)
         }
         return {getParentWidth() - mRange.getEnd(), getParentWidth() - mRange.getStart()};
     };
-    
+
     auto const isVertical = mOrientation == Orientation::vertical;
     auto const offset = isVertical ? event.getDistanceFromDragStartX() : event.getDistanceFromDragStartY();
     auto const newPosition = mRange.isEmpty() ? mSavedPosition + offset : getRange().clipValue(mSavedPosition + offset);
@@ -60,10 +60,11 @@ void ResizerBar::mouseDrag(juce::MouseEvent const& event)
         setTopLeftPosition(isVertical ? newPosition - getWidth() : getX(),
                            !isVertical ? newPosition - getHeight() : getY());
     }
-    
+
     if(onMoved != nullptr)
     {
-        onMoved(mDirection ? newPosition : mOrientation == Orientation::horizontal ? getParentHeight() - newPosition : getParentWidth() - newPosition);
+        onMoved(mDirection ? newPosition : mOrientation == Orientation::horizontal ? getParentHeight() - newPosition
+                                                                                   : getParentWidth() - newPosition);
     }
 }
 
