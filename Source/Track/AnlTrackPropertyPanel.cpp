@@ -118,7 +118,7 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
 {
     auto applyRange = [&](std::optional<Zoom::Range> const& globalRange)
     {
-        if(globalRange.has_value())
+        if(!globalRange.has_value() || globalRange->isEmpty())
         {
             return;
         }
