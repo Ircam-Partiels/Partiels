@@ -1,5 +1,6 @@
 #include "AnlApplicationCommandTarget.h"
 #include "AnlApplicationInstance.h"
+#include "../Document/AnlDocumentTools.h"
 #include <ImagesData.h>
 
 ANALYSE_FILE_BEGIN
@@ -409,9 +410,23 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::GroupNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
             documentDir.startAction();
-            documentDir.addGroup(AlertType::window, NotificationType::synchronous);
-            documentDir.endAction("New Group", ActionState::apply);
+            
+            auto const index = documentAcsr.getNumAcsr<Document::AcsrType::groups>();
+            auto const position = Document::Tools::getFocusedGroupIndex(documentAcsr);
+            if(!documentDir.addGroup("Group " + juce::String(index + 1_z), position.has_value() ? *position : index, NotificationType::synchronous))
+            {
+                auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
+                auto const title = juce::translate("Group cannot be created!");
+                auto const message = juce::translate("The group cannot be inserted into the document.");
+                juce::AlertWindow::showMessageBox(icon, title, message);
+                documentDir.endAction("New Group", ActionState::abort);
+            }
+            else
+            {
+                documentDir.endAction("New Group " + juce::String(index + 1_z), ActionState::apply);
+            }
             return true;
         }
         case CommandIDs::AnalysisNew:

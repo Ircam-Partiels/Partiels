@@ -291,7 +291,12 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
 
         if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
         {
-            addGroup(AlertType::silent, notification);
+            auto const result = addGroup("Group 1", 0, notification);
+            anlStrongAssert(result == true);
+            if(result == false)
+            {
+                return;
+            }
         }
 
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -458,31 +463,27 @@ void Document::Director::moveTrack(AlertType const alertType, juce::String const
     sanitize(notification);
 }
 
-void Document::Director::addGroup(AlertType const alertType, NotificationType const notification)
+bool Document::Director::addGroup(juce::String const& name, size_t position, NotificationType const notification)
 {
     auto const index = mAccessor.getNumAcsr<AcsrType::groups>();
     if(!mAccessor.insertAcsr<AcsrType::groups>(index, notification))
     {
-        if(alertType == AlertType::window)
-        {
-            auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-            auto const title = juce::translate("Group cannot be created!");
-            auto const message = juce::translate("The group cannot be inserted into the document.");
-            juce::AlertWindow::showMessageBox(icon, title, message);
-        }
-        return;
+        return false;
     }
-
+    
     auto const identifier = juce::Uuid().toString();
-
+    
     auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
-    groupAcsr.setAttr<Group::AttrType::name>("Group " + juce::String(index + 1_z), notification);
-
+    groupAcsr.setAttr<Group::AttrType::name>(name, notification);
+    
     auto layout = mAccessor.getAttr<AttrType::layout>();
-    layout.push_back(identifier);
+    anlStrongAssert(position <= layout.size());
+    position = std::min(position, layout.size());
+    layout.insert(layout.begin() + static_cast<long>(position), identifier);
     mAccessor.setAttr<AttrType::layout>(layout, notification);
     sanitize(notification);
+    return true;
 }
 
 void Document::Director::removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification)
@@ -529,7 +530,12 @@ void Document::Director::sanitize(NotificationType const notification)
     anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
     if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
     {
-        addGroup(AlertType::silent, notification);
+        auto const result = addGroup("Group 1", 0, notification);
+        anlStrongAssert(result == true);
+        if(result == false)
+        {
+            return;
+        }
     }
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     if(!groupAcsrs.empty())
