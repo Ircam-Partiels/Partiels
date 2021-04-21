@@ -93,15 +93,6 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::GroupNew
         , CommandIDs::AnalysisNew
         
-        , CommandIDs::PointsNew
-        , CommandIDs::PointsRemove
-        , CommandIDs::PointsMove
-        , CommandIDs::PointsCopy
-        , CommandIDs::PointsPaste
-        , CommandIDs::PointsScale
-        , CommandIDs::PointsQuantify
-        , CommandIDs::PointsDiscretize
-        
         , CommandIDs::TransportTogglePlayback
         , CommandIDs::TransportToggleLooping
         , CommandIDs::TransportRewindPlayHead
@@ -207,55 +198,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Add New Analysis"), juce::translate("Adds a new analysis"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-        break;
-
-        case CommandIDs::PointsNew:
-        {
-            result.setInfo(juce::translate("New Point(s) or Marker(s)"), juce::translate("Adds new points or markers to the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsRemove:
-        {
-            result.setInfo(juce::translate("Remove Point(s) or Marker(s)"), juce::translate("Removes points or markers from the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsMove:
-        {
-            result.setInfo(juce::translate("Move Point(s) or Marker(s)"), juce::translate("Moves points or markers of the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsCopy:
-        {
-            result.setInfo(juce::translate("Copy Point(s) or Marker(s)"), juce::translate("Copies points or markers of the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsPaste:
-        {
-            result.setInfo(juce::translate("Paste Point(s) or Marker(s)"), juce::translate("Pastes points or markers to the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsScale:
-        {
-            result.setInfo(juce::translate("Scale Point(s) or Marker(s)"), juce::translate("Scales points or markers of the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsQuantify:
-        {
-            result.setInfo(juce::translate("Quantify Point(s) or Marker(s)"), juce::translate("Quantifies points or markers of the analysis"), "Points", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::PointsDiscretize:
-        {
-            result.setInfo(juce::translate("Discretize Point(s) or Marker(s)"), juce::translate("Discretizes points or markers of the analysis"), "Points", 0);
-            result.setActive(true);
         }
         break;
 
@@ -436,19 +378,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             documentDir.startAction();
             documentDir.addTrack(AlertType::window, NotificationType::synchronous);
             documentDir.endAction("New Analysis", ActionState::apply);
-            return true;
-        }
-
-        case CommandIDs::PointsNew:
-        case CommandIDs::PointsRemove:
-        case CommandIDs::PointsMove:
-        case CommandIDs::PointsCopy:
-        case CommandIDs::PointsPaste:
-        case CommandIDs::PointsScale:
-        case CommandIDs::PointsQuantify:
-        case CommandIDs::PointsDiscretize:
-        {
-            showUnsupportedAction();
             return true;
         }
 

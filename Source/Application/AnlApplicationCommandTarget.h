@@ -30,15 +30,6 @@ namespace Application
             , GroupNew
             , AnalysisNew
             
-            , PointsNew
-            , PointsRemove
-            , PointsMove
-            , PointsCopy
-            , PointsPaste
-            , PointsScale
-            , PointsQuantify
-            , PointsDiscretize
-            
             , TransportTogglePlayback
             , TransportToggleLooping
             , TransportRewindPlayHead
