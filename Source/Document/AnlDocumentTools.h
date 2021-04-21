@@ -14,7 +14,7 @@ namespace Document
         Group::Accessor& getGroupAcsr(Accessor& accessor, juce::String const& identifier);
         size_t getTrackPositionInGroup(Accessor& accessor, juce::String const& identifier);
         std::optional<juce::String> getFocusedItem(Accessor const& accessor);
-        std::optional<size_t> getFocusedGroupIndex(Accessor const& accessor);
+        std::optional<std::tuple<juce::String, size_t>> getFocusedGroup(Accessor const& accessor);
     } // namespace Tools
 } // namespace Document
 
