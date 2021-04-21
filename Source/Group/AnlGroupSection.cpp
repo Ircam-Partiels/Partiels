@@ -65,7 +65,7 @@ Group::Section::Section(Accessor& accessor, Transport::Accessor& transportAcsr, 
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
-    
+    setWantsKeyboardFocus(true);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
