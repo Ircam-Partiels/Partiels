@@ -30,8 +30,6 @@ namespace Group
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
 
-        std::function<void(void)> onRemove = nullptr;
-
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
@@ -41,7 +39,6 @@ namespace Group
         juce::ImageButton mExportButton;
         StateButton mStateButton{mAccessor};
         juce::ImageButton mExpandButton;
-        juce::ImageButton mRemoveButton;
     };
 } // namespace Group
 

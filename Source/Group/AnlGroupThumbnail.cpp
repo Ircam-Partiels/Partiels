@@ -12,8 +12,6 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
     mExportButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
-    addAndMakeVisible(mRemoveButton);
-    mRemoveButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
     mExpandButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mDropdownButton);
@@ -21,17 +19,8 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
 
     mNameButton.setTooltip(juce::translate("Change the name of the group or the tracks' properties"));
     mExportButton.setTooltip(juce::translate("Export the group"));
-    mRemoveButton.setTooltip(juce::translate("Remove the group"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
-
-    mRemoveButton.onClick = [&]()
-    {
-        if(onRemove != nullptr)
-        {
-            onRemove();
-        }
-    };
 
     mExpandButton.onClick = [&]()
     {
@@ -130,7 +119,6 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
         };
         addItem(mNameButton);
         addItem(mExportButton);
-        addItem(mRemoveButton);
         addItem(mExpandButton);
         menu.showAt(&mDropdownButton);
     };
@@ -188,7 +176,6 @@ void Group::Thumbnail::resized()
     };
 
     layoutButton(mExpandButton);
-    layoutButton(mRemoveButton);
     layoutButton(mStateButton);
     layoutButton(mExportButton);
     layoutButton(mNameButton);
@@ -226,7 +213,6 @@ void Group::Thumbnail::lookAndFeelChanged()
         laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
         laf->setButtonIcon(mNameButton, IconManager::IconType::properties);
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
-        laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
         if(mAccessor.getAttr<AttrType::expanded>())
         {
             laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);
