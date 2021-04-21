@@ -70,4 +70,19 @@ std::optional<juce::String> Document::Tools::getFocusedItem(Accessor const& acce
     return std::optional<juce::String>();
 }
 
+std::optional<size_t> Document::Tools::getFocusedGroupIndex(Accessor const& accessor)
+{
+    auto const focusedItem = getFocusedItem(accessor);
+    if(!focusedItem.has_value())
+    {
+        return std::optional<size_t>();
+    }
+    auto const& groupAcsr = getGroupAcsr(accessor, *focusedItem);
+    auto const& identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+    auto const& layout = accessor.getAttr<AttrType::layout>();
+    auto it = std::find(layout.cbegin(), layout.cend(), identifier);
+    anlStrongAssert(it != layout.cend());
+    return static_cast<size_t>(std::distance(layout.cbegin(), it));
+}
+
 ANALYSE_FILE_END
