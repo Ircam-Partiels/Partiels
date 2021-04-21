@@ -1,9 +1,9 @@
 #pragma once
 
-#include "AnlApplicationModel.h"
 #include "../Document/AnlDocumentFileBased.h"
-#include "../Plugin/AnlPluginListTable.h"
 #include "../Plugin/AnlPluginListScanner.h"
+#include "../Plugin/AnlPluginListTable.h"
+#include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -14,7 +14,7 @@ namespace Application
     , private juce::ChangeListener
     {
     public:
-
+        // clang-format off
         enum CommandIDs : int
         {
               DocumentNew = 0x2001
@@ -53,10 +53,11 @@ namespace Application
 
             , DocumentOpenRecent
         };
-        
+        // clang-format on
+
         CommandTarget();
         ~CommandTarget() override;
-        
+
         // juce::ApplicationCommandTarget
         juce::ApplicationCommandTarget* getNextCommandTarget() override;
         void getAllCommands(juce::Array<juce::CommandID>& commands) override;
@@ -68,10 +69,9 @@ namespace Application
 
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
-        
+
         Accessor::Listener mListener;
     };
-}
+} // namespace Application
 
 ANALYSE_FILE_END
-
