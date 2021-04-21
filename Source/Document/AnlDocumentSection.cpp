@@ -323,9 +323,17 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
     {
         auto getSection = [&]()
         {
+            if(dynamic_cast<Track::Section*>(focusedComponent))
+            {
+                return focusedComponent;
+            }
             if(auto* trackSection = focusedComponent->findParentComponentOfClass<Track::Section>())
             {
                 return static_cast<juce::Component*>(trackSection);
+            }
+            if(dynamic_cast<Group::Section*>(focusedComponent))
+            {
+                return focusedComponent;
             }
             return static_cast<juce::Component*>(focusedComponent->findParentComponentOfClass<Group::Section>());
         };
@@ -341,11 +349,11 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
             auto const topDifference = relativeBounds.getY() - area.getY();
             if(bottomDifference > 0)
             {
-                mViewport.setViewPosition({area.getX(), area.getY() + bottomDifference});
+                mViewport.setViewPosition({area.getX(), area.getY() + bottomDifference + 8});
             }
             else if(topDifference < 0)
             {
-                mViewport.setViewPosition({area.getX(), area.getY() + topDifference});
+                mViewport.setViewPosition({area.getX(), area.getY() + topDifference - 8});
             }
         }
     }
