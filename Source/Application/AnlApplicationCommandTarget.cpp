@@ -57,6 +57,7 @@ Application::CommandTarget::CommandTarget()
     };
     
     Instance::get().getDocumentFileBased().addChangeListener(this);
+    Instance::get().getUndoManager().addChangeListener(this);
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
 }
@@ -64,6 +65,7 @@ Application::CommandTarget::CommandTarget()
 Application::CommandTarget::~CommandTarget()
 {
     Instance::get().getApplicationAccessor().removeListener(mListener);
+    Instance::get().getUndoManager().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
 }
 
@@ -175,16 +177,18 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             
         case CommandIDs::EditUndo:
         {
+            auto& undoManager = Instance::get().getUndoManager();
             result.setInfo(juce::translate("Undo Action"), juce::translate(""), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(false);
+            result.setActive(undoManager.canUndo());
         }
             break;
         case CommandIDs::EditRedo:
         {
+            auto& undoManager = Instance::get().getUndoManager();
             result.setInfo(juce::translate("Redo Action"), juce::translate(""), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
-            result.setActive(false);
+            result.setActive(undoManager.canRedo());
         }
             break;
         
@@ -391,21 +395,31 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
             
         case CommandIDs::EditUndo:
+        {
+            auto& undoManager = Instance::get().getUndoManager();
+            undoManager.undo();
+            return true;
+        }
         case CommandIDs::EditRedo:
         {
-            showUnsupportedAction();
+            auto& undoManager = Instance::get().getUndoManager();
+            undoManager.redo();
             return true;
         }
         case CommandIDs::GroupNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
             documentDir.addGroup(AlertType::window, NotificationType::synchronous);
+            documentDir.endAction("New Group", ActionState::apply);
             return true;
         }
         case CommandIDs::AnalysisNew:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
             documentDir.addTrack(AlertType::window, NotificationType::synchronous);
+            documentDir.endAction("New Analysis", ActionState::apply);
             return true;
         }
             
@@ -504,9 +518,13 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
 void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
+    if(source == &Instance::get().getUndoManager())
+    {
+        Instance::get().getApplicationCommandManager().commandStatusChanged();
+        return;
+    }
     auto const& fileBased = Instance::get().getDocumentFileBased();
     anlStrongAssert(source == &fileBased);
-    Instance::get().getApplicationCommandManager().commandStatusChanged();
     
     auto const file = fileBased.getFile();
     Instance::get().getApplicationAccessor().setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
