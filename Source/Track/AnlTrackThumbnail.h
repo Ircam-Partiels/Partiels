@@ -31,8 +31,6 @@ namespace Track
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
 
-        std::function<void(void)> onRemove = nullptr;
-
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
@@ -43,7 +41,6 @@ namespace Track
         juce::ImageButton mPropertiesButton;
         juce::ImageButton mExportButton;
         StateButton mStateButton{mAccessor};
-        juce::ImageButton mRemoveButton;
     };
 } // namespace Track
 

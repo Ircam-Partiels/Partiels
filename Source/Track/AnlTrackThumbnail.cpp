@@ -11,8 +11,6 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     mPropertiesButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExportButton);
     mExportButton.setWantsKeyboardFocus(false);
-    addAndMakeVisible(mRemoveButton);
-    mRemoveButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mDropdownButton);
@@ -20,17 +18,8 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
 
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
-    mRemoveButton.setTooltip(juce::translate("Remove the analysis"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
-
-    mRemoveButton.onClick = [&]()
-    {
-        if(onRemove != nullptr)
-        {
-            onRemove();
-        }
-    };
-
+    
     mPropertiesButton.onClick = [&]()
     {
         auto var = std::make_unique<juce::DynamicObject>();
@@ -83,7 +72,6 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
         };
         addItem(mPropertiesButton);
         addItem(mExportButton);
-        addItem(mRemoveButton);
         menu.showAt(&mDropdownButton);
     };
 
@@ -158,7 +146,6 @@ void Track::Thumbnail::resized()
         }
     };
 
-    layoutButton(mRemoveButton);
     layoutButton(mStateButton);
     layoutButton(mExportButton);
     layoutButton(mPropertiesButton);
@@ -196,7 +183,6 @@ void Track::Thumbnail::lookAndFeelChanged()
         laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
         laf->setButtonIcon(mExportButton, IconManager::IconType::share);
         laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
-        laf->setButtonIcon(mRemoveButton, IconManager::IconType::cancel);
     }
 }
 
