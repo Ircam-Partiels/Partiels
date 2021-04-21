@@ -90,11 +90,15 @@ Transport::Display::Display(Accessor& accessor)
         mAccessor.setAttr<AttrType::startPlayhead>(time, NotificationType::synchronous);
     };
     
+
     addAndMakeVisible(mRewindButton);
+    mRewindButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mPlaybackButton);
+    mPlaybackButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mLoopButton);
+    mLoopButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mPosition);
-    
+    mPosition.setWantsKeyboardFocus(false);
     addAndMakeVisible(mVolumeSlider);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
