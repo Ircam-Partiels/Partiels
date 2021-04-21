@@ -9,7 +9,6 @@ namespace Group
     class Thumbnail
     : public juce::Component
     , public juce::SettableTooltipClient
-    , private juce::Timer
     {
     public:
         // clang-format off
@@ -30,13 +29,10 @@ namespace Group
         void parentHierarchyChanged() override;
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
-        void mouseUp(juce::MouseEvent const& event) override;
 
         std::function<void(void)> onRemove = nullptr;
 
     private:
-        void timerCallback() override;
-
         Accessor& mAccessor;
         Accessor::Listener mListener;
 

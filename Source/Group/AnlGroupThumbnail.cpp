@@ -242,7 +242,7 @@ void Group::Thumbnail::parentHierarchyChanged()
 void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    startTimer(5);
+    beginDragAutoRepeat(5);
 }
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
@@ -251,7 +251,6 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     {
         return;
     }
-    stopTimer();
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StrechableSection>();
@@ -283,17 +282,6 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
                                          }),
                                      parent, snapshot, true, &p, &event.source);
     }
-}
-
-void Group::Thumbnail::mouseUp(juce::MouseEvent const& event)
-{
-    juce::ignoreUnused(event);
-    stopTimer();
-}
-
-void Group::Thumbnail::timerCallback()
-{
-    juce::Desktop::getInstance().getMainMouseSource().triggerFakeMove();
 }
 
 ANALYSE_FILE_END
