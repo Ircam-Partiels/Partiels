@@ -25,19 +25,7 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
                     mAccessor,
                     [this](Track::Accessor& trackAccessor)
                     {
-                        auto newSection = std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
-                        anlStrongAssert(newSection != nullptr);
-                        if(newSection != nullptr)
-                        {
-                            newSection->onRemove = [&]()
-                            {
-                                if(onRemoveTrack != nullptr)
-                                {
-                                    onRemoveTrack(trackAccessor.getAttr<Track::AttrType::identifier>());
-                                }
-                            };
-                        }
-                        return newSection;
+                        return std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
                     },
                     nullptr);
 
@@ -62,14 +50,6 @@ Group::StrechableSection::StrechableSection(Accessor& accessor, Transport::Acces
                 mConcertinaTable.setOpen(acsr.getAttr<AttrType::expanded>(), true);
             }
             break;
-        }
-    };
-
-    mSection.onRemove = [&]()
-    {
-        if(onRemoveGroup != nullptr)
-        {
-            onRemoveGroup();
         }
     };
 
