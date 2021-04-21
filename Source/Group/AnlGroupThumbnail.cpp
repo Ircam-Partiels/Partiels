@@ -7,11 +7,17 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
     addAndMakeVisible(mNameButton);
+    mNameButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExportButton);
+    mExportButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
+    mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mRemoveButton);
+    mRemoveButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
+    mExpandButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mDropdownButton);
+    mDropdownButton.setWantsKeyboardFocus(false);
 
     mNameButton.setTooltip(juce::translate("Change the name of the group or the tracks' properties"));
     mExportButton.setTooltip(juce::translate("Export the group"));
