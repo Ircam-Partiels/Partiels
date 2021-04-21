@@ -88,7 +88,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
-    
+    setWantsKeyboardFocus(true);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
