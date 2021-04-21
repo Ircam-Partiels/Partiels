@@ -1,6 +1,6 @@
 #include "AnlTrackSection.h"
-#include "AnlTrackTools.h"
 #include "../Zoom/AnlZoomTools.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -15,14 +15,14 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
         auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
-    
+
     mBinRuler.onDoubleClick = [&]()
     {
         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
         auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
-    
+
     mThumbnail.onRemove = [&]()
     {
         if(onRemove != nullptr)
@@ -30,7 +30,7 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
             onRemove();
         }
     };
-    
+
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         switch(type)
@@ -46,14 +46,14 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
                 mBinRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid);
                 mBinScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid);
             }
-                break;
+            break;
             case AttrType::state:
                 break;
             case AttrType::height:
             {
                 setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
             }
-                break;
+            break;
             case AttrType::colours:
             case AttrType::zoomLink:
             case AttrType::results:
@@ -70,15 +70,15 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
                 mSnapshotDecoration.setHighlighted(focused);
                 mPlotDecoration.setHighlighted(focused);
             }
-                break;
+            break;
         }
     };
-    
+
     mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
     };
-    
+
     addChildComponent(mValueRuler);
     addChildComponent(mValueScrollBar);
     addChildComponent(mBinRuler);
@@ -100,11 +100,11 @@ Track::Section::~Section()
 void Track::Section::resized()
 {
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));
-    
+
     auto bounds = getLocalBounds();
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
     mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
-    
+
     mValueScrollBar.setBounds(bounds.removeFromRight(8));
     mBinScrollBar.setBounds(mValueScrollBar.getBounds());
     mValueRuler.setBounds(bounds.removeFromRight(16));
@@ -129,7 +129,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
         Component::mouseWheelMove(event, wheel);
         return;
     }
-    
+
     switch(Tools::getDisplayType(mAccessor))
     {
         case Tools::DisplayType::markers:
@@ -141,7 +141,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
             auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
         }
-            break;
+        break;
         case Tools::DisplayType::grid:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
@@ -149,7 +149,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
             auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
         }
-            break;
+        break;
     }
 }
 
@@ -160,7 +160,7 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
         Component::mouseMagnify(event, magnifyAmount);
         return;
     }
-    
+
     switch(Tools::getDisplayType(mAccessor))
     {
         case Tools::DisplayType::markers:
@@ -171,36 +171,36 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
             auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            
+
             auto const anchor = Zoom::Tools::getScaledValueFromHeight(zoomAcsr, *this, event.y);
             auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
             auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
-            
+
             auto const minDistance = zoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
             auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
             auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
-            
+
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
         }
-            break;
+        break;
         case Tools::DisplayType::grid:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
             auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            
+
             auto const anchor = Zoom::Tools::getScaledValueFromHeight(zoomAcsr, *this, event.y);
             auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
             auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
-            
+
             auto const minDistance = zoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
             auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
             auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
-            
+
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
         }
-            break;
+        break;
     }
 }
 
@@ -209,24 +209,24 @@ void Track::Section::focusOfChildComponentChanged(juce::Component::FocusChangeTy
     juce::ignoreUnused(cause);
     juce::WeakReference<juce::Component> target(this);
     juce::MessageManager::callAsync([=, this]
-    {
-        if(target.get() != nullptr)
-        {
-            mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
-        }
-    });
+                                    {
+                                        if(target.get() != nullptr)
+                                        {
+                                            mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
+                                        }
+                                    });
 }
 
 void Track::Section::visibilityChanged()
 {
     juce::WeakReference<juce::Component> target(this);
     juce::MessageManager::callAsync([=, this]
-    {
-        if(target.get() != nullptr && isVisible() && (isShowing() || isOnDesktop()))
-        {
-            grabKeyboardFocus();
-        }
-    });
+                                    {
+                                        if(target.get() != nullptr && isVisible() && (isShowing() || isOnDesktop()))
+                                        {
+                                            grabKeyboardFocus();
+                                        }
+                                    });
 }
 
 void Track::Section::parentHierarchyChanged()
