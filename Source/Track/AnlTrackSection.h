@@ -24,8 +24,6 @@ namespace Track
         Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
         ~Section() override;
 
-        std::function<void(void)> onRemove = nullptr;
-
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;

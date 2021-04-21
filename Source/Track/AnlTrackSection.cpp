@@ -23,14 +23,6 @@ Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transp
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
     };
 
-    mThumbnail.onRemove = [&]()
-    {
-        if(onRemove != nullptr)
-        {
-            onRemove();
-        }
-    };
-
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         switch(type)
