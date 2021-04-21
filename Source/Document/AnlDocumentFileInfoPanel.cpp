@@ -14,7 +14,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
             case AttrType::file:
             {
                 mConcertinaTable.setComponents({});
-                
+
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setEditable(false);
@@ -42,11 +42,11 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 mPanelDurationInSeconds.entry.setEditable(false);
                 mPanelNumChannels.entry.setText(juce::String(audioFormatReader->numChannels), juce::NotificationType::dontSendNotification);
                 mPanelNumChannels.entry.setEditable(false);
-                
+
                 auto const& metadataValues = audioFormatReader->metadataValues;
                 mMetaDataPanels.clear();
-                std::vector<ConcertinaTable::ComponentRef> panels {mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
-                
+                std::vector<ConcertinaTable::ComponentRef> panels{mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
+
                 for(auto const& key : metadataValues.getAllKeys())
                 {
                     auto const& value = metadataValues[key];
@@ -64,12 +64,12 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 mConcertinaTable.setComponents(panels);
                 resized();
             }
-                break;
+            break;
             case AttrType::layout:
                 break;
         }
     };
-    
+
     mViewport.setViewedComponent(&mConcertinaTable, false);
     addAndMakeVisible(mViewport);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -100,12 +100,12 @@ Document::FileInfoButton::FileInfoButton(FileInfoPanel& fileInfoPanel)
     {
         mFileInfoPanel.show(getScreenBounds().getCentre());
     };
-    
+
     mTextButton.onStateChange = [&]
     {
         mImageButton.setState(mTextButton.getState());
     };
-    
+
     mImageButton.onStateChange = [&]
     {
         mTextButton.setState(mTextButton.getState());
