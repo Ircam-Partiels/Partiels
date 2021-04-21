@@ -65,6 +65,7 @@ namespace Document
         Zoom::ScrollBar mTimeScrollBar{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
+        juce::Component* mFocusComponent{nullptr};
     };
 } // namespace Document
 

@@ -361,24 +361,24 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
 {
     if(mViewport.isParentOf(focusedComponent))
     {
-        auto getSection = [&]()
+        auto getSection = [&]() -> juce::Component*
         {
-            if(dynamic_cast<Track::Section*>(focusedComponent))
+            if(dynamic_cast<Track::Section*>(focusedComponent) || dynamic_cast<Group::Section*>(focusedComponent))
             {
                 return focusedComponent;
             }
-            if(auto* trackSection = focusedComponent->findParentComponentOfClass<Track::Section>())
-            {
-                return static_cast<juce::Component*>(trackSection);
-            }
-            if(dynamic_cast<Group::Section*>(focusedComponent))
-            {
-                return focusedComponent;
-            }
-            return static_cast<juce::Component*>(focusedComponent->findParentComponentOfClass<Group::Section>());
+            anlWeakAssert(false);
+            return nullptr;
         };
         if(auto* section = getSection())
         {
+            // This is used to prevent false notifications
+            if(mFocusComponent == section)
+            {
+                return;
+            }
+            mFocusComponent = section;
+            
             auto const area = mViewport.getViewArea();
             auto const relativeBounds = mDraggableTable.getLocalArea(section, section->getLocalBounds());
             if(relativeBounds.contains(area))
@@ -395,10 +395,6 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
             {
                 mViewport.setViewPosition({area.getX(), area.getY() + topDifference - 8});
             }
-        }
-        else
-        {
-            anlWeakAssert(false);
         }
     }
 }
