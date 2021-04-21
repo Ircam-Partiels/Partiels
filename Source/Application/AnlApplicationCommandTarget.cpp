@@ -91,7 +91,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
         , CommandIDs::EditNewGroup
-        , CommandIDs::AnalysisNew
+        , CommandIDs::EditNewTrack
         
         , CommandIDs::TransportTogglePlayback
         , CommandIDs::TransportToggleLooping
@@ -193,9 +193,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
         break;
-        case CommandIDs::AnalysisNew:
+        case CommandIDs::EditNewTrack:
         {
-            result.setInfo(juce::translate("Add New Analysis"), juce::translate("Adds a new analysis"), "Edit", 0);
+            result.setInfo(juce::translate("Add New Track"), juce::translate("Adds a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
@@ -372,12 +372,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::AnalysisNew:
+        case CommandIDs::EditNewTrack:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
             documentDir.addTrack(AlertType::window, NotificationType::synchronous);
-            documentDir.endAction("New Analysis", ActionState::apply);
+            documentDir.endAction("New Track", ActionState::apply);
             return true;
         }
 
