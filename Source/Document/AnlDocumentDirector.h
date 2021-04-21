@@ -16,22 +16,22 @@ namespace Document
         ~Director();
 
         void sanitize(NotificationType const notification);
-        
+
         void startAction();
         void endAction(juce::String const& name, ActionState state);
 
         void addTrack(AlertType const alertType, NotificationType const notification);
-        void removeTrack(AlertType const alertType, juce::String const identifier, NotificationType const notification);
+        bool removeTrack(juce::String const identifier, NotificationType const notification);
         void moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
         bool addGroup(juce::String const& name, size_t position, NotificationType const notification);
-        void removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification);
+        bool removeGroup(juce::String const identifier, NotificationType const notification);
 
     private:
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;
-        
+
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
         std::vector<std::unique_ptr<Group::Director>> mGroups;

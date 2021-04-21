@@ -19,14 +19,12 @@ Application::Interface::Interface()
 
     mDocumentSection.onRemoveGroup = [](juce::String const& groupIdentifier)
     {
-        auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeGroup(AlertType::window, groupIdentifier, NotificationType::synchronous);
+        JUCE_COMPILER_WARNING("remove that");
     };
 
     mDocumentSection.onRemoveTrack = [](juce::String const& trackIdentifier)
     {
-        auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.removeTrack(AlertType::window, trackIdentifier, NotificationType::synchronous);
+        JUCE_COMPILER_WARNING("remove that");
     };
 
     mDocumentSection.onTrackInserted = [](juce::String const& groupIdentifier, juce::String const& trackIdentifier)

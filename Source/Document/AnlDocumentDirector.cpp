@@ -220,7 +220,7 @@ void Document::Director::endAction(juce::String const& name, ActionState state)
     {
         return;
     }
-    
+
     class Action
     : public juce::UndoableAction
     {
@@ -231,27 +231,27 @@ void Document::Director::endAction(juce::String const& name, ActionState state)
             mRedoAccessor.copyFrom(mAccessor, NotificationType::synchronous);
             mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
         }
-        
+
         ~Action() override = default;
-        
+
         bool perform() override
         {
             mAccessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
             return true;
         }
-        
+
         bool undo() override
         {
             mAccessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
             return true;
         }
-        
+
     private:
         Accessor& mAccessor;
         Accessor mRedoAccessor;
         Accessor mUndoAccessor;
     };
-    
+
     auto action = std::make_unique<Action>(mAccessor, mSavedState);
     if(action != nullptr)
     {
@@ -262,12 +262,12 @@ void Document::Director::endAction(juce::String const& name, ActionState state)
                 mUndoManager.beginNewTransaction(name);
                 mUndoManager.perform(action.release());
             }
-                break;
+            break;
             case ActionState::abort:
             {
                 action->undo();
             }
-                break;
+            break;
         }
     }
 }
@@ -376,7 +376,7 @@ void Document::Director::addTrack(AlertType const alertType, NotificationType co
     }
 }
 
-void Document::Director::removeTrack(AlertType const alertType, juce::String const identifier, NotificationType const notification)
+bool Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
 {
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
@@ -386,15 +386,7 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
     anlWeakAssert(it != trackAcsrs.cend());
     if(it == trackAcsrs.cend())
     {
-        return;
-    }
-
-    auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-    auto const title = juce::translate("Remove Analysis");
-    auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" analysis from the project? If you edited the results of the analysis, the changes will be lost!").replace("ANLNAME", it->get().getAttr<Track::AttrType::name>());
-    if(alertType == AlertType::window && !juce::AlertWindow::showOkCancelBox(icon, title, message))
-    {
-        return;
+        return false;
     }
 
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -409,6 +401,7 @@ void Document::Director::removeTrack(AlertType const alertType, juce::String con
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
 
     sanitize(notification);
+    return true;
 }
 
 void Document::Director::moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
@@ -470,13 +463,13 @@ bool Document::Director::addGroup(juce::String const& name, size_t position, Not
     {
         return false;
     }
-    
+
     auto const identifier = juce::Uuid().toString();
-    
+
     auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
     groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
     groupAcsr.setAttr<Group::AttrType::name>(name, notification);
-    
+
     auto layout = mAccessor.getAttr<AttrType::layout>();
     anlStrongAssert(position <= layout.size());
     position = std::min(position, layout.size());
@@ -486,7 +479,7 @@ bool Document::Director::addGroup(juce::String const& name, size_t position, Not
     return true;
 }
 
-void Document::Director::removeGroup(AlertType const alertType, juce::String const identifier, NotificationType const notification)
+bool Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
 {
     auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
@@ -496,27 +489,20 @@ void Document::Director::removeGroup(AlertType const alertType, juce::String con
     anlWeakAssert(it != groupAcsrs.cend());
     if(it == groupAcsrs.cend())
     {
-        return;
-    }
-
-    auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-    auto const title = juce::translate("Remove Group");
-    auto const message = juce::translate("Are you sure you want to remove the \"ANLNAME\" group from the project? This will delete all the analysis and lose everything!!!!!").replace("ANLNAME", it->get().getAttr<Group::AttrType::name>());
-    if(alertType == AlertType::window && !juce::AlertWindow::showOkCancelBox(icon, title, message))
-    {
-        return;
+        return false;
     }
 
     auto const layout = it->get().getAttr<Group::AttrType::layout>();
     for(auto const& tarckIdentifier : layout)
     {
-        removeTrack(AlertType::silent, tarckIdentifier, notification);
+        removeTrack(tarckIdentifier, notification);
     }
 
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
 
     sanitize(notification);
+    return true;
 }
 
 void Document::Director::sanitize(NotificationType const notification)
