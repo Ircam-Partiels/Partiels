@@ -24,7 +24,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     juce::ignoreUnused(commandLine);
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
     juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
-    
+
     mAudioFormatManager.registerBasicFormats();
     mWindow = std::make_unique<Window>();
     if(mWindow == nullptr)
@@ -50,7 +50,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         anlDebug("Application", "Failed.");
         return;
     }
-    
+
     anlDebug("Application", "Ready!");
     auto const path = commandLine.removeCharacters("\"");
     if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
@@ -87,14 +87,14 @@ void Application::Instance::systemRequestedQuit()
     {
         return;
     }
-    
+
     if(juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
     {
         anlDebug("Application", "Delayed...");
         juce::Timer::callAfterDelay(500, [this]()
-        {
-            systemRequestedQuit();
-        });
+                                    {
+                                        systemRequestedQuit();
+                                    });
     }
     else
     {
