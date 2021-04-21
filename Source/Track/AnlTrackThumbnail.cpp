@@ -45,7 +45,6 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
 
     mExportButton.onClick = [&]()
     {
-        JUCE_COMPILER_WARNING("these conditions should be fixed")
         auto const processing = mAccessor.getAttr<AttrType::processing>();
         auto const& results = mAccessor.getAttr<AttrType::results>();
         auto const resultsAreReady = !std::get<0>(processing) && results != nullptr && !results->empty();
