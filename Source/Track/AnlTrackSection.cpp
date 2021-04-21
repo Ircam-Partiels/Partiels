@@ -217,21 +217,4 @@ void Track::Section::focusOfChildComponentChanged(juce::Component::FocusChangeTy
                                     });
 }
 
-void Track::Section::visibilityChanged()
-{
-    juce::WeakReference<juce::Component> target(this);
-    juce::MessageManager::callAsync([=, this]
-                                    {
-                                        if(target.get() != nullptr && isVisible() && (isShowing() || isOnDesktop()))
-                                        {
-                                            grabKeyboardFocus();
-                                        }
-                                    });
-}
-
-void Track::Section::parentHierarchyChanged()
-{
-    visibilityChanged();
-}
-
 ANALYSE_FILE_END
