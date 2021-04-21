@@ -357,8 +357,9 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             documentDir.startAction();
 
             auto const index = documentAcsr.getNumAcsr<Document::AcsrType::groups>();
-            auto const position = Document::Tools::getFocusedGroup(documentAcsr);
-            if(!documentDir.addGroup("Group " + juce::String(index + 1_z), position.has_value() ? get<1>(*position) : index, NotificationType::synchronous))
+            auto const focusedId = Document::Tools::getFocusedGroup(documentAcsr);
+            auto const position = focusedId.has_value() ? Document::Tools::getGroupPosition(documentAcsr, *focusedId) : index;
+            if(!documentDir.addGroup("Group " + juce::String(index + 1_z), position, NotificationType::synchronous))
             {
                 auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
                 auto const title = juce::translate("Group cannot be created!");

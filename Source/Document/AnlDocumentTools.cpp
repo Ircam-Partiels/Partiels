@@ -47,6 +47,51 @@ Group::Accessor& Document::Tools::getGroupAcsr(Accessor& accessor, juce::String 
     return it->get();
 }
 
+size_t Document::Tools::getTrackPosition(Accessor& accessor, juce::String const& identifier)
+{
+    auto const& groupAcsr = getGroupAcsr(accessor, identifier);
+    auto const& layout = groupAcsr.getAttr<Group::AttrType::layout>();
+    auto it = std::find(layout.cbegin(), layout.cend(), identifier);
+    anlStrongAssert(it != layout.cend());
+    return static_cast<size_t>(std::distance(layout.cbegin(), it));
+}
+
+size_t Document::Tools::getGroupPosition(Accessor& accessor, juce::String const& identifier)
+{
+    auto const& layout = accessor.getAttr<AttrType::layout>();
+    auto it = std::find(layout.cbegin(), layout.cend(), identifier);
+    anlStrongAssert(it != layout.cend());
+    return static_cast<size_t>(std::distance(layout.cbegin(), it));
+}
+
+std::optional<juce::String> Document::Tools::getFocusedTrack(Accessor const& accessor)
+{
+    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
+    auto trackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                {
+                                    return trackAcsr.get().template getAttr<Track::AttrType::focused>();
+                                });
+    if(trackIt == trackAcsrs.cend())
+    {
+        return std::optional<juce::String>();
+    }
+    return trackIt->get().getAttr<Track::AttrType::identifier>();
+}
+
+std::optional<juce::String> Document::Tools::getFocusedGroup(Accessor const& accessor)
+{
+    auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
+    auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+                                {
+                                    return groupAcsr.get().template getAttr<Group::AttrType::focused>();
+                                });
+    if(groupIt == groupAcsrs.cend())
+    {
+        return std::optional<juce::String>();
+    }
+    return groupIt->get().getAttr<Group::AttrType::identifier>();
+}
+
 std::optional<juce::String> Document::Tools::getFocusedItem(Accessor const& accessor)
 {
     auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
@@ -68,21 +113,6 @@ std::optional<juce::String> Document::Tools::getFocusedItem(Accessor const& acce
         return groupIt->get().getAttr<Group::AttrType::identifier>();
     }
     return std::optional<juce::String>();
-}
-
-std::optional<std::tuple<juce::String, size_t>> Document::Tools::getFocusedGroup(Accessor const& accessor)
-{
-    auto const focusedItem = getFocusedItem(accessor);
-    if(!focusedItem.has_value())
-    {
-        return std::optional<std::tuple<juce::String, size_t>>();
-    }
-    auto const& groupAcsr = getGroupAcsr(accessor, *focusedItem);
-    auto const& identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-    auto const& layout = accessor.getAttr<AttrType::layout>();
-    auto it = std::find(layout.cbegin(), layout.cend(), identifier);
-    anlStrongAssert(it != layout.cend());
-    return std::make_tuple(identifier, static_cast<size_t>(std::distance(layout.cbegin(), it)));
 }
 
 ANALYSE_FILE_END
