@@ -27,7 +27,6 @@ namespace Group
         Section(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~Section() override;
 
-        std::function<void(void)> onRemove = nullptr;
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
 
         // juce::Component
