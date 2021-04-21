@@ -136,50 +136,101 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
 
         juce::Component* getNextComponent(juce::Component* current) override
         {
+            if(auto* content = getNextTrackOrOverview(current))
+            {
+                return content;
+            }
+            if(auto* parentFocusTraverser = getParentFocusTraverser())
+            {
+                return parentFocusTraverser->getNextComponent(&mStrechableSection);
+            }
+            return &mStrechableSection.mSection;
+        }
+
+        juce::Component* getPreviousComponent(juce::Component* current) override
+        {
+            if(auto* content = getPreviousTrackOrOverview(current))
+            {
+                return content;
+            }
+            if(auto* parentFocusTraverser = getParentFocusTraverser())
+            {
+                return parentFocusTraverser->getPreviousComponent(&mStrechableSection);
+            }
+            return &mStrechableSection.mSection;
+        }
+
+        bool isOverview(juce::Component* component) const
+        {
+            return &mStrechableSection.mSection == component || mStrechableSection.mSection.isParentOf(component);
+        }
+
+        juce::Component* getNextTrackOrOverview(juce::Component* component)
+        {
+            if(component == nullptr)
+            {
+                return &mStrechableSection.mSection;
+            }
             auto const isOpen = mStrechableSection.mConcertinaTable.isOpen();
-            auto const wcontents = mStrechableSection.mDraggableTable.getComponents();
-            if(current == nullptr || !isOpen || wcontents.empty())
+            auto const contents = mStrechableSection.mDraggableTable.getComponents();
+            if(!isOpen || contents.empty())
             {
-                auto* parent = mStrechableSection.getParentComponent();
-                if(parent != nullptr)
-                {
-                    if(auto* parentFocusTraverser = parent->createFocusTraverser())
-                    {
-                        return parentFocusTraverser->getNextComponent(&mStrechableSection);
-                    }
-                }
-                return juce::KeyboardFocusTraverser::getNextComponent(&mStrechableSection);
+                return nullptr;
             }
-            auto& section = mStrechableSection.mSection;
-            if(current == &section || section.isParentOf(current))
+            if(isOverview(component) && *contents.begin() != nullptr)
             {
-                auto next = wcontents.begin()->getComponent();
-                if(next != nullptr)
-                {
-                    return next;
-                }
+                return contents.begin()->getComponent();
             }
-            else
+            auto it = std::find_if(contents.begin(), contents.end(), [&](auto const& content)
+                                   {
+                                       return content != nullptr && (content == component || content->isParentOf(component));
+                                   });
+            while(it != contents.end() && std::next(it) != contents.end())
             {
-                auto it = std::find_if(wcontents.begin(), wcontents.end(), [&](auto const& wcontent)
-                                       {
-                                           auto* content = wcontent.getComponent();
-                                           return content != nullptr && (content == current || content->isParentOf(current));
-                                       });
-                if(it != wcontents.end() && std::next(it) != wcontents.end())
+                it = std::next(it);
+                if(*it != nullptr)
                 {
-                    return std::next(it)->getComponent();
+                    return it->getComponent();
                 }
             }
+            return nullptr;
+        }
+
+        juce::Component* getPreviousTrackOrOverview(juce::Component* component)
+        {
+            auto const isOpen = mStrechableSection.mConcertinaTable.isOpen();
+            auto const contents = mStrechableSection.mDraggableTable.getComponents();
+            if(!isOpen || contents.empty() || isOverview(component))
+            {
+                return nullptr;
+            }
+            auto it = std::find_if(contents.rbegin(), contents.rend(), [&](auto const& content)
+                                   {
+                                       return content != nullptr && (content == component || content->isParentOf(component));
+                                   });
+            if(it == contents.rend())
+            {
+                return &mStrechableSection.mSection;
+            }
+            while(it != contents.rend())
+            {
+                it = std::next(it);
+                if(*it != nullptr)
+                {
+                    return it->getComponent();
+                }
+            }
+            return nullptr;
+        }
+
+        juce::KeyboardFocusTraverser* getParentFocusTraverser()
+        {
             auto* parent = mStrechableSection.getParentComponent();
             if(parent != nullptr)
             {
-                if(auto* parentFocusTraverser = parent->createFocusTraverser())
-                {
-                    return parentFocusTraverser->getNextComponent(&mStrechableSection);
-                }
+                return parent->createFocusTraverser();
             }
-            return juce::KeyboardFocusTraverser::getNextComponent(&mStrechableSection);
+            return nullptr;
         }
 
     private:

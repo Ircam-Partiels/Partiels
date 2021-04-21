@@ -289,25 +289,65 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
 
         juce::Component* getNextComponent(juce::Component* current) override
         {
-            auto const wcontents = mSection.mDraggableTable.getComponents();
-            if(current == nullptr || wcontents.empty())
+            auto const contents = mSection.mDraggableTable.getComponents();
+            if(contents.empty())
             {
                 return juce::KeyboardFocusTraverser::getNextComponent(current);
             }
-            auto it = std::find_if(wcontents.begin(), wcontents.end(), [&](auto const& wcontent)
+            auto it = std::find_if(contents.begin(), contents.end(), [&](auto const& content)
                                    {
-                                       auto* content = wcontent.getComponent();
                                        return content != nullptr && (content == current || content->isParentOf(current));
                                    });
-            if(it != wcontents.end() && std::next(it) != wcontents.end())
+            while(it != contents.end() && std::next(it) != contents.end())
             {
-                return std::next(it)->getComponent();
+                it = std::next(it);
+                if(*it != nullptr)
+                {
+                    if(auto* childFocusTraverser = getChildFocusTraverser(*it))
+                    {
+                        childFocusTraverser->getNextComponent(nullptr);
+                    }
+                    return it->getComponent();
+                }
             }
-            else
+            return contents.begin()->getComponent();
+        }
+
+        juce::Component* getPreviousComponent(juce::Component* current) override
+        {
+            auto const contents = mSection.mDraggableTable.getComponents();
+            if(contents.empty())
             {
-                return wcontents.begin()->getComponent();
+                return juce::KeyboardFocusTraverser::getPreviousComponent(current);
             }
-            return juce::KeyboardFocusTraverser::getNextComponent(current);
+            auto it = std::find_if(contents.rbegin(), contents.rend(), [&](auto const& content)
+                                   {
+                                       return content != nullptr && (content == current || content->isParentOf(current));
+                                   });
+            while(it != contents.rend())
+            {
+                it = std::next(it);
+                if(*it != nullptr)
+                {
+                    if(auto* childFocusTraverser = getChildFocusTraverser(*it))
+                    {
+                        childFocusTraverser->getPreviousComponent(nullptr);
+                    }
+                    return it->getComponent();
+                }
+            }
+            return contents.back().getComponent();
+            ;
+        }
+
+        juce::KeyboardFocusTraverser* getChildFocusTraverser(juce::Component* component)
+        {
+            auto* child = dynamic_cast<Group::StrechableSection*>(component);
+            if(child != nullptr)
+            {
+                return child->createFocusTraverser();
+            }
+            return nullptr;
         }
 
     private:
@@ -355,6 +395,10 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
             {
                 mViewport.setViewPosition({area.getX(), area.getY() + topDifference - 8});
             }
+        }
+        else
+        {
+            anlWeakAssert(false);
         }
     }
 }
