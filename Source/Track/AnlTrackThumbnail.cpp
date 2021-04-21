@@ -8,10 +8,15 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
 : mAccessor(accessor)
 {
     addAndMakeVisible(mPropertiesButton);
+    mPropertiesButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExportButton);
+    mExportButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mRemoveButton);
+    mRemoveButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
+    mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mDropdownButton);
+    mDropdownButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
