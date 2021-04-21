@@ -29,6 +29,7 @@ namespace Application
             , EditRedo
             , EditNewGroup
             , EditNewTrack
+            , EditRemoveItem
             
             , TransportTogglePlayback
             , TransportToggleLooping

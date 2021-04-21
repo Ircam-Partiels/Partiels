@@ -92,6 +92,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::EditRedo
         , CommandIDs::EditNewGroup
         , CommandIDs::EditNewTrack
+        , CommandIDs::EditRemoveItem
         
         , CommandIDs::TransportTogglePlayback
         , CommandIDs::TransportToggleLooping
@@ -198,6 +199,30 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Add New Track"), juce::translate("Adds a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+        break;
+        case CommandIDs::EditRemoveItem:
+        {
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+
+            auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
+            auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
+            if(focusedTrack.has_value())
+            {
+                result.setInfo(juce::translate("Remove Track"), juce::translate("Adds the selected track"), "Edit", 0);
+            }
+            else if(focusedGroup.has_value())
+            {
+                result.setInfo(juce::translate("Remove Group"), juce::translate("Removes the selected group"), "Edit", 0);
+            }
+            else
+            {
+                result.setInfo(juce::translate("Remove Track or Group"), juce::translate("Removes the selected track or group"), "Edit", 0);
+            }
+            result.setActive(focusedTrack.has_value() || focusedGroup.has_value());
+            result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
         }
         break;
 
@@ -379,6 +404,60 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             documentDir.startAction();
             documentDir.addTrack(AlertType::window, NotificationType::synchronous);
             documentDir.endAction("New Track", ActionState::apply);
+            return true;
+        }
+        case CommandIDs::EditRemoveItem:
+        {
+            auto& documentDir = Instance::get().getDocumentDirector();
+            auto& documentAcsr = Instance::get().getDocumentAccessor();
+
+            auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
+            auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
+            if(focusedTrack.has_value())
+            {
+                auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *focusedTrack);
+                auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
+
+                auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+                auto const title = juce::translate("Remove Track");
+                auto const message = juce::translate("Are you sure you want to remove the \"TRACKNAME\" track from the project?").replace("TRACKNAME", trackName);
+                if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+                {
+                    return true;
+                }
+
+                documentDir.startAction();
+                if(documentDir.removeTrack(*focusedTrack, NotificationType::synchronous))
+                {
+                    documentDir.endAction("Remove Track " + trackName, ActionState::apply);
+                }
+                else
+                {
+                    documentDir.endAction("Remove Track " + trackName, ActionState::abort);
+                }
+            }
+            else if(focusedGroup.has_value())
+            {
+                auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *focusedGroup);
+                auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
+                auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
+                auto const title = juce::translate("Remove Group");
+                auto const message = juce::translate("Are you sure you want to remove the \"GROUPNAME\" group from the project? This will also remove all the contained analyses!").replace("GROUPNAME", groupName);
+                if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+                {
+                    return true;
+                }
+
+                documentDir.startAction();
+                if(documentDir.removeGroup(*focusedGroup, NotificationType::synchronous))
+                {
+                    documentDir.endAction("Remove Group " + groupName, ActionState::apply);
+                }
+                else
+                {
+                    documentDir.endAction("Remove Group " + groupName, ActionState::abort);
+                }
+            }
             return true;
         }
 
