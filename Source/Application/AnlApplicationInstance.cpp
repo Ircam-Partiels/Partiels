@@ -217,4 +217,9 @@ juce::AudioDeviceManager& Application::Instance::getAudioDeviceManager()
     return mAudioDeviceManager;
 }
 
+juce::UndoManager& Application::Instance::getUndoManager()
+{
+    return mUndoManager;
+}
+
 ANALYSE_FILE_END

@@ -51,13 +51,14 @@ namespace Application
         juce::ApplicationCommandManager& getApplicationCommandManager();
         juce::AudioFormatManager& getAudioFormatManager();
         juce::AudioDeviceManager& getAudioDeviceManager();
+        juce::UndoManager& getUndoManager();
 
     private:
         TranslationManager mTranslationManager;
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;
-        
+        juce::UndoManager mUndoManager;
         Accessor mApplicationAccessor;
         PluginList::Accessor mPluginListAccessor;
         PluginList::Scanner mPluginListScanner;
