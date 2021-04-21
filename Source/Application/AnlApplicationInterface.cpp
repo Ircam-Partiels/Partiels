@@ -17,16 +17,6 @@ Application::Interface::Interface()
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
 
-    mDocumentSection.onRemoveGroup = [](juce::String const& groupIdentifier)
-    {
-        JUCE_COMPILER_WARNING("remove that");
-    };
-
-    mDocumentSection.onRemoveTrack = [](juce::String const& trackIdentifier)
-    {
-        JUCE_COMPILER_WARNING("remove that");
-    };
-
     mDocumentSection.onTrackInserted = [](juce::String const& groupIdentifier, juce::String const& trackIdentifier)
     {
         auto& documentDir = Instance::get().getDocumentDirector();
