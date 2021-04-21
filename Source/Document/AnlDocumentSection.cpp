@@ -332,7 +332,7 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
         if(auto* section = getSection())
         {
             auto const area = mViewport.getViewArea();
-            auto const relativeBounds = mDraggableTable.getLocalArea(section, sectionPP->getLocalBounds());
+            auto const relativeBounds = mDraggableTable.getLocalArea(section, section->getLocalBounds());
             if(relativeBounds.contains(area))
             {
                 return;
