@@ -90,7 +90,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
-        , CommandIDs::GroupNew
+        , CommandIDs::EditNewGroup
         , CommandIDs::AnalysisNew
         
         , CommandIDs::TransportTogglePlayback
@@ -186,7 +186,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
-        case CommandIDs::GroupNew:
+        case CommandIDs::EditNewGroup:
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
@@ -350,7 +350,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             undoManager.redo();
             return true;
         }
-        case CommandIDs::GroupNew:
+        case CommandIDs::EditNewGroup:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             auto& documentAcsr = Instance::get().getDocumentAccessor();

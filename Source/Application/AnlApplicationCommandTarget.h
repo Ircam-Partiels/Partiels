@@ -27,7 +27,7 @@ namespace Application
             
             , EditUndo
             , EditRedo
-            , GroupNew
+            , EditNewGroup
             , AnalysisNew
             
             , TransportTogglePlayback
