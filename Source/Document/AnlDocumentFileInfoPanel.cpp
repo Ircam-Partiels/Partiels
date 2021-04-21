@@ -92,7 +92,9 @@ Document::FileInfoButton::FileInfoButton(FileInfoPanel& fileInfoPanel)
 : mFileInfoPanel(fileInfoPanel)
 {
     addAndMakeVisible(mTextButton);
+    mTextButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mImageButton);
+    mImageButton.setWantsKeyboardFocus(false);
     mImageButton.setTooltip(juce::translate("Show file info"));
     mTextButton.onClick = mImageButton.onClick = [&]()
     {
