@@ -75,6 +75,12 @@ enum class AlertType : bool
       silent = false
     , window = true
 };
+
+enum class ActionState : bool
+{
+      abort
+    , apply
+};
 // clang-format on
 
 ANALYSE_FILE_END

@@ -64,7 +64,7 @@ namespace Application
         PluginList::Accessor mPluginListAccessor;
         PluginList::Scanner mPluginListScanner;
         Document::Accessor mDocumentAccessor;
-        Document::Director mDocumentDirector{mDocumentAccessor, mPluginListAccessor, mPluginListScanner, mAudioFormatManager};
+        Document::Director mDocumentDirector{mDocumentAccessor, mPluginListAccessor, mPluginListScanner, mAudioFormatManager, mUndoManager};
         Document::FileWatcher mDocumentFileWatcher{mDocumentAccessor, mAudioFormatManager};
 
         Properties mProperties;

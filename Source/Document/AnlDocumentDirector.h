@@ -12,10 +12,13 @@ namespace Document
     class Director
     {
     public:
-        Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager);
+        Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager);
         ~Director();
 
         void sanitize(NotificationType const notification);
+        
+        void startAction();
+        void endAction(juce::String const& name, ActionState state);
 
         void addTrack(AlertType const alertType, NotificationType const notification);
         void removeTrack(AlertType const alertType, juce::String const identifier, NotificationType const notification);
@@ -26,6 +29,9 @@ namespace Document
     private:
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
+        juce::UndoManager& mUndoManager;
+        Accessor mSavedState;
+        
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;
         std::vector<std::unique_ptr<Group::Director>> mGroups;

@@ -6,9 +6,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager)
+Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
+, mUndoManager(undoManager)
 , mPluginListTable(pluginListAccessor, pluginListScanner)
 {
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
@@ -206,6 +207,69 @@ Document::Director::~Director()
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
+}
+
+void Document::Director::startAction()
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+}
+
+void Document::Director::endAction(juce::String const& name, ActionState state)
+{
+    if(mAccessor.isEquivalentTo(mSavedState))
+    {
+        return;
+    }
+    
+    class Action
+    : public juce::UndoableAction
+    {
+    public:
+        Action(Accessor& accessor, Accessor const& undoAcsr)
+        : mAccessor(accessor)
+        {
+            mRedoAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+            mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
+        }
+        
+        ~Action() override = default;
+        
+        bool perform() override
+        {
+            mAccessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
+            return true;
+        }
+        
+        bool undo() override
+        {
+            mAccessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
+            return true;
+        }
+        
+    private:
+        Accessor& mAccessor;
+        Accessor mRedoAccessor;
+        Accessor mUndoAccessor;
+    };
+    
+    auto action = std::make_unique<Action>(mAccessor, mSavedState);
+    if(action != nullptr)
+    {
+        switch(state)
+        {
+            case ActionState::apply:
+            {
+                mUndoManager.beginNewTransaction(name);
+                mUndoManager.perform(action.release());
+            }
+                break;
+            case ActionState::abort:
+            {
+                action->undo();
+            }
+                break;
+        }
+    }
 }
 
 void Document::Director::addTrack(AlertType const alertType, NotificationType const notification)
