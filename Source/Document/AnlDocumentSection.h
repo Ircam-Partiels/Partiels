@@ -13,6 +13,7 @@ namespace Document
     class Section
     : public juce::Component
     , public juce::DragAndDropContainer
+    , private juce::FocusChangeListener
     {
     public:
         // clang-format off
@@ -39,6 +40,9 @@ namespace Document
         juce::KeyboardFocusTraverser* createFocusTraverser() override;
 
     private:
+        // juce::FocusChangeListener
+        void globalFocusChanged(juce::Component* focusedComponent) override;
+
         void updateLayout();
 
         Accessor& mAccessor;
@@ -47,7 +51,7 @@ namespace Document
         FileInfoPanel mFileInfoPanel;
         FileInfoButton mFileInfoButton{mFileInfoPanel};
         Decorator mFileInfoButtonDecoration{mFileInfoButton, 1, 2.0f};
-        juce::ImageButton mTooltipButton;
+        juce::ImageButton mTooltipButton{"Document::Section::TooltipButton"};
 
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration{mTimeRuler, 1, 2.0f};

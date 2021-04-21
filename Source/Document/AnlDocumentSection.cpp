@@ -95,10 +95,12 @@ Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFo
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    juce::Desktop::getInstance().addFocusChangeListener(this);
 }
 
 Document::Section::~Section()
 {
+    juce::Desktop::getInstance().removeFocusChangeListener(this);
     mAccessor.removeListener(mListener);
 }
 
@@ -313,6 +315,40 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
     };
 
     return std::make_unique<FocusTraverser>(*this).release();
+}
+
+void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
+{
+    if(mViewport.isParentOf(focusedComponent))
+    {
+        auto getSection = [&]()
+        {
+            if(auto* trackSection = focusedComponent->findParentComponentOfClass<Track::Section>())
+            {
+                return static_cast<juce::Component*>(trackSection);
+            }
+            return static_cast<juce::Component*>(focusedComponent->findParentComponentOfClass<Group::Section>());
+        };
+        if(auto* section = getSection())
+        {
+            auto const area = mViewport.getViewArea();
+            auto const relativeBounds = mDraggableTable.getLocalArea(section, sectionPP->getLocalBounds());
+            if(relativeBounds.contains(area))
+            {
+                return;
+            }
+            auto const bottomDifference = relativeBounds.getBottom() - area.getBottom();
+            auto const topDifference = relativeBounds.getY() - area.getY();
+            if(bottomDifference > 0)
+            {
+                mViewport.setViewPosition({area.getX(), area.getY() + bottomDifference});
+            }
+            else if(topDifference < 0)
+            {
+                mViewport.setViewPosition({area.getX(), area.getY() + topDifference});
+            }
+        }
+    }
 }
 
 ANALYSE_FILE_END
