@@ -221,21 +221,4 @@ void Group::Section::focusOfChildComponentChanged(juce::Component::FocusChangeTy
                                     });
 }
 
-void Group::Section::visibilityChanged()
-{
-    juce::WeakReference<juce::Component> target(this);
-    juce::MessageManager::callAsync([=, this]
-                                    {
-                                        if(target.get() != nullptr && isVisible() && (isShowing() || isOnDesktop()))
-                                        {
-                                            grabKeyboardFocus();
-                                        }
-                                    });
-}
-
-void Group::Section::parentHierarchyChanged()
-{
-    visibilityChanged();
-}
-
 ANALYSE_FILE_END

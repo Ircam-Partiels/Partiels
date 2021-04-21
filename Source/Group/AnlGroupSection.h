@@ -36,9 +36,7 @@ namespace Group
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         void focusOfChildComponentChanged(juce::Component::FocusChangeType cause) override;
-        void visibilityChanged() override;
-        void parentHierarchyChanged() override;
-        
+
     private:
         // juce::DragAndDropTarget
         bool isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
