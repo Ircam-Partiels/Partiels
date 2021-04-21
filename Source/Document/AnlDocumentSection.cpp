@@ -191,20 +191,6 @@ void Document::Section::updateLayout()
         auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
-            groupSection->onRemoveGroup = [&]()
-            {
-                if(onRemoveGroup != nullptr)
-                {
-                    onRemoveGroup(groupAcsr.getAttr<Group::AttrType::identifier>());
-                }
-            };
-            groupSection->onRemoveTrack = [&](juce::String const& identifier)
-            {
-                if(onRemoveTrack != nullptr)
-                {
-                    onRemoveTrack(identifier);
-                }
-            };
             groupSection->onTrackInserted = [&](juce::String const& identifier)
             {
                 if(onTrackInserted != nullptr)
@@ -378,7 +364,7 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
                 return;
             }
             mFocusComponent = section;
-            
+
             auto const area = mViewport.getViewArea();
             auto const relativeBounds = mDraggableTable.getLocalArea(section, section->getLocalBounds());
             if(relativeBounds.contains(area))
