@@ -17,12 +17,6 @@ Application::Interface::Interface()
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandIDs::DocumentOpen, true);
     };
 
-    mDocumentSection.onTrackInserted = [](juce::String const& groupIdentifier, juce::String const& trackIdentifier)
-    {
-        auto& documentDir = Instance::get().getDocumentDirector();
-        documentDir.moveTrack(groupIdentifier, trackIdentifier, NotificationType::synchronous);
-    };
-
     mDocumentListener.onAttrChanged = [&](Document::Accessor const& acsr, Document::AttrType attribute)
     {
         switch(attribute)
