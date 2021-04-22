@@ -139,7 +139,6 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
             case AttrType::height:
             case AttrType::colour:
             case AttrType::layout:
-            case AttrType::tracks:
             case AttrType::focused:
                 break;
             case AttrType::expanded:
@@ -147,6 +146,11 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
                 lookAndFeelChanged();
             }
             break;
+            case AttrType::tracks:
+            {
+                resized();
+            }
+                break;
         }
     };
 
@@ -165,6 +169,7 @@ void Group::Thumbnail::resized()
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
 
+    auto const hasTrack = !mAccessor.getAttr<AttrType::layout>().empty();
     auto layoutButton = [&](juce::Component& component)
     {
         useDropdown = bounds.getHeight() < size * 2;
@@ -175,11 +180,15 @@ void Group::Thumbnail::resized()
         }
     };
 
+
     layoutButton(mExpandButton);
+    mExpandButton.setEnabled(hasTrack);
     layoutButton(mStateButton);
+    mStateButton.setEnabled(hasTrack);
     layoutButton(mExportButton);
+    mExportButton.setEnabled(hasTrack);
     layoutButton(mNameButton);
-    mDropdownButton.setVisible(useDropdown);
+    mDropdownButton.setVisible(hasTrack && useDropdown);
     if(useDropdown)
     {
         mDropdownButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
