@@ -184,6 +184,34 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
     timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
 }
 
+void Document::Section::moveKeyboardFocusTo(juce::String const& identifier)
+{
+    auto forwardToGroup = [&](juce::String const& groupIdentifier)
+    {
+        anlWeakAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+        if(Tools::hasGroupAcsr(mAccessor, groupIdentifier))
+        {
+            auto it = mGroupSections.find(groupIdentifier);
+            anlWeakAssert(it != mGroupSections.end());
+            if(it != mGroupSections.end())
+            {
+                it->second.get()->moveKeyboardFocusTo(identifier);
+            }
+        }
+    };
+
+    if(Tools::hasTrackAcsr(mAccessor, identifier))
+    {
+        auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
+        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+        forwardToGroup(groupIdentifier);
+    }
+    else
+    {
+        forwardToGroup(identifier);
+    }
+}
+
 void Document::Section::updateLayout()
 {
     auto createGroupSection = [&](Group::Accessor& groupAcsr)
@@ -208,6 +236,7 @@ void Document::Section::updateLayout()
                     auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
                     auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
                     mDirector.endAction("Move Track " + trackName + " to Group " + groupName, ActionState::apply);
+                    moveKeyboardFocusTo(identifier);
                 }
                 else
                 {

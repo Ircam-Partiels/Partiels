@@ -27,6 +27,8 @@ namespace Document
         Section(Accessor& accessor, Director& director, juce::AudioFormatManager& audioFormatManager);
         ~Section() override;
 
+        void moveKeyboardFocusTo(juce::String const& identifier);
+
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
