@@ -25,7 +25,7 @@ cmake .. -G Xcode
 
 echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'
-xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "$APP_NAME" -archivePath "$APP_PATH.xcarchive"
+xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "$APP_NAME" -archivePath "$APP_NAME.xcarchive"
 
 echo '\033[0;34m' "Exporting archive..."
 echo '\033[0m'
@@ -64,6 +64,7 @@ fi
 
 echo '\033[0;34m' "Creating apple disk image..."
 echo '\033[0m'
+cp -r -f $REPO_PATH/build/Partiels.app $REPO_PATH/build/app
 test -f "$APP_NAME-$APP_VERSION.dmg" && rm "$APP_NAME-$APP_VERSION.dmg"
 
 create-dmg \
