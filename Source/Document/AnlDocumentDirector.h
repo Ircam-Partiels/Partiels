@@ -17,6 +17,7 @@ namespace Document
 
         Accessor& getAccessor();
         juce::AudioFormatManager& getAudioFormatManager();
+        Group::Director& getGroupDirector(juce::String const& identifier);
 
         void sanitize(NotificationType const notification);
 

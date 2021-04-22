@@ -218,6 +218,17 @@ juce::AudioFormatManager& Document::Director::getAudioFormatManager()
     return mAudioFormatManager;
 }
 
+Group::Director& Document::Director::getGroupDirector(juce::String const& identifier)
+{
+    auto it = std::find_if(mGroups.begin(), mGroups.end(), [&](auto const& groupDirector)
+                           {
+                               auto const& grouAcsr = groupDirector->getAccessor();
+                               return grouAcsr.template getAttr<Group::AttrType::identifier>() == identifier;
+                           });
+    anlStrongAssert(it != mGroups.end());
+    return *it->get();
+}
+
 void Document::Director::startAction()
 {
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
