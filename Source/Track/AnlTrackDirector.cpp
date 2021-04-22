@@ -290,7 +290,6 @@ Track::Director::~Director()
     mProcessor.onAnalysisEnded = nullptr;
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
-    mAccessor.onAccessorErased = nullptr;
     auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     valueZoomAcsr.onAttrUpdated = nullptr;
     auto& binZoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
