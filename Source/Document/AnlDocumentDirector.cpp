@@ -378,55 +378,47 @@ bool Document::Director::removeGroup(juce::String const identifier, Notification
     return true;
 }
 
-void Document::Director::moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
+bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
 {
-    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-    auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
-                                 {
-                                     return acsr.getAttr<Track::AttrType::identifier>() == trackIdentifier;
-                                 });
-    anlWeakAssert(it != trackAcsrs.cend());
-    if(it == trackAcsrs.cend())
+    anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier) || !Tools::hasTrackAcsr(mAccessor, trackIdentifier))
     {
-        return;
+        return false;
+    }
+    // The track should already be in a group
+    anlWeakAssert(Tools::hasGroupAcsr(mAccessor, trackIdentifier));
+    if(Tools::hasGroupAcsr(mAccessor, trackIdentifier))
+    {
+        auto& groupAcsr = Tools::getGroupAcsr(mAccessor, trackIdentifier);
+        auto const identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+
+        // The previous groups is the same as the new group
+        anlWeakAssert(identifier != groupIdentifier);
+        if(identifier == groupIdentifier)
+        {
+            return false;
+        }
+        auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
+        std::erase(layout, trackIdentifier);
+        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
     }
 
-    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-    auto goupIt = std::find_if(groupAcsrs.begin(), groupAcsrs.end(), [&](auto const& groupAcsr)
-                               {
-                                   return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == groupIdentifier;
-                               });
-    anlWeakAssert(goupIt != groupAcsrs.end());
-    if(goupIt == groupAcsrs.end())
+    auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
+    auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
+    if(std::any_of(layout.cbegin(), layout.cend(), [&](auto const& identifier)
+                   {
+                       return identifier == trackIdentifier;
+                   }))
     {
-        return;
+        anlWeakAssert(false);
+        return false;
     }
-    for(auto& groupAcsr : groupAcsrs)
-    {
-        auto gIds = groupAcsr.get().getAttr<Group::AttrType::layout>();
-        if(std::addressof(*goupIt) == std::addressof(groupAcsr))
-        {
-            if(std::none_of(gIds.cbegin(), gIds.cend(), [&](auto const& identifier)
-                            {
-                                return identifier == trackIdentifier;
-                            }))
-            {
-                gIds.insert(gIds.cbegin(), trackIdentifier);
-            }
-            else
-            {
-                anlWeakAssert(false);
-            }
-            groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
-            groupAcsr.get().setAttr<Group::AttrType::expanded>(true, notification);
-        }
-        else
-        {
-            std::erase(gIds, trackIdentifier);
-            groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, notification);
-        }
-    }
+    layout.insert(layout.cbegin(), trackIdentifier);
+    groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
+    groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
     sanitize(notification);
+    return true;
 }
 
 void Document::Director::sanitize(NotificationType const notification)

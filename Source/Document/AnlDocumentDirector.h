@@ -25,7 +25,7 @@ namespace Document
         std::optional<juce::String> addGroup(size_t position, NotificationType const notification);
         bool removeGroup(juce::String const identifier, NotificationType const notification);
 
-        void moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
+        bool moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
 
     private:
         Accessor& mAccessor;
