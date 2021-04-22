@@ -33,7 +33,7 @@ Application::MainMenuModel::~MainMenuModel()
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Transport", "Points", "Zoom", "Help"};
+    return {"File", "Edit", "Transport", "Zoom", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
