@@ -63,6 +63,8 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         Accessor::Listener mListener;
+        PluginList::Table mPluginListTable;
+        juce::Component* mModalWindow = nullptr;
     };
 } // namespace Application
 

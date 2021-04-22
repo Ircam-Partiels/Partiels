@@ -41,6 +41,7 @@ void Application::CommandTarget::showUnsupportedAction()
 }
 
 Application::CommandTarget::CommandTarget()
+: mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
