@@ -26,8 +26,6 @@ namespace Document
         Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
         ~Section() override;
 
-        std::function<void(juce::String const& groupIdentifier, juce::String const& trackIdentifier)> onTrackInserted = nullptr;
-
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;

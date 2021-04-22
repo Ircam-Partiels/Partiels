@@ -193,9 +193,7 @@ void Document::Section::updateLayout()
         {
             groupSection->onTrackInserted = [&](juce::String const& identifier)
             {
-                if(onTrackInserted != nullptr)
                 {
-                    onTrackInserted(groupAcsr.getAttr<Group::AttrType::identifier>(), identifier);
                 }
             };
         }
