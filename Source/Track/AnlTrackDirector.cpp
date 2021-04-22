@@ -296,6 +296,11 @@ Track::Director::~Director()
     binZoomAcsr.onAttrUpdated = nullptr;
 }
 
+Track::Accessor& Track::Director::getAccessor()
+{
+    return mAccessor;
+}
+
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
     anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReaderManager);

@@ -15,7 +15,8 @@ namespace Track
     public:
         Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
         ~Director() override;
-        
+
+        Accessor& getAccessor();
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
         
     private:
