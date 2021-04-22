@@ -187,17 +187,41 @@ namespace Model
 
         //! @brief Gets an accessor of a container
         template <acsr_enum_type type>
-        auto& getAcsr(size_t index = 0_z) noexcept
+        auto& getAcsr() noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
+            anlWeakAssert(element_type::size_flags == 1);
+            return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[0].get();
+        }
+
+        //! @brief Gets an accessor of a container
+        template <acsr_enum_type type>
+        auto const& getAcsr() const noexcept
+        {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
+            anlWeakAssert(element_type::size_flags == 1);
+            return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[0].get();
+        }
+
+        //! @brief Gets an accessor of a container
+        template <acsr_enum_type type>
+        auto& getAcsr(size_t index) noexcept
+        {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
+            anlWeakAssert(element_type::size_flags == 0);
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
         }
 
         //! @brief Gets an accessor of a container
         template <acsr_enum_type type>
-        auto const& getAcsr(size_t index = 0_z) const noexcept
+        auto const& getAcsr(size_t index) const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+            using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
+            anlWeakAssert(element_type::size_flags == 0);
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
         }
 
