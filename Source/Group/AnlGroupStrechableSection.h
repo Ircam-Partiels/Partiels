@@ -14,6 +14,8 @@ namespace Group
         StrechableSection(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~StrechableSection() override;
 
+        void moveKeyboardFocusTo(juce::String const& identifier);
+
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
 
         // juce::Component

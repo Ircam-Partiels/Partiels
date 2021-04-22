@@ -101,6 +101,26 @@ void Group::StrechableSection::resized()
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
 }
 
+void Group::StrechableSection::moveKeyboardFocusTo(juce::String const& identifier)
+{
+    auto const isOpen = mConcertinaTable.isOpen();
+    if(mAccessor.getAttr<AttrType::identifier>() == identifier || !isOpen)
+    {
+        mSection.grabKeyboardFocus();
+    }
+    else
+    {
+        anlStrongAssert(Tools::hasTrackAcsr(mAccessor, identifier));
+        auto const& contents = mTrackSections.getContents();
+        auto it = contents.find(identifier);
+        anlStrongAssert(it != contents.end());
+        if(it != contents.end() && it->second != nullptr)
+        {
+            it->second->grabKeyboardFocus();
+        }
+    }
+}
+
 juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
 {
     class FocusTraverser
