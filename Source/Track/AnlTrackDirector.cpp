@@ -35,10 +35,6 @@ Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatR
             {
                 applyZoom(*resultsRange);
             }
-            else if(globalRange.isEmpty())
-            {
-                applyZoom({0.0, 1.0});
-            }
         }
         
         // Bin Zoom
