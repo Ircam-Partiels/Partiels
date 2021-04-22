@@ -15,6 +15,9 @@ namespace Document
         Director(Accessor& accessor, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager);
         ~Director();
 
+        Accessor& getAccessor();
+        juce::AudioFormatManager& getAudioFormatManager();
+
         void sanitize(NotificationType const notification);
 
         void startAction();

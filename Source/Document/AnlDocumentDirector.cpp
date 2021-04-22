@@ -208,6 +208,16 @@ Document::Director::~Director()
     mAccessor.onAccessorErased = nullptr;
 }
 
+Document::Accessor& Document::Director::getAccessor()
+{
+    return mAccessor;
+}
+
+juce::AudioFormatManager& Document::Director::getAudioFormatManager()
+{
+    return mAudioFormatManager;
+}
+
 void Document::Director::startAction()
 {
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
