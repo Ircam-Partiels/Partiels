@@ -42,6 +42,13 @@ namespace Track
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
+
+    class MultiDirector
+    {
+    public:
+        virtual ~MultiDirector() = default;
+        virtual Director& getTrackDirector(juce::String const& identifier) = 0;
+    };
 } // namespace Track
 
 ANALYSE_FILE_END
