@@ -1,15 +1,16 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
-#include "../Zoom/AnlZoomModel.h"
-#include "../Transport/AnlTransportModel.h"
-#include "../Track/AnlTrackModel.h"
 #include "../Group/AnlGroupModel.h"
+#include "../Misc/AnlMisc.h"
+#include "../Track/AnlTrackModel.h"
+#include "../Transport/AnlTransportModel.h"
+#include "../Zoom/AnlZoomModel.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Document
 {
+    // clang-format off
     enum class AttrType : size_t
     {
           file
@@ -35,15 +36,18 @@ namespace Document
     , Model::Acsr<AcsrType::groups, Group::Accessor, Model::Flag::basic, Model::resizable>
     , Model::Acsr<AcsrType::tracks, Track::Accessor, Model::Flag::basic, Model::resizable>
     >;
-    
+    // clang-format on
+
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
-        
+
         Accessor()
-        : Accessor(AttrContainer({juce::File{}} , {}))
+        : Accessor(AttrContainer({juce::File{}}, {}))
+        {
+        }
 
         template <acsr_enum_type type>
         size_t getAcsrPosition(typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type const& other) const
@@ -78,6 +82,6 @@ namespace Document
             }
         }
     };
-}
+} // namespace Document
 
 ANALYSE_FILE_END
