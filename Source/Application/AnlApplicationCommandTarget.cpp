@@ -387,6 +387,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *identifier);
                 documentDir.endAction("New Group " + groupAcsr.getAttr<Group::AttrType::name>(), ActionState::apply);
+                if(auto* window = Instance::get().getWindow())
+                {
+                    window->moveKeyboardFocusTo(*identifier);
+                }
             }
             else
             {
@@ -476,7 +480,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
                     documentDir.endAction("New Track " + description.name, ActionState::apply);
-                    JUCE_COMPILER_WARNING("move focus sibling");
+                    if(auto* window = Instance::get().getWindow())
+                    {
+                        window->moveKeyboardFocusTo(*identifier);
+                    }
                 }
                 else
                 {
