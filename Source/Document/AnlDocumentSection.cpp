@@ -212,11 +212,11 @@ void Document::Section::moveKeyboardFocusTo(juce::String const& identifier)
 
 void Document::Section::updateLayout()
 {
-    auto createGroupSection = [&](Group::Accessor& groupAcsr)
+    auto createGroupSection = [&](Group::Director& groupDirector)
     {
         auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-        auto groupSection = std::make_unique<Group::StrechableSection>(groupAcsr, transportAcsr, timeZoomAcsr);
+        auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
             groupSection->onTrackInserted = [&](juce::String const& identifier)
@@ -228,6 +228,7 @@ void Document::Section::updateLayout()
                 }
 
                 mDirector.startAction();
+                auto& groupAcsr = groupDirector.getAccessor();
                 if(mDirector.moveTrack(groupAcsr.getAttr<Group::AttrType::identifier>(), identifier, NotificationType::synchronous))
                 {
                     auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
@@ -274,13 +275,11 @@ void Document::Section::updateLayout()
         auto sectionIt = mGroupSections.find(identifier);
         if(sectionIt == mGroupSections.cend())
         {
-            auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-                                        {
-                                            return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier;
-                                        });
-            if(groupIt != groupAcsrs.cend())
+            // This is necessary because the layout can be initialized before the group accessors
+            if(Tools::hasGroupAcsr(mAccessor, identifier))
             {
-                auto groupSection = createGroupSection(groupIt->get());
+                auto& groupDirector = mDirector.getGroupDirector(identifier);
+                auto groupSection = createGroupSection(groupDirector);
                 anlStrongAssert(groupSection != nullptr);
                 if(groupSection != nullptr)
                 {

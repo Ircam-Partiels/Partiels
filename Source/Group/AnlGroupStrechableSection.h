@@ -11,7 +11,7 @@ namespace Group
     : public juce::Component
     {
     public:
-        StrechableSection(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
+        StrechableSection(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~StrechableSection() override;
 
         void moveKeyboardFocusTo(juce::String const& identifier);
@@ -23,7 +23,8 @@ namespace Group
         juce::KeyboardFocusTraverser* createFocusTraverser() override;
 
     private:
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
