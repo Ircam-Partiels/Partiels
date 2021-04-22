@@ -381,7 +381,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
             auto const index = documentAcsr.getNumAcsr<Document::AcsrType::groups>();
             auto const focusedId = Document::Tools::getFocusedGroup(documentAcsr);
-            auto const position = focusedId.has_value() ? Document::Tools::getGroupPosition(documentAcsr, *focusedId) : index;
+            auto const position = focusedId.has_value() ? Document::Tools::getGroupPosition(documentAcsr, *focusedId) + 1_z : index;
             auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
             if(identifier.has_value())
             {
