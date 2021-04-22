@@ -39,7 +39,7 @@ juce::StringArray Application::MainMenuModel::getMenuBarNames()
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
 {
     juce::ignoreUnused(topLevelMenuIndex);
-    
+
     using CommandIDs = CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     juce::PopupMenu menu;
@@ -107,7 +107,7 @@ void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMe
 {
     juce::ignoreUnused(topLevelMenuIndex);
     using CommandIDs = CommandTarget::CommandIDs;
-    
+
     auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
     auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::DocumentOpenRecent));
     if(fileIndex < recentFiles.size())
