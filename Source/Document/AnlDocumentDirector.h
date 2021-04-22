@@ -12,7 +12,7 @@ namespace Document
     class Director
     {
     public:
-        Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager);
+        Director(Accessor& accessor, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager);
         ~Director();
 
         void sanitize(NotificationType const notification);
@@ -20,9 +20,9 @@ namespace Document
         void startAction();
         void endAction(juce::String const& name, ActionState state);
 
-        void addTrack(AlertType const alertType, NotificationType const notification);
+        std::optional<juce::String> addTrack(juce::String const groupIdentifer, size_t position, NotificationType const notification);
         bool removeTrack(juce::String const identifier, NotificationType const notification);
-        bool addGroup(juce::String const& name, size_t position, NotificationType const notification);
+        std::optional<juce::String> addGroup(size_t position, NotificationType const notification);
         bool removeGroup(juce::String const identifier, NotificationType const notification);
 
         void moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
@@ -33,8 +33,6 @@ namespace Document
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;
 
-        PluginList::Table mPluginListTable;
-        juce::Component* mModalWindow = nullptr;
         std::vector<std::unique_ptr<Group::Director>> mGroups;
         std::vector<std::unique_ptr<Track::Director>> mTracks;
         double mSampleRate = 44100.0;

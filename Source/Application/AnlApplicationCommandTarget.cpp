@@ -382,26 +382,126 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const index = documentAcsr.getNumAcsr<Document::AcsrType::groups>();
             auto const focusedId = Document::Tools::getFocusedGroup(documentAcsr);
             auto const position = focusedId.has_value() ? Document::Tools::getGroupPosition(documentAcsr, *focusedId) : index;
-            if(!documentDir.addGroup("Group " + juce::String(index + 1_z), position, NotificationType::synchronous))
+            auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
+            if(identifier.has_value())
             {
+                auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *identifier);
+                documentDir.endAction("New Group " + groupAcsr.getAttr<Group::AttrType::name>(), ActionState::apply);
+            }
+            else
+            {
+                documentDir.endAction("New Group", ActionState::abort);
                 auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
                 auto const title = juce::translate("Group cannot be created!");
                 auto const message = juce::translate("The group cannot be inserted into the document.");
                 juce::AlertWindow::showMessageBox(icon, title, message);
-                documentDir.endAction("New Group", ActionState::abort);
-            }
-            else
-            {
-                documentDir.endAction("New Group " + juce::String(index + 1_z), ActionState::apply);
             }
             return true;
         }
         case CommandIDs::EditNewTrack:
         {
-            auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.startAction();
-            documentDir.addTrack(AlertType::window, NotificationType::synchronous);
-            documentDir.endAction("New Track", ActionState::apply);
+            if(mModalWindow != nullptr)
+            {
+                mModalWindow->exitModalState(0);
+                mModalWindow = nullptr;
+            }
+
+            auto getNewTrackPosition = [&]()
+            {
+                auto const focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
+                if(focusedTrack.has_value())
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *focusedTrack);
+                    auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+                    auto const position = Document::Tools::getTrackPosition(documentAcsr, *focusedTrack);
+                    return std::make_tuple(groupIdentifier, position + 1_z);
+                }
+                auto const focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
+                if(focusedGroup.has_value())
+                {
+                    return std::make_tuple(*focusedGroup, 0_z);
+                }
+                return std::make_tuple(juce::String(""), 0_z);
+            };
+
+            mPluginListTable.onPluginSelected = [&, position = getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description) mutable
+            {
+                if(mModalWindow != nullptr)
+                {
+                    mModalWindow->exitModalState(0);
+                    mModalWindow = nullptr;
+                }
+
+                auto& documentDir = Instance::get().getDocumentDirector();
+                documentDir.startAction();
+
+                // Creates a group if there is none
+                if(documentAcsr.getNumAcsr<Document::AcsrType::groups>() == 0_z)
+                {
+                    anlStrongAssert(std::get<0>(position).isEmpty());
+
+                    auto const identifier = documentDir.addGroup(0, NotificationType::synchronous);
+                    anlStrongAssert(identifier.has_value());
+                    if(!identifier.has_value())
+                    {
+                        documentDir.endAction("New Track", ActionState::abort);
+                        auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
+                        auto const title = juce::translate("Group cannot be created!");
+                        auto const message = juce::translate("The group necessary for the new track cannot be inserted into the document.");
+                        juce::AlertWindow::showMessageBox(icon, title, message);
+                        return;
+                    }
+                    std::get<0>(position) = *identifier;
+                    std::get<1>(position) = 0_z;
+                }
+
+                anlStrongAssert(documentAcsr.getNumAcsr<Document::AcsrType::groups>() > 0_z);
+                if(std::get<0>(position).isEmpty())
+                {
+                    auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
+                    std::get<0>(position) = layout.front();
+                    std::get<1>(position) = 0_z;
+                }
+
+                auto const identifier = documentDir.addTrack(std::get<0>(position), std::get<1>(position), NotificationType::synchronous);
+                if(identifier.has_value())
+                {
+                    auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
+                    trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
+                    trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
+                    trackAcsr.setAttr<Track::AttrType::state>(description.defaultState, NotificationType::synchronous);
+                    trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+
+                    auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, std::get<0>(position));
+                    groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
+
+                    documentDir.endAction("New Track " + description.name, ActionState::apply);
+                    JUCE_COMPILER_WARNING("move focus sibling");
+                }
+                else
+                {
+                    documentDir.endAction("New Track", ActionState::abort);
+                }
+            };
+
+            auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+            auto const bgColor = laf.findColour(juce::ResizableWindow::backgroundColourId);
+
+            juce::DialogWindow::LaunchOptions o;
+            o.dialogTitle = juce::translate("Add Analysis...");
+            o.content.setNonOwned(&mPluginListTable);
+            o.componentToCentreAround = nullptr;
+            o.dialogBackgroundColour = bgColor;
+            o.escapeKeyTriggersCloseButton = true;
+            o.useNativeTitleBar = false;
+            o.resizable = false;
+            o.useBottomRightCornerResizer = false;
+            mModalWindow = o.launchAsync();
+            if(mModalWindow != nullptr)
+            {
+                mModalWindow->runModalLoop();
+            };
+
             return true;
         }
         case CommandIDs::EditRemoveItem:

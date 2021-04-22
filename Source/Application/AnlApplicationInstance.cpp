@@ -144,8 +144,7 @@ void Application::Instance::openFile(juce::File const& file)
         auto const& documentAcsr = getDocumentAccessor();
         if(documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty())
         {
-            auto& documentDir = getDocumentDirector();
-            documentDir.addTrack(AlertType::window, NotificationType::synchronous);
+            mApplicationCommandManager.invokeDirectly(CommandTarget::CommandIDs::EditNewTrack, false);
         }
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
@@ -157,8 +156,7 @@ void Application::Instance::openFile(juce::File const& file)
         auto const& documentAcsr = getDocumentAccessor();
         if(documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty())
         {
-            auto& documentDir = getDocumentDirector();
-            documentDir.addTrack(AlertType::window, NotificationType::synchronous);
+            mApplicationCommandManager.invokeDirectly(CommandTarget::CommandIDs::EditNewTrack, false);
         }
     }
     else

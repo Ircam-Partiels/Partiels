@@ -6,11 +6,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Director::Director(Accessor& accessor, PluginList::Accessor& pluginListAccessor, PluginList::Scanner& pluginListScanner, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager)
+Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager)
 : mAccessor(accessor)
 , mAudioFormatManager(audioFormatManager)
 , mUndoManager(undoManager)
-, mPluginListTable(pluginListAccessor, pluginListScanner)
 {
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
     {
@@ -272,108 +271,34 @@ void Document::Director::endAction(juce::String const& name, ActionState state)
     }
 }
 
-void Document::Director::addTrack(AlertType const alertType, NotificationType const notification)
+std::optional<juce::String> Document::Director::addTrack(juce::String const groupIdentifer, size_t position, NotificationType const notification)
 {
-    if(mModalWindow != nullptr)
+    anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifer));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifer))
     {
-        mModalWindow->exitModalState(0);
-        mModalWindow = nullptr;
+        return std::optional<juce::String>();
     }
 
-    auto const focusedItem = Tools::getFocusedItem(mAccessor);
-    mPluginListTable.onPluginSelected = [this, focusedItem, alertType, notification](Plugin::Key const& key, Plugin::Description const& description)
+    auto const index = mAccessor.getNumAcsr<AcsrType::tracks>();
+    if(!mAccessor.insertAcsr<AcsrType::tracks>(index, notification))
     {
-        if(mModalWindow != nullptr)
-        {
-            mModalWindow->exitModalState(0);
-            mModalWindow = nullptr;
-        }
-
-        if(mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
-        {
-            auto const result = addGroup("Group 1", 0, notification);
-            anlStrongAssert(result == true);
-            if(result == false)
-            {
-                return;
-            }
-        }
-
-        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-        anlStrongAssert(!groupAcsrs.empty());
-        if(groupAcsrs.empty())
-        {
-            return;
-        }
-
-        auto const index = mAccessor.getNumAcsr<AcsrType::tracks>();
-        if(!mAccessor.insertAcsr<AcsrType::tracks>(index, notification))
-        {
-            if(alertType == AlertType::window)
-            {
-                auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-                auto const title = juce::translate("Analysis cannot be created!");
-                auto const message = juce::translate("The analysis \"PLGNAME: SPECNAME\" cannot be inserted into the document.").replace("PLGNAME", description.name).replace("SPECNAME", description.output.name);
-                juce::AlertWindow::showMessageBox(icon, title, message);
-            }
-            return;
-        }
-
-        auto const identifier = juce::Uuid().toString();
-
-        auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
-        trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
-        trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::state>(description.defaultState, NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::key>(key, notification);
-
-        if(focusedItem.has_value())
-        {
-            auto& groupAcsr = Tools::getGroupAcsr(mAccessor, *focusedItem);
-            auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
-            auto const it = std::find(groupLayout.cbegin(), groupLayout.cend(), *focusedItem);
-            if(it == groupLayout.cend())
-            {
-                groupLayout.insert(groupLayout.cbegin(), identifier);
-                groupAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
-            }
-            else
-            {
-                groupLayout.insert(groupLayout.cbegin() + std::distance(groupLayout.cbegin(), it) + 1ul, identifier);
-                groupAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
-            }
-            groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
-        }
-        else
-        {
-            auto& groupAcsr = groupAcsrs.back().get();
-            auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
-            groupLayout.insert(groupLayout.cbegin(), identifier);
-            groupAcsr.setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
-            groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
-        }
-
-        sanitize(notification);
-    };
-
-    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-    auto const bgColor = laf.findColour(juce::ResizableWindow::backgroundColourId);
-
-    juce::DialogWindow::LaunchOptions o;
-    o.dialogTitle = juce::translate("Add Analysis...");
-    o.content.setNonOwned(&mPluginListTable);
-    o.componentToCentreAround = nullptr;
-    o.dialogBackgroundColour = bgColor;
-    o.escapeKeyTriggersCloseButton = true;
-    o.useNativeTitleBar = false;
-    o.resizable = false;
-    o.useBottomRightCornerResizer = false;
-    mModalWindow = o.launchAsync();
-    if(mModalWindow != nullptr)
-    {
-        mModalWindow->runModalLoop();
+        return std::optional<juce::String>();
     }
+
+    auto const identifier = juce::Uuid().toString();
+
+    auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(index);
+    trackAcsr.setAttr<Track::AttrType::identifier>(identifier, notification);
+
+    auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifer);
+    auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
+    anlStrongAssert(position <= layout.size());
+    position = std::min(position, layout.size());
+    layout.insert(layout.begin() + static_cast<long>(position), identifier);
+    groupAcsr.setAttr<Group::AttrType::layout>(layout, NotificationType::synchronous);
+
+    sanitize(notification);
+    return std::optional<juce::String>(identifier);
 }
 
 bool Document::Director::removeTrack(juce::String const identifier, NotificationType const notification)
@@ -399,6 +324,55 @@ bool Document::Director::removeTrack(juce::String const identifier, Notification
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::tracks>(index, notification);
+
+    sanitize(notification);
+    return true;
+}
+
+std::optional<juce::String> Document::Director::addGroup(size_t position, NotificationType const notification)
+{
+    auto const index = mAccessor.getNumAcsr<AcsrType::groups>();
+    if(!mAccessor.insertAcsr<AcsrType::groups>(index, notification))
+    {
+        return std::optional<juce::String>();
+    }
+
+    auto const identifier = juce::Uuid().toString();
+    auto const name = juce::String("Group ") + juce::String(index + 1_z);
+    auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
+    groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
+    groupAcsr.setAttr<Group::AttrType::name>(name, notification);
+
+    auto layout = mAccessor.getAttr<AttrType::layout>();
+    anlStrongAssert(position <= layout.size());
+    position = std::min(position, layout.size());
+    layout.insert(layout.begin() + static_cast<long>(position), identifier);
+    mAccessor.setAttr<AttrType::layout>(layout, notification);
+    sanitize(notification);
+    return std::optional<juce::String>(identifier);
+}
+
+bool Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
+{
+    auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
+                                 {
+                                     return acsr.getAttr<Group::AttrType::identifier>() == identifier;
+                                 });
+    anlWeakAssert(it != groupAcsrs.cend());
+    if(it == groupAcsrs.cend())
+    {
+        return false;
+    }
+
+    auto const layout = it->get().getAttr<Group::AttrType::layout>();
+    for(auto const& tarckIdentifier : layout)
+    {
+        removeTrack(tarckIdentifier, notification);
+    }
+
+    auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
+    mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
 
     sanitize(notification);
     return true;
@@ -455,55 +429,6 @@ void Document::Director::moveTrack(juce::String const groupIdentifier, juce::Str
     sanitize(notification);
 }
 
-bool Document::Director::addGroup(juce::String const& name, size_t position, NotificationType const notification)
-{
-    auto const index = mAccessor.getNumAcsr<AcsrType::groups>();
-    if(!mAccessor.insertAcsr<AcsrType::groups>(index, notification))
-    {
-        return false;
-    }
-
-    auto const identifier = juce::Uuid().toString();
-
-    auto& groupAcsr = mAccessor.getAcsr<AcsrType::groups>(index);
-    groupAcsr.setAttr<Group::AttrType::identifier>(identifier, notification);
-    groupAcsr.setAttr<Group::AttrType::name>(name, notification);
-
-    auto layout = mAccessor.getAttr<AttrType::layout>();
-    anlStrongAssert(position <= layout.size());
-    position = std::min(position, layout.size());
-    layout.insert(layout.begin() + static_cast<long>(position), identifier);
-    mAccessor.setAttr<AttrType::layout>(layout, notification);
-    sanitize(notification);
-    return true;
-}
-
-bool Document::Director::removeGroup(juce::String const identifier, NotificationType const notification)
-{
-    auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-    auto const it = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](Group::Accessor const& acsr)
-                                 {
-                                     return acsr.getAttr<Group::AttrType::identifier>() == identifier;
-                                 });
-    anlWeakAssert(it != groupAcsrs.cend());
-    if(it == groupAcsrs.cend())
-    {
-        return false;
-    }
-
-    auto const layout = it->get().getAttr<Group::AttrType::layout>();
-    for(auto const& tarckIdentifier : layout)
-    {
-        removeTrack(tarckIdentifier, notification);
-    }
-
-    auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
-    mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
-
-    sanitize(notification);
-    return true;
-}
-
 void Document::Director::sanitize(NotificationType const notification)
 {
     if(mAccessor.getNumAcsr<AcsrType::tracks>() == 0_z && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
@@ -515,9 +440,9 @@ void Document::Director::sanitize(NotificationType const notification)
     anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
     if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
     {
-        auto const result = addGroup("Group 1", 0, notification);
-        anlStrongAssert(result == true);
-        if(result == false)
+        auto const identifier = addGroup(0, notification);
+        anlStrongAssert(identifier.has_value());
+        if(!identifier.has_value())
         {
             return;
         }
