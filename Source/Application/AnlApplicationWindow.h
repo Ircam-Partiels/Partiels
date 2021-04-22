@@ -21,21 +21,20 @@ namespace Application
         void closeButtonPressed() override;
         void resized() override;
         void moved() override;
-        
+
     private:
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
-        
+
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
-        
+
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         Interface mInterface;
 #ifndef JUCE_MAC
         juce::OpenGLContext mOpenGLContext;
 #endif
     };
-}
+} // namespace Application
 
 ANALYSE_FILE_END
-

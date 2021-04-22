@@ -10,7 +10,7 @@ Application::Window::Window()
     mOpenGLContext.setComponentPaintingEnabled(true);
     mOpenGLContext.attachTo(*this);
 #endif
-    
+
     if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
     {
         centreWithSize(1024, 768);
@@ -18,9 +18,9 @@ Application::Window::Window()
     mBoundsConstrainer.setSizeLimits(1024, 768, std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mBoundsConstrainer.setMinimumOnscreenAmounts(0xffffff, 50, 50, 50);
     setConstrainer(&mBoundsConstrainer);
-    
+
     setContentNonOwned(&mInterface, false);
-    
+
     setVisible(true);
     setResizable(true, false);
     setUsingNativeTitleBar(true);
