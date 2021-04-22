@@ -323,17 +323,18 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
     auto showWarningWindow = [&](juce::String const& reason)
     {
+        // clang-format on
         MessageWindow::show(MessageWindow::MessageType::warning,
                             "Plugin cannot be loaded",
                             "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.",
-        {
-              {"KEYID", mAccessor.getAttr<AttrType::key>().identifier}
-            , {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}
-            , {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}
-            , {"REASON", reason}
-        });
+                            {
+                                  {"KEYID", mAccessor.getAttr<AttrType::key>().identifier}
+                                , {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}
+                                , {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}
+                                , {"REASON", reason}
+                            });
+        // clang-format off
     };
-    
 
     auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReaderManager.get());
     if(!result.has_value())
