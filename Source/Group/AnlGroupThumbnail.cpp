@@ -162,7 +162,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             {
                 resized();
             }
-                break;
+            break;
         }
     };
 
@@ -191,7 +191,6 @@ void Group::Thumbnail::resized()
             component.setBounds(bounds.removeFromBottom(size).reduced(separator));
         }
     };
-
 
     layoutButton(mExpandButton);
     mExpandButton.setEnabled(hasTrack);
