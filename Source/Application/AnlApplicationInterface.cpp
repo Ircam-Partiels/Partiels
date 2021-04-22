@@ -112,4 +112,9 @@ void Application::Interface::filesDropped(juce::StringArray const& files, int x,
     Instance::get().openFile(file);
 }
 
+void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)
+{
+    mDocumentSection.moveKeyboardFocusTo(identifier);
+}
+
 ANALYSE_FILE_END

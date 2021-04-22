@@ -19,6 +19,8 @@ namespace Application
         Interface();
         ~Interface() override;
         
+        void moveKeyboardFocusTo(juce::String const& identifier);
+
         // juce::Component
         void resized() override;
         
