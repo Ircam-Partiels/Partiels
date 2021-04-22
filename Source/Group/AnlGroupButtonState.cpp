@@ -106,6 +106,8 @@ Group::StateButton::StateButton(Accessor& accessor)
         }
     };
     
+    mProcessingButton.setActive(false);
+    mProcessingButton.setInactiveImage(IconManager::getIcon(IconManager::IconType::checked));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
