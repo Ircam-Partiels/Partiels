@@ -187,6 +187,11 @@ PluginList::Accessor& Application::Instance::getPluginListAccessor()
     return mPluginListAccessor;
 }
 
+PluginList::Scanner& Application::Instance::getPluginListScanner()
+{
+    return mPluginListScanner;
+}
+
 Document::Accessor& Application::Instance::getDocumentAccessor()
 {
     return mDocumentAccessor;

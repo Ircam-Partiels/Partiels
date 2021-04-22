@@ -44,6 +44,7 @@ namespace Application
         AudioSettings& getAudioSettings();
         About& getAbout();
         PluginList::Accessor& getPluginListAccessor();
+        PluginList::Scanner& getPluginListScanner();
         Document::Accessor& getDocumentAccessor();
         Document::Director& getDocumentDirector();
         Document::FileBased& getDocumentFileBased();
@@ -64,7 +65,7 @@ namespace Application
         PluginList::Accessor mPluginListAccessor;
         PluginList::Scanner mPluginListScanner;
         Document::Accessor mDocumentAccessor;
-        Document::Director mDocumentDirector{mDocumentAccessor, mPluginListAccessor, mPluginListScanner, mAudioFormatManager, mUndoManager};
+        Document::Director mDocumentDirector{mDocumentAccessor, mAudioFormatManager, mUndoManager};
         Document::FileWatcher mDocumentFileWatcher{mDocumentAccessor, mAudioFormatManager};
 
         Properties mProperties;
