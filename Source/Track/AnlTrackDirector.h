@@ -13,10 +13,13 @@ namespace Track
     : private juce::Timer
     {
     public:
-        Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
+        Director(Accessor& accessor, juce::UndoManager& undoManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
         ~Director() override;
 
         Accessor& getAccessor();
+
+        void startAction();
+        void endAction(juce::String const& name, ActionState state);
 
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
 
@@ -28,6 +31,8 @@ namespace Track
         void timerCallback() override;
 
         Accessor& mAccessor;
+        juce::UndoManager& mUndoManager;
+        Accessor mSavedState;
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         Processor mProcessor;
         Graphics mGraphics;

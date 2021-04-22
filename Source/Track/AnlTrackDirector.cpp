@@ -5,8 +5,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Director::Director(Accessor& accessor, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
+Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
+, mUndoManager(undoManager)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
 {
     auto sanitizeZooms = [this](NotificationType notification)
@@ -301,6 +302,69 @@ Track::Accessor& Track::Director::getAccessor()
     return mAccessor;
 }
 
+void Track::Director::startAction()
+{
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+}
+
+void Track::Director::endAction(juce::String const& name, ActionState state)
+{
+    if(mAccessor.isEquivalentTo(mSavedState))
+    {
+        return;
+    }
+
+    class Action
+    : public juce::UndoableAction
+    {
+    public:
+        Action(Accessor& accessor, Accessor const& undoAcsr)
+        : mAccessor(accessor)
+        {
+            mRedoAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+            mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
+        }
+
+        ~Action() override = default;
+
+        bool perform() override
+        {
+            mAccessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
+            return true;
+        }
+
+        bool undo() override
+        {
+            mAccessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
+            return true;
+        }
+
+    private:
+        Accessor& mAccessor;
+        Accessor mRedoAccessor;
+        Accessor mUndoAccessor;
+    };
+
+    auto action = std::make_unique<Action>(mAccessor, mSavedState);
+    if(action != nullptr)
+    {
+        switch(state)
+        {
+            case ActionState::apply:
+            {
+                mUndoManager.beginNewTransaction(name);
+                mUndoManager.perform(action.release());
+            }
+            break;
+            case ActionState::abort:
+            {
+                action->undo();
+            }
+            break;
+        }
+    }
+}
+
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
     anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReaderManager);
@@ -327,12 +391,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
         MessageWindow::show(MessageWindow::MessageType::warning,
                             "Plugin cannot be loaded",
                             "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.",
-                            {
-                                  {"KEYID", mAccessor.getAttr<AttrType::key>().identifier}
-                                , {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}
-                                , {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}
-                                , {"REASON", reason}
-                            });
+                            {{"KEYID", mAccessor.getAttr<AttrType::key>().identifier}, {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}, {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}, {"REASON", reason}});
         // clang-format off
     };
 

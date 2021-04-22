@@ -67,7 +67,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
                 auto& trackAcsr = trackAcsrs[index].get();
                 auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
-                auto director = std::make_unique<Track::Director>(trackAcsr, std::move(audioFormatReader));
+                auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, std::move(audioFormatReader));
                 anlStrongAssert(director != nullptr);
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
