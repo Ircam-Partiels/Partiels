@@ -20,7 +20,7 @@ namespace Track
         };
         // clang-format on
 
-        Thumbnail(Accessor& accessor);
+        Thumbnail(Director& director);
         ~Thumbnail() override;
 
         // juce::Component
@@ -32,7 +32,8 @@ namespace Track
         void mouseDrag(juce::MouseEvent const& event) override;
 
     private:
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
 

@@ -4,8 +4,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Thumbnail::Thumbnail(Accessor& accessor)
-: mAccessor(accessor)
+Track::Thumbnail::Thumbnail(Director& director)
+: mDirector(director)
 {
     addAndMakeVisible(mPropertiesButton);
     mPropertiesButton.setWantsKeyboardFocus(false);
@@ -19,7 +19,7 @@ Track::Thumbnail::Thumbnail(Accessor& accessor)
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
     mExportButton.setTooltip(juce::translate("Export the analysis"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
-    
+
     mPropertiesButton.onClick = [&]()
     {
         auto var = std::make_unique<juce::DynamicObject>();

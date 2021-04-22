@@ -39,7 +39,7 @@ namespace Track
         Transport::Accessor& mTransportAccessor;
         Accessor::Listener mListener;
 
-        Thumbnail mThumbnail{mAccessor};
+        Thumbnail mThumbnail{mDirector};
         Decorator mThumbnailDecoration{mThumbnail, 1, 2.0f};
 
         Snapshot mSnapshot{mAccessor, mTimeZoomAccessor};
