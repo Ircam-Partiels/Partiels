@@ -22,7 +22,6 @@ namespace Document
 
         void addTrack(AlertType const alertType, NotificationType const notification);
         bool removeTrack(juce::String const identifier, NotificationType const notification);
-        void moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
         bool addGroup(juce::String const& name, size_t position, NotificationType const notification);
         bool removeGroup(juce::String const identifier, NotificationType const notification);
 
