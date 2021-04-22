@@ -229,6 +229,17 @@ Group::Director& Document::Director::getGroupDirector(juce::String const& identi
     return *it->get();
 }
 
+Track::Director& Document::Director::getTrackDirector(juce::String const& identifier)
+{
+    auto it = std::find_if(mTracks.begin(), mTracks.end(), [&](auto const& trackDirector)
+                           {
+                               auto const& trackAcsr = trackDirector->getAccessor();
+                               return trackAcsr.template getAttr<Track::AttrType::identifier>() == identifier;
+                           });
+    anlStrongAssert(it != mTracks.end());
+    return *it->get();
+}
+
 void Document::Director::startAction()
 {
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
