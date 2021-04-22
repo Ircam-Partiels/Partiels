@@ -258,12 +258,6 @@ namespace Model
 
             accessors.erase(accessors.begin() + static_cast<long>(index));
 
-            if(onAccessorErased != nullptr)
-            {
-                lock.store(true);
-                onAccessorErased(type, index, notification);
-                lock.store(false);
-            }
             if constexpr((element_type::flags & Flag::notifying) != 0)
             {
                 mListeners.notify([=, this](Listener& listener) mutable
@@ -274,6 +268,12 @@ namespace Model
                                       }
                                   },
                                   notification);
+            }
+            if(onAccessorErased != nullptr)
+            {
+                lock.store(true);
+                onAccessorErased(type, index, notification);
+                lock.store(false);
             }
 
             // Detaches the mutex that prevent recurvise changes
@@ -715,8 +715,8 @@ namespace Model
                                              accessor.mDelayInsertionNotification = true;
                                              if(static_cast<parent_t*>(&accessor)->template insertAcsr<acsr_type>(index, NotificationType::synchronous))
                                              {
-                                                 anlStrongAssert(accessors[index] != nullptr  && childs[index] != nullptr);
-                                                 if(accessors[index] != nullptr  && childs[index] != nullptr)
+                                                 anlStrongAssert(accessors[index] != nullptr && childs[index] != nullptr);
+                                                 if(accessors[index] != nullptr && childs[index] != nullptr)
                                                  {
                                                      accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
                                                  }
