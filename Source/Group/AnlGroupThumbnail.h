@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlGroupButtonState.h"
+#include "AnlGroupDirector.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -19,7 +20,7 @@ namespace Group
         };
         // clang-format on
 
-        Thumbnail(Accessor& accessor);
+        Thumbnail(Director& director);
         ~Thumbnail() override;
 
         // juce::Component
@@ -31,7 +32,8 @@ namespace Group
         void mouseDrag(juce::MouseEvent const& event) override;
 
     private:
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
 
         juce::ImageButton mDropdownButton;

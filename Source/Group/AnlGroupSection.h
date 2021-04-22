@@ -52,7 +52,7 @@ namespace Group
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
 
-        Thumbnail mThumbnail{mAccessor};
+        Thumbnail mThumbnail{mDirector};
         Decorator mThumbnailDecoration{mThumbnail, 1, 2.0f};
 
         Snapshot mSnapshot{mAccessor, mTransportAccessor, mTimeZoomAccessor};

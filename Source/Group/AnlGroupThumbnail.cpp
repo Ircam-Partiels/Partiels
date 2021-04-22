@@ -3,8 +3,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Thumbnail::Thumbnail(Accessor& accessor)
-: mAccessor(accessor)
+Group::Thumbnail::Thumbnail(Director& director)
+: mDirector(director)
 {
     addAndMakeVisible(mNameButton);
     mNameButton.setWantsKeyboardFocus(false);
@@ -68,12 +68,24 @@ Group::Thumbnail::Thumbnail(Accessor& accessor)
                              Accessor& mAccessor;
                          };
 
+                         auto const previousName = mAccessor.getAttr<AttrType::name>();
+                         mDirector.startAction();
                          Editor editor(mAccessor);
                          auto const buttonBounds = mNameButton.getScreenBounds();
                          editor.setBounds(buttonBounds.getRight(), buttonBounds.getY(), 80, 22);
                          editor.addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary);
                          editor.enterModalState(true, nullptr, false);
                          editor.runModalLoop();
+
+                         auto const newName = mAccessor.getAttr<AttrType::name>();
+                         if(newName != previousName)
+                         {
+                             mDirector.endAction("Change Group Name " + previousName + " to " + newName, ActionState::apply);
+                         }
+                         else
+                         {
+                             mDirector.endAction("Change Group Name", ActionState::abort);
+                         }
                      });
         auto const layout = mAccessor.getAttr<AttrType::layout>();
         for(auto const& identifier : layout)
