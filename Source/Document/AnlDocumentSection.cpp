@@ -1,9 +1,11 @@
 #include "AnlDocumentSection.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
+Document::Section::Section(Accessor& accessor, Director& director, juce::AudioFormatManager& audioFormatManager)
 : mAccessor(accessor)
+, mDirector(director)
 , mFileInfoPanel(accessor, audioFormatManager)
 {
     mTimeRuler.setPrimaryTickInterval(0);
@@ -193,7 +195,23 @@ void Document::Section::updateLayout()
         {
             groupSection->onTrackInserted = [&](juce::String const& identifier)
             {
+                anlStrongAssert(Tools::hasTrackAcsr(mAccessor, identifier));
+                if(!Tools::hasTrackAcsr(mAccessor, identifier))
                 {
+                    return;
+                }
+
+                mDirector.startAction();
+                if(mDirector.moveTrack(groupAcsr.getAttr<Group::AttrType::identifier>(), identifier, NotificationType::synchronous))
+                {
+                    auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+                    auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
+                    auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
+                    mDirector.endAction("Move Track " + trackName + " to Group " + groupName, ActionState::apply);
+                }
+                else
+                {
+                    mDirector.endAction("Move Track", ActionState::abort);
                 }
             };
         }

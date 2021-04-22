@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 Application::Interface::Interface()
 : mTransportDisplay(Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>())
-, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getAudioFormatManager())
+, mDocumentSection(Instance::get().getDocumentAccessor(), Instance::get().getDocumentDirector(), Instance::get().getAudioFormatManager())
 {
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mDocumentSection);

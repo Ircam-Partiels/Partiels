@@ -3,6 +3,7 @@
 #include "../Group/AnlGroupStrechableSection.h"
 #include "../Transport/AnlTransportLoopBar.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
+#include "AnlDocumentDirector.h"
 #include "AnlDocumentFileInfoPanel.h"
 #include "AnlDocumentModel.h"
 
@@ -23,7 +24,7 @@ namespace Document
         };
         // clang-format on
 
-        Section(Accessor& accessor, juce::AudioFormatManager& audioFormatManager);
+        Section(Accessor& accessor, Director& director, juce::AudioFormatManager& audioFormatManager);
         ~Section() override;
 
         // juce::Component
@@ -42,6 +43,7 @@ namespace Document
         void updateLayout();
 
         Accessor& mAccessor;
+        Director& mDirector;
         Accessor::Listener mListener;
 
         FileInfoPanel mFileInfoPanel;
