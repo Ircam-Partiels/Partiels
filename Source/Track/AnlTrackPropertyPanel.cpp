@@ -171,17 +171,17 @@ Track::PropertyPanel::PropertyPanel(Accessor& accessor)
     {
         auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
         auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        anlWeakAssert(!range.isEmpty() && std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
+        anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
         auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
         auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
         mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
         mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
         mPropertyValueRangeMode.entry.setItemEnabled(3, false);
-        if(pluginRange.has_value() && range == *pluginRange)
+        if(pluginRange.has_value() && !range.isEmpty() && range == *pluginRange)
         {
             mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
         }
-        else if(resultsRange.has_value() && range == *resultsRange)
+        else if(resultsRange.has_value() && !range.isEmpty() && range == *resultsRange)
         {
             mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
         }
