@@ -25,7 +25,9 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
                     mAccessor,
                     [this](Track::Accessor& trackAccessor)
                     {
-                        return std::make_unique<Track::Section>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+                        auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
+                        auto& trackDirector = mDirector.getTrackDirector(identifier);
+                        return std::make_unique<Track::Section>(trackDirector, mTimeZoomAccessor, mTransportAccessor);
                     },
                     nullptr);
 

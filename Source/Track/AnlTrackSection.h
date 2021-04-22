@@ -21,7 +21,7 @@ namespace Track
         };
         // clang-format on
 
-        Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
+        Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
         ~Section() override;
 
         // juce::Component
@@ -33,7 +33,8 @@ namespace Track
         void focusOfChildComponentChanged(juce::Component::FocusChangeType cause) override;
 
     private:
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
         Accessor::Listener mListener;

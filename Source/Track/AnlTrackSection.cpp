@@ -4,8 +4,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Section::Section(Accessor& accessor, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr)
-: mAccessor(accessor)
+Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr)
+: mDirector(director)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mTransportAccessor(transportAcsr)
 {
