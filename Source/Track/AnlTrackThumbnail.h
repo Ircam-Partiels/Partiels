@@ -37,7 +37,7 @@ namespace Track
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
 
-        PropertyPanel mPropertyPanel{mAccessor};
+        PropertyPanel mPropertyPanel{mDirector};
         juce::ImageButton mDropdownButton;
         juce::ImageButton mPropertiesButton;
         juce::ImageButton mExportButton;

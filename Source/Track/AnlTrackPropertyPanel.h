@@ -13,14 +13,16 @@ namespace Track
     , public juce::DragAndDropContainer
     {
     public:
-        PropertyPanel(Accessor& accessor);
+        PropertyPanel(Director& director);
         ~PropertyPanel() override;
         
         // juce::Component
         void resized() override;
         
+
     private:
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;

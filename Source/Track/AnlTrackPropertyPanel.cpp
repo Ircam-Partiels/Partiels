@@ -5,9 +5,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::PropertyPanel::PropertyPanel(Accessor& accessor)
+Track::PropertyPanel::PropertyPanel(Director& director)
 : FloatingWindowContainer("Properties", mViewport)
-, mAccessor(accessor)
+, mDirector(director)
 
 , mPropertyName("Name", "The name of the track", [&](juce::String text)
                 {
