@@ -68,20 +68,9 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::EditUndo);
         menu.addCommandItem(&commandManager, CommandIDs::EditRedo);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::GroupNew);
-        menu.addCommandItem(&commandManager, CommandIDs::AnalysisNew);
-    }
-    else if(menuName == "Points")
-    {
-        menu.addCommandItem(&commandManager, CommandIDs::PointsNew);
-        menu.addCommandItem(&commandManager, CommandIDs::PointsRemove);
-        menu.addCommandItem(&commandManager, CommandIDs::PointsMove);
-        menu.addCommandItem(&commandManager, CommandIDs::PointsCopy);
-        menu.addCommandItem(&commandManager, CommandIDs::PointsPaste);
-        menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::PointsScale);
-        menu.addCommandItem(&commandManager, CommandIDs::PointsQuantify);
-        menu.addCommandItem(&commandManager, CommandIDs::PointsDiscretize);
+        menu.addCommandItem(&commandManager, CommandIDs::EditRemoveItem);
+        menu.addCommandItem(&commandManager, CommandIDs::EditNewTrack);
+        menu.addCommandItem(&commandManager, CommandIDs::EditNewGroup);
     }
     else if(menuName == "Transport")
     {
