@@ -3,6 +3,24 @@
 
 ANALYSE_FILE_BEGIN
 
+bool Document::Tools::hasTrackAcsr(Accessor const& accessor, juce::String const& identifier)
+{
+    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
+    return std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                       {
+                           return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
+                       });
+}
+
+bool Document::Tools::hasGroupAcsr(Accessor const& accessor, juce::String const& identifier)
+{
+    auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
+    return std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+                       {
+                           return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier || Group::Tools::hasTrackAcsr(groupAcsr.get(), identifier);
+                       });
+}
+
 Track::Accessor const& Document::Tools::getTrackAcsr(Accessor const& accessor, juce::String const& identifier)
 {
     auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
@@ -14,17 +32,6 @@ Track::Accessor const& Document::Tools::getTrackAcsr(Accessor const& accessor, j
     return it->get();
 }
 
-Track::Accessor& Document::Tools::getTrackAcsr(Accessor& accessor, juce::String const& identifier)
-{
-    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
-    auto it = std::find_if(trackAcsrs.begin(), trackAcsrs.end(), [&](auto const& trackAcsr)
-                           {
-                               return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
-                           });
-    anlStrongAssert(it != trackAcsrs.end());
-    return it->get();
-}
-
 Group::Accessor const& Document::Tools::getGroupAcsr(Accessor const& accessor, juce::String const& identifier)
 {
     auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
@@ -33,6 +40,17 @@ Group::Accessor const& Document::Tools::getGroupAcsr(Accessor const& accessor, j
                                return groupAcsr.get().template getAttr<Group::AttrType::identifier>() == identifier || Group::Tools::hasTrackAcsr(groupAcsr.get(), identifier);
                            });
     anlStrongAssert(it != groupAcsrs.cend());
+    return it->get();
+}
+
+Track::Accessor& Document::Tools::getTrackAcsr(Accessor& accessor, juce::String const& identifier)
+{
+    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
+    auto it = std::find_if(trackAcsrs.begin(), trackAcsrs.end(), [&](auto const& trackAcsr)
+                           {
+                               return trackAcsr.get().template getAttr<Track::AttrType::identifier>() == identifier;
+                           });
+    anlStrongAssert(it != trackAcsrs.end());
     return it->get();
 }
 
