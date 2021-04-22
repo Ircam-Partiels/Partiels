@@ -69,4 +69,9 @@ void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source
     setName(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString + " - " + name + extension);
 }
 
+void Application::Window::moveKeyboardFocusTo(juce::String const& identifier)
+{
+    mInterface.moveKeyboardFocusTo(identifier);
+}
+
 ANALYSE_FILE_END

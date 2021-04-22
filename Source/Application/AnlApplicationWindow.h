@@ -14,7 +14,9 @@ namespace Application
     public:
         Window();
         ~Window() override;
-        
+
+        void moveKeyboardFocusTo(juce::String const& identifier);
+
         // juce::DocumentWindow
         void closeButtonPressed() override;
         void resized() override;
