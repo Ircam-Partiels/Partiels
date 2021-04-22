@@ -10,15 +10,16 @@ ANALYSE_FILE_BEGIN
 namespace Document
 {
     class Director
+    : public Track::MultiDirector
     {
     public:
         Director(Accessor& accessor, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager);
-        ~Director();
+        ~Director() override;
 
         Accessor& getAccessor();
         juce::AudioFormatManager& getAudioFormatManager();
         Group::Director& getGroupDirector(juce::String const& identifier);
-        Track::Director& getTrackDirector(juce::String const& identifier);
+        Track::Director& getTrackDirector(juce::String const& identifier) override;
 
         void sanitize(NotificationType const notification);
 

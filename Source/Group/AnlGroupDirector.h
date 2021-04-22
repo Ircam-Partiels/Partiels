@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Track/AnlTrackDirector.h"
 #include "AnlGroupModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -7,18 +8,22 @@ ANALYSE_FILE_BEGIN
 namespace Group
 {
     class Director
+    : public Track::MultiDirector
     {
     public:
-        Director(Accessor& accessor, juce::UndoManager& undoManager);
-        ~Director();
-        
+        Director(Accessor& accessor, Track::MultiDirector& trackMultiDirector, juce::UndoManager& undoManager);
+        ~Director() override;
+
         Accessor& getAccessor();
 
         void startAction();
         void endAction(juce::String const& name, ActionState state);
 
+        Track::Director& getTrackDirector(juce::String const& identifier) override;
+
     private:
         Accessor& mAccessor;
+        Track::MultiDirector& mTrackMultiDirector;
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;
 

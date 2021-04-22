@@ -3,8 +3,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Director::Director(Accessor& accessor, juce::UndoManager& undoManager)
+Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDirector, juce::UndoManager& undoManager)
 : mAccessor(accessor)
+, mTrackMultiDirector(trackMultiDirector)
 , mUndoManager(undoManager)
 {
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
@@ -111,6 +112,11 @@ void Group::Director::endAction(juce::String const& name, ActionState state)
             break;
         }
     }
+}
+
+Track::Director& Group::Director::getTrackDirector(juce::String const& identifier)
+{
+    return mTrackMultiDirector.getTrackDirector(identifier);
 }
 
 ANALYSE_FILE_END
