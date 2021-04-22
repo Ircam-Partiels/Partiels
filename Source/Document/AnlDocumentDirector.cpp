@@ -404,9 +404,8 @@ bool Document::Director::removeTrack(juce::String const identifier, Notification
     return true;
 }
 
-void Document::Director::moveTrack(AlertType const alertType, juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
+void Document::Director::moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
 {
-    juce::ignoreUnused(alertType);
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     auto const it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](Track::Accessor const& acsr)
                                  {
