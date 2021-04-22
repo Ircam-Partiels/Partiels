@@ -1,8 +1,9 @@
 #pragma once
 
+#include "../Misc/AnlMisc.h"
+#include "AnlTrackDirector.h"
 #include "AnlTrackModel.h"
 #include "AnlTrackProgressBar.h"
-#include "../Misc/AnlMisc.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -15,10 +16,9 @@ namespace Track
     public:
         PropertyPanel(Director& director);
         ~PropertyPanel() override;
-        
+
         // juce::Component
         void resized() override;
-        
 
     private:
         Director& mDirector;
@@ -27,9 +27,9 @@ namespace Track
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;
         BoundsListener mBoundsListener;
-        
+
         PropertyText mPropertyName;
-        
+
         PropertyList mPropertyWindowType;
         PropertyList mPropertyWindowSize;
         PropertyList mPropertyWindowOverlapping;
@@ -37,8 +37,8 @@ namespace Track
         PropertyNumber mPropertyStepSize;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
-        ProgressBar mProgressBarAnalysis {mAccessor, ProgressBar::Mode::analysis};
-        
+        ProgressBar mProgressBarAnalysis{mAccessor, ProgressBar::Mode::analysis};
+
         PropertyList mPropertyColourMap;
         PropertySlider mPropertyColourMapAlpha;
         PropertyColourButton mPropertyForegroundColour;
@@ -51,26 +51,26 @@ namespace Track
         PropertyRangeSlider mPropertyValueRange;
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
-        ProgressBar mProgressBarRendering {mAccessor, ProgressBar::Mode::rendering};
-        
-        PropertyLabel mPropertyPluginName {"Name", "The name of the plugin"};
-        PropertyLabel mPropertyPluginFeature {"Feature", "The feature of the plugin"};
-        PropertyLabel mPropertyPluginMaker {"Maker", "The maker of the plugin"};
-        PropertyLabel mPropertyPluginVersion {"Version", "The version of the plugin"};
-        PropertyLabel mPropertyPluginCategory {"Category", "The category of the plugin"};
+        ProgressBar mProgressBarRendering{mAccessor, ProgressBar::Mode::rendering};
+
+        PropertyLabel mPropertyPluginName{"Name", "The name of the plugin"};
+        PropertyLabel mPropertyPluginFeature{"Feature", "The feature of the plugin"};
+        PropertyLabel mPropertyPluginMaker{"Maker", "The maker of the plugin"};
+        PropertyLabel mPropertyPluginVersion{"Version", "The version of the plugin"};
+        PropertyLabel mPropertyPluginCategory{"Category", "The category of the plugin"};
         juce::TextEditor mPropertyPluginDetails;
-        
-        ConcertinaTable mProcessorSection {juce::translate("PROCESSOR"), true,
-            juce::translate("The processor parameters of the track")};
-        ConcertinaTable mGraphicalSection {juce::translate("GRAPHICAL"), true,
-            juce::translate("The graphical parameters of the track")};
-        ConcertinaTable mPluginSection {juce::translate("PLUGIN"), true,
-            juce::translate("The plugin information")};
-        
+
+        ConcertinaTable mProcessorSection{juce::translate("PROCESSOR"), true,
+                                          juce::translate("The processor parameters of the track")};
+        ConcertinaTable mGraphicalSection{juce::translate("GRAPHICAL"), true,
+                                          juce::translate("The graphical parameters of the track")};
+        ConcertinaTable mPluginSection{juce::translate("PLUGIN"), true,
+                                       juce::translate("The plugin information")};
+
         juce::Viewport mViewport;
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         static auto constexpr sInnerWidth = 300;
     };
-}
+} // namespace Track
 
 ANALYSE_FILE_END
