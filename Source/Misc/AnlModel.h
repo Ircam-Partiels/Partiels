@@ -399,121 +399,9 @@ namespace Model
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
         void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType const notification)
         {
-            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
-            anlWeakAssert(xml.hasTagName(name));
-            if(!xml.hasTagName(name))
-            {
-                return;
-            }
-
-            detail::for_each(mAttributes, [&](auto& d)
-                             {
-                                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                                 if constexpr((element_type::flags & Flag::saveable) != 0)
-                                 {
-                                     auto constexpr attr_type = element_type::type;
-                                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
-                                     static_cast<parent_t*>(this)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), notification);
-                                 }
-                             });
-
-            detail::for_each_inv(mAccessors, [&](auto const& d)
-                                 {
-                                     using element_type = typename std::remove_reference<decltype(d)>::type;
-                                     if constexpr((element_type::flags & Flag::saveable) != 0)
-                                     {
-                                         auto constexpr acsr_type = element_type::type;
-                                         auto const enumname = std::string(magic_enum::enum_name(acsr_type));
-
-                                         std::vector<juce::XmlElement const*> childs;
-                                         for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
-                                         {
-                                             childs.push_back(child);
-                                         }
-
-                                         auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                         anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
-
-                                         if constexpr(element_type::size_flags == 0)
-                                         {
-                                             while(accessors.size() > childs.size())
-                                             {
-                                                 auto const index = accessors.size() - 1;
-                                                 static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
-                                             }
-                                         }
-                                     }
-                                 });
-
-            detail::for_each(mAccessors, [&](auto& d)
-                             {
-                                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                                 if constexpr((element_type::flags & Flag::saveable) != 0)
-                                 {
-                                     auto constexpr acsr_type = element_type::type;
-                                     auto const enumname = std::string(magic_enum::enum_name(acsr_type));
-
-                                     std::vector<juce::XmlElement const*> childs;
-                                     for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
-                                     {
-                                         childs.push_back(child);
-                                     }
-
-                                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                     anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
-
-                                     for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
-                                     {
-                                         anlStrongAssert(accessors[index] != nullptr);
-                                         if(accessors[index] != nullptr)
-                                         {
-                                             accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
-                                         }
-                                     }
-                                 }
-                             });
-
-            detail::for_each(mAccessors, [&](auto& d)
-                             {
-                                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                                 if constexpr((element_type::flags & Flag::saveable) != 0)
-                                 {
-                                     auto constexpr acsr_type = element_type::type;
-                                     auto const enumname = std::string(magic_enum::enum_name(acsr_type));
-
-                                     std::vector<juce::XmlElement const*> childs;
-                                     for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
-                                     {
-                                         childs.push_back(child);
-                                     }
-
-                                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                     anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
-
-                                     if constexpr(element_type::size_flags == 0)
-                                     {
-                                         while(childs.size() > accessors.size())
-                                         {
-                                             auto const index = accessors.size();
-                                             mDelayInsertionNotification = true;
-                                             if(static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
-                                             {
-                                                 anlStrongAssert(accessors[index] != nullptr);
-                                                 if(accessors[index] != nullptr)
-                                                 {
-                                                     accessors[index]->fromXml(*childs[index], enumname.c_str(), notification);
-                                                 }
-                                                 notifyAccessorInsertion<acsr_type>(index, notification);
-                                             }
-                                             else
-                                             {
-                                                 anlStrongAssert(false && "allocation failed");
-                                             }
-                                             mDelayInsertionNotification = false;
-                                         }
-                                     }
-                                 }
-                             });
+            Accessor temporary;
+            fromXml(temporary, xml, name);
+            copyFrom(temporary, notification);
         }
 
         //! @brief Copy the content from another container
@@ -530,6 +418,7 @@ namespace Model
                                  }
                              });
 
+            // Remove accessors
             detail::for_each_inv(accessor.mAccessors, [&](auto const& d)
                                  {
                                      using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -538,36 +427,23 @@ namespace Model
                                          auto constexpr acsr_type = element_type::type;
                                          auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
                                          anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
+
                                          if constexpr(element_type::size_flags == 0)
                                          {
-                                             while(accessors.size() > d.accessors.size())
+                                             for(auto index = accessors.size(); index > 0_z; --index)
                                              {
-                                                 auto const index = accessors.size() - 1;
-                                                 static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index, notification);
+                                                 auto const& acsrPtr = accessors[index - 1].get();
+                                                 anlStrongAssert(acsrPtr != nullptr);
+                                                 if(acsrPtr == nullptr || static_cast<parent_t const*>(&accessor)->template getAcsrPosition<acsr_type>(*acsrPtr) == npos)
+                                                 {
+                                                     static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index - 1, notification);
+                                                 }
                                              }
                                          }
                                      }
                                  });
 
-            detail::for_each(accessor.mAccessors, [&](auto const& d)
-                             {
-                                 using element_type = typename std::remove_reference<decltype(d)>::type;
-                                 if constexpr((element_type::flags & Flag::saveable) != 0)
-                                 {
-                                     auto constexpr acsr_type = element_type::type;
-                                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                     anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
-                                     for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
-                                     {
-                                         anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
-                                         if(accessors[index] != nullptr && d.accessors[index] != nullptr)
-                                         {
-                                             accessors[index]->copyFrom(*(d.accessors[index].get()), notification);
-                                         }
-                                     }
-                                 }
-                             });
-
+            // Insert accessors
             detail::for_each(accessor.mAccessors, [&](auto const& d)
                              {
                                  using element_type = typename std::remove_reference<decltype(d)>::type;
@@ -578,11 +454,11 @@ namespace Model
                                      anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
                                      if constexpr(element_type::size_flags == 0)
                                      {
-                                         while(d.accessors.size() > accessors.size())
+                                         for(auto index = 0_z; index < d.accessors.size(); ++index)
                                          {
-                                             auto const index = accessors.size();
-                                             anlStrongAssert(d.accessors[index] != nullptr);
-                                             if(d.accessors[index] != nullptr)
+                                             auto const& acsrPtr = d.accessors[index].get();
+                                             anlStrongAssert(acsrPtr != nullptr);
+                                             if(acsrPtr != nullptr && static_cast<parent_t*>(this)->template getAcsrPosition<acsr_type>(*acsrPtr) == npos)
                                              {
                                                  mDelayInsertionNotification = true;
                                                  if(static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
@@ -599,6 +475,42 @@ namespace Model
                                                      anlStrongAssert(false && "allocation failed");
                                                  }
                                                  mDelayInsertionNotification = false;
+                                             }
+                                         }
+                                     }
+                                 }
+                             });
+
+            // Updates accessors
+            detail::for_each(accessor.mAccessors, [&](auto const& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     auto constexpr acsr_type = element_type::type;
+                                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
+                                     anlStrongAssert(d.accessors.size() == accessors.size());
+                                     for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
+                                     {
+                                         if constexpr(element_type::size_flags == 0)
+                                         {
+                                             anlStrongAssert(accessors[index] != nullptr);
+                                             if(accessors[index] != nullptr)
+                                             {
+                                                 auto const position = static_cast<parent_t*>(this)->template getAcsrPosition<acsr_type>(*accessors[index]);
+                                                 anlStrongAssert(position != npos);
+                                                 if(position != npos && d.accessors[position] != nullptr)
+                                                 {
+                                                     accessors[index]->copyFrom(*(d.accessors[position].get()), notification);
+                                                 }
+                                             }
+                                         }
+                                         else
+                                         {
+                                             anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
+                                             if(accessors[index] != nullptr && d.accessors[index] != nullptr)
+                                             {
+                                                 accessors[index]->copyFrom(*(d.accessors[index].get()), notification);
                                              }
                                          }
                                      }
@@ -749,7 +661,91 @@ namespace Model
             return false;
         }
 
+        static constexpr size_t npos = static_cast<size_t>(-1);
+        template <acsr_enum_type type>
+        size_t getAcsrPosition(typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type const& other) const
+        {
+            juce::ignoreUnused(other);
+            return npos;
+        }
+
     private:
+        static void fromXml(Accessor& accessor, juce::XmlElement const& xml, juce::StringRef const& name)
+        {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+            anlWeakAssert(xml.hasTagName(name));
+            if(!xml.hasTagName(name))
+            {
+                return;
+            }
+
+            detail::for_each(accessor.mAttributes, [&](auto& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     auto constexpr attr_type = element_type::type;
+                                     auto const enumname = std::string(magic_enum::enum_name(attr_type));
+                                     static_cast<parent_t*>(&accessor)->template setAttr<attr_type>(XmlParser::fromXml(xml, enumname.c_str(), d.value), NotificationType::synchronous);
+                                 }
+                             });
+
+            detail::for_each(accessor.mAccessors, [&](auto& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     auto constexpr acsr_type = element_type::type;
+                                     auto const enumname = std::string(magic_enum::enum_name(acsr_type));
+
+                                     std::vector<juce::XmlElement const*> childs;
+                                     for(auto* child = xml.getChildByName(enumname.c_str()); child != nullptr; child = child->getNextElementWithTagName(enumname.c_str()))
+                                     {
+                                         childs.push_back(child);
+                                     }
+
+                                     auto& accessors = std::get<static_cast<size_t>(acsr_type)>(accessor.mAccessors).accessors;
+                                     anlWeakAssert(element_type::size_flags == 0 || childs.size() == accessors.size());
+
+                                     if constexpr(element_type::size_flags == 0)
+                                     {
+                                         anlStrongAssert(accessors.empty());
+                                         for(auto index = 0_z; index < childs.size(); ++index)
+                                         {
+                                             accessor.mDelayInsertionNotification = true;
+                                             if(static_cast<parent_t*>(&accessor)->template insertAcsr<acsr_type>(index, NotificationType::synchronous))
+                                             {
+                                                 anlStrongAssert(accessors[index] != nullptr  && childs[index] != nullptr);
+                                                 if(accessors[index] != nullptr  && childs[index] != nullptr)
+                                                 {
+                                                     accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
+                                                 }
+                                                 accessor.notifyAccessorInsertion<acsr_type>(index, NotificationType::synchronous);
+                                             }
+                                             else
+                                             {
+                                                 accessors.push_back(nullptr);
+                                                 anlStrongAssert(false && "allocation failed");
+                                             }
+                                             accessor.mDelayInsertionNotification = false;
+                                         }
+                                     }
+                                     else
+                                     {
+                                         anlStrongAssert(childs.size() == accessors.size());
+                                         for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
+                                         {
+                                             anlStrongAssert(accessors[index] != nullptr && childs[index] != nullptr);
+                                             if(accessors[index] != nullptr && childs[index] != nullptr)
+                                             {
+                                                 accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
+                                             }
+                                         }
+                                     }
+                                 }
+                             });
+        }
+
         template <acsr_enum_type type>
         bool notifyAccessorInsertion(size_t index, NotificationType const notification)
         {
