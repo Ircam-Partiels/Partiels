@@ -32,9 +32,8 @@ Group::Director::Director(Accessor& accessor, juce::UndoManager& undoManager)
                         trackAcsr->get().setAttr<Track::AttrType::zoomAcsr>(std::ref(zoomAcsr), notification);
                     }
                 }
-
             }
-                break;
+            break;
         }
     };
 }

@@ -24,6 +24,6 @@ namespace Group
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
-}
+} // namespace Group
 
 ANALYSE_FILE_END
