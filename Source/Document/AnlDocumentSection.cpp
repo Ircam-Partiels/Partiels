@@ -3,10 +3,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::Section::Section(Accessor& accessor, Director& director, juce::AudioFormatManager& audioFormatManager)
-: mAccessor(accessor)
-, mDirector(director)
-, mFileInfoPanel(accessor, audioFormatManager)
+Document::Section::Section(Director& director)
+: mDirector(director)
 {
     mTimeRuler.setPrimaryTickInterval(0);
     mTimeRuler.setTickReferenceValue(0.0);

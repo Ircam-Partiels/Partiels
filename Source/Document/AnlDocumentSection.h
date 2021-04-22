@@ -24,7 +24,7 @@ namespace Document
         };
         // clang-format on
 
-        Section(Accessor& accessor, Director& director, juce::AudioFormatManager& audioFormatManager);
+        Section(Director& director);
         ~Section() override;
 
         void moveKeyboardFocusTo(juce::String const& identifier);
@@ -44,11 +44,11 @@ namespace Document
 
         void updateLayout();
 
-        Accessor& mAccessor;
         Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
 
-        FileInfoPanel mFileInfoPanel;
+        FileInfoPanel mFileInfoPanel{mAccessor, mDirector.getAudioFormatManager()};
         FileInfoButton mFileInfoButton{mFileInfoPanel};
         Decorator mFileInfoButtonDecoration{mFileInfoButton, 1, 2.0f};
         juce::ImageButton mTooltipButton{"Document::Section::TooltipButton"};
