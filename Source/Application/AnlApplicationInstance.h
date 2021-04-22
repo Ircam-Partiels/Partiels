@@ -41,8 +41,8 @@ namespace Application
         void openFile(juce::File const& file);
 
         Accessor& getApplicationAccessor();
-        AudioSettings& getAudioSettings();
-        About& getAbout();
+        AudioSettings* getAudioSettings();
+        About* getAbout();
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
         Document::Accessor& getDocumentAccessor();

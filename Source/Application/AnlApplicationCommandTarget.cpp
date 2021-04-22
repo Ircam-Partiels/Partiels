@@ -605,12 +605,18 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::HelpOpenAudioSettings:
         {
-            Instance::get().getAudioSettings().show();
+            if(auto* audioSettings = Instance::get().getAudioSettings())
+            {
+                audioSettings->show();
+            }
             return true;
         }
         case CommandIDs::HelpOpenAbout:
         {
-            Instance::get().getAbout().show();
+            if(auto* about = Instance::get().getAbout())
+            {
+                about->show();
+            }
             return true;
         }
         case CommandIDs::HelpOpenManual:

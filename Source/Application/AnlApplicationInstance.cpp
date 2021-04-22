@@ -170,14 +170,14 @@ Application::Accessor& Application::Instance::getApplicationAccessor()
     return mApplicationAccessor;
 }
 
-Application::AudioSettings& Application::Instance::getAudioSettings()
+Application::AudioSettings* Application::Instance::getAudioSettings()
 {
-    return *mAudioSettings.get();
+    return mAudioSettings.get();
 }
 
-Application::About& Application::Instance::getAbout()
+Application::About* Application::Instance::getAbout()
 {
-    return *mAbout.get();
+    return mAbout.get();
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()
