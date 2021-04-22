@@ -29,7 +29,7 @@ namespace Group
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
 
-        Section mSection{mAccessor, mTransportAccessor, mTimeZoomAccessor};
+        Section mSection{mDirector, mTransportAccessor, mTimeZoomAccessor};
         TrackMap<std::unique_ptr<Track::Section>> mTrackSections;
         DraggableTable mDraggableTable{"Track"};
         ConcertinaTable mConcertinaTable{"", false};

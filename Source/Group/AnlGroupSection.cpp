@@ -5,8 +5,8 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Section::Section(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
-: mAccessor(accessor)
+Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr)
+: mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 {

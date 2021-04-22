@@ -24,7 +24,7 @@ namespace Group
         };
         // clang-format on
 
-        Section(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
+        Section(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~Section() override;
 
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
@@ -46,7 +46,8 @@ namespace Group
         void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
         void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
 
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Accessor::Listener mListener;
