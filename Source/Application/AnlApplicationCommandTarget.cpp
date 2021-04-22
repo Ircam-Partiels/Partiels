@@ -174,7 +174,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::EditUndo:
         {
             auto& undoManager = Instance::get().getUndoManager();
-            result.setInfo(juce::translate("Undo Action"), juce::translate(""), "Edit", 0);
+            result.setInfo(juce::translate("Undo ") + undoManager.getUndoDescription(), juce::translate("Undo last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0));
             result.setActive(undoManager.canUndo());
         }
@@ -182,7 +182,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::EditRedo:
         {
             auto& undoManager = Instance::get().getUndoManager();
-            result.setInfo(juce::translate("Redo Action"), juce::translate(""), "Edit", 0);
+            result.setInfo(juce::translate("Redo ") + undoManager.getRedoDescription(), juce::translate("Redo last action"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(undoManager.canRedo());
         }
