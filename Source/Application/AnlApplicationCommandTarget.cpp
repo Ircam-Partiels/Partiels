@@ -112,15 +112,15 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
 
 void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result)
 {
-    auto const& docAcsr = Instance::get().getDocumentAccessor();
-    auto const& transportAcsr = docAcsr.getAcsr<Document::AcsrType::transport>();
+    auto const& documentAcsr = Instance::get().getDocumentAccessor();
+    auto const& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
     switch(commandID)
     {
         case CommandIDs::DocumentNew:
         {
             result.setInfo(juce::translate("New..."), juce::translate("Create a new document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!docAcsr.isEquivalentTo(Document::FileBased::getDefaultContainer()));
+            result.setActive(!documentAcsr.isEquivalentTo(Document::FileBased::getDefaultContainer()));
         }
         break;
         case CommandIDs::DocumentOpen:
@@ -155,19 +155,19 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidate the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
         break;
         case CommandIDs::DocumentOpenTemplate:
         {
             result.setInfo(juce::translate("Open Template..."), juce::translate("Open a template"), "Application", 0);
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
         break;
         case CommandIDs::DocumentSaveTemplate:
         {
             result.setInfo(juce::translate("Save Template..."), juce::translate("Save as a template"), "Application", 0);
-            result.setActive(!docAcsr.getAcsrs<Document::AcsrType::tracks>().empty());
+            result.setActive(!documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty());
         }
         break;
 
@@ -192,20 +192,18 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
         break;
         case CommandIDs::EditNewTrack:
         {
             result.setInfo(juce::translate("Add New Track"), juce::translate("Adds a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
         break;
         case CommandIDs::EditRemoveItem:
         {
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
-
             auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
             auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
             if(focusedTrack.has_value())
@@ -231,7 +229,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::playback>());
         }
         break;
@@ -239,7 +237,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File());
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
         }
         break;
@@ -247,13 +245,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(docAcsr.getAttr<Document::AttrType::file>() != juce::File() && transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() > 0.0);
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File() && transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() > 0.0);
         }
         break;
 
         case CommandIDs::ZoomIn:
         {
-            auto const& zoomAcsr = docAcsr.getAcsr<Document::AcsrType::timeZoom>();
+            auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
@@ -261,7 +259,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::ZoomOut:
         {
-            auto const& zoomAcsr = docAcsr.getAcsr<Document::AcsrType::timeZoom>();
+            auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
@@ -313,8 +311,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     };
 
     auto& fileBased = Instance::get().getDocumentFileBased();
-    auto& docAcsr = Instance::get().getDocumentAccessor();
-    auto& transportAcsr = docAcsr.getAcsr<Document::AcsrType::transport>();
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
     switch(info.commandID)
     {
         case CommandIDs::DocumentNew:
@@ -379,7 +377,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::EditNewGroup:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
             documentDir.startAction();
 
             auto const index = documentAcsr.getNumAcsr<Document::AcsrType::groups>();
@@ -410,7 +407,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::EditRemoveItem:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
 
             auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
             auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
@@ -492,7 +488,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::ZoomIn:
         {
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
             auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
@@ -501,7 +496,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::ZoomOut:
         {
-            auto& documentAcsr = Instance::get().getDocumentAccessor();
             auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
