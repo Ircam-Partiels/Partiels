@@ -110,27 +110,4 @@ std::optional<juce::String> Document::Tools::getFocusedGroup(Accessor const& acc
     return groupIt->get().getAttr<Group::AttrType::identifier>();
 }
 
-std::optional<juce::String> Document::Tools::getFocusedItem(Accessor const& accessor)
-{
-    auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
-    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
-    auto trackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
-                                {
-                                    return trackAcsr.get().template getAttr<Track::AttrType::focused>();
-                                });
-    if(trackIt != trackAcsrs.cend())
-    {
-        return trackIt->get().getAttr<Track::AttrType::identifier>();
-    }
-    auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-                                {
-                                    return groupAcsr.get().template getAttr<Group::AttrType::focused>();
-                                });
-    if(groupIt != groupAcsrs.cend())
-    {
-        return groupIt->get().getAttr<Group::AttrType::identifier>();
-    }
-    return std::optional<juce::String>();
-}
-
 ANALYSE_FILE_END

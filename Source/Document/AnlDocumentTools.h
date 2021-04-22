@@ -22,8 +22,6 @@ namespace Document
 
         std::optional<juce::String> getFocusedTrack(Accessor const& accessor);
         std::optional<juce::String> getFocusedGroup(Accessor const& accessor);
-
-        JUCE_DEPRECATED(std::optional<juce::String> getFocusedItem(Accessor const& accessor));
     } // namespace Tools
 } // namespace Document
 
