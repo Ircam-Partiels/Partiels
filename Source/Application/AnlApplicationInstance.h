@@ -43,6 +43,8 @@ namespace Application
         Accessor& getApplicationAccessor();
         AudioSettings* getAudioSettings();
         About* getAbout();
+        Window* getWindow();
+
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
         Document::Accessor& getDocumentAccessor();

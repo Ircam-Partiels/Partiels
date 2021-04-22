@@ -180,6 +180,11 @@ Application::About* Application::Instance::getAbout()
     return mAbout.get();
 }
 
+Application::Window* Application::Instance::getWindow()
+{
+    return mWindow.get();
+}
+
 PluginList::Accessor& Application::Instance::getPluginListAccessor()
 {
     return mPluginListAccessor;
