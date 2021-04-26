@@ -1,18 +1,10 @@
-- Zoom fix rulers
-- Add program support
-- Use a colour scheme for look and feel
-- Improve plugin blacklist support
-- Clean exporter
 - Add push notification support
-- Fix export state
-- Fix colour management
-- Look And Feel
-- Translations
 - https://github.com/taglib/taglib
 - Optimize result representation
   - 256b interger for grid
 - Add Unit Tests
   - Group Model
   - Document Model
-- Improve support of 1 value analysis  
-- Windows time code width
+  - Analysis (compare with files)
+- replace model resizable by dynamic and fixed
+- output all key shortcuts
