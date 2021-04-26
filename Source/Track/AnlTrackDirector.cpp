@@ -304,13 +304,17 @@ Track::Accessor& Track::Director::getAccessor()
 
 void Track::Director::startAction()
 {
+    anlStrongAssert(mIsPerformingAction == false);
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    mIsPerformingAction = true;
 }
 
 void Track::Director::endAction(juce::String const& name, ActionState state)
 {
+    anlStrongAssert(mIsPerformingAction == true);
     if(mAccessor.isEquivalentTo(mSavedState))
     {
+        mIsPerformingAction = false;
         return;
     }
 
@@ -363,6 +367,7 @@ void Track::Director::endAction(juce::String const& name, ActionState state)
             break;
         }
     }
+    mIsPerformingAction = false;
 }
 
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -429,9 +434,19 @@ void Track::Director::runAnalysis(NotificationType const notification)
             }
             else if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
                                                        juce::translate("Plugin cannot be loaded"),
-                                                       juce::translate("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?")))
+                                                       juce::translate("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?").replace("KEYID", mAccessor.getAttr<AttrType::key>().identifier).replace("KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature).replace("TRACKNAME", mAccessor.getAttr<AttrType::name>())))
+
             {
-                mAccessor.setAttr<AttrType::state>(pluginState, notification);
+                auto isPerformingAction = mIsPerformingAction;
+                if(!isPerformingAction)
+                {
+                    startAction();
+                }
+                mAccessor.setAttr<AttrType::state>(pluginDescription.defaultState, notification);
+                if(!isPerformingAction)
+                {
+                    endAction("Restore track factory properties", ActionState::apply);
+                }
             }
         }
         break;

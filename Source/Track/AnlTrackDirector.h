@@ -33,6 +33,7 @@ namespace Track
         Accessor& mAccessor;
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;
+        bool mIsPerformingAction{false};
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         Processor mProcessor;
         Graphics mGraphics;
