@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnlDocumentModel.h"
 #include "AnlDocumentDirector.h"
+#include "AnlDocumentModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -16,6 +16,7 @@ namespace Document
         ~FileBased() override;
 
         static Document::AttrContainer const& getDefaultContainer();
+
     protected:
         // juce::FileBasedDocument
         juce::String getDocumentTitle() override;
@@ -24,11 +25,11 @@ namespace Document
         juce::File getLastDocumentOpened() override;
         void setLastDocumentOpened(juce::File const& file) override;
         void changed() override;
-        
+
     private:
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
-        
+
         Accessor& mAccessor;
         Director& mDirector;
         Accessor::Listener mListener;
@@ -36,9 +37,10 @@ namespace Document
         std::vector<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         Group::Accessor::Listener mGroupListener;
         std::vector<std::reference_wrapper<Group::Accessor>> mGroupAccessors;
+
         juce::File mLastFile;
         Accessor mSavedStateAccessor;
     };
-}
+} // namespace Document
 
 ANALYSE_FILE_END

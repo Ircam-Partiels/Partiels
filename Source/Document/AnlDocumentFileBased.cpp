@@ -4,7 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::AttrContainer const& Document::FileBased::getDefaultContainer()
 {
-    static AttrContainer const document {{juce::File{}}, {}};
+    static AttrContainer const document{{juce::File{}}, {}};
     return document;
 }
 
@@ -19,6 +19,7 @@ Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::Str
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
+
     mListener.onAccessorInserted = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
@@ -44,6 +45,7 @@ Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::Str
                 break;
         }
     };
+
     mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
     {
         triggerAsyncUpdate();
@@ -80,6 +82,7 @@ Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::Str
         juce::ignoreUnused(acsr, attribute);
         triggerAsyncUpdate();
     };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mSavedStateAccessor.addListener(mListener, NotificationType::synchronous);
 }
