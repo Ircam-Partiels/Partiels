@@ -11,10 +11,10 @@ void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertTy
         return;
     }
     juce::TemporaryFile temp(fc.getResult());
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as preset failed!");
-    
+
     auto xml = std::make_unique<juce::XmlElement>("Preset");
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
@@ -26,17 +26,17 @@ void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertTy
         }
         return;
     }
-    
+
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
     XmlParser::toXml(*xml.get(), "state", accessor.getAttr<AttrType::state>());
-    
+
     auto const file = fc.getResult();
     if(!xml->writeTo(temp.getFile()) && alertType == AlertType::window)
     {
         auto const message = juce::translate("The track ANLNAME can not be exported as a preset because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
     }
-    
+
     if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
     {
         auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
@@ -52,10 +52,10 @@ bool Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
         return false;
     }
     auto const file = fc.getResult();
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as preset failed!");
-    
+
     auto xml = juce::XmlDocument::parse(file);
     if(xml == nullptr)
     {
@@ -66,7 +66,7 @@ bool Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
         }
         return false;
     }
-    
+
     Plugin::Key const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
     if(key != accessor.getAttr<AttrType::key>())
     {
@@ -89,10 +89,10 @@ void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alert
         return;
     }
     juce::TemporaryFile temp(fc.getResult());
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as template failed!");
-    
+
     auto xml = accessor.toXml("Template");
     if(xml == nullptr)
     {
@@ -103,14 +103,14 @@ void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alert
         }
         return;
     }
-    
+
     auto const file = fc.getResult();
     if(!xml->writeTo(temp.getFile()) && alertType == AlertType::window)
     {
         auto const message = juce::translate("The track ANLNAME can not be exported as a template because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
         juce::AlertWindow::showMessageBox(icon, title, message);
     }
-    
+
     if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
     {
         auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
@@ -125,16 +125,16 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
     {
         return;
     }
-    
+
     juce::TemporaryFile temp(fc.getResult());
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as image failed!");
-    
+
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
     if(imageFormat == nullptr)
     {
-        if(alertType!= AlertType::window)
+        if(alertType != AlertType::window)
         {
             return;
         }
@@ -142,11 +142,11 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
-    
+
     juce::FileOutputStream stream(temp.getFile());
     if(!stream.openedOk())
     {
-        if(alertType!= AlertType::window)
+        if(alertType != AlertType::window)
         {
             return;
         }
@@ -154,11 +154,11 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
         juce::AlertWindow::showMessageBox(icon, title, message);
         return;
     }
-    
+
     auto const& graphics = accessor.getAttr<AttrType::graphics>();
     if(graphics.empty())
     {
-        if(alertType!= AlertType::window)
+        if(alertType != AlertType::window)
         {
             return;
         }
@@ -168,7 +168,7 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
     }
     if(!imageFormat->writeImageToStream(graphics.back(), stream))
     {
-        if(alertType!= AlertType::window)
+        if(alertType != AlertType::window)
         {
             return;
         }
@@ -179,7 +179,7 @@ void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertTyp
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        if(alertType!= AlertType::window)
+        if(alertType != AlertType::window)
         {
             return;
         }
@@ -195,10 +195,10 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
     {
         return;
     }
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as CSV failed!");
-    
+
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
     if(resultsPtr == nullptr)
     {
@@ -209,10 +209,10 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
         }
         return;
     }
-    
+
     juce::TemporaryFile temp(fc.getResult());
     juce::FileOutputStream stream(temp.getFile());
-    
+
     if(!stream.openedOk())
     {
         auto const message = juce::translate("The track ANLNAME can not be exported as CSV because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
@@ -226,7 +226,7 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
         state = false;
         stream << '\n';
     };
-    
+
     auto addColumn = [&](juce::StringRef const& text)
     {
         if(state)
@@ -237,17 +237,17 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
         state = true;
         return true;
     };
-    
+
     auto toSeconds = [](Vamp::RealTime const& timestamp)
     {
         return static_cast<double>(timestamp.sec) + static_cast<double>(timestamp.msec()) / 1000.0;
     };
-    
+
     addColumn("ROW");
     addColumn("TIME");
     addColumn("DURATION");
     addColumn("LABEL");
-    
+
     auto const& results = *resultsPtr;
     for(size_t i = 0; i < results.front().values.size(); ++i)
     {
@@ -267,7 +267,7 @@ void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
         }
         addLine();
     }
-    
+
     if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
     {
         auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
@@ -282,17 +282,17 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
     {
         return;
     }
-    
+
     juce::TemporaryFile temp(fc.getResult());
-    
+
     auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as XML failed!");
-    
+
     auto toSeconds = [](Vamp::RealTime const& timestamp)
     {
         return static_cast<double>(timestamp.sec) + static_cast<double>(timestamp.msec()) / 1000.0;
     };
-    
+
     auto toXml = [&](size_t row, Plugin::Result const& result)
     {
         auto child = std::make_unique<juce::XmlElement>("result");
@@ -305,16 +305,16 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
             }
             return child;
         }
-        
+
         XmlParser::toXml(*child, "row", row);
         XmlParser::toXml(*child, "time", result.hasTimestamp ? toSeconds(result.timestamp) : 0.0);
         XmlParser::toXml(*child, "duration", result.hasDuration ? toSeconds(result.duration) : 0.0);
         XmlParser::toXml(*child, "label", result.label);
         XmlParser::toXml(*child, "values", result.values);
-        
+
         return child;
     };
-    
+
     auto element = std::make_unique<juce::XmlElement>("partiels");
     if(element == nullptr)
     {
@@ -325,7 +325,7 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
         }
         return;
     }
-    
+
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
     if(resultsPtr == nullptr)
     {
@@ -336,13 +336,13 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
         }
         return;
     }
-    
+
     auto const& results = *resultsPtr;
     for(size_t i = 0; i < results.size(); ++i)
     {
         element->addChildElement(toXml(i, results[i]).release());
     }
-    
+
     if(!element->writeTo(temp.getFile()))
     {
         if(alertType == AlertType::window)
@@ -352,7 +352,7 @@ void Track::Exporter::toXml(Accessor const& accessor, AlertType const alertType)
         }
         return;
     }
-       
+
     if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
     {
         auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", temp.getTargetFile().getFullPathName()));
