@@ -32,6 +32,10 @@ namespace Document
         Accessor& mAccessor;
         Director& mDirector;
         Accessor::Listener mListener;
+        Track::Accessor::Listener mTrackListener;
+        std::vector<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
+        Group::Accessor::Listener mGroupListener;
+        std::vector<std::reference_wrapper<Group::Accessor>> mGroupAccessors;
         juce::File mLastFile;
         Accessor mSavedStateAccessor;
     };
