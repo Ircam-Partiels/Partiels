@@ -62,10 +62,12 @@ Application::CommandTarget::CommandTarget()
     Instance::get().getUndoManager().addChangeListener(this);
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
+    Instance::get().getApplicationCommandManager().setFirstCommandTarget(this);
 }
 
 Application::CommandTarget::~CommandTarget()
 {
+    Instance::get().getApplicationCommandManager().setFirstCommandTarget(nullptr);
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getUndoManager().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
