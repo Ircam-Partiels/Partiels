@@ -234,12 +234,12 @@ void Document::Section::updateLayout()
                     auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
                     auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
                     auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
-                    mDirector.endAction("Move Track " + trackName + " to Group " + groupName, ActionState::apply);
+                    mDirector.endAction(juce::translate("Move \"TRACKNAME\" Track to the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName), ActionState::apply);
                     moveKeyboardFocusTo(identifier);
                 }
                 else
                 {
-                    mDirector.endAction("Move Track", ActionState::abort);
+                    mDirector.endAction(juce::translate("Move Track"), ActionState::abort);
                 }
             };
         }
