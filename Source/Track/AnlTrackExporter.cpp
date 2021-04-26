@@ -44,12 +44,12 @@ void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertTy
     }
 }
 
-void Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
+bool Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
 {
     juce::FileChooser fc(juce::translate("Load from preset..."), {}, App::getFileWildCardFor("preset"));
     if(!fc.browseForFileToOpen())
     {
-        return;
+        return false;
     }
     auto const file = fc.getResult();
     
@@ -64,7 +64,7 @@ void Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
             auto const message = juce::translate("The track ANLNAME can not be parse to a preset.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
-        return;
+        return false;
     }
     
     Plugin::Key const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
@@ -75,9 +75,10 @@ void Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
             auto const message = juce::translate("The track ANLNAME can not be parse to a preset because the key arer not compatible.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
             juce::AlertWindow::showMessageBox(icon, title, message);
         }
-        return;
+        return false;
     }
     accessor.setAttr<AttrType::state>(XmlParser::fromXml(*xml.get(), "state", accessor.getAttr<AttrType::state>()), NotificationType::synchronous);
+    return true;
 }
 
 void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alertType)
