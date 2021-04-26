@@ -65,10 +65,15 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 
     mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
+        mDirector.startAction();
         auto layout = mAccessor.getAttr<AttrType::layout>();
         std::erase(layout, identifier);
         layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        auto const trackName = trackAcsr.has_value() ? trackAcsr->get().getAttr<Track::AttrType::name>() : "-";
+        auto const groupName = mAccessor.getAttr<AttrType::name>();
+        mDirector.endAction(juce::translate("Move \"TRACKNAME\" Track in the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName), ActionState::apply);
     };
 
     mBoundsListener.onComponentResized = [&](juce::Component& component)
