@@ -21,6 +21,10 @@ namespace XmlParser
         {
             xml.setAttribute(attributeName, value);
         }
+        else if constexpr(std::is_same<T, std::string>::value)
+        {
+            xml.setAttribute(attributeName, juce::String(value));
+        }
         else if constexpr(std::is_same<T, juce::Colour>::value)
         {
             xml.setAttribute(attributeName, value.toString());
@@ -105,6 +109,11 @@ namespace XmlParser
         {
             anlWeakAssert(xml.hasAttribute(attributeName));
             return xml.getStringAttribute(attributeName, defaultValue);
+        }
+        else if constexpr(std::is_same<T, std::string>::value)
+        {
+            anlWeakAssert(xml.hasAttribute(attributeName));
+            return xml.getStringAttribute(attributeName, juce::String(defaultValue)).toStdString();
         }
         else if constexpr(std::is_same<T, juce::Colour>::value)
         {
