@@ -720,7 +720,7 @@ namespace Model
                                                  {
                                                      accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
                                                  }
-                                                 accessor.notifyAccessorInsertion<acsr_type>(index, NotificationType::synchronous);
+                                                 accessor.template notifyAccessorInsertion<acsr_type>(index, NotificationType::synchronous);
                                              }
                                              else
                                              {
