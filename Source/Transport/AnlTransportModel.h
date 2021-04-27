@@ -38,7 +38,7 @@ namespace Transport
                                  , {0.0}
                                  , {false}
                                  , {Zoom::Range{0.0, 0.0}}
-                                 , {0.0}
+                                 , {1.0}
                                  ))
         {
         }
