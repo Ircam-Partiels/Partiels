@@ -747,14 +747,14 @@ namespace Model
         }
 
         template <acsr_enum_type type>
-        bool notifyAccessorInsertion(size_t index, NotificationType const notification)
+        void notifyAccessorInsertion(size_t index, NotificationType const notification)
         {
             auto& lock = getLock();
             auto const canAccess = lock.exchange(false);
             anlStrongAssert(canAccess == true);
             if(!canAccess)
             {
-                return false;
+                return;
             }
 
             if(onAccessorInserted != nullptr)
@@ -778,7 +778,6 @@ namespace Model
             }
 
             lock = true;
-            return true;
         }
 
         void setLock(std::atomic<bool>* lock)
