@@ -591,7 +591,7 @@ void Track::PropertyPanel::applyParameterValue(Plugin::Parameter const& paramete
     anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
     state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-    mDirector.endAction(juce::translate("Change track \"PROPERTYNAME\" property").replace("PROPERTYNAME", parameter.name), ActionState::apply);
+    mDirector.endAction(juce::translate("Change track property"), ActionState::apply);
 }
 
 ANALYSE_FILE_END
