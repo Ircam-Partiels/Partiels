@@ -55,7 +55,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mScanButton.setClickingTogglesState(false);
     mScanButton.onClick = [this]()
     {
-        auto scanPlugins = [this]() -> decltype(mScanner.getKeys())
+        auto scanPlugins = [this]() -> decltype(mScanner.getKeys(48000.0))
         {
             try
             {

@@ -9,9 +9,8 @@ namespace PluginList
     class Scanner
     {
     public:
-        std::tuple<std::set<Plugin::Key>, juce::StringArray> getKeys(double sampleRate = 48000.0);
-        Plugin::Description getDescription(Plugin::Key const& key, double sampleRate = 48000.0);
-        
+        std::tuple<std::set<Plugin::Key>, juce::StringArray> getKeys(double sampleRate);
+        Plugin::Description getDescription(Plugin::Key const& key, double sampleRate);
     private:
         Vamp::Plugin* loadPlugin(std::string const& key, float sampleRate);
         
