@@ -21,6 +21,8 @@ namespace Track
         void resized() override;
 
     private:
+        void applyParameterValue(Plugin::Parameter const& parameter, float value);
+
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;

@@ -254,35 +254,25 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             {
                 auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<juce::Component>
                 {
-                    auto const setValue = [=, this](float value)
-                    {
-                        mDirector.startAction();
-                        auto state = mAccessor.getAttr<AttrType::state>();
-                        anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
-                        state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
-                        mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                        mDirector.endAction(juce::translate("Change track \"PROPERTYNAME\" property").replace("PROPERTYNAME", parameter.name), ActionState::apply);
-                    };
-
                     if(!parameter.valueNames.empty())
                     {
                         return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=](size_t index)
                                                               {
-                                                                  setValue(static_cast<float>(index));
+                                                                  applyParameterValue(parameter, static_cast<float>(index));
                                                               });
                     }
                     else if(parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon())
                     {
                         return std::make_unique<PropertyToggle>(parameter.name, parameter.description, [=](bool state)
                                                                 {
-                                                                    setValue(state ? 1.0f : 0.f);
+                                                                    applyParameterValue(parameter, state ? 1.0f : 0.f);
                                                                 });
                     }
 
                     auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
                     return std::make_unique<PropertyNumber>(parameter.name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=](float value)
                                                             {
-                                                                setValue(value);
+                                                                applyParameterValue(parameter, value);
                                                             });
                 };
 
@@ -592,6 +582,16 @@ void Track::PropertyPanel::resized()
     mGraphicalSection.setBounds(bounds.removeFromTop(mGraphicalSection.getHeight()));
     mPluginSection.setBounds(bounds.removeFromTop(mPluginSection.getHeight()));
     setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
+}
+
+void Track::PropertyPanel::applyParameterValue(Plugin::Parameter const& parameter, float value)
+{
+    mDirector.startAction();
+    auto state = mAccessor.getAttr<AttrType::state>();
+    anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
+    state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
+    mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
+    mDirector.endAction(juce::translate("Change track \"PROPERTYNAME\" property").replace("PROPERTYNAME", parameter.name), ActionState::apply);
 }
 
 ANALYSE_FILE_END
