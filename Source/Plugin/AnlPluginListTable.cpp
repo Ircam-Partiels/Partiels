@@ -23,18 +23,18 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                 auto const isForward = acsr.getAttr<AttrType::sortIsFowards>();
                 mPluginTable.getHeader().setSortColumnId(columnId, isForward);
             }
-                break;
+            break;
         }
         updateContent();
         mIsBeingUpdated = false;
     };
-    
+
     addAndMakeVisible(mPluginTable);
     mPluginTable.setHeaderHeight(28);
     mPluginTable.setRowHeight(22);
     mPluginTable.setMultipleSelectionEnabled(true);
     mPluginTable.setModel(this);
-    
+
     using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mPluginTable.getHeader();
     header.addColumn(juce::translate("Name"), ColumnType::Name, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
@@ -43,14 +43,14 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Maker"), ColumnType::Maker, 120, 100, 300);
     header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 100, 200);
     header.addColumn(juce::translate("Version"), ColumnType::Version, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
-    
+
     addAndMakeVisible(mClearButton);
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
     {
         mAccessor.setAttr<AttrType::keys>(decltype(mAccessor.getAttr<AttrType::keys>()){}, NotificationType::synchronous);
     };
-    
+
     addAndMakeVisible(mScanButton);
     mScanButton.setClickingTogglesState(false);
     mScanButton.onClick = [this]()
@@ -82,7 +82,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                                 "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
         }
     };
-    
+
     addAndMakeVisible(mSearchField);
     mSearchField.setMultiLine(false);
     mSearchField.setPopupMenuEnabled(false);
@@ -107,7 +107,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     {
         moveKeyboardFocusToSibling(false);
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(800, 600);
 }
@@ -133,7 +133,7 @@ void PluginList::Table::resized()
 void PluginList::Table::updateContent()
 {
     auto const& keys = mAccessor.getAttr<AttrType::keys>();
-    
+
     mFilteredList.clear();
     juce::StringArray errors;
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
@@ -165,51 +165,51 @@ void PluginList::Table::updateContent()
             errors.add(key.identifier + " - " + key.feature + ": unknown error");
         }
     }
-    
+
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
     switch(mAccessor.getAttr<AttrType::sortColumn>())
     {
         case ColumnType::Name:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-            {
-                return isForwards ? (lhs.second.name + lhs.second.output.name > rhs.second.name + rhs.second.output.name) : (lhs.second.name + lhs.second.output.name < rhs.second.name + rhs.second.output.name);
-            });
+                      {
+                          return isForwards ? (lhs.second.name + lhs.second.output.name > rhs.second.name + rhs.second.output.name) : (lhs.second.name + lhs.second.output.name < rhs.second.name + rhs.second.output.name);
+                      });
         }
-            break;
+        break;
         case ColumnType::Feature:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-            {
-                return isForwards ? (lhs.second.output.name > rhs.second.output.name) : (lhs.second.output.name < rhs.second.output.name);
-            });
+                      {
+                          return isForwards ? (lhs.second.output.name > rhs.second.output.name) : (lhs.second.output.name < rhs.second.output.name);
+                      });
         }
-            break;
+        break;
         case ColumnType::Maker:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-            {
-                return isForwards ? (lhs.second.maker > rhs.second.maker) : (lhs.second.maker < rhs.second.maker);
-            });
+                      {
+                          return isForwards ? (lhs.second.maker > rhs.second.maker) : (lhs.second.maker < rhs.second.maker);
+                      });
         }
-            break;
+        break;
         case ColumnType::Category:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-            {
-                return isForwards ? (lhs.second.category > rhs.second.category) : (lhs.second.category < rhs.second.category);
-            });
+                      {
+                          return isForwards ? (lhs.second.category > rhs.second.category) : (lhs.second.category < rhs.second.category);
+                      });
         }
-            break;
+        break;
         case ColumnType::Version:
         case ColumnType::Details:
             break;
     }
-    
+
     mPluginTable.getHeader().reSortTable();
     mPluginTable.updateContent();
     mPluginTable.repaint();
-    
+
     if(!errors.isEmpty())
     {
         MessageWindow::show(MessageWindow::MessageType::warning,
@@ -259,7 +259,7 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
         }
         return "";
     };
-    
+
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
     g.setColour(columnId == ColumnType::Name || columnId == ColumnType::Feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
     g.setFont(juce::Font(static_cast<float>(height) * 0.7f, juce::Font::bold));
@@ -271,7 +271,7 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
     juce::ignoreUnused(lastRowSelected);
     auto const selectedRows = mPluginTable.getSelectedRows();
     mPluginTable.deselectAllRows();
-    
+
     auto keys = mAccessor.getAttr<AttrType::keys>();
     for(int i = 0; i < selectedRows.size(); ++i)
     {
@@ -283,7 +283,7 @@ void PluginList::Table::deleteKeyPressed(int lastRowSelected)
             keys.erase(key);
         }
     }
-    
+
     mAccessor.setAttr<AttrType::keys>(keys, NotificationType::synchronous);
 }
 
