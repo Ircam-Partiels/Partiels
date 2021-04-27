@@ -102,7 +102,17 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         {
             case AttrType::key:
             {
-                runAnalysis(notification);
+                if(mAccessor.getAttr<AttrType::state>() == Plugin::State{})
+                {
+                    auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
+                    auto const description = PluginList::Scanner::loadDescription(mAccessor.getAttr<AttrType::key>(), sampleRate);
+                    mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
+                    mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
+                }
+                else
+                {
+                    runAnalysis(notification);
+                }
             }
             break;
             case AttrType::state:
