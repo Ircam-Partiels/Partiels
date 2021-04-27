@@ -11,33 +11,33 @@ Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float samp
     {
         throw std::runtime_error("plugin loader is not available");
     }
-    
+
     std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
         throw std::logic_error("plugin loader thread is already in used");
     }
-    
+
     auto const entry = std::make_tuple(key, sampleRate);
     auto it = mPlugins.find(entry);
     if(it != mPlugins.end())
     {
         return it->second.get();
     }
-    
+
     auto const pluginKeys = pluginLoader->listPlugins();
     if(std::find(pluginKeys.cbegin(), pluginKeys.cend(), key) == pluginKeys.cend())
     {
         throw std::runtime_error("plugin key cannot be found");
     }
-    
+
     auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
     if(plugin == nullptr)
     {
         throw std::runtime_error("plugin allocation failed");
     }
-    
+
     auto* pointer = plugin.get();
     mPlugins[entry] = std::move(plugin);
     return pointer;
@@ -93,13 +93,13 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
     {
         throw std::runtime_error("plugin loader is not available");
     }
-    
+
     auto* plugin = loadPlugin(key.identifier, static_cast<float>(sampleRate));
     if(plugin == nullptr)
     {
         throw std::runtime_error("allocation failed");
     }
-    
+
     auto const outputs = plugin->getOutputDescriptors();
     for(size_t feature = 0; feature < outputs.size(); ++feature)
     {
@@ -116,13 +116,13 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
                     description.defaultState.windowType = inputDomainAdapter->getWindowType();
                 }
             }
-            
+
             description.maker = plugin->getMaker();
             description.version = static_cast<unsigned int>(plugin->getPluginVersion());
             auto const categories = pluginLoader->getPluginCategory(key.identifier);
-            description.category = categories.empty() ? "": categories.front();
+            description.category = categories.empty() ? "" : categories.front();
             description.details = plugin->getDescription();
-            
+
             auto const blockSize = plugin->getPreferredBlockSize();
             description.defaultState.blockSize = blockSize > 0 ? blockSize : 512;
             auto const stepSize = plugin->getPreferredStepSize();
@@ -133,7 +133,7 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
             {
                 description.defaultState.parameters[parameter.identifier] = parameter.defaultValue;
             }
-            
+
             description.output = outputs[feature];
             return description;
         }
