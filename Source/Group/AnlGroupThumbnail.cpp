@@ -110,12 +110,12 @@ Group::Thumbnail::Thumbnail(Director& director)
         return menu;
     };
 
-    mNameButton.onClick = [=, this]()
+    mNameButton.onClick = [=]()
     {
         getNameMenu().showAt(&mNameButton);
     };
 
-    mDropdownButton.onClick = [=, this]()
+    mDropdownButton.onClick = [=]()
     {
         juce::PopupMenu menu;
         if(!mNameButton.isVisible())
@@ -278,14 +278,14 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
         auto const p = -event.getMouseDownPosition();
         auto const expanded = mAccessor.getAttr<AttrType::expanded>();
         dragContainer->startDragging(DraggableTable::createDescription(
-                                         event, "Group", mAccessor.getAttr<AttrType::identifier>(), section->getHeight(), [=, this]()
+                                         event, "Group", mAccessor.getAttr<AttrType::identifier>(), section->getHeight(), [=]()
                                          {
                                              if(expanded)
                                              {
                                                  mAccessor.setAttr<AttrType::expanded>(false, NotificationType::synchronous);
                                              }
                                          },
-                                         [=, this]()
+                                         [=]()
                                          {
                                              if(expanded)
                                              {

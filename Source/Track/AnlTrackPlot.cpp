@@ -10,7 +10,7 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
 , mTransportAccessor(transportAccessor)
 {
     setInterceptsMouseClicks(false, false);
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -524,7 +524,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
     
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {

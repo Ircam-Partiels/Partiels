@@ -68,7 +68,7 @@ void NumberField::setValue(double value, juce::NotificationType const notificati
         else if(notification == juce::NotificationType::sendNotificationAsync)
         {
             juce::WeakReference<juce::Component> target(this);
-            juce::MessageManager::callAsync([=, this]
+            juce::MessageManager::callAsync([=]
                                             {
                                                 if(target.get() != nullptr && onValueChanged != nullptr)
                                                 {

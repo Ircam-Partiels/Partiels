@@ -96,7 +96,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         }
     };
 
-    accessor.onAttrUpdated = [=, this](AttrType attr, NotificationType notification)
+    accessor.onAttrUpdated = [=](AttrType attr, NotificationType notification)
     {
         switch(attr)
         {
@@ -164,7 +164,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
     };
 
     auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    valueZoomAcsr.onAttrUpdated = [=, this](Zoom::AttrType attr, NotificationType notification)
+    valueZoomAcsr.onAttrUpdated = [=](Zoom::AttrType attr, NotificationType notification)
     {
         switch(attr)
         {

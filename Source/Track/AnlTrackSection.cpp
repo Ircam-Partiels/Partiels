@@ -200,7 +200,7 @@ void Track::Section::focusOfChildComponentChanged(juce::Component::FocusChangeTy
 {
     juce::ignoreUnused(cause);
     juce::WeakReference<juce::Component> target(this);
-    juce::MessageManager::callAsync([=, this]
+    juce::MessageManager::callAsync([=]
                                     {
                                         if(target.get() != nullptr)
                                         {

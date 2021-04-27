@@ -260,7 +260,7 @@ namespace Model
 
             if constexpr((element_type::flags & Flag::notifying) != 0)
             {
-                mListeners.notify([=, this](Listener& listener) mutable
+                mListeners.notify([=](Listener& listener) mutable
                                   {
                                       if(listener.onAccessorErased != nullptr)
                                       {
@@ -321,7 +321,7 @@ namespace Model
 
                     if constexpr((element_type::flags & Flag::notifying) != 0)
                     {
-                        mListeners.notify([=, this](Listener& listener)
+                        mListeners.notify([=](Listener& listener)
                                           {
                                               if(listener.onAttrChanged != nullptr)
                                               {

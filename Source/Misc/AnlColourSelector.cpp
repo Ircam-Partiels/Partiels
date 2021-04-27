@@ -50,7 +50,7 @@ void ColourButton::setCurrentColour(juce::Colour const& newColour, juce::Notific
         if(notificationType == juce::NotificationType::sendNotificationAsync)
         {
             juce::WeakReference<juce::Component> target(this);
-            juce::MessageManager::callAsync([=, this]
+            juce::MessageManager::callAsync([=]
                                             {
                                                 if(target.get() != nullptr && onColourChanged != nullptr)
                                                 {
