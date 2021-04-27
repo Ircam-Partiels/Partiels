@@ -474,8 +474,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 {
                     auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
                     trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
-                    trackAcsr.setAttr<Track::AttrType::description>(description, NotificationType::synchronous);
-                    trackAcsr.setAttr<Track::AttrType::state>(description.defaultState, NotificationType::synchronous);
                     trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
 
                     auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, std::get<0>(position));
