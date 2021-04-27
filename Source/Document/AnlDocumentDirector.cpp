@@ -459,8 +459,42 @@ void Document::Director::sanitize(NotificationType const notification)
     {
         return;
     }
-
-    auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    std::set<juce::String> identifiers;
+    
+    auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    for(auto trackAcsr : trackAcsrs)
+    {
+        auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+        anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+        if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
+        {
+            auto const newidentifier = juce::Uuid().toString();
+            trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+            identifiers.insert(newidentifier);
+        }
+        else
+        {
+            identifiers.insert(identifier);
+        }
+    }
+    
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    for(auto groupAcsr : groupAcsrs)
+    {
+        auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+        anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+        if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
+        {
+            auto const newidentifier = juce::Uuid().toString();
+            groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+            identifiers.insert(newidentifier);
+        }
+        else
+        {
+            identifiers.insert(identifier);
+        }
+    }
+    
     anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
     if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
     {
@@ -471,7 +505,7 @@ void Document::Director::sanitize(NotificationType const notification)
             return;
         }
     }
-    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    
     if(!groupAcsrs.empty())
     {
         auto& lastAcsr = groupAcsrs.back().get();
