@@ -9,7 +9,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
 , mTimeZoomAccessor(timeZoomAccessor)
 {
     setInterceptsMouseClicks(false, false);
-    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -37,7 +37,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         }
     };
     
-    mValueZoomListener.onAttrChanged = [=](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();

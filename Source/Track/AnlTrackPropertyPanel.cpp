@@ -235,7 +235,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
         }
     };
 
-    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         auto constexpr silent = juce::NotificationType::dontSendNotification;
@@ -460,7 +460,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
         }
     };
 
-    mValueZoomListener.onAttrChanged = [=](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         switch(attribute)
         {

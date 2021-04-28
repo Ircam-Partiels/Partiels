@@ -50,7 +50,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     auto const valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     
     mChrono.start();
-    mRenderingProcess = std::thread([=]()
+    mRenderingProcess = std::thread([=, this]()
     {
         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
         juce::Thread::setCurrentThreadPriority(10);

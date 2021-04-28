@@ -81,7 +81,7 @@ PropertyText::PropertyText(juce::String const& name, juce::String const& tooltip
             editor->setJustification(entry.getJustificationType());
         }
     };
-    entry.onTextChange = [=]()
+    entry.onTextChange = [=, this]()
     {
         if(fn != nullptr)
         {
@@ -121,7 +121,7 @@ PropertySlider::PropertySlider(juce::String const& name, juce::String const& too
     entry.setTooltip(juce::translate(tooltip));
     entry.setTextValueSuffix(suffix);
     entry.setScrollWheelEnabled(false);
-    entry.onValueChange = [=]()
+    entry.onValueChange = [=, this]()
     {
         if(fn != nullptr)
         {
@@ -139,7 +139,7 @@ PropertyRangeSlider::PropertyRangeSlider(juce::String const& name, juce::String 
     entry.setTooltip(juce::translate(tooltip));
     entry.setTextValueSuffix(suffix);
     entry.setScrollWheelEnabled(false);
-    entry.onValueChange = [=]()
+    entry.onValueChange = [=, this]()
     {
         if(fn != nullptr)
         {
@@ -152,7 +152,7 @@ PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& too
 : PropertyComponent<juce::ToggleButton>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setTooltip(juce::translate(tooltip));
-    entry.onClick = [=]()
+    entry.onClick = [=, this]()
     {
         if(fn != nullptr)
         {
@@ -178,7 +178,7 @@ PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip
     }
     entry.addItemList(items, 1);
     entry.setJustificationType(juce::Justification::centredRight);
-    entry.onChange = [=]()
+    entry.onChange = [=, this]()
     {
         if(fn != nullptr)
         {
