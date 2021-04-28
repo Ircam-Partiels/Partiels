@@ -30,9 +30,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
             {
                 clearCurrentRange();
                 mLoopRange = acsr.getAttr<AttrType::loopRange>();
-                auto const x1 = Zoom::Tools::getScaledXFromValue(zoomAcsr, *this, mLoopRange.getStart());
-                auto const x2 = Zoom::Tools::getScaledXFromValue(zoomAcsr, *this, mLoopRange.getEnd());
-                repaint(x1, 0, x2 - x1, getHeight());
+                clearCurrentRange();
             }
             case AttrType::gain:
                 break;
