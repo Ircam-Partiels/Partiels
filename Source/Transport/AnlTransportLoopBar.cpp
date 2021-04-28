@@ -69,13 +69,13 @@ Transport::LoopBar::~LoopBar()
 void Transport::LoopBar::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
-    g.setColour(findColour(ColourIds::thumbCoulourId));
     auto const x1 = Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mLoopRange.getStart());
     auto const x2 = Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mLoopRange.getEnd());
-    if(x1 <= x2)
+    if(x1 >= x2)
     {
         return;
     }
+    g.setColour(findColour(ColourIds::thumbCoulourId));
     if(mAccessor.getAttr<AttrType::looping>())
     {
         g.fillRoundedRectangle(static_cast<float>(x1), 0.0f, static_cast<float>(x2 - x1), static_cast<float>(getHeight()), 2.0f);
