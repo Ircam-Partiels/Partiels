@@ -24,7 +24,11 @@ Document::Section::Section(Director& director)
     mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
         auto layout = mAccessor.getAttr<AttrType::layout>();
+#ifdef __cpp_lib_erase_if
         std::erase(layout, identifier);
+#else
+        layout.erase(std::remove(layout.begin(), layout.end(), identifier), layout.end());
+#endif
         layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };

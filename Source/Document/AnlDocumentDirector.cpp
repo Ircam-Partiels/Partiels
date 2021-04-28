@@ -350,7 +350,11 @@ bool Document::Director::removeTrack(juce::String const identifier, Notification
     for(auto& groupAcsr : groupAcsrs)
     {
         auto gIds = groupAcsr.get().getAttr<Group::AttrType::layout>();
+#ifdef __cpp_lib_erase_if
         std::erase(gIds, identifier);
+#else
+        gIds.erase(std::remove(gIds.begin(), gIds.end(), identifier), gIds.end());
+#endif
         groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, NotificationType::synchronous);
     }
 
@@ -432,7 +436,11 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::Str
             return false;
         }
         auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
+#ifdef __cpp_lib_erase_if
         std::erase(layout, trackIdentifier);
+#else
+        layout.erase(std::remove(layout.begin(), layout.end(), trackIdentifier), layout.end());
+#endif
         groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
     }
 
