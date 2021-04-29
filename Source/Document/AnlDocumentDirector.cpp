@@ -467,88 +467,163 @@ void Document::Director::sanitize(NotificationType const notification)
     {
         return;
     }
-    std::set<juce::String> identifiers;
-    
-    auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-    for(auto trackAcsr : trackAcsrs)
+
+    // Ensures all tracks and groups have a unique identifier
     {
-        auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-        anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
-        if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
+        std::set<juce::String> identifiers;
+        auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+        for(auto trackAcsr : trackAcsrs)
         {
-            auto const newidentifier = juce::Uuid().toString();
-            trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
-            identifiers.insert(newidentifier);
+            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+            if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
+            {
+                auto const newidentifier = juce::Uuid().toString();
+                trackAcsr.get().setAttr<Track::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                identifiers.insert(newidentifier);
+            }
+            else
+            {
+                identifiers.insert(identifier);
+            }
         }
-        else
+
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        for(auto groupAcsr : groupAcsrs)
         {
-            identifiers.insert(identifier);
+            auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+            anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
+            if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
+            {
+                auto const newidentifier = juce::Uuid().toString();
+                groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
+                identifiers.insert(newidentifier);
+            }
+            else
+            {
+                identifiers.insert(identifier);
+            }
         }
     }
-    
-    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-    for(auto groupAcsr : groupAcsrs)
+
+    // Ensures that there is also at least one group if there is one or more tracks
     {
-        auto const identifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
-        anlWeakAssert(!identifier.isEmpty() && identifiers.count(identifier) == 0_z);
-        if(identifier.isEmpty() || identifiers.count(identifier) > 0_z)
+        auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+        anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
+        if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
         {
-            auto const newidentifier = juce::Uuid().toString();
-            groupAcsr.get().setAttr<Group::AttrType::identifier>(newidentifier, NotificationType::synchronous);
-            identifiers.insert(newidentifier);
-        }
-        else
-        {
-            identifiers.insert(identifier);
+            auto const identifier = addGroup(0, notification);
+            anlStrongAssert(identifier.has_value());
+            if(!identifier.has_value())
+            {
+                return;
+            }
         }
     }
-    
-    anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
-    if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
+
+    // Ensures that groups' layouts are valid
     {
-        auto const identifier = addGroup(0, notification);
-        anlStrongAssert(identifier.has_value());
-        if(!identifier.has_value())
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        for(auto groupAcsr : groupAcsrs)
         {
-            return;
+            auto groupLayout = groupAcsr.get().getAttr<Group::AttrType::layout>();
+#ifdef __cpp_lib_erase_if
+            std::erase_if(groupLayout, [&](auto const identifier)
+                          {
+                              return !Tools::hasTrackAcsr(mAccessor, identifier);
+                          });
+#else
+            groupLayout.erase(std::remove_if(groupLayout.begin(), groupLayout.end(), [&](auto const identifier)
+                                             {
+                                                 return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                             }),
+                              groupLayout.end());
+#endif
+            anlWeakAssert(groupAcsr.get().getAttr<Group::AttrType::layout>().size() == groupLayout.size());
+            groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, notification);
         }
     }
-    
-    if(!groupAcsrs.empty())
+
+    // Ensures that all tracks are in one group
+    if(mAccessor.getNumAcsr<AcsrType::groups>() != 0_z)
     {
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         auto& lastAcsr = groupAcsrs.back().get();
         for(auto const& trackAcsr : trackAcsrs)
         {
             auto const trackIdentifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-            if(std::none_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-                            {
-                                auto const& groupLayout = groupAcsr.get().template getAttr<Group::AttrType::layout>();
-                                return std::any_of(groupLayout.cbegin(), groupLayout.cend(), [&](auto const identifier)
-                                                   {
-                                                       return identifier == trackIdentifier;
-                                                   });
-                            }))
+            auto numGroupds = std::count_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
+                                            {
+                                                return Group::Tools::hasTrackAcsr(groupAcsr.get(), trackIdentifier);
+                                            });
+            anlWeakAssert(numGroupds == 1l);
+            if(numGroupds == 0l)
             {
                 auto groupLayout = lastAcsr.getAttr<Group::AttrType::layout>();
                 groupLayout.push_back(trackIdentifier);
                 lastAcsr.setAttr<Group::AttrType::layout>(groupLayout, notification);
             }
+            while(numGroupds > 1l)
+            {
+                auto groupIt = std::find_if(groupAcsrs.begin(), groupAcsrs.end(), [&](auto const& groupAcsr)
+                                            {
+                                                return Group::Tools::hasTrackAcsr(groupAcsr.get(), trackIdentifier);
+                                            });
+                anlStrongAssert(groupIt != groupAcsrs.end());
+                if(groupIt != groupAcsrs.end())
+                {
+                    auto groupLayout = groupIt->get().getAttr<Group::AttrType::layout>();
+#ifdef __cpp_lib_erase_if
+                    std::erase(groupLayout, trackIdentifier);
+#else
+                    groupLayout.erase(std::remove(groupLayout.begin(), groupLayout.end(), trackIdentifier), groupLayout.end());
+#endif
+                    groupIt->get().setAttr<Group::AttrType::layout>(groupLayout, notification);
+                    --numGroupds;
+                }
+            }
         }
     }
 
-    auto layout = mAccessor.getAttr<AttrType::layout>();
-    for(auto const& groupAcsr : groupAcsrs)
+    // Ensures that document's layout is valid
     {
-        auto const groupIdentifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
-        if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
-                        {
-                            return identifier == groupIdentifier;
-                        }))
-        {
-            layout.push_back(groupIdentifier);
-        }
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        auto layout = mAccessor.getAttr<AttrType::layout>();
+        anlWeakAssert(groupAcsrs.size() == layout.size());
+#ifdef __cpp_lib_erase_if
+        std::erase_if(layout, [&](auto const identifier)
+                      {
+                          return !Tools::hasGroupAcsr(mAccessor, identifier);
+                      });
+#else
+        layout.erase(std::remove_if(layout.begin(), layout.end(), [&](auto const identifier)
+                                    {
+                                        return !Tools::hasGroupAcsr(mAccessor, identifier);
+                                    }),
+                     layout.end());
+#endif
+        mAccessor.setAttr<AttrType::layout>(layout, notification);
     }
-    mAccessor.setAttr<AttrType::layout>(layout, notification);
+
+    // Ensures that all groups are in the document
+    {
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        auto layout = mAccessor.getAttr<AttrType::layout>();
+        anlWeakAssert(groupAcsrs.size() == layout.size());
+        for(auto const& groupAcsr : groupAcsrs)
+        {
+            auto const groupIdentifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
+            if(std::none_of(layout.cbegin(), layout.cend(), [&](auto const identifier)
+                            {
+                                return identifier == groupIdentifier;
+                            }))
+            {
+                layout.push_back(groupIdentifier);
+            }
+        }
+        mAccessor.setAttr<AttrType::layout>(layout, notification);
+    }
 }
 
 ANALYSE_FILE_END
