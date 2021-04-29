@@ -38,7 +38,10 @@ public:
     void setTitle(juce::String const& title);
     juce::Colour getCurrentColour() const;
     void setCurrentColour(juce::Colour const& newColour, juce::NotificationType notificationType);
+    bool isColourSelectorVisible() const;
 
+    std::function<void()> onColourSelectorShow = nullptr;
+    std::function<void()> onColourSelectorHide = nullptr;
     std::function<void(juce::Colour const& colour)> onColourChanged = nullptr;
 
     // juce::Component
@@ -61,6 +64,7 @@ private:
     juce::String mTitle;
     juce::Colour mColour;
     juce::Component::SafePointer<ColourButton> mDraggedColour;
+    bool mIsColourSelectorVisible{false};
 };
 
 ANALYSE_FILE_END

@@ -116,38 +116,98 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
                               mDirector.endAction(juce::translate("Change track transparency"), ActionState::apply);
                           })
-, mPropertyForegroundColour("Foreground Color", "The foreground current color of the graphical renderer.", "Select the foreground color", [&](juce::Colour const& colour)
-                            {
-                                mDirector.startAction();
-                                auto colours = mAccessor.getAttr<AttrType::colours>();
-                                colours.foreground = colour;
-                                mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                                mDirector.endAction(juce::translate("Change track foreground color"), ActionState::apply);
-                            })
-, mPropertyBackgroundColour("Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
-                            {
-                                mDirector.startAction();
-                                auto colours = mAccessor.getAttr<AttrType::colours>();
-                                colours.background = colour;
-                                mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                                mDirector.endAction(juce::translate("Change track background color"), ActionState::apply);
-                            })
-, mPropertyTextColour("Text Color", "The text current color of the graphical renderer.", "Select the text color", [&](juce::Colour const& colour)
-                      {
-                          mDirector.startAction();
-                          auto colours = mAccessor.getAttr<AttrType::colours>();
-                          colours.text = colour;
-                          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                          mDirector.endAction(juce::translate("Change track text color"), ActionState::apply);
-                      })
-, mPropertyShadowColour("Shadow Color", "The shadow current color of the graphical renderer.", "Select the shadow color", [&](juce::Colour const& colour)
-                        {
-                            mDirector.startAction();
-                            auto colours = mAccessor.getAttr<AttrType::colours>();
-                            colours.shadow = colour;
-                            mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                            mDirector.endAction(juce::translate("Change track shadow color"), ActionState::apply);
-                        })
+, mPropertyForegroundColour(
+      "Foreground Color", "The foreground current color of the graphical renderer.", "Select the foreground color", [&](juce::Colour const& colour)
+      {
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.startAction();
+          }
+          auto colours = mAccessor.getAttr<AttrType::colours>();
+          colours.foreground = colour;
+          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.endAction(juce::translate("Change track foreground color"), ActionState::apply);
+          }
+      },
+      [&]()
+      {
+          mDirector.startAction();
+      },
+      [&]()
+      {
+          mDirector.endAction(juce::translate("Change track foreground color"), ActionState::apply);
+      })
+, mPropertyBackgroundColour(
+      "Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
+      {
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.startAction();
+          }
+          auto colours = mAccessor.getAttr<AttrType::colours>();
+          colours.background = colour;
+          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.endAction(juce::translate("Change track background color"), ActionState::apply);
+          }
+      },
+      [&]()
+      {
+          mDirector.startAction();
+      },
+      [&]()
+      {
+          mDirector.endAction(juce::translate("Change track background color"), ActionState::apply);
+      })
+, mPropertyTextColour(
+      "Text Color", "The text current color of the graphical renderer.", "Select the text color", [&](juce::Colour const& colour)
+      {
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.startAction();
+          }
+          auto colours = mAccessor.getAttr<AttrType::colours>();
+          colours.text = colour;
+          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.endAction(juce::translate("Change track text color"), ActionState::apply);
+          }
+      },
+      [&]()
+      {
+          mDirector.startAction();
+      },
+      [&]()
+      {
+          mDirector.endAction(juce::translate("Change track text color"), ActionState::apply);
+      })
+, mPropertyShadowColour(
+      "Shadow Color", "The shadow current color of the graphical renderer.", "Select the shadow color", [&](juce::Colour const& colour)
+      {
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.startAction();
+          }
+          auto colours = mAccessor.getAttr<AttrType::colours>();
+          colours.shadow = colour;
+          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
+          {
+              mDirector.endAction(juce::translate("Change track shadow color"), ActionState::apply);
+          }
+      },
+      [&]()
+      {
+          mDirector.startAction();
+      },
+      [&]()
+      {
+          mDirector.endAction(juce::translate("Change track shadow color"), ActionState::apply);
+      })
 , mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Plugin", "Results", "Manual"}, [&](size_t index)
                           {
                               auto applyRange = [&](std::optional<Zoom::Range> const& globalRange)

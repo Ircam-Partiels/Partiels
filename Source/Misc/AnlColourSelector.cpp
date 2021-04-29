@@ -68,6 +68,11 @@ void ColourButton::setCurrentColour(juce::Colour const& newColour, juce::Notific
     }
 }
 
+bool ColourButton::isColourSelectorVisible() const
+{
+    return mIsColourSelectorVisible;
+}
+
 void ColourButton::mouseDown(juce::MouseEvent const& event)
 {
     juce::Button::mouseDown(event);
@@ -106,6 +111,7 @@ void ColourButton::mouseUp(juce::MouseEvent const& event)
 
 void ColourButton::clicked()
 {
+    mIsColourSelectorVisible = true;
     ColourSelector colourSelector;
     colourSelector.setSize(400, 300);
     colourSelector.setCurrentColour(mColour, juce::NotificationType::dontSendNotification);
@@ -120,7 +126,16 @@ void ColourButton::clicked()
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
     options.resizable = false;
+    if(onColourSelectorShow != nullptr)
+    {
+        onColourSelectorShow();
+    }
     options.runModal();
+    mIsColourSelectorVisible = false;
+    if(onColourSelectorHide != nullptr)
+    {
+        onColourSelectorHide();
+    }
 }
 
 void ColourButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)

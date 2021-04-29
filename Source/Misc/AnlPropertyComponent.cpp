@@ -187,7 +187,7 @@ PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip
     };
 }
 
-PropertyColourButton::PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn)
+PropertyColourButton::PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn, std::function<void()> onEditorShow, std::function<void()> onEditorHide)
 : PropertyComponent<ColourButton>(juce::translate(name), juce::translate(tooltip))
 {
     entry.setTitle(header);
@@ -199,6 +199,8 @@ PropertyColourButton::PropertyColourButton(juce::String const& name, juce::Strin
             fn(colour);
         }
     };
+    entry.onColourSelectorShow = onEditorShow;
+    entry.onColourSelectorHide = onEditorHide;
 }
 
 void PropertyColourButton::resized()

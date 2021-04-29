@@ -128,7 +128,7 @@ class PropertyColourButton
 : public PropertyComponent<ColourButton>
 {
 public:
-    PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn);
+    PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn, std::function<void()> onEditorShow, std::function<void()> onEditorHide);
     ~PropertyColourButton() override = default;
 
     // juce::Component
