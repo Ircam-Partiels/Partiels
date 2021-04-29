@@ -193,7 +193,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
     };
 
     auto& binZoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-    binZoomAcsr.onAttrUpdated = [=](Zoom::AttrType attr, NotificationType notification)
+    binZoomAcsr.onAttrUpdated = [=, this](Zoom::AttrType attr, NotificationType notification)
     {
         switch(attr)
         {
@@ -212,7 +212,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         }
     };
 
-    mSharedZoomListener.onAttrChanged = [=](Zoom::Accessor const& sharedZoomAcsr, Zoom::AttrType attribute)
+    mSharedZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& sharedZoomAcsr, Zoom::AttrType attribute)
     {
         std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
         if(!lock.owns_lock())
