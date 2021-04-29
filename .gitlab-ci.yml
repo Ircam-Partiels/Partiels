@@ -121,3 +121,22 @@ Deploy::Ubuntu:
     - cp ../../../BinaryData/Misc/Partiels.desktop Partiels-v$CI_COMMIT_TAG
     - tar -zcvf Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz Partiels-v$CI_COMMIT_TAG
     - cp Partiels-v$CI_COMMIT_TAG-Ubuntu-x86_64.tar.gz /home/pierre/Nextcloud/Partiels
+
+Deploy::Debian:
+  stage: deploy
+  needs: ["Build::Debian"]
+  tags:
+    - debian
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - cd $CI_PROJECT_DIR/release/Partiels_artefacts/Release
+    - mkdir Partiels-v$CI_COMMIT_TAG
+    - cp Partiels Partiels-v$CI_COMMIT_TAG
+    - cp ../../../BinaryData/Icons/icon.png Partiels-v$CI_COMMIT_TAG
+    - cp ../../../BinaryData/Misc/Partiels.desktop Partiels-v$CI_COMMIT_TAG
+    - tar -zcvf Partiels-v$CI_COMMIT_TAG-Debian-x86_64.tar.gz Partiels-v$CI_COMMIT_TAG
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/release/Partiels_artefacts/Release/Partiels-v$CI_COMMIT_TAG-Debian-x86_64.tar.gz
+    expire_in: 1 week
