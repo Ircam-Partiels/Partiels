@@ -28,7 +28,7 @@ Test::Ubuntu:
     - mkdir debug
     - cd debug
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - cmake --build . -j 3
+    - cmake --build .
     - ctest -C Debug
 
 Test::Debian:
@@ -70,7 +70,7 @@ Build::Ubuntu:
     - mkdir release
     - cd release
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . -j 3
+    - cmake --build .
     - ctest -C Release
   artifacts:
     paths:
