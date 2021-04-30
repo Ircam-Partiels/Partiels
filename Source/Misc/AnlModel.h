@@ -709,13 +709,13 @@ namespace Model
 
                                      if constexpr(element_type::size_flags == 0)
                                      {
-                                         anlStrongAssert(accessors.empty());
+                                         anlWeakAssert(accessors.empty());
                                          for(auto index = 0_z; index < childs.size(); ++index)
                                          {
                                              accessor.mDelayInsertionNotification = true;
                                              if(static_cast<parent_t*>(&accessor)->template insertAcsr<acsr_type>(index, NotificationType::synchronous))
                                              {
-                                                 anlStrongAssert(accessors[index] != nullptr && childs[index] != nullptr);
+                                                 anlWeakAssert(accessors[index] != nullptr && childs[index] != nullptr);
                                                  if(accessors[index] != nullptr && childs[index] != nullptr)
                                                  {
                                                      accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
@@ -725,17 +725,17 @@ namespace Model
                                              else
                                              {
                                                  accessors.push_back(nullptr);
-                                                 anlStrongAssert(false && "allocation failed");
+                                                 anlWeakAssert(false && "allocation failed");
                                              }
                                              accessor.mDelayInsertionNotification = false;
                                          }
                                      }
                                      else
                                      {
-                                         anlStrongAssert(childs.size() == accessors.size());
+                                         anlWeakAssert(childs.size() == accessors.size());
                                          for(size_t index = 0; index < std::min(accessors.size(), childs.size()); ++index)
                                          {
-                                             anlStrongAssert(accessors[index] != nullptr && childs[index] != nullptr);
+                                             anlWeakAssert(accessors[index] != nullptr && childs[index] != nullptr);
                                              if(accessors[index] != nullptr && childs[index] != nullptr)
                                              {
                                                  accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
