@@ -17,6 +17,22 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         {
             case AttrType::file:
             {
+                auto const file = mAccessor.getAttr<AttrType::file>();
+                if(!file.existsAsFile())
+                {
+                    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannt be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
+                    {
+                        auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
+                        juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
+                        if(!fc.browseForFileToOpen())
+                        {
+                            return;
+                        }
+                        mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+                    }
+                    return;
+                }
+
                 auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
                 if(reader == nullptr)

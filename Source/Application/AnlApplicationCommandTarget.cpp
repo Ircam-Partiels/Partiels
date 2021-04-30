@@ -540,10 +540,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *focusedGroup);
                 auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
-                auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-                auto const title = juce::translate("Remove Group");
-                auto const message = juce::translate("Are you sure you want to remove the \"GROUPNAME\" group from the project? This will also remove all the contained analyses!").replace("GROUPNAME", groupName);
-                if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+                if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Remove Group", "Are you sure you want to remove the \"GROUPNAME\" group from the project? This will also remove all the contained analyses!", {{"GROUPNAME", groupName}}))
                 {
                     return true;
                 }
@@ -551,11 +548,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 documentDir.startAction();
                 if(documentDir.removeGroup(*focusedGroup, NotificationType::synchronous))
                 {
-                    documentDir.endAction(juce::translate("Remove \"GROUPNAME\" Group").replace("GROUPNAME", groupName), ActionState::apply);
+                    documentDir.endAction(juce::translate("Remove Group").replace("GROUPNAME", groupName), ActionState::apply);
                 }
                 else
                 {
-                    documentDir.endAction(juce::translate("Remove \"GROUPNAME\" Group").replace("GROUPNAME", groupName), ActionState::abort);
+                    documentDir.endAction(juce::translate("Remove  Group").replace("GROUPNAME", groupName), ActionState::abort);
                 }
             }
             return true;

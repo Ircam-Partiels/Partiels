@@ -41,10 +41,7 @@ void Document::FileWatcher::timerCallback()
     if(!file.existsAsFile())
     {
         stopTimer();
-        auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-        auto const title = juce::translate("Audio file has been moved or deleted!");
-        auto const message = juce::translate("The audio file FLNM has been moved or deleted. Would you like to restore  it?").replace("FLNM", file.getFullPathName());
-        if(juce::AlertWindow::showOkCancelBox(icon, title, message))
+        if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannt be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
         {
             auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
             juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
@@ -61,10 +58,7 @@ void Document::FileWatcher::timerCallback()
     {
         mModificationTime = time;
         stopTimer();
-        auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-        auto const title = juce::translate("Audio file  has been modified!");
-        auto const message = juce::translate("The audio file FLNM has been modified. Would you like to reload it?").replace("FLNM", file.getFullPathName());
-        if(juce::AlertWindow::showOkCancelBox(icon, title, message))
+        if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file  has been modified!", "The audio file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
         {
             mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
             mAccessor.setAttr<AttrType::file>(file, NotificationType::synchronous);

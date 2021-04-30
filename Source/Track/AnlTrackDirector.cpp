@@ -442,9 +442,10 @@ void Track::Director::runAnalysis(NotificationType const notification)
             {
                 showWarningWindow(message);
             }
-            else if(juce::AlertWindow::showOkCancelBox(juce::AlertWindow::AlertIconType::WarningIcon,
-                                                       juce::translate("Plugin cannot be loaded"),
-                                                       juce::translate("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?").replace("KEYID", mAccessor.getAttr<AttrType::key>().identifier).replace("KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature).replace("TRACKNAME", mAccessor.getAttr<AttrType::name>())))
+            else if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning,
+                                              "Plugin cannot be loaded",
+                                              "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?",
+                                              {{"KEYID", mAccessor.getAttr<AttrType::key>().identifier}, {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}, {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}}))
 
             {
                 auto isPerformingAction = mIsPerformingAction;
