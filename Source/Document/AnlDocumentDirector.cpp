@@ -20,47 +20,21 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 auto const file = mAccessor.getAttr<AttrType::file>();
                 if(!file.existsAsFile())
                 {
-                    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannt be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
+                    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
                     {
                         auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
                         juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
                         if(!fc.browseForFileToOpen())
                         {
+                            setFile(file);
                             return;
                         }
                         mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
-                    }
-                    return;
-                }
-
-                auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-                if(reader == nullptr)
-                {
-                    mDuration = 0.0;
-                    mSampleRate = 44100.0;
-                    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 0.0}, notification);
-                    zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(0.0, notification);
-                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 0.0}, notification);
-                    return;
-                }
-                mSampleRate = reader->sampleRate > 0.0 ? reader->sampleRate : 44100.0;
-                mDuration = static_cast<double>(reader->lengthInSamples) / mSampleRate;
-                auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / reader->sampleRate, notification);
-                if(visibleRange == Zoom::Range{0.0, 0.0})
-                {
-                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
-                }
-
-                for(auto const& anl : mTracks)
-                {
-                    if(anl != nullptr)
-                    {
-                        anl->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+                        return;
                     }
                 }
+                setFile(file);
+                initializeAudioReaders(notification);
             }
             break;
             case AttrType::layout:
@@ -639,6 +613,68 @@ void Document::Director::sanitize(NotificationType const notification)
             }
         }
         mAccessor.setAttr<AttrType::layout>(layout, notification);
+    }
+}
+
+void Document::Director::fileHasBeenRemoved()
+{
+    auto const file = mAccessor.getAttr<AttrType::file>();
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannt be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
+    {
+        auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
+        juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
+        if(!fc.browseForFileToOpen())
+        {
+            return;
+        }
+        mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+    }
+}
+
+void Document::Director::fileHasBeenModified()
+{
+    auto const file = mAccessor.getAttr<AttrType::file>();
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file  has been modified!", "The audio file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
+    {
+        initializeAudioReaders(NotificationType::synchronous);
+    }
+}
+
+void Document::Director::initializeAudioReaders(NotificationType notification)
+{
+    auto const file = mAccessor.getAttr<AttrType::file>();
+    if(!file.existsAsFile())
+    {
+        return;
+    }
+    
+    auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    if(reader == nullptr)
+    {
+        mDuration = 0.0;
+        mSampleRate = 44100.0;
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 0.0}, notification);
+        zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(0.0, notification);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 0.0}, notification);
+        return;
+    }
+    mSampleRate = reader->sampleRate > 0.0 ? reader->sampleRate : 44100.0;
+    mDuration = static_cast<double>(reader->lengthInSamples) / mSampleRate;
+    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
+    zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / reader->sampleRate, notification);
+    if(visibleRange == Zoom::Range{0.0, 0.0})
+    {
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
+    }
+    
+    for(auto const& anl : mTracks)
+    {
+        if(anl != nullptr)
+        {
+            anl->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+        }
     }
 }
 

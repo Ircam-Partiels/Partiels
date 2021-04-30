@@ -11,6 +11,7 @@ namespace Document
 {
     class Director
     : public Track::MultiDirector
+    , private FileWatcher
     {
     public:
         Director(Accessor& accessor, juce::AudioFormatManager& audioFormatManager, juce::UndoManager& undoManager);
@@ -34,6 +35,12 @@ namespace Document
         bool moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification);
 
     private:
+        // FileWatcher
+        void fileHasBeenRemoved() override;
+        void fileHasBeenModified() override;
+        
+        void initializeAudioReaders(NotificationType notification);
+
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
         juce::UndoManager& mUndoManager;

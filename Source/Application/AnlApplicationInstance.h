@@ -12,7 +12,6 @@
 #include "AnlApplicationWindow.h"
 
 #include "../Document/AnlDocumentDirector.h"
-#include "../Document/AnlDocumentFileWatcher.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -68,7 +67,6 @@ namespace Application
         PluginList::Scanner mPluginListScanner;
         Document::Accessor mDocumentAccessor;
         Document::Director mDocumentDirector{mDocumentAccessor, mAudioFormatManager, mUndoManager};
-        Document::FileWatcher mDocumentFileWatcher{mDocumentAccessor, mAudioFormatManager};
 
         Properties mProperties;
         AudioReader mAudioReader;
