@@ -202,9 +202,9 @@ void Document::Section::moveKeyboardFocusTo(juce::String const& identifier)
         }
     };
 
-    if(Tools::hasTrackAcsr(mAccessor, identifier))
+    if(Tools::hasTrackAcsr(mAccessor, identifier) && Tools::isTrackInGroup(mAccessor, identifier))
     {
-        auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
+        auto const& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, identifier);
         auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
         forwardToGroup(groupIdentifier);
     }

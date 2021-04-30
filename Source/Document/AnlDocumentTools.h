@@ -10,12 +10,15 @@ namespace Document
     {
         bool hasTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         bool hasGroupAcsr(Accessor const& accessor, juce::String const& identifier);
+        bool isTrackInGroup(Accessor const& accessor, juce::String const& identifier);
 
         Track::Accessor const& getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         Group::Accessor const& getGroupAcsr(Accessor const& accessor, juce::String const& identifier);
+        Group::Accessor const& getGroupAcsrForTrack(Accessor const& accessor, juce::String const& identifier);
 
         Track::Accessor& getTrackAcsr(Accessor& accessor, juce::String const& identifier);
         Group::Accessor& getGroupAcsr(Accessor& accessor, juce::String const& identifier);
+        Group::Accessor& getGroupAcsrForTrack(Accessor& accessor, juce::String const& identifier);
 
         size_t getTrackPosition(Accessor& accessor, juce::String const& identifier);
         size_t getGroupPosition(Accessor& accessor, juce::String const& identifier);

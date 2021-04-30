@@ -413,10 +413,10 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::Str
         return false;
     }
     // The track should already be in a group
-    anlWeakAssert(Tools::hasGroupAcsr(mAccessor, trackIdentifier));
-    if(Tools::hasGroupAcsr(mAccessor, trackIdentifier))
+    anlWeakAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
+    if(Tools::isTrackInGroup(mAccessor, trackIdentifier))
     {
-        auto& groupAcsr = Tools::getGroupAcsr(mAccessor, trackIdentifier);
+        auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
         auto const identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
 
         // The previous groups is the same as the new group
@@ -647,7 +647,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     {
         return;
     }
-    
+
     auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     if(reader == nullptr)
@@ -668,7 +668,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     {
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
     }
-    
+
     for(auto const& anl : mTracks)
     {
         if(anl != nullptr)
