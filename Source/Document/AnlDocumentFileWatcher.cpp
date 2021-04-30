@@ -15,16 +15,15 @@ Document::FileWatcher::FileWatcher(Accessor& accessor, juce::AudioFormatManager 
             {
                 stopTimer();
                 auto const file = acsr.getAttr<AttrType::file>();
-                if(file != juce::File())
+                if(file.existsAsFile())
                 {
                     mModificationTime = file.getLastModificationTime();
-                    startTimer(200);                    
+                    startTimer(200);
                 }
             }
-                break;
+            break;
             case AttrType::layout:
                 break;
-                
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);
