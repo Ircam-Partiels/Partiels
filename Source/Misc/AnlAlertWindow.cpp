@@ -1,8 +1,8 @@
-#include "AnlMessageWindow.h"
+#include "AnlAlertWindow.h"
 
 ANALYSE_FILE_BEGIN
 
-void MessageWindow::show(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
+void AlertWindow::show(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
 {
 #ifdef JUCE_DEBUG
     auto getTypeAsText = [&]()
@@ -30,7 +30,7 @@ void MessageWindow::show(MessageType const type, juce::String const& title, juce
     juce::AlertWindow::showMessageBox(static_cast<juce::AlertWindow::AlertIconType>(type), juce::translate(title), text);
 }
 
-bool MessageWindow::showOkCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
+bool AlertWindow::showOkCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
 {
 #ifdef JUCE_DEBUG
     auto getTypeAsText = [&]()

@@ -161,7 +161,7 @@ void Application::Instance::openFile(juce::File const& file)
     }
     else
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "File format not supported!", "The format of the file FILENAME is not supported by thee application.", {{"FILENAME", file.getFullPathName()}});
+        AlertWindow::show(AlertWindow::MessageType::warning, "File format not supported!", "The format of the file FILENAME is not supported by thee application.", {{"FILENAME", file.getFullPathName()}});
     }
 }
 

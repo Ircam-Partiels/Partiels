@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnlAlertWindow.h"
 #include "AnlAtomicManager.h"
 #include "AnlBasics.h"
 #include "AnlBoundsListener.h"
@@ -14,7 +15,6 @@
 #include "AnlHMSmsField.h"
 #include "AnlIconManager.h"
 #include "AnlLoadingCircle.h"
-#include "AnlMessageWindow.h"
 #include "AnlModel.h"
 #include "AnlNotifier.h"
 #include "AnlNumberField.h"

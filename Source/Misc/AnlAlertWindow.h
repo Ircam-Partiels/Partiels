@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-class MessageWindow
+class AlertWindow
 {
 public:
     // clang-format off

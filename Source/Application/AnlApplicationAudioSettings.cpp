@@ -30,7 +30,7 @@ Application::AudioSettings::AudioSettings()
     auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
     if(error.isNotEmpty())
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", error);
+        AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
     }
 })
 , mPropertySampleRate("Sample Rate", "The current device sample rate", "Hz", {}, [&](size_t index)
@@ -47,7 +47,7 @@ Application::AudioSettings::AudioSettings()
     auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
     if(error.isNotEmpty())
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", error);
+        AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
     }
 })
 , mPropertyBufferSize("Buffer Size", "The current buffer size", "samples", {}, [&](size_t index)
@@ -64,7 +64,7 @@ Application::AudioSettings::AudioSettings()
     auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
     if(error.isNotEmpty())
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", error);
+        AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
     }
 })
 , mPropertyBufferSizeNumber("Buffer Size", "The current buffer size", "samples", {8.0f, 8192.0f}, 1.0f, [&](float value)
@@ -80,7 +80,7 @@ Application::AudioSettings::AudioSettings()
     anlStrongAssert(currentDevice != nullptr);
     if(currentDevice == nullptr)
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", "No audio device selected.");
+        AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", "No audio device selected.");
         return;
     }
     
@@ -88,7 +88,7 @@ Application::AudioSettings::AudioSettings()
     auto const it = std::lower_bound(bufferSizes.begin(), bufferSizes.end(), bufferSize);
     if(it == bufferSizes.end())
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", "Buffer size BUFFERSIZE is not supported by the audio device.", {{"BUFFERSIZE", juce::String(bufferSize)}});
+        AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", "Buffer size BUFFERSIZE is not supported by the audio device.", {{"BUFFERSIZE", juce::String(bufferSize)}});
         return;
     }
     
@@ -96,7 +96,7 @@ Application::AudioSettings::AudioSettings()
     auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
     if(error.isNotEmpty())
     {
-        MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", error);
+        AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
     }
 })
 , mPropertyDriverPanel("Audio Device Panel...", "Show audio device panel", []()

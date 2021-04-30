@@ -521,11 +521,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *focusedTrack);
                 auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
-
-                auto constexpr icon = juce::AlertWindow::AlertIconType::QuestionIcon;
-                auto const title = juce::translate("Remove Track");
-                auto const message = juce::translate("Are you sure you want to remove the \"TRACKNAME\" track from the project?").replace("TRACKNAME", trackName);
-                if(!juce::AlertWindow::showOkCancelBox(icon, title, message))
+                if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Remove Track", "Are you sure you want to remove the \"TRACKNAME\" track from the project?", {{"TRACKNAME", trackName}}))
                 {
                     return true;
                 }
@@ -533,11 +529,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 documentDir.startAction();
                 if(documentDir.removeTrack(*focusedTrack, NotificationType::synchronous))
                 {
-                    documentDir.endAction(juce::translate("Remove \"TRACKNAME\" Track").replace("TRACKNAME", trackName), ActionState::apply);
+                    documentDir.endAction(juce::translate("Remove Track"), ActionState::apply);
                 }
                 else
                 {
-                    documentDir.endAction(juce::translate("Remove \"TRACKNAME\" Track").replace("TRACKNAME", trackName), ActionState::abort);
+                    documentDir.endAction(juce::translate("Remove Track"), ActionState::abort);
                 }
             }
             else if(focusedGroup.has_value())

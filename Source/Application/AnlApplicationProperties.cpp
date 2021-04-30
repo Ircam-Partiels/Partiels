@@ -132,7 +132,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             auto const error = manager.initialise(0, sMaxIONumber, xml.get(), true);
             if(error.isNotEmpty())
             {
-                MessageWindow::show(MessageWindow::MessageType::warning, "Error loading audio device settings!", error);
+                AlertWindow::show(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
             }
         }
             break;
