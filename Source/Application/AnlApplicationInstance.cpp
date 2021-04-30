@@ -55,14 +55,31 @@ void Application::Instance::initialise(juce::String const& commandLine)
     auto const path = commandLine.removeCharacters("\"");
     if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
     {
+        mDocumentFileBased.addChangeListener(this);
         anlDebug("Application", "Opening new file...");
         openFile(juce::File(path));
+        return;
     }
-    else
+
+    auto const backupFile = getBackupFile();
+    if(backupFile.existsAsFile())
     {
-        anlDebug("Application", "Reopening last document...");
-        openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
+        if(AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Do you want to restore your document?", "The application unexpectedly quit. Do you want to restore the last saved state of the document before this?"))
+        {
+            auto const result = mDocumentFileBased.loadBackup(backupFile);
+            anlWeakAssert(!result.failed());
+            if(!result.failed())
+            {
+                mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
+            }
+            mDocumentFileBased.addChangeListener(this);
+            return;
+        }
     }
+
+    mDocumentFileBased.addChangeListener(this);
+    anlDebug("Application", "Reopening last document...");
+    openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -105,6 +122,8 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
+    mDocumentFileBased.removeChangeListener(this);
+    getBackupFile().deleteFile();
     mAbout.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
@@ -228,6 +247,22 @@ juce::AudioDeviceManager& Application::Instance::getAudioDeviceManager()
 juce::UndoManager& Application::Instance::getUndoManager()
 {
     return mUndoManager;
+}
+
+void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    anlStrongAssert(source == &mDocumentFileBased);
+    if(source != &mDocumentFileBased)
+    {
+        return;
+    }
+    auto const result = mDocumentFileBased.saveBackup(getBackupFile());
+    anlWeakAssert(!result.failed());
+}
+
+juce::File Application::Instance::getBackupFile() const
+{
+    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getFileExtension());
 }
 
 ANALYSE_FILE_END

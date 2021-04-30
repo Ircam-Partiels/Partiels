@@ -19,6 +19,7 @@ namespace Application
 {
     class Instance
     : public juce::JUCEApplication
+    , private juce::ChangeListener
     {
     public:
         Instance() = default;
@@ -56,6 +57,11 @@ namespace Application
         juce::UndoManager& getUndoManager();
 
     private:
+        // juce::ChangeListener
+        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+        juce::File getBackupFile() const;
+
         TranslationManager mTranslationManager;
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
