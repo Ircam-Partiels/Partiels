@@ -137,6 +137,46 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
     return juce::Result::ok();
 }
 
+juce::Result Document::FileBased::loadBackup(juce::File const& file)
+{
+    auto xml = juce::XmlDocument::parse(file);
+    if(xml == nullptr)
+    {
+        return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
+    }
+    if(xml->hasAttribute("origin"))
+    {
+        setFile(juce::File(xml->getStringAttribute("origin")));
+    }
+    else
+    {
+        setFile({});
+    }
+    mAccessor.copyFrom({getDefaultContainer()}, NotificationType::synchronous);
+    mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
+    mDirector.sanitize(NotificationType::synchronous);
+    triggerAsyncUpdate();
+    return juce::Result::ok();
+}
+
+juce::Result Document::FileBased::saveBackup(juce::File const& file)
+{
+    auto xml = mAccessor.toXml("document");
+    if(xml == nullptr)
+    {
+        return juce::Result::fail(juce::translate("The document cannot be parsed!"));
+    }
+    if(getFile().existsAsFile())
+    {
+        xml->setAttribute("origin", getFile().getFullPathName());
+    }
+    if(!xml->writeTo(file))
+    {
+        return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
+    }
+    return juce::Result::ok();
+}
+
 juce::File Document::FileBased::getLastDocumentOpened()
 {
     return getFile().existsAsFile() ? getFile() : (mAccessor.getAttr<AttrType::file>().existsAsFile() ? mAccessor.getAttr<AttrType::file>().getFullPathName() : mLastFile.getParentDirectory());
