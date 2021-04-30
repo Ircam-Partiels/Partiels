@@ -403,7 +403,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
     auto showWarningWindow = [&](juce::String const& reason)
     {
         // clang-format off
-        AlertWindow::show(AlertWindow::MessageType::warning,
+        AlertWindow::showMessage(AlertWindow::MessageType::warning,
                             "Plugin cannot be loaded",
                             "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.",
                             {

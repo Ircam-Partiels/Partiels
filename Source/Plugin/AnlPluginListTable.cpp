@@ -63,12 +63,12 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
             }
             catch(std::exception& e)
             {
-                AlertWindow::show(AlertWindow::MessageType::warning,
+                AlertWindow::showMessage(AlertWindow::MessageType::warning,
                                   "Plugins scan failed!", e.what());
             }
             catch(...)
             {
-                AlertWindow::show(AlertWindow::MessageType::warning,
+                AlertWindow::showMessage(AlertWindow::MessageType::warning,
                                   "Plugins scan failed!", "");
             }
             return {};
@@ -77,7 +77,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         mAccessor.setAttr<AttrType::keys>(std::get<0>(results), NotificationType::synchronous);
         if(!std::get<1>(results).isEmpty())
         {
-            AlertWindow::show(AlertWindow::MessageType::warning,
+            AlertWindow::showMessage(AlertWindow::MessageType::warning,
                               "Plugins scan has encountered errors!",
                               "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
         }
@@ -212,7 +212,7 @@ void PluginList::Table::updateContent()
 
     if(!errors.isEmpty())
     {
-        AlertWindow::show(AlertWindow::MessageType::warning,
+        AlertWindow::showMessage(AlertWindow::MessageType::warning,
                           "Plugins listing has encountered errors!",
                           "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
     }

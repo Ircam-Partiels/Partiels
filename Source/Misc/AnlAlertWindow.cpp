@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-void AlertWindow::show(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
+void AlertWindow::showMessage(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements)
 {
 #ifdef JUCE_DEBUG
     auto getTypeAsText = [&]()
