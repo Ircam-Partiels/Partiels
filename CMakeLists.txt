@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
-project(Partiels VERSION 0.0.5 LANGUAGES C CXX)
+project(Partiels VERSION 0.0.6 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 include(vamp.cmake)
@@ -11,7 +11,7 @@ include(xcode-warnings.cmake)
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
-    VERSION                             "0.0.5"
+    VERSION                             "0.0.6"
     BUNDLE_ID                           fr.ircam.dev.partiels
     COMPANY_COPYRIGHT                   "Copyright 2021 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
@@ -28,7 +28,7 @@ juce_add_gui_app(Partiels
 
 juce_add_console_app(PartielsTest
     PRODUCT_NAME                        "PartielsTest"
-    VERSION                             "0.0.5")
+    VERSION                             "0.0.6")
 
 juce_generate_juce_header(Partiels)
 juce_generate_juce_header(PartielsTest)
