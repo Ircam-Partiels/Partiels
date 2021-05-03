@@ -1,9 +1,8 @@
 [Desktop Entry]
-Version=1.0
-Type=Application
-Terminal=false
-Icon[fr_FR]=./icon.png
-Name[fr_FR]=Partiels
-Exec=bash -c '"$(dirname "$1")"/Partiels' dummy %k
-Name=Partiels
-Icon=./icon.png
+Version = 1.0
+Type = Application
+Terminal = false
+Name = Partiels
+Exec = /usr/bin/Partiels
+Icon = /opt/Partiels/icon.png
+Categories = Application;
