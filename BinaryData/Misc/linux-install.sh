@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ThisPath="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-mkdir -f /opt/Partiels
+mkdir -p /opt/Partiels
 cp -f $ThisPath/Partiels /opt/Partiels/
 cp -f $ThisPath/icon.png /opt/Partiels/
 cp -f $ThisPath/uninstall.sh /opt/Partiels/
