@@ -8,3 +8,4 @@
   - Analysis (compare with files)
 - replace model resizable by dynamic and fixed
 - output all key shortcuts
+- Use cache image component ?
