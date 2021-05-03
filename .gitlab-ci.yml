@@ -13,8 +13,8 @@ Test::Windows:
     - windows
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir debug
-    - cd debug
+    - mkdir build
+    - cd build
     - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Debug
     - ctest -C Debug
@@ -50,14 +50,15 @@ Build::Windows:
     - windows
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir release
-    - cd release
+    - mkdir build
+    - cd build
     - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Release
     - ctest -C Release
+    - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR\Scripts\windows-package.iss"'
   artifacts:
     paths:
-      - $CI_PROJECT_DIR\release\Partiels_artefacts\Release\Partiels.exe
+      - $CI_PROJECT_DIR\Partiels-install.exe
     expire_in: 1 week
 
 Build::Ubuntu:
@@ -104,9 +105,9 @@ Deploy::Windows:
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - cd $CI_PROJECT_DIR\release\Partiels_artefacts\Release
-    - tar.exe -a -c -f Partiels-v$CI_COMMIT_TAG-Windows-10.zip Partiels.exe
-    - cp Partiels-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Partiels
+    - cd $CI_PROJECT_DIR
+    - tar.exe -a -c -f Partiels-v$CI_COMMIT_TAG-Windows-10.zip Partiels-install.exe
+    - cp Partiels-v$CI_COMMIT_TAG-Windows-10.zip C:\Users\pierr\Nextcloud\Partiels\Temp
 
 Deploy::Ubuntu:
   stage: deploy
