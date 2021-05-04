@@ -54,6 +54,12 @@ void Application::Window::moved()
     triggerAsyncUpdate();
 }
 
+void Application::Window::lookAndFeelChanged()
+{
+    juce::DocumentWindow::lookAndFeelChanged();
+    setBackgroundColour(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+}
+
 void Application::Window::handleAsyncUpdate()
 {
     Instance::get().getApplicationAccessor().setAttr<AttrType::windowState>(getBounds().toString(), NotificationType::synchronous);

@@ -21,6 +21,7 @@ namespace Application
         void closeButtonPressed() override;
         void resized() override;
         void moved() override;
+        void lookAndFeelChanged() override;
 
     private:
         // juce::AsyncUpdater
