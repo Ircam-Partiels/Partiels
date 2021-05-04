@@ -17,6 +17,9 @@ namespace PluginList
         
         // juce::Component
         void resized() override;
+        void lookAndFeelChanged() override;
+        void parentHierarchyChanged() override;
+        void visibilityChanged() override;
         
         std::function<void(Plugin::Key const& key, Plugin::Description const& description)> onPluginSelected = nullptr;
         
@@ -37,6 +40,7 @@ namespace PluginList
         Accessor::Listener mListener;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         juce::TableListBox mPluginTable;
+        ColouredPanel mSeparator;
         juce::TextButton mClearButton;
         juce::TextButton mScanButton;
         juce::TextEditor mSearchField;

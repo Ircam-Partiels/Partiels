@@ -42,8 +42,10 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Description"), ColumnType::Details, 200, 100, 500, ColumnFlags::notSortable);
     header.addColumn(juce::translate("Maker"), ColumnType::Maker, 120, 100, 300);
     header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 100, 200);
-    header.addColumn(juce::translate("Version"), ColumnType::Version, 40, 40, 40, ColumnFlags::notResizable | ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Version"), ColumnType::Version, 60, 60, 60, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
+    addAndMakeVisible(mSeparator);
+    
     addAndMakeVisible(mClearButton);
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
@@ -88,10 +90,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mSearchField.setPopupMenuEnabled(false);
     mSearchField.setCaretVisible(true);
     mSearchField.setJustification(juce::Justification::centredLeft);
-    mSearchField.setTextToShowWhenEmpty(juce::translate("Filter..."), juce::Colours::white.withAlpha(0.6f));
-    mSearchField.setColour(juce::CaretComponent::caretColourId, juce::Colours::white.withAlpha(0.8f));
-    mSearchField.setColour(juce::TextEditor::textColourId, juce::Colours::white.withAlpha(0.8f));
-    mSearchField.setColour(juce::TextEditor::backgroundColourId, juce::Colours::black.withAlpha(0.4799997f));
+    lookAndFeelChanged();
     mSearchField.onTextChange = [this]()
     {
         updateContent();
@@ -109,7 +108,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    setSize(800, 600);
+    setSize(820, 600);
 }
 
 PluginList::Table::~Table()
@@ -120,7 +119,8 @@ PluginList::Table::~Table()
 void PluginList::Table::resized()
 {
     auto bounds = getLocalBounds();
-    auto bottom = bounds.removeFromBottom(30);
+    auto bottom = bounds.removeFromBottom(31);
+    mSeparator.setBounds(bottom.removeFromTop(1));
     bottom.removeFromLeft(4);
     mClearButton.setBounds(bottom.removeFromLeft(100).withSizeKeepingCentre(100, 21));
     bottom.removeFromLeft(4);
@@ -128,6 +128,22 @@ void PluginList::Table::resized()
     bottom.removeFromLeft(4);
     mSearchField.setBounds(bottom.removeFromLeft(200).withSizeKeepingCentre(200, 21));
     mPluginTable.setBounds(bounds);
+}
+
+void PluginList::Table::lookAndFeelChanged()
+{
+    mSearchField.setTextToShowWhenEmpty(juce::translate("Filter..."), getLookAndFeel().findColour(juce::TableListBox::ColourIds::textColourId));
+    mSeparator.setColour(ColouredPanel::backgroundColourId, getLookAndFeel().findColour(juce::TableListBox::ColourIds::outlineColourId));
+}
+
+void PluginList::Table::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
+}
+
+void PluginList::Table::visibilityChanged()
+{
+    lookAndFeelChanged();
 }
 
 void PluginList::Table::updateContent()
