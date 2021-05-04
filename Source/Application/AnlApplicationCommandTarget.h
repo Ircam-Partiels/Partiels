@@ -42,8 +42,6 @@ namespace Application
             , HelpOpenAbout
             , HelpOpenManual
             , HelpOpenForum
-
-            , DocumentOpenRecent
         };
         // clang-format on
 

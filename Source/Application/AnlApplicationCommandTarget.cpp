@@ -136,13 +136,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(true);
         }
         break;
-        case CommandIDs::DocumentOpenRecent:
-        {
-            auto const& appAcsr = Instance::get().getApplicationAccessor();
-            result.setInfo(juce::translate("Open Recent"), juce::translate("Open a recent document"), "Application", 0);
-            result.setActive(!appAcsr.getAttr<AttrType::recentlyOpenedFilesList>().empty());
-        }
-        break;
         case CommandIDs::DocumentSave:
         {
             result.setInfo(juce::translate("Save"), juce::translate("Save the document"), "Application", 0);
@@ -343,11 +336,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             Instance::get().openFile(fc.getResult());
-            return true;
-        }
-        case CommandIDs::DocumentOpenRecent:
-        {
-            // Managed
             return true;
         }
         case CommandIDs::DocumentSave:
