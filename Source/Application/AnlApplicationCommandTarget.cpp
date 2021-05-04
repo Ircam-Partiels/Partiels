@@ -49,8 +49,10 @@ Application::CommandTarget::CommandTarget()
         switch(attribute)
         {
             case AttrType::recentlyOpenedFilesList:
+            {
                 Instance::get().getApplicationCommandManager().commandStatusChanged();
-                break;
+            }
+            break;
             case AttrType::currentDocumentFile:
                 break;
             case AttrType::windowState:
