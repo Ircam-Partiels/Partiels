@@ -5,6 +5,60 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::LookAndFeel::ColourChart::ColourChart(Mode mode)
+{
+    auto getColours = [&]() -> Container
+    {
+        switch(mode)
+        {
+            case Mode::night:
+            {
+                // clang-format off
+                return
+                {{
+                      juce::Colour(0xff0d1b2a)
+                    , juce::Colour(0xff1b263b)
+                    , juce::Colour(0xff415a77)
+                    , juce::Colour(0xff778da9)
+                    , juce::Colour(0xffe0e1dd)
+                }};
+                // clang-format on
+            }
+            break;
+            case Mode::day:
+            {
+                // clang-format off
+                return
+                {{
+                      juce::Colour(0xffF8F8F7)
+                    , juce::Colour(0xffAEB5B4)
+                    , juce::Colour(0xff7E7A7D)
+                    , juce::Colour(0xff27232B)
+                    , juce::Colour(0xff000000)
+                }};
+                // clang-format on
+            }
+            break;
+
+            case Mode::nature:
+            {
+                // clang-format off
+                return
+                {{
+                      juce::Colour(0xffcad2c5)
+                    , juce::Colour(0xff84a98c)
+                    , juce::Colour(0xff52796f)
+                    , juce::Colour(0xff354f52)
+                    , juce::Colour(0xff2f3e46)}};
+                // clang-format on
+            }
+            break;
+        }
+        return {};
+    };
+    mColours = getColours();
+}
+
 Application::LookAndFeel::ColourChart::ColourChart(Container colours)
 : mColours(std::move(colours))
 {
@@ -19,9 +73,7 @@ Application::LookAndFeel::LookAndFeel()
 {
     static FontManager fontManager;
 
-    setColourChart(
-        {{juce::Colours::grey.darker(0.8f), juce::Colours::grey.darker(0.4f), juce::Colours::grey, juce::Colours::grey.brighter(0.4f), juce::Colours::white}});
-
+    setColourChart({ColourChart::Mode::night});
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
 
     setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());

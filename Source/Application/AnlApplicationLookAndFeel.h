@@ -24,11 +24,19 @@ namespace Application
                 , active
                 , text
             };
+            
+            enum class Mode
+            {
+                  night
+                , day
+                , nature
+            };
             // clang-format on
 
             using Container = std::array<juce::Colour, magic_enum::enum_count<Type>()>;
 
             ColourChart(Container colours);
+            ColourChart(Mode mode);
             ColourChart(ColourChart const&) = default;
             ColourChart& operator=(ColourChart const&) = default;
 
