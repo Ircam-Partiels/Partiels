@@ -475,4 +475,50 @@ void Application::LookAndFeel::drawButtonBackground(juce::Graphics& g, juce::But
     }
 }
 
+void Application::LookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& button, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    auto const width = static_cast<float>(button.getWidth());
+    auto const height = static_cast<float>(button.getHeight());
+
+    drawTickBox(g, button, 0.0f, 0.0f, width, height, button.getToggleState(), button.isEnabled(), shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+
+    g.setColour(button.findColour(juce::ToggleButton::textColourId));
+    g.setFont(std::min(15.0f, height * 0.75f));
+
+    if(!button.isEnabled())
+    {
+        g.setOpacity(0.5f);
+    }
+
+    g.drawFittedText(button.getButtonText(), button.getLocalBounds().reduced(2, 0), juce::Justification::centredLeft, 10);
+}
+
+void Application::LookAndFeel::drawTickBox(juce::Graphics& g, juce::Component& button, float x, float y, float w, float h, bool ticked, bool isEnabled, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    juce::ignoreUnused(isEnabled);
+
+    auto borderColour = button.findColour(juce::ToggleButton::tickDisabledColourId);
+    if(shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
+    {
+        borderColour = borderColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
+    }
+    
+    juce::Rectangle<float> const tickBounds(x + 1.0f, y  + 1.0f, w - 2.0f, h - 2.0f);
+    g.setColour(borderColour);
+    g.drawRoundedRectangle(tickBounds, 4.0f, 1.0f);
+
+    if(ticked)
+    {
+        auto tickColour = button.findColour(juce::ToggleButton::tickColourId);
+        if(shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
+        {
+            tickColour = tickColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
+        }
+        
+        g.setColour(tickColour);
+        auto const tick = getTickShape(0.75f);
+        g.fillPath(tick, tick.getTransformToScaleToFit(tickBounds.reduced(3.0f), false));
+    }
+}
+
 ANALYSE_FILE_END
