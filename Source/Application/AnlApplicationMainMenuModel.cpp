@@ -33,7 +33,7 @@ Application::MainMenuModel::~MainMenuModel()
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Transport", "Zoom", "Help"};
+    return {"File", "Edit", "Transport", "View", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -79,8 +79,23 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::TransportRewindPlayHead);
     }
-    else if(menuName == "Zoom")
+    else if(menuName == "View")
     {
+        juce::PopupMenu colourModeMenu;
+        using ColourMode = LookAndFeel::ColourChart::Mode;
+        auto const selectedMode = Instance::get().getApplicationAccessor().getAttr<AttrType::colourMode>();
+        for(auto const& entry : magic_enum::enum_entries<ColourMode>())
+        {
+            auto name = std::string(entry.second);
+            name[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(name[0_z])));
+            colourModeMenu.addItem(juce::String(name), true, selectedMode == entry.first, [=]()
+                                   {
+                                       auto& accessor = Instance::get().getApplicationAccessor();
+                                       accessor.setAttr<AttrType::colourMode>(entry.first, NotificationType::synchronous);
+                                   });
+        }
+        menu.addSubMenu("Theme", colourModeMenu);
+        menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::ZoomIn);
         menu.addCommandItem(&commandManager, CommandIDs::ZoomOut);
     }
