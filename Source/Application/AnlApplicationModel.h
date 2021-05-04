@@ -8,7 +8,8 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     using Flag = Model::Flag;
-    
+
+    // clang-format off
     enum class AttrType : size_t
     {
           windowState
@@ -16,20 +17,21 @@ namespace Application
         , currentDocumentFile
         , colourMode
     };
-    
+
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::windowState, juce::String, Flag::basic>
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
     , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
     >;
-    
+    // clang-format on
+
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
-        
+
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
@@ -48,7 +50,7 @@ namespace Application
                     }
                     return copy;
                 };
-                
+
                 Anl::Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
             }
             else
@@ -57,6 +59,6 @@ namespace Application
             }
         }
     };
-}
+} // namespace Application
 
 ANALYSE_FILE_END
