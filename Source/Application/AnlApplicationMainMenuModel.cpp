@@ -47,24 +47,24 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     {
         menu.addCommandItem(&commandManager, CommandIDs::DocumentNew);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentOpen);
-        
+
         juce::PopupMenu recentFilesMenu;
         auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
         for(auto const& recentFile : recentFiles)
         {
             auto const fileName = recentFile.getFileNameWithoutExtension();
             auto const hasDuplicate = std::count_if(recentFiles.cbegin(), recentFiles.cend(), [&](auto const file)
-            {
-                return fileName == file.getFileNameWithoutExtension();
-            }) > 1l;
+                                                    {
+                                                        return fileName == file.getFileNameWithoutExtension();
+                                                    }) > 1l;
             auto const isActive = Instance::get().getDocumentFileBased().getFile() != recentFile;
             auto const name = fileName + (hasDuplicate ? " (" + recentFile.getParentDirectory().getFileName() + ")" : "");
             recentFilesMenu.addItem(name, isActive, !isActive, [=]()
-            {
-                Instance::get().openFile(recentFile);
-            });
+                                    {
+                                        Instance::get().openFile(recentFile);
+                                    });
         }
-        
+
         menu.addSubMenu("Open Recent", recentFilesMenu);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentSave);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentDuplicate);
