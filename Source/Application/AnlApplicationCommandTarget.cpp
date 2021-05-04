@@ -417,7 +417,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 auto const focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
                 if(focusedTrack.has_value())
                 {
-                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *focusedTrack);
+                    auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *focusedTrack);
                     auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
                     auto const position = Document::Tools::getTrackPosition(documentAcsr, *focusedTrack);
                     return std::make_tuple(groupIdentifier, position + 1_z);
