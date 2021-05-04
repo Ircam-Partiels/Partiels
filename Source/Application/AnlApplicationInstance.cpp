@@ -139,19 +139,20 @@ void Application::Instance::systemRequestedQuit()
         return;
     }
 
-    if(juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
+    if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
-        anlDebug("Application", "Delayed...");
-        juce::Timer::callAfterDelay(500, [this]()
-                                    {
-                                        systemRequestedQuit();
-                                    });
+        if(modalComponentManager->cancelAllModalComponents())
+        {
+            anlDebug("Application", "Delayed...");
+            juce::Timer::callAfterDelay(500, [this]()
+                                        {
+                                            systemRequestedQuit();
+                                        });
+            return;
+        }
     }
-    else
-    {
-        anlDebug("Application", "Ready");
-        quit();
-    }
+    anlDebug("Application", "Ready");
+    quit();
 }
 
 void Application::Instance::shutdown()
