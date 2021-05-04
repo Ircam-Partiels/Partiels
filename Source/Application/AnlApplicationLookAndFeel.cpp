@@ -40,7 +40,7 @@ Application::LookAndFeel::ColourChart::ColourChart(Mode mode)
             }
             break;
 
-            case Mode::nature:
+            case Mode::grass:
             {
                 // clang-format off
                 return

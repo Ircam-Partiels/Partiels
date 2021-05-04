@@ -29,7 +29,7 @@ namespace Application
             {
                   night
                 , day
-                , nature
+                , grass
             };
             // clang-format on
 
