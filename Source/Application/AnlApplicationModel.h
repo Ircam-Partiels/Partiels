@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
+#include "AnlApplicationLookAndFeel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -13,12 +14,14 @@ namespace Application
           windowState
         , recentlyOpenedFilesList
         , currentDocumentFile
+        , colourMode
     };
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::windowState, juce::String, Flag::basic>
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
+    , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
     >;
     
     class Accessor

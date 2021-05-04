@@ -55,6 +55,8 @@ Application::CommandTarget::CommandTarget()
                 break;
             case AttrType::windowState:
                 break;
+            case AttrType::colourMode:
+                break;
         }
     };
 
