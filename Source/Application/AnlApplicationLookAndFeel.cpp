@@ -515,8 +515,8 @@ void Application::LookAndFeel::drawTickBox(juce::Graphics& g, juce::Component& b
     {
         borderColour = borderColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
     }
-    
-    juce::Rectangle<float> const tickBounds(x + 1.0f, y  + 1.0f, w - 2.0f, h - 2.0f);
+
+    juce::Rectangle<float> const tickBounds(x + 1.0f, y + 1.0f, w - 2.0f, h - 2.0f);
     g.setColour(borderColour);
     g.drawRoundedRectangle(tickBounds, 4.0f, 1.0f);
 
@@ -527,7 +527,7 @@ void Application::LookAndFeel::drawTickBox(juce::Graphics& g, juce::Component& b
         {
             tickColour = tickColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
         }
-        
+
         g.setColour(tickColour);
         auto const tick = getTickShape(0.75f);
         g.fillPath(tick, tick.getTransformToScaleToFit(tickBounds.reduced(3.0f), false));
