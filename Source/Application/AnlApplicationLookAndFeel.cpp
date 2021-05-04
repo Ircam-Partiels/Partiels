@@ -278,16 +278,29 @@ int Application::LookAndFeel::getAlertWindowButtonHeight()
     return 36;
 }
 
+void Application::LookAndFeel::drawTableHeaderBackground(juce::Graphics& g, juce::TableHeaderComponent& header)
+{
+    auto const backgroundColour = header.findColour(juce::TableHeaderComponent::backgroundColourId);
+    auto const outlineColour = header.findColour(juce::TableHeaderComponent::outlineColourId);
+
+    for(int index = header.getNumColumns(true); --index >= 0;)
+    {
+        auto const columnBounds = header.getColumnPosition(index).reduced(1).toFloat();
+        g.setColour(backgroundColour);
+        g.fillRoundedRectangle(columnBounds, 2.0f);
+        g.setColour(outlineColour);
+        g.drawRoundedRectangle(columnBounds, 2.0f, 1.0f);
+    }
+}
+
 void Application::LookAndFeel::drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComponent& header, juce::String const& columnName, int columnId, int width, int height, bool isMouseOver, bool isMouseDown, int columnFlags)
 {
     juce::ignoreUnused(columnId);
-    if(isMouseDown)
+    if(isMouseDown || isMouseOver)
     {
-        g.fillAll(header.findColour(juce::TableHeaderComponent::highlightColourId));
-    }
-    else if(isMouseOver)
-    {
-        g.fillAll(header.findColour(juce::TableHeaderComponent::highlightColourId).withMultipliedAlpha(0.625f));
+        auto const columnBounds = g.getClipBounds().reduced(2).toFloat();
+        g.setColour(header.findColour(juce::TableHeaderComponent::highlightColourId).withMultipliedAlpha(isMouseOver ? 0.625f : 1.0f));
+        g.fillRoundedRectangle(columnBounds, 2.0f);
     }
 
     g.setColour(header.findColour(juce::TableHeaderComponent::textColourId));
@@ -301,7 +314,7 @@ void Application::LookAndFeel::drawTableHeaderColumn(juce::Graphics& g, juce::Ta
     }
 
     g.setFont(juce::Font(static_cast<float>(height) * 0.5f, juce::Font::bold));
-    g.drawFittedText(columnName, area, juce::Justification::centredLeft, 1);
+    g.drawText(columnName, area, juce::Justification::centredLeft, false);
 }
 
 juce::Button* Application::LookAndFeel::createDocumentWindowButton(int buttonType)

@@ -66,6 +66,7 @@ namespace Application
         int getAlertWindowButtonHeight() override;
 
         // juce::TableHeaderComponent::LookAndFeelMethods
+        void drawTableHeaderBackground(juce::Graphics& g, juce::TableHeaderComponent& header) override;
         void drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComponent& header, juce::String const& columnName, int columnId, int width, int height, bool isMouseOver, bool isMouseDown, int columnFlags) override;
 
         // juce::DocumentWindow::LookAndFeelMethods
