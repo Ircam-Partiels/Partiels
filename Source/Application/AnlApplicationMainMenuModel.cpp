@@ -47,14 +47,24 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     {
         menu.addCommandItem(&commandManager, CommandIDs::DocumentNew);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentOpen);
+        
         juce::PopupMenu recentFilesMenu;
-        auto recentFileIndex = static_cast<int>(CommandIDs::DocumentOpenRecent);
         auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
-        for(auto const& file : recentFiles)
+        for(auto const& recentFile : recentFiles)
         {
-            auto const isActive = Instance::get().getDocumentFileBased().getFile() != file;
-            recentFilesMenu.addItem(recentFileIndex++, file.getFileNameWithoutExtension(), isActive);
+            auto const fileName = recentFile.getFileNameWithoutExtension();
+            auto const hasDuplicate = std::count_if(recentFiles.cbegin(), recentFiles.cend(), [&](auto const file)
+            {
+                return fileName == file.getFileNameWithoutExtension();
+            }) > 1l;
+            auto const isActive = Instance::get().getDocumentFileBased().getFile() != recentFile;
+            auto const name = fileName + (hasDuplicate ? " (" + recentFile.getParentDirectory().getFileName() + ")" : "");
+            recentFilesMenu.addItem(name, isActive, !isActive, [=]()
+            {
+                Instance::get().openFile(recentFile);
+            });
         }
+        
         menu.addSubMenu("Open Recent", recentFilesMenu);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentSave);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentDuplicate);
@@ -120,15 +130,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
 
 void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 {
-    juce::ignoreUnused(topLevelMenuIndex);
-    using CommandIDs = CommandTarget::CommandIDs;
-
-    auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
-    auto const fileIndex = static_cast<size_t>(menuItemID - static_cast<int>(CommandIDs::DocumentOpenRecent));
-    if(fileIndex < recentFiles.size())
-    {
-        Instance::get().openFile(recentFiles[fileIndex]);
-    }
+    juce::ignoreUnused(menuItemID, topLevelMenuIndex);
 }
 
 ANALYSE_FILE_END
