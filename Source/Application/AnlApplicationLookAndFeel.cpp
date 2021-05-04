@@ -97,7 +97,7 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
 
     setColour(Decorator::ColourIds::backgroundColourId, colourChart.get(Type::background));
     setColour(Decorator::ColourIds::normalBorderColourId, colourChart.get(Type::border));
-    setColour(Decorator::ColourIds::highlightedBorderColourId, colourChart.get(Type::active));
+    setColour(Decorator::ColourIds::highlightedBorderColourId, colourChart.get(Type::inactive));
 
     setColour(IconManager::ColourIds::normalColourId, colourChart.get(Type::inactive));
     setColour(IconManager::ColourIds::overColourId, colourChart.get(Type::active));
@@ -137,6 +137,14 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     auto& colourScheme = getCurrentColourScheme();
     colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, colourChart.get(Type::background));
     colourScheme.setUIColour(ColourScheme::UIColour::widgetBackground, colourChart.get(Type::background));
+    colourScheme.setUIColour(ColourScheme::UIColour::menuBackground, colourChart.get(Type::background));
+    colourScheme.setUIColour(ColourScheme::UIColour::outline, colourChart.get(Type::border));
+    colourScheme.setUIColour(ColourScheme::UIColour::defaultText, colourChart.get(Type::text));
+    colourScheme.setUIColour(ColourScheme::UIColour::defaultFill, colourChart.get(Type::inactive));
+    colourScheme.setUIColour(ColourScheme::UIColour::highlightedText, colourChart.get(Type::text));
+    colourScheme.setUIColour(ColourScheme::UIColour::highlightedText, colourChart.get(Type::active));
+    colourScheme.setUIColour(ColourScheme::UIColour::menuText, colourChart.get(Type::text));
+    setColourScheme(colourScheme);
 
     // juce::ResizableWindow
     setColour(juce::ResizableWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
@@ -144,9 +152,19 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     // juce::AlertWindow
     setColour(juce::AlertWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
+    // juce::Label
+    setColour(juce::Label::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
+    setColour(juce::Label::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(juce::Label::ColourIds::outlineColourId, juce::Colours::transparentBlack);
+    setColour(juce::Label::ColourIds::backgroundWhenEditingColourId, juce::Colours::transparentBlack);
+    setColour(juce::Label::ColourIds::textWhenEditingColourId, colourChart.get(Type::text));
+    setColour(juce::Label::ColourIds::outlineWhenEditingColourId, juce::Colours::transparentBlack);
+
     // juce::TextButton
     setColour(juce::TextButton::ColourIds::buttonColourId, colourChart.get(Type::border));
     setColour(juce::TextButton::ColourIds::buttonOnColourId, colourChart.get(Type::inactive));
+    setColour(juce::TextButton::ColourIds::textColourOffId, colourChart.get(Type::text));
+    setColour(juce::TextButton::ColourIds::textColourOnId, colourChart.get(Type::text));
 
     // juce::Slider
     setColour(juce::Slider::ColourIds::backgroundColourId, colourChart.get(Type::border));
@@ -164,14 +182,14 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(juce::ScrollBar::ColourIds::thumbColourId, colourChart.get(Type::active));
 
     // juce::ListBox
-    setColour(juce::ListBox::ColourIds::backgroundColourId, colourChart.get(Type::border));
-    setColour(juce::ListBox::ColourIds::outlineColourId, colourChart.get(Type::background));
+    setColour(juce::ListBox::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::ListBox::ColourIds::outlineColourId, colourChart.get(Type::border));
     setColour(juce::ListBox::ColourIds::textColourId, colourChart.get(Type::text));
 
     // juce::TableHeaderComponent
     setColour(juce::TableHeaderComponent::ColourIds::textColourId, colourChart.get(Type::text));
-    setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, colourChart.get(Type::border));
-    setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, colourChart.get(Type::background));
+    setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, colourChart.get(Type::border));
     setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, colourChart.get(Type::active));
 
     // juce::TextEditor
@@ -191,6 +209,11 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(juce::PopupMenu::ColourIds::headerTextColourId, colourChart.get(Type::text));
     setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, colourChart.get(Type::background));
     setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, colourChart.get(Type::text));
+
+    // juce::TooltipWindow
+    setColour(juce::TooltipWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::TooltipWindow::ColourIds::outlineColourId, colourChart.get(Type::border));
+    setColour(juce::TooltipWindow::ColourIds::textColourId, colourChart.get(Type::text));
 
     // juce::ProgressBar
     setColour(juce::ProgressBar::ColourIds::backgroundColourId, colourChart.get(Type::background));
