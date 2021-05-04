@@ -314,23 +314,25 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             {
                 auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<juce::Component>
                 {
+                    auto name = parameter.name;
+                    name[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(name[0_z])));
                     if(!parameter.valueNames.empty())
                     {
-                        return std::make_unique<PropertyList>(parameter.name, parameter.description, parameter.unit, parameter.valueNames, [=, this](size_t index)
+                        return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, parameter.valueNames, [=, this](size_t index)
                                                               {
                                                                   applyParameterValue(parameter, static_cast<float>(index));
                                                               });
                     }
                     else if(parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon())
                     {
-                        return std::make_unique<PropertyToggle>(parameter.name, parameter.description, [=, this](bool state)
+                        return std::make_unique<PropertyToggle>(name, parameter.description, [=, this](bool state)
                                                                 {
                                                                     applyParameterValue(parameter, state ? 1.0f : 0.f);
                                                                 });
                     }
 
                     auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
-                    return std::make_unique<PropertyNumber>(parameter.name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=, this](float value)
+                    return std::make_unique<PropertyNumber>(name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=, this](float value)
                                                             {
                                                                 applyParameterValue(parameter, value);
                                                             });
