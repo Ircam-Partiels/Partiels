@@ -12,9 +12,37 @@ namespace Application
     , public IconManager::LookAndFeelMethods
     {
     public:
+        class ColourChart
+        {
+        public:
+            // clang-format off
+            enum class Type
+            {
+                  background = 0
+                , border
+                , inactive
+                , active
+                , text
+            };
+            // clang-format on
+
+            using Container = std::array<juce::Colour, magic_enum::enum_count<Type>()>;
+
+            ColourChart(Container colours);
+            ColourChart(ColourChart const&) = default;
+            ColourChart& operator=(ColourChart const&) = default;
+
+            ~ColourChart() = default;
+            juce::Colour get(Type const& type) const;
+
+        private:
+            Container mColours;
+        };
+
         LookAndFeel();
         ~LookAndFeel() override = default;
-        
+
+        void setColourChart(ColourChart const& colourChart);
         // ConcertinaTable::LookAndFeelMethods
         juce::Font getHeaderFont(ConcertinaTable const& panel, int headerHeight) const override;
         int getHeaderHeight(ConcertinaTable const& panel) const override;

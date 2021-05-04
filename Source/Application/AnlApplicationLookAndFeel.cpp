@@ -5,138 +5,151 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::LookAndFeel::ColourChart::ColourChart(Container colours)
+: mColours(std::move(colours))
+{
+}
+
+juce::Colour Application::LookAndFeel::ColourChart::get(Type const& type) const
+{
+    return mColours[static_cast<size_t>(magic_enum::enum_integer(type))];
+}
+
 Application::LookAndFeel::LookAndFeel()
 {
     static FontManager fontManager;
 
-    auto const backgroundColour = juce::Colours::grey.darker();
-    auto const rulerColour = juce::Colours::grey;
-    auto const textColour = juce::Colours::white;
-    auto const thumbColour = juce::Colours::white;
+    setColourChart(
+        {{juce::Colours::grey.darker(0.8f), juce::Colours::grey.darker(0.4f), juce::Colours::grey, juce::Colours::grey.brighter(0.4f), juce::Colours::white}});
 
     juce::Font::setDefaultMinimumHorizontalScaleFactor(1.0f);
 
-    setColour(ColourButton::ColourIds::borderOffColourId, rulerColour);
-    setColour(ColourButton::ColourIds::borderOnColourId, rulerColour.brighter());
+    setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());
+    setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
+}
 
-    setColour(ColouredPanel::ColourIds::backgroundColourId, backgroundColour);
+void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
+{
+    using Type = ColourChart::Type;
+    setColour(ColourButton::ColourIds::borderOffColourId, colourChart.get(Type::inactive));
+    setColour(ColourButton::ColourIds::borderOnColourId, colourChart.get(Type::active));
 
-    setColour(FloatingWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(ColouredPanel::ColourIds::backgroundColourId, colourChart.get(Type::background));
+
+    setColour(FloatingWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
     setColour(ConcertinaTable::ColourIds::headerBackgroundColourId, juce::Colours::transparentBlack);
-    setColour(ConcertinaTable::ColourIds::headerBorderColourId, backgroundColour);
-    setColour(ConcertinaTable::ColourIds::headerTitleColourId, textColour);
-    setColour(ConcertinaTable::ColourIds::headerButtonColourId, textColour);
+    setColour(ConcertinaTable::ColourIds::headerBorderColourId, colourChart.get(Type::border));
+    setColour(ConcertinaTable::ColourIds::headerTitleColourId, colourChart.get(Type::text));
+    setColour(ConcertinaTable::ColourIds::headerButtonColourId, colourChart.get(Type::text));
 
-    setColour(Decorator::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(Decorator::ColourIds::normalBorderColourId, backgroundColour);
-    setColour(Decorator::ColourIds::highlightedBorderColourId, rulerColour.brighter());
+    setColour(Decorator::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(Decorator::ColourIds::normalBorderColourId, colourChart.get(Type::border));
+    setColour(Decorator::ColourIds::highlightedBorderColourId, colourChart.get(Type::active));
 
-    setColour(IconManager::ColourIds::normalColourId, rulerColour);
-    setColour(IconManager::ColourIds::overColourId, rulerColour.brighter());
-    setColour(IconManager::ColourIds::downColourId, rulerColour.brighter());
+    setColour(IconManager::ColourIds::normalColourId, colourChart.get(Type::inactive));
+    setColour(IconManager::ColourIds::overColourId, colourChart.get(Type::active));
+    setColour(IconManager::ColourIds::downColourId, colourChart.get(Type::active));
 
     setColour(LoadingCircle::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
-    setColour(LoadingCircle::ColourIds::foregroundColourId, rulerColour);
+    setColour(LoadingCircle::ColourIds::foregroundColourId, colourChart.get(Type::inactive));
 
     setColour(ResizerBar::ColourIds::activeColourId, juce::Colours::transparentBlack);
     setColour(ResizerBar::ColourIds::inactiveColourId, juce::Colours::transparentBlack);
 
-    setColour(Zoom::Ruler::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(Zoom::Ruler::ColourIds::tickColourId, textColour);
-    setColour(Zoom::Ruler::ColourIds::textColourId, textColour);
-    setColour(Zoom::Ruler::ColourIds::anchorColourId, thumbColour);
-    setColour(Zoom::Ruler::ColourIds::selectionColourId, thumbColour);
+    setColour(Zoom::Ruler::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(Zoom::Ruler::ColourIds::tickColourId, colourChart.get(Type::text));
+    setColour(Zoom::Ruler::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(Zoom::Ruler::ColourIds::anchorColourId, colourChart.get(Type::active));
+    setColour(Zoom::Ruler::ColourIds::selectionColourId, colourChart.get(Type::active));
 
     setColour(Transport::LoopBar::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
-    setColour(Transport::LoopBar::ColourIds::thumbCoulourId, thumbColour);
+    setColour(Transport::LoopBar::ColourIds::thumbCoulourId, colourChart.get(Type::active));
 
-    setColour(Transport::PlayheadBar::ColourIds::startPlayheadColourId, thumbColour);
-    setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, rulerColour);
+    setColour(Transport::PlayheadBar::ColourIds::startPlayheadColourId, colourChart.get(Type::active));
+    setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, colourChart.get(Type::inactive));
 
-    setColour(Track::Thumbnail::ColourIds::textColourId, textColour);
-    setColour(Track::Thumbnail::ColourIds::titleBackgroundColourId, juce::Colours::transparentBlack);
-    
-    setColour(Track::Section::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Track::Thumbnail::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(Track::Thumbnail::ColourIds::titleBackgroundColourId, colourChart.get(Type::background));
 
-    setColour(Group::Thumbnail::ColourIds::textColourId, textColour);
-    setColour(Group::Thumbnail::ColourIds::titleBackgroundColourId, backgroundColour);
-    
-    setColour(Group::Section::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(Group::Section::ColourIds::highlightedColourId, rulerColour.withAlpha(0.4f));
+    setColour(Track::Section::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
-    setColour(Document::Section::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(Group::Thumbnail::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(Group::Thumbnail::ColourIds::titleBackgroundColourId, colourChart.get(Type::border));
+
+    setColour(Group::Section::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(Group::Section::ColourIds::highlightedColourId, colourChart.get(Type::inactive).withAlpha(0.4f));
+
+    setColour(Document::Section::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
     auto& colourScheme = getCurrentColourScheme();
-    colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, backgroundColour.darker());
-    colourScheme.setUIColour(ColourScheme::UIColour::widgetBackground, backgroundColour.darker());
+    colourScheme.setUIColour(ColourScheme::UIColour::windowBackground, colourChart.get(Type::background));
+    colourScheme.setUIColour(ColourScheme::UIColour::widgetBackground, colourChart.get(Type::background));
 
     // juce::ResizableWindow
-    setColour(juce::ResizableWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(juce::ResizableWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
     // juce::AlertWindow
-    setColour(juce::AlertWindow::ColourIds::backgroundColourId, backgroundColour.darker());
+    setColour(juce::AlertWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
     // juce::TextButton
-    setColour(juce::TextButton::ColourIds::buttonColourId, backgroundColour);
-    setColour(juce::TextButton::ColourIds::buttonOnColourId, backgroundColour.brighter());
+    setColour(juce::TextButton::ColourIds::buttonColourId, colourChart.get(Type::border));
+    setColour(juce::TextButton::ColourIds::buttonOnColourId, colourChart.get(Type::inactive));
 
     // juce::Slider
-    setColour(juce::Slider::ColourIds::backgroundColourId, backgroundColour);
-    setColour(juce::Slider::ColourIds::thumbColourId, thumbColour);
+    setColour(juce::Slider::ColourIds::backgroundColourId, colourChart.get(Type::border));
+    setColour(juce::Slider::ColourIds::trackColourId, colourChart.get(Type::inactive));
+    setColour(juce::Slider::ColourIds::thumbColourId, colourChart.get(Type::active));
 
     // juce::ComboBox
     setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
-    setColour(juce::ComboBox::ColourIds::arrowColourId, textColour);
+    setColour(juce::ComboBox::ColourIds::arrowColourId, colourChart.get(Type::text));
 
     // juce::ScrollBar
-    setColour(juce::ScrollBar::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(juce::ScrollBar::ColourIds::thumbColourId, thumbColour);
+    setColour(juce::ScrollBar::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::ScrollBar::ColourIds::thumbColourId, colourChart.get(Type::active));
 
     // juce::ListBox
-    setColour(juce::ListBox::ColourIds::backgroundColourId, backgroundColour);
-    setColour(juce::ListBox::ColourIds::outlineColourId, backgroundColour.darker());
-    setColour(juce::ListBox::ColourIds::textColourId, textColour);
+    setColour(juce::ListBox::ColourIds::backgroundColourId, colourChart.get(Type::border));
+    setColour(juce::ListBox::ColourIds::outlineColourId, colourChart.get(Type::background));
+    setColour(juce::ListBox::ColourIds::textColourId, colourChart.get(Type::text));
 
     // juce::TableHeaderComponent
-    setColour(juce::TableHeaderComponent::ColourIds::textColourId, textColour);
-    setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, backgroundColour);
-    setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, backgroundColour.darker());
-    setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, backgroundColour.brighter());
+    setColour(juce::TableHeaderComponent::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(juce::TableHeaderComponent::ColourIds::backgroundColourId, colourChart.get(Type::border));
+    setColour(juce::TableHeaderComponent::ColourIds::outlineColourId, colourChart.get(Type::background));
+    setColour(juce::TableHeaderComponent::ColourIds::highlightColourId, colourChart.get(Type::active));
 
     // juce::TextEditor
     setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
-    setColour(juce::TextEditor::ColourIds::textColourId, textColour);
-    setColour(juce::TextEditor::ColourIds::highlightColourId, textColour.withAlpha(0.2f));
+    setColour(juce::TextEditor::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(juce::TextEditor::ColourIds::highlightColourId, colourChart.get(Type::text).withAlpha(0.2f));
     setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::shadowColourId, juce::Colours::transparentBlack);
 
     // juce::CaretComponent
-    setColour(juce::CaretComponent::ColourIds::caretColourId, textColour);
+    setColour(juce::CaretComponent::ColourIds::caretColourId, colourChart.get(Type::text));
 
     // juce::PopupMenu
-    setColour(juce::PopupMenu::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(juce::PopupMenu::ColourIds::textColourId, textColour);
-    setColour(juce::PopupMenu::ColourIds::headerTextColourId, textColour);
-    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, backgroundColour);
-    setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, textColour);
+    setColour(juce::PopupMenu::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::PopupMenu::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(juce::PopupMenu::ColourIds::headerTextColourId, colourChart.get(Type::text));
+    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, colourChart.get(Type::background));
+    setColour(juce::PopupMenu::ColourIds::highlightedTextColourId, colourChart.get(Type::text));
 
     // juce::ProgressBar
-    setColour(juce::ProgressBar::ColourIds::backgroundColourId, backgroundColour);
-    setColour(juce::ProgressBar::ColourIds::foregroundColourId, thumbColour);
+    setColour(juce::ProgressBar::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::ProgressBar::ColourIds::foregroundColourId, colourChart.get(Type::active));
 
     // juce::HyperlinkButton
     setColour(juce::HyperlinkButton::ColourIds::textColourId, juce::Colour(0xFF16A4DB));
-    
-    // juce::ColourSelector
-    setColour(juce::ColourSelector::ColourIds::backgroundColourId, backgroundColour.darker());
-    setColour(juce::ColourSelector::ColourIds::labelTextColourId, textColour);
 
-    setDefaultSansSerifTypefaceName(fontManager.getDefaultSansSerifTypefaceName());
-    setDefaultSansSerifTypeface(fontManager.getDefaultSansSerifTypeface());
+    // juce::ColourSelector
+    setColour(juce::ColourSelector::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(juce::ColourSelector::ColourIds::labelTextColourId, colourChart.get(Type::text));
 }
 
 int Application::LookAndFeel::getHeaderHeight(ConcertinaTable const& panel) const
