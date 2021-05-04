@@ -98,7 +98,7 @@ Group::Accessor& Document::Tools::getGroupAcsrForTrack(Accessor& accessor, juce:
 
 size_t Document::Tools::getTrackPosition(Accessor& accessor, juce::String const& identifier)
 {
-    auto const& groupAcsr = getGroupAcsr(accessor, identifier);
+    auto const& groupAcsr = getGroupAcsrForTrack(accessor, identifier);
     auto const& layout = groupAcsr.getAttr<Group::AttrType::layout>();
     auto it = std::find(layout.cbegin(), layout.cend(), identifier);
     anlStrongAssert(it != layout.cend());
