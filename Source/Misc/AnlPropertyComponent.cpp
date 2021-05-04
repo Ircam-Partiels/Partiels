@@ -164,7 +164,7 @@ PropertyToggle::PropertyToggle(juce::String const& name, juce::String const& too
 void PropertyToggle::resized()
 {
     PropertyComponent<juce::ToggleButton>::resized();
-    entry.setBounds(getLocalBounds().removeFromRight(entry.getHeight()));
+    entry.setBounds(getLocalBounds().removeFromRight(getHeight()).reduced(4));
 }
 
 PropertyList::PropertyList(juce::String const& name, juce::String const& tooltip, juce::String const& suffix, std::vector<std::string> const& values, std::function<void(size_t)> fn)
@@ -206,7 +206,7 @@ PropertyColourButton::PropertyColourButton(juce::String const& name, juce::Strin
 void PropertyColourButton::resized()
 {
     PropertyComponent<ColourButton>::resized();
-    entry.setBounds(getLocalBounds().removeFromRight(entry.getHeight()).reduced(4));
+    entry.setBounds(getLocalBounds().removeFromRight(getHeight()).reduced(4));
 }
 
 ANALYSE_FILE_END
