@@ -69,6 +69,7 @@ namespace Application
         juce::UndoManager mUndoManager;
 
         Accessor mApplicationAccessor;
+        Accessor::Listener mApplicationListener;
         PluginList::Accessor mPluginListAccessor;
         PluginList::Scanner mPluginListScanner;
         Document::Accessor mDocumentAccessor;

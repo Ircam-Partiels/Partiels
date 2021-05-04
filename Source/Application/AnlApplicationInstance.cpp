@@ -51,6 +51,40 @@ void Application::Instance::initialise(juce::String const& commandLine)
         return;
     }
 
+    mApplicationListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::recentlyOpenedFilesList:
+                break;
+            case AttrType::currentDocumentFile:
+                break;
+            case AttrType::windowState:
+                break;
+            case AttrType::colourMode:
+            {
+                mLookAndFeel.setColourChart({acsr.getAttr<AttrType::colourMode>()});
+                juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
+                if(mMainMenuModel != nullptr)
+                {
+                    mMainMenuModel->menuItemsChanged();
+                }
+                if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
+                {
+                    for(int i = 0; i < modalComponentManager->getNumModalComponents(); ++i)
+                    {
+                        if(auto* resizableWindow = dynamic_cast<juce::ResizableWindow*>(modalComponentManager->getModalComponent(i)))
+                        {
+                            resizableWindow->setBackgroundColour(mLookAndFeel.findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+                        }
+                    }
+                }
+            }
+            break;
+        }
+    };
+    mApplicationAccessor.addListener(mApplicationListener, NotificationType::synchronous);
+
     anlDebug("Application", "Ready!");
     auto const path = commandLine.removeCharacters("\"");
     if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
@@ -122,6 +156,7 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
+    mApplicationAccessor.removeListener(mApplicationListener);
     mDocumentFileBased.removeChangeListener(this);
     getBackupFile().deleteFile();
     mAbout.reset();
