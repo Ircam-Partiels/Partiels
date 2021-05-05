@@ -74,30 +74,41 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               // Ignore (custom)
                           }
                           break;
-                          case 2:
-                          {
-                              mDirector.startAction();
-                              if(Exporter::fromPreset(mAccessor, AlertType::window))
-                              {
-                                  mDirector.endAction(juce::translate("Load track properties from file"), ActionState::apply);
-                              }
-                              else
-                              {
-                                  mDirector.endAction(juce::translate("Load track properties from file"), ActionState::abort);
-                              }
-                          }
-                          break;
-                          case 3:
-                          {
-                              Exporter::toPreset(mAccessor, AlertType::window);
-                          }
-                          break;
                           default:
-                              break;
+                          {
+                              index -= 2;
+                              auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
+                              if(static_cast<size_t>(index) == programs.size())
+                              {
+                                  mDirector.startAction();
+                                  if(Exporter::fromPreset(mAccessor, AlertType::window))
+                                  {
+                                      mDirector.endAction(juce::translate("Load track properties from file"), ActionState::apply);
+                                  }
+                                  else
+                                  {
+                                      mDirector.endAction(juce::translate("Load track properties from file"), ActionState::abort);
+                                  }
+                                  break;
+                              }
+                              else if(static_cast<size_t>(index) == programs.size() + 1)
+                              {
+                                  Exporter::toPreset(mAccessor, AlertType::window);
+                                  break;
+                              }
+                              anlWeakAssert(static_cast<size_t>(index) < programs.size());
+                              if(static_cast<size_t>(index) >= programs.size())
+                              {
+                                  break;
+                              }
+                              auto const it = std::next(programs.cbegin(), static_cast<long>(index));
+                              mDirector.startAction();
+                              mAccessor.setAttr<AttrType::state>(it->second, NotificationType::synchronous);
+                              mDirector.endAction(juce::translate("Apply track preset properties"), ActionState::apply);
+                          }
+                          break;
                       };
-                      auto const& state = mAccessor.getAttr<AttrType::state>();
-                      auto const& description = mAccessor.getAttr<AttrType::description>();
-                      mPropertyPreset.entry.setSelectedItemIndex(state != description.defaultState, juce::NotificationType::dontSendNotification);
+                      updatePresets();
                   })
 
 , mPropertyColourMap("Color Map", "The color map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
@@ -458,9 +469,24 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     }
                 }
 
-                mPropertyPreset.entry.setSelectedItemIndex(state != description.defaultState, juce::NotificationType::dontSendNotification);
-                mPropertyPreset.entry.setItemEnabled(1, true);
+                auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
+                mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
+
+                mPropertyPreset.entry.addItem("Factory", 1);
+                mPropertyPreset.entry.addItem("Custom", 2);
                 mPropertyPreset.entry.setItemEnabled(2, false);
+                mPropertyPreset.entry.addSeparator();
+                juce::StringArray items;
+                for(auto const& program : programs)
+                {
+                    auto const name = Format::withFirstCharUpperCase(program.first);
+                    items.add(juce::String(name));
+                }
+                mPropertyPreset.entry.addItemList(items, 3);
+                mPropertyPreset.entry.addSeparator();
+                mPropertyPreset.entry.addItem("Load...", items.size() + 3);
+                mPropertyPreset.entry.addItem("Save...", items.size() + 4);
+                updatePresets();
             }
             break;
             case AttrType::results:
