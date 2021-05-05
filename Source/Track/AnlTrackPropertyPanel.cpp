@@ -678,4 +678,29 @@ void Track::PropertyPanel::updatePresets()
     }
     mPropertyPreset.entry.setSelectedItemIndex(1, juce::NotificationType::dontSendNotification);
 }
+
+void Track::PropertyPanel::updateZoomMode()
+{
+    auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+    auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+    anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
+    auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+    auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+    mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
+    mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
+    mPropertyValueRangeMode.entry.setItemEnabled(3, false);
+    if(pluginRange.has_value() && !range.isEmpty() && range == *pluginRange)
+    {
+        mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
+    }
+    else if(resultsRange.has_value() && !range.isEmpty() && range == *resultsRange)
+    {
+        mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
+    }
+}
+
 ANALYSE_FILE_END
