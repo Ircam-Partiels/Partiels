@@ -18,7 +18,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::file:
             {
                 auto const file = mAccessor.getAttr<AttrType::file>();
-                if(!file.existsAsFile())
+                if(file != juce::File() && !file.existsAsFile())
                 {
                     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
                     {
