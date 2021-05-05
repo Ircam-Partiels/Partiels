@@ -421,6 +421,24 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, silent);
                 mPropertyPluginDetails.setText(description.details + " - " + description.output.description, silent);
 
+                auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
+                mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
+                
+                mPropertyPreset.entry.addItem("Factory", 1);
+                mPropertyPreset.entry.addItem("Custom", 2);
+                mPropertyPreset.entry.setItemEnabled(2, false);
+                mPropertyPreset.entry.addSeparator();
+                juce::StringArray items;
+                for(auto const& program : programs)
+                {
+                    auto const name = Format::withFirstCharUpperCase(program.first);
+                    items.add(juce::String(name));
+                }
+                mPropertyPreset.entry.addItemList(items, 3);
+                mPropertyPreset.entry.addSeparator();
+                mPropertyPreset.entry.addItem("Load...", items.size() + 3);
+                mPropertyPreset.entry.addItem("Save...", items.size() + 4);
+                
                 updateZoomMode();
             }
             case AttrType::state:
@@ -469,23 +487,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     }
                 }
 
-                auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
-                mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
-
-                mPropertyPreset.entry.addItem("Factory", 1);
-                mPropertyPreset.entry.addItem("Custom", 2);
-                mPropertyPreset.entry.setItemEnabled(2, false);
-                mPropertyPreset.entry.addSeparator();
-                juce::StringArray items;
-                for(auto const& program : programs)
-                {
-                    auto const name = Format::withFirstCharUpperCase(program.first);
-                    items.add(juce::String(name));
-                }
-                mPropertyPreset.entry.addItemList(items, 3);
-                mPropertyPreset.entry.addSeparator();
-                mPropertyPreset.entry.addItem("Load...", items.size() + 3);
-                mPropertyPreset.entry.addItem("Save...", items.size() + 4);
                 updatePresets();
             }
             break;
