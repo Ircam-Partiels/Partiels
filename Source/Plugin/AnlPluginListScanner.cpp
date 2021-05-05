@@ -122,16 +122,26 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
             auto const categories = pluginLoader->getPluginCategory(key.identifier);
             description.category = categories.empty() ? "" : categories.front();
             description.details = plugin->getDescription();
-
-            auto const blockSize = plugin->getPreferredBlockSize();
-            description.defaultState.blockSize = blockSize > 0 ? blockSize : 512;
-            auto const stepSize = plugin->getPreferredStepSize();
-            description.defaultState.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
             auto const parameters = plugin->getParameterDescriptors();
             description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-            for(auto const& parameter : parameters)
+
+            auto initializeState = [&](Plugin::State& state, bool defaultValues)
             {
-                description.defaultState.parameters[parameter.identifier] = parameter.defaultValue;
+                auto const blockSize = plugin->getPreferredBlockSize();
+                state.blockSize = blockSize > 0 ? blockSize : 512;
+                auto const stepSize = plugin->getPreferredStepSize();
+                state.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
+                for(auto const& parameter : parameters)
+                {
+                    state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin->getParameter(parameter.identifier);
+                }
+            };
+            initializeState(description.defaultState, true);
+            auto const programNames = plugin->getPrograms();
+            for(auto const& programName : programNames)
+            {
+                plugin->selectProgram(programName);
+                initializeState(description.programs[programName], false);
             }
 
             description.output = outputs[feature];

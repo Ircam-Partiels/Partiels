@@ -181,6 +181,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
         toXml(*child, "defaultState", value.defaultState);
         toXml(*child, "parameters", value.parameters);
         toXml(*child, "output", value.output);
+        toXml(*child, "programs", value.programs);
         xml.addChildElement(child.release());
     }
 }
@@ -205,6 +206,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
+    value.programs = fromXml(*child, "programs", defaultValue.programs);
     return value;
 }
 

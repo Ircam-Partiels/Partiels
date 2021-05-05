@@ -115,7 +115,8 @@ namespace Plugin
         State defaultState;                                 //!< The default state of the plugin
         std::vector<Parameter> parameters {};               //!< The parameters of the plugin
         Output output {};                                   //!< The output of the plugin
-        
+        std::map<std::string, State> programs{}; //!< The program of the plugin
+
         inline bool operator==(Description const& rhd) const noexcept
         {
             return name == rhd.name &&
@@ -126,7 +127,8 @@ namespace Plugin
             details == rhd.details &&
             defaultState == rhd.defaultState &&
             parameters == rhd.parameters &&
-            output == rhd.output;
+                   output == rhd.output &&
+                   programs == rhd.programs;
         }
         
         inline bool operator!=(Description const& rhd) const noexcept
