@@ -6,37 +6,37 @@ ANALYSE_FILE_BEGIN
 bool Plugin::Output::operator==(Output const& rhd) const noexcept
 {
     return identifier == rhd.identifier &&
-    name == rhd.name &&
-    description == rhd.description &&
-    unit == rhd.unit &&
-    hasFixedBinCount == rhd.hasFixedBinCount &&
-    (!hasFixedBinCount || binCount == rhd.binCount) &&
-    binNames == rhd.binNames &&
-    hasKnownExtents == rhd.hasKnownExtents &&
-    (!hasKnownExtents || std::abs(minValue - rhd.minValue) < std::numeric_limits<float>::epsilon()) &&
-    (!hasKnownExtents || std::abs(maxValue - rhd.maxValue) < std::numeric_limits<float>::epsilon()) &&
-    isQuantized == rhd.isQuantized &&
-    (!isQuantized || std::abs(quantizeStep - rhd.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
-    sampleType == rhd.sampleType &&
-    (sampleType == SampleType::OneSamplePerStep || std::abs(sampleRate - rhd.sampleRate) < std::numeric_limits<float>::epsilon()) &&
-    hasDuration == rhd.hasDuration;
+           name == rhd.name &&
+           description == rhd.description &&
+           unit == rhd.unit &&
+           hasFixedBinCount == rhd.hasFixedBinCount &&
+           (!hasFixedBinCount || binCount == rhd.binCount) &&
+           binNames == rhd.binNames &&
+           hasKnownExtents == rhd.hasKnownExtents &&
+           (!hasKnownExtents || std::abs(minValue - rhd.minValue) < std::numeric_limits<float>::epsilon()) &&
+           (!hasKnownExtents || std::abs(maxValue - rhd.maxValue) < std::numeric_limits<float>::epsilon()) &&
+           isQuantized == rhd.isQuantized &&
+           (!isQuantized || std::abs(quantizeStep - rhd.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
+           sampleType == rhd.sampleType &&
+           (sampleType == SampleType::OneSamplePerStep || std::abs(sampleRate - rhd.sampleRate) < std::numeric_limits<float>::epsilon()) &&
+           hasDuration == rhd.hasDuration;
 }
 
 bool Plugin::Parameter::operator==(Parameter const& rhd) const noexcept
 {
     return identifier == rhd.identifier &&
-    name == rhd.name &&
-    description == rhd.description &&
-    unit == rhd.unit &&
-    std::abs(minValue - rhd.minValue) < std::numeric_limits<float>::epsilon() &&
-    std::abs(maxValue - rhd.maxValue) < std::numeric_limits<float>::epsilon() &&
-    std::abs(defaultValue - rhd.defaultValue) < std::numeric_limits<float>::epsilon() &&
-    isQuantized == rhd.isQuantized &&
-    (!isQuantized || std::abs(quantizeStep - rhd.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
-    valueNames == rhd.valueNames;
+           name == rhd.name &&
+           description == rhd.description &&
+           unit == rhd.unit &&
+           std::abs(minValue - rhd.minValue) < std::numeric_limits<float>::epsilon() &&
+           std::abs(maxValue - rhd.maxValue) < std::numeric_limits<float>::epsilon() &&
+           std::abs(defaultValue - rhd.defaultValue) < std::numeric_limits<float>::epsilon() &&
+           isQuantized == rhd.isQuantized &&
+           (!isQuantized || std::abs(quantizeStep - rhd.quantizeStep) < std::numeric_limits<float>::epsilon()) &&
+           valueNames == rhd.valueNames;
 }
 
-template<>
+template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -49,9 +49,9 @@ void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const
     }
 }
 
-template<>
+template <>
 auto XmlParser::fromXml<Plugin::Key>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Key const& defaultValue)
--> Plugin::Key
+    -> Plugin::Key
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
@@ -65,7 +65,7 @@ auto XmlParser::fromXml<Plugin::Key>(juce::XmlElement const& xml, juce::Identifi
     return value;
 }
 
-template<>
+template <>
 void XmlParser::toXml<Plugin::Parameter>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Parameter const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -86,9 +86,9 @@ void XmlParser::toXml<Plugin::Parameter>(juce::XmlElement& xml, juce::Identifier
     }
 }
 
-template<>
+template <>
 auto XmlParser::fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Parameter const& defaultValue)
--> Plugin::Parameter
+    -> Plugin::Parameter
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
@@ -110,7 +110,7 @@ auto XmlParser::fromXml<Plugin::Parameter>(juce::XmlElement const& xml, juce::Id
     return value;
 }
 
-template<>
+template <>
 void XmlParser::toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Output const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -136,9 +136,9 @@ void XmlParser::toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier co
     }
 }
 
-template<>
+template <>
 auto XmlParser::fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Output const& defaultValue)
--> Plugin::Output
+    -> Plugin::Output
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
@@ -165,7 +165,7 @@ auto XmlParser::fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Ident
     return value;
 }
 
-template<>
+template <>
 void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Description const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -186,9 +186,9 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
     }
 }
 
-template<>
+template <>
 auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Description const& defaultValue)
--> Plugin::Description
+    -> Plugin::Description
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
@@ -210,7 +210,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     return value;
 }
 
-template<>
+template <>
 void XmlParser::toXml<Plugin::State>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::State const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -225,9 +225,9 @@ void XmlParser::toXml<Plugin::State>(juce::XmlElement& xml, juce::Identifier con
     }
 }
 
-template<>
+template <>
 auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::State const& defaultValue)
--> Plugin::State
+    -> Plugin::State
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
