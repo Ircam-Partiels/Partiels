@@ -16,6 +16,7 @@ namespace PluginList
 
     private:
         Vamp::Plugin* loadPlugin(std::string const& key, float sampleRate);
+        static Plugin::Description loadDescription(Vamp::Plugin& plugin, Plugin::Key const& key);
 
         using entry_t = std::tuple<std::string, float>;
         struct entry_comp

@@ -99,56 +99,7 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
     {
         throw std::runtime_error("allocation failed");
     }
-
-    auto const outputs = plugin->getOutputDescriptors();
-    for(size_t feature = 0; feature < outputs.size(); ++feature)
-    {
-        if(outputs[feature].identifier == key.feature)
-        {
-            Plugin::Description description;
-            description.name = plugin->getName();
-            description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
-            if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin))
-            {
-                if(auto* inputDomainAdapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-                {
-                    description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
-                    description.defaultState.windowType = inputDomainAdapter->getWindowType();
-                }
-            }
-
-            description.maker = plugin->getMaker();
-            description.version = static_cast<unsigned int>(plugin->getPluginVersion());
-            auto const categories = pluginLoader->getPluginCategory(key.identifier);
-            description.category = categories.empty() ? "" : categories.front();
-            description.details = plugin->getDescription();
-            auto const parameters = plugin->getParameterDescriptors();
-            description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-
-            auto initializeState = [&](Plugin::State& state, bool defaultValues)
-            {
-                auto const blockSize = plugin->getPreferredBlockSize();
-                state.blockSize = blockSize > 0 ? blockSize : 512;
-                auto const stepSize = plugin->getPreferredStepSize();
-                state.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
-                for(auto const& parameter : parameters)
-                {
-                    state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin->getParameter(parameter.identifier);
-                }
-            };
-            initializeState(description.defaultState, true);
-            auto const programNames = plugin->getPrograms();
-            for(auto const& programName : programNames)
-            {
-                plugin->selectProgram(programName);
-                initializeState(description.programs[programName], false);
-            }
-
-            description.output = outputs[feature];
-            return description;
-        }
-    }
-    throw std::runtime_error("plugin feature cannot be found");
+    return loadDescription(*plugin, key);
 }
 
 Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key, double sampleRate)
@@ -165,16 +116,27 @@ Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key,
     {
         return {};
     }
+    return loadDescription(*plugin.get(), key);
+}
 
-    auto const outputs = plugin->getOutputDescriptors();
+Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, Plugin::Key const& key)
+{
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        return {};
+    }
+    
+    auto const outputs = plugin.getOutputDescriptors();
     for(size_t feature = 0; feature < outputs.size(); ++feature)
     {
         if(outputs[feature].identifier == key.feature)
         {
             Plugin::Description description;
-            description.name = plugin->getName();
+            description.name = plugin.getName();
             description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
-            if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin.get()))
+            if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(const_cast<Vamp::Plugin*>(&plugin)))
             {
                 if(auto* inputDomainAdapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
                 {
@@ -182,24 +144,34 @@ Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key,
                     description.defaultState.windowType = inputDomainAdapter->getWindowType();
                 }
             }
-
-            description.maker = plugin->getMaker();
-            description.version = static_cast<unsigned int>(plugin->getPluginVersion());
+            
+            description.maker = plugin.getMaker();
+            description.version = static_cast<unsigned int>(plugin.getPluginVersion());
             auto const categories = pluginLoader->getPluginCategory(key.identifier);
             description.category = categories.empty() ? "" : categories.front();
-            description.details = plugin->getDescription();
-
-            auto const blockSize = plugin->getPreferredBlockSize();
-            description.defaultState.blockSize = blockSize > 0 ? blockSize : 512;
-            auto const stepSize = plugin->getPreferredStepSize();
-            description.defaultState.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
-            auto const parameters = plugin->getParameterDescriptors();
+            description.details = plugin.getDescription();
+            auto const parameters = plugin.getParameterDescriptors();
             description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-            for(auto const& parameter : parameters)
+            
+            auto initializeState = [&](Plugin::State& state, bool defaultValues)
             {
-                description.defaultState.parameters[parameter.identifier] = parameter.defaultValue;
+                auto const blockSize = plugin.getPreferredBlockSize();
+                state.blockSize = blockSize > 0 ? blockSize : 512;
+                auto const stepSize = plugin.getPreferredStepSize();
+                state.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
+                for(auto const& parameter : parameters)
+                {
+                    state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
+                }
+            };
+            initializeState(description.defaultState, true);
+            auto const programNames = plugin.getPrograms();
+            for(auto const& programName : programNames)
+            {
+                plugin.selectProgram(programName);
+                initializeState(description.programs[programName], false);
             }
-
+            
             description.output = outputs[feature];
             return description;
         }
