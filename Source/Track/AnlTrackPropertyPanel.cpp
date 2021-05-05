@@ -271,31 +271,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                      })
 , mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 {
-    auto updateValueZoomMode = [&]()
-    {
-        auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-        auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
-        auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-        auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
-        mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
-        mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
-        mPropertyValueRangeMode.entry.setItemEnabled(3, false);
-        if(pluginRange.has_value() && !range.isEmpty() && range == *pluginRange)
-        {
-            mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
-        }
-        else if(resultsRange.has_value() && !range.isEmpty() && range == *resultsRange)
-        {
-            mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
-        }
-    };
-
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         auto constexpr silent = juce::NotificationType::dontSendNotification;
@@ -434,7 +410,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, silent);
                 mPropertyPluginDetails.setText(description.details + " - " + description.output.description, silent);
 
-                updateValueZoomMode();
+                updateZoomMode();
             }
             case AttrType::state:
             {
@@ -489,7 +465,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             break;
             case AttrType::results:
             {
-                updateValueZoomMode();
+                updateZoomMode();
             }
             break;
             case AttrType::graphics:
@@ -543,7 +519,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
                 }
 
-                updateValueZoomMode();
+                updateZoomMode();
                 mPropertyValueRange.repaint();
             }
             break;
