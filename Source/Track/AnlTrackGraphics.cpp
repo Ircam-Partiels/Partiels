@@ -23,7 +23,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
     abortRendering();
-    
+
     auto const results = accessor.getAttr<AttrType::results>();
     if(results == nullptr || results->empty() || results->at(0).values.size() <= 1)
     {
@@ -33,7 +33,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         }
         return;
     }
-    
+
     auto const width = static_cast<int>(results->size());
     auto const height = static_cast<int>(results->at(0).values.size());
     anlWeakAssert(width > 0 && height > 0);
@@ -45,10 +45,10 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         }
         return;
     }
-    
+
     auto const colourMap = accessor.getAttr<AttrType::colours>().map;
     auto const valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-    
+
     mChrono.start();
     mRenderingProcess = std::thread([=, this]()
     {
@@ -211,7 +211,7 @@ void Track::Graphics::handleAsyncUpdate()
     if(mRenderingProcess.joinable())
     {
         anlWeakAssert(mRenderingState != ProcessState::available);
-        
+
         auto expected = ProcessState::ended;
         if(mRenderingState.load() == ProcessState::running)
         {
@@ -257,7 +257,7 @@ void Track::Graphics::abortRendering()
         mRenderingState = ProcessState::aborted;
         mRenderingProcess.join();
         cancelPendingUpdate();
-        
+
         if(onRenderingAborted != nullptr)
         {
             onRenderingAborted();
