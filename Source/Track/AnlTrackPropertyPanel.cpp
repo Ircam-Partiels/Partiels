@@ -655,4 +655,27 @@ void Track::PropertyPanel::applyParameterValue(Plugin::Parameter const& paramete
     mDirector.endAction(juce::translate("Change track property"), ActionState::apply);
 }
 
+void Track::PropertyPanel::updatePresets()
+{
+    auto const& state = mAccessor.getAttr<AttrType::state>();
+    auto const& description = mAccessor.getAttr<AttrType::description>();
+    if(state == description.defaultState)
+    {
+        mPropertyPreset.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        int index = 2;
+        for(auto const& program : mAccessor.getAttr<AttrType::description>().programs)
+        {
+            if(state == program.second)
+            {
+                mPropertyPreset.entry.setSelectedItemIndex(index, juce::NotificationType::dontSendNotification);
+                return;
+            }
+            ++index;
+        }
+    }
+    mPropertyPreset.entry.setSelectedItemIndex(1, juce::NotificationType::dontSendNotification);
+}
 ANALYSE_FILE_END

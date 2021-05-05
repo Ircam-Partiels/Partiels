@@ -22,6 +22,7 @@ namespace Track
 
     private:
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
+        void updatePresets();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
