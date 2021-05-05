@@ -17,7 +17,6 @@ void Track::Processor::stopAnalysis()
 
 Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
 {
-    auto const& description = accessor.getAttr<AttrType::description>();
     auto const& state = accessor.getAttr<AttrType::state>();
     
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
@@ -47,24 +46,19 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     }
     catch(std::exception& e)
     {
-        return std::make_tuple(WarningType::plugin, e.what(), description, state);
+        return std::make_tuple(WarningType::plugin, e.what(), Plugin::Output{});
     }
     catch(...)
     {
-        return std::make_tuple(WarningType::plugin, "unknown error", description, state);
+        return std::make_tuple(WarningType::plugin, "unknown error", Plugin::Output{});
     }
     
     if(processor == nullptr)
     {
-        return std::make_tuple(WarningType::state, "invalid state", description, state);
+        return std::make_tuple(WarningType::state, "invalid state", Plugin::Output{});
     }
     
-    auto const pluginDescription = processor->getDescription();
-    anlStrongAssert(pluginDescription != Plugin::Description{});
-    if(pluginDescription == Plugin::Description{})
-    {
-        return std::make_tuple(WarningType::plugin, "invalid description", pluginDescription, state);
-    }
+    auto const output = processor->getOutput();
     
     mChrono.start();
     mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> std::shared_ptr<std::vector<Plugin::Result>>
@@ -110,7 +104,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         return {};
     });
     
-    return std::make_tuple(WarningType::none, "", pluginDescription, state);
+    return std::make_tuple(WarningType::none, "", std::move(output));
 }
 
 void Track::Processor::handleAsyncUpdate()

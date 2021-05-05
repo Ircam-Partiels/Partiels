@@ -10,7 +10,7 @@ namespace Track
     : private juce::AsyncUpdater
     {
     public:
-        using Result = std::optional<std::tuple<WarningType, juce::String, Plugin::Description, Plugin::State>>;
+        using Result = std::optional<std::tuple<WarningType, juce::String, Plugin::Output>>;
         
         Processor() = default;
         ~Processor() override;

@@ -422,23 +422,25 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
     auto const warning = std::get<0>(*result);
     auto const message = std::get<1>(*result);
-    auto const pluginDescription = std::get<2>(*result);
-    auto const pluginState = std::get<3>(*result);
     mAccessor.setAttr<AttrType::warnings>(warning, notification);
     switch(std::get<0>(*result))
     {
         case WarningType::none:
         {
             anlDebug("Track", "analysis launched");
-            mAccessor.setAttr<AttrType::description>(pluginDescription, notification);
+            auto const key = mAccessor.getAttr<AttrType::key>();
+            auto const sampleRate = mAudioFormatReaderManager->sampleRate;
+            auto description = PluginList::Scanner::loadDescription(key, sampleRate);
+            description.output = std::get<2>(*result);
+            mAccessor.setAttr<AttrType::description>(description, notification);
             startTimer(50);
         }
         break;
         case WarningType::state:
         {
-            auto const state = mAccessor.getAttr<AttrType::state>();
-            if(state.blockSize == pluginDescription.defaultState.blockSize &&
-               state.stepSize == pluginDescription.defaultState.stepSize)
+            auto currentState = mAccessor.getAttr<AttrType::state>();
+            auto const& defaultState = mAccessor.getAttr<AttrType::description>().defaultState;
+            if(currentState.blockSize == defaultState.blockSize && currentState.stepSize == defaultState.stepSize)
             {
                 showWarningWindow(message);
             }
@@ -453,7 +455,9 @@ void Track::Director::runAnalysis(NotificationType const notification)
                 {
                     startAction();
                 }
-                mAccessor.setAttr<AttrType::state>(pluginDescription.defaultState, notification);
+                currentState.blockSize = defaultState.blockSize;
+                currentState.stepSize = defaultState.stepSize;
+                mAccessor.setAttr<AttrType::state>(defaultState, notification);
                 if(!isPerformingAction)
                 {
                     endAction("Restore track factory properties", ActionState::apply);
