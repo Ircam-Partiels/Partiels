@@ -78,7 +78,7 @@ namespace Track
     < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
-    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
+    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     
     , Model::Attr<AttrType::height, int, Model::Flag::basic>
