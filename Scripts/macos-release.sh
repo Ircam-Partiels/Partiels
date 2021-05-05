@@ -3,18 +3,8 @@
 ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_PATH="$ThisPath/.."
 APP_NAME="Partiels"
-APP_VERSION="Partiels"
 APPLE_ACCOUNT="pierre.guillot@ircam.fr"
 APPLE_PASSWORD="Developer-altool"
-
-if [ -z $1 ];  then
-	echo '\033[0;31m' "Error: No arguments provided. Expected build number as arg."
-	echo '\033[0m'
-	exit 1
-else
-	APP_VERSION=$1
-	echo "Preparing $APP_NAME-$APP_VERSION";
-fi
 
 mkdir -p $REPO_PATH/build
 cd $REPO_PATH/build
@@ -25,7 +15,7 @@ cmake .. -G Xcode
 
 echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'
-xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "$APP_NAME" -archivePath "$APP_NAME.xcarchive"
+xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "ALL_BUILD" -archivePath "$APP_NAME.xcarchive"
 
 echo '\033[0;34m' "Exporting archive..."
 echo '\033[0m'
@@ -62,34 +52,16 @@ if [[ $request_status != "success" ]]; then
     exit 1
 fi
 
-echo '\033[0;34m' "Creating apple disk image..."
-echo '\033[0m'
-cp -r -f $REPO_PATH/build/Partiels.app $REPO_PATH/build/app
-test -f "$APP_NAME-$APP_VERSION.dmg" && rm "$APP_NAME-$APP_VERSION.dmg"
-
-create-dmg \
-	--volname "$APP_NAME-$APP_VERSION" \
-	--background "$REPO_PATH/BinaryData/Misc/macos-dmg-background.png" \
-	--volicon "$REPO_PATH/BinaryData/Misc/macos-dmg-icon.icns" \
-	--window-size 600 380 \
-	--window-pos 200 120 \
-	--icon-size 64 \
-	--icon "Partiels.app" 128 90 \
-  --app-drop-link 432 90 \
-	--add-file "About.txt" 	"$REPO_PATH/BinaryData/Misc/About.txt" 128 200 \
-	"$APP_NAME-$APP_VERSION.dmg" \
-	"app"
-
-xcrun rez -append "$REPO_PATH/BinaryData/Misc/macos-dmg-icon.rsrc" -o "$APP_NAME-$APP_VERSION.dmg"
-xcrun setFile -a C "$APP_NAME-$APP_VERSION.dmg"
+APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
+ThisPath/macos-package.sh
 
 echo '\033[0;34m' "Compressing apple image disk..."
 echo '\033[0m'
-zip -r "$APP_NAME-$APP_VERSION-MacOS-x86_64.zip" "$APP_NAME-$APP_VERSION.dmg"
+zip -r "$APP_NAME-v$APP_VERSION-MacOS-x86_64.zip" "$APP_NAME-v$APP_VERSION.dmg"
 
 echo '\033[0;34m' "Installing zip file..."
 echo '\033[0m'
-cp "$APP_NAME-$APP_VERSION-MacOS-x86_64.zip" /Users/guillot/Nextcloud/Partiels
+cp "$APP_NAME-v$APP_VERSION-MacOS-x86_64.zip" /Users/guillot/Nextcloud/Partiels/Temp
 
 echo '\033[0;34m' "done"
 echo '\033[0m'
