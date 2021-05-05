@@ -314,8 +314,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             {
                 auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<juce::Component>
                 {
-                    auto name = parameter.name;
-                    name[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(name[0_z])));
+                    auto const name = juce::String(Format::withFirstCharUpperCase(parameter.name));
                     if(!parameter.valueNames.empty())
                     {
                         return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, parameter.valueNames, [=, this](size_t index)

@@ -25,6 +25,11 @@
 #define anlWeakAssert jassert
 // clang-format on
 
+constexpr std::size_t operator""_z(unsigned long long n)
+{
+    return static_cast<std::size_t>(n);
+}
+
 ANALYSE_FILE_BEGIN
 
 namespace Logger
@@ -47,6 +52,12 @@ namespace Format
         time -= static_cast<double>(s);
         auto const ms = static_cast<int>(std::floor(time * 1000.0));
         return juce::String::formatted("%02d" + separators[0] + "%02d" + separators[1] + "%02d" + separators[2] + "%03d" + separators[3], h, m, s, ms);
+    }
+    
+    inline std::string withFirstCharUpperCase(std::string text)
+    {
+        text[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(text[0_z])));
+        return text;
     }
 } // namespace Format
 
@@ -103,11 +114,6 @@ template <template <typename...> class Ref, typename... Args>
 struct is_specialization<Ref<Args...>, Ref> : std::true_type
 {
 };
-
-constexpr std::size_t operator""_z(unsigned long long n)
-{
-    return static_cast<std::size_t>(n);
-}
 
 // https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
 template <std::size_t... Is>

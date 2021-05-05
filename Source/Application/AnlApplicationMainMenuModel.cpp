@@ -96,8 +96,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         auto const selectedMode = Instance::get().getApplicationAccessor().getAttr<AttrType::colourMode>();
         for(auto const& entry : magic_enum::enum_entries<ColourMode>())
         {
-            auto name = std::string(entry.second);
-            name[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(name[0_z])));
+            auto const name = Format::withFirstCharUpperCase(std::string(entry.second));
             colourModeMenu.addItem(juce::String(name), true, selectedMode == entry.first, [=]()
                                    {
                                        auto& accessor = Instance::get().getApplicationAccessor();
