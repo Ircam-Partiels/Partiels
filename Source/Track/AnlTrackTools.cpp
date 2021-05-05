@@ -134,7 +134,7 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
     {
         return "-";
     }
-    anlStrongAssert(bin < it->values.size());
+    anlWeakAssert(bin < it->values.size());
     if(bin >= it->values.size())
     {
         return "-";
