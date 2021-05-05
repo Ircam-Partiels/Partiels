@@ -664,19 +664,17 @@ void Track::PropertyPanel::updatePresets()
     if(state == description.defaultState)
     {
         mPropertyPreset.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+        return;
     }
-    else
+    int index = 2;
+    for(auto const& program : mAccessor.getAttr<AttrType::description>().programs)
     {
-        int index = 2;
-        for(auto const& program : mAccessor.getAttr<AttrType::description>().programs)
+        if(state == program.second)
         {
-            if(state == program.second)
-            {
-                mPropertyPreset.entry.setSelectedItemIndex(index, juce::NotificationType::dontSendNotification);
-                return;
-            }
-            ++index;
+            mPropertyPreset.entry.setSelectedItemIndex(index, juce::NotificationType::dontSendNotification);
+            return;
         }
+        ++index;
     }
     mPropertyPreset.entry.setSelectedItemIndex(1, juce::NotificationType::dontSendNotification);
 }
