@@ -84,7 +84,6 @@ Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::Str
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mSavedStateAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Document::FileBased::~FileBased()
@@ -97,7 +96,6 @@ Document::FileBased::~FileBased()
     {
         groupAcsr.get().removeListener(mGroupListener);
     }
-    mSavedStateAccessor.removeListener(mListener);
     mAccessor.removeListener(mListener);
 }
 
