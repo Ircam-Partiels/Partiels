@@ -128,7 +128,7 @@ std::vector<T> copy_with_erased(std::vector<T> const& v, T const& e)
 #ifdef __cpp_lib_erase_if
     std::erase(copy, e);
 #else
-    copy.erase(std::remove(copy.begin(), copy.end(), y), copy.end());
+    copy.erase(std::remove(copy.begin(), copy.end(), e), copy.end());
 #endif
     return copy;
 }
