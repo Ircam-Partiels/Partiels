@@ -123,13 +123,13 @@ juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& res
     auto const second = std::next(first);
     if(second == results.cend() || second->values.empty())
     {
-        auto const value = first->values.empty() ? "-" : juce::String(first->values.at(0), 2) + output.unit;
+        auto const value = (first->values.empty() ? "-" : juce::String(first->values.at(0), 2)) + output.unit;
         auto const label = first->label.empty() ? "" : ("(" + first->label + ")");
         return value + " " + label;
     }
     if(first->values.empty())
     {
-        auto const value = second->values.empty() ? "-" : juce::String(second->values.at(0), 2) + output.unit;
+        auto const value = juce::String(second->values.at(0), 2) + output.unit;
         auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
         return value + " " + label;
     }
