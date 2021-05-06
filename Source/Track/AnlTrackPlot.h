@@ -44,10 +44,10 @@ namespace Track
         };
 
     private:
-        static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange);
         
         static void paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange);
         
+        static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr);
         static void paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr);
         
         Accessor& mAccessor;

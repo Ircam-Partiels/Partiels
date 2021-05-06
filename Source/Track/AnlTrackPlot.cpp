@@ -98,9 +98,8 @@ void Track::Plot::paint(juce::Graphics& g)
     {
         case Tools::DisplayType::markers:
         {
-            paintMarkers(g, bounds.toFloat(), colours, output.unit, *resultsPtr, timeRange);
+            paintMarkers(g, bounds.toFloat(), colours, output.unit, *resultsPtr, mTimeZoomAccessor);
         }
-            break;
         case Tools::DisplayType::segments:
         {
             paintSegments(g, bounds.toFloat(), colours, output.unit, *resultsPtr, timeRange, valueRange);
@@ -114,54 +113,48 @@ void Track::Plot::paint(juce::Graphics& g)
     }
 }
 
-void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange)
+void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr)
 {
     auto constexpr epsilonPixel = 2.0f;
+    auto const& globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+    auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const clipBounds = g.getClipBounds().toFloat();
     auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
-    auto const rtStart = Tools::secondsToRealTime(clipTimeStart);
     auto const rtEnd = Tools::secondsToRealTime(clipTimeEnd);
-    
+
     // Time distance corresponding to epsilon pixels
     auto const minDiffTime = Tools::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
-  
-    // Find the first result that is inside the clip bounds
-    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-    {
-        return Tools::getEndRealTime(result) >= rtStart;
-    });
-    
+
     juce::RectangleList<float> rectangles;
     std::vector<std::tuple<juce::String, int, int>> labels;
     auto const showLabel = !colours.text.isTransparent();
     auto const font = g.getCurrentFont();
+
+    auto it = Tools::getIteratorAt(results, globalRange, clipTimeStart);
     while(it != results.cend() && it->timestamp < rtEnd)
     {
-        if(it->hasTimestamp)
+        auto const start = Tools::realTimeToSeconds(it->timestamp);
+        auto const x1 = Tools::secondsToPixel(start, timeRange, bounds);
+
+        // Skip any adjacent result with a distance inferior to epsilon pixels
+        auto next = std::next(it);
+        while(next != results.cend() && next->timestamp < rtEnd && next->timestamp < Tools::getEndRealTime(*it) + minDiffTime)
         {
-            auto const start = Tools::realTimeToSeconds(it->timestamp);
-            auto const x1 = Tools::secondsToPixel(start, timeRange, bounds);
+            it = std::exchange(next, std::next(next));
+        }
 
-            // Skip any adjacent result with a distance inferior to epsilon pixels
-            auto next = std::next(it);
-            while(next != results.cend() && next->timestamp < rtEnd && next->hasTimestamp && next->timestamp < Tools::getEndRealTime(*it) + minDiffTime)
-            {
-                it = std::exchange(next, std::next(next));
-            }
+        auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*it));
+        auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
+        auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x1;
+        rectangles.addWithoutMerging({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
 
-            auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*it));
-            auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
-            auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x1;
-            rectangles.addWithoutMerging({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
-
-            if(showLabel && !it->label.empty() && (labels.empty() || static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
-            {
-                auto const text = juce::String(it->label) + unit;
-                auto const textWidth = font.getStringWidth(text) + 2;
-                auto const textX = static_cast<int>(std::round(x2)) + 2;
-                labels.push_back(std::make_tuple(text, textX, textWidth));
-            }
+        if(showLabel && !it->label.empty() && (labels.empty() || static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
+        {
+            auto const text = juce::String(it->label) + unit;
+            auto const textWidth = font.getStringWidth(text) + 2;
+            auto const textX = static_cast<int>(std::round(x2)) + 2;
+            labels.push_back(std::make_tuple(text, textX, textWidth));
         }
         it = std::next(it);
     }
