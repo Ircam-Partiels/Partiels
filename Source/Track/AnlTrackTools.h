@@ -24,10 +24,13 @@ namespace Track
         Vamp::RealTime secondsToRealTime(double seconds);
         Vamp::RealTime getEndRealTime(Plugin::Result const& rt);
 
-        juce::String getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, double timeEpsilon);
-        juce::String getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time);
-        juce::String getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin);
-        juce::String getResultText(Accessor const& acsr, double time, size_t bin, double timeEpsilon);
+        //! @brief Optimized method to get the iterator at a given time
+        std::vector<Plugin::Result>::const_iterator getIteratorAt(std::vector<Plugin::Result> const& results, Zoom::Range const& globalRange, double time);
+
+        juce::String getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, double timeEpsilon);
+        juce::String getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time);
+        juce::String getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin);
+        juce::String getResultText(Accessor const& acsr, Zoom::Range const& globalRange, double time, size_t bin, double timeEpsilon);
         juce::String getProcessingTooltip(Accessor const& acsr);
     
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);

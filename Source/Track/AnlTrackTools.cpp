@@ -61,76 +61,102 @@ Vamp::RealTime Track::Tools::getEndRealTime(Plugin::Result const& rt)
     return rt.hasDuration ? rt.timestamp + rt.duration : rt.timestamp;
 }
 
-juce::String Track::Tools::getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, double timeEpsilon)
+std::vector<Plugin::Result>::const_iterator Track::Tools::getIteratorAt(std::vector<Plugin::Result> const& results, Zoom::Range const& globalRange, double time)
 {
-    auto const rt = secondsToRealTime(time - timeEpsilon);
-    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                           {
-                               return result.hasTimestamp && getEndRealTime(result) >= rt;
-                           });
+    anlWeakAssert(!globalRange.isEmpty());
+    if(globalRange.isEmpty())
+    {
+        return results.cend();
+    }
+
+    auto const timeRatioPosition = std::max(std::min((time - globalRange.getStart()) / globalRange.getLength(), 1.0), 0.0);
+    auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
+    auto const rtStart = Tools::secondsToRealTime(time);
+
+    auto const expectedIt = std::next(results.cbegin(), expectedIndex);
+    anlStrongAssert(expectedIt != results.cend());
+    auto const position = Tools::getEndRealTime(*expectedIt);
+    
+    if(position == rtStart)
+    {
+        return expectedIt;
+    }
+    else if(position >= rtStart)
+    {
+        return std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](Plugin::Result const& result)
+                            {
+                                return Tools::getEndRealTime(result) <= rtStart;
+                            })
+            .base();
+    }
+    else
+    {
+        auto const it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+                                     {
+                                         return Tools::getEndRealTime(result) >= rtStart;
+                                     });
+        if(it->timestamp > rtStart && it != results.cbegin())
+        {
+            return std::prev(it);
+        }
+        return it;
+    }
+}
+
+juce::String Track::Tools::getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, double timeEpsilon)
+{
+    auto const it = getIteratorAt(results, globalRange, time - timeEpsilon);
     if(it != results.cend() && getEndRealTime(*it) <= secondsToRealTime(time))
     {
         return it->label.empty() ? output.unit : (it->label + output.unit);
     }
-    return "";
-}
-
-juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time)
-{
-    auto const rt = secondsToRealTime(time);
-    auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                                     {
-                                         return result.hasTimestamp && getEndRealTime(result) >= rt;
-                                     });
-    if(second == results.cend())
-    {
-        return "-";
-    }
-    auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
-    if(second->timestamp <= rt && getEndRealTime(*second) >= rt)
-    {
-        if(!second->values.empty())
-        {
-            auto const label = second->label.empty() ? "" : (" (" + second->label + ")");
-            return juce::String(second->values[0], 2) + output.unit + label;
-        }
-    }
-    else if(first->timestamp <= rt && getEndRealTime(*first) >= rt)
-    {
-        if(!first->values.empty())
-        {
-            auto const label = second->label.empty() ? "" : (" (" + second->label + ")");
-            return juce::String(first->values[0], 2) + output.unit + label;
-        }
-    }
-    else if(first != second && first->hasTimestamp)
-    {
-        if(!first->values.empty() && !second->values.empty())
-        {
-            auto const start = realTimeToSeconds(getEndRealTime(*first));
-            auto const end = realTimeToSeconds(second->timestamp);
-            anlStrongAssert(end > start);
-            if(end <= start)
-            {
-                return "-";
-            }
-            auto const ratio = static_cast<float>((time - start) / (end - start));
-            auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
-            auto const label = second->label.empty() ? "" : (" (" + second->label + ")");
-            return juce::String(value, 2) + output.unit + label;
-        }
-    }
     return "-";
 }
 
-juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, double time, size_t bin)
+juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time)
 {
-    auto const rt = secondsToRealTime(time);
-    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                           {
-                               return result.hasTimestamp && getEndRealTime(result) >= rt;
-                           });
-    if(it == results.cend() || it->values.empty())
+    auto const first = getIteratorAt(results, globalRange, time);
+    if(first == results.cend())
+    {
+        return "-";
+    }
+    auto const second = std::next(first);
+    if(second == results.cend() || second->values.empty())
+    {
+        auto const value = first->values.empty() ? "-" : juce::String(first->values.at(0), 2) + output.unit;
+        auto const label = first->label.empty() ? "" : ("(" + first->label + ")");
+        return value + " " + label;
+    }
+    if(first->values.empty())
+    {
+        auto const value = second->values.empty() ? "-" : juce::String(second->values.at(0), 2) + output.unit;
+        auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
+        return value + " " + label;
+    }
+    auto const end = realTimeToSeconds(getEndRealTime(*first));
+    if(time < end)
+    {
+        auto const value = first->values.empty() ? "-" : juce::String(first->values.at(0), 2) + output.unit;
+        auto const label = first->label.empty() ? "" : ("(" + first->label + ")");
+        return value + " " + label;
+    }
+    auto const next = realTimeToSeconds(second->timestamp);
+    if(next <= end)
+    {
+        auto const value = juce::String(second->values.at(0), 2) + output.unit;
+        auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
+        return value + " " + label;
+    }
+    auto const ratio = static_cast<float>((time - end) / (next - end));
+    auto const value = juce::String((1.0f - ratio) * first->values.at(0) + ratio * second->values.at(0), 2) + output.unit;
+    auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
+    return value + " " + label;
+}
+
+juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
+{
+    auto const it = getIteratorAt(results, globalRange, time);
+    if(it != results.cend() || it->values.empty())
     {
         return "-";
     }
@@ -139,39 +165,40 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
     {
         return "-";
     }
-    auto const label = it->label.empty() ? output.unit : it->label;
-    return juce::String(it->values[bin], 2) + label;
+    auto const value = juce::String(it->values[bin], 2) + output.unit;
+    auto const label = it->label.empty() ? "" : ("(" + it->label + ")");
+    return value + " " + label;
 }
 
-juce::String Track::Tools::getResultText(Accessor const& acsr, double time, size_t bin, double timeEpsilon)
+juce::String Track::Tools::getResultText(Accessor const& acsr, Zoom::Range const& globalRange, double time, size_t bin, double timeEpsilon)
 {
     auto const results = acsr.getAttr<AttrType::results>();
-    auto const& output = acsr.getAttr<AttrType::description>().output;
-    if(results == nullptr || results->empty())
+    if(results == nullptr || results->empty() || globalRange.isEmpty())
     {
         return "-";
     }
+    auto const& output = acsr.getAttr<AttrType::description>().output;
     switch(getDisplayType(acsr))
     {
         case DisplayType::markers:
         {
-            return Tools::getMarkerText(*results, output, time, timeEpsilon);
+            return Tools::getMarkerText(*results, output, globalRange, time, timeEpsilon);
         }
         break;
         case DisplayType::segments:
         {
-            return Tools::getSegmentText(*results, output, time);
+            return Tools::getSegmentText(*results, output, globalRange, time);
         }
         break;
         case DisplayType::grid:
         {
             auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
             auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");
-            return "(" + binName + ") " + Tools::getGridText(*results, output, time, bin);
+            return "(" + binName + ") " + Tools::getGridText(*results, output, globalRange, time, bin);
         }
         break;
     }
-    anlStrongAssert(false);
+    anlWeakAssert(false);
     return "";
 }
 
