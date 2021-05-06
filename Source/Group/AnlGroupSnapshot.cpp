@@ -1,6 +1,6 @@
 #include "AnlGroupSnapshot.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "../Track/AnlTrackTools.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -12,7 +12,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
     juce::ignoreUnused(mTransportAccessor);
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
-    
+
     mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -29,13 +29,14 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case AttrType::tracks:
             {
                 removeAllChildren();
-                mTrackSnapshots.updateContents(mAccessor,
-                [this](Track::Accessor& trackAccessor)
-                {
-                    return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor);
-                },
-                nullptr);
-                
+                mTrackSnapshots.updateContents(
+                    mAccessor,
+                    [this](Track::Accessor& trackAccessor)
+                    {
+                        return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor);
+                    },
+                    nullptr);
+
                 auto const& layout = mAccessor.getAttr<AttrType::layout>();
                 auto const& group = mTrackSnapshots.getContents();
                 for(auto const& identifier : layout)
@@ -48,10 +49,10 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
                 }
                 resized();
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
