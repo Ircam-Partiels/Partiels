@@ -82,7 +82,7 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 {
     addAndMakeVisible(mSnapshot);
     setInterceptsMouseClicks(true, true);
-    
+
     mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -95,14 +95,14 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             {
                 updateTooltip(getMouseXYRelative());
             }
-                break;
+            break;
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
             case Transport::AttrType::gain:
                 break;
         }
     };
-    
+
     mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
 }
 
