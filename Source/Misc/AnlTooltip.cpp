@@ -54,7 +54,7 @@ Tooltip::BubbleWindow::BubbleWindow()
 : juce::Component("TooltipBubbleWindow")
 {
     setAlwaysOnTop(true);
-    setOpaque(true);
+    setOpaque(false);
 
     if(juce::Desktop::getInstance().getMainMouseSource().canHover())
     {
