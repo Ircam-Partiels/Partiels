@@ -339,13 +339,8 @@ bool Document::Director::removeTrack(juce::String const identifier, Notification
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     for(auto& groupAcsr : groupAcsrs)
     {
-        auto gIds = groupAcsr.get().getAttr<Group::AttrType::layout>();
-#ifdef __cpp_lib_erase_if
-        std::erase(gIds, identifier);
-#else
-        gIds.erase(std::remove(gIds.begin(), gIds.end(), identifier), gIds.end());
-#endif
-        groupAcsr.get().setAttr<Group::AttrType::layout>(gIds, NotificationType::synchronous);
+        auto const groupLayout = copy_with_erased(groupAcsr.get().getAttr<Group::AttrType::layout>(), identifier);
+        groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, NotificationType::synchronous);
     }
 
     auto const index = static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
@@ -425,12 +420,8 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::Str
         {
             return false;
         }
-        auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
-#ifdef __cpp_lib_erase_if
-        std::erase(layout, trackIdentifier);
-#else
-        layout.erase(std::remove(layout.begin(), layout.end(), trackIdentifier), layout.end());
-#endif
+
+        auto const layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
         groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
     }
 
@@ -516,19 +507,10 @@ void Document::Director::sanitize(NotificationType const notification)
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
         for(auto groupAcsr : groupAcsrs)
         {
-            auto groupLayout = groupAcsr.get().getAttr<Group::AttrType::layout>();
-#ifdef __cpp_lib_erase_if
-            std::erase_if(groupLayout, [&](auto const identifier)
-                          {
-                              return !Tools::hasTrackAcsr(mAccessor, identifier);
-                          });
-#else
-            groupLayout.erase(std::remove_if(groupLayout.begin(), groupLayout.end(), [&](auto const identifier)
-                                             {
-                                                 return !Tools::hasTrackAcsr(mAccessor, identifier);
-                                             }),
-                              groupLayout.end());
-#endif
+            auto const groupLayout = copy_with_erased_if(groupAcsr.get().getAttr<Group::AttrType::layout>(), [&](auto const identifier)
+                                                         {
+                                                             return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                                         });
             anlWeakAssert(groupAcsr.get().getAttr<Group::AttrType::layout>().size() == groupLayout.size());
             groupAcsr.get().setAttr<Group::AttrType::layout>(groupLayout, notification);
         }
@@ -563,12 +545,7 @@ void Document::Director::sanitize(NotificationType const notification)
                 anlStrongAssert(groupIt != groupAcsrs.end());
                 if(groupIt != groupAcsrs.end())
                 {
-                    auto groupLayout = groupIt->get().getAttr<Group::AttrType::layout>();
-#ifdef __cpp_lib_erase_if
-                    std::erase(groupLayout, trackIdentifier);
-#else
-                    groupLayout.erase(std::remove(groupLayout.begin(), groupLayout.end(), trackIdentifier), groupLayout.end());
-#endif
+                    auto const groupLayout = copy_with_erased(groupIt->get().getAttr<Group::AttrType::layout>(), trackIdentifier);
                     groupIt->get().setAttr<Group::AttrType::layout>(groupLayout, notification);
                     --numGroupds;
                 }
@@ -578,21 +555,11 @@ void Document::Director::sanitize(NotificationType const notification)
 
     // Ensures that document's layout is valid
     {
-        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-        auto layout = mAccessor.getAttr<AttrType::layout>();
-        anlWeakAssert(groupAcsrs.size() == layout.size());
-#ifdef __cpp_lib_erase_if
-        std::erase_if(layout, [&](auto const identifier)
-                      {
-                          return !Tools::hasGroupAcsr(mAccessor, identifier);
-                      });
-#else
-        layout.erase(std::remove_if(layout.begin(), layout.end(), [&](auto const identifier)
-                                    {
-                                        return !Tools::hasGroupAcsr(mAccessor, identifier);
-                                    }),
-                     layout.end());
-#endif
+        anlWeakAssert(mAccessor.getNumAcsr<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
+        auto const layout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const identifier)
+                                                {
+                                                    return !Tools::hasGroupAcsr(mAccessor, identifier);
+                                                });
         mAccessor.setAttr<AttrType::layout>(layout, notification);
     }
 

@@ -66,12 +66,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
     mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
     {
         mDirector.startAction();
-        auto layout = mAccessor.getAttr<AttrType::layout>();
-#ifdef __cpp_lib_erase_if
-        std::erase(layout, identifier);
-#else
-        layout.erase(std::remove(layout.begin(), layout.end(), identifier), layout.end());
-#endif
+        auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
         layout.insert(layout.begin() + static_cast<long>(index), identifier);
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
