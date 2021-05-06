@@ -386,11 +386,14 @@ bool Document::Director::removeGroup(juce::String const identifier, Notification
         return false;
     }
 
-    auto const layout = it->get().getAttr<Group::AttrType::layout>();
-    for(auto const& tarckIdentifier : layout)
+    auto const groupLayout = it->get().getAttr<Group::AttrType::layout>();
+    for(auto const& tarckIdentifier : groupLayout)
     {
         removeTrack(tarckIdentifier, notification);
     }
+
+    auto const layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
+    mAccessor.setAttr<AttrType::layout>(layout, notification);
 
     auto const index = static_cast<size_t>(std::distance(groupAcsrs.cbegin(), it));
     mAccessor.eraseAcsr<AcsrType::groups>(index, notification);
