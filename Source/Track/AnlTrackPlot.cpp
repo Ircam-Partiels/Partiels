@@ -84,6 +84,12 @@ void Track::Plot::paint(juce::Graphics& g)
         return;
     }
 
+    auto const& globalRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
+    if(globalRange.isEmpty())
+    {
+        return;
+    }
+
     auto const& timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
