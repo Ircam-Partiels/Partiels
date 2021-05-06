@@ -1,6 +1,6 @@
 #include "AnlGroupPlot.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "../Track/AnlTrackTools.h"
+#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -14,7 +14,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
     juce::ignoreUnused(mTimeZoomAccessor);
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
-    
+
     mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -31,12 +31,14 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case AttrType::tracks:
             {
                 removeAllChildren();
-                mTrackPlots.updateContents(mAccessor,
-                [this](Track::Accessor& trackAccessor)
-                {
-                    return std::make_unique<Track::Plot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
-                }, nullptr);
-                
+                mTrackPlots.updateContents(
+                    mAccessor,
+                    [this](Track::Accessor& trackAccessor)
+                    {
+                        return std::make_unique<Track::Plot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+                    },
+                    nullptr);
+
                 auto const& layout = mAccessor.getAttr<AttrType::layout>();
                 auto const& group = mTrackPlots.getContents();
                 for(auto const& identifier : layout)
@@ -49,10 +51,10 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
                 }
                 resized();
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -87,7 +89,7 @@ Group::Plot::Overlay::Overlay(Plot& plot)
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
     addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
-    
+
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -100,12 +102,12 @@ Group::Plot::Overlay::Overlay(Plot& plot)
             {
                 updateTooltip(getMouseXYRelative());
             }
-                break;
+            break;
             case Zoom::AttrType::anchor:
                 break;
         }
     };
-    
+
     mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
 }
 
