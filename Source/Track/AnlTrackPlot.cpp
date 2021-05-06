@@ -1,6 +1,6 @@
 #include "AnlTrackPlot.h"
-#include "AnlTrackTools.h"
 #include "../Zoom/AnlZoomTools.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,28 +34,28 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             {
                 repaint();
             }
-                break;
+            break;
         }
     };
-    
+
     mValueZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
     };
-    
+
     mBinZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
     };
-    
+
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         repaint();
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
@@ -77,13 +77,13 @@ void Track::Plot::paint(juce::Graphics& g)
     {
         return;
     }
-    
+
     auto const bounds = getLocalBounds();
     if(bounds.isEmpty())
     {
         return;
     }
-    
+
     auto const& timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
@@ -143,12 +143,12 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
             {
                 it = std::exchange(next, std::next(next));
             }
-            
+
             auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*it));
             auto const x2 = Tools::secondsToPixel(end, timeRange, bounds);
             auto const w = Tools::secondsToPixel(end, timeRange, bounds) - x1;
             rectangles.addWithoutMerging({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
-            
+
             if(showLabel && !it->label.empty() && (labels.empty() || static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
             {
                 auto const text = juce::String(it->label) + unit;
@@ -159,22 +159,22 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
         }
         it = std::next(it);
     }
-    
+
     if(!colours.shadow.isTransparent())
     {
         rectangles.offsetAll(-2.0f, 0.0f);
-        
+
         g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
-        
+
         g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
         g.fillRectList(rectangles);
         rectangles.offsetAll(1.0f, 0.0f);
     }
     g.setColour(colours.foreground);
     g.fillRectList(rectangles);
-    
+
     if(showLabel)
     {
         g.setColour(colours.text);
@@ -221,7 +221,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     labelInfo labelInfoLow;
     labelInfo labelInfoHigh;
     std::vector<labelInfo> labels;
-    
+
     auto const font = g.getCurrentFont();
     auto const fontAscent = font.getAscent();
     auto const fontDescent = font.getDescent();
@@ -234,13 +234,13 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         }
         auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
         auto canInsertLow = !std::get<0>(labelInfoLow).isEmpty() && x > std::get<1>(labelInfoLow) + std::get<2>(labelInfoLow) + 2;
-        
+
         if(canInsertHight && canInsertLow && labelInfoHigh == labelInfoLow)
         {
             canInsertHight = y >= std::get<3>(labelInfoHigh);
             canInsertLow = !canInsertHight;
         }
-        
+
         if(canInsertHight)
         {
             if(labelInfoHigh == labelInfoLow)
@@ -257,7 +257,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto const textWidth = font.getStringWidth(text) + 2;
             labelInfoHigh = std::make_tuple(text, x, textWidth, y);
         }
-        
+
         if(canInsertLow)
         {
             if(labelInfoLow == labelInfoHigh)
@@ -275,7 +275,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             labelInfoLow = std::make_tuple(text, x, textWidth, y);
         }
     };
-    
+
     auto shouldStartSubPath = true;
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != results.cend())
@@ -295,19 +295,19 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto const limit = end + minDiffTime;
             auto const value = it->values[0];
             auto const x = Tools::secondsToPixel(Tools::realTimeToSeconds(it->timestamp), timeRange, bounds);
-            
+
             auto min = value;
             auto max = value;
             auto const next = std::prev(std::find_if(std::next(it), results.cend(), [&](Plugin::Result const& result)
-            {
-                if(result.values.empty() || !result.hasTimestamp || result.timestamp >= limit)
-                {
-                    return true;
-                }
-                min = std::min(min, result.values[0]);
-                max = std::max(max, result.values[0]);
-                return false;
-            }));
+                                                     {
+                                                         if(result.values.empty() || !result.hasTimestamp || result.timestamp >= limit)
+                                                         {
+                                                             return true;
+                                                         }
+                                                         min = std::min(min, result.values[0]);
+                                                         max = std::max(max, result.values[0]);
+                                                         return false;
+                                                     }));
             if(it != next)
             {
                 auto const nend = Tools::getEndRealTime(*next);
@@ -370,11 +370,11 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         if(!colours.shadow.isTransparent())
         {
             rectangles.offsetAll(0.0f, 2.0f);
-            
+
             g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
             g.fillRectList(rectangles);
             rectangles.offsetAll(0.0f, -1.0f);
-            
+
             g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
             g.fillRectList(rectangles);
             rectangles.offsetAll(0.0f, -1.0f);
@@ -396,7 +396,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         g.setColour(colours.foreground);
         g.fillPath(path);
     }
-    
+
     if(showLabel)
     {
         g.setColour(colours.text);
@@ -413,17 +413,17 @@ void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bound
     {
         return;
     }
-    
+
     auto renderImage = [&](juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
     {
         if(!image.isValid())
         {
             return;
         }
-        
+
         using PixelRange = juce::Range<int>;
         using ZoomRange = Zoom::Range;
-        
+
         // Gets the visible zoom range of a zoom accessor and inverses it if necessary
         auto const getZoomRange = [](Zoom::Accessor const& zoomAcsr, bool inverted)
         {
@@ -433,9 +433,9 @@ void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bound
             }
             auto const& globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             auto const& visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            return ZoomRange{globalRange.getEnd() - visibleRange.getEnd() + globalRange.getStart(), globalRange.getEnd() - visibleRange.getStart()+ globalRange.getStart()};
+            return ZoomRange{globalRange.getEnd() - visibleRange.getEnd() + globalRange.getStart(), globalRange.getEnd() - visibleRange.getStart() + globalRange.getStart()};
         };
-        
+
         // Gets the visible zoom range equivalent to the graphics clip bounds
         auto const clipZoomRange = [](PixelRange const& global, PixelRange const& visible, ZoomRange const& zoom)
         {
@@ -444,7 +444,7 @@ void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bound
             auto const x2 = static_cast<double>(visible.getEnd() - global.getStart()) * ratio + zoom.getStart();
             return ZoomRange{x1, x2};
         };
-        
+
         // Converts the visible zoom range to image range
         auto toImageRange = [](ZoomRange const& globalRange, ZoomRange const& visibleRange, int imageSize)
         {
@@ -461,7 +461,7 @@ void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bound
             };
             return juce::Range<float>{scaleValue(visibleRange.getStart()), scaleValue(visibleRange.getEnd())};
         };
-        
+
         // Draws a range of an image
         auto drawImage = [&](juce::Rectangle<float> const& rectangle)
         {
@@ -476,27 +476,27 @@ void Track::Plot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bound
             anlWeakAssert(deltaY <= 0);
             auto const scaleX = graphicsBounds.getWidth() / rectangle.getWidth();
             auto const scaleY = graphicsBounds.getHeight() / rectangle.getHeight();
-            
+
             g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
             g.drawImageTransformed(clippedImage, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
         };
-        
+
         auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
-        
+
         auto const xClippedRange = clipZoomRange(bounds.getHorizontalRange(), clipBounds.getHorizontalRange(), getZoomRange(xZoomAcsr, false));
         auto const xRange = toImageRange(xZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), xClippedRange, image.getWidth());
-        
+
         auto const yClippedRange = clipZoomRange(bounds.getVerticalRange(), clipBounds.getVerticalRange(), getZoomRange(yZoomAcsr, true));
         auto const yRange = toImageRange(yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), yClippedRange, image.getHeight());
-        
+
         drawImage({xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()});
     };
-    
+
     auto getZoomRatio = [](Zoom::Accessor const& acsr)
     {
         return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
     };
-    
+
     auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
     auto const binZoomRatio = getZoomRatio(binZoomAcsr);
     auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
@@ -523,7 +523,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
     addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
-    
+
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -546,12 +546,12 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             {
                 setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
             }
-                break;
+            break;
             case AttrType::processing:
                 break;
         }
     };
-    
+
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -564,12 +564,12 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             {
                 updateTooltip(getMouseXYRelative());
             }
-                break;
+            break;
             case Zoom::AttrType::anchor:
                 break;
         }
     };
-    
+
     mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }

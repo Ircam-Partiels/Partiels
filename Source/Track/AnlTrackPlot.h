@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnlTrackModel.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
+#include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -13,10 +13,10 @@ namespace Track
     public:
         Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
         ~Plot() override;
-        
+
         // juce::Component
         void paint(juce::Graphics& g) override;
-        
+
         class Overlay
         : public juce::Component
         , public Tooltip::BubbleClient
@@ -24,17 +24,17 @@ namespace Track
         public:
             Overlay(Plot& plot);
             ~Overlay() override;
-            
+
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
             void mouseMove(juce::MouseEvent const& event) override;
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
-            
+
         private:
             void updateTooltip(juce::Point<int> const& pt);
-            
+
             Plot& mPlot;
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
@@ -42,7 +42,7 @@ namespace Track
             Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadBar mTransportPlayheadBar;
         };
-        
+
     private:
         static void paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange);
         
@@ -58,6 +58,6 @@ namespace Track
         Zoom::Accessor::Listener mBinZoomListener;
         Accessor::Listener mListener;
     };
-}
+} // namespace Track
 
 ANALYSE_FILE_END
