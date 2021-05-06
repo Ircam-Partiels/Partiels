@@ -99,16 +99,17 @@ void Track::Plot::paint(juce::Graphics& g)
         {
             paintMarkers(g, bounds.toFloat(), colours, output.unit, *resultsPtr, mTimeZoomAccessor);
         }
+        break;
         case Tools::DisplayType::segments:
         {
             paintSegments(g, bounds.toFloat(), colours, output.unit, *resultsPtr, mTimeZoomAccessor, valueRange);
         }
-            break;
+        break;
         case Tools::DisplayType::grid:
         {
             paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), mTimeZoomAccessor, mAccessor.getAcsr<AcsrType::binZoom>());
         }
-            break;
+        break;
     }
 }
 
@@ -379,7 +380,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             hasExceededEnd = end >= rtEnd;
         }
     }
-    
+
     if(!rectangles.isEmpty())
     {
         if(!colours.shadow.isTransparent())
