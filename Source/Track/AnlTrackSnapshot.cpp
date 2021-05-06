@@ -74,6 +74,12 @@ void Track::Snapshot::paint(juce::Graphics& g)
     {
         return;
     }
+    
+    auto const& globalRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
+    if(globalRange.isEmpty())
+    {
+        return;
+    }
 
     auto const time = mAccessor.getAttr<AttrType::time>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
@@ -81,12 +87,12 @@ void Track::Snapshot::paint(juce::Graphics& g)
     {
         case Tools::DisplayType::markers:
         {
-            paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time);
+            paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, mTimeZoomAccessor, time);
         }
         break;
         case Tools::DisplayType::segments:
         {
-            paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, time, valueRange);
+            paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, mTimeZoomAccessor, time, valueRange);
         }
         break;
         case Tools::DisplayType::grid:
@@ -97,38 +103,18 @@ void Track::Snapshot::paint(juce::Graphics& g)
     }
 }
 
-void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time)
+void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, double time)
 {
-    auto const rt = Tools::secondsToRealTime(time);
-    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                           {
-                               return result.hasTimestamp && Tools::getEndRealTime(result) >= rt;
-                           });
-    if(it != results.cend() && Tools::getEndRealTime(*it) <= rt)
+    auto const it = Tools::getIteratorAt(results, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), time);
+    if(it != results.cend() && Tools::realTimeToSeconds(Tools::getEndRealTime(*it)) >= time)
     {
         g.setColour(colour);
         g.fillRect(bounds);
     }
 }
 
-void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, double time, juce::Range<double> const& valueRange)
+void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, double time, juce::Range<double> const& valueRange)
 {
-    anlWeakAssert(!valueRange.isEmpty());
-    if(valueRange.isEmpty())
-    {
-        return;
-    }
-
-    auto const rt = Tools::secondsToRealTime(time);
-    auto const second = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-                                     {
-                                         return result.hasTimestamp && Tools::getEndRealTime(result) >= rt;
-                                     });
-    if(second == results.cend())
-    {
-        return;
-    }
-
     auto const clipBounds = g.getClipBounds().toFloat();
     auto paintLineWithShadow = [&](float const y)
     {
@@ -142,37 +128,41 @@ void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> con
         g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
     };
 
-    auto const first = second != results.cbegin() ? std::prev(second) : results.cbegin();
-    if(second->timestamp <= rt && Tools::getEndRealTime(*second) >= rt)
+    auto const first = Tools::getIteratorAt(results, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), time);
+    if(first == results.cend())
     {
-        if(!second->values.empty())
-        {
-            paintLineWithShadow(Tools::valueToPixel(second->values[0], valueRange, bounds));
-        }
+        return;
     }
-    else if(first->timestamp <= rt && Tools::getEndRealTime(*first) >= rt)
+    auto const second = std::next(first);
+    if(second == results.cend() || second->values.empty())
     {
-        if(!first->values.empty())
+        if(first->values.empty())
         {
-            paintLineWithShadow(Tools::valueToPixel(first->values[0], valueRange, bounds));
+            return;
         }
+        paintLineWithShadow(Tools::valueToPixel(first->values.at(0), valueRange, bounds));
+        return;
     }
-    else if(first != second && first->hasTimestamp)
+    if(first->values.empty())
     {
-        if(!first->values.empty() && !second->values.empty())
-        {
-            auto const start = Tools::realTimeToSeconds(Tools::getEndRealTime(*first));
-            auto const end = Tools::realTimeToSeconds(second->timestamp);
-            anlStrongAssert(end > start);
-            if(end <= start)
-            {
-                return;
-            }
-            auto const ratio = static_cast<float>((time - start) / (end - start));
-            auto const value = (1.0f - ratio) * first->values[0] + ratio * second->values[0];
-            paintLineWithShadow(Tools::valueToPixel(value, valueRange, bounds));
-        }
+        paintLineWithShadow(Tools::valueToPixel(second->values.at(0), valueRange, bounds));
+        return;
     }
+    auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*first));
+    if(time < end)
+    {
+        paintLineWithShadow(Tools::valueToPixel(first->values.at(0), valueRange, bounds));
+        return;
+    }
+    auto const next = Tools::realTimeToSeconds(second->timestamp);
+    if(next <= end)
+    {
+        paintLineWithShadow(Tools::valueToPixel(second->values.at(0), valueRange, bounds));
+        return;
+    }
+    auto const ratio = static_cast<float>((time - end) / (next - end));
+    auto const value = (1.0f - ratio) * first->values.at(0) + ratio * second->values.at(0);
+    paintLineWithShadow(Tools::valueToPixel(value, valueRange, bounds));
 }
 
 void Track::Snapshot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, double time, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr)
