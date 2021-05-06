@@ -90,7 +90,6 @@ void Track::Plot::paint(juce::Graphics& g)
         return;
     }
 
-    auto const& timeRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
     auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
     auto const& colours = mAccessor.getAttr<AttrType::colours>();
     auto const& output = mAccessor.getAttr<AttrType::description>().output;
@@ -102,7 +101,7 @@ void Track::Plot::paint(juce::Graphics& g)
         }
         case Tools::DisplayType::segments:
         {
-            paintSegments(g, bounds.toFloat(), colours, output.unit, *resultsPtr, timeRange, valueRange);
+            paintSegments(g, bounds.toFloat(), colours, output.unit, *resultsPtr, mTimeZoomAccessor, valueRange);
         }
             break;
         case Tools::DisplayType::grid:
@@ -184,7 +183,7 @@ void Track::Plot::paintMarkers(juce::Graphics& g, juce::Rectangle<float> const& 
     }
 }
 
-void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange)
+void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const& bounds, ColourSet const& colours, juce::String const& unit, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, juce::Range<double> const& valueRange)
 {
     anlWeakAssert(!valueRange.isEmpty());
     if(valueRange.isEmpty())
@@ -195,27 +194,20 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     {
         return;
     }
-    auto constexpr epsilonPixel = 2.0f;
-    auto const clipBounds = g.getClipBounds().toFloat();
-    auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, bounds);
-    auto const clipTimeEnd = Tools::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, bounds);
-    auto const rtStart = Tools::secondsToRealTime(clipTimeStart);
+
+    auto constexpr epsilonPixel = 1.0f;
+    auto const& globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+    auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(g.getClipBounds().getX()) - epsilonPixel, timeRange, bounds);
+    auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(g.getClipBounds().getRight()) + epsilonPixel, timeRange, bounds);
     auto const rtEnd = Tools::secondsToRealTime(clipTimeEnd);
-    
-    // Find the first result that is inside the clip bounds
-    auto it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
-    {
-        return result.hasTimestamp && Tools::getEndRealTime(result) >= rtStart;
-    });
-    if(it->timestamp > rtStart && it != results.cbegin())
-    {
-        it = std::prev(it);
-    }
-    
+
+    auto it = Tools::getIteratorAt(results, globalRange, clipTimeStart);
+
     // Time distance corresponding to epsilon pixels
     auto const minDiffTime = Tools::secondsToRealTime(static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth()));
     juce::Path path;
-    juce::RectangleList<float> rectangles;
+    juce::RectangleList<int> rectangles;
     using labelInfo = std::tuple<juce::String, int, int, float>;
     labelInfo labelInfoLow;
     labelInfo labelInfoHigh;
@@ -224,13 +216,8 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     auto const font = g.getCurrentFont();
     auto const fontAscent = font.getAscent();
     auto const fontDescent = font.getDescent();
-    auto const showLabel = !colours.text.isTransparent();
-    auto insertLabelIfPossible = [&](int x, float y, float value, std::string const& label)
+    auto insertLabel = [&](int x, float y, float value, std::string const& label)
     {
-        if(!showLabel)
-        {
-            return;
-        }
         auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
         auto canInsertLow = !std::get<0>(labelInfoLow).isEmpty() && x > std::get<1>(labelInfoLow) + std::get<2>(labelInfoLow) + 2;
 
@@ -275,18 +262,19 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
         }
     };
 
+    auto const showLabel = !colours.text.isTransparent();
     auto shouldStartSubPath = true;
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != results.cend())
     {
-        if(!it->hasTimestamp)
-        {
-            it = std::next(it);
-        }
-        else if(it->values.empty())
+        if(it->values.empty())
         {
             shouldStartSubPath = true;
-            it = std::next(it);
+            it = std::find_if(std::next(it), results.cend(), [&](Plugin::Result const& result)
+                              {
+                                  return !result.values.empty();
+                              });
+            hasExceededEnd = it == results.cend() || Tools::getEndRealTime(*it) >= rtEnd;
         }
         else if(!it->hasDuration || it->duration < minDiffTime)
         {
@@ -295,28 +283,50 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto const value = it->values[0];
             auto const x = Tools::secondsToPixel(Tools::realTimeToSeconds(it->timestamp), timeRange, bounds);
 
-            auto min = value;
-            auto max = value;
-            auto const next = std::prev(std::find_if(std::next(it), results.cend(), [&](Plugin::Result const& result)
-                                                     {
-                                                         if(result.values.empty() || !result.hasTimestamp || result.timestamp >= limit)
-                                                         {
-                                                             return true;
-                                                         }
-                                                         min = std::min(min, result.values[0]);
-                                                         max = std::max(max, result.values[0]);
-                                                         return false;
-                                                     }));
+            auto getNextItBeforeTime = [](decltype(it) _start, decltype(it) _end, Vamp::RealTime const& l)
+            {
+                float min = _start->values[0];
+                float max = min;
+                _start = std::next(_start);
+                while(_start != _end)
+                {
+                    if(_start->timestamp >= l)
+                    {
+                        return std::make_tuple(std::prev(_start), min, max);
+                    }
+                    if(!_start->values.empty())
+                    {
+                        auto const& lvalue = _start->values.at(0);
+                        min = std::min(min, lvalue);
+                        max = std::max(max, lvalue);
+                    }
+                    ++_start;
+                }
+                return std::make_tuple(std::prev(_start), min, max);
+            };
+            auto const nextResult = getNextItBeforeTime(it, results.cend(), limit);
+            auto const next = std::get<0>(nextResult);
+            auto const min = std::get<1>(nextResult);
+            auto const max = std::get<2>(nextResult);
+
             if(it != next)
             {
                 auto const nend = Tools::getEndRealTime(*next);
-                auto const x2 = Tools::secondsToPixel(Tools::realTimeToSeconds(nend), timeRange, bounds);
-                auto const y1 = Tools::valueToPixel(min, valueRange, bounds);
-                auto const y2 = Tools::valueToPixel(max, valueRange, bounds);
-                rectangles.addWithoutMerging({x, y2, std::max(x2 - x, 1.0f), std::max(y1 - y2, 1.0f)});
-                insertLabelIfPossible(static_cast<int>(x), y1, min, it->label);
-                insertLabelIfPossible(static_cast<int>(x), y2, max, it->label);
-                
+                auto const x2 = static_cast<int>(Tools::secondsToPixel(Tools::realTimeToSeconds(nend), timeRange, bounds));
+                auto const y1 = static_cast<int>(Tools::valueToPixel(min, valueRange, bounds));
+                auto const y2 = static_cast<int>(Tools::valueToPixel(max, valueRange, bounds));
+                if(!shouldStartSubPath)
+                {
+                    path.lineTo(x, y1);
+                }
+
+                rectangles.addWithoutMerging({static_cast<int>(x), y2, std::max(x2 - static_cast<int>(x), 1), std::max(y1 - y2, 1)});
+                if(showLabel)
+                {
+                    insertLabel(static_cast<int>(x), y1, min, it->label);
+                    insertLabel(static_cast<int>(x), y2, max, it->label);
+                }
+
                 shouldStartSubPath = true;
                 hasExceededEnd = nend >= rtEnd;
                 it = next;
@@ -324,7 +334,10 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             else
             {
                 auto const y = Tools::valueToPixel(value, valueRange, bounds);
-                insertLabelIfPossible(static_cast<int>(x), y, value, it->label);
+                if(showLabel)
+                {
+                    insertLabel(static_cast<int>(x), y, value, it->label);
+                }
                 if(std::exchange(shouldStartSubPath, false))
                 {
                     path.startNewSubPath(x, y);
@@ -347,7 +360,10 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
             auto const value = it->values[0];
             auto const x = Tools::secondsToPixel(Tools::realTimeToSeconds(it->timestamp), timeRange, bounds);
             auto const y = Tools::valueToPixel(value, valueRange, bounds);
-            insertLabelIfPossible(static_cast<int>(x), y, value, it->label);
+            if(showLabel)
+            {
+                insertLabel(static_cast<int>(x), y, value, it->label);
+            }
             if(std::exchange(shouldStartSubPath, false))
             {
                 path.startNewSubPath(x, y);
