@@ -390,7 +390,7 @@ void Track::Plot::paintSegments(juce::Graphics& g, juce::Rectangle<float> const&
     }
     if(!path.isEmpty())
     {
-        juce::PathStrokeType pathStrokeType(1.0f);
+        juce::PathStrokeType const pathStrokeType(1.0f);
         pathStrokeType.createStrokedPath(path, path);
         if(!colours.shadow.isTransparent())
         {
