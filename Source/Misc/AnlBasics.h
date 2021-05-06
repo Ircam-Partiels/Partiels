@@ -120,3 +120,27 @@ template <std::size_t... Is>
 constexpr auto index_sequence_reverse(std::index_sequence<Is...> const&) -> decltype(std::index_sequence<sizeof...(Is) - 1U - Is...>{});
 template <std::size_t N>
 using make_index_sequence_reverse = decltype(index_sequence_reverse(std::make_index_sequence<N>{}));
+
+template <typename T>
+std::vector<T> copy_with_erased(std::vector<T> const& v, T const& e)
+{
+    auto copy = v;
+#ifdef __cpp_lib_erase_if
+    std::erase(copy, e);
+#else
+    copy.erase(std::remove(copy.begin(), copy.end(), y), copy.end());
+#endif
+    return copy;
+}
+
+template <typename T, class Predicate>
+std::vector<T> copy_with_erased_if(std::vector<T> const& v, Predicate predicate)
+{
+    auto copy = v;
+#ifdef __cpp_lib_erase_if
+    std::erase_if(copy, predicate);
+#else
+    copy.erase(std::remove_if(copy.begin(), copy.end(), predicate), copy.end());
+#endif
+    return copy;
+}
