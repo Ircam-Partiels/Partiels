@@ -17,8 +17,8 @@ namespace Document
 
         static Document::AttrContainer const& getDefaultContainer();
 
-        juce::Result saveBackup(juce::File const& file);
         juce::Result loadBackup(juce::File const& file);
+        juce::Result saveBackup(juce::File const& file);
 
     protected:
         // juce::FileBasedDocument
