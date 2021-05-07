@@ -107,7 +107,7 @@ juce::String Document::FileBased::getDocumentTitle()
 juce::Result Document::FileBased::loadDocument(juce::File const& file)
 {
     auto xml = juce::XmlDocument::parse(file);
-    if(xml == nullptr)
+    if(xml == nullptr || !xml->hasTagName("document"))
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
@@ -138,7 +138,7 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
 juce::Result Document::FileBased::loadBackup(juce::File const& file)
 {
     auto xml = juce::XmlDocument::parse(file);
-    if(xml == nullptr)
+    if(xml == nullptr || !xml->hasTagName("document"))
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
