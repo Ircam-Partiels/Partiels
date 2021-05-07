@@ -194,7 +194,10 @@ void Application::Instance::openFile(juce::File const& file)
     }
     else if(getFileExtension() == fileExtension)
     {
-        mDocumentFileBased.loadFrom(file, true);
+        if(!mDocumentFileBased.loadFrom(file, true))
+        {
+            return;
+        }
         mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
         auto const& documentAcsr = getDocumentAccessor();
         if(documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty())
