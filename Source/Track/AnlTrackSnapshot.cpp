@@ -87,7 +87,7 @@ void Track::Snapshot::paint(juce::Graphics& g)
     {
         case Tools::DisplayType::markers:
         {
-            paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, mTimeZoomAccessor, time);
+            //paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, mTimeZoomAccessor, time);
         }
         break;
         case Tools::DisplayType::segments:
