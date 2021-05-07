@@ -138,6 +138,7 @@ void Application::Instance::systemRequestedQuit()
     {
         return;
     }
+    mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(mDocumentFileBased.getFile(), NotificationType::synchronous);
 
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
@@ -190,7 +191,6 @@ void Application::Instance::openFile(juce::File const& file)
     {
         mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
         mDocumentFileBased.setFile(file);
-        mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     }
     else if(getFileExtension() == fileExtension)
     {
@@ -198,24 +198,12 @@ void Application::Instance::openFile(juce::File const& file)
         {
             return;
         }
-        mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
-        auto const& documentAcsr = getDocumentAccessor();
-        if(documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty())
-        {
-            mApplicationCommandManager.invokeDirectly(CommandTarget::CommandIDs::EditNewTrack, false);
-        }
     }
     else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
     {
         mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
         mDocumentAccessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
-        mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(juce::File{}, NotificationType::synchronous);
-        auto const& documentAcsr = getDocumentAccessor();
-        if(documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty())
-        {
-            mApplicationCommandManager.invokeDirectly(CommandTarget::CommandIDs::EditNewTrack, false);
-        }
     }
     else
     {
