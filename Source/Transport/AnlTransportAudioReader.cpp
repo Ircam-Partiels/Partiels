@@ -108,7 +108,8 @@ void Transport::AudioReader::Source::setGain(float gain)
 void Transport::AudioReader::Source::setStartPlayheadPosition(double position)
 {
     auto const sampleRate = mAudioFormatReader->sampleRate > 0.0 ? mAudioFormatReader->sampleRate : 44100.0;
-    mStartPosition.store(static_cast<juce::int64>(std::round(position * sampleRate)));
+    auto const limit = static_cast<juce::int64>(mAudioFormatReader->lengthInSamples - 1);
+    mStartPosition.store(std::min(static_cast<juce::int64>(std::round(position * sampleRate)), limit));
 }
 
 void Transport::AudioReader::Source::setLooping(bool shouldLoop)
