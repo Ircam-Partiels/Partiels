@@ -18,20 +18,15 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setEditable(false);
-                auto* audioFormat = mAudioFormatManager.findFormatForFileExtension(file.getFileExtension());
-                if(audioFormat == nullptr)
-                {
-                    resized();
-                    return;
-                }
-                mPanelFileFormat.entry.setText(audioFormat->getFormatName(), juce::NotificationType::dontSendNotification);
-                mPanelFileFormat.entry.setEditable(false);
-                auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormat->createReaderFor(file.createInputStream().release(), true));
+                
+                auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
                 if(audioFormatReader == nullptr)
                 {
                     resized();
                     return;
                 }
+                mPanelFileFormat.entry.setText(audioFormatReader->getFormatName(), juce::NotificationType::dontSendNotification);
+                mPanelFileFormat.entry.setEditable(false);
                 mPanelSampleRate.entry.setText(juce::String(audioFormatReader->sampleRate, 1) + "Hz", juce::NotificationType::dontSendNotification);
                 mPanelSampleRate.entry.setEditable(false);
                 mPanelBitPerSample.entry.setText(juce::String(audioFormatReader->bitsPerSample) + " (" + (audioFormatReader->usesFloatingPointData ? "float" : "int") + ")", juce::NotificationType::dontSendNotification);
