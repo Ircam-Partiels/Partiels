@@ -71,7 +71,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::DocumentConsolidate);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::DocumentOpenTemplate);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentSaveTemplate);
     }
     else if(menuName == "Edit")
     {

@@ -93,7 +93,6 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::DocumentDuplicate
         , CommandIDs::DocumentConsolidate
         , CommandIDs::DocumentOpenTemplate
-        , CommandIDs::DocumentSaveTemplate
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
@@ -161,12 +160,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Open Template..."), juce::translate("Open a template"), "Application", 0);
             result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-        break;
-        case CommandIDs::DocumentSaveTemplate:
-        {
-            result.setInfo(juce::translate("Save Template..."), juce::translate("Save as a template"), "Application", 0);
-            result.setActive(!documentAcsr.getAcsrs<Document::AcsrType::tracks>().empty());
         }
         break;
 
@@ -349,10 +342,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
         case CommandIDs::DocumentConsolidate:
-        case CommandIDs::DocumentOpenTemplate:
-        case CommandIDs::DocumentSaveTemplate:
         {
             showUnsupportedAction();
+            return true;
+        }
+        case CommandIDs::DocumentOpenTemplate:
+        {
             return true;
         }
 

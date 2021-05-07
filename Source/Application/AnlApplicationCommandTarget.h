@@ -23,7 +23,6 @@ namespace Application
             , DocumentDuplicate
             , DocumentConsolidate
             , DocumentOpenTemplate
-            , DocumentSaveTemplate
             
             , EditUndo
             , EditRedo
