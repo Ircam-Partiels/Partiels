@@ -637,14 +637,19 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     }
     auto const& fileBased = Instance::get().getDocumentFileBased();
     anlStrongAssert(source == &fileBased);
+    if(source != &fileBased)
+    {
+        return;
+    }
 
+    auto& acsr = Instance::get().getApplicationAccessor();
     auto const file = fileBased.getFile();
-    Instance::get().getApplicationAccessor().setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
+    acsr.setAttr<AttrType::currentDocumentFile>(file, NotificationType::synchronous);
     if(file.existsAsFile())
     {
-        auto list = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
+        auto list = acsr.getAttr<AttrType::recentlyOpenedFilesList>();
         list.insert(list.begin(), file);
-        Instance::get().getApplicationAccessor().setAttr<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
+        acsr.setAttr<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
     }
 }
 
