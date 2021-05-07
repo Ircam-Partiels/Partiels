@@ -56,6 +56,7 @@ public:
 protected:
     juce::Component& mContent;
     FloatingWindow mFloatingWindow;
+    juce::ComponentBoundsConstrainer mBoundsConstrainer;
 };
 
 ANALYSE_FILE_END

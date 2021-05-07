@@ -620,7 +620,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
     mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
     mBoundsConstrainer.setMinimumHeight(120);
-    mBoundsConstrainer.setMinimumOnscreenAmounts(0, 40, 40, 40);
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);

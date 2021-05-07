@@ -72,7 +72,6 @@ namespace Track
                                        juce::translate("The plugin information")};
 
         juce::Viewport mViewport;
-        juce::ComponentBoundsConstrainer mBoundsConstrainer;
         static auto constexpr sInnerWidth = 300;
     };
 } // namespace Track

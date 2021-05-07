@@ -74,6 +74,9 @@ FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce
 : mContent(content)
 , mFloatingWindow(title)
 {
+    auto constexpr max = std::numeric_limits<int>::max();
+    mBoundsConstrainer.setMinimumOnscreenAmounts(max, 40, 40, 40);
+    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 }
 
 void FloatingWindowContainer::show()
@@ -92,15 +95,15 @@ void FloatingWindowContainer::show(juce::Point<int> const& pt)
 {
     if(mFloatingWindow.getContentComponent() == nullptr)
     {
-        auto const& desktop = juce::Desktop::getInstance();
+        mFloatingWindow.setContentNonOwned(&mContent, true);
         juce::Rectangle<int> const bounds{pt.x, pt.y, mFloatingWindow.getWidth(), mFloatingWindow.getHeight()};
+        auto const& desktop = juce::Desktop::getInstance();
         auto const* display = desktop.getDisplays().getDisplayForPoint(pt);
         anlStrongAssert(display != nullptr);
         if(display != nullptr)
         {
             mFloatingWindow.setBounds(bounds.constrainedWithin(display->userArea));
         }
-        mFloatingWindow.setContentNonOwned(&mContent, true);
     }
 
     mFloatingWindow.setVisible(true);
