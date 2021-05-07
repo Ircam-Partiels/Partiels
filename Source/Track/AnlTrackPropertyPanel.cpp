@@ -423,7 +423,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
                 auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
-                
+
                 mPropertyPreset.entry.addItem("Factory", 1);
                 mPropertyPreset.entry.addItem("Custom", 2);
                 mPropertyPreset.entry.setItemEnabled(2, false);
@@ -438,7 +438,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyPreset.entry.addSeparator();
                 mPropertyPreset.entry.addItem("Load...", items.size() + 3);
                 mPropertyPreset.entry.addItem("Save...", items.size() + 4);
-                
+
                 updateZoomMode();
             }
             case AttrType::state:
