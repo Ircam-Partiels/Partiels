@@ -384,10 +384,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             else
             {
                 documentDir.endAction(juce::translate("New Group"), ActionState::abort);
-                auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-                auto const title = juce::translate("Group cannot be created!");
-                auto const message = juce::translate("The group cannot be inserted into the document.");
-                juce::AlertWindow::showMessageBox(icon, title, message);
+                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group cannot be inserted into the document.");
             }
             return true;
         }
@@ -438,10 +435,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     if(!identifier.has_value())
                     {
                         documentDir.endAction(juce::translate("New Track"), ActionState::abort);
-                        auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-                        auto const title = juce::translate("Group cannot be created!");
-                        auto const message = juce::translate("The group necessary for the new track cannot be inserted into the document.");
-                        juce::AlertWindow::showMessageBox(icon, title, message);
+                        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group necessary for the new track cannot be inserted into the document.");
                         return;
                     }
                     std::get<0>(position) = *identifier;
