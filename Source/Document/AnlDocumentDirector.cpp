@@ -613,8 +613,12 @@ void Document::Director::fileHasBeenModified()
 void Document::Director::initializeAudioReaders(NotificationType notification)
 {
     auto const file = mAccessor.getAttr<AttrType::file>();
+    auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     if(!file.existsAsFile())
     {
+        transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
+        transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
+        transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range{}, notification);
         return;
     }
 
@@ -638,6 +642,19 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     {
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
     }
+    
+    auto const startPlayhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
+    if(startPlayhead >= mDuration)
+    {
+        transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
+    }
+    auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+    if(runningPlayhead >= mDuration)
+    {
+        transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
+    }
+    auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
+    transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range(0.0, mDuration).getIntersectionWith(loopRange), notification);
 
     for(auto const& anl : mTracks)
     {
