@@ -22,13 +22,13 @@ namespace Application
             , DocumentSave
             , DocumentDuplicate
             , DocumentConsolidate
-            , DocumentOpenTemplate
             
             , EditUndo
             , EditRedo
             , EditNewGroup
             , EditNewTrack
             , EditRemoveItem
+            , EditLoadTemplate
             
             , TransportTogglePlayback
             , TransportToggleLooping

@@ -92,13 +92,13 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::DocumentSave
         , CommandIDs::DocumentDuplicate
         , CommandIDs::DocumentConsolidate
-        , CommandIDs::DocumentOpenTemplate
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
         , CommandIDs::EditNewGroup
         , CommandIDs::EditNewTrack
         , CommandIDs::EditRemoveItem
+        , CommandIDs::EditLoadTemplate
         
         , CommandIDs::TransportTogglePlayback
         , CommandIDs::TransportToggleLooping
@@ -156,12 +156,6 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
         break;
-        case CommandIDs::DocumentOpenTemplate:
-        {
-            result.setInfo(juce::translate("Open Template..."), juce::translate("Open a template"), "Application", 0);
-            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
-        }
-        break;
 
         case CommandIDs::EditUndo:
         {
@@ -216,6 +210,12 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
         }
         break;
+        case CommandIDs::EditLoadTemplate:
+        {
+            result.setInfo(juce::translate("Load Template..."), juce::translate("Load a template"), "Edit", 0);
+            result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+            break;
 
         case CommandIDs::TransportTogglePlayback:
         {
@@ -344,10 +344,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::DocumentConsolidate:
         {
             showUnsupportedAction();
-            return true;
-        }
-        case CommandIDs::DocumentOpenTemplate:
-        {
             return true;
         }
 
@@ -536,6 +532,25 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     documentDir.endAction(juce::translate("Remove  Group").replace("GROUPNAME", groupName), ActionState::abort);
                 }
             }
+            return true;
+        }
+        case CommandIDs::EditLoadTemplate:
+        {
+            Document::Accessor copyAcsr;
+            juce::UndoManager copyUndoManager;
+            Document::Director copyDirector{copyAcsr, Instance::get().getAudioFormatManager(), copyUndoManager};
+            Document::FileBased copyFileBased{copyAcsr, copyDirector, Instance::getFileExtension(), Instance::getFileWildCard(), "Open a document", "Save the document"};
+            if(copyFileBased.loadFromUserSpecifiedFile(true).failed())
+            {
+                return true;
+            }
+            
+            copyAcsr.setAttr<Document::AttrType::file>(documentAcsr.getAttr<Document::AttrType::file>(), NotificationType::synchronous);
+            
+            auto& documentDir = Instance::get().getDocumentDirector();
+            documentDir.startAction();
+            documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
+            documentDir.endAction("Load template", ActionState::apply);
             return true;
         }
 

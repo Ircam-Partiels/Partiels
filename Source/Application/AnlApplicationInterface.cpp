@@ -17,7 +17,7 @@ Application::Interface::Loader::Loader()
     };
     mLoadTemplateButton.onClick = [&]()
     {
-        commandManager.invokeDirectly(CommandIDs::DocumentOpenTemplate, true);
+        commandManager.invokeDirectly(CommandIDs::EditLoadTemplate, true);
     };
     mLoadFileLabel.setJustificationType(juce::Justification::centred);
 
@@ -108,7 +108,7 @@ void Application::Interface::Loader::applicationCommandListChanged()
     auto& commandManager = Instance::get().getApplicationCommandManager();
     mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::DocumentOpen));
     mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::EditNewTrack));
-    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::DocumentOpenTemplate));
+    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::EditLoadTemplate));
 }
 
 bool Application::Interface::Loader::isInterestedInFileDrag(juce::StringArray const& files)

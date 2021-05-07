@@ -69,8 +69,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::DocumentSave);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentDuplicate);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentConsolidate);
-        menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentOpenTemplate);
     }
     else if(menuName == "Edit")
     {
@@ -80,6 +78,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::EditRemoveItem);
         menu.addCommandItem(&commandManager, CommandIDs::EditNewTrack);
         menu.addCommandItem(&commandManager, CommandIDs::EditNewGroup);
+        menu.addCommandItem(&commandManager, CommandIDs::EditLoadTemplate);
     }
     else if(menuName == "Transport")
     {
