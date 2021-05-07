@@ -156,7 +156,7 @@ juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& res
 juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
 {
     auto const it = getIteratorAt(results, globalRange, time);
-    if(it != results.cend() || it->values.empty())
+    if(it == results.cend() || it->values.empty())
     {
         return "-";
     }
