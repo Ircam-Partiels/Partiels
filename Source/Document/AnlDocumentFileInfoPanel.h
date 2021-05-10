@@ -37,23 +37,7 @@ namespace Document
         
         ConcertinaTable mConcertinaTable {"", false};
         juce::Viewport mViewport;
-    };
-    
-    class FileInfoButton
-    : public juce::Component
-    {
-    public:
-        FileInfoButton(FileInfoPanel& fileInfoPanel);
-        ~FileInfoButton() override = default;
 
-        // juce::Component
-        void resized() override;
-        void lookAndFeelChanged() override;
-        
-    private:
-        FileInfoPanel& mFileInfoPanel;
-        juce::TextButton mTextButton {"File Info", "Show file info"};
-        juce::ImageButton mImageButton;
     };
 }
 
