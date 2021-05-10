@@ -81,7 +81,7 @@ namespace Application
             };
 
             Document::Accessor::Listener mDocumentListener;
-            
+
             juce::TextButton mLoadFileButton{juce::translate("Load")};
             juce::Label mLoadFileInfo{"", ""};
             juce::Label mLoadFileWildcard{""};
@@ -89,7 +89,7 @@ namespace Application
             juce::Label mAddTrackInfo{""};
             juce::TextButton mLoadTemplateButton{juce::translate("Load Template")};
             juce::Label mLoadTemplateInfo{""};
-            
+
             juce::Label mSelectRecentDocument{"", juce::translate("Select Recent Document")};
             ColouredPanel mSeparatorVertical;
             ColouredPanel mSeparatorHorizontal;

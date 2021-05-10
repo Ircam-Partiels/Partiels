@@ -116,13 +116,13 @@ Application::Interface::Loader::Loader()
     };
     mLoadFileInfo.setText(juce::translate("or\nDrag & Drop\n(Document/Audio)"), juce::NotificationType::dontSendNotification);
     mLoadFileInfo.setJustificationType(juce::Justification::centredTop);
-    
+
     mLoadFileWildcard.setText(juce::translate("Document: DOCWILDCARD\nAudio: AUDIOWILDCARD").replace("DOCWILDCARD", Instance::getFileWildCard()).replace("AUDIOWILDCARD", "*.aac,*.aiff,*.aif,*.flac,*.m4a,*.mp3,*.ogg,*.wav,*.wma"), juce::NotificationType::dontSendNotification);
     mLoadFileWildcard.setJustificationType(juce::Justification::bottomLeft);
-    
+
     mAddTrackInfo.setText(juce::translate("Insert an analysis plugin as a new track"), juce::NotificationType::dontSendNotification);
     mAddTrackInfo.setJustificationType(juce::Justification::centredTop);
-    
+
     mLoadTemplateInfo.setText(juce::translate("Use an existing document as template"), juce::NotificationType::dontSendNotification);
     mLoadTemplateInfo.setJustificationType(juce::Justification::centredTop);
 
@@ -130,7 +130,7 @@ Application::Interface::Loader::Loader()
     addAndMakeVisible(mSeparatorHorizontal);
     addAndMakeVisible(mSelectRecentDocument);
     addAndMakeVisible(mFileTable);
-    
+
     mFileTable.onFileSelected = [](juce::File const& file)
     {
         auto& documentAcsr = Instance::get().getDocumentAccessor();
@@ -149,9 +149,9 @@ Application::Interface::Loader::Loader()
             {
                 return;
             }
-        
+
             copyAcsr.setAttr<Document::AttrType::file>(documentAcsr.getAttr<Document::AttrType::file>(), NotificationType::synchronous);
-            
+
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
             documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
