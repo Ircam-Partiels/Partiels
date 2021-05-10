@@ -50,9 +50,19 @@ Document::Section::Section(Director& director)
     setWantsKeyboardFocus(true);
     setFocusContainer(true);
 
-    setSize(480, 200);
+    addAndMakeVisible(mFileInfoLabel);
+    mFileInfoLabel.setWantsKeyboardFocus(false);
+    mFileInfoLabel.setJustificationType(juce::Justification::centredRight);
+
+    addAndMakeVisible(mFileInfoButton);
+    mFileInfoButton.setWantsKeyboardFocus(false);
+    mFileInfoButton.setTooltip(juce::translate("Show audio file info"));
+    mFileInfoButton.onClick = [&]()
+    {
+        mFileInfoPanel.show(mFileInfoButton.getBounds().getCentre());
+    };
+
     addAndMakeVisible(mTransportDisplay);
-    addAndMakeVisible(mFileInfoButtonDecoration);
     addAndMakeVisible(mTooltipButton);
     addAndMakeVisible(mTimeRulerDecoration);
     mLoopBar.addAndMakeVisible(mPlayheadBar);
@@ -61,6 +71,7 @@ Document::Section::Section(Director& director)
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mTimeScrollBar);
+    setSize(480, 200);
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -68,7 +79,14 @@ Document::Section::Section(Director& director)
         switch(attribute)
         {
             case AttrType::file:
-                break;
+            {
+                auto const file = acsr.getAttr<AttrType::file>();
+                mFileInfoLabel.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
+                mFileInfoLabel.setTooltip(file.getFullPathName());
+                mFileInfoLabel.setVisible(file != juce::File());
+                mFileInfoButton.setVisible(file != juce::File());
+            }
+            break;
             case AttrType::layout:
             {
                 updateLayout();
@@ -111,9 +129,17 @@ void Document::Section::resized()
     auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
 
-    mTransportDisplay.setBounds(bounds.removeFromTop(40).withSizeKeepingCentre(284, 40));
+    {
+        auto header = bounds.removeFromTop(40);
+        mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
+        header.removeFromRight(4);
+        mFileInfoButton.setBounds(header.removeFromRight(18).withSizeKeepingCentre(18, 18));
+        auto const maxWidth = header.getRight() - mTransportDisplay.getRight() - 4;
+        mFileInfoLabel.setBounds(header.removeFromRight(maxWidth));
+    }
+
     auto topPart = bounds.removeFromTop(28);
-    mFileInfoButtonDecoration.setBounds(topPart.removeFromLeft(leftSize));
+    topPart.removeFromLeft(leftSize);
     mTooltipButton.setBounds(topPart.removeFromRight(rightSize).reduced(4));
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
     mLoopBarDecoration.setBounds(topPart);
@@ -141,6 +167,7 @@ void Document::Section::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mTooltipButton, IconManager::IconType::conversation);
+        laf->setButtonIcon(mFileInfoButton, IconManager::IconType::information);
     }
 }
 

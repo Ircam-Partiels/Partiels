@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../Group/AnlGroupStrechableSection.h"
+#include "../Transport/AnlTransportDisplay.h"
 #include "../Transport/AnlTransportLoopBar.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
-#include "../Transport/AnlTransportDisplay.h"
 #include "AnlDocumentDirector.h"
 #include "AnlDocumentFileInfoPanel.h"
 #include "AnlDocumentModel.h"
@@ -50,10 +50,10 @@ namespace Document
         Accessor::Listener mListener;
 
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
-        
+
         FileInfoPanel mFileInfoPanel{mAccessor, mDirector.getAudioFormatManager()};
-        FileInfoButton mFileInfoButton{mFileInfoPanel};
-        Decorator mFileInfoButtonDecoration{mFileInfoButton, 1, 2.0f};
+        juce::ImageButton mFileInfoButton;
+        juce::Label mFileInfoLabel;
         juce::ImageButton mTooltipButton{"Document::Section::TooltipButton"};
 
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
