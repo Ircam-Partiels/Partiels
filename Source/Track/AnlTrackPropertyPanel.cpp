@@ -99,13 +99,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               }
                               else if(static_cast<size_t>(index) == programs.size() + 1)
                               {
-                                  juce::FileChooser fc(juce::translate("Export as preset..."), {}, App::getFileWildCardFor("preset"));
+                                  juce::FileChooser fc(juce::translate("Save as preset..."), {}, App::getFileWildCardFor("preset"));
                                   if(fc.browseForFileToSave(true))
                                   {
                                       auto const result = Exporter::toPreset(mAccessor, fc.getResult());
                                       if(result.failed())
                                       {
-                                          AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as preset failed!", result.getErrorMessage());
+                                          AlertWindow::showMessage(AlertWindow::MessageType::warning, "Save as preset failed!", result.getErrorMessage());
                                       }
                                   }
                                   break;
