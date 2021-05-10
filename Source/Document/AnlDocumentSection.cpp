@@ -51,6 +51,7 @@ Document::Section::Section(Director& director)
     setFocusContainer(true);
 
     setSize(480, 200);
+    addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mFileInfoButtonDecoration);
     addAndMakeVisible(mTooltipButton);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -110,6 +111,7 @@ void Document::Section::resized()
     auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
 
+    mTransportDisplay.setBounds(bounds.removeFromTop(40).withSizeKeepingCentre(284, 40));
     auto topPart = bounds.removeFromTop(28);
     mFileInfoButtonDecoration.setBounds(topPart.removeFromLeft(leftSize));
     mTooltipButton.setBounds(topPart.removeFromRight(rightSize).reduced(4));
@@ -364,7 +366,6 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
                 }
             }
             return contents.back().getComponent();
-            ;
         }
 
         juce::KeyboardFocusTraverser* getChildFocusTraverser(juce::Component* component)

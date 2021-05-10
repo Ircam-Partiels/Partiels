@@ -96,10 +96,10 @@ namespace Application
             bool mIsDragging{false};
         };
 
-        Transport::Display mTransportDisplay;
         Document::Section mDocumentSection;
         Loader mLoader;
         Decorator mLoaderDecorator{mLoader, 1, 2.0f};
+        ColouredPanel mToolTipSeparator;
         Tooltip::Display mToolTipDisplay;
     };
 } // namespace Application

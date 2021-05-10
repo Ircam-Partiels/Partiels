@@ -331,12 +331,11 @@ void Application::Interface::Loader::filesDropped(juce::StringArray const& files
 }
 
 Application::Interface::Interface()
-: mTransportDisplay(Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>())
-, mDocumentSection(Instance::get().getDocumentDirector())
+: mDocumentSection(Instance::get().getDocumentDirector())
 {
-    addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mDocumentSection);
     addAndMakeVisible(mLoaderDecorator);
+    addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
     mLoader.addComponentListener(this);
 }
@@ -349,8 +348,8 @@ Application::Interface::~Interface()
 void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
-    mTransportDisplay.setBounds(bounds.removeFromTop(40).withSizeKeepingCentre(284, 40));
     mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
+    mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     mDocumentSection.setBounds(bounds);
     mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(800, 600));
 }
@@ -368,7 +367,6 @@ void Application::Interface::componentVisibilityChanged(juce::Component& compone
         return;
     }
     mLoaderDecorator.setVisible(mLoader.isVisible());
-    mTransportDisplay.setEnabled(!mLoader.isVisible());
     mDocumentSection.setEnabled(!mLoader.isVisible());
 }
 

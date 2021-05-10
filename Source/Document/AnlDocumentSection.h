@@ -3,6 +3,7 @@
 #include "../Group/AnlGroupStrechableSection.h"
 #include "../Transport/AnlTransportLoopBar.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
+#include "../Transport/AnlTransportDisplay.h"
 #include "AnlDocumentDirector.h"
 #include "AnlDocumentFileInfoPanel.h"
 #include "AnlDocumentModel.h"
@@ -48,6 +49,8 @@ namespace Document
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
 
+        Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
+        
         FileInfoPanel mFileInfoPanel{mAccessor, mDirector.getAudioFormatManager()};
         FileInfoButton mFileInfoButton{mFileInfoPanel};
         Decorator mFileInfoButtonDecoration{mFileInfoButton, 1, 2.0f};
