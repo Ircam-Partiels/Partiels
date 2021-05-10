@@ -123,6 +123,7 @@ void Document::Section::resized()
 
     auto topPart = bounds.removeFromTop(28);
     topPart.removeFromLeft(leftSize);
+    topPart.removeFromRight(rightSize);
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
     mLoopBarDecoration.setBounds(topPart);
     mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
