@@ -42,8 +42,6 @@ namespace Application
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
-            void lookAndFeelChanged() override;
-            void visibilityChanged() override;
 
             // juce::FileDragAndDropTarget
             bool isInterestedInFileDrag(juce::StringArray const& files) override;

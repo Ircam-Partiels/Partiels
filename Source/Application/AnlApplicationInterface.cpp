@@ -251,18 +251,6 @@ void Application::Interface::Loader::resized()
     }
 }
 
-void Application::Interface::Loader::lookAndFeelChanged()
-{
-    auto const colour = getLookAndFeel().findColour(juce::TableListBox::ColourIds::outlineColourId);
-    mSeparatorVertical.setColour(ColouredPanel::backgroundColourId, colour);
-    mSeparatorHorizontal.setColour(ColouredPanel::backgroundColourId, colour);
-}
-
-void Application::Interface::Loader::visibilityChanged()
-{
-    lookAndFeelChanged();
-}
-
 void Application::Interface::Loader::paint(juce::Graphics& g)
 {
     g.setColour(mIsDragging ? findColour(juce::TextButton::ColourIds::buttonColourId) : findColour(juce::ResizableWindow::ColourIds::backgroundColourId));

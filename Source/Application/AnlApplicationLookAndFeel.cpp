@@ -86,7 +86,7 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(ColourButton::ColourIds::borderOffColourId, colourChart.get(Type::inactive));
     setColour(ColourButton::ColourIds::borderOnColourId, colourChart.get(Type::active));
 
-    setColour(ColouredPanel::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(ColouredPanel::ColourIds::backgroundColourId, colourChart.get(Type::border));
 
     setColour(FloatingWindow::ColourIds::backgroundColourId, colourChart.get(Type::background));
 

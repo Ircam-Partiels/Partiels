@@ -133,7 +133,6 @@ void PluginList::Table::resized()
 void PluginList::Table::lookAndFeelChanged()
 {
     mSearchField.setTextToShowWhenEmpty(juce::translate("Filter..."), getLookAndFeel().findColour(juce::TableListBox::ColourIds::textColourId));
-    mSeparator.setColour(ColouredPanel::backgroundColourId, getLookAndFeel().findColour(juce::TableListBox::ColourIds::outlineColourId));
 }
 
 void PluginList::Table::parentHierarchyChanged()
