@@ -115,7 +115,7 @@ void Document::Section::resized()
     {
         auto header = bounds.removeFromTop(40);
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-        header.removeFromRight(4);
+        header.removeFromRight(rightSize);
         mFileInfoButton.setBounds(header.removeFromRight(18).withSizeKeepingCentre(18, 18));
         auto const maxWidth = header.getRight() - mTransportDisplay.getRight() - 4;
         mFileInfoLabel.setBounds(header.removeFromRight(maxWidth));
