@@ -10,7 +10,6 @@ namespace Track
     {
     public:
         static juce::Result toPreset(Accessor const& accessor, juce::File const& file);
-        static void toTemplate(Accessor const& accessor, AlertType const alertType);
         static juce::Result fromPreset(Accessor& accessor, juce::File const& file);
 
         static void toImage(Accessor const& accessor, AlertType const alertType);
