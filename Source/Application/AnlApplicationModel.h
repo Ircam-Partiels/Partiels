@@ -16,6 +16,7 @@ namespace Application
         , recentlyOpenedFilesList
         , currentDocumentFile
         , colourMode
+        , showTooltip
     };
 
     using AttrContainer = Model::Container
@@ -23,6 +24,7 @@ namespace Application
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
     , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
+    , Model::Attr<AttrType::showTooltip, bool, Flag::basic>
     >;
     // clang-format on
 
@@ -31,6 +33,19 @@ namespace Application
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
+        // clang-format off
+        Accessor()
+        : Accessor(AttrContainer(
+        {
+              {juce::String{}}
+            , {std::vector<juce::File>{}}
+            , {juce::File{}}
+            , {LookAndFeel::ColourChart::Mode::night}
+            , {true}
+        }))
+        {
+        }
+        // clang-format on
 
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
