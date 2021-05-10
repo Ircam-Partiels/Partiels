@@ -23,6 +23,7 @@ namespace Application
 
         // juce::Component
         void resized() override;
+        void lookAndFeelChanged() override;
 
     private:
         // juce::ComponentListener
@@ -96,11 +97,13 @@ namespace Application
             bool mIsDragging{false};
         };
 
+        Accessor::Listener mListener;
         Document::Section mDocumentSection;
         Loader mLoader;
         Decorator mLoaderDecorator{mLoader, 1, 2.0f};
         ColouredPanel mToolTipSeparator;
         Tooltip::Display mToolTipDisplay;
+        juce::ImageButton mTooltipButton{"TooltipButton"};
     };
 } // namespace Application
 

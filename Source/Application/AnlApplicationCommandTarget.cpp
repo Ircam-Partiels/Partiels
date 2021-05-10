@@ -59,6 +59,8 @@ Application::CommandTarget::CommandTarget()
                 break;
             case AttrType::colourMode:
                 break;
+            case AttrType::showTooltip:
+                break;
         }
     };
 

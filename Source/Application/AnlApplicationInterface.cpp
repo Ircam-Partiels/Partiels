@@ -24,6 +24,8 @@ Application::Interface::Loader::FileTable::FileTable()
                 break;
             case AttrType::colourMode:
                 break;
+            case AttrType::showTooltip:
+                break;
         }
     };
 
@@ -337,21 +339,65 @@ Application::Interface::Interface()
     addAndMakeVisible(mLoaderDecorator);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
+    addAndMakeVisible(mTooltipButton);
     mLoader.addComponentListener(this);
+
+    mTooltipButton.setClickingTogglesState(true);
+    mTooltipButton.onClick = [&]()
+    {
+        auto& accessor = Instance::get().getApplicationAccessor();
+        accessor.setAttr<AttrType::showTooltip>(mTooltipButton.getToggleState(), NotificationType::synchronous);
+    };
+
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::windowState:
+                break;
+            case AttrType::recentlyOpenedFilesList:
+                break;
+            case AttrType::currentDocumentFile:
+                break;
+            case AttrType::colourMode:
+                break;
+            case AttrType::showTooltip:
+            {
+                mDocumentSection.showBubbleInfo(acsr.getAttr<AttrType::showTooltip>());
+            }
+            break;
+        }
+    };
+    auto& accessor = Instance::get().getApplicationAccessor();
+    accessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Application::Interface::~Interface()
 {
+    auto& accessor = Instance::get().getApplicationAccessor();
+    accessor.removeListener(mListener);
     mLoader.removeComponentListener(this);
 }
 
 void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
-    mToolTipDisplay.setBounds(bounds.removeFromBottom(24));
+    auto bottom = bounds.removeFromBottom(24);
+    mTooltipButton.setBounds(bottom.removeFromRight(24).withSizeKeepingCentre(20, 20));
+    mToolTipDisplay.setBounds(bottom);
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     mDocumentSection.setBounds(bounds);
     mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(800, 600));
+}
+
+void Application::Interface::lookAndFeelChanged()
+{
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
+    {
+        laf->setButtonIcon(mTooltipButton, IconManager::IconType::conversation);
+    }
 }
 
 void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)
