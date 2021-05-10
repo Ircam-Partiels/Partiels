@@ -10,7 +10,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to preset format.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
     }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
@@ -18,7 +18,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
 
     if(!xml->writeTo(file))
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the file cannot FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
     return juce::Result::ok();
 }
