@@ -32,9 +32,9 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
     {
         return;
     }
-    
+
     mVolume.setTargetValue(mVolumeTargetValue.load());
-    
+
     auto numSamplesToProceed = bufferToFill.numSamples;
     auto outputPosition = bufferToFill.startSample;
     while(numSamplesToProceed > 0)
@@ -47,7 +47,7 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
             auto const endPosition = isLooping ? loopRange.getEnd() : mAudioFormatReaderSource.getTotalLength() - 1;
             auto const numRemainingSamples = static_cast<int>(std::min(endPosition - currentReadPosition, static_cast<juce::int64>(numSamplesToProceed)));
             juce::AudioSourceChannelInfo tempBuffer(buffer, outputPosition, numRemainingSamples);
-            
+
             mAudioFormatReaderSource.setNextReadPosition(currentReadPosition);
             mAudioFormatReaderSource.getNextAudioBlock(tempBuffer);
             auto const nextReadPosition = mAudioFormatReaderSource.getNextReadPosition();
@@ -62,7 +62,7 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
             {
                 mReadPosition = nextReadPosition;
             }
-            
+
             numSamplesToProceed -= numRemainingSamples;
             outputPosition += numRemainingSamples;
         }
@@ -73,7 +73,7 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
             numSamplesToProceed = 0;
         }
     }
-    
+
     juce::AudioBuffer<float> tempBuffer(buffer->getArrayOfWritePointers(), buffer->getNumChannels(), bufferToFill.startSample, bufferToFill.numSamples);
     mVolume.applyGain(tempBuffer, bufferToFill.numSamples);
 }
@@ -134,11 +134,11 @@ void Transport::AudioReader::ResamplingSource::prepareToPlay(int samplesPerBlock
 {
     anlWeakAssert(sampleRate > 0.0);
     sampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
-    
+
     auto sourceSampleRate = mSource.getSampleRate();
     anlWeakAssert(sourceSampleRate > 0.0);
     sourceSampleRate = sourceSampleRate > 0.0 ? sourceSampleRate : 44100.0;
-    
+
     mResamplingAudioSource.setResamplingRatio(sourceSampleRate / sampleRate);
     mResamplingAudioSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
@@ -216,7 +216,7 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                     }
                 }
             }
-                break;
+            break;
             case AttrType::startPlayhead:
             {
                 auto instance = mSourceManager.getInstance();
@@ -225,7 +225,7 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                     instance->setStartPlayheadPosition(acsr.getAttr<AttrType::startPlayhead>());
                 }
             }
-                break;
+            break;
             case AttrType::runningPlayhead:
                 break;
             case AttrType::looping:
@@ -236,7 +236,7 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                     instance->setLooping(acsr.getAttr<AttrType::looping>());
                 }
             }
-                break;
+            break;
             case AttrType::loopRange:
             {
                 auto instance = mSourceManager.getInstance();
@@ -245,7 +245,7 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                     instance->setLoopRange(acsr.getAttr<AttrType::loopRange>());
                 }
             }
-                break;
+            break;
             case AttrType::gain:
             {
                 auto instance = mSourceManager.getInstance();
@@ -254,10 +254,10 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                     instance->setGain(static_cast<float>(acsr.getAttr<AttrType::gain>()));
                 }
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
