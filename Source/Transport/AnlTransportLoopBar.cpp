@@ -168,4 +168,10 @@ void Transport::LoopBar::mouseUp(juce::MouseEvent const& event)
     setMouseCursor(juce::MouseCursor::NormalCursor);
 }
 
+void Transport::LoopBar::mouseDoubleClick(juce::MouseEvent const& event)
+{
+    juce::ignoreUnused(event);
+    mAccessor.setAttr<AttrType::loopRange>(mZoomAccessor.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+}
+
 ANALYSE_FILE_END
