@@ -126,9 +126,9 @@ namespace Model
                                  {
                                      using element_type = typename std::remove_reference<decltype(d)>::type;
                                      auto constexpr acsr_type = element_type::type;
-                                     while(getNumAcsr<acsr_type>() > 0)
+                                     while(getNumAcsrs<acsr_type>() > 0)
                                      {
-                                         eraseAcsr<acsr_type>(getNumAcsr<acsr_type>() - 1, NotificationType::synchronous);
+                                         eraseAcsr<acsr_type>(getNumAcsrs<acsr_type>() - 1, NotificationType::synchronous);
                                      }
                                  });
             }
@@ -136,7 +136,7 @@ namespace Model
 
         //! @brief Gets an accessor of a container
         template <acsr_enum_type type>
-        auto getNumAcsr() const noexcept
+        auto getNumAcsrs() const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             return std::get<static_cast<size_t>(type)>(mAccessors).accessors.size();

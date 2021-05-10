@@ -147,7 +147,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case Transport::AttrType::runningPlayhead:
             {
                 auto const time = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
-                auto const numAnlAcsrs = mAccessor.getNumAcsr<AcsrType::tracks>();
+                auto const numAnlAcsrs = mAccessor.getNumAcsrs<AcsrType::tracks>();
                 for(size_t i = 0; i < numAnlAcsrs; ++i)
                 {
                     auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(i);
@@ -301,7 +301,7 @@ std::optional<juce::String> Document::Director::addTrack(juce::String const grou
         return std::optional<juce::String>();
     }
 
-    auto const index = mAccessor.getNumAcsr<AcsrType::tracks>();
+    auto const index = mAccessor.getNumAcsrs<AcsrType::tracks>();
     if(!mAccessor.insertAcsr<AcsrType::tracks>(index, notification))
     {
         return std::optional<juce::String>();
@@ -352,7 +352,7 @@ bool Document::Director::removeTrack(juce::String const identifier, Notification
 
 std::optional<juce::String> Document::Director::addGroup(size_t position, NotificationType const notification)
 {
-    auto const index = mAccessor.getNumAcsr<AcsrType::groups>();
+    auto const index = mAccessor.getNumAcsrs<AcsrType::groups>();
     if(!mAccessor.insertAcsr<AcsrType::groups>(index, notification))
     {
         return std::optional<juce::String>();
@@ -447,7 +447,7 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::Str
 
 void Document::Director::sanitize(NotificationType const notification)
 {
-    if(mAccessor.getNumAcsr<AcsrType::tracks>() == 0_z && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
+    if(mAccessor.getNumAcsrs<AcsrType::tracks>() == 0_z && mAccessor.getNumAcsrs<AcsrType::groups>() == 0_z)
     {
         return;
     }
@@ -493,8 +493,8 @@ void Document::Director::sanitize(NotificationType const notification)
     // Ensures that there is also at least one group if there is one or more tracks
     {
         auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-        anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsr<AcsrType::groups>() != 0_z);
-        if(!trackAcsrs.empty() && mAccessor.getNumAcsr<AcsrType::groups>() == 0_z)
+        anlWeakAssert(trackAcsrs.empty() || mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z);
+        if(!trackAcsrs.empty() && mAccessor.getNumAcsrs<AcsrType::groups>() == 0_z)
         {
             auto const identifier = addGroup(0, notification);
             anlStrongAssert(identifier.has_value());
@@ -520,7 +520,7 @@ void Document::Director::sanitize(NotificationType const notification)
     }
 
     // Ensures that all tracks are in one group
-    if(mAccessor.getNumAcsr<AcsrType::groups>() != 0_z)
+    if(mAccessor.getNumAcsrs<AcsrType::groups>() != 0_z)
     {
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
         auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -558,7 +558,7 @@ void Document::Director::sanitize(NotificationType const notification)
 
     // Ensures that document's layout is valid
     {
-        anlWeakAssert(mAccessor.getNumAcsr<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
+        anlWeakAssert(mAccessor.getNumAcsrs<AcsrType::groups>() == mAccessor.getAttr<AttrType::layout>().size());
         auto const layout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const identifier)
                                                 {
                                                     return !Tools::hasGroupAcsr(mAccessor, identifier);
@@ -642,7 +642,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     {
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, mDuration}, notification);
     }
-    
+
     auto const startPlayhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
     if(startPlayhead >= mDuration)
     {

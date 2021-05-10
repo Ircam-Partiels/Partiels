@@ -196,7 +196,7 @@ void Application::Interface::Loader::updateState()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     auto const documentHasFile = documentAccessor.getAttr<Document::AttrType::file>().existsAsFile();
-    auto const documentHasTrackOrGroup = documentAccessor.getNumAcsr<Document::AcsrType::tracks>() > 0_z || documentAccessor.getNumAcsr<Document::AcsrType::groups>() > 0_z;
+    auto const documentHasTrackOrGroup = documentAccessor.getNumAcsrs<Document::AcsrType::tracks>() > 0_z || documentAccessor.getNumAcsrs<Document::AcsrType::groups>() > 0_z;
 
     removeChildComponent(&mLoadFileButton);
     removeChildComponent(&mLoadFileInfo);

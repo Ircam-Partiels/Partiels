@@ -366,7 +366,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
 
-            auto const index = documentAcsr.getNumAcsr<Document::AcsrType::groups>();
+            auto const index = documentAcsr.getNumAcsrs<Document::AcsrType::groups>();
             auto const focusedId = Document::Tools::getFocusedGroup(documentAcsr);
             auto const position = focusedId.has_value() ? Document::Tools::getGroupPosition(documentAcsr, *focusedId) + 1_z : index;
             auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
@@ -424,7 +424,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 documentDir.startAction();
 
                 // Creates a group if there is none
-                if(documentAcsr.getNumAcsr<Document::AcsrType::groups>() == 0_z)
+                if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
                 {
                     anlStrongAssert(std::get<0>(position).isEmpty());
 
@@ -440,7 +440,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     std::get<1>(position) = 0_z;
                 }
 
-                anlStrongAssert(documentAcsr.getNumAcsr<Document::AcsrType::groups>() > 0_z);
+                anlStrongAssert(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() > 0_z);
                 if(std::get<0>(position).isEmpty())
                 {
                     auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
