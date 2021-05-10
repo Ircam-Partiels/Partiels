@@ -29,6 +29,7 @@ namespace Document
         ~Section() override;
 
         void moveKeyboardFocusTo(juce::String const& identifier);
+        void showBubbleInfo(bool state);
 
         // juce::Component
         void resized() override;
@@ -54,7 +55,6 @@ namespace Document
         FileInfoPanel mFileInfoPanel{mAccessor, mDirector.getAudioFormatManager()};
         juce::ImageButton mFileInfoButton;
         juce::Label mFileInfoLabel;
-        juce::ImageButton mTooltipButton{"Document::Section::TooltipButton"};
 
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration{mTimeRuler, 1, 2.0f};

@@ -28,22 +28,6 @@ Document::Section::Section(Director& director)
         mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
     };
 
-    mTooltipButton.setClickingTogglesState(true);
-    mTooltipButton.onClick = [&]()
-    {
-        if(mTooltipButton.getToggleState())
-        {
-            mToolTipBubbleWindow.startTimer(23);
-        }
-        else
-        {
-            mToolTipBubbleWindow.stopTimer();
-            mToolTipBubbleWindow.removeFromDesktop();
-            mToolTipBubbleWindow.setVisible(false);
-        }
-    };
-    mTooltipButton.setToggleState(true, juce::NotificationType::sendNotification);
-
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
 
@@ -63,7 +47,6 @@ Document::Section::Section(Director& director)
     };
 
     addAndMakeVisible(mTransportDisplay);
-    addAndMakeVisible(mTooltipButton);
     addAndMakeVisible(mTimeRulerDecoration);
     mLoopBar.addAndMakeVisible(mPlayheadBar);
     mPlayheadBar.setInterceptsMouseClicks(false, false);
@@ -140,7 +123,6 @@ void Document::Section::resized()
 
     auto topPart = bounds.removeFromTop(28);
     topPart.removeFromLeft(leftSize);
-    mTooltipButton.setBounds(topPart.removeFromRight(rightSize).reduced(4));
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
     mLoopBarDecoration.setBounds(topPart);
     mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
@@ -166,7 +148,6 @@ void Document::Section::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(mTooltipButton, IconManager::IconType::conversation);
         laf->setButtonIcon(mFileInfoButton, IconManager::IconType::information);
     }
 }
@@ -235,6 +216,20 @@ void Document::Section::moveKeyboardFocusTo(juce::String const& identifier)
     else
     {
         forwardToGroup(identifier);
+    }
+}
+
+void Document::Section::showBubbleInfo(bool state)
+{
+    if(state)
+    {
+        mToolTipBubbleWindow.startTimer(23);
+    }
+    else
+    {
+        mToolTipBubbleWindow.stopTimer();
+        mToolTipBubbleWindow.removeFromDesktop();
+        mToolTipBubbleWindow.setVisible(false);
     }
 }
 
