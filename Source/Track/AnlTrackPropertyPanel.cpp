@@ -93,7 +93,15 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               }
                               else if(static_cast<size_t>(index) == programs.size() + 1)
                               {
-                                  Exporter::toPreset(mAccessor, AlertType::window);
+                                  juce::FileChooser fc(juce::translate("Export as preset..."), {}, App::getFileWildCardFor("preset"));
+                                  if(fc.browseForFileToSave(true))
+                                  {
+                                      auto const result = Exporter::toPreset(mAccessor, fc.getResult());
+                                      if(result.failed())
+                                      {
+                                          AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as preset failed!", result.getErrorMessage());
+                                      }
+                                  }
                                   break;
                               }
                               anlWeakAssert(static_cast<size_t>(index) < programs.size());

@@ -3,45 +3,24 @@
 
 ANALYSE_FILE_BEGIN
 
-void Track::Exporter::toPreset(Accessor const& accessor, AlertType const alertType)
+juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File const& file)
 {
-    juce::FileChooser fc(juce::translate("Export as preset..."), {}, App::getFileWildCardFor("preset"));
-    if(!fc.browseForFileToSave(true))
-    {
-        return;
-    }
-    juce::TemporaryFile temp(fc.getResult());
-
-    auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
     auto const title = juce::translate("Export as preset failed!");
-
     auto xml = std::make_unique<juce::XmlElement>("Preset");
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            auto const message = juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to XML.").replace("FLNM", accessor.getAttr<AttrType::name>());
-            juce::AlertWindow::showMessageBox(icon, title, message);
-        }
-        return;
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to XML.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
     }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
     XmlParser::toXml(*xml.get(), "state", accessor.getAttr<AttrType::state>());
 
-    auto const file = fc.getResult();
-    if(!xml->writeTo(temp.getFile()) && alertType == AlertType::window)
+    if(!xml->writeTo(file))
     {
-        auto const message = juce::translate("The track ANLNAME can not be exported as a preset because the file cannot FLNAME cannot be written.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", file.getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the file cannot FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
-
-    if(!temp.overwriteTargetFileWithTemporary() && alertType == AlertType::window)
-    {
-        auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("FLNM", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
-    }
+    return juce::Result::ok();
 }
 
 bool Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)

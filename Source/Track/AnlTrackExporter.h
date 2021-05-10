@@ -9,8 +9,7 @@ namespace Track
     class Exporter
     {
     public:
-        static void toPreset(Accessor const& accessor, AlertType const alertType);
-
+        static juce::Result toPreset(Accessor const& accessor, juce::File const& file);
         static bool fromPreset(Accessor& accessor, AlertType const alertType);
 
         static void toTemplate(Accessor const& accessor, AlertType const alertType);
