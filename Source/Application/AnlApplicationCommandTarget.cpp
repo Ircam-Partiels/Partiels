@@ -217,7 +217,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Load Template..."), juce::translate("Load a template"), "Edit", 0);
             result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
         }
-            break;
+        break;
 
         case CommandIDs::TransportTogglePlayback:
         {
@@ -546,9 +546,9 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 return true;
             }
-            
+
             copyAcsr.setAttr<Document::AttrType::file>(documentAcsr.getAttr<Document::AttrType::file>(), NotificationType::synchronous);
-            
+
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
             documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
