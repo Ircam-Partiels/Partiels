@@ -18,7 +18,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
                 auto const file = acsr.getAttr<AttrType::file>();
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setEditable(false);
-                
+
                 auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
                 if(audioFormatReader == nullptr)
                 {
