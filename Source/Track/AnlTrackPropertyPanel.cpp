@@ -80,14 +80,20 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
                               if(static_cast<size_t>(index) == programs.size())
                               {
-                                  mDirector.startAction();
-                                  if(Exporter::fromPreset(mAccessor, AlertType::window))
+                                  juce::FileChooser fc(juce::translate("Load from preset..."), {}, App::getFileWildCardFor("preset"));
+                                  if(fc.browseForFileToOpen())
                                   {
-                                      mDirector.endAction(juce::translate("Load track properties from file"), ActionState::apply);
-                                  }
-                                  else
-                                  {
-                                      mDirector.endAction(juce::translate("Load track properties from file"), ActionState::abort);
+                                      mDirector.startAction();
+                                      auto const result = Exporter::fromPreset(mAccessor, fc.getResult());
+                                      if(result.failed())
+                                      {
+                                          mDirector.endAction(juce::translate("Load track properties from preset file"), ActionState::abort);
+                                          AlertWindow::showMessage(AlertWindow::MessageType::warning, "Load from preset failed!", result.getErrorMessage());
+                                      }
+                                      else
+                                      {
+                                          mDirector.endAction(juce::translate("Load track properties from preset file"), ActionState::apply);
+                                      }
                                   }
                                   break;
                               }

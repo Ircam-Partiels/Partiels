@@ -23,41 +23,18 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-bool Track::Exporter::fromPreset(Accessor& accessor, AlertType const alertType)
+juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& file)
 {
-    juce::FileChooser fc(juce::translate("Load from preset..."), {}, App::getFileWildCardFor("preset"));
-    if(!fc.browseForFileToOpen())
-    {
-        return false;
-    }
-    auto const file = fc.getResult();
-
-    auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-    auto const title = juce::translate("Export as preset failed!");
-
     auto xml = juce::XmlDocument::parse(file);
     if(xml == nullptr)
     {
-        if(alertType == AlertType::window)
-        {
-            auto const message = juce::translate("The track ANLNAME can not be parse to a preset.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
-            juce::AlertWindow::showMessageBox(icon, title, message);
-        }
-        return false;
+        return juce::Result::fail(juce::translate("The file FLNAME cannot be parsed to preset format.").replace("FLNAME", file.getFullPathName()));
     }
 
-    Plugin::Key const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
-    if(key != accessor.getAttr<AttrType::key>())
+    if(!xml->hasAttribute("key"))
     {
-        if(alertType == AlertType::window)
-        {
-            auto const message = juce::translate("The track ANLNAME can not be parse to a preset because the key arer not compatible.").replace("ANLNAME", accessor.getAttr<AttrType::name>());
-            juce::AlertWindow::showMessageBox(icon, title, message);
-        }
-        return false;
+        return juce::Result::fail(juce::translate("The preset file FLNAME doesn't contain a plugin key.").replace("FLNAME", file.getFullPathName()));
     }
-    accessor.setAttr<AttrType::state>(XmlParser::fromXml(*xml.get(), "state", accessor.getAttr<AttrType::state>()), NotificationType::synchronous);
-    return true;
 }
 
 void Track::Exporter::toTemplate(Accessor const& accessor, AlertType const alertType)
