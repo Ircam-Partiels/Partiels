@@ -44,7 +44,7 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
             auto const currentReadPosition = mReadPosition.load();
             auto const loopRange = mLoopRange.load();
             auto const isLooping = mIsLooping && !loopRange.isEmpty() && currentReadPosition < loopRange.getEnd();
-            auto const endPosition = isLooping ? loopRange.getEnd() : mAudioFormatReaderSource.getTotalLength();
+            auto const endPosition = isLooping ? loopRange.getEnd() : mAudioFormatReaderSource.getTotalLength() - 1;
             auto const numRemainingSamples = static_cast<int>(std::min(endPosition - currentReadPosition, static_cast<juce::int64>(numSamplesToProceed)));
             juce::AudioSourceChannelInfo tempBuffer(buffer, outputPosition, numRemainingSamples);
             
