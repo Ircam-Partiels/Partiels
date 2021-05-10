@@ -1,5 +1,6 @@
 #include "AnlTrackSection.h"
 #include "../Zoom/AnlZoomTools.h"
+#include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -69,6 +70,41 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
     mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
+    };
+
+    mThumbnail.onExportButtonClicked = [&](juce::Button& button)
+    {
+        auto const processing = mAccessor.getAttr<AttrType::processing>();
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        auto const resultsAreReady = !std::get<0>(processing) && results != nullptr && !results->empty();
+        auto const graphicsAreReady = !std::get<2>(processing) && results != nullptr && !results->empty();
+        juce::PopupMenu menu;
+        menu.addItem("Export as image", graphicsAreReady, false, [this]()
+                     {
+                         juce::FileChooser fc(juce::translate("Export to image"), {}, "*.png;*.jpeg;*.jpg");
+                         if(!fc.browseForFileToSave(true))
+                         {
+                             return;
+                         }
+                         auto const width = mPlot.getWidth();
+                         auto const height = mPlot.getHeight();
+                         auto const result = Exporter::toImage(mAccessor, mTimeZoomAccessor, fc.getResult(), width, height);
+                         if(result.failed())
+                         {
+                             AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
+                         }
+                     });
+        menu.addItem("Export as CSV...", resultsAreReady, false, [this]()
+                     {
+                         Exporter::toCsv(mAccessor, AlertType::window);
+                     });
+        menu.addItem("Export as XML...", resultsAreReady, false, [this]()
+                     {
+                         Exporter::toXml(mAccessor, AlertType::window);
+                     });
+        menu.showAt(&button);
+        // Force to repaint to update the state
+        button.setState(juce::Button::ButtonState::buttonNormal);
     };
 
     addChildComponent(mValueRuler);

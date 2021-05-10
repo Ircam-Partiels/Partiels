@@ -23,6 +23,8 @@ namespace Track
         Thumbnail(Director& director);
         ~Thumbnail() override;
 
+        std::function<void(juce::Button& button)> onExportButtonClicked = nullptr;
+
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;

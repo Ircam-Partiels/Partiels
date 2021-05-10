@@ -1,5 +1,4 @@
 #include "AnlTrackThumbnail.h"
-#include "AnlTrackExporter.h"
 #include "AnlTrackSection.h"
 
 ANALYSE_FILE_BEGIN
@@ -34,26 +33,10 @@ Track::Thumbnail::Thumbnail(Director& director)
 
     mExportButton.onClick = [&]()
     {
-        auto const processing = mAccessor.getAttr<AttrType::processing>();
-        auto const& results = mAccessor.getAttr<AttrType::results>();
-        auto const resultsAreReady = !std::get<0>(processing) && results != nullptr && !results->empty();
-        auto const graphicsAreReady = !std::get<2>(processing) && results != nullptr && !results->empty();
-        juce::PopupMenu menu;
-        menu.addItem("Export as image", graphicsAreReady, false, [this]()
-                     {
-                         Exporter::toImage(mAccessor, AlertType::window);
-                     });
-        menu.addItem("Export as CSV...", resultsAreReady, false, [this]()
-                     {
-                         Exporter::toCsv(mAccessor, AlertType::window);
-                     });
-        menu.addItem("Export as XML...", resultsAreReady, false, [this]()
-                     {
-                         Exporter::toXml(mAccessor, AlertType::window);
-                     });
-        menu.showAt(&mExportButton);
-        // Force to repaint to update the state
-        mExportButton.setState(juce::Button::ButtonState::buttonNormal);
+        if(onExportButtonClicked != nullptr)
+        {
+            onExportButtonClicked(mExportButton);
+        }
     };
 
     mDropdownButton.onClick = [&]()

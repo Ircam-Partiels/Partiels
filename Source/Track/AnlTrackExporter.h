@@ -12,7 +12,7 @@ namespace Track
         static juce::Result toPreset(Accessor const& accessor, juce::File const& file);
         static juce::Result fromPreset(Accessor& accessor, juce::File const& file);
 
-        static void toImage(Accessor const& accessor, AlertType const alertType);
+        static juce::Result toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height);
 
         static void toCsv(Accessor const& accessor, AlertType const alertType);
 

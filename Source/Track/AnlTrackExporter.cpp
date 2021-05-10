@@ -1,5 +1,6 @@
 #include "AnlTrackExporter.h"
-#include "AnlTrackGraphics.h"
+#include "../Transport/AnlTransportModel.h"
+#include "AnlTrackPlot.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -49,74 +50,44 @@ juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& f
     return juce::Result::ok();
 }
 
-void Track::Exporter::toImage(Accessor const& accessor, AlertType const alertType)
+juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height)
 {
-    juce::FileChooser fc(juce::translate("Export to image"), {}, "*.png;*.jpeg;*.jpg");
-    if(!fc.browseForFileToSave(true))
+    if(width <= 0 || height <= 0)
     {
-        return;
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because image size is not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
     }
-
-    juce::TemporaryFile temp(fc.getResult());
-
-    auto constexpr icon = juce::AlertWindow::AlertIconType::WarningIcon;
-    auto const title = juce::translate("Export as image failed!");
+    juce::TemporaryFile temp(file);
 
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
     if(imageFormat == nullptr)
     {
-        if(alertType != AlertType::window)
-        {
-            return;
-        }
-        auto const message = juce::translate("The track ANLNAME can not be exported as image because the file format of FLNM supported.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
-        return;
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
 
     juce::FileOutputStream stream(temp.getFile());
     if(!stream.openedOk())
     {
-        if(alertType != AlertType::window)
-        {
-            return;
-        }
-        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
-        return;
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
 
-    auto const& graphics = accessor.getAttr<AttrType::graphics>();
-    if(graphics.empty())
+    Transport::Accessor transportAccessor;
+    Plot plot(accessor, timeZoomAccessor, transportAccessor);
+    plot.setSize(width, height);
+    
+    juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
+    juce::Graphics g(image);
+    plot.paint(g);
+
+    if(!imageFormat->writeImageToStream(image, stream))
     {
-        if(alertType != AlertType::window)
-        {
-            return;
-        }
-        auto const message = juce::translate("The track ANLNAME can not be exported as image because the rendering is not ready.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
-        return;
-    }
-    if(!imageFormat->writeImageToStream(graphics.back(), stream))
-    {
-        if(alertType != AlertType::window)
-        {
-            return;
-        }
-        auto const message = juce::translate("The track ANLNAME can not be exported as image because the output stream of FLNM cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
-        return;
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        if(alertType != AlertType::window)
-        {
-            return;
-        }
-        auto const message = juce::translate("The analysis ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNM", temp.getTargetFile().getFullPathName()));
-        juce::AlertWindow::showMessageBox(icon, title, message);
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
+    return juce::Result::ok();
 }
 
 void Track::Exporter::toCsv(Accessor const& accessor, AlertType const alertType)
