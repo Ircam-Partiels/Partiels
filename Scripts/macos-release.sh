@@ -53,7 +53,7 @@ if [[ $request_status != "success" ]]; then
 fi
 
 APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
-ThisPath/macos-package.sh
+$ThisPath/macos-package.sh
 
 echo '\033[0;34m' "Compressing apple image disk..."
 echo '\033[0m'

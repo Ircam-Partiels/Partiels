@@ -6,9 +6,12 @@ APP_NAME="Partiels"
 
 APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
 
+cd $REPO_PATH/build
+
 echo '\033[0;34m' "Creating apple disk image..."
 echo '\033[0m'
-cp -r -f $REPO_PATH/build/Partiels.app $REPO_PATH/build/app
+mkdir -p $REPO_PATH/build/app
+cp -r -f $REPO_PATH/build/Partiels.app $REPO_PATH/build/app/
 test -f "$APP_NAME-v$APP_VERSION.dmg" && rm "$APP_NAME-v$APP_VERSION.dmg"
 
 create-dmg \
