@@ -78,7 +78,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::EditRemoveItem);
         menu.addCommandItem(&commandManager, CommandIDs::EditNewTrack);
         menu.addCommandItem(&commandManager, CommandIDs::EditNewGroup);
-        menu.addCommandItem(&commandManager, CommandIDs::EditLoadTemplate);
     }
     else if(menuName == "Transport")
     {
