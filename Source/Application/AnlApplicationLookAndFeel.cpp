@@ -342,7 +342,8 @@ void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow
         return juce::Image();
     };
 
-    g.drawImage(getIcon(), {-48.0f, -20.0f, 180.0f, 180.0f});
+    g.setColour(alert.findColour(juce::AlertWindow::ColourIds::outlineColourId));
+    g.drawImage(getIcon(), {-48.0f, -20.0f, 180.0f, 180.0f}, juce::RectanglePlacement::stretchToFit, true);
 
     g.setColour(alert.findColour(juce::AlertWindow::ColourIds::textColourId));
     textLayout.draw(g, textArea.withX(84).withTop(12).toFloat());
