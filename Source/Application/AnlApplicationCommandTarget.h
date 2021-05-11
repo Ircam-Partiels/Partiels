@@ -37,6 +37,7 @@ namespace Application
             
             , ViewZoomIn
             , ViewZoomOut
+            , ViewInfoBubble
             
             , HelpOpenAudioSettings
             , HelpOpenAbout

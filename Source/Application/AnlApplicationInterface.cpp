@@ -364,6 +364,7 @@ Application::Interface::Interface()
             case AttrType::showTooltip:
             {
                 mDocumentSection.showBubbleInfo(acsr.getAttr<AttrType::showTooltip>());
+                mTooltipButton.setToggleState(acsr.getAttr<AttrType::showTooltip>(), juce::NotificationType::dontSendNotification);
             }
             break;
         }

@@ -105,6 +105,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::ViewZoomIn);
         menu.addCommandItem(&commandManager, CommandIDs::ViewZoomOut);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::ViewInfoBubble);
     }
     else if(menuName == "Help")
     {

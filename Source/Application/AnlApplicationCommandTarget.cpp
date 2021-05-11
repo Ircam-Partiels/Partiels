@@ -109,6 +109,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::ViewZoomIn
         , CommandIDs::ViewZoomOut
+        , CommandIDs::ViewInfoBubble
         
         , CommandIDs::HelpOpenAudioSettings
         , CommandIDs::HelpOpenAbout
@@ -254,7 +255,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::ViewZoomIn:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-            result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
+            result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
         }
@@ -262,11 +263,19 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::ViewZoomOut:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-            result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "Zoom", 0);
+            result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
         }
         break;
+        case CommandIDs::ViewInfoBubble:
+        {
+            result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggle the info bubble info"), "View", 0);
+            result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(true);
+            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showTooltip>());
+        }
+            break;
 
         case CommandIDs::HelpOpenAudioSettings:
         {
@@ -615,6 +624,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             auto const grange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / 100.0), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::ViewInfoBubble:
+        {
+            auto& accessor = Instance::get().getApplicationAccessor();
+            accessor.setAttr<AttrType::showTooltip>(!accessor.getAttr<AttrType::showTooltip>(), NotificationType::synchronous);
             return true;
         }
 
