@@ -24,7 +24,7 @@ Application::Interface::Loader::FileTable::FileTable()
                 break;
             case AttrType::colourMode:
                 break;
-            case AttrType::showTooltip:
+            case AttrType::showInfoBubble:
                 break;
         }
     };
@@ -346,7 +346,7 @@ Application::Interface::Interface()
     mTooltipButton.onClick = [&]()
     {
         auto& accessor = Instance::get().getApplicationAccessor();
-        accessor.setAttr<AttrType::showTooltip>(mTooltipButton.getToggleState(), NotificationType::synchronous);
+        accessor.setAttr<AttrType::showInfoBubble>(mTooltipButton.getToggleState(), NotificationType::synchronous);
     };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
@@ -361,10 +361,10 @@ Application::Interface::Interface()
                 break;
             case AttrType::colourMode:
                 break;
-            case AttrType::showTooltip:
+            case AttrType::showInfoBubble:
             {
-                mDocumentSection.showBubbleInfo(acsr.getAttr<AttrType::showTooltip>());
-                mTooltipButton.setToggleState(acsr.getAttr<AttrType::showTooltip>(), juce::NotificationType::dontSendNotification);
+                mDocumentSection.showBubbleInfo(acsr.getAttr<AttrType::showInfoBubble>());
+                mTooltipButton.setToggleState(acsr.getAttr<AttrType::showInfoBubble>(), juce::NotificationType::dontSendNotification);
             }
             break;
         }

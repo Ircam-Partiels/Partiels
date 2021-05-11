@@ -88,7 +88,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 }
             }
             break;
-            case AttrType::showTooltip:
+            case AttrType::showInfoBubble:
                 break;
         }
     };

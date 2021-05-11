@@ -59,7 +59,7 @@ Application::CommandTarget::CommandTarget()
                 break;
             case AttrType::colourMode:
                 break;
-            case AttrType::showTooltip:
+            case AttrType::showInfoBubble:
                 break;
         }
     };
@@ -273,7 +273,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggle the info bubble info"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
-            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showTooltip>());
+            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
         }
             break;
 
@@ -629,7 +629,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::ViewInfoBubble:
         {
             auto& accessor = Instance::get().getApplicationAccessor();
-            accessor.setAttr<AttrType::showTooltip>(!accessor.getAttr<AttrType::showTooltip>(), NotificationType::synchronous);
+            accessor.setAttr<AttrType::showInfoBubble>(!accessor.getAttr<AttrType::showInfoBubble>(), NotificationType::synchronous);
             return true;
         }
 

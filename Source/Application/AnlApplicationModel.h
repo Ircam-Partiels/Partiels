@@ -16,7 +16,7 @@ namespace Application
         , recentlyOpenedFilesList
         , currentDocumentFile
         , colourMode
-        , showTooltip
+        , showInfoBubble
     };
 
     using AttrContainer = Model::Container
@@ -24,7 +24,7 @@ namespace Application
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
     , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
-    , Model::Attr<AttrType::showTooltip, bool, Flag::basic>
+    , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
     >;
     // clang-format on
 
