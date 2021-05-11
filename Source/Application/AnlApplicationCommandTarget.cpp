@@ -94,6 +94,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::DocumentSave
         , CommandIDs::DocumentDuplicate
         , CommandIDs::DocumentConsolidate
+        , CommandIDs::DocumentExport
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
@@ -156,6 +157,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidate the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getAttr<Document::AttrType::file>() != juce::File());
+        }
+        break;
+        case CommandIDs::DocumentExport:
+        {
+            result.setInfo(juce::translate("Export..."), juce::translate("Export the document"), "Application", 0);
+            result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
         }
         break;
 
@@ -346,6 +354,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::DocumentConsolidate:
         {
             showUnsupportedAction();
+            return true;
+        }
+
+        case CommandIDs::DocumentExport:
+        {
+            if(auto* imageExpoter = Instance::get().getImageExporter())
+            {
+                imageExpoter->show();
+            }
             return true;
         }
 

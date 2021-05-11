@@ -51,6 +51,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
         return;
     }
 
+    mImageExporter = std::make_unique<ImageExporter>();
+    if(mImageExporter == nullptr)
+    {
+        anlDebug("Application", "Failed.");
+        return;
+    }
+
     mApplicationListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -163,6 +170,7 @@ void Application::Instance::shutdown()
     mApplicationAccessor.removeListener(mApplicationListener);
     mDocumentFileBased.removeChangeListener(this);
     getBackupFile().deleteFile();
+    mImageExporter.reset();
     mAbout.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
@@ -231,6 +239,11 @@ Application::About* Application::Instance::getAbout()
 Application::Window* Application::Instance::getWindow()
 {
     return mWindow.get();
+}
+
+Application::ImageExporter* Application::Instance::getImageExporter()
+{
+    return mImageExporter.get();
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()

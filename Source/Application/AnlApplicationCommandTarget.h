@@ -22,6 +22,7 @@ namespace Application
             , DocumentSave
             , DocumentDuplicate
             , DocumentConsolidate
+            , DocumentExport
             
             , EditUndo
             , EditRedo

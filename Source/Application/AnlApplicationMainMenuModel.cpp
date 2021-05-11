@@ -69,6 +69,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::DocumentSave);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentDuplicate);
         menu.addCommandItem(&commandManager, CommandIDs::DocumentConsolidate);
+        menu.addCommandItem(&commandManager, CommandIDs::DocumentExport);
     }
     else if(menuName == "Edit")
     {

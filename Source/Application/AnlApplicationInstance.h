@@ -3,6 +3,7 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioReader.h"
 #include "AnlApplicationAudioSettings.h"
+#include "AnlApplicationExporter.h"
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationMainMenuModel.h"
@@ -44,6 +45,7 @@ namespace Application
         AudioSettings* getAudioSettings();
         About* getAbout();
         Window* getWindow();
+        ImageExporter* getImageExporter();
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
@@ -84,6 +86,7 @@ namespace Application
         std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<About> mAbout;
         std::unique_ptr<AudioSettings> mAudioSettings;
+        std::unique_ptr<ImageExporter> mImageExporter;
     };
 } // namespace Application
 
