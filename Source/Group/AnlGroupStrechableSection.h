@@ -15,7 +15,8 @@ namespace Group
         ~StrechableSection() override;
 
         void moveKeyboardFocusTo(juce::String const& identifier);
-
+        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
 
         // juce::Component

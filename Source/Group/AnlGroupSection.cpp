@@ -66,6 +66,11 @@ Group::Section::~Section()
     mAccessor.removeListener(mListener);
 }
 
+juce::Rectangle<int> Group::Section::getPlotBounds() const
+{
+    return mPlot.getBounds();
+}
+
 void Group::Section::resized()
 {
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));

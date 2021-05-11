@@ -127,6 +127,25 @@ void Group::StrechableSection::moveKeyboardFocusTo(juce::String const& identifie
     }
 }
 
+juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const& identifier) const
+{
+    if(identifier == mAccessor.getAttr<AttrType::identifier>())
+    {
+        return mSection.getPlotBounds();
+    }
+    if(Tools::hasTrackAcsr(mAccessor, identifier))
+    {
+        auto const& contents = mTrackSections.getContents();
+        auto it = contents.find(identifier);
+        if(it != contents.end() && it->second != nullptr)
+        {
+            return it->second->getPlotBounds();
+        }
+    }
+    anlWeakAssert(false);
+    return {};
+}
+
 juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
 {
     class FocusTraverser
