@@ -234,6 +234,27 @@ void Document::Section::showBubbleInfo(bool state)
     }
 }
 
+juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identifier) const
+{
+    auto getGroupIdentifier = [&]()
+    {
+        if(Tools::hasTrackAcsr(mAccessor, identifier) && Tools::isTrackInGroup(mAccessor, identifier))
+        {
+            auto const& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, identifier);
+            return groupAcsr.getAttr<Group::AttrType::identifier>();
+        }
+        return identifier;
+    };
+    
+    auto it = mGroupSections.find(getGroupIdentifier());
+    anlWeakAssert(it != mGroupSections.end());
+    if(it != mGroupSections.end())
+    {
+        return it->second.get()->getPlotBounds(identifier);
+    }
+    return {};
+}
+
 void Document::Section::updateLayout()
 {
     auto createGroupSection = [&](Group::Director& groupDirector)

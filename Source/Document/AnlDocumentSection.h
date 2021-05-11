@@ -30,6 +30,7 @@ namespace Document
 
         void moveKeyboardFocusTo(juce::String const& identifier);
         void showBubbleInfo(bool state);
+        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
         // juce::Component
         void resized() override;
