@@ -35,8 +35,8 @@ namespace Application
             , TransportToggleLooping
             , TransportRewindPlayHead
             
-            , ZoomIn
-            , ZoomOut
+            , ViewZoomIn
+            , ViewZoomOut
             
             , HelpOpenAudioSettings
             , HelpOpenAbout
