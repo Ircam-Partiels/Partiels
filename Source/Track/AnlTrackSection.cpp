@@ -125,6 +125,11 @@ Track::Section::~Section()
     mAccessor.removeListener(mListener);
 }
 
+juce::Rectangle<int> Track::Section::getPlotBounds() const
+{
+    return mPlot.getBounds();
+}
+
 void Track::Section::resized()
 {
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));

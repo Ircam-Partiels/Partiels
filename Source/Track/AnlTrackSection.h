@@ -23,6 +23,8 @@ namespace Track
 
         Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transport::Accessor& transportAcsr);
         ~Section() override;
+        
+        juce::Rectangle<int> getPlotBounds() const;
 
         // juce::Component
         void resized() override;
