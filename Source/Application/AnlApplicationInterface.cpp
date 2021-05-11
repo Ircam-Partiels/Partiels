@@ -405,6 +405,11 @@ void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)
     mDocumentSection.moveKeyboardFocusTo(identifier);
 }
 
+juce::Rectangle<int> Application::Interface::getPlotBounds(juce::String const& identifier) const
+{
+    return mDocumentSection.getPlotBounds(identifier);
+}
+
 void Application::Interface::componentVisibilityChanged(juce::Component& component)
 {
     anlStrongAssert(&component == &mLoader);
