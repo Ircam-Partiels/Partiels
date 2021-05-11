@@ -11,6 +11,6 @@ namespace Group
     public:
         static juce::Result toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height);
     };
-}
+} // namespace Group
 
 ANALYSE_FILE_END
