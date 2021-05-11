@@ -73,11 +73,7 @@ juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
     Transport::Accessor transportAccessor;
     Plot plot(accessor, timeZoomAccessor, transportAccessor);
     plot.setSize(width, height);
-    
-    juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
-    juce::Graphics g(image);
-    plot.paint(g);
-
+    auto const image = plot.createComponentSnapshot({0, 0, width, height});
     if(!imageFormat->writeImageToStream(image, stream))
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
