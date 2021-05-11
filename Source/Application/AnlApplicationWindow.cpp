@@ -80,4 +80,9 @@ void Application::Window::moveKeyboardFocusTo(juce::String const& identifier)
     mInterface.moveKeyboardFocusTo(identifier);
 }
 
+juce::Rectangle<int> Application::Window::getPlotBounds(juce::String const& identifier) const
+{
+    return mInterface.getPlotBounds(identifier);
+}
+
 ANALYSE_FILE_END

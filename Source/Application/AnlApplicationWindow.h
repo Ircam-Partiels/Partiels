@@ -16,6 +16,7 @@ namespace Application
         ~Window() override;
 
         void moveKeyboardFocusTo(juce::String const& identifier);
+        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
         // juce::DocumentWindow
         void closeButtonPressed() override;
