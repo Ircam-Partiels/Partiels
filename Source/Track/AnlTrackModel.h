@@ -107,6 +107,7 @@ namespace Track
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
+        // clang-format off
         Accessor()
         : Accessor(AttrContainer(  {""}
                                  , {""}
@@ -128,6 +129,7 @@ namespace Track
                                  ))
         {
         }
+        // clang-format on
     };
 } // namespace Track
 
