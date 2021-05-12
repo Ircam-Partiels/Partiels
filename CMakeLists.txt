@@ -108,6 +108,9 @@ juce_add_binary_data(ImagesData HEADER_NAME "ImagesData.h" NAMESPACE ImagesData 
 file(GLOB IconsDataSources ${BINARYDATA_DIRECTORY}/Icons/*.png)
 juce_add_binary_data(IconsData HEADER_NAME "IconsData.h" NAMESPACE IconsData SOURCES ${IconsDataSources})
 
+file(GLOB CursorsDataSources ${BINARYDATA_DIRECTORY}/Cursors/*.png)
+juce_add_binary_data(CursorsData HEADER_NAME "CursorsData.h" NAMESPACE CursorsData SOURCES ${CursorsDataSources})
+
 file(GLOB TranslationsDataSources ${TranslationsSources})
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
@@ -121,6 +124,7 @@ target_link_libraries(Partiels PRIVATE
     vamp
     ImagesData
     IconsData
+    CursorsData
     FontsData
     TranslationsData
     MiscData
@@ -139,6 +143,7 @@ target_link_libraries(PartielsTest PRIVATE
     vamp
     ImagesData
     IconsData
+    CursorsData
     FontsData
     TranslationsData
     MiscData
