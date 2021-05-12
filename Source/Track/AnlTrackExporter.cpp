@@ -1,6 +1,7 @@
 #include "AnlTrackExporter.h"
 #include "../Transport/AnlTransportModel.h"
 #include "AnlTrackPlot.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -175,6 +176,69 @@ juce::Result Track::Exporter::toXml(Accessor const& accessor, juce::File const& 
     if(!xml->writeTo(file))
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+    }
+    return juce::Result::ok();
+}
+
+juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file)
+{
+    auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    if(resultsPtr == nullptr)
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("ANLNAME", accessor.getAttr<AttrType::name>())));
+    }
+
+    juce::TemporaryFile temp(file);
+    juce::FileOutputStream stream(temp.getFile());
+
+    if(!stream.openedOk())
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+    }
+
+    auto resultToVar = [](juce::DynamicObject& obj, Plugin::Result const& result)
+    {
+        if(result.hasTimestamp)
+        {
+            obj.setProperty("time", Tools::realTimeToSeconds(result.timestamp));
+        }
+        if(result.hasDuration)
+        {
+            obj.setProperty("duration", Tools::realTimeToSeconds(result.duration));
+        }
+        if(!result.label.empty())
+        {
+            obj.setProperty("label", juce::String(result.label));
+        }
+        if(result.values.size() == 1_z)
+        {
+            obj.setProperty("value", result.values[0]);
+        }
+        else if(result.values.size() > 1_z)
+        {
+            juce::var results;
+            for(auto const& value : result.values)
+            {
+                results.append(value);
+            }
+            obj.setProperty("values", results);
+        }
+    };
+    auto const& results = *resultsPtr;
+    juce::Array<juce::var> array;
+    array.ensureStorageAllocated(static_cast<int>(results.size()));
+    for(auto const& result : results)
+    {
+        juce::var v(new juce::DynamicObject());
+        resultToVar(*v.getDynamicObject(), result);
+        array.add(v);
+    }
+    juce::var const json(array);
+    json.writeToStream(stream);
+
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
     }
     return juce::Result::ok();
 }
