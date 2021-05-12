@@ -115,14 +115,9 @@ std::pair<int, int> Application::ImageExporter::getSizeFor(juce::String const& i
     auto* window = Instance::get().getWindow();
     if(!identifier.isEmpty() && window != nullptr)
     {
-        auto const bounds = window->getPlotBounds(identifier);
+        auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(window->getPlotBounds(identifier));
         anlWeakAssert(!bounds.isEmpty());
-        if(!bounds.isEmpty())
-        {
-            auto const* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(window->getScreenBounds());
-            auto const scale = display != nullptr ? display->scale : 1.0;
-            return {static_cast<int>(std::round(static_cast<double>(bounds.getWidth()) * scale)), static_cast<int>(std::round(static_cast<double>(bounds.getHeight()) * scale))};
-        }
+        return {bounds.getWidth(), bounds.getHeight()};
     }
     return {0, 0};
 }
