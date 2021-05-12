@@ -10,7 +10,7 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     using ColourMap = tinycolormap::ColormapType;
-    
+
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
@@ -18,22 +18,22 @@ namespace Track
         juce::Colour foreground = juce::Colours::white;
         juce::Colour text = juce::Colours::white;
         juce::Colour shadow = juce::Colours::black;
-        
+
         inline bool operator==(ColourSet const& rhd) const noexcept
         {
             return map == rhd.map &&
-            background == rhd.background &&
-            foreground == rhd.foreground &&
-            text == rhd.text &&
-            shadow == rhd.shadow;
+                   background == rhd.background &&
+                   foreground == rhd.foreground &&
+                   text == rhd.text &&
+                   shadow == rhd.shadow;
         }
-        
+
         inline bool operator!=(ColourSet const& rhd) const noexcept
         {
             return !(*this == rhd);
         }
     };
-    
+
     // clang-format off
     enum class WarningType
     {
@@ -106,7 +106,7 @@ namespace Track
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
-        
+
         Accessor()
         : Accessor(AttrContainer(  {""}
                                  , {""}
@@ -129,16 +129,16 @@ namespace Track
         {
         }
     };
-}
+} // namespace Track
 
 namespace XmlParser
 {
-    template<>
+    template <>
     void toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value);
-    
-    template<>
+
+    template <>
     auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
-    -> Track::ColourSet;
-}
+        -> Track::ColourSet;
+} // namespace XmlParser
 
 ANALYSE_FILE_END
