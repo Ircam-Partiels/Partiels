@@ -368,9 +368,9 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::DocumentExport:
         {
-            if(auto* imageExpoter = Instance::get().getImageExporter())
+            if(auto* exporter = Instance::get().getExporter())
             {
-                imageExpoter->show();
+                exporter->show();
             }
             return true;
         }

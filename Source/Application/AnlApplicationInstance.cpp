@@ -51,8 +51,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
         return;
     }
 
-    mImageExporter = std::make_unique<ImageExporter>();
-    if(mImageExporter == nullptr)
+    mExporter = std::make_unique<Exporter>();
+    if(mExporter == nullptr)
     {
         anlDebug("Application", "Failed.");
         return;
@@ -170,7 +170,7 @@ void Application::Instance::shutdown()
     mApplicationAccessor.removeListener(mApplicationListener);
     mDocumentFileBased.removeChangeListener(this);
     getBackupFile().deleteFile();
-    mImageExporter.reset();
+    mExporter.reset();
     mAbout.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
@@ -241,9 +241,9 @@ Application::Window* Application::Instance::getWindow()
     return mWindow.get();
 }
 
-Application::ImageExporter* Application::Instance::getImageExporter()
+Application::Exporter* Application::Instance::getExporter()
 {
-    return mImageExporter.get();
+    return mExporter.get();
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()

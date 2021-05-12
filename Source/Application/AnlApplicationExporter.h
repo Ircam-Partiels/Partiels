@@ -6,12 +6,12 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class ImageExporter
+    class Exporter
     : public FloatingWindowContainer
     {
     public:
-        ImageExporter();
-        ~ImageExporter() override;
+        Exporter();
+        ~Exporter() override;
 
         // juce::Component
         void resized() override;
@@ -21,19 +21,35 @@ namespace Application
         void show(juce::Point<int> const& pt) override;
 
     private:
-        static std::pair<int, int> getSizeFor(juce::String const& identifier);
+        // clang-format off
+        enum class Format
+        {
+              JPEG
+            , PNG
+            , CSV
+            , XML
+            , JSON
+        };
+        // clang-format on
+
         juce::String getSelectedIdentifier() const;
         void updateItems();
-        void sanitizeProperties();
+        void updateFormat();
+        void sanitizeImageProperties();
         void exportToFile();
+
+        static std::pair<int, int> getSizeFor(juce::String const& identifier);
+        static void exportToImage(Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode);
+        static void exportToText(Format format, juce::String const& identifier, bool ignoreGrids);
 
         Document::Accessor::Listener mDocumentListener;
         PropertyList mPropertyItem;
+        PropertyList mPropertyFormat;
         PropertyToggle mPropertyGroupMode;
         PropertyToggle mPropertyAutoSizeMode;
         PropertyNumber mPropertyWidth;
         PropertyNumber mPropertyHeight;
-        PropertyList mPropertyFormat;
+        PropertyToggle mPropertyIgnoreGrids;
         PropertyTextButton mPropertyExport;
 
         auto static constexpr documentItemFactor = 1000000;

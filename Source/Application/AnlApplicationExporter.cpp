@@ -2,26 +2,32 @@
 #include "../Document/AnlDocumentTools.h"
 #include "../Group/AnlGroupExporter.h"
 #include "../Track/AnlTrackExporter.h"
+#include "../Track/AnlTrackTools.h"
 #include "AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
 
-Application::ImageExporter::ImageExporter()
-: FloatingWindowContainer("Image Exporter", *this)
+Application::Exporter::Exporter()
+: FloatingWindowContainer("Exporter", *this)
 , mPropertyItem("Item", "The item to export.", "", std::vector<std::string>{}, [this](size_t index)
                 {
                     juce::ignoreUnused(index);
-                    sanitizeProperties();
+                    sanitizeImageProperties();
                 })
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "XML", "JSON"}, [this](size_t index)
+                  {
+                      juce::ignoreUnused(index);
+                      updateFormat();
+                  })
 , mPropertyGroupMode("Preserve group overlay", "Preserve group overlay of tracks when exporting", [this](bool state)
                      {
                          juce::ignoreUnused(state);
-                         sanitizeProperties();
+                         sanitizeImageProperties();
                      })
 , mPropertyAutoSizeMode("Preserve item size", "Preserve the size of the track or the group", [this](bool state)
                         {
                             juce::ignoreUnused(state);
-                            sanitizeProperties();
+                            sanitizeImageProperties();
                         })
 , mPropertyWidth("Image Width", "Set the width of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [](float value)
                  {
@@ -31,21 +37,23 @@ Application::ImageExporter::ImageExporter()
                   {
                       juce::ignoreUnused(value);
                   })
-, mPropertyFormat("Image Format", "Set the format of the image", "", std::vector<std::string>{"JPEG", "PNG"}, [](size_t index)
-                  {
-                      juce::ignoreUnused(index);
-                  })
-, mPropertyExport("Export", "Export to image", [this]()
+, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [this](bool state)
+                       {
+                           juce::ignoreUnused(state);
+                           sanitizeImageProperties();
+                       })
+, mPropertyExport("Export", "Export the results", [this]()
                   {
                       exportToFile();
                   })
 {
     addAndMakeVisible(mPropertyItem);
+    addAndMakeVisible(mPropertyFormat);
     addAndMakeVisible(mPropertyGroupMode);
     addAndMakeVisible(mPropertyAutoSizeMode);
     addAndMakeVisible(mPropertyWidth);
     addAndMakeVisible(mPropertyHeight);
-    addAndMakeVisible(mPropertyFormat);
+    addAndMakeVisible(mPropertyIgnoreGrids);
     addAndMakeVisible(mPropertyExport);
 
     mDocumentListener.onAttrChanged = [this](Document::Accessor const& acsr, Document::AttrType attribute)
@@ -72,19 +80,20 @@ Application::ImageExporter::ImageExporter()
     mPropertyWidth.entry.setValue(1920.0, juce::NotificationType::dontSendNotification);
     mPropertyHeight.entry.setValue(1200.0, juce::NotificationType::dontSendNotification);
     mPropertyFormat.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    mPropertyIgnoreGrids.entry.setToggleState(true, juce::NotificationType::dontSendNotification);
 
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     documentAcsr.addListener(mDocumentListener, NotificationType::synchronous);
     setSize(300, 200);
 }
 
-Application::ImageExporter::~ImageExporter()
+Application::Exporter::~Exporter()
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     documentAcsr.removeListener(mDocumentListener);
 }
 
-void Application::ImageExporter::resized()
+void Application::Exporter::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     auto setBounds = [&](juce::Component& component)
@@ -95,22 +104,23 @@ void Application::ImageExporter::resized()
         }
     };
     setBounds(mPropertyItem);
+    setBounds(mPropertyFormat);
     setBounds(mPropertyGroupMode);
     setBounds(mPropertyAutoSizeMode);
     setBounds(mPropertyWidth);
     setBounds(mPropertyHeight);
-    setBounds(mPropertyFormat);
+    setBounds(mPropertyIgnoreGrids);
     setBounds(mPropertyExport);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::ImageExporter::show(juce::Point<int> const& pt)
+void Application::Exporter::show(juce::Point<int> const& pt)
 {
     FloatingWindowContainer::show(pt);
     mFloatingWindow.runModalLoop();
 }
 
-std::pair<int, int> Application::ImageExporter::getSizeFor(juce::String const& identifier)
+std::pair<int, int> Application::Exporter::getSizeFor(juce::String const& identifier)
 {
     auto* window = Instance::get().getWindow();
     if(!identifier.isEmpty() && window != nullptr)
@@ -122,7 +132,7 @@ std::pair<int, int> Application::ImageExporter::getSizeFor(juce::String const& i
     return {0, 0};
 }
 
-juce::String Application::ImageExporter::getSelectedIdentifier() const
+juce::String Application::Exporter::getSelectedIdentifier() const
 {
     auto const itemId = mPropertyItem.entry.getSelectedId();
     if(itemId % documentItemFactor == 0)
@@ -165,7 +175,7 @@ juce::String Application::ImageExporter::getSelectedIdentifier() const
     return groupLayout[trackIndex];
 }
 
-void Application::ImageExporter::updateItems()
+void Application::Exporter::updateItems()
 {
     auto const selectedId = getSelectedIdentifier();
 
@@ -223,7 +233,18 @@ void Application::ImageExporter::updateItems()
     }
 }
 
-void Application::ImageExporter::sanitizeProperties()
+void Application::Exporter::updateFormat()
+{
+    auto const isImage = mPropertyFormat.entry.getSelectedItemIndex() < 2;
+    mPropertyGroupMode.setVisible(isImage);
+    mPropertyAutoSizeMode.setVisible(isImage);
+    mPropertyWidth.setVisible(isImage);
+    mPropertyHeight.setVisible(isImage);
+    mPropertyIgnoreGrids.setVisible(!isImage);
+    resized();
+}
+
+void Application::Exporter::sanitizeImageProperties()
 {
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = getSelectedIdentifier();
@@ -255,16 +276,34 @@ void Application::ImageExporter::sanitizeProperties()
     }
 }
 
-void Application::ImageExporter::exportToFile()
+void Application::Exporter::exportToFile()
 {
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = getSelectedIdentifier();
-    auto const width = static_cast<int>(mPropertyWidth.entry.getValue());
-    auto const height = static_cast<int>(mPropertyHeight.entry.getValue());
-    auto const autoSize = mPropertyAutoSizeMode.entry.getToggleState();
-    auto const groupMode = mPropertyGroupMode.entry.getToggleState();
-    auto const extension = mPropertyFormat.entry.getSelectedItemIndex() == 0 ? juce::String("jpg") : juce::String("png");
+    auto const format = magic_enum::enum_value<Format>(static_cast<size_t>(mPropertyFormat.entry.getSelectedItemIndex()));
+    if(format == Format::JPEG || format == Format::PNG)
+    {
+        auto const width = static_cast<int>(mPropertyWidth.entry.getValue());
+        auto const height = static_cast<int>(mPropertyHeight.entry.getValue());
+        auto const autoSize = mPropertyAutoSizeMode.entry.getToggleState();
+        auto const groupMode = mPropertyGroupMode.entry.getToggleState();
+        exportToImage(format, identifier, autoSize, width, height, groupMode);
+    }
+    else
+    {
+        auto const ignoreGrids = mPropertyIgnoreGrids.entry.getToggleState();
+        exportToText(format, identifier, ignoreGrids);
+    }
+}
 
+void Application::Exporter::exportToImage(Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode)
+{
+    anlStrongAssert(format == Format::JPEG || format == Format::PNG);
+    if(format != Format::JPEG && format != Format::PNG)
+    {
+        return;
+    }
+    auto const extension = juce::String(std::string(magic_enum::enum_name(format))).toLowerCase();
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
     auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& file)
     {
@@ -374,7 +413,7 @@ void Application::ImageExporter::exportToFile()
                 AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
                 return;
             }
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export to image succeeded!", "All the groups of the document have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
+            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "All the groups of the document have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
         }
         else
         {
@@ -392,14 +431,14 @@ void Application::ImageExporter::exportToFile()
                     return;
                 }
             }
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export to image succeeded!", "All the tracks of the document have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
+            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "All the tracks of the document have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
         }
     }
     else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
     {
         if(groupMode)
         {
-            juce::FileChooser fc(juce::translate("Export as image"), {}, ((extension == "jpg") ? "*.jpeg;*.jpg" : "*.png"));
+            juce::FileChooser fc(juce::translate("Export as image"), {}, ((format == Format::JPEG) ? "*.jpeg;*.jpg" : "*.png"));
             if(!fc.browseForFileToSave(true))
             {
                 return;
@@ -408,11 +447,11 @@ void Application::ImageExporter::exportToFile()
             auto const result = exportGroup(identifier, file);
             if(result.failed())
             {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export to image failed!", result.getErrorMessage());
+                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
             }
             else
             {
-                AlertWindow::showMessage(AlertWindow::MessageType::info, "Export to image succeeded!", "The group has been exported as an image into the file FILENAME.", {{"FILENAME", file.getFullPathName()}});
+                AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "The group has been exported as an image into the file FILENAME.", {{"FILENAME", file.getFullPathName()}});
             }
         }
         else
@@ -429,12 +468,12 @@ void Application::ImageExporter::exportToFile()
                 AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
                 return;
             }
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export to image succeeded!", "All the tracks of the group have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
+            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "All the tracks of the group have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
         }
     }
     else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
     {
-        juce::FileChooser fc(juce::translate("Export as image"), {}, ((extension == "jpg") ? "*.jpeg;*.jpg" : "*.png"));
+        juce::FileChooser fc(juce::translate("Export as image"), {}, ((format == Format::JPEG) ? "*.jpeg;*.jpg" : "*.png"));
         if(!fc.browseForFileToSave(true))
         {
             return;
@@ -443,12 +482,155 @@ void Application::ImageExporter::exportToFile()
         auto const result = exportTrack(identifier, file);
         if(result.failed())
         {
-            AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export to image failed!", result.getErrorMessage());
+            AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
         }
         else
         {
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export to image succeeded!", "The track has been exported as an image into the file FILENAME.", {{"FILENAME", file.getFullPathName()}});
+            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "The track has been exported as an image into the file FILENAME.", {{"FILENAME", file.getFullPathName()}});
         }
+    }
+}
+
+void Application::Exporter::exportToText(Format format, juce::String const& identifier, bool ignoreGrids)
+{
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto const formatName = juce::String(std::string(magic_enum::enum_name(format)));
+    auto const formatExtension = formatName.toLowerCase();
+    auto const formatWilcard = "*." + formatExtension;
+
+    auto const fcTitle = juce::translate("Export as FORMATNAME").replace("FORMATNAME", formatName);
+    auto const failedTitle = juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", formatName);
+    auto const succeededTitle = juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", formatName);
+
+    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& file)
+    {
+        auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
+        anlStrongAssert(documentHasTrack);
+        if(!documentHasTrack)
+        {
+            return juce::Result::fail("Track is invalid");
+        }
+        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
+        if(ignoreGrids && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::grid)
+        {
+            return juce::Result::ok();
+        }
+
+        switch(format)
+        {
+            case Format::JPEG:
+                return juce::Result::fail("Unsupported format");
+            case Format::PNG:
+                return juce::Result::fail("Unsupported format");
+            case Format::CSV:
+                return Track::Exporter::toCsv(trackAcsr, file);
+            case Format::XML:
+                return Track::Exporter::toXml(trackAcsr, file);
+            case Format::JSON:
+                return Track::Exporter::toJson(trackAcsr, file);
+        }
+        return juce::Result::fail("Unsupported format");
+    };
+
+    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& file)
+    {
+        auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
+        anlStrongAssert(documentHasGroup);
+        if(!documentHasGroup)
+        {
+            return juce::Result::fail("Group is invalid");
+        }
+
+        auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
+        auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                     {
+                                                         return !Document::Tools::hasTrackAcsr(documentAcsr, trackId);
+                                                     });
+        auto const& groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
+        for(auto const& trackIdentifier : groupLayout)
+        {
+            auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
+            anlStrongAssert(documentHasTrack);
+            if(!documentHasTrack)
+            {
+                return juce::Result::fail("Track is invalid");
+            }
+            auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
+            auto const& trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
+            auto const trackFile = file.getNonexistentChildFile(groupName + "_" + trackName, "." + formatExtension);
+            auto const result = exportTrack(trackIdentifier, trackFile);
+            if(result.failed())
+            {
+                return result;
+            }
+        }
+        return juce::Result::ok();
+    };
+
+    if(identifier.isEmpty())
+    {
+        juce::FileChooser fc(fcTitle, {}, formatWilcard);
+        if(!fc.browseForDirectory())
+        {
+            return;
+        }
+        juce::MouseCursor::showWaitCursor();
+        auto const file = fc.getResult();
+        auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
+                                                        {
+                                                            return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
+                                                        });
+
+        for(auto const& groupIdentifier : documentLayout)
+        {
+            auto const result = exportGroupTracks(groupIdentifier, file);
+            if(result.failed())
+            {
+                juce::MouseCursor::hideWaitCursor();
+                AlertWindow::showMessage(AlertWindow::MessageType::warning, failedTitle, result.getErrorMessage());
+                return;
+            }
+        }
+        AlertWindow::showMessage(AlertWindow::MessageType::info, succeededTitle, "All the tracks of the document have been exported as FORMATNAME into the directory DIRNAME.", {{"FORMATNAME", formatName}, {"DIRNAME", file.getFullPathName()}});
+        juce::MouseCursor::hideWaitCursor();
+    }
+    else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
+    {
+        juce::FileChooser fc(juce::translate("Export as images"), {}, "");
+        if(!fc.browseForDirectory())
+        {
+            return;
+        }
+        juce::MouseCursor::showWaitCursor();
+        auto const file = fc.getResult();
+        auto const result = exportGroupTracks(identifier, file);
+        if(result.failed())
+        {
+            juce::MouseCursor::hideWaitCursor();
+            AlertWindow::showMessage(AlertWindow::MessageType::warning, failedTitle, result.getErrorMessage());
+            return;
+        }
+        juce::MouseCursor::hideWaitCursor();
+        AlertWindow::showMessage(AlertWindow::MessageType::info, succeededTitle, "All the tracks of the group have been exported as FORMATNAME into the directory DIRNAME.", {{"FORMATNAME", formatName}, {"DIRNAME", file.getFullPathName()}});
+    }
+    else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
+    {
+        juce::FileChooser fc(fcTitle, {}, formatWilcard);
+        if(!fc.browseForFileToSave(true))
+        {
+            return;
+        }
+        juce::MouseCursor::showWaitCursor();
+        auto const file = fc.getResult();
+        auto const result = exportTrack(identifier, file);
+        if(result.failed())
+        {
+            juce::MouseCursor::hideWaitCursor();
+            AlertWindow::showMessage(AlertWindow::MessageType::warning, failedTitle, result.getErrorMessage());
+            return;
+        }
+        juce::MouseCursor::hideWaitCursor();
+        AlertWindow::showMessage(AlertWindow::MessageType::info, succeededTitle, "The track has been exported as FORMATNAME into the file FILENAME.", {{"FORMATNAME", formatName}, {"FILENAME", file.getFullPathName()}});
     }
 }
 
