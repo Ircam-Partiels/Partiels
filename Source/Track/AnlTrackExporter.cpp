@@ -219,11 +219,15 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         json.emplace_back(resultToVar(result));
     }
-    
+
     juce::TemporaryFile temp(file);
     std::ofstream stream(temp.getFile().getFullPathName().toStdString());
-    stream << json << std::endl;;
-
+    if(!stream.is_open() || !stream.good())
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as JSON because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+    }
+    stream << json << std::endl;
+    stream.close();
     if(!temp.overwriteTargetFileWithTemporary())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
