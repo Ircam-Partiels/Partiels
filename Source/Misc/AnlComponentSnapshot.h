@@ -13,7 +13,7 @@ public:
     ~ComponentSnapshot() override = default;
 
     void showCameraCursor(bool state);
-    void takeSnapshot(juce::Component& component, juce::String const& name);
+    void takeSnapshot(juce::Component& component, juce::String const& name, juce::Colour const& backgroundColour);
 
     // juce::Component
     void paintOverChildren(juce::Graphics& g) override;

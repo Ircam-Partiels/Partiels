@@ -9,12 +9,35 @@ void ComponentSnapshot::showCameraCursor(bool state)
     setMouseCursor(state ? camera : juce::MouseCursor::NormalCursor);
 }
 
-void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String const& name)
+void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String const& name, juce::Colour const& backgroundColour)
 {
+    auto createSnapshot = [&](juce::Rectangle<int> areaToGrab, float scaleFactor) -> juce::Image
+    {
+        auto const r = areaToGrab.getIntersection(component.getLocalBounds());
+        if(r.isEmpty())
+        {
+            return {};
+        }
+        
+        auto const w = static_cast<int>(std::round(scaleFactor * static_cast<float>(r.getWidth())));
+        auto const h = static_cast<int>(std::round(scaleFactor * static_cast<float>(r.getHeight())));
+        
+        juce::Image image(component.isOpaque() || backgroundColour.isOpaque() ? juce::Image::PixelFormat::RGB : juce::Image::PixelFormat::ARGB, w, h, true);
+        juce::Graphics g(image);
+        if(w != getWidth() || h != getHeight())
+        {
+            g.addTransform(juce::AffineTransform::scale(static_cast<float>(w) / static_cast<float>(r.getWidth()), static_cast<float>(h) / static_cast<float>(r.getHeight())));
+        }
+        g.setOrigin(-r.getPosition());
+        g.fillAll(backgroundColour);
+        component.paintEntireComponent(g, false);
+        return image;
+    };
+    
     juce::MouseCursor::showWaitCursor();
     auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
     auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
-    auto const file(desktop.getNonexistentChildFile(juce::File::createLegalFileName(name) + "_" + date, ".jpg"));
+    auto const file(desktop.getNonexistentChildFile(juce::File::createLegalFileName(name) + "_" + date, ".png"));
     juce::TemporaryFile temp(file);
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
     anlWeakAssert(imageFormat != nullptr);
@@ -34,7 +57,7 @@ void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String co
     const auto* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(component.getScreenBounds(), true);
     auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(component.getScreenBounds());
     auto const scale = (display != nullptr ? static_cast<float>(display->scale) : 1.0f) * juce::Component::getApproximateScaleFactorForComponent(&component);
-    auto const image = component.createComponentSnapshot(bounds.withZeroOrigin(), true, scale);
+    auto const image = createSnapshot(bounds.withZeroOrigin(), scale);
 
     if(!imageFormat->writeImageToStream(image, stream))
     {
@@ -54,10 +77,9 @@ void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String co
         auto const snapshotHeight = std::max(image.getHeight() * (snapshotWidth / image.getWidth()), 32);
         mImage = juce::Image(juce::Image::PixelFormat::ARGB, snapshotWidth, snapshotHeight, true);
         juce::Graphics g(mImage);
-        g.fillAll(juce::Colours::black);
-        g.setColour(juce::Colours::white);
+        g.drawImageAt(image.rescaled(snapshotWidth, snapshotHeight), 0, 0, false);
+        g.setColour(juce::Colours::black);
         g.drawRect(0, 0, snapshotWidth, snapshotHeight);
-        g.drawImageAt(image.rescaled(snapshotWidth - 8, snapshotHeight - 8), 4, 4);
     }
 
     juce::MouseCursor::hideWaitCursor();

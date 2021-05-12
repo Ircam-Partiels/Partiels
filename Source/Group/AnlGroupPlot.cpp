@@ -145,7 +145,7 @@ void Group::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
     updateMode(event);
     if(event.mods.isCtrlDown())
     {
-        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>());
+        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);
     }
 }
 
