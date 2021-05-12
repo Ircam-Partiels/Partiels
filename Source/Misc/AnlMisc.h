@@ -8,6 +8,7 @@
 #include "AnlChrono.h"
 #include "AnlColourSelector.h"
 #include "AnlColouredPanel.h"
+#include "AnlComponentSnapshot.h"
 #include "AnlConcertinaTable.h"
 #include "AnlDecorator.h"
 #include "AnlDraggableTable.h"
