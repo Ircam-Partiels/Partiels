@@ -87,7 +87,6 @@ Group::Plot::Overlay::Overlay(Plot& plot)
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
-    addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
 
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
@@ -126,17 +125,54 @@ void Group::Plot::Overlay::resized()
 void Group::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     updateTooltip({event.x, event.y});
+    updateMode(event);
 }
 
 void Group::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
     updateTooltip({event.x, event.y});
+    updateMode(event);
 }
 
 void Group::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     setTooltip("");
+}
+
+void Group::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
+{
+    updateMode(event);
+    if(event.mods.isCtrlDown())
+    {
+        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>());
+    }
+}
+
+void Group::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
+{
+    updateMode(event);
+}
+
+void Group::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
+{
+    updateMode(event);
+}
+
+void Group::Plot::Overlay::updateMode(juce::MouseEvent const& event)
+{
+    if(event.mods.isCtrlDown() && !mSnapshotMode)
+    {
+        mSnapshotMode = true;
+        showCameraCursor(true);
+        removeMouseListener(&mTransportPlayheadBar);
+    }
+    else if(!event.mods.isCtrlDown() && mSnapshotMode)
+    {
+        mSnapshotMode = false;
+        showCameraCursor(false);
+        addMouseListener(&mTransportPlayheadBar, false);
+    }
 }
 
 void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)

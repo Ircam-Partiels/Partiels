@@ -20,7 +20,7 @@ namespace Group
         void resized() override;
         
         class Overlay
-        : public juce::Component
+        : public ComponentSnapshot
         , public Tooltip::BubbleClient
         {
         public:
@@ -32,15 +32,20 @@ namespace Group
             void mouseMove(juce::MouseEvent const& event) override;
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
+            void mouseDown(juce::MouseEvent const& event) override;
+            void mouseDrag(juce::MouseEvent const& event) override;
+            void mouseUp(juce::MouseEvent const& event) override;
             
         private:
             void updateTooltip(juce::Point<int> const& pt);
+            void updateMode(juce::MouseEvent const& event);
             
             Plot& mPlot;
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
             Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadBar mTransportPlayheadBar;
+            bool mSnapshotMode{false};
         };
         
     private:
