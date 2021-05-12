@@ -243,4 +243,30 @@ auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identi
     return value;
 }
 
+template <>
+void XmlParser::toXml<Plugin::Result>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Result const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        auto realTimeToSeconds = [](Vamp::RealTime const& rt)
+        {
+            return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
+        };
+
+        if(value.hasTimestamp)
+        {
+            toXml(*child, "time", realTimeToSeconds(value.timestamp));
+        }
+        if(value.hasDuration)
+        {
+            toXml(*child, "duration", realTimeToSeconds(value.duration));
+        }
+        toXml(*child, "label", value.label);
+        toXml(*child, "values", value.values);
+        xml.addChildElement(child.release());
+    }
+}
+
 ANALYSE_FILE_END
