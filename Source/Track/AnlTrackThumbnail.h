@@ -22,9 +22,7 @@ namespace Track
 
         Thumbnail(Director& director);
         ~Thumbnail() override;
-
-        std::function<void(juce::Button& button)> onExportButtonClicked = nullptr;
-
+        
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
@@ -42,7 +40,6 @@ namespace Track
         PropertyPanel mPropertyPanel{mDirector};
         juce::ImageButton mDropdownButton;
         juce::ImageButton mPropertiesButton;
-        juce::ImageButton mExportButton;
         StateButton mStateButton{mAccessor};
     };
 } // namespace Track

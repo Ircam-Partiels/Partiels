@@ -72,43 +72,6 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
     };
 
-    mThumbnail.onExportButtonClicked = [&](juce::Button& button)
-    {
-        auto const processing = mAccessor.getAttr<AttrType::processing>();
-        auto const& results = mAccessor.getAttr<AttrType::results>();
-        auto const resultsAreReady = !std::get<0>(processing) && results != nullptr && !results->empty();
-        juce::PopupMenu menu;
-        menu.addItem("Export as CSV...", resultsAreReady, false, [this]()
-                     {
-                         juce::FileChooser fc(juce::translate("Export as CVS..."), {}, "*.csv");
-                         if(!fc.browseForFileToSave(true))
-                         {
-                             return;
-                         }
-                         auto const result = Exporter::toCsv(mAccessor, fc.getResult());
-                         if(result.failed())
-                         {
-                             AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as CVS failed!", result.getErrorMessage());
-                         }
-                     });
-        menu.addItem("Export as XML...", resultsAreReady, false, [this]()
-                     {
-                         juce::FileChooser fc(juce::translate("Export as XML..."), {}, "*.xml");
-                         if(!fc.browseForFileToSave(true))
-                         {
-                             return;
-                         }
-                         auto const result = Exporter::toXml(mAccessor, fc.getResult());
-                         if(result.failed())
-                         {
-                             AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as XML failed!", result.getErrorMessage());
-                         }
-                     });
-        menu.showAt(&button);
-        // Force to repaint to update the state
-        button.setState(juce::Button::ButtonState::buttonNormal);
-    };
-
     addChildComponent(mValueRuler);
     addChildComponent(mValueScrollBar);
     addChildComponent(mBinRuler);

@@ -8,15 +8,12 @@ Track::Thumbnail::Thumbnail(Director& director)
 {
     addAndMakeVisible(mPropertiesButton);
     mPropertiesButton.setWantsKeyboardFocus(false);
-    addAndMakeVisible(mExportButton);
-    mExportButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mDropdownButton);
     mDropdownButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
-    mExportButton.setTooltip(juce::translate("Export the analysis"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
     mPropertiesButton.onClick = [&]()
@@ -31,14 +28,6 @@ Track::Thumbnail::Thumbnail(Director& director)
         }
     };
 
-    mExportButton.onClick = [&]()
-    {
-        if(onExportButtonClicked != nullptr)
-        {
-            onExportButtonClicked(mExportButton);
-        }
-    };
-
     mDropdownButton.onClick = [&]()
     {
         juce::PopupMenu menu;
@@ -50,7 +39,6 @@ Track::Thumbnail::Thumbnail(Director& director)
             }
         };
         addItem(mPropertiesButton);
-        addItem(mExportButton);
         menu.showAt(&mDropdownButton);
     };
 
@@ -126,7 +114,6 @@ void Track::Thumbnail::resized()
     };
 
     layoutButton(mStateButton);
-    layoutButton(mExportButton);
     layoutButton(mPropertiesButton);
     mDropdownButton.setVisible(useDropdown);
     if(useDropdown)
@@ -160,7 +147,6 @@ void Track::Thumbnail::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
-        laf->setButtonIcon(mExportButton, IconManager::IconType::share);
         laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
     }
 }
