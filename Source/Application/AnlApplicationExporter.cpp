@@ -13,6 +13,8 @@ Application::Exporter::Exporter()
                 {
                     juce::ignoreUnused(index);
                     sanitizeImageProperties();
+                    auto const itemId = mPropertyItem.entry.getSelectedId();
+                    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0);
                 })
 , mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "XML", "JSON"}, [this](size_t index)
                   {
@@ -53,7 +55,7 @@ Application::Exporter::Exporter()
     addAndMakeVisible(mPropertyAutoSizeMode);
     addAndMakeVisible(mPropertyWidth);
     addAndMakeVisible(mPropertyHeight);
-    addAndMakeVisible(mPropertyIgnoreGrids);
+    addChildComponent(mPropertyIgnoreGrids);
     addAndMakeVisible(mPropertyExport);
 
     mDocumentListener.onAttrChanged = [this](Document::Accessor const& acsr, Document::AttrType attribute)
