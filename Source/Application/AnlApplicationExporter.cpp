@@ -172,7 +172,7 @@ void Application::ImageExporter::updateItems()
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& entryBox = mPropertyItem.entry;
     entryBox.clear(juce::NotificationType::dontSendNotification);
-    entryBox.addItem(juce::translate("Document: All"), documentItemFactor);
+    entryBox.addItem(juce::translate("All (Document)"), documentItemFactor);
     auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
                                                     {
                                                         return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
