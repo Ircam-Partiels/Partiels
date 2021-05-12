@@ -38,7 +38,6 @@ namespace Group
 
         juce::ImageButton mDropdownButton;
         juce::ImageButton mNameButton;
-        juce::ImageButton mExportButton;
         StateButton mStateButton{mAccessor};
         juce::ImageButton mExpandButton;
     };

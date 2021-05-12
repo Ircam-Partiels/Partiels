@@ -8,8 +8,6 @@ Group::Thumbnail::Thumbnail(Director& director)
 {
     addAndMakeVisible(mNameButton);
     mNameButton.setWantsKeyboardFocus(false);
-    addAndMakeVisible(mExportButton);
-    mExportButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
@@ -18,19 +16,12 @@ Group::Thumbnail::Thumbnail(Director& director)
     mDropdownButton.setWantsKeyboardFocus(false);
 
     mNameButton.setTooltip(juce::translate("Change the name of the group or the tracks' properties"));
-    mExportButton.setTooltip(juce::translate("Export the group"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
     mExpandButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
-    };
-
-    mExportButton.onClick = [&]()
-    {
-        // Force to repaint to update the state
-        mExportButton.setState(juce::Button::ButtonState::buttonNormal);
     };
 
     auto getNameMenu = [&]()
@@ -130,7 +121,6 @@ Group::Thumbnail::Thumbnail(Director& director)
             }
         };
         addItem(mNameButton);
-        addItem(mExportButton);
         addItem(mExpandButton);
         menu.showAt(&mDropdownButton);
     };
@@ -196,8 +186,6 @@ void Group::Thumbnail::resized()
     mExpandButton.setEnabled(hasTrack);
     layoutButton(mStateButton);
     mStateButton.setEnabled(hasTrack);
-    layoutButton(mExportButton);
-    mExportButton.setEnabled(hasTrack);
     layoutButton(mNameButton);
     mDropdownButton.setVisible(hasTrack && useDropdown);
     if(useDropdown)
@@ -232,7 +220,6 @@ void Group::Thumbnail::lookAndFeelChanged()
     {
         laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
         laf->setButtonIcon(mNameButton, IconManager::IconType::properties);
-        laf->setButtonIcon(mExportButton, IconManager::IconType::share);
         if(mAccessor.getAttr<AttrType::expanded>())
         {
             laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);
