@@ -12,14 +12,9 @@ juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& f
     {
         return juce::Result::fail(juce::translate("The file FLNAME cannot be parsed to preset format.").replace("FLNAME", file.getFullPathName()));
     }
-
-    if(!xml->hasAttribute("key"))
+    if(!xml->hasTagName("preset"))
     {
-        return juce::Result::fail(juce::translate("The preset file FLNAME doesn't contain a plugin key.").replace("FLNAME", file.getFullPathName()));
-    }
-    if(!xml->hasAttribute("state"))
-    {
-        return juce::Result::fail(juce::translate("The preset file FLNAME doesn't contain a saved state.").replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The preset file FLNAME is not valid.").replace("FLNAME", file.getFullPathName()));
     }
 
     auto const key = XmlParser::fromXml(*xml.get(), "key", Plugin::Key());
@@ -34,7 +29,7 @@ juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& f
 juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File const& file)
 {
     auto const title = juce::translate("Export as preset failed!");
-    auto xml = std::make_unique<juce::XmlElement>("Preset");
+    auto xml = std::make_unique<juce::XmlElement>("preset");
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
     {
