@@ -10,93 +10,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 , mUndoManager(undoManager)
 , mAudioFormatReaderManager(std::move(audioFormatReader))
 {
-    auto sanitizeZooms = [this](NotificationType notification)
-    {
-        // Value Zoom
-        {
-            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-            auto applyZoom = [&](Zoom::Range const& globalRange)
-            {
-                auto const& output = mAccessor.getAttr<AttrType::description>().output;
-                auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
-                auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, NotificationType::synchronous);
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
-            };
-
-            auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-            auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
-            if(globalRange.isEmpty() && pluginRange.has_value() && !pluginRange->isEmpty())
-            {
-                applyZoom(*pluginRange);
-            }
-            else if(globalRange.isEmpty() && resultsRange.has_value() && !resultsRange->isEmpty())
-            {
-                applyZoom(*resultsRange);
-            }
-        }
-
-        // Bin Zoom
-        {
-            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-            auto applyZoom = [&](Zoom::Range const& globalRange)
-            {
-                auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
-                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, notification);
-            };
-
-            auto const pluginRange = Tools::getBinRange(mAccessor.getAttr<AttrType::description>());
-            auto const resultsRange = Tools::getBinRange(mAccessor.getAttr<AttrType::results>());
-            if(pluginRange.has_value() && !pluginRange->isEmpty())
-            {
-                applyZoom(*pluginRange);
-            }
-            else if(resultsRange.has_value() && !resultsRange->isEmpty())
-            {
-                applyZoom(*resultsRange);
-            }
-        }
-    };
-
-    auto updateLinkedZoom = [this](NotificationType notification)
-    {
-        if(!mAccessor.getAttr<AttrType::zoomLink>() || !mSharedZoomAccessor.has_value())
-        {
-            return;
-        }
-        std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
-        if(!lock.owns_lock())
-        {
-            return;
-        }
-
-        auto& sharedZoom = mSharedZoomAccessor->get();
-        switch(Tools::getDisplayType(mAccessor))
-        {
-            case Tools::DisplayType::markers:
-                break;
-            case Tools::DisplayType::segments:
-            {
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
-                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
-            }
-            break;
-            case Tools::DisplayType::grid:
-            {
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
-                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
-            }
-            break;
-        }
-    };
-
-    accessor.onAttrUpdated = [=, this](AttrType attr, NotificationType notification)
+    accessor.onAttrUpdated = [this](AttrType attr, NotificationType notification)
     {
         switch(attr)
         {
@@ -163,6 +77,40 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         }
     };
 
+    auto updateLinkedZoom = [this](NotificationType notification)
+    {
+        if(!mAccessor.getAttr<AttrType::zoomLink>() || !mSharedZoomAccessor.has_value())
+        {
+            return;
+        }
+        std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
+        if(!lock.owns_lock())
+        {
+            return;
+        }
+
+        auto& sharedZoom = mSharedZoomAccessor->get();
+        switch(Tools::getDisplayType(mAccessor))
+        {
+            case Tools::DisplayType::markers:
+                break;
+            case Tools::DisplayType::segments:
+            {
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
+                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
+            }
+            break;
+            case Tools::DisplayType::grid:
+            {
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
+                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
+            }
+            break;
+        }
+    };
+
     auto& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
     valueZoomAcsr.onAttrUpdated = [=, this](Zoom::AttrType attr, NotificationType notification)
     {
@@ -170,6 +118,26 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         {
             case Zoom::AttrType::globalRange:
             {
+                auto const globalRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::globalRange>();
+                auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+                auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+                if(globalRange.isEmpty())
+                {
+                    mValueRangeMode = ValueRangeMode::undefined;
+                }
+                else if(pluginRange.has_value() && !globalRange.isEmpty() && globalRange == *pluginRange)
+                {
+                    mValueRangeMode = ValueRangeMode::plugin;
+                }
+                else if(resultsRange.has_value() && !globalRange.isEmpty() && globalRange == *resultsRange)
+                {
+                    mValueRangeMode = ValueRangeMode::results;
+                }
+                else
+                {
+                    mValueRangeMode = ValueRangeMode::custom;
+                }
+
                 if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments)
                 {
                     updateLinkedZoom(notification);
@@ -477,6 +445,58 @@ void Track::Director::runRendering()
 {
     startTimer(50);
     mGraphics.runRendering(mAccessor);
+}
+
+void Track::Director::sanitizeZooms(NotificationType const notification)
+{
+    // Value Zoom
+    {
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+        auto applyZoom = [&](Zoom::Range const& globalRange)
+        {
+            auto const& output = mAccessor.getAttr<AttrType::description>().output;
+            auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
+            auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, NotificationType::synchronous);
+            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
+        };
+
+        auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+        auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
+        auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+        if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::plugin || globalRange.isEmpty()) && pluginRange.has_value() && !pluginRange->isEmpty())
+        {
+            applyZoom(*pluginRange);
+        }
+        else if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::results || globalRange.isEmpty()) && resultsRange.has_value() && !resultsRange->isEmpty())
+        {
+            applyZoom(*resultsRange);
+        }
+    }
+
+    // Bin Zoom
+    {
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+        auto applyZoom = [&](Zoom::Range const& globalRange)
+        {
+            auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
+            zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, notification);
+            zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(1.0, notification);
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, notification);
+        };
+
+        auto const pluginRange = Tools::getBinRange(mAccessor.getAttr<AttrType::description>());
+        auto const resultsRange = Tools::getBinRange(mAccessor.getAttr<AttrType::results>());
+        if(pluginRange.has_value() && !pluginRange->isEmpty())
+        {
+            applyZoom(*pluginRange);
+        }
+        else if(resultsRange.has_value() && !resultsRange->isEmpty())
+        {
+            applyZoom(*resultsRange);
+        }
+    }
 }
 
 void Track::Director::timerCallback()
