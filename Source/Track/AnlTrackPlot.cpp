@@ -537,7 +537,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
-    addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
 
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -611,17 +610,54 @@ void Track::Plot::Overlay::paint(juce::Graphics& g)
 void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
     updateTooltip({event.x, event.y});
+    updateMode(event);
 }
 
 void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
     updateTooltip({event.x, event.y});
+    updateMode(event);
 }
 
 void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
     setTooltip("");
+}
+
+void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
+{
+    updateMode(event);
+    if(event.mods.isCtrlDown())
+    {
+        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>());
+    }
+}
+
+void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
+{
+    updateMode(event);
+}
+
+void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
+{
+    updateMode(event);
+}
+
+void Track::Plot::Overlay::updateMode(juce::MouseEvent const& event)
+{
+    if(event.mods.isCtrlDown() && !mSnapshotMode)
+    {
+        mSnapshotMode = true;
+        showCameraCursor(true);
+        removeMouseListener(&mTransportPlayheadBar);
+    }
+    else if(!event.mods.isCtrlDown() && mSnapshotMode)
+    {
+        mSnapshotMode = false;
+        showCameraCursor(false);
+        addMouseListener(&mTransportPlayheadBar, false);
+    }
 }
 
 void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
