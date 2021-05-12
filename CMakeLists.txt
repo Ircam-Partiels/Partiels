@@ -97,9 +97,12 @@ set(PartielsDefinitions
 target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
 target_compile_definitions(PartielsTest PRIVATE ${PartielsDefinitions})
 
+target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
+target_include_directories(PartielsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
+
 if(WIN32)
-target_include_directories(Partiels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/steinberg-asio-sdk)
-target_include_directories(PartielsTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/steinberg-asio-sdk)
+target_include_directories(Partiels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
+target_include_directories(PartielsTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
 endif()
 
 file(GLOB ImagesDataSources ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)

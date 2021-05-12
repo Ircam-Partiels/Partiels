@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../Misc/AnlMisc.h"
-#include "../Zoom/AnlZoomModel.h"
 #include "../Plugin/AnlPluginModel.h"
-#include "../../tinycolormap/include/tinycolormap.hpp"
+#include "../Zoom/AnlZoomModel.h"
+#include <tinycolormap/tinycolormap.hpp>
 
 ANALYSE_FILE_BEGIN
 

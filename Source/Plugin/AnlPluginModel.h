@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../tinycolormap/include/tinycolormap.hpp"
 #include "../Misc/AnlMisc.h"
 #include "../Zoom/AnlZoomModel.h"
+#include <tinycolormap/tinycolormap.hpp>
 #include <vamp-hostsdk/PluginHostAdapter.h>
 #include <vamp-hostsdk/PluginInputDomainAdapter.h>
 #include <vamp-hostsdk/PluginWrapper.h>

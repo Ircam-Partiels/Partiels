@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../magic_enum/include/magic_enum.hpp"
 #include "AnlNotifier.h"
 #include "AnlXmlParser.h"
+#include <magic_enum/magic_enum.hpp>
 
 ANALYSE_FILE_BEGIN
 
