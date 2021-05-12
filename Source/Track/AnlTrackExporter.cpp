@@ -2,6 +2,11 @@
 #include "../Transport/AnlTransportModel.h"
 #include "AnlTrackPlot.h"
 #include "AnlTrackTools.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#include <json/json.hpp>
+#pragma GCC diagnostic pop
+#include <fstream>
 
 ANALYSE_FILE_BEGIN
 
@@ -183,53 +188,41 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("ANLNAME", accessor.getAttr<AttrType::name>())));
     }
 
-    juce::TemporaryFile temp(file);
-    juce::FileOutputStream stream(temp.getFile());
-
-    if(!stream.openedOk())
+    auto resultToVar = [](Plugin::Result const& result)
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
-    }
-
-    auto resultToVar = [](juce::DynamicObject& obj, Plugin::Result const& result)
-    {
+        nlohmann::json json;
         if(result.hasTimestamp)
         {
-            obj.setProperty("time", Tools::realTimeToSeconds(result.timestamp));
+            json["time"] = Tools::realTimeToSeconds(result.timestamp);
         }
         if(result.hasDuration)
         {
-            obj.setProperty("duration", Tools::realTimeToSeconds(result.duration));
+            json["duration"] = Tools::realTimeToSeconds(result.duration);
         }
         if(!result.label.empty())
         {
-            obj.setProperty("label", juce::String(result.label));
+            json["label"] = result.label;
         }
         if(result.values.size() == 1_z)
         {
-            obj.setProperty("value", result.values[0]);
+            json["value"] = result.values[0];
         }
         else if(result.values.size() > 1_z)
         {
-            juce::var results;
-            for(auto const& value : result.values)
-            {
-                results.append(value);
-            }
-            obj.setProperty("values", results);
+            json["values"] = result.values;
         }
+        return json;
     };
     auto const& results = *resultsPtr;
-    juce::Array<juce::var> array;
-    array.ensureStorageAllocated(static_cast<int>(results.size()));
+    nlohmann::json json;
     for(auto const& result : results)
     {
-        juce::var v(new juce::DynamicObject());
-        resultToVar(*v.getDynamicObject(), result);
-        array.add(v);
+        json.emplace_back(resultToVar(result));
     }
-    juce::var const json(array);
-    json.writeToStream(stream);
+    
+    juce::TemporaryFile temp(file);
+    std::ofstream stream(temp.getFile().getFullPathName().toStdString());
+    stream << json << std::endl;;
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
