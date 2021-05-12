@@ -43,6 +43,9 @@ juce::Image IconManager::getIcon(IconType const type)
         case IconType::pause:
             return juce::ImageCache::getFromMemory(IconsData::pause_png, IconsData::pause_pngSize);
             break;
+        case IconType::photocamera:
+            return juce::ImageCache::getFromMemory(IconsData::photocamera_png, IconsData::photocamera_pngSize);
+            break;
         case IconType::play:
             return juce::ImageCache::getFromMemory(IconsData::play_png, IconsData::play_pngSize);
             break;

@@ -31,6 +31,7 @@ public:
         , loop
         , navigate
         , pause
+        , photocamera
         , play
         , properties
         , question
