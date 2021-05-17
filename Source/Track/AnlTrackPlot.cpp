@@ -537,6 +537,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
+    addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
 
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)

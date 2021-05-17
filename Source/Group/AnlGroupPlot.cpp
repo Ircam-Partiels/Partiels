@@ -87,6 +87,7 @@ Group::Plot::Overlay::Overlay(Plot& plot)
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
+    addMouseListener(&mTransportPlayheadBar, false);
     setInterceptsMouseClicks(true, true);
 
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
