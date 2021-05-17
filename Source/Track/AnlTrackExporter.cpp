@@ -185,36 +185,6 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toXml(Accessor const& accessor, juce::File const& file)
-{
-    juce::MessageManager::Lock lock;
-    if(!lock.tryEnter())
-    {
-        return juce::Result::fail("Invalid threaded access to model");
-    }
-    auto const resultsPtr = accessor.getAttr<AttrType::results>();
-    auto const name = accessor.getAttr<AttrType::name>();
-    lock.exit();
-    
-    if(resultsPtr == nullptr)
-    {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the results are not valid.").replace("ANLNAME", name).replace("ANLNAME", accessor.getAttr<AttrType::name>()));
-    }
-
-    auto xml = std::make_unique<juce::XmlElement>("results");
-    if(xml == nullptr)
-    {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the results cannot be parsed to XML format.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
-    }
-    XmlParser::toXml(*xml.get(), "row", *resultsPtr);
-
-    if(!xml->writeTo(file))
-    {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-    }
-    return juce::Result::ok();
-}
-
 juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file)
 {
     juce::MessageManager::Lock lock;
