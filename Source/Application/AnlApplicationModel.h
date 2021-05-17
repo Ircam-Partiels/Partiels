@@ -9,6 +9,119 @@ namespace Application
 {
     using Flag = Model::Flag;
 
+    struct ExportOptions
+    {
+        // clang-format off
+        enum class Format
+        {
+              jpeg
+            , png
+            , csv
+            , json
+        };
+
+        enum class ColumnSeparator
+        {
+              comma
+            , space
+            , tab
+            , pipe
+            , slash
+            , colon
+        };
+        // clang-format on
+
+        Format format{Format::jpeg};
+        bool useGroupOverview{false};
+        bool useAutoSize{false};
+        int imageWidth{1920};
+        int imageHeight{1200};
+        bool includeHeaderRaw{true};
+        bool ignoreGridResults{true};
+        ColumnSeparator columnSeparator{ColumnSeparator::comma};
+
+        inline bool operator==(ExportOptions const& rhd) const noexcept
+        {
+            return format == rhd.format &&
+                   useGroupOverview == rhd.useGroupOverview &&
+                   useAutoSize == rhd.useAutoSize &&
+                   imageWidth == rhd.imageWidth &&
+                   imageHeight == rhd.imageHeight &&
+                   includeHeaderRaw == rhd.includeHeaderRaw &&
+                   ignoreGridResults == rhd.ignoreGridResults &&
+                   columnSeparator == rhd.columnSeparator;
+        }
+
+        inline bool operator!=(ExportOptions const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+
+        inline bool useImageFormat() const noexcept
+        {
+            return format == Format::jpeg || format == Format::png;
+        }
+
+        inline bool useTextFormat() const noexcept
+        {
+            return !useImageFormat();
+        }
+
+        juce::String getFormatName() const
+        {
+            return juce::String(std::string(magic_enum::enum_name(format)));
+        }
+
+        juce::String getFormatExtension() const
+        {
+            return getFormatName().toLowerCase();
+        }
+
+        juce::String getFormatWilcard() const
+        {
+            if(format == Format::jpeg)
+            {
+                return "*.jpeg;*.jpg";
+            }
+            return "*." + getFormatExtension();
+        }
+
+        char getSeparatorChar() const
+        {
+            switch(columnSeparator)
+            {
+                case ColumnSeparator::comma:
+                {
+                    return ';';
+                }
+                case ColumnSeparator::space:
+                {
+                    return ' ';
+                }
+                case ColumnSeparator::tab:
+                {
+                    return '\t';
+                }
+                case ColumnSeparator::pipe:
+                {
+                    return '|';
+                }
+                case ColumnSeparator::slash:
+                {
+                    return '/';
+                }
+                case ColumnSeparator::colon:
+                {
+                    return ':';
+                }
+                default:
+                {
+                    return ';';
+                }
+            }
+        }
+    };
+
     // clang-format off
     enum class AttrType : size_t
     {
@@ -17,6 +130,7 @@ namespace Application
         , currentDocumentFile
         , colourMode
         , showInfoBubble
+        , exportOptions
     };
 
     using AttrContainer = Model::Container
@@ -25,6 +139,7 @@ namespace Application
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
     , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
     , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
+    , Model::Attr<AttrType::exportOptions, ExportOptions, Flag::basic>
     >;
     // clang-format on
 
@@ -42,6 +157,7 @@ namespace Application
             , {juce::File{}}
             , {LookAndFeel::ColourChart::Mode::night}
             , {true}
+            , {}
         }))
         {
         }
@@ -75,5 +191,15 @@ namespace Application
         }
     };
 } // namespace Application
+
+namespace XmlParser
+{
+    template <>
+    void toXml<Application::ExportOptions>(juce::XmlElement& xml, juce::Identifier const& attributeName, Application::ExportOptions const& value);
+
+    template <>
+    auto fromXml<Application::ExportOptions>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Application::ExportOptions const& defaultValue)
+        -> Application::ExportOptions;
+} // namespace XmlParser
 
 ANALYSE_FILE_END
