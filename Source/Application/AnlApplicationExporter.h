@@ -31,7 +31,6 @@ namespace Application
               JPEG
             , PNG
             , CSV
-            , XML
             , JSON
         };
         // clang-format on

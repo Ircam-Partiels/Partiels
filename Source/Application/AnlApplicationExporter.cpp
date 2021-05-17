@@ -612,8 +612,6 @@ juce::Result Application::Exporter::exportToText(juce::File const file, Format f
                 return juce::Result::fail("Unsupported format");
             case Format::CSV:
                 return Track::Exporter::toCsv(trackAcsr, trackFile);
-            case Format::XML:
-                return Track::Exporter::toXml(trackAcsr, trackFile);
             case Format::JSON:
                 return Track::Exporter::toJson(trackAcsr, trackFile);
         }
