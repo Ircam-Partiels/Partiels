@@ -79,7 +79,7 @@ void Track::Plot::paint(juce::Graphics& g)
     }
 
     auto const bounds = getLocalBounds();
-    if(bounds.isEmpty())
+    if(bounds.isEmpty() || g.getClipBounds().isEmpty())
     {
         return;
     }
