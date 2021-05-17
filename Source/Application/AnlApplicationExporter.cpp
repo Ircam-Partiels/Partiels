@@ -315,7 +315,8 @@ void Application::Exporter::exportToFile()
         mLoadingCircle.setActive(true);
         juce::MouseCursor::showWaitCursor();
         setEnabled(false);
-
+        mFloatingWindow.setCanBeClosedByUser(false);
+        
         mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
                               {
                                   auto const result = exportToImage(file, format, identifier, autoSize, width, height, groupMode);
@@ -351,7 +352,8 @@ void Application::Exporter::exportToFile()
         mLoadingCircle.setActive(true);
         juce::MouseCursor::showWaitCursor();
         setEnabled(false);
-
+        mFloatingWindow.setCanBeClosedByUser(false);
+        
         mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
                               {
                                   juce::Thread::setCurrentThreadName("Exporter");
@@ -368,6 +370,7 @@ void Application::Exporter::exportToFile()
 
 void Application::Exporter::handleAsyncUpdate()
 {
+    mFloatingWindow.setCanBeClosedByUser(true);
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     setEnabled(true);
