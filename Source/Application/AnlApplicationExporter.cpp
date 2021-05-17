@@ -57,6 +57,7 @@ Application::Exporter::Exporter()
     addAndMakeVisible(mPropertyHeight);
     addChildComponent(mPropertyIgnoreGrids);
     addAndMakeVisible(mPropertyExport);
+    addAndMakeVisible(mLoadingCircle);
 
     mDocumentListener.onAttrChanged = [this](Document::Accessor const& acsr, Document::AttrType attribute)
     {
@@ -93,6 +94,11 @@ Application::Exporter::~Exporter()
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     documentAcsr.removeListener(mDocumentListener);
+
+    if(mProcess.valid())
+    {
+        mProcess.get();
+    }
 }
 
 void Application::Exporter::resized()
@@ -113,6 +119,7 @@ void Application::Exporter::resized()
     setBounds(mPropertyHeight);
     setBounds(mPropertyIgnoreGrids);
     setBounds(mPropertyExport);
+    mLoadingCircle.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
@@ -280,6 +287,7 @@ void Application::Exporter::sanitizeImageProperties()
 
 void Application::Exporter::exportToFile()
 {
+    auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = getSelectedIdentifier();
     auto const format = magic_enum::enum_value<Format>(static_cast<size_t>(mPropertyFormat.entry.getSelectedItemIndex()));
     if(format == Format::JPEG || format == Format::PNG)
@@ -288,27 +296,110 @@ void Application::Exporter::exportToFile()
         auto const height = static_cast<int>(mPropertyHeight.entry.getValue());
         auto const autoSize = mPropertyAutoSizeMode.entry.getToggleState();
         auto const groupMode = mPropertyGroupMode.entry.getToggleState();
-        exportToImage(format, identifier, autoSize, width, height, groupMode);
+
+        auto const useDirectory = identifier.isEmpty() || (!groupMode && Document::Tools::hasGroupAcsr(documentAcsr, identifier));
+
+        juce::FileChooser fc(juce::translate("Export as image"), {}, ((format == Format::JPEG) ? "*.jpeg;*.jpg" : "*.png"));
+        auto const fcresult = useDirectory ? fc.browseForDirectory() : fc.browseForFileToSave(true);
+        if(!fcresult)
+        {
+            return;
+        }
+
+        anlStrongAssert(!mProcess.valid());
+        if(mProcess.valid())
+        {
+            return;
+        }
+
+        mLoadingCircle.setActive(true);
+        juce::MouseCursor::showWaitCursor();
+        setEnabled(false);
+
+        mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
+                              {
+                                  auto const result = exportToImage(file, format, identifier, autoSize, width, height, groupMode);
+                                  triggerAsyncUpdate();
+                                  if(result.failed())
+                                  {
+                                      return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as image failed!"), result.getErrorMessage());
+                                  }
+                                  return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as image succeeded!"), juce::translate("The analyses have been exported as image(s) to FILENAME.").replace("FILENAME", file.getFullPathName()));
+                              });
     }
     else
     {
         auto const ignoreGrids = mPropertyIgnoreGrids.entry.getToggleState();
-        exportToText(format, identifier, ignoreGrids);
+        auto const formatName = juce::String(std::string(magic_enum::enum_name(format)));
+        auto const formatWilcard = "*." + formatName.toLowerCase();
+
+        auto const useDirectory = identifier.isEmpty() || Document::Tools::hasGroupAcsr(documentAcsr, identifier);
+
+        juce::FileChooser fc(juce::translate("Export as FORMATNAME").replace("FORMATNAME", formatName), {}, formatWilcard);
+        auto const fcresult = useDirectory ? fc.browseForDirectory() : fc.browseForFileToSave(true);
+        if(!fcresult)
+        {
+            return;
+        }
+
+        anlStrongAssert(!mProcess.valid());
+        if(mProcess.valid())
+        {
+            return;
+        }
+
+        mLoadingCircle.setActive(true);
+        juce::MouseCursor::showWaitCursor();
+        setEnabled(false);
+
+        mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
+                              {
+                                  juce::Thread::setCurrentThreadName("Exporter");
+                                  auto const result = exportToText(file, format, identifier, ignoreGrids);
+                                  triggerAsyncUpdate();
+                                  if(result.failed())
+                                  {
+                                      return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", formatName), result.getErrorMessage());
+                                  }
+                                  return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", formatName), juce::translate("The analyses have been exported as FORMATNAME to FILENAME.").replace("FORMATNAME", formatName).replace("FILENAME", file.getFullPathName()));
+                              });
     }
 }
 
-void Application::Exporter::exportToImage(Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode)
+void Application::Exporter::handleAsyncUpdate()
+{
+    mLoadingCircle.setActive(false);
+    juce::MouseCursor::hideWaitCursor();
+    setEnabled(true);
+    anlStrongAssert(mProcess.valid());
+    if(!mProcess.valid())
+    {
+        return;
+    }
+    auto const result = mProcess.get();
+    AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), std::get<2>(result));
+}
+
+juce::Result Application::Exporter::exportToImage(juce::File const file, Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode)
 {
     anlStrongAssert(format == Format::JPEG || format == Format::PNG);
     if(format != Format::JPEG && format != Format::PNG)
     {
-        return;
+        return juce::Result::fail("Invalid format");
+    }
+    if(file == juce::File())
+    {
+        return juce::Result::fail("Invalid file");
     }
     auto const extension = juce::String(std::string(magic_enum::enum_name(format))).toLowerCase();
     auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& file)
+    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
     {
+        juce::MessageManager::Lock lock;
+        if(!lock.tryEnter())
+        {
+            return juce::Result::fail("Invalid threaded threadsafe access");
+        }
         auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
         anlStrongAssert(documentHasTrack);
         if(!documentHasTrack)
@@ -319,11 +410,19 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
         auto const trackWidth = autoSize ? std::get<0>(size) : width;
         auto const trackheight = autoSize ? std::get<1>(size) : height;
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-        return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, file, trackWidth, trackheight);
+        auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+        lock.exit();
+
+        return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, trackFile, trackWidth, trackheight);
     };
 
-    auto exportGroup = [&](juce::String const& groupIdentifier, juce::File const& file)
+    auto exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
     {
+        juce::MessageManager::Lock lock;
+        if(!lock.tryEnter())
+        {
+            return juce::Result::fail("Invalid threaded threadsafe access");
+        }
         auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
         anlStrongAssert(documentHasGroup);
         if(!documentHasGroup)
@@ -334,11 +433,19 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
         auto const groupWidth = autoSize ? std::get<0>(size) : width;
         auto const groupheight = autoSize ? std::get<1>(size) : height;
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, file, groupWidth, groupheight);
+        auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+        lock.exit();
+
+        return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, groupFile, groupWidth, groupheight);
     };
 
-    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& file)
+    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
     {
+        juce::MessageManager::Lock lock;
+        if(!lock.tryEnter())
+        {
+            return juce::Result::fail("Invalid threaded threadsafe access");
+        }
         auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
         anlStrongAssert(documentHasGroup);
         if(!documentHasGroup)
@@ -351,9 +458,15 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
                                                      {
                                                          return !Document::Tools::hasTrackAcsr(documentAcsr, trackId);
                                                      });
-        auto const& groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
+        auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
+        lock.exit();
+
         for(auto const& trackIdentifier : groupLayout)
         {
+            if(!lock.tryEnter())
+            {
+                return juce::Result::fail("Invalid threaded threadsafe access");
+            }
             auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
             anlStrongAssert(documentHasTrack);
             if(!documentHasTrack)
@@ -361,8 +474,10 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
                 return juce::Result::fail("Track is invalid");
             }
             auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-            auto const& trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
-            auto const trackFile = file.getNonexistentChildFile(groupName + "_" + trackName, "." + extension);
+            auto const trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
+            lock.exit();
+
+            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + extension);
             auto const result = exportTrack(trackIdentifier, trackFile);
             if(result.failed())
             {
@@ -372,14 +487,25 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
         return juce::Result::ok();
     };
 
-    auto exportDocumentGroups = [&](juce::File const& file)
+    auto exportDocumentGroups = [&](juce::File const& documentFolder)
     {
+        juce::MessageManager::Lock lock;
+        if(!lock.tryEnter())
+        {
+            return juce::Result::fail("Invalid threaded threadsafe access");
+        }
         auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
                                                         {
                                                             return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
                                                         });
+        lock.exit();
+
         for(auto const& groupIdentifier : documentLayout)
         {
+            if(!lock.tryEnter())
+            {
+                return juce::Result::fail("Invalid threaded threadsafe access");
+            }
             auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
             anlStrongAssert(documentHasGroup);
             if(!documentHasGroup)
@@ -388,8 +514,10 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
             }
 
             auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-            auto const& groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
-            auto const groupFile = file.getNonexistentChildFile(groupName, "." + extension);
+            auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
+            lock.exit();
+
+            auto const groupFile = documentFolder.getNonexistentChildFile(groupName, "." + extension);
             auto const result = exportGroup(groupIdentifier, groupFile);
             if(result.failed())
             {
@@ -399,23 +527,18 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
         return juce::Result::ok();
     };
 
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded threadsafe access");
+    }
+
     if(identifier.isEmpty())
     {
-        juce::FileChooser fc(juce::translate("Export as images"), {}, "");
-        if(!fc.browseForDirectory())
-        {
-            return;
-        }
-        auto const file = fc.getResult();
         if(groupMode)
         {
-            auto const result = exportDocumentGroups(file);
-            if(result.failed())
-            {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
-                return;
-            }
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "All the groups of the document have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
+            lock.exit();
+            return exportDocumentGroups(file);
         }
         else
         {
@@ -423,89 +546,48 @@ void Application::Exporter::exportToImage(Format format, juce::String const& ide
                                                             {
                                                                 return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
                                                             });
+            lock.exit();
 
             for(auto const& groupIdentifier : documentLayout)
             {
                 auto const result = exportGroupTracks(groupIdentifier, file);
                 if(result.failed())
                 {
-                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
-                    return;
+                    return result;
                 }
             }
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "All the tracks of the document have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
+            return juce::Result::ok();
         }
     }
     else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
     {
-        if(groupMode)
-        {
-            juce::FileChooser fc(juce::translate("Export as image"), {}, ((format == Format::JPEG) ? "*.jpeg;*.jpg" : "*.png"));
-            if(!fc.browseForFileToSave(true))
-            {
-                return;
-            }
-            auto const file = fc.getResult();
-            auto const result = exportGroup(identifier, file);
-            if(result.failed())
-            {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
-            }
-            else
-            {
-                AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "The group has been exported as an image into the file FILENAME.", {{"FILENAME", file.getFullPathName()}});
-            }
-        }
-        else
-        {
-            juce::FileChooser fc(juce::translate("Export as images"), {}, "");
-            if(!fc.browseForDirectory())
-            {
-                return;
-            }
-            auto const file = fc.getResult();
-            auto const result = exportGroupTracks(identifier, file);
-            if(result.failed())
-            {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
-                return;
-            }
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "All the tracks of the group have been exported as images into the directory DIRNAME.", {{"DIRNAME", file.getFullPathName()}});
-        }
+        lock.exit();
+        return groupMode ? exportGroup(identifier, file) : exportGroupTracks(identifier, file);
     }
     else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
     {
-        juce::FileChooser fc(juce::translate("Export as image"), {}, ((format == Format::JPEG) ? "*.jpeg;*.jpg" : "*.png"));
-        if(!fc.browseForFileToSave(true))
-        {
-            return;
-        }
-        auto const file = fc.getResult();
-        auto const result = exportTrack(identifier, file);
-        if(result.failed())
-        {
-            AlertWindow::showMessage(AlertWindow::MessageType::warning, "Export as image failed!", result.getErrorMessage());
-        }
-        else
-        {
-            AlertWindow::showMessage(AlertWindow::MessageType::info, "Export as image succeeded!", "The track has been exported as an image into the file FILENAME.", {{"FILENAME", file.getFullPathName()}});
-        }
+        lock.exit();
+        return exportTrack(identifier, file);
     }
+    return juce::Result::fail("Invalid identifier");
 }
 
-void Application::Exporter::exportToText(Format format, juce::String const& identifier, bool ignoreGrids)
+juce::Result Application::Exporter::exportToText(juce::File const file, Format format, juce::String const& identifier, bool ignoreGrids)
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const formatName = juce::String(std::string(magic_enum::enum_name(format)));
-    auto const formatExtension = formatName.toLowerCase();
-    auto const formatWilcard = "*." + formatExtension;
-
-    auto const fcTitle = juce::translate("Export as FORMATNAME").replace("FORMATNAME", formatName);
-    auto const failedTitle = juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", formatName);
-    auto const succeededTitle = juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", formatName);
-
-    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& file)
+    auto const formatExtension = juce::String(std::string(magic_enum::enum_name(format))).toLowerCase();
+    if(file == juce::File())
     {
+        return juce::Result::fail("Invalid file");
+    }
+
+    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
+    {
+        juce::MessageManager::Lock lock;
+        if(!lock.tryEnter())
+        {
+            return juce::Result::fail("Invalid threaded access to model");
+        }
         auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
         anlStrongAssert(documentHasTrack);
         if(!documentHasTrack)
@@ -517,6 +599,7 @@ void Application::Exporter::exportToText(Format format, juce::String const& iden
         {
             return juce::Result::ok();
         }
+        lock.exit();
 
         switch(format)
         {
@@ -525,32 +608,42 @@ void Application::Exporter::exportToText(Format format, juce::String const& iden
             case Format::PNG:
                 return juce::Result::fail("Unsupported format");
             case Format::CSV:
-                return Track::Exporter::toCsv(trackAcsr, file);
+                return Track::Exporter::toCsv(trackAcsr, trackFile);
             case Format::XML:
-                return Track::Exporter::toXml(trackAcsr, file);
+                return Track::Exporter::toXml(trackAcsr, trackFile);
             case Format::JSON:
-                return Track::Exporter::toJson(trackAcsr, file);
+                return Track::Exporter::toJson(trackAcsr, trackFile);
         }
         return juce::Result::fail("Unsupported format");
     };
 
-    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& file)
+    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
     {
+        juce::MessageManager::Lock lock;
+        if(!lock.tryEnter())
+        {
+            return juce::Result::fail("Invalid threaded threadsafe access");
+        }
         auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
         anlStrongAssert(documentHasGroup);
         if(!documentHasGroup)
         {
             return juce::Result::fail("Group is invalid");
         }
-
         auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
                                                      {
                                                          return !Document::Tools::hasTrackAcsr(documentAcsr, trackId);
                                                      });
-        auto const& groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
+        auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
+        lock.exit();
+
         for(auto const& trackIdentifier : groupLayout)
         {
+            if(!lock.tryEnter())
+            {
+                return juce::Result::fail("Invalid threaded threadsafe access");
+            }
             auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
             anlStrongAssert(documentHasTrack);
             if(!documentHasTrack)
@@ -558,8 +651,10 @@ void Application::Exporter::exportToText(Format format, juce::String const& iden
                 return juce::Result::fail("Track is invalid");
             }
             auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-            auto const& trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
-            auto const trackFile = file.getNonexistentChildFile(groupName + "_" + trackName, "." + formatExtension);
+            auto const trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
+            lock.exit();
+
+            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + formatExtension);
             auto const result = exportTrack(trackIdentifier, trackFile);
             if(result.failed())
             {
@@ -569,71 +664,42 @@ void Application::Exporter::exportToText(Format format, juce::String const& iden
         return juce::Result::ok();
     };
 
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded threadsafe access");
+    }
+
     if(identifier.isEmpty())
     {
-        juce::FileChooser fc(fcTitle, {}, formatWilcard);
-        if(!fc.browseForDirectory())
-        {
-            return;
-        }
-        juce::MouseCursor::showWaitCursor();
-        auto const file = fc.getResult();
         auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
                                                         {
                                                             return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
                                                         });
+
+        lock.exit();
 
         for(auto const& groupIdentifier : documentLayout)
         {
             auto const result = exportGroupTracks(groupIdentifier, file);
             if(result.failed())
             {
-                juce::MouseCursor::hideWaitCursor();
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, failedTitle, result.getErrorMessage());
-                return;
+                return result;
             }
         }
-        AlertWindow::showMessage(AlertWindow::MessageType::info, succeededTitle, "All the tracks of the document have been exported as FORMATNAME into the directory DIRNAME.", {{"FORMATNAME", formatName}, {"DIRNAME", file.getFullPathName()}});
-        juce::MouseCursor::hideWaitCursor();
+        return juce::Result::ok();
     }
     else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
     {
-        juce::FileChooser fc(juce::translate("Export as images"), {}, "");
-        if(!fc.browseForDirectory())
-        {
-            return;
-        }
-        juce::MouseCursor::showWaitCursor();
-        auto const file = fc.getResult();
-        auto const result = exportGroupTracks(identifier, file);
-        if(result.failed())
-        {
-            juce::MouseCursor::hideWaitCursor();
-            AlertWindow::showMessage(AlertWindow::MessageType::warning, failedTitle, result.getErrorMessage());
-            return;
-        }
-        juce::MouseCursor::hideWaitCursor();
-        AlertWindow::showMessage(AlertWindow::MessageType::info, succeededTitle, "All the tracks of the group have been exported as FORMATNAME into the directory DIRNAME.", {{"FORMATNAME", formatName}, {"DIRNAME", file.getFullPathName()}});
+        lock.exit();
+        return exportGroupTracks(identifier, file);
     }
     else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
     {
-        juce::FileChooser fc(fcTitle, {}, formatWilcard);
-        if(!fc.browseForFileToSave(true))
-        {
-            return;
-        }
-        juce::MouseCursor::showWaitCursor();
-        auto const file = fc.getResult();
-        auto const result = exportTrack(identifier, file);
-        if(result.failed())
-        {
-            juce::MouseCursor::hideWaitCursor();
-            AlertWindow::showMessage(AlertWindow::MessageType::warning, failedTitle, result.getErrorMessage());
-            return;
-        }
-        juce::MouseCursor::hideWaitCursor();
-        AlertWindow::showMessage(AlertWindow::MessageType::info, succeededTitle, "The track has been exported as FORMATNAME into the file FILENAME.", {{"FORMATNAME", formatName}, {"FILENAME", file.getFullPathName()}});
+        lock.exit();
+        return exportTrack(identifier, file);
     }
+    return juce::Result::fail("Invalid identifier");
 }
 
 ANALYSE_FILE_END

@@ -8,6 +8,7 @@ namespace Application
 {
     class Exporter
     : public FloatingWindowContainer
+    , private juce::AsyncUpdater
     {
     public:
         Exporter();
@@ -21,6 +22,9 @@ namespace Application
         void show(juce::Point<int> const& pt) override;
 
     private:
+        // juce::AsyncUpdater
+        void handleAsyncUpdate() override;
+
         // clang-format off
         enum class Format
         {
@@ -39,8 +43,8 @@ namespace Application
         void exportToFile();
 
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
-        static void exportToImage(Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode);
-        static void exportToText(Format format, juce::String const& identifier, bool ignoreGrids);
+        static juce::Result exportToImage(juce::File const file, Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode);
+        static juce::Result exportToText(juce::File const file, Format format, juce::String const& identifier, bool ignoreGrids);
 
         Document::Accessor::Listener mDocumentListener;
         PropertyList mPropertyItem;
@@ -51,6 +55,8 @@ namespace Application
         PropertyNumber mPropertyHeight;
         PropertyToggle mPropertyIgnoreGrids;
         PropertyTextButton mPropertyExport;
+        LoadingCircle mLoadingCircle;
+        std::future<std::tuple<AlertWindow::MessageType, juce::String, juce::String>> mProcess;
 
         auto static constexpr documentItemFactor = 1000000;
         auto static constexpr groupItemFactor = documentItemFactor / 1000;
