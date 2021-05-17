@@ -99,7 +99,7 @@ void ComponentSnapshot::paintOverChildren(juce::Graphics& g)
 
 void ComponentSnapshot::timerCallback()
 {
-    mAlpha = std::max(mAlpha - 0.025f, 0.0f);
+    mAlpha = std::max(mAlpha - 0.05f, 0.0f);
     repaint();
     if(mAlpha <= 0.0f)
     {
