@@ -243,35 +243,4 @@ auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identi
     return value;
 }
 
-template <>
-void XmlParser::toXml<Plugin::Result>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Result const& value)
-{
-    xml.setTagName(attributeName);
-    auto realTimeToSeconds = [](Vamp::RealTime const& rt)
-    {
-        return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
-    };
-    
-    if(value.hasTimestamp)
-    {
-        toXml(xml, "time", realTimeToSeconds(value.timestamp));
-    }
-    if(value.hasDuration)
-    {
-        toXml(xml, "duration", realTimeToSeconds(value.duration));
-    }
-    if(!value.label.empty())
-    {
-        toXml(xml, "label", value.label);
-    }
-    if(value.values.size() == 1_z)
-    {
-        toXml(xml, "value", value.values[0]);
-    }
-    else if(value.values.size() > 1_z)
-    {
-        toXml(xml, "value", value.values);
-    }
-}
-
 ANALYSE_FILE_END

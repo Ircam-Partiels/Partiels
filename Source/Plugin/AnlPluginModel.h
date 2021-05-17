@@ -202,9 +202,6 @@ namespace XmlParser
     template <>
     auto fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::State const& defaultValue)
         -> Plugin::State;
-
-    template <>
-    void toXml<Plugin::Result>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Result const& value);
 } // namespace XmlParser
 
 ANALYSE_FILE_END
