@@ -140,7 +140,6 @@ Group::Thumbnail::Thumbnail(Director& director)
             break;
             case AttrType::height:
             case AttrType::colour:
-            case AttrType::layout:
             case AttrType::focused:
                 break;
             case AttrType::expanded:
@@ -148,6 +147,7 @@ Group::Thumbnail::Thumbnail(Director& director)
                 lookAndFeelChanged();
             }
             break;
+            case AttrType::layout:
             case AttrType::tracks:
             {
                 resized();
