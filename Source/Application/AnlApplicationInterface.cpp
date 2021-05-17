@@ -21,10 +21,9 @@ Application::Interface::Loader::FileTable::FileTable()
             }
             break;
             case AttrType::currentDocumentFile:
-                break;
             case AttrType::colourMode:
-                break;
             case AttrType::showInfoBubble:
+            case AttrType::exportOptions:
                 break;
         }
     };
@@ -354,12 +353,10 @@ Application::Interface::Interface()
         switch(attribute)
         {
             case AttrType::windowState:
-                break;
             case AttrType::recentlyOpenedFilesList:
-                break;
             case AttrType::currentDocumentFile:
-                break;
             case AttrType::colourMode:
+            case AttrType::exportOptions:
                 break;
             case AttrType::showInfoBubble:
             {

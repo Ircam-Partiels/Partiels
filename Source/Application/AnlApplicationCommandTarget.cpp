@@ -54,12 +54,10 @@ Application::CommandTarget::CommandTarget()
             }
             break;
             case AttrType::currentDocumentFile:
-                break;
             case AttrType::windowState:
-                break;
             case AttrType::colourMode:
-                break;
             case AttrType::showInfoBubble:
+            case AttrType::exportOptions:
                 break;
         }
     };
@@ -275,7 +273,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(true);
             result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::showInfoBubble>());
         }
-            break;
+        break;
 
         case CommandIDs::HelpOpenAudioSettings:
         {
