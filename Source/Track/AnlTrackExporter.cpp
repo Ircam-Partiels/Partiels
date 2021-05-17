@@ -34,7 +34,7 @@ juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& f
 juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File const& file)
 {
     auto const name = accessor.getAttr<AttrType::name>();
-    
+
     auto const title = juce::translate("Export as preset failed!");
     auto xml = std::make_unique<juce::XmlElement>("preset");
     anlWeakAssert(xml != nullptr);
@@ -62,7 +62,7 @@ juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
     }
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
-    
+
     if(width <= 0 || height <= 0)
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because image size is not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
@@ -92,7 +92,7 @@ juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
         plot.setSize(width, height);
         return plot.createComponentSnapshot({0, 0, width, height});
     };
-    
+
     auto const image = getImage();
     if(!imageFormat->writeImageToStream(image, stream))
     {
@@ -106,7 +106,7 @@ juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& file)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& file, bool includeHeader, char separator)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -116,7 +116,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
-    
+
     if(resultsPtr == nullptr)
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the results are not valid.").replace("ANLNAME", name));
@@ -141,7 +141,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     {
         if(state)
         {
-            stream << ',';
+            stream << separator;
         }
         stream << text;
         state = true;
@@ -153,17 +153,21 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         return static_cast<double>(timestamp.sec) + static_cast<double>(timestamp.msec()) / 1000.0;
     };
 
-    addColumn("ROW");
-    addColumn("TIME");
-    addColumn("DURATION");
-    addColumn("LABEL");
-
     auto const& results = *resultsPtr;
-    for(size_t i = 0; i < results.front().values.size(); ++i)
+    if(includeHeader)
     {
-        addColumn("BIN " + juce::String(i));
+        addColumn("ROW");
+        addColumn("TIME");
+        addColumn("DURATION");
+        addColumn("LABEL");
+
+        for(size_t i = 0; i < results.front().values.size(); ++i)
+        {
+            addColumn("BIN " + juce::String(i));
+        }
+        addLine();
     }
-    addLine();
+
     for(size_t i = 0; i < results.size(); ++i)
     {
         auto const& result = results[i];
@@ -195,7 +199,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
-    
+
     if(resultsPtr == nullptr)
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", name).replace("ANLNAME", accessor.getAttr<AttrType::name>()));

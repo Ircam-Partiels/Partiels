@@ -9,40 +9,66 @@ ANALYSE_FILE_BEGIN
 
 Application::Exporter::Exporter()
 : FloatingWindowContainer("Exporter", *this)
-, mPropertyItem("Item", "The item to export.", "", std::vector<std::string>{}, [this](size_t index)
+, mPropertyItem("Item", "The item to export", "", std::vector<std::string>{""}, [this](size_t index)
                 {
                     juce::ignoreUnused(index);
-                    sanitizeImageProperties();
-                    auto const itemId = mPropertyItem.entry.getSelectedId();
-                    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0);
+                    sanitizeProperties(true);
                 })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "XML", "JSON"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON"}, [](size_t index)
                   {
-                      juce::ignoreUnused(index);
-                      updateFormat();
+                      auto& acsr = Instance::get().getApplicationAccessor();
+                      auto options = acsr.getAttr<AttrType::exportOptions>();
+                      options.format = magic_enum::enum_value<ExportOptions::Format>(index);
+                      acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                   })
-, mPropertyGroupMode("Preserve group overlay", "Preserve group overlay of tracks when exporting", [this](bool state)
+, mPropertyGroupMode("Preserve group overlay", "Preserve group overlay of tracks when exporting", [](bool state)
                      {
-                         juce::ignoreUnused(state);
-                         sanitizeImageProperties();
+                         auto& acsr = Instance::get().getApplicationAccessor();
+                         auto options = acsr.getAttr<AttrType::exportOptions>();
+                         options.useGroupOverview = state;
+                         acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                      })
-, mPropertyAutoSizeMode("Preserve item size", "Preserve the size of the track or the group", [this](bool state)
+, mPropertyAutoSizeMode("Preserve item size", "Preserve the size of the track or the group", [](bool state)
                         {
-                            juce::ignoreUnused(state);
-                            sanitizeImageProperties();
+                            auto& acsr = Instance::get().getApplicationAccessor();
+                            auto options = acsr.getAttr<AttrType::exportOptions>();
+                            options.useAutoSize = state;
+                            acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                         })
 , mPropertyWidth("Image Width", "Set the width of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [](float value)
                  {
-                     juce::ignoreUnused(value);
+                     auto& acsr = Instance::get().getApplicationAccessor();
+                     auto options = acsr.getAttr<AttrType::exportOptions>();
+                     options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
+                     acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                  })
 , mPropertyHeight("Image Height", "Set the height of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [](float value)
                   {
-                      juce::ignoreUnused(value);
+                      auto& acsr = Instance::get().getApplicationAccessor();
+                      auto options = acsr.getAttr<AttrType::exportOptions>();
+                      options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
+                      acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                   })
-, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [this](bool state)
+, mPropertyRawHeader("Header Row", "Include header row before the data rows", [](bool state)
+                     {
+                         auto& acsr = Instance::get().getApplicationAccessor();
+                         auto options = acsr.getAttr<AttrType::exportOptions>();
+                         options.includeHeaderRaw = state;
+                         acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
+                     })
+, mPropertyRawSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [](size_t index)
+                        {
+                            auto& acsr = Instance::get().getApplicationAccessor();
+                            auto options = acsr.getAttr<AttrType::exportOptions>();
+                            options.columnSeparator = magic_enum::enum_value<ExportOptions::ColumnSeparator>(index);
+                            acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
+                        })
+, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [](bool state)
                        {
-                           juce::ignoreUnused(state);
-                           sanitizeImageProperties();
+                           auto& acsr = Instance::get().getApplicationAccessor();
+                           auto options = acsr.getAttr<AttrType::exportOptions>();
+                           options.ignoreGridResults = state;
+                           acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                        })
 , mPropertyExport("Export", "Export the results", [this]()
                   {
@@ -55,6 +81,8 @@ Application::Exporter::Exporter()
     addAndMakeVisible(mPropertyAutoSizeMode);
     addAndMakeVisible(mPropertyWidth);
     addAndMakeVisible(mPropertyHeight);
+    addChildComponent(mPropertyRawHeader);
+    addChildComponent(mPropertyRawSeparator);
     addChildComponent(mPropertyIgnoreGrids);
     addAndMakeVisible(mPropertyExport);
     addAndMakeVisible(mLoadingCircle);
@@ -80,18 +108,56 @@ Application::Exporter::Exporter()
         updateItems();
     };
 
-    mPropertyWidth.entry.setValue(1920.0, juce::NotificationType::dontSendNotification);
-    mPropertyHeight.entry.setValue(1200.0, juce::NotificationType::dontSendNotification);
-    mPropertyFormat.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
-    mPropertyIgnoreGrids.entry.setToggleState(true, juce::NotificationType::dontSendNotification);
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::windowState:
+            case AttrType::recentlyOpenedFilesList:
+            case AttrType::currentDocumentFile:
+            case AttrType::colourMode:
+            case AttrType::showInfoBubble:
+                break;
+            case AttrType::exportOptions:
+            {
+                auto const options = acsr.getAttr<AttrType::exportOptions>();
+
+                auto constexpr notification = juce::NotificationType::dontSendNotification;
+                mPropertyFormat.entry.setSelectedItemIndex(static_cast<int>(options.format), notification);
+                mPropertyGroupMode.entry.setToggleState(options.useGroupOverview, notification);
+                mPropertyAutoSizeMode.entry.setToggleState(options.useAutoSize, notification);
+                mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), notification);
+                mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), notification);
+                mPropertyRawHeader.entry.setToggleState(options.includeHeaderRaw, notification);
+                mPropertyRawSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), notification);
+                mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, notification);
+
+                mPropertyGroupMode.setVisible(options.useImageFormat());
+                mPropertyAutoSizeMode.setVisible(options.useImageFormat());
+                mPropertyWidth.setVisible(options.useImageFormat());
+                mPropertyHeight.setVisible(options.useImageFormat());
+                mPropertyRawHeader.setVisible(options.format == ExportOptions::Format::csv);
+                mPropertyRawSeparator.setVisible(options.format == ExportOptions::Format::csv);
+                mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+                sanitizeProperties(false);
+                resized();
+            }
+            break;
+        }
+    };
 
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     documentAcsr.addListener(mDocumentListener, NotificationType::synchronous);
+    auto& acsr = Instance::get().getApplicationAccessor();
+    acsr.addListener(mListener, NotificationType::synchronous);
     setSize(300, 200);
 }
 
 Application::Exporter::~Exporter()
 {
+    auto& acsr = Instance::get().getApplicationAccessor();
+    acsr.removeListener(mListener);
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     documentAcsr.removeListener(mDocumentListener);
 
@@ -117,6 +183,8 @@ void Application::Exporter::resized()
     setBounds(mPropertyAutoSizeMode);
     setBounds(mPropertyWidth);
     setBounds(mPropertyHeight);
+    setBounds(mPropertyRawHeader);
+    setBounds(mPropertyRawSeparator);
     setBounds(mPropertyIgnoreGrids);
     setBounds(mPropertyExport);
     mLoadingCircle.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
@@ -242,19 +310,9 @@ void Application::Exporter::updateItems()
     }
 }
 
-void Application::Exporter::updateFormat()
+void Application::Exporter::sanitizeProperties(bool updateModel)
 {
-    auto const isImage = mPropertyFormat.entry.getSelectedItemIndex() < 2;
-    mPropertyGroupMode.setVisible(isImage);
-    mPropertyAutoSizeMode.setVisible(isImage);
-    mPropertyWidth.setVisible(isImage);
-    mPropertyHeight.setVisible(isImage);
-    mPropertyIgnoreGrids.setVisible(!isImage);
-    resized();
-}
-
-void Application::Exporter::sanitizeImageProperties()
-{
+    auto& acsr = Instance::get().getApplicationAccessor();
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = getSelectedIdentifier();
     auto const itemIsDocument = identifier.isEmpty();
@@ -271,101 +329,67 @@ void Application::Exporter::sanitizeImageProperties()
     if(itemIsTrack)
     {
         mPropertyGroupMode.setEnabled(false);
-        mPropertyGroupMode.entry.setToggleState(false, juce::NotificationType::dontSendNotification);
+        if(updateModel)
+        {
+            auto options = acsr.getAttr<AttrType::exportOptions>();
+            options.useGroupOverview = false;
+            acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
+        }
     }
 
-    auto const autoSize = mPropertyAutoSizeMode.entry.getToggleState();
+    auto const autoSize = acsr.getAttr<AttrType::exportOptions>().useAutoSize;
     mPropertyWidth.setEnabled(!autoSize);
     mPropertyHeight.setEnabled(!autoSize);
-    if(autoSize && !itemIsDocument)
+    if(updateModel && autoSize && !itemIsDocument)
     {
         auto const size = getSizeFor(identifier);
-        mPropertyWidth.entry.setValue(std::get<0>(size), juce::NotificationType::dontSendNotification);
-        mPropertyHeight.entry.setValue(std::get<1>(size), juce::NotificationType::dontSendNotification);
+        auto options = acsr.getAttr<AttrType::exportOptions>();
+        options.imageWidth = std::get<0>(size);
+        options.imageHeight = std::get<1>(size);
+        acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
     }
+
+    auto const itemId = mPropertyItem.entry.getSelectedId();
+    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0);
 }
 
 void Application::Exporter::exportToFile()
 {
+    auto const& acsr = Instance::get().getApplicationAccessor();
+    auto const& options = acsr.getAttr<AttrType::exportOptions>();
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = getSelectedIdentifier();
-    auto const format = magic_enum::enum_value<Format>(static_cast<size_t>(mPropertyFormat.entry.getSelectedItemIndex()));
-    if(format == Format::JPEG || format == Format::PNG)
+
+    juce::FileChooser fc(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), {}, options.getFormatWilcard());
+    auto const useDirectory = identifier.isEmpty() || (Document::Tools::hasGroupAcsr(documentAcsr, identifier) && (!options.useGroupOverview || options.useTextFormat()));
+    auto const fcresult = useDirectory ? fc.browseForDirectory() : fc.browseForFileToSave(true);
+    if(!fcresult)
     {
-        auto const width = static_cast<int>(mPropertyWidth.entry.getValue());
-        auto const height = static_cast<int>(mPropertyHeight.entry.getValue());
-        auto const autoSize = mPropertyAutoSizeMode.entry.getToggleState();
-        auto const groupMode = mPropertyGroupMode.entry.getToggleState();
-
-        auto const useDirectory = identifier.isEmpty() || (!groupMode && Document::Tools::hasGroupAcsr(documentAcsr, identifier));
-
-        juce::FileChooser fc(juce::translate("Export as image"), {}, ((format == Format::JPEG) ? "*.jpeg;*.jpg" : "*.png"));
-        auto const fcresult = useDirectory ? fc.browseForDirectory() : fc.browseForFileToSave(true);
-        if(!fcresult)
-        {
-            return;
-        }
-
-        anlStrongAssert(!mProcess.valid());
-        if(mProcess.valid())
-        {
-            return;
-        }
-
-        mLoadingCircle.setActive(true);
-        juce::MouseCursor::showWaitCursor();
-        setEnabled(false);
-        mFloatingWindow.setCanBeClosedByUser(false);
-        
-        mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
-                              {
-                                  auto const result = exportToImage(file, format, identifier, autoSize, width, height, groupMode);
-                                  triggerAsyncUpdate();
-                                  if(result.failed())
-                                  {
-                                      return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as image failed!"), result.getErrorMessage());
-                                  }
-                                  return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as image succeeded!"), juce::translate("The analyses have been exported as image(s) to FILENAME.").replace("FILENAME", file.getFullPathName()));
-                              });
+        return;
     }
-    else
+
+    anlStrongAssert(!mProcess.valid());
+    if(mProcess.valid())
     {
-        auto const ignoreGrids = mPropertyIgnoreGrids.entry.getToggleState();
-        auto const formatName = juce::String(std::string(magic_enum::enum_name(format)));
-        auto const formatWilcard = "*." + formatName.toLowerCase();
-
-        auto const useDirectory = identifier.isEmpty() || Document::Tools::hasGroupAcsr(documentAcsr, identifier);
-
-        juce::FileChooser fc(juce::translate("Export as FORMATNAME").replace("FORMATNAME", formatName), {}, formatWilcard);
-        auto const fcresult = useDirectory ? fc.browseForDirectory() : fc.browseForFileToSave(true);
-        if(!fcresult)
-        {
-            return;
-        }
-
-        anlStrongAssert(!mProcess.valid());
-        if(mProcess.valid())
-        {
-            return;
-        }
-
-        mLoadingCircle.setActive(true);
-        juce::MouseCursor::showWaitCursor();
-        setEnabled(false);
-        mFloatingWindow.setCanBeClosedByUser(false);
-        
-        mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
-                              {
-                                  juce::Thread::setCurrentThreadName("Exporter");
-                                  auto const result = exportToText(file, format, identifier, ignoreGrids);
-                                  triggerAsyncUpdate();
-                                  if(result.failed())
-                                  {
-                                      return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", formatName), result.getErrorMessage());
-                                  }
-                                  return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", formatName), juce::translate("The analyses have been exported as FORMATNAME to FILENAME.").replace("FORMATNAME", formatName).replace("FILENAME", file.getFullPathName()));
-                              });
+        return;
     }
+
+    mLoadingCircle.setActive(true);
+    juce::MouseCursor::showWaitCursor();
+    setEnabled(false);
+    mFloatingWindow.setCanBeClosedByUser(false);
+
+    mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
+                          {
+                              juce::Thread::setCurrentThreadName("Exporter");
+                              auto const result = exportTo(file, identifier, options);
+                              triggerAsyncUpdate();
+                              if(result.failed())
+                              {
+                                  return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", options.getFormatName()), result.getErrorMessage());
+                              }
+                              return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", options.getFormatName()), juce::translate("The analyses have been exported as FORMATNAME to FILENAME.").replace("FORMATNAME", options.getFormatName()).replace("FILENAME", file.getFullPathName()));
+                          });
 }
 
 void Application::Exporter::handleAsyncUpdate()
@@ -383,10 +407,10 @@ void Application::Exporter::handleAsyncUpdate()
     AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), std::get<2>(result));
 }
 
-juce::Result Application::Exporter::exportToImage(juce::File const file, Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode)
+juce::Result Application::Exporter::exportToImage(juce::File const file, juce::String const& identifier, ExportOptions const& options)
 {
-    anlStrongAssert(format == Format::JPEG || format == Format::PNG);
-    if(format != Format::JPEG && format != Format::PNG)
+    anlStrongAssert(options.useImageFormat());
+    if(!options.useImageFormat())
     {
         return juce::Result::fail("Invalid format");
     }
@@ -394,7 +418,7 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
     {
         return juce::Result::fail("Invalid file");
     }
-    auto const extension = juce::String(std::string(magic_enum::enum_name(format))).toLowerCase();
+
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
     {
@@ -410,8 +434,8 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
             return juce::Result::fail("Track is invalid");
         }
         auto const size = getSizeFor(trackIdentifier);
-        auto const trackWidth = autoSize ? std::get<0>(size) : width;
-        auto const trackheight = autoSize ? std::get<1>(size) : height;
+        auto const trackWidth = options.useAutoSize ? std::get<0>(size) : options.imageWidth;
+        auto const trackheight = options.useAutoSize ? std::get<1>(size) : options.imageHeight;
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
         auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
         lock.exit();
@@ -433,8 +457,8 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
             return juce::Result::fail("Group is invalid");
         }
         auto const size = getSizeFor(groupIdentifier);
-        auto const groupWidth = autoSize ? std::get<0>(size) : width;
-        auto const groupheight = autoSize ? std::get<1>(size) : height;
+        auto const groupWidth = options.useAutoSize ? std::get<0>(size) : options.imageWidth;
+        auto const groupheight = options.useAutoSize ? std::get<1>(size) : options.imageHeight;
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
         lock.exit();
@@ -480,7 +504,7 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
             auto const trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
             lock.exit();
 
-            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + extension);
+            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + options.getFormatExtension());
             auto const result = exportTrack(trackIdentifier, trackFile);
             if(result.failed())
             {
@@ -520,7 +544,7 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
             auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
             lock.exit();
 
-            auto const groupFile = documentFolder.getNonexistentChildFile(groupName, "." + extension);
+            auto const groupFile = documentFolder.getNonexistentChildFile(groupName, "." + options.getFormatExtension());
             auto const result = exportGroup(groupIdentifier, groupFile);
             if(result.failed())
             {
@@ -538,7 +562,7 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
 
     if(identifier.isEmpty())
     {
-        if(groupMode)
+        if(options.useGroupOverview)
         {
             lock.exit();
             return exportDocumentGroups(file);
@@ -565,7 +589,7 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
     else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
     {
         lock.exit();
-        return groupMode ? exportGroup(identifier, file) : exportGroupTracks(identifier, file);
+        return options.useGroupOverview ? exportGroup(identifier, file) : exportGroupTracks(identifier, file);
     }
     else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
     {
@@ -575,15 +599,19 @@ juce::Result Application::Exporter::exportToImage(juce::File const file, Format 
     return juce::Result::fail("Invalid identifier");
 }
 
-juce::Result Application::Exporter::exportToText(juce::File const file, Format format, juce::String const& identifier, bool ignoreGrids)
+juce::Result Application::Exporter::exportToText(juce::File const file, juce::String const& identifier, ExportOptions const& options)
 {
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const formatExtension = juce::String(std::string(magic_enum::enum_name(format))).toLowerCase();
+    anlStrongAssert(options.useTextFormat());
+    if(!options.useTextFormat())
+    {
+        return juce::Result::fail("Invalid format");
+    }
     if(file == juce::File())
     {
         return juce::Result::fail("Invalid file");
     }
 
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
     {
         juce::MessageManager::Lock lock;
@@ -598,21 +626,21 @@ juce::Result Application::Exporter::exportToText(juce::File const file, Format f
             return juce::Result::fail("Track is invalid");
         }
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-        if(ignoreGrids && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::grid)
+        if(options.ignoreGridResults && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::grid)
         {
             return juce::Result::ok();
         }
         lock.exit();
 
-        switch(format)
+        switch(options.format)
         {
-            case Format::JPEG:
+            case ExportOptions::Format::jpeg:
                 return juce::Result::fail("Unsupported format");
-            case Format::PNG:
+            case ExportOptions::Format::png:
                 return juce::Result::fail("Unsupported format");
-            case Format::CSV:
-                return Track::Exporter::toCsv(trackAcsr, trackFile);
-            case Format::JSON:
+            case ExportOptions::Format::csv:
+                return Track::Exporter::toCsv(trackAcsr, trackFile, options.includeHeaderRaw, options.getSeparatorChar());
+            case ExportOptions::Format::json:
                 return Track::Exporter::toJson(trackAcsr, trackFile);
         }
         return juce::Result::fail("Unsupported format");
@@ -655,7 +683,7 @@ juce::Result Application::Exporter::exportToText(juce::File const file, Format f
             auto const trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
             lock.exit();
 
-            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + formatExtension);
+            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + options.getFormatExtension());
             auto const result = exportTrack(trackIdentifier, trackFile);
             if(result.failed())
             {
@@ -701,6 +729,15 @@ juce::Result Application::Exporter::exportToText(juce::File const file, Format f
         return exportTrack(identifier, file);
     }
     return juce::Result::fail("Invalid identifier");
+}
+
+juce::Result Application::Exporter::exportTo(juce::File const file, juce::String const& identifier, ExportOptions const& options)
+{
+    if(options.useTextFormat())
+    {
+        return exportToText(file, identifier, options);
+    }
+    return exportToImage(file, identifier, options);
 }
 
 ANALYSE_FILE_END

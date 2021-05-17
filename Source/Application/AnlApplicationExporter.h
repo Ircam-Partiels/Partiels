@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Document/AnlDocumentModel.h"
+#include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -21,30 +22,22 @@ namespace Application
         using FloatingWindowContainer::show;
         void show(juce::Point<int> const& pt) override;
 
+        static juce::Result exportTo(juce::File const file, juce::String const& identifier, ExportOptions const& options);
+
     private:
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
 
-        // clang-format off
-        enum class Format
-        {
-              JPEG
-            , PNG
-            , CSV
-            , JSON
-        };
-        // clang-format on
-
         juce::String getSelectedIdentifier() const;
         void updateItems();
-        void updateFormat();
-        void sanitizeImageProperties();
+        void sanitizeProperties(bool updateModel);
         void exportToFile();
 
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
-        static juce::Result exportToImage(juce::File const file, Format format, juce::String const& identifier, bool autoSize, int width, int height, bool groupMode);
-        static juce::Result exportToText(juce::File const file, Format format, juce::String const& identifier, bool ignoreGrids);
+        static juce::Result exportToImage(juce::File const file, juce::String const& identifier, ExportOptions const& options);
+        static juce::Result exportToText(juce::File const file, juce::String const& identifier, ExportOptions const& options);
 
+        Accessor::Listener mListener;
         Document::Accessor::Listener mDocumentListener;
         PropertyList mPropertyItem;
         PropertyList mPropertyFormat;
@@ -52,6 +45,8 @@ namespace Application
         PropertyToggle mPropertyAutoSizeMode;
         PropertyNumber mPropertyWidth;
         PropertyNumber mPropertyHeight;
+        PropertyToggle mPropertyRawHeader;
+        PropertyList mPropertyRawSeparator;
         PropertyToggle mPropertyIgnoreGrids;
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
