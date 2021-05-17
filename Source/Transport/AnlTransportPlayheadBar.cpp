@@ -71,6 +71,11 @@ void Transport::PlayheadBar::paint(juce::Graphics& g)
 
 void Transport::PlayheadBar::mouseDown(juce::MouseEvent const& event)
 {
+    mouseDrag(event);
+}
+
+void Transport::PlayheadBar::mouseDrag(juce::MouseEvent const& event)
+{
     auto const relEvent = event.getEventRelativeTo(this);
     mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, relEvent.x), NotificationType::synchronous);
 }

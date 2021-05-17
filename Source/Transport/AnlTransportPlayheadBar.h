@@ -23,6 +23,7 @@ namespace Transport
         // juce::Component
         void paint(juce::Graphics& g) override;
         void mouseDown(juce::MouseEvent const& event) override;
+        void mouseDrag(juce::MouseEvent const& event) override;
         
     private:
         Accessor& mAccessor;
