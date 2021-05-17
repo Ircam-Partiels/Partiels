@@ -33,12 +33,14 @@ juce::Result Track::Exporter::fromPreset(Accessor& accessor, juce::File const& f
 
 juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File const& file)
 {
+    auto const name = accessor.getAttr<AttrType::name>();
+    
     auto const title = juce::translate("Export as preset failed!");
     auto xml = std::make_unique<juce::XmlElement>("preset");
     anlWeakAssert(xml != nullptr);
     if(xml == nullptr)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to preset format.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the track cannot be parsed to preset format.").replace("ANLNAME", name));
     }
 
     XmlParser::toXml(*xml.get(), "key", accessor.getAttr<AttrType::key>());
@@ -46,13 +48,21 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
 
     if(!xml->writeTo(file))
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as a preset because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }
 
 juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height)
 {
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
+    auto const name = accessor.getAttr<AttrType::name>();
+    lock.exit();
+    
     if(width <= 0 || height <= 0)
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because image size is not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
@@ -62,37 +72,54 @@ juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
     if(imageFormat == nullptr)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     juce::FileOutputStream stream(temp.getFile());
     if(!stream.openedOk())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    Transport::Accessor transportAccessor;
-    Plot plot(accessor, timeZoomAccessor, transportAccessor);
-    plot.setSize(width, height);
-    auto const image = plot.createComponentSnapshot({0, 0, width, height});
+    auto getImage = [&]()
+    {
+        if(!lock.tryEnter())
+        {
+            return juce::Image{};
+        }
+        Transport::Accessor transportAccessor;
+        Plot plot(accessor, timeZoomAccessor, transportAccessor);
+        plot.setSize(width, height);
+        return plot.createComponentSnapshot({0, 0, width, height});
+    };
+    
+    auto const image = getImage();
     if(!imageFormat->writeImageToStream(image, stream))
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }
 
 juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& file)
 {
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    auto const name = accessor.getAttr<AttrType::name>();
+    lock.exit();
+    
     if(resultsPtr == nullptr)
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the results are not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("ANLNAME", accessor.getAttr<AttrType::name>())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the results are not valid.").replace("ANLNAME", name));
     }
 
     juce::TemporaryFile temp(file);
@@ -100,7 +127,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
 
     if(!stream.openedOk())
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     auto state = false;
@@ -153,17 +180,25 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }
 
 juce::Result Track::Exporter::toXml(Accessor const& accessor, juce::File const& file)
 {
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    auto const name = accessor.getAttr<AttrType::name>();
+    lock.exit();
+    
     if(resultsPtr == nullptr)
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the results are not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("ANLNAME", accessor.getAttr<AttrType::name>())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the results are not valid.").replace("ANLNAME", name).replace("ANLNAME", accessor.getAttr<AttrType::name>()));
     }
 
     auto xml = std::make_unique<juce::XmlElement>("results");
@@ -175,17 +210,25 @@ juce::Result Track::Exporter::toXml(Accessor const& accessor, juce::File const& 
 
     if(!xml->writeTo(file))
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as XML because the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }
 
 juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file)
 {
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
     auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    auto const name = accessor.getAttr<AttrType::name>();
+    lock.exit();
+    
     if(resultsPtr == nullptr)
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("ANLNAME", accessor.getAttr<AttrType::name>())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", name).replace("ANLNAME", accessor.getAttr<AttrType::name>()));
     }
 
     auto resultToVar = [](Plugin::Result const& result)
@@ -224,13 +267,13 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     std::ofstream stream(temp.getFile().getFullPathName().toStdString());
     if(!stream.is_open() || !stream.good())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as JSON because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as JSON because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     stream << json << std::endl;
     stream.close();
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }
