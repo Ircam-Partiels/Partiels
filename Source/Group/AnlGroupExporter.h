@@ -6,11 +6,10 @@ ANALYSE_FILE_BEGIN
 
 namespace Group
 {
-    class Exporter
+    namespace Exporter
     {
-    public:
-        static juce::Result toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height);
-    };
+        juce::Result toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height);
+    } // namespace Exporter
 } // namespace Group
 
 ANALYSE_FILE_END
