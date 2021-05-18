@@ -26,6 +26,16 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
             break;
         }
     }
+
+    auto const& results = acsr.getAttr<AttrType::results>();
+    if(results.getMarkers() != nullptr)
+    {
+        return DisplayType::markers;
+    }
+    if(results.getColumns() != nullptr)
+    {
+        return DisplayType::grid;
+    }
     return DisplayType::segments;
 }
 
@@ -44,179 +54,101 @@ double Track::Tools::pixelToSeconds(float position, juce::Range<double> const& t
     return static_cast<double>(position - bounds.getX()) / static_cast<double>(bounds.getWidth()) * timeRange.getLength() + timeRange.getStart();
 }
 
-double Track::Tools::realTimeToSeconds(Vamp::RealTime const& rt)
+std::optional<std::string> Track::Tools::getValue(Results::SharedMarkers results, Zoom::Range const& globalRange, double time, double timeEpsilon)
 {
-    return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
+    if(results == nullptr || results->empty())
+    {
+        return {};
+    }
+    auto const& channel = results->at(0);
+    auto const it = findFirstAt(channel, globalRange, time - timeEpsilon);
+    if(it != channel.cend() && std::get<0>(*it) + std::get<1>(*it) <= time)
+    {
+        return std::get<2>(*it);
+    }
+    return {};
 }
 
-Vamp::RealTime Track::Tools::secondsToRealTime(double seconds)
+std::optional<float> Track::Tools::getValue(Results::SharedPoints results, Zoom::Range const& globalRange, double time)
 {
-    auto const secondint = floor(seconds);
-    return Vamp::RealTime(static_cast<int>(secondint), static_cast<int>(std::round((seconds - secondint) * 1000000000.0)));
-}
-
-Vamp::RealTime Track::Tools::getEndRealTime(Plugin::Result const& rt)
-{
-    anlWeakAssert(rt.hasTimestamp);
-    return rt.hasDuration ? rt.timestamp + rt.duration : rt.timestamp;
-}
-
-std::vector<Plugin::Result>::const_iterator Track::Tools::getIteratorAt(std::vector<Plugin::Result> const& results, Zoom::Range const& globalRange, double time)
-{
-    anlWeakAssert(!globalRange.isEmpty());
-    if(globalRange.isEmpty())
+    if(results == nullptr || results->empty())
     {
-        return results.cend();
+        return {};
     }
-
-    auto const timeRatioPosition = std::max(std::min((time - globalRange.getStart()) / globalRange.getLength(), 1.0), 0.0);
-    auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
-    auto const rtStart = Tools::secondsToRealTime(time);
-
-    auto const expectedIt = std::next(results.cbegin(), expectedIndex);
-    anlStrongAssert(expectedIt != results.cend());
-    auto const position = Tools::getEndRealTime(*expectedIt);
-    
-    if(position == rtStart)
+    auto const& channel = results->at(0);
+    auto const first = findFirstAt(channel, globalRange, time);
+    if(first == channel.cend())
     {
-        return expectedIt;
-    }
-    else if(position >= rtStart)
-    {
-        return std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](Plugin::Result const& result)
-                            {
-                                return Tools::getEndRealTime(result) <= rtStart;
-                            })
-            .base();
-    }
-    else
-    {
-        auto const it = std::find_if(expectedIt, results.cend(), [&](Plugin::Result const& result)
-                                     {
-                                         return Tools::getEndRealTime(result) >= rtStart;
-                                     });
-        if(it->timestamp > rtStart && it != results.cbegin())
-        {
-            return std::prev(it);
-        }
-        return it;
-    }
-}
-
-Track::Results::Columns::const_iterator Track::Tools::getIteratorAt(Results::Columns const& results, Zoom::Range const& globalRange, double time)
-{
-    anlWeakAssert(!globalRange.isEmpty());
-    if(globalRange.isEmpty())
-    {
-        return results.cend();
-    }
-    
-    auto const timeRatioPosition = std::max(std::min((time - globalRange.getStart()) / globalRange.getLength(), 1.0), 0.0);
-    auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
-    auto const rtStart = Tools::secondsToRealTime(time);
-    
-    auto const expectedIt = std::next(results.cbegin(), expectedIndex);
-    anlWeakAssert(expectedIt != results.cend());
-    if(expectedIt == results.cend())
-    {
-        return results.cend();
-    }
-    auto const position = std::get<0>(*expectedIt);
-    if(position >= time && position + std::get<1>(*expectedIt) <= time)
-    {
-        return expectedIt;
-    }
-    else if(position >= time)
-    {
-        return std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
-        {
-            return std::get<0>(result) + std::get<1>(result) <= time;
-        })
-        .base();
-    }
-    else
-    {
-        auto const it = std::find_if(expectedIt, results.cend(), [&](auto const& result)
-        {
-            return std::get<0>(result) + std::get<1>(result) >= time;
-        });
-        if(std::get<0>(*it) > time && it != results.cbegin())
-        {
-            return std::prev(it);
-        }
-        return it;
-    }
-}
-
-juce::String Track::Tools::getMarkerText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, double timeEpsilon)
-{
-    auto const it = getIteratorAt(results, globalRange, time - timeEpsilon);
-    if(it != results.cend() && getEndRealTime(*it) <= secondsToRealTime(time))
-    {
-        return it->label.empty() ? output.unit : (it->label + output.unit);
-    }
-    return "-";
-}
-
-juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time)
-{
-    auto const first = getIteratorAt(results, globalRange, time);
-    if(first == results.cend())
-    {
-        return "-";
+        return {};
     }
     auto const second = std::next(first);
-    if(second == results.cend() || second->values.empty())
+    auto const end = std::get<0>(*first) + std::get<1>(*first);
+    if(second == channel.cend() || time < end || !std::get<2>(*second).has_value())
     {
-        auto const value = (first->values.empty() ? "-" : juce::String(first->values.at(0), 2)) + output.unit;
-        auto const label = first->label.empty() ? "" : ("(" + first->label + ")");
-        return value + " " + label;
+        return std::get<2>(*first);
     }
-    if(first->values.empty())
+    auto const next = std::get<0>(*second);
+    if(next <= end || !std::get<2>(*first).has_value())
     {
-        auto const value = juce::String(second->values.at(0), 2) + output.unit;
-        auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
-        return value + " " + label;
+        return std::get<2>(*second);
     }
-    auto const end = realTimeToSeconds(getEndRealTime(*first));
-    if(time < end)
-    {
-        auto const value = first->values.empty() ? "-" : juce::String(first->values.at(0), 2) + output.unit;
-        auto const label = first->label.empty() ? "" : ("(" + first->label + ")");
-        return value + " " + label;
-    }
-    auto const next = realTimeToSeconds(second->timestamp);
-    if(next <= end)
-    {
-        auto const value = juce::String(second->values.at(0), 2) + output.unit;
-        auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
-        return value + " " + label;
-    }
-    auto const ratio = static_cast<float>((time - end) / (next - end));
-    auto const value = juce::String((1.0f - ratio) * first->values.at(0) + ratio * second->values.at(0), 2) + output.unit;
-    auto const label = second->label.empty() ? "" : ("(" + second->label + ")");
-    return value + " " + label;
+    auto const ratio = (time - end) / (next - end);
+    return (1.0 - ratio) * *std::get<2>(*first) + ratio * *std::get<2>(*second);
 }
 
-juce::String Track::Tools::getText(Results::SharedColumns results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
+std::optional<float> Track::Tools::getValue(Results::SharedColumns results, Zoom::Range const& globalRange, double time, size_t bin)
+{
+    if(results == nullptr || results->empty())
+    {
+        return {};
+    }
+    auto const& channel = results->at(0);
+    auto const it = findFirstAt(channel, globalRange, time);
+    if(it == channel.cend() || std::get<2>(*it).empty())
+    {
+        return {};
+    }
+    auto const& column = std::get<2>(*it);
+    anlWeakAssert(bin < column.size());
+    if(bin >= column.size())
+    {
+        return {};
+    }
+    return column[bin];
+}
+
+juce::String Track::Tools::getText(Results::SharedMarkers results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, double timeEpsilon)
 {
     if(results == nullptr)
     {
         return "-";
     }
-    auto const it = getIteratorAt(results, globalRange, time);
-    if(it == results.cend() || it->values.empty())
+    auto const it = findFirstAt(results->at(0), globalRange, time - timeEpsilon);
+    if(it != results->at(0).cend() && std::get<0>(*it) + std::get<1>(*it) <= time)
     {
-        return "-";
+        return std::get<2>(*it) + output.unit;
     }
-    anlWeakAssert(bin < it->values.size());
-    if(bin >= it->values.size())
+    return "-";
+}
+
+juce::String Track::Tools::getText(Results::SharedPoints results, Plugin::Output const& output, Zoom::Range const& globalRange, double time)
+{
+    auto const value = getValue(results, globalRange, time);
+    if(value.has_value())
     {
-        return "-";
+        return juce::String(*value, 2) + output.unit;
     }
-    auto const value = juce::String(it->values[bin], 2) + output.unit;
-    auto const label = it->label.empty() ? "" : ("(" + it->label + ")");
-    return value + " " + label;
+    return "-";
+}
+
+juce::String Track::Tools::getText(Results::SharedColumns results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
+{
+    auto const value = getValue(results, globalRange, time, bin);
+    if(value.has_value())
+    {
+        return juce::String(*value, 2) + output.unit;
+    }
+    return "-";
 }
 
 juce::String Track::Tools::getResultText(Accessor const& acsr, Zoom::Range const& globalRange, double time, size_t bin, double timeEpsilon)
@@ -292,46 +224,86 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const
     return Zoom::Range(static_cast<double>(output.minValue), static_cast<double>(output.maxValue));
 }
 
-std::optional<Zoom::Range> Track::Tools::getValueRange(std::shared_ptr<const std::vector<Plugin::Result>> const& results)
+std::optional<Zoom::Range> Track::Tools::getValueRange(Results const& results)
 {
-    if(results == nullptr || results->empty())
+    if(results.isEmpty())
     {
         return std::optional<Zoom::Range>();
     }
-    auto it = std::find_if(results->cbegin(), results->cend(), [](auto const& v)
-                           {
-                               if(v.values.empty())
-                               {
-                                   return false;
-                               }
-                               auto const [min, max] = std::minmax_element(v.values.cbegin(), v.values.cend());
-                               anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
-                               if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
-                               {
-                                   return false;
-                               }
-                               return true;
-                           });
-    if(it == results->cend())
+    if(results.getMarkers() != nullptr)
     {
-        return std::optional<Zoom::Range>();
+        return Zoom::Range(0.0, 0.0);
     }
-    auto const [min, max] = std::minmax_element(it->values.cbegin(), it->values.cend());
-    auto const firstRange = Zoom::Range{static_cast<double>(*min), static_cast<double>(*max)};
-    return std::accumulate(std::next(it), results->cend(), firstRange, [](auto const r, auto const& v)
-                           {
-                               if(v.values.empty())
+    auto const points = results.getPoints();
+    if(points != nullptr)
+    {
+        if(points->empty())
+        {
+            return std::optional<Zoom::Range>();
+        }
+        auto const& channel = points->at(0);
+        auto const [min, max] = std::minmax_element(channel.cbegin(), channel.cend(), [](auto const& lhs, auto const& rhs)
+                                                    {
+                                                        if(!std::get<2>(lhs).has_value())
+                                                        {
+                                                            return true;
+                                                        }
+                                                        if(!std::get<2>(rhs).has_value())
+                                                        {
+                                                            return false;
+                                                        }
+                                                        return *std::get<2>(lhs) < *std::get<2>(rhs);
+                                                    });
+        if(min == channel.cend() || max == channel.cend())
+        {
+            return std::optional<Zoom::Range>();
+        }
+        return Zoom::Range(*std::get<2>(*min), *std::get<2>(*max));
+    }
+    auto const columns = results.getColumns();
+    if(columns != nullptr)
+    {
+        if(columns->empty())
+        {
+            return std::optional<Zoom::Range>();
+        }
+        auto const& channel = columns->at(0);
+        if(channel.empty())
+        {
+            return std::optional<Zoom::Range>();
+        }
+        auto const [min, max] = std::minmax_element(std::get<2>(channel.front()).cbegin(), get<2>(channel.front()).cend());
+        if(min == std::get<2>(channel.front()).cend() || max == std::get<2>(channel.front()).cend())
+        {
+            return std::optional<Zoom::Range>();
+        }
+        anlWeakAssert(std::isfinite(*min) && std::isfinite(*max));
+        if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
+        {
+            return std::optional<Zoom::Range>();
+        }
+
+        return std::accumulate(std::next(channel.cbegin()), channel.cend(), Zoom::Range{*min, *max}, [](auto const& range, auto const& column)
                                {
-                                   return r;
-                               }
-                               auto const [min, max] = std::minmax_element(v.values.cbegin(), v.values.cend());
-                               anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
-                               if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
-                               {
-                                   return r;
-                               }
-                               return r.getUnionWith({static_cast<double>(*min), static_cast<double>(*max)});
-                           });
+                                   auto const& values = std::get<2>(column);
+                                   if(values.empty())
+                                   {
+                                       return range;
+                                   }
+                                   auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
+                                   if(min == values.cend() || max == values.cend())
+                                   {
+                                       return range;
+                                   }
+                                   anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
+                                   if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
+                                   {
+                                       return range;
+                                   }
+                                   return range.getUnionWith({*min, *max});
+                               });
+    }
+    return std::optional<Zoom::Range>();
 }
 
 std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& description)
@@ -344,17 +316,27 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& 
     return Zoom::Range(0.0, static_cast<double>(output.binCount));
 }
 
-std::optional<Zoom::Range> Track::Tools::getBinRange(std::shared_ptr<const std::vector<Plugin::Result>> const& results)
+std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
 {
-    if(results == nullptr || results->empty())
+    if(results.isEmpty())
     {
         return std::optional<Zoom::Range>();
     }
-    auto const firstRange = Zoom::Range::emptyRange(static_cast<double>(results->front().values.size()));
-    return std::accumulate(results->cbegin() + 1, results->cend(), firstRange, [](auto const r, auto const& v)
-                           {
-                               return r.getUnionWith({static_cast<double>(v.values.size()), static_cast<double>(v.values.size())});
-                           });
+    if(results.getMarkers() != nullptr)
+    {
+        return Zoom::Range(0.0, 0.0);
+    }
+    if(results.getPoints() != nullptr)
+    {
+        return Zoom::Range(0.0, 1.0);
+    }
+    auto const columns = results.getColumns();
+    if(columns == nullptr || columns->empty())
+    {
+        return std::optional<Zoom::Range>();
+    }
+    auto const& channel = columns->at(0);
+    return Zoom::Range(0.0, static_cast<double>(channel.size()));
 }
 
 ANALYSE_FILE_END

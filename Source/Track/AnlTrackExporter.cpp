@@ -113,11 +113,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    auto const results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
 
-    if(resultsPtr == nullptr)
+    if(results.isEmpty())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the results are not valid.").replace("ANLNAME", name));
     }
@@ -148,38 +148,77 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         return true;
     };
 
-    auto toSeconds = [](Vamp::RealTime const& timestamp)
+    auto const markers = results.getMarkers();
+    auto const points = results.getPoints();
+    auto const columns = results.getColumns();
+    if(markers != nullptr && !markers->empty())
     {
-        return static_cast<double>(timestamp.sec) + static_cast<double>(timestamp.msec()) / 1000.0;
-    };
-
-    auto const& results = *resultsPtr;
-    if(includeHeader)
-    {
-        addColumn("ROW");
-        addColumn("TIME");
-        addColumn("DURATION");
-        addColumn("LABEL");
-
-        for(size_t i = 0; i < results.front().values.size(); ++i)
+        if(includeHeader)
         {
-            addColumn("BIN " + juce::String(i));
+            addColumn("ROW");
+            addColumn("TIME");
+            addColumn("DURATION");
+            addColumn("LABEL");
+            addLine();
         }
-        addLine();
+
+        auto const& channel = markers->at(0);
+        for(size_t i = 0; i < channel.size(); ++i)
+        {
+            addColumn(juce::String(i));
+            addColumn(juce::String(std::get<0>(channel[i])));
+            addColumn(juce::String(std::get<1>(channel[i])));
+            addColumn(std::get<2>(channel[i]).empty() ? "\"\"" : juce::String(std::get<2>(channel[i])));
+            addLine();
+        }
     }
-
-    for(size_t i = 0; i < results.size(); ++i)
+    else if(points != nullptr && !points->empty())
     {
-        auto const& result = results[i];
-        addColumn(juce::String(i));
-        addColumn(result.hasTimestamp ? juce::String(toSeconds(result.timestamp)) : "0");
-        addColumn(result.hasDuration ? juce::String(toSeconds(result.duration)) : "0");
-        addColumn(result.label.empty() ? "\"\"" : juce::String(result.label));
-        for(auto const& value : result.values)
+        if(includeHeader)
         {
-            addColumn(juce::String(value));
+            addColumn("ROW");
+            addColumn("TIME");
+            addColumn("DURATION");
+            addColumn("VALUE");
+            addLine();
         }
-        addLine();
+
+        auto const& channel = points->at(0);
+        for(size_t i = 0; i < channel.size(); ++i)
+        {
+            addColumn(juce::String(i));
+            addColumn(juce::String(std::get<0>(channel[i])));
+            addColumn(juce::String(std::get<1>(channel[i])));
+            addColumn(std::get<2>(channel[i]).has_value() ? "\"\"" : juce::String(*std::get<2>(channel[i])));
+            addLine();
+        }
+    }
+    else if(columns != nullptr && !columns->empty())
+    {
+        auto const& channel = columns->at(0);
+        if(includeHeader)
+        {
+            addColumn("ROW");
+            addColumn("TIME");
+            addColumn("DURATION");
+            for(size_t i = 0; i < std::get<2>(channel.front()).size(); ++i)
+            {
+                addColumn("BIN " + juce::String(i));
+            }
+            addLine();
+        }
+
+        for(size_t i = 0; i < channel.size(); ++i)
+        {
+            addColumn(juce::String(i));
+            addColumn(juce::String(std::get<0>(channel[i])));
+            addColumn(juce::String(std::get<1>(channel[i])));
+            for(auto const& value : std::get<2>(channel[i]))
+            {
+                addColumn(juce::String(value));
+            }
+            addLine();
+        }
     }
 
     if(!temp.overwriteTargetFileWithTemporary())
@@ -196,45 +235,70 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const resultsPtr = accessor.getAttr<AttrType::results>();
+    auto const results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
 
-    if(resultsPtr == nullptr)
+    if(results.isEmpty())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", name).replace("ANLNAME", accessor.getAttr<AttrType::name>()));
     }
 
-    auto resultToVar = [](Plugin::Result const& result)
-    {
-        nlohmann::json json;
-        if(result.hasTimestamp)
-        {
-            json["time"] = Tools::realTimeToSeconds(result.timestamp);
-        }
-        if(result.hasDuration)
-        {
-            json["duration"] = Tools::realTimeToSeconds(result.duration);
-        }
-        if(!result.label.empty())
-        {
-            json["label"] = result.label;
-        }
-        if(result.values.size() == 1_z)
-        {
-            json["value"] = result.values[0];
-        }
-        else if(result.values.size() > 1_z)
-        {
-            json["values"] = result.values;
-        }
-        return json;
-    };
-    auto const& results = *resultsPtr;
     nlohmann::json json;
-    for(auto const& result : results)
+
+    auto const markers = results.getMarkers();
+    auto const points = results.getPoints();
+    auto const columns = results.getColumns();
+    if(markers != nullptr && !markers->empty())
     {
-        json.emplace_back(resultToVar(result));
+        auto const& channel = markers->at(0);
+        for(auto const& result : channel)
+        {
+            nlohmann::json vjson;
+            vjson["time"] = std::get<0>(result);
+            if(std::get<1>(result) > 0.0)
+            {
+                vjson["duration"] = std::get<1>(result);
+            }
+            if(!std::get<2>(result).empty())
+            {
+                vjson["label"] = std::get<2>(result);
+            }
+            json.emplace_back(vjson);
+        }
+    }
+    else if(points != nullptr && !points->empty())
+    {
+        auto const& channel = points->at(0);
+        for(auto const& result : channel)
+        {
+            nlohmann::json vjson;
+            vjson["time"] = std::get<0>(result);
+            if(std::get<1>(result) > 0.0)
+            {
+                vjson["duration"] = std::get<1>(result);
+            }
+            if(std::get<2>(result).has_value())
+            {
+                vjson["value"] = *std::get<2>(result);
+            }
+            json.emplace_back(vjson);
+        }
+    }
+    else if(columns != nullptr && !columns->empty())
+    {
+        auto const& channel = columns->at(0);
+        for(auto const& result : channel)
+        {
+            nlohmann::json vjson;
+            vjson["time"] = std::get<0>(result);
+            if(std::get<1>(result) > 0.0)
+            {
+                vjson["duration"] = std::get<1>(result);
+            }
+            vjson["values"] = std::get<2>(result);
+            json.emplace_back(vjson);
+        }
     }
 
     juce::TemporaryFile temp(file);

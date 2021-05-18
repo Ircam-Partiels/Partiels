@@ -25,7 +25,16 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     abortRendering();
 
     auto const results = accessor.getAttr<AttrType::results>();
-    if(results == nullptr || results->empty() || results->at(0).values.size() <= 1)
+    if(results.isEmpty())
+    {
+        if(onRenderingEnded != nullptr)
+        {
+            onRenderingEnded({});
+        }
+        return;
+    }
+    auto const columns = results.getColumns();
+    if(columns == nullptr || columns->empty())
     {
         if(onRenderingEnded != nullptr)
         {
@@ -34,8 +43,9 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
-    auto const width = static_cast<int>(results->size());
-    auto const height = static_cast<int>(results->at(0).values.size());
+    auto const& channel = columns->at(0);
+    auto const width = static_cast<int>(channel.size());
+    auto const height = static_cast<int>(std::get<2>(channel.front()).size());
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
@@ -70,7 +80,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                         auto createImage = [&](int imageWidth, int imageHeight, float& advancement, std::function<bool(void)> predicate) -> juce::Image
                                         {
                                             advancement = 0.0f;
-                                            if(results->empty())
+                                            if(channel.empty() || std::get<2>(channel.front()).empty())
                                             {
                                                 return {};
                                             }
@@ -81,8 +91,8 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                 return {};
                                             }
 
-                                            auto const numColumns = static_cast<int>(results->size());
-                                            auto const numRows = static_cast<int>(results->front().values.size());
+                                            auto const numColumns = static_cast<int>(channel.size());
+                                            auto const numRows = static_cast<int>(std::get<2>(channel.front()).size());
                                             anlStrongAssert(numColumns > 0 && numRows > 0 && numColumns >= width && numRows >= imageHeight);
                                             if(numColumns <= 0 || numRows <= 0)
                                             {
@@ -116,7 +126,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             {
                                                 auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
                                                 auto const columnIndex = std::min(static_cast<size_t>(std::round(i * wd)), static_cast<size_t>(numColumns - 1));
-                                                auto const& values = results->at(columnIndex).values;
+                                                auto const& values = std::get<2>(channel.at(columnIndex));
                                                 auto const valuesSize = values.size();
                                                 for(int j = 0; j < imageHeight; ++j)
                                                 {
@@ -125,7 +135,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                     {
                                                         anlDebug("Track::Graphics::Process", "inconsistent values at [" + juce::String(columnIndex) + "][" + juce::String(rowIndex) + "]");
                                                     }
-                                                    auto const& value = rowIndex < valuesSize ? values[rowIndex] : valueStart;
+                                                    auto const& value = rowIndex < valuesSize ? values.at(rowIndex) : valueStart;
                                                     auto const colorIndex = std::min(std::max(static_cast<size_t>(std::ceil(value - valueStart) * valueScale), 0_z), colours.size() - 1_z);
                                                     reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
                                                     pixel -= lineStride;

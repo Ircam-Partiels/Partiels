@@ -12,7 +12,7 @@ namespace Track
     public:
         Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
         ~Snapshot() override;
-        
+
         // juce::Component
         void paint(juce::Graphics& g) override;
 
@@ -23,35 +23,32 @@ namespace Track
         public:
             Overlay(Snapshot& snapshot);
             ~Overlay() override;
-            
+
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
             void mouseMove(juce::MouseEvent const& event) override;
             void mouseEnter(juce::MouseEvent const& event) override;
             void mouseExit(juce::MouseEvent const& event) override;
-            
+
         private:
             void updateTooltip(juce::Point<int> const& pt);
-            
+
             Snapshot& mSnapshot;
             Accessor& mAccessor;
             Accessor::Listener mListener;
         };
-        
+
     private:
-        static void paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, double time);
-        
-        static void paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, double time, juce::Range<double> const& valueRange);
-        
-        static void paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, double time, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr);
-        
+        static void paintPoints(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        static void paintColumns(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Zoom::Accessor::Listener mValueZoomListener;
         Zoom::Accessor::Listener mBinZoomListener;
         Accessor::Listener mListener;
     };
-}
+} // namespace Track
 
 ANALYSE_FILE_END

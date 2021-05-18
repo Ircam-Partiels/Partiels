@@ -15,35 +15,36 @@ namespace Track
     {
     public:
         using Marker = std::tuple<double, double, std::string>;
-        using Point = std::tuple<double, double, double>;
-        using Column = std::tuple<double, double, std::vector<double>>;
+        using Point = std::tuple<double, double, std::optional<float>>;
+        using Column = std::tuple<double, double, std::vector<float>>;
 
         using Markers = std::vector<Marker>;
         using Points = std::vector<Point>;
         using Columns = std::vector<Column>;
-        
+
         using SharedMarkers = std::shared_ptr<const std::vector<Markers>>;
         using SharedPoints = std::shared_ptr<const std::vector<Points>>;
         using SharedColumns = std::shared_ptr<const std::vector<Columns>>;
-        
+
         Results() = default;
+        Results(Results const& rhs) = default;
         ~Results() = default;
-        
+
         explicit Results(SharedMarkers ptr)
         : mResults(ptr)
         {
         }
-        
+
         explicit Results(SharedPoints ptr)
         : mResults(ptr)
         {
         }
-        
+
         explicit Results(SharedColumns ptr)
         : mResults(ptr)
         {
         }
-        
+
         inline SharedMarkers getMarkers() const noexcept
         {
             if(auto const* markersPtr = std::get_if<SharedMarkers>(&mResults))
@@ -52,7 +53,7 @@ namespace Track
             }
             return nullptr;
         }
-        
+
         inline SharedPoints getPoints() const noexcept
         {
             if(auto const* pointsPtr = std::get_if<SharedPoints>(&mResults))
@@ -61,7 +62,7 @@ namespace Track
             }
             return nullptr;
         }
-        
+
         inline SharedColumns getColumns() const noexcept
         {
             if(auto const* columnsPtr = std::get_if<SharedColumns>(&mResults))
@@ -77,32 +78,45 @@ namespace Track
             {
                 auto const markers = *markersPtr;
                 return markers == nullptr || markers->empty() || std::all_of(markers->cbegin(), markers->cend(), [](auto const& channel)
-                                                       {
-                                                           return channel.empty();
-                                                       });
+                                                                             {
+                                                                                 return channel.empty();
+                                                                             });
             }
             else if(auto const* pointsPtr = std::get_if<SharedPoints>(&mResults))
             {
                 auto const points = *pointsPtr;
                 return points == nullptr || points->empty() || std::all_of(points->cbegin(), points->cend(), [](auto const& channel)
-                                                      {
-                                                          return channel.empty();
-                                                      });
+                                                                           {
+                                                                               return channel.empty();
+                                                                           });
             }
             else if(auto const* columnsPtr = std::get_if<SharedColumns>(&mResults))
             {
                 auto const columns = *columnsPtr;
                 return columns == nullptr || columns->empty() || std::all_of(columns->cbegin(), columns->cend(), [](auto const& channel)
-                                                       {
-                                                           return channel.empty();
-                                                       });
+                                                                             {
+                                                                                 return channel.empty();
+                                                                             });
             }
             return true;
         }
 
+        inline bool operator==(Results const& rhd) const noexcept
+        {
+            return getMarkers() == rhd.getMarkers() &&
+                   getPoints() == rhd.getPoints() &&
+                   getColumns() == rhd.getColumns() &&
+                   mFile == rhd.mFile;
+        }
+
+        inline bool operator!=(Results const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+
     private:
-        std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults {SharedPoints(nullptr)};
-        juce::File file{};
+        std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
+        juce::File mFile{};
     };
 
     struct ColourSet

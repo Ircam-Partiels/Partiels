@@ -31,7 +31,10 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::processing:
             case AttrType::colours:
             {
-                repaint();
+                if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                {
+                    repaint();
+                }
             }
             break;
         }
@@ -40,13 +43,19 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
     mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
-        repaint();
+        if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+        {
+            repaint();
+        }
     };
 
     mBinZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
-        repaint();
+        if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+        {
+            repaint();
+        }
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -63,110 +72,79 @@ Track::Snapshot::~Snapshot()
 
 void Track::Snapshot::paint(juce::Graphics& g)
 {
-    auto const results = mAccessor.getAttr<AttrType::results>();
-    if(results == nullptr || results->empty())
+    switch(Tools::getDisplayType(mAccessor))
+    {
+        case Tools::DisplayType::markers:
+            break;
+        case Tools::DisplayType::segments:
+        {
+            paintPoints(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+        }
+        break;
+        case Tools::DisplayType::grid:
+        {
+            paintColumns(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+        }
+        break;
+    }
+}
+
+void Track::Snapshot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+{
+    if(bounds.isEmpty())
     {
         return;
     }
 
-    auto const bounds = getLocalBounds();
-    if(bounds.isEmpty() || g.getClipBounds().isEmpty())
+    auto const clipBounds = g.getClipBounds().toFloat();
+    if(clipBounds.isEmpty())
     {
         return;
     }
-    
-    auto const& globalRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
+
+    auto const& globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     if(globalRange.isEmpty())
     {
         return;
     }
 
-    auto const time = mAccessor.getAttr<AttrType::time>();
-    auto const& valueRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-    switch(Tools::getDisplayType(mAccessor))
+    auto const results = accessor.getAttr<AttrType::results>();
+    auto const points = results.getPoints();
+    if(points == nullptr || points->empty())
     {
-        case Tools::DisplayType::markers:
-        {
-            //paintMarker(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, mTimeZoomAccessor, time);
-        }
-        break;
-        case Tools::DisplayType::segments:
-        {
-            paintSegment(g, bounds.toFloat(), mAccessor.getAttr<AttrType::colours>().foreground, *results, mTimeZoomAccessor, time, valueRange);
-        }
-        break;
-        case Tools::DisplayType::grid:
-        {
-            paintGrid(g, bounds, mAccessor.getAttr<AttrType::graphics>(), time, mTimeZoomAccessor, mAccessor.getAcsr<AcsrType::binZoom>());
-        }
-        break;
+        return;
     }
+
+    auto const value = Tools::getValue(points, globalRange, accessor.getAttr<AttrType::time>());
+    if(!value.has_value())
+    {
+        return;
+    }
+    auto const y = Tools::valueToPixel(*value, accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>(), bounds.toFloat());
+    g.setColour(juce::Colours::black.withAlpha(0.25f));
+    g.drawLine(clipBounds.getX(), y + 3.0f, clipBounds.getRight(), y + 3.0f, 1.0f);
+    g.setColour(juce::Colours::black.withAlpha(0.5f));
+    g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f, 1.0f);
+    g.setColour(juce::Colours::black.withAlpha(0.75f));
+    g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, 1.0f);
+    g.setColour(accessor.getAttr<AttrType::colours>().foreground);
+    g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
 }
 
-void Track::Snapshot::paintMarker(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, double time)
+void Track::Snapshot::paintColumns(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    auto const it = Tools::getIteratorAt(results, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), time);
-    if(it != results.cend() && Tools::realTimeToSeconds(Tools::getEndRealTime(*it)) >= time)
+    if(bounds.isEmpty())
     {
-        g.setColour(colour);
-        g.fillRect(bounds);
+        return;
     }
-}
 
-void Track::Snapshot::paintSegment(juce::Graphics& g, juce::Rectangle<float> const& bounds, juce::Colour const& colour, std::vector<Plugin::Result> const& results, Zoom::Accessor const& timeZoomAcsr, double time, juce::Range<double> const& valueRange)
-{
-    auto const clipBounds = g.getClipBounds().toFloat();
-    auto paintLineWithShadow = [&](float const y)
+    auto const& globalTimeRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+    if(globalTimeRange.isEmpty())
     {
-        g.setColour(juce::Colours::black.withAlpha(0.25f));
-        g.drawLine(clipBounds.getX(), y + 3.0f, clipBounds.getRight(), y + 3.0f, 1.0f);
-        g.setColour(juce::Colours::black.withAlpha(0.5f));
-        g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f, 1.0f);
-        g.setColour(juce::Colours::black.withAlpha(0.75f));
-        g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, 1.0f);
-        g.setColour(colour);
-        g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
-    };
+        return;
+    }
 
-    auto const first = Tools::getIteratorAt(results, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), time);
-    if(first == results.cend())
-    {
-        return;
-    }
-    auto const second = std::next(first);
-    if(second == results.cend() || second->values.empty())
-    {
-        if(first->values.empty())
-        {
-            return;
-        }
-        paintLineWithShadow(Tools::valueToPixel(first->values.at(0), valueRange, bounds));
-        return;
-    }
-    if(first->values.empty())
-    {
-        paintLineWithShadow(Tools::valueToPixel(second->values.at(0), valueRange, bounds));
-        return;
-    }
-    auto const end = Tools::realTimeToSeconds(Tools::getEndRealTime(*first));
-    if(time < end)
-    {
-        paintLineWithShadow(Tools::valueToPixel(first->values.at(0), valueRange, bounds));
-        return;
-    }
-    auto const next = Tools::realTimeToSeconds(second->timestamp);
-    if(next <= end)
-    {
-        paintLineWithShadow(Tools::valueToPixel(second->values.at(0), valueRange, bounds));
-        return;
-    }
-    auto const ratio = static_cast<float>((time - end) / (next - end));
-    auto const value = (1.0f - ratio) * first->values.at(0) + ratio * second->values.at(0);
-    paintLineWithShadow(Tools::valueToPixel(value, valueRange, bounds));
-}
-
-void Track::Snapshot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<juce::Image> const& images, double time, Zoom::Accessor const& timeZoomAcsr, Zoom::Accessor const& binZoomAcsr)
-{
+    auto const images = accessor.getAttr<AttrType::graphics>();
     if(images.empty())
     {
         return;
@@ -240,6 +218,10 @@ void Track::Snapshot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& b
         };
 
         auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
+        if(clipBounds.isEmpty())
+        {
+            return;
+        }
 
         auto const xClippedRange = clipZoomRange(bounds.getHorizontalRange(), clipBounds.getHorizontalRange(), {t, t});
         auto const xRange = toImageRange(xZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), xClippedRange, image.getWidth());
@@ -250,7 +232,7 @@ void Track::Snapshot::paintGrid(juce::Graphics& g, juce::Rectangle<int> const& b
         drawImage({std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
 
-    renderImage(images.back(), time, timeZoomAcsr, binZoomAcsr);
+    renderImage(images.back(), accessor.getAttr<AttrType::time>(), timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
 }
 
 Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
@@ -328,6 +310,11 @@ void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 
 void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
 {
+    if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::markers)
+    {
+        setTooltip("");
+        return;
+    }
     if(!getLocalBounds().contains(pt))
     {
         setTooltip("");

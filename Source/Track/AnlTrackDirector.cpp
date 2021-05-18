@@ -219,7 +219,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         }
     };
 
-    mProcessor.onAnalysisEnded = [&](std::shared_ptr<std::vector<Plugin::Result>> results)
+    mProcessor.onAnalysisEnded = [&](Results const& results)
     {
         stopTimer();
         timerCallback();
@@ -231,7 +231,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
     {
         stopTimer();
         timerCallback();
-        mAccessor.setAttr<AttrType::results>(nullptr, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
         mAccessor.setAttr<AttrType::graphics>(std::vector<juce::Image>{}, NotificationType::synchronous);
     };
 
