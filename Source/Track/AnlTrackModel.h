@@ -11,6 +11,100 @@ namespace Track
 {
     using ColourMap = tinycolormap::ColormapType;
 
+    class Results
+    {
+    public:
+        using Marker = std::tuple<double, double, std::string>;
+        using Point = std::tuple<double, double, double>;
+        using Column = std::tuple<double, double, std::vector<double>>;
+
+        using Markers = std::vector<Marker>;
+        using Points = std::vector<Point>;
+        using Columns = std::vector<Column>;
+        
+        using SharedMarkers = std::shared_ptr<const std::vector<Markers>>;
+        using SharedPoints = std::shared_ptr<const std::vector<Points>>;
+        using SharedColumns = std::shared_ptr<const std::vector<Columns>>;
+        
+        Results() = default;
+        ~Results() = default;
+        
+        explicit Results(SharedMarkers ptr)
+        : mResults(ptr)
+        {
+        }
+        
+        explicit Results(SharedPoints ptr)
+        : mResults(ptr)
+        {
+        }
+        
+        explicit Results(SharedColumns ptr)
+        : mResults(ptr)
+        {
+        }
+        
+        inline SharedMarkers getMarkers() const noexcept
+        {
+            if(auto const* markersPtr = std::get_if<SharedMarkers>(&mResults))
+            {
+                return *markersPtr;
+            }
+            return nullptr;
+        }
+        
+        inline SharedPoints getPoints() const noexcept
+        {
+            if(auto const* pointsPtr = std::get_if<SharedPoints>(&mResults))
+            {
+                return *pointsPtr;
+            }
+            return nullptr;
+        }
+        
+        inline SharedColumns getColumns() const noexcept
+        {
+            if(auto const* columnsPtr = std::get_if<SharedColumns>(&mResults))
+            {
+                return *columnsPtr;
+            }
+            return nullptr;
+        }
+
+        inline bool isEmpty() const noexcept
+        {
+            if(auto const* markersPtr = std::get_if<SharedMarkers>(&mResults))
+            {
+                auto const markers = *markersPtr;
+                return markers == nullptr || markers->empty() || std::all_of(markers->cbegin(), markers->cend(), [](auto const& channel)
+                                                       {
+                                                           return channel.empty();
+                                                       });
+            }
+            else if(auto const* pointsPtr = std::get_if<SharedPoints>(&mResults))
+            {
+                auto const points = *pointsPtr;
+                return points == nullptr || points->empty() || std::all_of(points->cbegin(), points->cend(), [](auto const& channel)
+                                                      {
+                                                          return channel.empty();
+                                                      });
+            }
+            else if(auto const* columnsPtr = std::get_if<SharedColumns>(&mResults))
+            {
+                auto const columns = *columnsPtr;
+                return columns == nullptr || columns->empty() || std::all_of(columns->cbegin(), columns->cend(), [](auto const& channel)
+                                                       {
+                                                           return channel.empty();
+                                                       });
+            }
+            return true;
+        }
+
+    private:
+        std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults {SharedPoints(nullptr)};
+        juce::File file{};
+    };
+
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
@@ -86,7 +180,7 @@ namespace Track
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
-    , Model::Attr<AttrType::results, std::shared_ptr<const std::vector<Plugin::Result>>, Model::Flag::notifying>
+    , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::graphics, std::vector<juce::Image>, Model::Flag::notifying>
     , Model::Attr<AttrType::time, double, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
