@@ -18,7 +18,7 @@ Application::Exporter::Exporter()
                   {
                       auto& acsr = Instance::get().getApplicationAccessor();
                       auto options = acsr.getAttr<AttrType::exportOptions>();
-                      options.format = magic_enum::enum_value<ExportOptions::Format>(index);
+                      options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
                       acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                   })
 , mPropertyGroupMode("Preserve group overlay", "Preserve group overlay of tracks when exporting", [](bool state)
@@ -60,7 +60,7 @@ Application::Exporter::Exporter()
                         {
                             auto& acsr = Instance::get().getApplicationAccessor();
                             auto options = acsr.getAttr<AttrType::exportOptions>();
-                            options.columnSeparator = magic_enum::enum_value<ExportOptions::ColumnSeparator>(index);
+                            options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                             acsr.setAttr<AttrType::exportOptions>(options, NotificationType::synchronous);
                         })
 , mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [](bool state)
@@ -137,8 +137,8 @@ Application::Exporter::Exporter()
                 mPropertyAutoSizeMode.setVisible(options.useImageFormat());
                 mPropertyWidth.setVisible(options.useImageFormat());
                 mPropertyHeight.setVisible(options.useImageFormat());
-                mPropertyRawHeader.setVisible(options.format == ExportOptions::Format::csv);
-                mPropertyRawSeparator.setVisible(options.format == ExportOptions::Format::csv);
+                mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
+                mPropertyRawSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
                 mPropertyIgnoreGrids.setVisible(options.useTextFormat());
                 sanitizeProperties(false);
                 resized();
@@ -382,7 +382,7 @@ void Application::Exporter::exportToFile()
     mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
                           {
                               juce::Thread::setCurrentThreadName("Exporter");
-                              auto const result = exportTo(file, identifier, options);
+                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, identifier, options, getSizeFor);
                               triggerAsyncUpdate();
                               if(result.failed())
                               {
@@ -405,339 +405,6 @@ void Application::Exporter::handleAsyncUpdate()
     }
     auto const result = mProcess.get();
     AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), std::get<2>(result));
-}
-
-juce::Result Application::Exporter::exportToImage(juce::File const file, juce::String const& identifier, ExportOptions const& options)
-{
-    anlStrongAssert(options.useImageFormat());
-    if(!options.useImageFormat())
-    {
-        return juce::Result::fail("Invalid format");
-    }
-    if(file == juce::File())
-    {
-        return juce::Result::fail("Invalid file");
-    }
-
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
-    {
-        juce::MessageManager::Lock lock;
-        if(!lock.tryEnter())
-        {
-            return juce::Result::fail("Invalid threaded threadsafe access");
-        }
-        auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
-        anlStrongAssert(documentHasTrack);
-        if(!documentHasTrack)
-        {
-            return juce::Result::fail("Track is invalid");
-        }
-        auto const size = getSizeFor(trackIdentifier);
-        auto const trackWidth = options.useAutoSize ? std::get<0>(size) : options.imageWidth;
-        auto const trackheight = options.useAutoSize ? std::get<1>(size) : options.imageHeight;
-        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-        auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-        lock.exit();
-
-        return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, trackFile, trackWidth, trackheight);
-    };
-
-    auto exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
-    {
-        juce::MessageManager::Lock lock;
-        if(!lock.tryEnter())
-        {
-            return juce::Result::fail("Invalid threaded threadsafe access");
-        }
-        auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
-        anlStrongAssert(documentHasGroup);
-        if(!documentHasGroup)
-        {
-            return juce::Result::fail("Group is invalid");
-        }
-        auto const size = getSizeFor(groupIdentifier);
-        auto const groupWidth = options.useAutoSize ? std::get<0>(size) : options.imageWidth;
-        auto const groupheight = options.useAutoSize ? std::get<1>(size) : options.imageHeight;
-        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        auto& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-        lock.exit();
-
-        return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, groupFile, groupWidth, groupheight);
-    };
-
-    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
-    {
-        juce::MessageManager::Lock lock;
-        if(!lock.tryEnter())
-        {
-            return juce::Result::fail("Invalid threaded threadsafe access");
-        }
-        auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
-        anlStrongAssert(documentHasGroup);
-        if(!documentHasGroup)
-        {
-            return juce::Result::fail("Group is invalid");
-        }
-
-        auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
-                                                     {
-                                                         return !Document::Tools::hasTrackAcsr(documentAcsr, trackId);
-                                                     });
-        auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
-        lock.exit();
-
-        for(auto const& trackIdentifier : groupLayout)
-        {
-            if(!lock.tryEnter())
-            {
-                return juce::Result::fail("Invalid threaded threadsafe access");
-            }
-            auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
-            anlStrongAssert(documentHasTrack);
-            if(!documentHasTrack)
-            {
-                return juce::Result::fail("Track is invalid");
-            }
-            auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-            auto const trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
-            lock.exit();
-
-            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + options.getFormatExtension());
-            auto const result = exportTrack(trackIdentifier, trackFile);
-            if(result.failed())
-            {
-                return result;
-            }
-        }
-        return juce::Result::ok();
-    };
-
-    auto exportDocumentGroups = [&](juce::File const& documentFolder)
-    {
-        juce::MessageManager::Lock lock;
-        if(!lock.tryEnter())
-        {
-            return juce::Result::fail("Invalid threaded threadsafe access");
-        }
-        auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
-                                                        {
-                                                            return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
-                                                        });
-        lock.exit();
-
-        for(auto const& groupIdentifier : documentLayout)
-        {
-            if(!lock.tryEnter())
-            {
-                return juce::Result::fail("Invalid threaded threadsafe access");
-            }
-            auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
-            anlStrongAssert(documentHasGroup);
-            if(!documentHasGroup)
-            {
-                return juce::Result::fail("Group is invalid");
-            }
-
-            auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-            auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
-            lock.exit();
-
-            auto const groupFile = documentFolder.getNonexistentChildFile(groupName, "." + options.getFormatExtension());
-            auto const result = exportGroup(groupIdentifier, groupFile);
-            if(result.failed())
-            {
-                return result;
-            }
-        }
-        return juce::Result::ok();
-    };
-
-    juce::MessageManager::Lock lock;
-    if(!lock.tryEnter())
-    {
-        return juce::Result::fail("Invalid threaded threadsafe access");
-    }
-
-    if(identifier.isEmpty())
-    {
-        if(options.useGroupOverview)
-        {
-            lock.exit();
-            return exportDocumentGroups(file);
-        }
-        else
-        {
-            auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
-                                                            {
-                                                                return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
-                                                            });
-            lock.exit();
-
-            for(auto const& groupIdentifier : documentLayout)
-            {
-                auto const result = exportGroupTracks(groupIdentifier, file);
-                if(result.failed())
-                {
-                    return result;
-                }
-            }
-            return juce::Result::ok();
-        }
-    }
-    else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
-    {
-        lock.exit();
-        return options.useGroupOverview ? exportGroup(identifier, file) : exportGroupTracks(identifier, file);
-    }
-    else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
-    {
-        lock.exit();
-        return exportTrack(identifier, file);
-    }
-    return juce::Result::fail("Invalid identifier");
-}
-
-juce::Result Application::Exporter::exportToText(juce::File const file, juce::String const& identifier, ExportOptions const& options)
-{
-    anlStrongAssert(options.useTextFormat());
-    if(!options.useTextFormat())
-    {
-        return juce::Result::fail("Invalid format");
-    }
-    if(file == juce::File())
-    {
-        return juce::Result::fail("Invalid file");
-    }
-
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
-    {
-        juce::MessageManager::Lock lock;
-        if(!lock.tryEnter())
-        {
-            return juce::Result::fail("Invalid threaded access to model");
-        }
-        auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
-        anlStrongAssert(documentHasTrack);
-        if(!documentHasTrack)
-        {
-            return juce::Result::fail("Track is invalid");
-        }
-        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-        if(options.ignoreGridResults && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::grid)
-        {
-            return juce::Result::ok();
-        }
-        lock.exit();
-
-        switch(options.format)
-        {
-            case ExportOptions::Format::jpeg:
-                return juce::Result::fail("Unsupported format");
-            case ExportOptions::Format::png:
-                return juce::Result::fail("Unsupported format");
-            case ExportOptions::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, trackFile, options.includeHeaderRaw, options.getSeparatorChar());
-            case ExportOptions::Format::json:
-                return Track::Exporter::toJson(trackAcsr, trackFile);
-        }
-        return juce::Result::fail("Unsupported format");
-    };
-
-    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
-    {
-        juce::MessageManager::Lock lock;
-        if(!lock.tryEnter())
-        {
-            return juce::Result::fail("Invalid threaded threadsafe access");
-        }
-        auto const documentHasGroup = Document::Tools::hasGroupAcsr(documentAcsr, groupIdentifier);
-        anlStrongAssert(documentHasGroup);
-        if(!documentHasGroup)
-        {
-            return juce::Result::fail("Group is invalid");
-        }
-        auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
-                                                     {
-                                                         return !Document::Tools::hasTrackAcsr(documentAcsr, trackId);
-                                                     });
-        auto const groupName = juce::File::createLegalFileName(groupAcsr.getAttr<Group::AttrType::name>());
-        lock.exit();
-
-        for(auto const& trackIdentifier : groupLayout)
-        {
-            if(!lock.tryEnter())
-            {
-                return juce::Result::fail("Invalid threaded threadsafe access");
-            }
-            auto const documentHasTrack = Document::Tools::hasTrackAcsr(documentAcsr, trackIdentifier);
-            anlStrongAssert(documentHasTrack);
-            if(!documentHasTrack)
-            {
-                return juce::Result::fail("Track is invalid");
-            }
-            auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackIdentifier);
-            auto const trackName = juce::File::createLegalFileName(trackAcsr.getAttr<Track::AttrType::name>());
-            lock.exit();
-
-            auto const trackFile = groupFolder.getNonexistentChildFile(groupName + "_" + trackName, "." + options.getFormatExtension());
-            auto const result = exportTrack(trackIdentifier, trackFile);
-            if(result.failed())
-            {
-                return result;
-            }
-        }
-        return juce::Result::ok();
-    };
-
-    juce::MessageManager::Lock lock;
-    if(!lock.tryEnter())
-    {
-        return juce::Result::fail("Invalid threaded threadsafe access");
-    }
-
-    if(identifier.isEmpty())
-    {
-        auto const documentLayout = copy_with_erased_if(documentAcsr.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
-                                                        {
-                                                            return !Document::Tools::hasGroupAcsr(documentAcsr, groupId);
-                                                        });
-
-        lock.exit();
-
-        for(auto const& groupIdentifier : documentLayout)
-        {
-            auto const result = exportGroupTracks(groupIdentifier, file);
-            if(result.failed())
-            {
-                return result;
-            }
-        }
-        return juce::Result::ok();
-    }
-    else if(Document::Tools::hasGroupAcsr(documentAcsr, identifier))
-    {
-        lock.exit();
-        return exportGroupTracks(identifier, file);
-    }
-    else if(Document::Tools::hasTrackAcsr(documentAcsr, identifier))
-    {
-        lock.exit();
-        return exportTrack(identifier, file);
-    }
-    return juce::Result::fail("Invalid identifier");
-}
-
-juce::Result Application::Exporter::exportTo(juce::File const file, juce::String const& identifier, ExportOptions const& options)
-{
-    if(options.useTextFormat())
-    {
-        return exportToText(file, identifier, options);
-    }
-    return exportToImage(file, identifier, options);
 }
 
 ANALYSE_FILE_END
