@@ -221,6 +221,7 @@ void XmlParser::toXml<Plugin::State>(juce::XmlElement& xml, juce::Identifier con
         toXml(*child, "stepSize", value.stepSize);
         toXml(*child, "windowType", value.windowType);
         toXml(*child, "parameters", value.parameters);
+        toXml(*child, "independentChannels", value.independentChannels);
         xml.addChildElement(child.release());
     }
 }
@@ -240,6 +241,7 @@ auto XmlParser::fromXml<Plugin::State>(juce::XmlElement const& xml, juce::Identi
     value.stepSize = fromXml(*child, "stepSize", defaultValue.stepSize);
     value.windowType = fromXml(*child, "windowType", defaultValue.windowType);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
+    value.independentChannels = fromXml(*child, "independentChannels", defaultValue.independentChannels);
     return value;
 }
 

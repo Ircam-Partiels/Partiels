@@ -85,13 +85,15 @@ namespace Plugin
         size_t stepSize{512};                             //!< The default step size
         WindowType windowType{WindowType::HanningWindow}; //!< The window type for frequency domain plugins
         std::map<std::string, float> parameters{};        //!< The values of the parameters of the plugin
+        bool independentChannels{false};                  //!< If the channels should be performed independently
 
         inline bool operator==(State const& rhd) const noexcept
         {
             return blockSize == rhd.blockSize &&
                    stepSize == rhd.stepSize &&
                    windowType == rhd.windowType &&
-                   parameters == rhd.parameters;
+                   parameters == rhd.parameters &&
+                   independentChannels == rhd.independentChannels;
         }
 
         inline bool operator!=(State const& rhd) const noexcept
