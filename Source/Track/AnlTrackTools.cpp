@@ -91,11 +91,56 @@ std::vector<Plugin::Result>::const_iterator Track::Tools::getIteratorAt(std::vec
     }
     else
     {
-        auto const it = std::find_if(results.cbegin(), results.cend(), [&](Plugin::Result const& result)
+        auto const it = std::find_if(expectedIt, results.cend(), [&](Plugin::Result const& result)
                                      {
                                          return Tools::getEndRealTime(result) >= rtStart;
                                      });
         if(it->timestamp > rtStart && it != results.cbegin())
+        {
+            return std::prev(it);
+        }
+        return it;
+    }
+}
+
+Track::Results::Columns::const_iterator Track::Tools::getIteratorAt(Results::Columns const& results, Zoom::Range const& globalRange, double time)
+{
+    anlWeakAssert(!globalRange.isEmpty());
+    if(globalRange.isEmpty())
+    {
+        return results.cend();
+    }
+    
+    auto const timeRatioPosition = std::max(std::min((time - globalRange.getStart()) / globalRange.getLength(), 1.0), 0.0);
+    auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
+    auto const rtStart = Tools::secondsToRealTime(time);
+    
+    auto const expectedIt = std::next(results.cbegin(), expectedIndex);
+    anlWeakAssert(expectedIt != results.cend());
+    if(expectedIt == results.cend())
+    {
+        return results.cend();
+    }
+    auto const position = std::get<0>(*expectedIt);
+    if(position >= time && position + std::get<1>(*expectedIt) <= time)
+    {
+        return expectedIt;
+    }
+    else if(position >= time)
+    {
+        return std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
+        {
+            return std::get<0>(result) + std::get<1>(result) <= time;
+        })
+        .base();
+    }
+    else
+    {
+        auto const it = std::find_if(expectedIt, results.cend(), [&](auto const& result)
+        {
+            return std::get<0>(result) + std::get<1>(result) >= time;
+        });
+        if(std::get<0>(*it) > time && it != results.cbegin())
         {
             return std::prev(it);
         }
@@ -153,8 +198,12 @@ juce::String Track::Tools::getSegmentText(std::vector<Plugin::Result> const& res
     return value + " " + label;
 }
 
-juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
+juce::String Track::Tools::getText(Results::SharedColumns results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
 {
+    if(results == nullptr)
+    {
+        return "-";
+    }
     auto const it = getIteratorAt(results, globalRange, time);
     if(it == results.cend() || it->values.empty())
     {
@@ -173,7 +222,7 @@ juce::String Track::Tools::getGridText(std::vector<Plugin::Result> const& result
 juce::String Track::Tools::getResultText(Accessor const& acsr, Zoom::Range const& globalRange, double time, size_t bin, double timeEpsilon)
 {
     auto const results = acsr.getAttr<AttrType::results>();
-    if(results == nullptr || results->empty() || globalRange.isEmpty())
+    if(results.isEmpty() || globalRange.isEmpty())
     {
         return "-";
     }
@@ -182,19 +231,19 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, Zoom::Range const
     {
         case DisplayType::markers:
         {
-            return Tools::getMarkerText(*results, output, globalRange, time, timeEpsilon);
+            return Tools::getText(results.getMarkers(), output, globalRange, time, timeEpsilon);
         }
         break;
         case DisplayType::segments:
         {
-            return Tools::getSegmentText(*results, output, globalRange, time);
+            return Tools::getText(results.getPoints(), output, globalRange, time);
         }
         break;
         case DisplayType::grid:
         {
             auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
             auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");
-            return "(" + binName + ") " + Tools::getGridText(*results, output, globalRange, time, bin);
+            return "(" + binName + ") " + Tools::getText(results.getColumns(), output, globalRange, time, bin);
         }
         break;
     }
