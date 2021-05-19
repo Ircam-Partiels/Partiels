@@ -32,7 +32,7 @@ Document::Section::Section(Director& director)
     mViewport.setScrollBarsShown(true, false, false, false);
 
     setWantsKeyboardFocus(true);
-    setFocusContainer(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
     addAndMakeVisible(mFileInfoLabel);
     mFileInfoLabel.setWantsKeyboardFocus(false);
@@ -347,7 +347,7 @@ void Document::Section::updateLayout()
     resized();
 }
 
-juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
+std::unique_ptr<juce::ComponentTraverser> Document::Section::createFocusTraverser()
 {
     class FocusTraverser
     : public juce::KeyboardFocusTraverser
@@ -376,7 +376,7 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
                 it = std::next(it);
                 if(*it != nullptr)
                 {
-                    if(auto* childFocusTraverser = getChildFocusTraverser(*it))
+                    if(auto childFocusTraverser = getChildFocusTraverser(*it))
                     {
                         childFocusTraverser->getNextComponent(nullptr);
                     }
@@ -402,7 +402,7 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
                 it = std::next(it);
                 if(*it != nullptr)
                 {
-                    if(auto* childFocusTraverser = getChildFocusTraverser(*it))
+                    if(auto childFocusTraverser = getChildFocusTraverser(*it))
                     {
                         childFocusTraverser->getPreviousComponent(nullptr);
                     }
@@ -412,7 +412,7 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
             return contents.back().getComponent();
         }
 
-        juce::KeyboardFocusTraverser* getChildFocusTraverser(juce::Component* component)
+        std::unique_ptr<juce::ComponentTraverser> getChildFocusTraverser(juce::Component* component)
         {
             auto* child = dynamic_cast<Group::StrechableSection*>(component);
             if(child != nullptr)
@@ -426,7 +426,7 @@ juce::KeyboardFocusTraverser* Document::Section::createFocusTraverser()
         Section& mSection;
     };
 
-    return std::make_unique<FocusTraverser>(*this).release();
+    return std::make_unique<FocusTraverser>(*this);
 }
 
 void Document::Section::globalFocusChanged(juce::Component* focusedComponent)

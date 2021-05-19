@@ -82,7 +82,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
         setSize(getWidth(), height);
     };
 
-    setFocusContainer(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
     mBoundsListener.attachTo(mSection);
     mBoundsListener.attachTo(mConcertinaTable);
@@ -146,7 +146,7 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     return {};
 }
 
-juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
+std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createFocusTraverser()
 {
     class FocusTraverser
     : public juce::KeyboardFocusTraverser
@@ -165,7 +165,7 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
             {
                 return content;
             }
-            if(auto* parentFocusTraverser = getParentFocusTraverser())
+            if(auto parentFocusTraverser = getParentFocusTraverser())
             {
                 return parentFocusTraverser->getNextComponent(&mStrechableSection);
             }
@@ -178,7 +178,7 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
             {
                 return content;
             }
-            if(auto* parentFocusTraverser = getParentFocusTraverser())
+            if(auto parentFocusTraverser = getParentFocusTraverser())
             {
                 return parentFocusTraverser->getPreviousComponent(&mStrechableSection);
             }
@@ -248,7 +248,7 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
             return nullptr;
         }
 
-        juce::KeyboardFocusTraverser* getParentFocusTraverser()
+        std::unique_ptr<juce::ComponentTraverser> getParentFocusTraverser()
         {
             auto* parent = mStrechableSection.getParentComponent();
             if(parent != nullptr)
@@ -262,7 +262,7 @@ juce::KeyboardFocusTraverser* Group::StrechableSection::createFocusTraverser()
         StrechableSection& mStrechableSection;
     };
 
-    return std::make_unique<FocusTraverser>(*this).release();
+    return std::make_unique<FocusTraverser>(*this);
 }
 
 ANALYSE_FILE_END
