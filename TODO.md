@@ -9,3 +9,9 @@
 - replace model resizable by dynamic and fixed
 - output all key shortcuts
 - Use cache image component ?
+- rename dislay type
+- Multichannel
+  - Fix processor
+  - Fix bubble info
+  - Add channels layout
+  - Fix value/bin rulers
