@@ -40,33 +40,36 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         }
     };
 
-    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
-        if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+        juce::ignoreUnused(acsr);
+        switch(attribute)
         {
-            repaint();
-        }
-    };
-
-    mBinZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr, attribute);
-        if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
-        {
-            repaint();
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
+                break;
+            case Zoom::AttrType::visibleRange:
+            {
+                if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                {
+                    repaint();
+                }
+            }
+                break;
+            case Zoom::AttrType::anchor:
+                break;
         }
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
-    mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Track::Snapshot::~Snapshot()
 {
-    mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mBinZoomListener);
-    mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mValueZoomListener);
+    mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
+    mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
