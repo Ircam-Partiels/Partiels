@@ -25,7 +25,7 @@ echo '\033[0;34m' "Uploading archive..."
 echo '\033[0m'
 ditto -c -k --keepParent "$APP_NAME.app" "$APP_NAME.zip"
 xc_out=$(xcrun altool --notarize-app --primary-bundle-id "fr.ircam.dev.partiels" --username "$APPLE_ACCOUNT" --password "@keychain:$APPLE_PASSWORD" --file "$APP_NAME.zip" 2>&1)
-MAX_UPLOAD_ATTEMPTS=30
+MAX_UPLOAD_ATTEMPTS=100
 requestUUID=$(echo "$xc_out" | awk '/RequestUUID/ { print $NF; }')
 
 if [[ $requestUUID == "" ]]; then
@@ -40,7 +40,7 @@ count=0
 while [[ "$count" -lt $MAX_UPLOAD_ATTEMPTS && ("$request_status" == "in progress" || "$request_status" == "") ]]; do
     sleep 10
     request_status=$(xcrun altool --notarization-info "$requestUUID" --username "$APPLE_ACCOUNT" --password "@keychain:$APPLE_PASSWORD" 2>&1 | awk -F ': ' '/Status:/ { print $2; }' )
-    echo Status: "$request_status"
+    echo "$request_status"
     count=$((count+1))
 done
 
