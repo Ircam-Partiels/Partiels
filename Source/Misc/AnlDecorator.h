@@ -17,7 +17,7 @@ public:
     };
     // clang-format on
 
-    Decorator(juce::Component& content, int borderThickness, float cornerSize);
+    Decorator(juce::Component& content, int borderThickness = 1, float cornerSize = 2.0f);
     ~Decorator() override = default;
 
     void setHighlighted(bool state);
@@ -26,7 +26,9 @@ public:
     void resized() override;
     void paint(juce::Graphics& g) override;
     void paintOverChildren(juce::Graphics& g) override;
-
+    void colourChanged() override;
+    void lookAndFeelChanged() override;
+    
 private:
     juce::Component& mContent;
     int const mBorderThickness;

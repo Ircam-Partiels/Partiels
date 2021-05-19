@@ -8,6 +8,7 @@ Decorator::Decorator(juce::Component& content, int borderThickness, float corner
 , mCornerSize(cornerSize)
 {
     addAndMakeVisible(mContent);
+    colourChanged();
 }
 
 void Decorator::setHighlighted(bool state)
@@ -37,6 +38,16 @@ void Decorator::paintOverChildren(juce::Graphics& g)
     auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 0.5f));
     g.setColour(findColour(mIsHighlighted ? ColourIds::highlightedBorderColourId : ColourIds::normalBorderColourId));
     g.drawRoundedRectangle(getLocalBounds().reduced(offset).toFloat(), mCornerSize, static_cast<float>(mBorderThickness));
+}
+
+void Decorator::colourChanged()
+{
+    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque() && mCornerSize <= 0.0f);
+}
+
+void Decorator::lookAndFeelChanged()
+{
+    colourChanged();
 }
 
 ANALYSE_FILE_END

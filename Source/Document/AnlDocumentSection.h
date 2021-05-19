@@ -58,10 +58,10 @@ namespace Document
         juce::Label mFileInfoLabel;
 
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
-        Decorator mTimeRulerDecoration{mTimeRuler, 1, 2.0f};
+        Decorator mTimeRulerDecoration{mTimeRuler};
         Transport::LoopBar mLoopBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Transport::PlayheadBar mPlayheadBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
-        Decorator mLoopBarDecoration{mLoopBar, 1, 2.0f};
+        Decorator mLoopBarDecoration{mLoopBar};
 
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
         DraggableTable mDraggableTable{"Group"};

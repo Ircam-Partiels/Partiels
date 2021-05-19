@@ -54,15 +54,15 @@ namespace Group
         Accessor::Listener mListener;
 
         Thumbnail mThumbnail{mDirector};
-        Decorator mThumbnailDecoration{mThumbnail, 1, 2.0f};
+        Decorator mThumbnailDecoration{mThumbnail};
 
         Snapshot mSnapshot{mAccessor, mTransportAccessor, mTimeZoomAccessor};
         Snapshot::Overlay mSnapshotOverlay{mSnapshot};
-        Decorator mSnapshotDecoration{mSnapshotOverlay, 1, 2.0f};
+        Decorator mSnapshotDecoration{mSnapshotOverlay};
 
         Plot mPlot{mAccessor, mTransportAccessor, mTimeZoomAccessor};
         Plot::Overlay mPlotOverlay{mPlot};
-        Decorator mPlotDecoration{mPlotOverlay, 1, 2.0f};
+        Decorator mPlotDecoration{mPlotOverlay};
 
         Zoom::Ruler mRuler{mAccessor.getAcsr<AcsrType::zoom>(), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mScrollBar{mAccessor.getAcsr<AcsrType::zoom>(), Zoom::ScrollBar::Orientation::vertical, true};

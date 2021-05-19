@@ -101,7 +101,7 @@ namespace Application
         Accessor::Listener mListener;
         Document::Section mDocumentSection;
         Loader mLoader;
-        Decorator mLoaderDecorator{mLoader, 1, 2.0f};
+        Decorator mLoaderDecorator{mLoader};
         ColouredPanel mToolTipSeparator;
         Tooltip::Display mToolTipDisplay;
         juce::ImageButton mTooltipButton{"TooltipButton"};
