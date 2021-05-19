@@ -6,24 +6,24 @@ Group::StateButton::StateButton(Accessor& accessor)
 : mAccessor(accessor)
 {
     addAndMakeVisible(mProcessingButton);
-    
+
     auto updateToolTip = [&]()
     {
         auto const& name = mAccessor.getAttr<AttrType::name>();
         auto const& contents = mTrackAccessors.getContents();
         auto const valid = std::all_of(contents.cbegin(), contents.cend(), [](auto const& pair)
                                        {
-            return pair.second.get().template getAttr<Track::AttrType::warnings>() == Track::WarningType::none;
-        });
-        
+                                           return pair.second.get().template getAttr<Track::AttrType::warnings>() == Track::WarningType::none;
+                                       });
+
         auto const processing = std::any_of(contents.cbegin(), contents.cend(), [](auto const& pair)
                                             {
-            return std::get<0>(pair.second.get().template getAttr<Track::AttrType::processing>());
-        });
+                                                return std::get<0>(pair.second.get().template getAttr<Track::AttrType::processing>());
+                                            });
         auto const rendering = std::any_of(contents.cbegin(), contents.cend(), [](auto const& pair)
                                            {
-            return std::get<2>(pair.second.get().template getAttr<Track::AttrType::processing>());
-        });
+                                               return std::get<2>(pair.second.get().template getAttr<Track::AttrType::processing>());
+                                           });
         if(processing && rendering)
         {
             setTooltip(name + ": processing and rendering...");
@@ -49,11 +49,11 @@ Group::StateButton::StateButton(Accessor& accessor)
             setTooltip(name + ": analyses and renderings finished with errors!");
             mProcessingButton.setTooltip(name + ":analyses and renderings finished with errors!");
         }
-        
+
         mProcessingButton.setActive(processing || rendering);
         mProcessingButton.setInactiveImage(IconManager::getIcon(valid ? IconManager::IconType::checked : IconManager::IconType::alert));
     };
-    
+
     mTrackListener.onAttrChanged = [=](Track::Accessor const& acsr, Track::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -64,7 +64,7 @@ Group::StateButton::StateButton(Accessor& accessor)
             {
                 updateToolTip();
             }
-                break;
+            break;
             case Track::AttrType::name:
             case Track::AttrType::key:
             case Track::AttrType::description:
@@ -81,7 +81,7 @@ Group::StateButton::StateButton(Accessor& accessor)
                 break;
         }
     };
-    
+
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -93,7 +93,7 @@ Group::StateButton::StateButton(Accessor& accessor)
             {
                 updateToolTip();
             }
-                break;
+            break;
             case AttrType::height:
             case AttrType::colour:
             case AttrType::expanded:
@@ -102,21 +102,22 @@ Group::StateButton::StateButton(Accessor& accessor)
             case AttrType::layout:
             case AttrType::tracks:
             {
-                mTrackAccessors.updateContents(mAccessor,
-                [this](Track::Accessor& trackAccessor)
-                {
-                    trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
-                    return std::ref(trackAccessor);
-                },
-                [this](std::reference_wrapper<Track::Accessor>& content)
-                {
-                    content.get().removeListener(mTrackListener);
-                });
+                mTrackAccessors.updateContents(
+                    mAccessor,
+                    [this](Track::Accessor& trackAccessor)
+                    {
+                        trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
+                        return std::ref(trackAccessor);
+                    },
+                    [this](std::reference_wrapper<Track::Accessor>& content)
+                    {
+                        content.get().removeListener(mTrackListener);
+                    });
             }
-                break;
+            break;
         }
     };
-    
+
     mProcessingButton.setActive(false);
     mProcessingButton.setInactiveImage(IconManager::getIcon(IconManager::IconType::checked));
     mAccessor.addListener(mListener, NotificationType::synchronous);
