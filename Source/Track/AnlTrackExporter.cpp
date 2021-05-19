@@ -53,7 +53,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height)
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -87,10 +87,11 @@ juce::Result Track::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
         {
             return juce::Image{};
         }
-        Transport::Accessor transportAccessor;
-        Plot plot(accessor, timeZoomAccessor, transportAccessor);
-        plot.setSize(width, height);
-        return plot.createComponentSnapshot({0, 0, width, height});
+        juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
+        juce::Graphics g(image);
+        g.fillAll(accessor.getAttr<AttrType::colours>().background);
+        Plot::paint(accessor, g, {0, 0, width, height}, timeZoomAccessor);
+        return image;
     };
 
     auto const image = getImage();

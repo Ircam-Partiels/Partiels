@@ -70,23 +70,28 @@ Track::Plot::~Plot()
 
 void Track::Plot::paint(juce::Graphics& g)
 {
-    switch(Tools::getDisplayType(mAccessor))
+    paint(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+}
+
+void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+{
+    switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
         {
-            paintMarkers(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+            paintMarkers(accessor, g, bounds, timeZoomAcsr);
         }
-        break;
+            break;
         case Tools::DisplayType::segments:
         {
-            paintPoints(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+            paintPoints(accessor, g, bounds, timeZoomAcsr);
         }
-        break;
+            break;
         case Tools::DisplayType::grid:
         {
-            paintColumns(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+            paintColumns(accessor, g, bounds, timeZoomAcsr);
         }
-        break;
+            break;
     }
 }
 

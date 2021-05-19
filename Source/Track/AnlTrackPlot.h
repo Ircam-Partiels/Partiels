@@ -47,11 +47,13 @@ namespace Track
             Transport::PlayheadBar mTransportPlayheadBar;
             bool mSnapshotMode{false};
         };
-
-    private:
+        
+        static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintMarkers(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintPoints(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintColumns(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+
+    private:
 
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
