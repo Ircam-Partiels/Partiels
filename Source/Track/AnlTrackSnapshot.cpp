@@ -55,7 +55,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
                     repaint();
                 }
             }
-                break;
+            break;
             case Zoom::AttrType::anchor:
                 break;
         }
@@ -75,24 +75,60 @@ Track::Snapshot::~Snapshot()
 
 void Track::Snapshot::paint(juce::Graphics& g)
 {
-    switch(Tools::getDisplayType(mAccessor))
+    paint(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+}
+
+void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr)
+{
+    auto paintChannels = [&](size_t numChannels, std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
+    {
+        auto const fullHeight = bounds.getHeight();
+        auto const channelHeight = (fullHeight / static_cast<int>(numChannels)) - static_cast<int>(numChannels) + 1;
+        
+        size_t channel = 1;
+        while(channel < numChannels)
+        {
+            juce::Graphics::ScopedSaveState sss(g);
+            auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(1);
+            g.reduceClipRegion(region);
+            fn(accessor, channel - 1_z, g, region, timeZoomAcsr);
+            ++channel;
+        }
+        
+        juce::Graphics::ScopedSaveState sss(g);
+        g.reduceClipRegion(bounds);
+        fn(accessor, channel - 1_z, g, bounds, timeZoomAcsr);
+    };
+    switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
+        {
+        }
             break;
         case Tools::DisplayType::segments:
         {
-            paintPoints(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+            auto const points = accessor.getAttr<AttrType::results>().getPoints();
+            if(points == nullptr || points->empty())
+            {
+                return;
+            }
+            paintChannels(points->size(), paintPoints);
         }
-        break;
+            break;
         case Tools::DisplayType::grid:
         {
-            paintColumns(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+            auto const columns = accessor.getAttr<AttrType::results>().getColumns();
+            if(columns == nullptr || columns->empty())
+            {
+                return;
+            }
+            paintChannels(columns->size(), paintColumns);
         }
-        break;
+            break;
     }
 }
 
-void Track::Snapshot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     if(bounds.isEmpty())
     {
@@ -113,12 +149,12 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, juce::Graphics& g, j
 
     auto const results = accessor.getAttr<AttrType::results>();
     auto const points = results.getPoints();
-    if(points == nullptr || points->empty())
+    if(points == nullptr || points->size() <= channel)
     {
         return;
     }
 
-    auto const value = Tools::getValue(points, globalRange, accessor.getAttr<AttrType::time>());
+    auto const value = Tools::getValue(points, channel, globalRange, accessor.getAttr<AttrType::time>());
     if(!value.has_value())
     {
         return;
@@ -134,7 +170,7 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, juce::Graphics& g, j
     g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
 }
 
-void Track::Snapshot::paintColumns(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     if(bounds.isEmpty())
     {
@@ -148,7 +184,7 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, juce::Graphics& g, 
     }
 
     auto const images = accessor.getAttr<AttrType::graphics>();
-    if(images.empty())
+    if(images.empty() || images.size() <= channel || images.at(channel).empty())
     {
         return;
     }
@@ -207,6 +243,10 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, juce::Graphics& g, 
             auto const graphicsBounds = g.getClipBounds().toFloat();
             auto const imageBounds = rectangle.getSmallestIntegerContainer();
             auto const clippedImage = image.getClippedImage(imageBounds);
+            if(!clippedImage.isValid())
+            {
+                return;
+            }
             anlWeakAssert(clippedImage.getWidth() == imageBounds.getWidth());
             anlWeakAssert(clippedImage.getHeight() == imageBounds.getHeight());
             auto const deltaX = static_cast<float>(imageBounds.getX()) - rectangle.getX();
@@ -235,7 +275,7 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, juce::Graphics& g, 
         drawImage({std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
 
-    renderImage(images.back(), accessor.getAttr<AttrType::time>(), timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
+    renderImage(images.at(channel).back(), accessor.getAttr<AttrType::time>(), timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
 }
 
 Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)

@@ -12,22 +12,23 @@ namespace Track
     public:
         Graphics() = default;
         ~Graphics() override;
-        
+
         void runRendering(Accessor const& accessor);
         void stopRendering();
         bool isRunning() const;
         float getAdvancement() const;
-        
-        std::function<void(std::vector<juce::Image> images)> onRenderingUpdated = nullptr;
-        std::function<void(std::vector<juce::Image> images)> onRenderingEnded = nullptr;
+
+        std::function<void(Images images)> onRenderingUpdated = nullptr;
+        std::function<void(Images images)> onRenderingEnded = nullptr;
         std::function<void(void)> onRenderingAborted = nullptr;
-        
+
     private:
         void abortRendering();
-        
+
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
-       
+
+        // clang-format off
         enum class ProcessState
         {
               available
@@ -35,17 +36,18 @@ namespace Track
             , running
             , ended
         };
-        
+        // clang-format on
+
         std::mutex mMutex;
-        std::vector<juce::Image> mImages;
-        std::atomic<ProcessState> mRenderingState {ProcessState::available};
+        Images mImages;
+        std::atomic<ProcessState> mRenderingState{ProcessState::available};
         std::thread mRenderingProcess;
         std::mutex mRenderingMutex;
-        std::atomic<float> mAdvancement {0.0f};
-        Chrono mChrono {"Track", "graphics rendering ended"};
+        std::atomic<float> mAdvancement{0.0f};
+        Chrono mChrono{"Track", "graphics rendering ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Graphics)
     };
-}
+} // namespace Track
 
 ANALYSE_FILE_END

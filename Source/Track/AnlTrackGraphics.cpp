@@ -24,16 +24,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     }
     abortRendering();
 
-    auto const results = accessor.getAttr<AttrType::results>();
-    if(results.isEmpty())
-    {
-        if(onRenderingEnded != nullptr)
-        {
-            onRenderingEnded({});
-        }
-        return;
-    }
-    auto const columns = results.getColumns();
+    auto const columns = accessor.getAttr<AttrType::results>().getColumns();
     if(columns == nullptr || columns->empty())
     {
         if(onRenderingEnded != nullptr)
@@ -43,9 +34,8 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
-    auto const& channel = columns->at(0);
-    auto const width = static_cast<int>(channel.size());
-    auto const height = static_cast<int>(std::get<2>(channel.front()).size());
+    auto const width = static_cast<int>(columns->at(0).size());
+    auto const height = static_cast<int>(std::get<2>(columns->at(0).front()).size());
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
@@ -77,9 +67,10 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             colours[i] = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
                                         }
 
-                                        auto createImage = [&](int imageWidth, int imageHeight, float& advancement, std::function<bool(void)> predicate) -> juce::Image
+                                        auto createImage = [&](size_t index, int imageWidth, int imageHeight, float& advancement, std::function<bool(void)> predicate) -> juce::Image
                                         {
                                             advancement = 0.0f;
+                                            auto const& channel = columns->at(index);
                                             if(channel.empty() || std::get<2>(channel.front()).empty())
                                             {
                                                 return {};
@@ -145,69 +136,89 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             advancement = 1.0f;
                                             return predicate() ? image : juce::Image();
                                         };
+                                        auto const numChannels = columns->size();
+
+                                        {
+                                            std::unique_lock<std::mutex> imageLock(mMutex);
+                                            mImages.resize(numChannels);
+                                        }
 
                                         auto constexpr maxImageSize = 4096;
                                         auto const dimension = std::max(width, height);
                                         if(dimension > maxImageSize)
                                         {
                                             float advancement = 0.0f;
-                                            auto image = createImage(std::min(maxImageSize, width), std::min(maxImageSize, height), advancement, [&]()
+                                            for(size_t channel = 0; channel < numChannels; ++channel)
+                                            {
+                                                auto image = createImage(channel, std::min(maxImageSize, width), std::min(maxImageSize, height), advancement, [&]()
+                                                                         {
+                                                                             mAdvancement.store(0.05f * (static_cast<float>(channel) + advancement) / static_cast<float>(numChannels));
+                                                                             return mRenderingState.load() != ProcessState::aborted;
+                                                                         });
+
+                                                if(image.isNull())
+                                                {
+                                                    mRenderingState = ProcessState::aborted;
+                                                    triggerAsyncUpdate();
+                                                    return;
+                                                }
+
+                                                std::unique_lock<std::mutex> imageLock(mMutex);
+                                                mImages[channel].push_back(image);
+                                                imageLock.unlock();
+                                                triggerAsyncUpdate();
+
+                                                mAdvancement.store(0.05f * (static_cast<float>(channel) / static_cast<float>(numChannels)));
+                                            }
+                                            mAdvancement.store(0.05f);
+                                        }
+
+                                        std::vector<juce::Image> tempImages;
+                                        auto const currentAdvancement = mAdvancement.load();
+                                        float advancement = 0.0f;
+                                        for(size_t channel = 0; channel < numChannels; ++channel)
+                                        {
+                                            auto image = createImage(channel, width, height, advancement, [&]()
                                                                      {
-                                                                         mAdvancement.store(0.05f * advancement);
+                                                                         mAdvancement.store(currentAdvancement + (static_cast<float>(channel) + 0.98f - currentAdvancement) * advancement / static_cast<float>(numChannels));
                                                                          return mRenderingState.load() != ProcessState::aborted;
                                                                      });
 
+                                            tempImages.push_back(image);
+                                            mAdvancement.store(0.98f * (static_cast<float>(channel) / static_cast<float>(numChannels)));
                                             if(image.isNull())
                                             {
                                                 mRenderingState = ProcessState::aborted;
                                                 triggerAsyncUpdate();
                                                 return;
                                             }
-
-                                            std::unique_lock<std::mutex> imageLock(mMutex);
-                                            mImages.push_back(image);
-                                            imageLock.unlock();
-                                            triggerAsyncUpdate();
-
-                                            mAdvancement.store(0.05f);
                                         }
-
-                                        auto const currentAdvancement = mAdvancement.load();
-                                        float advancement = 0.0f;
-                                        auto image = createImage(width, height, advancement, [&]()
-                                                                 {
-                                                                     mAdvancement.store(currentAdvancement + (0.98f - currentAdvancement) * advancement);
-                                                                     return mRenderingState.load() != ProcessState::aborted;
-                                                                 });
-
                                         mAdvancement.store(0.98f);
-                                        if(image.isNull())
-                                        {
-                                            mRenderingState = ProcessState::aborted;
-                                            triggerAsyncUpdate();
-                                            return;
-                                        }
 
-                                        for(int i = maxImageSize; i < dimension; i *= 2)
+                                        for(size_t channel = 0; channel < numChannels; ++channel)
                                         {
-                                            auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
+                                            auto const& image = tempImages[channel];
+                                            for(int i = maxImageSize; i < dimension; i *= 2)
+                                            {
+                                                auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
+                                                std::unique_lock<std::mutex> imageLock(mMutex);
+                                                if(i == maxImageSize)
+                                                {
+                                                    mImages[channel] = {rescaledImage};
+                                                }
+                                                else
+                                                {
+                                                    mImages[channel].push_back(rescaledImage);
+                                                }
+                                                imageLock.unlock();
+                                                triggerAsyncUpdate();
+                                                mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
+                                            }
+
                                             std::unique_lock<std::mutex> imageLock(mMutex);
-                                            if(i == maxImageSize)
-                                            {
-                                                mImages = {rescaledImage};
-                                            }
-                                            else
-                                            {
-                                                mImages.push_back(rescaledImage);
-                                            }
+                                            mImages[channel].push_back(image);
                                             imageLock.unlock();
-                                            triggerAsyncUpdate();
-                                            mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
                                         }
-
-                                        std::unique_lock<std::mutex> imageLock(mMutex);
-                                        mImages.push_back(image);
-                                        imageLock.unlock();
 
                                         mAdvancement.store(1.0f);
                                         expected = ProcessState::running;

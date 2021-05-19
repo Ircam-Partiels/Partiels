@@ -232,15 +232,15 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         stopTimer();
         timerCallback();
         mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
-        mAccessor.setAttr<AttrType::graphics>(std::vector<juce::Image>{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
 
-    mGraphics.onRenderingUpdated = [&](std::vector<juce::Image> images)
+    mGraphics.onRenderingUpdated = [&](Images images)
     {
         mAccessor.setAttr<AttrType::graphics>(images, NotificationType::synchronous);
     };
 
-    mGraphics.onRenderingEnded = [&](std::vector<juce::Image> images)
+    mGraphics.onRenderingEnded = [&](Images images)
     {
         stopTimer();
         timerCallback();

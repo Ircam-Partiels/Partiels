@@ -59,9 +59,10 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     }
 
     auto const output = processor->getOutput();
+    auto const numChannels = reader.numChannels;
 
     mChrono.start();
-    mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> Results
+    mAnalysisProcess = std::async([this, numChannels, processor = std::move(processor)]() -> Results
                                   {
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
                                       juce::Thread::setCurrentThreadPriority(10);
@@ -124,7 +125,12 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                                           markers.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, result.label));
                                                       }
                                                   }
-                                                  return Results(std::make_shared<const std::vector<Results::Markers>>(std::vector<Results::Markers>(1_z, std::move(markers))));
+                                                  std::vector<Results::Markers> results;
+                                                  for(size_t i = 0; i < numChannels; ++i)
+                                                  {
+                                                      results.push_back(markers);
+                                                  }
+                                                  return Results(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
                                               }
                                               break;
                                               case 1_z:
@@ -140,7 +146,12 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                                           points.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, valid ? result.values[0] : std::optional<float>()));
                                                       }
                                                   }
-                                                  return Results(std::make_shared<const std::vector<Results::Points>>(std::vector<Results::Points>(1_z, std::move(points))));
+                                                  std::vector<Results::Points> results;
+                                                  for(size_t i = 0; i < numChannels; ++i)
+                                                  {
+                                                      results.push_back(points);
+                                                  }
+                                                  return Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
                                               }
                                               break;
                                               default:
@@ -155,7 +166,12 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                                           columns.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, std::move(result.values)));
                                                       }
                                                   }
-                                                  return Results(std::make_shared<const std::vector<Results::Columns>>(std::vector<Results::Columns>(1_z, std::move(columns))));
+                                                  std::vector<Results::Columns> results;
+                                                  for(size_t i = 0; i < numChannels; ++i)
+                                                  {
+                                                      results.push_back(columns);
+                                                  }
+                                                  return Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
                                               }
                                               break;
                                           }

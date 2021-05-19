@@ -72,9 +72,9 @@ namespace Track
             }
         }
 
-        std::optional<std::string> getValue(Results::SharedMarkers results, Zoom::Range const& globalRange, double time, double timeEpsilon);
-        std::optional<float> getValue(Results::SharedPoints results, Zoom::Range const& globalRange, double time);
-        std::optional<float> getValue(Results::SharedColumns results, Zoom::Range const& globalRange, double time, size_t bin);
+        std::optional<std::string> getValue(Results::SharedMarkers results, size_t channel, Zoom::Range const& globalRange, double time, double timeEpsilon);
+        std::optional<float> getValue(Results::SharedPoints results, size_t channel, Zoom::Range const& globalRange, double time);
+        std::optional<float> getValue(Results::SharedColumns results, size_t channel, Zoom::Range const& globalRange, double time, size_t bin);
 
         juce::String getText(Results::SharedMarkers results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, double timeEpsilon);
         juce::String getText(Results::SharedPoints results, Plugin::Output const& output, Zoom::Range const& globalRange, double time);

@@ -73,29 +73,63 @@ void Track::Plot::paint(juce::Graphics& g)
     paint(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
 }
 
-void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr)
 {
+    auto paintChannels = [&](size_t numChannels, std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
+    {
+        auto const fullHeight = bounds.getHeight();
+        auto const channelHeight = (fullHeight / static_cast<int>(numChannels)) - static_cast<int>(numChannels) + 1;
+
+        size_t channel = 1;
+        while(channel < numChannels)
+        {
+            juce::Graphics::ScopedSaveState sss(g);
+            auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(1);
+            g.reduceClipRegion(region);
+            fn(accessor, channel - 1_z, g, region, timeZoomAcsr);
+            ++channel;
+        }
+
+        juce::Graphics::ScopedSaveState sss(g);
+        g.reduceClipRegion(bounds);
+        fn(accessor, channel - 1_z, g, bounds, timeZoomAcsr);
+    };
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
         {
-            paintMarkers(accessor, g, bounds, timeZoomAcsr);
+            auto const markers = accessor.getAttr<AttrType::results>().getMarkers();
+            if(markers == nullptr || markers->empty())
+            {
+                return;
+            }
+            paintChannels(markers->size(), paintMarkers);
         }
-            break;
+        break;
         case Tools::DisplayType::segments:
         {
-            paintPoints(accessor, g, bounds, timeZoomAcsr);
+            auto const points = accessor.getAttr<AttrType::results>().getPoints();
+            if(points == nullptr || points->empty())
+            {
+                return;
+            }
+            paintChannels(points->size(), paintPoints);
         }
-            break;
+        break;
         case Tools::DisplayType::grid:
         {
-            paintColumns(accessor, g, bounds, timeZoomAcsr);
+            auto const columns = accessor.getAttr<AttrType::results>().getColumns();
+            if(columns == nullptr || columns->empty())
+            {
+                return;
+            }
+            paintChannels(columns->size(), paintColumns);
         }
-            break;
+        break;
     }
 }
 
-void Track::Plot::paintMarkers(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     auto const results = accessor.getAttr<AttrType::results>();
     if(results.isEmpty())
@@ -104,7 +138,7 @@ void Track::Plot::paintMarkers(Accessor const& accessor, juce::Graphics& g, juce
     }
 
     auto const markers = results.getMarkers();
-    if(markers == nullptr || markers->empty())
+    if(markers == nullptr || markers->size() <= channel)
     {
         return;
     }
@@ -138,16 +172,16 @@ void Track::Plot::paintMarkers(Accessor const& accessor, juce::Graphics& g, juce
     auto const showLabel = !colours.text.isTransparent();
     auto const font = g.getCurrentFont();
 
-    auto const& channel = markers->at(0);
-    auto it = Tools::findFirstAt(channel, globalRange, clipTimeStart);
-    while(it != channel.cend() && std::get<0>(*it) < clipTimeEnd)
+    auto const& channelResults = markers->at(channel);
+    auto it = Tools::findFirstAt(channelResults, globalRange, clipTimeStart);
+    while(it != channelResults.cend() && std::get<0>(*it) < clipTimeEnd)
     {
         auto const start = std::get<0>(*it);
         auto const x1 = Tools::secondsToPixel(start, timeRange, fbounds);
         auto timeLimit = std::min(std::get<0>(*it) + std::get<1>(*it) + timeEpsilon, clipTimeEnd);
         // Skip any adjacent result with a distance inferior to epsilon pixels
         auto next = std::next(it);
-        while(next != channel.cend() && std::get<0>(*next) < timeLimit)
+        while(next != channelResults.cend() && std::get<0>(*next) < timeLimit)
         {
             it = std::exchange(next, std::next(next));
             timeLimit = std::min(std::get<0>(*it) + std::get<1>(*it) + timeEpsilon, clipTimeEnd);
@@ -156,7 +190,7 @@ void Track::Plot::paintMarkers(Accessor const& accessor, juce::Graphics& g, juce
         auto const end = std::get<0>(*it) + std::get<1>(*it);
         auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
         auto const w = Tools::secondsToPixel(end, timeRange, fbounds) - x1;
-        rectangles.addWithoutMerging({x1, clipBounds.getY(), std::max(w, 1.0f), clipBounds.getHeight()});
+        rectangles.addWithoutMerging({x1, fbounds.getY(), std::max(w, 1.0f), fbounds.getHeight()});
 
         if(showLabel && !std::get<2>(*it).empty() && (labels.empty() || static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
         {
@@ -188,12 +222,12 @@ void Track::Plot::paintMarkers(Accessor const& accessor, juce::Graphics& g, juce
         g.setColour(colours.text);
         for(auto const& label : labels)
         {
-            g.drawSingleLineText(std::get<0>(label), std::get<1>(label), 22, juce::Justification::left);
+            g.drawSingleLineText(std::get<0>(label), std::get<1>(label), bounds.getY() + 22, juce::Justification::left);
         }
     }
 }
 
-void Track::Plot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     auto const results = accessor.getAttr<AttrType::results>();
     if(results.isEmpty())
@@ -202,7 +236,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce:
     }
 
     auto const points = results.getPoints();
-    if(points == nullptr || points->empty())
+    if(points == nullptr || points->size() <= channel)
     {
         return;
     }
@@ -235,8 +269,8 @@ void Track::Plot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce:
     auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(clipBounds.getX()) - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(clipBounds.getRight()) + epsilonPixel, timeRange, fbounds);
 
-    auto const& channel = points->at(0);
-    auto it = Tools::findFirstAt(channel, globalRange, clipTimeStart);
+    auto const& channelResults = points->at(channel);
+    auto it = Tools::findFirstAt(channelResults, globalRange, clipTimeStart);
 
     // Time distance corresponding to epsilon pixels
     auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
@@ -318,16 +352,16 @@ void Track::Plot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce:
     auto const showLabel = !colours.text.isTransparent();
     auto shouldStartSubPath = true;
     auto hasExceededEnd = false;
-    while(!hasExceededEnd && it != channel.cend())
+    while(!hasExceededEnd && it != channelResults.cend())
     {
         if(!std::get<2>(*it).has_value())
         {
             shouldStartSubPath = true;
-            it = std::find_if(std::next(it), channel.cend(), [&](auto const& result)
+            it = std::find_if(std::next(it), channelResults.cend(), [&](auto const& result)
                               {
                                   return std::get<2>(result).has_value();
                               });
-            hasExceededEnd = it == channel.cend() || std::get<0>(*it) >= clipTimeEnd;
+            hasExceededEnd = it == channelResults.cend() || std::get<0>(*it) >= clipTimeEnd;
         }
         else if(std::get<1>(*it) < timeEpsilon)
         {
@@ -336,7 +370,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce:
             auto const value = *std::get<2>(*it);
             auto const x = Tools::secondsToPixel(std::get<0>(*it), timeRange, fbounds);
 
-            auto const nextResult = getNextItBeforeTime(it, channel.cend(), limit);
+            auto const nextResult = getNextItBeforeTime(it, channelResults.cend(), limit);
             auto const next = std::get<0>(nextResult);
             auto const min = std::get<1>(nextResult);
             auto const max = std::get<2>(nextResult);
@@ -452,10 +486,10 @@ void Track::Plot::paintPoints(Accessor const& accessor, juce::Graphics& g, juce:
     }
 }
 
-void Track::Plot::paintColumns(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Plot::paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
     auto const images = accessor.getAttr<AttrType::graphics>();
-    if(images.empty())
+    if(images.empty() || images.size() <= channel || images.at(channel).empty())
     {
         return;
     }
@@ -560,7 +594,7 @@ void Track::Plot::paintColumns(Accessor const& accessor, juce::Graphics& g, juce
     auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
     auto const binZoomRatio = getZoomRatio(binZoomAcsr);
     auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
-    for(auto const& image : images)
+    for(auto const& image : images.at(channel))
     {
         auto const imageDimension = std::max(image.getWidth(), image.getHeight());
         if(imageDimension >= boundsDimension)
@@ -569,7 +603,7 @@ void Track::Plot::paintColumns(Accessor const& accessor, juce::Graphics& g, juce
             return;
         }
     }
-    renderImage(images.back(), timeZoomAcsr, binZoomAcsr);
+    renderImage(images.at(channel).back(), timeZoomAcsr, binZoomAcsr);
 }
 
 Track::Plot::Overlay::Overlay(Plot& plot)

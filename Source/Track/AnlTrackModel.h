@@ -119,6 +119,8 @@ namespace Track
         juce::File mFile{};
     };
 
+    using Images = std::vector<std::vector<juce::Image>>;
+
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
@@ -195,7 +197,7 @@ namespace Track
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
-    , Model::Attr<AttrType::graphics, std::vector<juce::Image>, Model::Flag::notifying>
+    , Model::Attr<AttrType::graphics, Images, Model::Flag::notifying>
     , Model::Attr<AttrType::time, double, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>

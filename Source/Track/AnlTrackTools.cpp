@@ -54,36 +54,36 @@ double Track::Tools::pixelToSeconds(float position, juce::Range<double> const& t
     return static_cast<double>(position - bounds.getX()) / static_cast<double>(bounds.getWidth()) * timeRange.getLength() + timeRange.getStart();
 }
 
-std::optional<std::string> Track::Tools::getValue(Results::SharedMarkers results, Zoom::Range const& globalRange, double time, double timeEpsilon)
+std::optional<std::string> Track::Tools::getValue(Results::SharedMarkers results, size_t channel, Zoom::Range const& globalRange, double time, double timeEpsilon)
 {
-    if(results == nullptr || results->empty())
+    if(results == nullptr || results->size() <= channel || results->at(channel).empty())
     {
         return {};
     }
-    auto const& channel = results->at(0);
-    auto const it = findFirstAt(channel, globalRange, time - timeEpsilon);
-    if(it != channel.cend() && std::get<0>(*it) + std::get<1>(*it) <= time)
+    auto const& channelResults = results->at(channel);
+    auto const it = findFirstAt(channelResults, globalRange, time - timeEpsilon);
+    if(it != channelResults.cend() && std::get<0>(*it) + std::get<1>(*it) <= time)
     {
         return std::get<2>(*it);
     }
     return {};
 }
 
-std::optional<float> Track::Tools::getValue(Results::SharedPoints results, Zoom::Range const& globalRange, double time)
+std::optional<float> Track::Tools::getValue(Results::SharedPoints results, size_t channel, Zoom::Range const& globalRange, double time)
 {
-    if(results == nullptr || results->empty())
+    if(results == nullptr || results->size() <= channel || results->at(channel).empty())
     {
         return {};
     }
-    auto const& channel = results->at(0);
-    auto const first = findFirstAt(channel, globalRange, time);
-    if(first == channel.cend())
+    auto const& channelResults = results->at(channel);
+    auto const first = findFirstAt(channelResults, globalRange, time);
+    if(first == channelResults.cend())
     {
         return {};
     }
     auto const second = std::next(first);
     auto const end = std::get<0>(*first) + std::get<1>(*first);
-    if(second == channel.cend() || time < end || !std::get<2>(*second).has_value())
+    if(second == channelResults.cend() || time < end || !std::get<2>(*second).has_value())
     {
         return std::get<2>(*first);
     }
@@ -96,15 +96,15 @@ std::optional<float> Track::Tools::getValue(Results::SharedPoints results, Zoom:
     return (1.0 - ratio) * *std::get<2>(*first) + ratio * *std::get<2>(*second);
 }
 
-std::optional<float> Track::Tools::getValue(Results::SharedColumns results, Zoom::Range const& globalRange, double time, size_t bin)
+std::optional<float> Track::Tools::getValue(Results::SharedColumns results, size_t channel, Zoom::Range const& globalRange, double time, size_t bin)
 {
-    if(results == nullptr || results->empty())
+    if(results == nullptr || results->size() <= channel || results->at(channel).empty())
     {
         return {};
     }
-    auto const& channel = results->at(0);
-    auto const it = findFirstAt(channel, globalRange, time);
-    if(it == channel.cend() || std::get<2>(*it).empty())
+    auto const& channelResults = results->at(channel);
+    auto const it = findFirstAt(channelResults, globalRange, time);
+    if(it == channelResults.cend() || std::get<2>(*it).empty())
     {
         return {};
     }
@@ -123,8 +123,8 @@ juce::String Track::Tools::getText(Results::SharedMarkers results, Plugin::Outpu
     {
         return "-";
     }
-    auto const it = findFirstAt(results->at(0), globalRange, time - timeEpsilon);
-    if(it != results->at(0).cend() && std::get<0>(*it) + std::get<1>(*it) <= time)
+    auto const it = findFirstAt(results->at(0), globalRange, time - timeEpsilon / 2.0);
+    if(it != results->at(0).cend() && std::get<0>(*it) + std::get<1>(*it) <= time + timeEpsilon / 2.0)
     {
         return std::get<2>(*it) + output.unit;
     }
@@ -133,7 +133,7 @@ juce::String Track::Tools::getText(Results::SharedMarkers results, Plugin::Outpu
 
 juce::String Track::Tools::getText(Results::SharedPoints results, Plugin::Output const& output, Zoom::Range const& globalRange, double time)
 {
-    auto const value = getValue(results, globalRange, time);
+    auto const value = getValue(results, 0_z, globalRange, time);
     if(value.has_value())
     {
         return juce::String(*value, 2) + output.unit;
@@ -143,7 +143,7 @@ juce::String Track::Tools::getText(Results::SharedPoints results, Plugin::Output
 
 juce::String Track::Tools::getText(Results::SharedColumns results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin)
 {
-    auto const value = getValue(results, globalRange, time, bin);
+    auto const value = getValue(results, 0_z, globalRange, time, bin);
     if(value.has_value())
     {
         return juce::String(*value, 2) + output.unit;
