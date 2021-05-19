@@ -210,7 +210,8 @@ void Track::Section::focusOfChildComponentChanged(juce::Component::FocusChangeTy
                                     {
                                         if(target.get() != nullptr)
                                         {
-                                            mAccessor.setAttr<AttrType::focused>(hasKeyboardFocus(true), NotificationType::synchronous);
+                                            auto const hasFocus = hasKeyboardFocus(true) || getCurrentlyFocusedComponent() == nullptr;
+                                            mAccessor.setAttr<AttrType::focused>(hasFocus, NotificationType::synchronous);
                                         }
                                     });
 }
