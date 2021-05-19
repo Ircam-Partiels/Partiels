@@ -17,7 +17,11 @@ Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTi
         {
             case AttrType::globalRange:
             case AttrType::minimumLength:
+                break;
             case AttrType::visibleRange:
+            {
+                repaint();
+            }
                 break;
             case AttrType::anchor:
             {
@@ -26,7 +30,6 @@ Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTi
             }
                 break;
         }
-        repaint();
     };
     
     mAccessor.addListener(mListener, NotificationType::synchronous);
