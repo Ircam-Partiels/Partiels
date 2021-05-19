@@ -130,6 +130,20 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
     transportAcsr.onAttrUpdated = [&](Transport::AttrType attribute, NotificationType notification)
     {
         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+        auto updateTime = [&](double time)
+        {
+            auto const numAnlAcsrs = mAccessor.getNumAcsrs<AcsrType::tracks>();
+            for(size_t i = 0; i < numAnlAcsrs; ++i)
+            {
+                auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(i);
+                trackAcsr.setAttr<Track::AttrType::time>(time, notification);
+            }
+            auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+            if(!range.contains(time))
+            {
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
+            }
+        };
         switch(attribute)
         {
             case Transport::AttrType::playback:
@@ -137,27 +151,17 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case Transport::AttrType::startPlayhead:
             {
                 auto const time = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
-                zoomAcsr.setAttr<Zoom::AttrType::anchor>(std::make_tuple(false, time), notification);
                 if(!transportAcsr.getAttr<Transport::AttrType::playback>())
                 {
-                    transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(time, notification);
+                    updateTime(time);
                 }
+                zoomAcsr.setAttr<Zoom::AttrType::anchor>(std::make_tuple(false, time), notification);
             }
             break;
             case Transport::AttrType::runningPlayhead:
             {
                 auto const time = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
-                auto const numAnlAcsrs = mAccessor.getNumAcsrs<AcsrType::tracks>();
-                for(size_t i = 0; i < numAnlAcsrs; ++i)
-                {
-                    auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(i);
-                    trackAcsr.setAttr<Track::AttrType::time>(time, notification);
-                }
-                auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                if(!range.contains(time))
-                {
-                    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.movedToStartAt(time), notification);
-                }
+                updateTime(time);
             }
             break;
             case Transport::AttrType::looping:
