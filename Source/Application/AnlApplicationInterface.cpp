@@ -385,7 +385,8 @@ void Application::Interface::resized()
     mToolTipDisplay.setBounds(bottom);
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     mDocumentSection.setBounds(bounds);
-    mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(800, 600));
+    auto const loaderBounds = bounds.withSizeKeepingCentre(800, 600);
+    mLoaderDecorator.setBounds(loaderBounds.withY(std::max(loaderBounds.getY(), 80)));
 }
 
 void Application::Interface::lookAndFeelChanged()
