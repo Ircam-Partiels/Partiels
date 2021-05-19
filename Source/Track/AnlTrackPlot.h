@@ -56,9 +56,7 @@ namespace Track
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        Zoom::Accessor::Listener mTimeZoomListener;
-        Zoom::Accessor::Listener mValueZoomListener;
-        Zoom::Accessor::Listener mBinZoomListener;
+        Zoom::Accessor::Listener mZoomListener;
         Accessor::Listener mListener;
     };
 } // namespace Track
