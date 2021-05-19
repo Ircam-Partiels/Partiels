@@ -38,28 +38,28 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
 {
     auto** inputPointers = mBuffer.getArrayOfWritePointers();
     auto const numChannels = mBuffer.getNumChannels();
-    
+
     mPosition = std::min(mPosition + static_cast<juce::int64>(mStepSize), mAudioFormatReader.lengthInSamples);
-    
+
     if(mStepSize >= mBlocksize)
     {
         juce::AudioBuffer<float> input(inputPointers, numChannels, 0, mBlocksize);
         mAudioFormatReader.read(input.getArrayOfWritePointers(), numChannels, mReaderPosition, mBlocksize);
-        
+
         mReaderPosition += static_cast<juce::int64>(mStepSize);
-        
+
         for(size_t channel = 0; channel < static_cast<size_t>(numChannels); ++channel)
         {
             mOutputBuffer[channel] = inputPointers[channel];
         }
         return mOutputBuffer.data();
     }
-    
+
     // Expected number of samples to read (equivalent to the step except for the first call if the block size is greater)
     auto const bufferSize = std::max(static_cast<int>(static_cast<juce::int64>(mBlocksize) - mReaderPosition), mStepSize);
     // The number of sample that can be used from the previous block
     auto const hopeSize = std::max(mBlocksize - bufferSize, 0);
-    
+
     auto bufferPosition = mBufferPosition;
     if(bufferPosition + mStepSize > mBuffer.getNumSamples())
     {
@@ -76,7 +76,7 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
         bufferPosition = hopeSize;
         anlStrongAssert(bufferSize == static_cast<juce::int64>(mStepSize));
     }
-    
+
     juce::AudioBuffer<float> input(inputPointers, numChannels, bufferPosition, bufferSize);
     auto const silence = static_cast<int>(std::max(mReaderPosition + bufferSize - mAudioFormatReader.lengthInSamples, static_cast<juce::int64>(0)));
     if(silence >= bufferSize)
@@ -88,15 +88,14 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
         mAudioFormatReader.read(input.getArrayOfWritePointers(), numChannels, mReaderPosition, bufferSize - silence);
         input.clear(bufferSize - silence, silence);
     }
-    
-    
+
     mBufferPosition = bufferPosition + bufferSize;
     mReaderPosition += static_cast<juce::int64>(bufferSize);
-    
+
     auto const outputBufferPosition = std::max(bufferPosition - hopeSize, 0);
     for(size_t channel = 0; channel < static_cast<size_t>(numChannels); ++channel)
     {
-        mOutputBuffer[channel] = inputPointers[channel]+outputBufferPosition;
+        mOutputBuffer[channel] = inputPointers[channel] + outputBufferPosition;
     }
     return mOutputBuffer.data();
 }
@@ -116,7 +115,7 @@ bool Plugin::Processor::prepareToAnalyze(std::vector<Result>& results)
     {
         return false;
     }
-    
+
     auto const blockSize = mState.blockSize;
     auto const stepSize = mState.stepSize;
     anlStrongAssert(blockSize > 0 && stepSize > 0);
@@ -124,14 +123,14 @@ bool Plugin::Processor::prepareToAnalyze(std::vector<Result>& results)
     {
         return false;
     }
-    
+
     auto const descriptors = mPlugin->getOutputDescriptors();
     anlStrongAssert(mFeature < descriptors.size());
     if(mFeature >= descriptors.size())
     {
         return false;
     }
-    
+
     auto const& descriptor = descriptors[mFeature];
     if(descriptor.sampleType == Output::SampleType::OneSamplePerStep)
     {
@@ -167,7 +166,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
     auto const position = mCircularReader.getPosition();
     auto const sampleRate = mCircularReader.getSampleRate();
     auto const rt = Vamp::RealTime::frame2RealTime(static_cast<long>(position), static_cast<unsigned int>(sampleRate));
-    
+
     if(mCircularReader.hasReachedEnd())
     {
         auto result = mPlugin->getRemainingFeatures();
@@ -186,7 +185,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
         }
         return false;
     }
-    
+
     auto result = mPlugin->process(mCircularReader.getNextBlock(), rt);
     auto it = result.find(static_cast<int>(feature));
     if(it != result.end())
@@ -207,7 +206,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
 float Plugin::Processor::getAdvancement() const
 {
     auto const position = static_cast<float>(mCircularReader.getPosition());
-    return  position / static_cast<float>(mCircularReader.getLengthInSamples());
+    return position / static_cast<float>(mCircularReader.getLengthInSamples());
 }
 
 Plugin::Output Plugin::Processor::getOutput() const
@@ -217,7 +216,7 @@ Plugin::Output Plugin::Processor::getOutput() const
     {
         return {};
     }
-    
+
     auto const descriptors = mPlugin->getOutputDescriptors();
     anlStrongAssert(descriptors.size() > mFeature);
     return descriptors.size() > mFeature ? descriptors[mFeature] : Plugin::Output{};
@@ -231,7 +230,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     {
         throw std::runtime_error("plugin loader is not available");
     }
-    
+
     anlStrongAssert(!key.identifier.empty());
     if(key.identifier.empty())
     {
@@ -252,24 +251,23 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     {
         throw std::invalid_argument("step size cannot be null");
     }
-    
+
     auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(audioFormatReader.sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
     if(instance == nullptr)
     {
         throw std::runtime_error("allocation failed");
     }
-    
+
     auto const outputs = instance->getOutputDescriptors();
     auto const feature = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
-    {
-        return output.identifier == key.feature;
-    });
+                                      {
+                                          return output.identifier == key.feature;
+                                      });
     if(feature == outputs.cend())
     {
         throw std::runtime_error("plugin feature is not invalid");
     }
-    
-    auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
+
     auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get());
     if(wrapper != nullptr)
     {
@@ -278,14 +276,14 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
             adapter->setWindowType(state.windowType);
         }
     }
-    
+
     auto const descriptors = instance->getParameterDescriptors();
     for(auto const& parameter : state.parameters)
     {
         if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-        {
-            return descriptor.identifier == parameter.first;
-        }))
+                       {
+                           return descriptor.identifier == parameter.first;
+                       }))
         {
             instance->setParameter(parameter.first, parameter.second);
         }
@@ -294,12 +292,13 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
             throw std::invalid_argument("invalid parameters");
         }
     }
-    
+
     if(!instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
     {
         return nullptr;
     }
 
+    auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
     auto processor = std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(instance), featureIndex, state));
     if(processor == nullptr)
     {
@@ -312,11 +311,13 @@ class Plugin::Processor::CircularReaderUnitTest
 : public juce::UnitTest
 {
 public:
-    
-    CircularReaderUnitTest() : juce::UnitTest("CircularReader", "Plugin") {}
-    
+    CircularReaderUnitTest()
+    : juce::UnitTest("CircularReader", "Plugin")
+    {
+    }
+
     ~CircularReaderUnitTest() override = default;
-    
+
     void runTest() override
     {
         class Reader
@@ -332,14 +333,14 @@ public:
                 lengthInSamples = l;
                 usesFloatingPointData = true;
             }
-            
+
             ~Reader() override = default;
-            
+
             bool readSamples(int** destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override
             {
                 for(int channelIndex = 0; channelIndex < numDestChannels; ++channelIndex)
                 {
-                    auto* channel = reinterpret_cast<float*>(destChannels[channelIndex])+startOffsetInDestBuffer;
+                    auto* channel = reinterpret_cast<float*>(destChannels[channelIndex]) + startOffsetInDestBuffer;
                     for(int sampleIndex = 0; sampleIndex < numSamples; ++sampleIndex)
                     {
                         auto const position = static_cast<juce::int64>(sampleIndex) + startSampleInFile;
@@ -350,10 +351,9 @@ public:
                 return true;
             }
         };
-        
-        
+
         Reader reader(44100.0, 20813);
-        
+
         beginTest("check reader");
         {
             auto constexpr blockSize = 2048;
@@ -369,7 +369,7 @@ public:
                 }
             }
         }
-        
+
         auto performTest = [&](size_t blockSize, size_t stepSize)
         {
             beginTest("check circular reader " + juce::String(blockSize) + " " + juce::String(stepSize));
@@ -390,7 +390,7 @@ public:
             }
             expectEquals(circularReader.getPosition(), reader.lengthInSamples);
         };
-        
+
         performTest(1024, 1024);
         performTest(1024, 2000);
         performTest(1024, 256);
