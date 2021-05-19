@@ -77,7 +77,8 @@ void Transport::PlayheadBar::mouseDown(juce::MouseEvent const& event)
 void Transport::PlayheadBar::mouseDrag(juce::MouseEvent const& event)
 {
     auto const relEvent = event.getEventRelativeTo(this);
-    mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, relEvent.x), NotificationType::synchronous);
+    auto const x = getLocalBounds().getHorizontalRange().clipValue(relEvent.x);
+    mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, x), NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
