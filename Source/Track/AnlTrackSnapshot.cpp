@@ -4,9 +4,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
+Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
+, mTransportAccessor(transportAccessor)
 {
     setInterceptsMouseClicks(false, false);
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -26,7 +27,6 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
             case AttrType::focused:
                 break;
             case AttrType::results:
-            case AttrType::time:
             case AttrType::graphics:
             case AttrType::processing:
             case AttrType::colours:
@@ -61,13 +61,50 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor)
         }
     };
 
+    mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Transport::AttrType::startPlayhead:
+            {
+                if(!acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                    {
+                        repaint();
+                    }
+                }
+            }
+            break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                if(acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                    {
+                        repaint();
+                    }
+                }
+            }
+                break;
+            case Transport::AttrType::playback:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::gain:
+                break;
+        }
+    };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
+    mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
 }
 
 Track::Snapshot::~Snapshot()
 {
+    mTransportAccessor.removeListener(mTransportListener);
     mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
     mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
@@ -75,37 +112,39 @@ Track::Snapshot::~Snapshot()
 
 void Track::Snapshot::paint(juce::Graphics& g)
 {
-    paint(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+    auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
+    auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
+    paint(mAccessor, g, getLocalBounds(), mTimeZoomAccessor, time);
 }
 
-void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr, double time)
 {
-    auto paintChannels = [&](size_t numChannels, std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
+    auto paintChannels = [&](size_t numChannels, std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&, double)> fn)
     {
         auto const fullHeight = bounds.getHeight();
-        auto const channelHeight = (fullHeight  - static_cast<int>(numChannels) + 1) / static_cast<int>(numChannels);
-        
+        auto const channelHeight = (fullHeight - static_cast<int>(numChannels) + 1) / static_cast<int>(numChannels);
+
         size_t channel = 1;
         while(channel < numChannels)
         {
             juce::Graphics::ScopedSaveState sss(g);
             auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(1);
             g.reduceClipRegion(region);
-            fn(accessor, channel - 1_z, g, region, timeZoomAcsr);
+            fn(accessor, channel - 1_z, g, region, timeZoomAcsr, time);
             ++channel;
         }
-        
+
         juce::Graphics::ScopedSaveState sss(g);
         g.reduceClipRegion(bounds);
-        fn(accessor, channel - 1_z, g, bounds, timeZoomAcsr);
+        fn(accessor, channel - 1_z, g, bounds, timeZoomAcsr, time);
     };
-    
+
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
         {
         }
-            break;
+        break;
         case Tools::DisplayType::points:
         {
             auto const points = accessor.getAttr<AttrType::results>().getPoints();
@@ -115,7 +154,7 @@ void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::R
             }
             paintChannels(points->size(), paintPoints);
         }
-            break;
+        break;
         case Tools::DisplayType::columns:
         {
             auto const columns = accessor.getAttr<AttrType::results>().getColumns();
@@ -125,11 +164,11 @@ void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::R
             }
             paintChannels(columns->size(), paintColumns);
         }
-            break;
+        break;
     }
 }
 
-void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time)
 {
     if(bounds.isEmpty())
     {
@@ -155,7 +194,7 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
         return;
     }
 
-    auto const value = Tools::getValue(points, channel, globalRange, accessor.getAttr<AttrType::time>());
+    auto const value = Tools::getValue(points, channel, globalRange, time);
     if(!value.has_value())
     {
         return;
@@ -171,7 +210,7 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
     g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
 }
 
-void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time)
 {
     if(bounds.isEmpty())
     {
@@ -276,12 +315,13 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
         drawImage({std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
 
-    renderImage(images.at(channel).back(), accessor.getAttr<AttrType::time>(), timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
+    renderImage(images.at(channel).back(), time, timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
 }
 
 Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 : mSnapshot(snapshot)
 , mAccessor(mSnapshot.mAccessor)
+, mTransportAccessor(mSnapshot.mTransportAccessor)
 {
     addAndMakeVisible(mSnapshot);
     setInterceptsMouseClicks(true, true);
@@ -301,28 +341,52 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::results:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::warnings:
+            case AttrType::processing:
                 break;
-            case AttrType::time:
-            {
-                updateTooltip(getMouseXYRelative());
-            }
-            break;
             case AttrType::colours:
             {
                 setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
             }
             break;
-            case AttrType::warnings:
-            case AttrType::processing:
+        }
+    };
+
+    mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Transport::AttrType::startPlayhead:
+            {
+                if(!acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    updateTooltip(getMouseXYRelative());
+                }
+            }
+                break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                if(acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    updateTooltip(getMouseXYRelative());
+                }
+            }
+                break;
+            case Transport::AttrType::playback:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::gain:
                 break;
         }
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
 }
 
 Track::Snapshot::Overlay::~Overlay()
 {
+    mTransportAccessor.removeListener(mTransportListener);
     mAccessor.removeListener(mListener);
 }
 
@@ -364,7 +428,8 @@ void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
-    auto const time = mAccessor.getAttr<AttrType::time>();
+    auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
+    auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const tip = Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time);
     setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }

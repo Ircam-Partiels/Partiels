@@ -60,7 +60,6 @@ Track::Thumbnail::Thumbnail(Director& director)
             case AttrType::state:
             case AttrType::results:
             case AttrType::graphics:
-            case AttrType::time:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:

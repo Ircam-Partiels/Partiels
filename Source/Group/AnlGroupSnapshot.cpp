@@ -9,13 +9,11 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 {
-    juce::ignoreUnused(mTransportAccessor);
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
 
     mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
@@ -33,11 +31,11 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
                     mAccessor,
                     [this](Track::Accessor& trackAccessor)
                     {
-                        return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor);
+                        return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
                     },
                     nullptr);
 
-                auto const& layout = mAccessor.getAttr<AttrType::layout>();
+                auto const& layout = acsr.getAttr<AttrType::layout>();
                 auto const& group = mTrackSnapshots.getContents();
                 for(auto const& identifier : layout)
                 {
@@ -86,17 +84,25 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 
     mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case Transport::AttrType::playback:
             case Transport::AttrType::startPlayhead:
-                break;
-            case Transport::AttrType::runningPlayhead:
             {
-                updateTooltip(getMouseXYRelative());
+                if(!acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    updateTooltip(getMouseXYRelative());
+                }
             }
             break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                if(acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    updateTooltip(getMouseXYRelative());
+                }
+            }
+            break;
+            case Transport::AttrType::playback:
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
             case Transport::AttrType::gain:
@@ -145,7 +151,8 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
-    auto const time = mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>();
+    auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
+    auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto tooltip = Format::secondsToString(time);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)

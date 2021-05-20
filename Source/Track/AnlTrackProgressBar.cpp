@@ -19,7 +19,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                
+
                 if(std::get<0>(state))
                 {
                     if(mMode == Mode::analysis || mMode == Mode::both)
@@ -66,23 +66,22 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                         }
                         return "Analysis and rendering successfully completed!";
                     };
-                    
+
                     mMessage = getMessage();
                 }
-                
+
                 auto const tooltip = Tools::getStateTootip(acsr);
                 mProgressBar.setTooltip(tooltip);
                 setTooltip(tooltip);
-                
+
                 repaint();
             }
-                break;
+            break;
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
             case AttrType::results:
             case AttrType::graphics:
-            case AttrType::time:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:
@@ -92,7 +91,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                 break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 

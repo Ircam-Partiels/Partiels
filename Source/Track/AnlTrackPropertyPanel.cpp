@@ -524,7 +524,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }
             break;
-            case AttrType::time:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::zoomAcsr:

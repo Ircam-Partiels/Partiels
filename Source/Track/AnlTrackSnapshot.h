@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Transport/AnlTransportModel.h"
 #include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -10,7 +11,7 @@ namespace Track
     : public juce::Component
     {
     public:
-        Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor);
+        Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
         ~Snapshot() override;
 
         // juce::Component
@@ -36,19 +37,23 @@ namespace Track
 
             Snapshot& mSnapshot;
             Accessor& mAccessor;
+            Transport::Accessor& mTransportAccessor;
             Accessor::Listener mListener;
+            Transport::Accessor::Listener mTransportListener;
         };
-        
-        static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr);
+
+        static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr, double time);
 
     private:
-        static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time);
+        static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time);
 
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        Zoom::Accessor::Listener mZoomListener;
+        Transport::Accessor& mTransportAccessor;
         Accessor::Listener mListener;
+        Zoom::Accessor::Listener mZoomListener;
+        Transport::Accessor::Listener mTransportListener;
     };
 } // namespace Track
 

@@ -132,12 +132,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         auto updateTime = [&](double time)
         {
-            auto const numAnlAcsrs = mAccessor.getNumAcsrs<AcsrType::tracks>();
-            for(size_t i = 0; i < numAnlAcsrs; ++i)
-            {
-                auto& trackAcsr = mAccessor.getAcsr<AcsrType::tracks>(i);
-                trackAcsr.setAttr<Track::AttrType::time>(time, notification);
-            }
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
             if(!range.contains(time))
             {

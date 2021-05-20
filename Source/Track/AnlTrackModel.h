@@ -167,7 +167,6 @@ namespace Track
         
         , results
         , graphics
-        , time
         , warnings
         , processing
         , focused
@@ -198,7 +197,6 @@ namespace Track
     
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::graphics, Images, Model::Flag::notifying>
-    , Model::Attr<AttrType::time, double, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
     , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
@@ -232,7 +230,6 @@ namespace Track
                                  
                                  , {}
                                  , {}
-                                 , {0.0}
                                  , {WarningType::none}
                                  , {{false, 0.0, false, 0.0}}
                                  , {false}

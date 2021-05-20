@@ -51,7 +51,6 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::zoomLink:
             case AttrType::results:
             case AttrType::graphics:
-            case AttrType::time:
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:

@@ -71,7 +71,6 @@ Group::StateButton::StateButton(Accessor& accessor)
             case Track::AttrType::state:
             case Track::AttrType::results:
             case Track::AttrType::graphics:
-            case Track::AttrType::time:
             case Track::AttrType::identifier:
             case Track::AttrType::height:
             case Track::AttrType::colours:

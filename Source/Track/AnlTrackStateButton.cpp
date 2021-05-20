@@ -27,13 +27,12 @@ Track::StateButton::StateButton(Accessor& accessor)
                 setTooltip(tooltip);
                 mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
             }
-                break;
+            break;
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
             case AttrType::results:
             case AttrType::graphics:
-            case AttrType::time:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:
@@ -43,7 +42,7 @@ Track::StateButton::StateButton(Accessor& accessor)
                 break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 

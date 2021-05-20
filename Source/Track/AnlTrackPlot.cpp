@@ -24,7 +24,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::warnings:
-            case AttrType::time:
             case AttrType::processing:
             case AttrType::focused:
                 break;
@@ -634,7 +633,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::warnings:
-            case AttrType::time:
             case AttrType::focused:
                 break;
             case AttrType::colours:
@@ -747,7 +745,7 @@ void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
-    
+
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     auto const tip = Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time);
     setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));

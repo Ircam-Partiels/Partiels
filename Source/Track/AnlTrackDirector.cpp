@@ -69,7 +69,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 }
             }
             break;
-            case AttrType::time:
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::focused:

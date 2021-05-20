@@ -44,7 +44,7 @@ namespace Track
         Thumbnail mThumbnail{mDirector};
         Decorator mThumbnailDecoration{mThumbnail};
 
-        Snapshot mSnapshot{mAccessor, mTimeZoomAccessor};
+        Snapshot mSnapshot{mAccessor, mTimeZoomAccessor, mTransportAccessor};
         Snapshot::Overlay mSnapshotOverlay{mSnapshot};
         Decorator mSnapshotDecoration{mSnapshotOverlay};
 
