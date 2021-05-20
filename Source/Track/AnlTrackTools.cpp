@@ -60,7 +60,7 @@ double Track::Tools::pixelToSeconds(float position, juce::Range<double> const& t
     return static_cast<double>(position - bounds.getX()) / static_cast<double>(bounds.getWidth()) * timeRange.getLength() + timeRange.getStart();
 }
 
-std::optional<std::string> Track::Tools::getValue(Results::SharedMarkers results, size_t channel, Zoom::Range const& globalRange, double time, double timeEpsilon)
+std::optional<std::string> Track::Tools::getValue(Results::SharedMarkers results, size_t channel, Zoom::Range const& globalRange, double time)
 {
     if(results == nullptr || results->size() <= channel || results->at(channel).empty())
     {
@@ -169,8 +169,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& acsr, Zoom::Accessor c
         {
             return "-";
         }
-        auto const epsilon = 4.0 / static_cast<double>(component.getWidth()) * timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
-        auto const value = getValue(markers, std::get<0>(*channel), timeGlobalRange, time, epsilon);
+        auto const value = getValue(markers, std::get<0>(*channel), timeGlobalRange, time);
         if(value.has_value())
         {
             return *value + acsr.getAttr<AttrType::description>().output.unit;
