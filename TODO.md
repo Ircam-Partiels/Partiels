@@ -11,7 +11,7 @@
 - Use cache image component ?
 - rename dislay type
 - Multichannel
-  - Fix processor
-  - Fix bubble info
   - Add channels layout
   - Fix value/bin rulers
+  - Fix export
+- replace track time with transport playhead
