@@ -246,7 +246,10 @@ namespace Track
         {
             if constexpr(type == AttrType::channelsLayout)
             {
-                if(!value.empty() && !std::binary_search(value.cbegin(), value.cend(), true))
+                if(!value.empty() && std::none_of(value.cbegin(), value.cend(), [](auto const& state)
+                                                  {
+                                                      return state == true;
+                                                  }))
                 {
                     auto copy = value;
                     copy[0_z] = true;

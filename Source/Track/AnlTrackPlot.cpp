@@ -640,6 +640,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::colours:
             {
                 setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
+                repaint();
             }
             break;
             case AttrType::channelsLayout:

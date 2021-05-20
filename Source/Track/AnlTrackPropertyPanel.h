@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
 #include "AnlTrackDirector.h"
 #include "AnlTrackModel.h"
 #include "AnlTrackProgressBar.h"

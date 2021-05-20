@@ -726,38 +726,46 @@ void Track::PropertyPanel::updateZoomMode()
 
 void Track::PropertyPanel::showChannelLayout()
 {
-    auto const channelLayout = mAccessor.getAttr<AttrType::channelsLayout>();
-    auto const numChannels = channelLayout.size();
-    auto const numVisibleChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+    auto const channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+    auto const numChannels = channelsLayout.size();
+    auto const numVisibleChannels = static_cast<size_t>(std::count(channelsLayout.cbegin(), channelsLayout.cend(), true));
     juce::PopupMenu menu;
     if(numChannels > 2_z)
     {
         auto const allActive = numChannels != numVisibleChannels;
         menu.addItem(juce::translate("All Channels"), allActive, !allActive, [this]()
                      {
+                         mDirector.startAction();
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          std::fill(copy.begin(), copy.end(), true);
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                         mDirector.endAction("Change track channels layout", ActionState::apply);
                          showChannelLayout();
                      });
 
-        auto const oneActive = numVisibleChannels > 1_z || !channelLayout[0_z];
-        menu.addItem(juce::translate("Channel 1 Only"), oneActive, oneActive, [this]()
+        auto const oneActive = !channelsLayout[0_z] || numVisibleChannels > 1_z;
+        menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [this]()
                      {
+                         mDirector.startAction();
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          copy[0_z] = true;
-                         std::fill(copy.begin() + 1l, copy.end(), false);
+                         std::fill(std::next(copy.begin()), copy.end(), false);
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                         mDirector.endAction("Change track channels layout", ActionState::apply);
                          showChannelLayout();
                      });
     }
-    for(size_t channel = 0_z; channel < channelLayout.size(); ++channel)
+    for(size_t channel = 0_z; channel < channelsLayout.size(); ++channel)
     {
-        menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelLayout[channel], [this, channel]()
+        menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelsLayout[channel], [this, channel]()
                      {
+                         mDirector.startAction();
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          copy[channel] = !copy[channel];
-                         if(!std::binary_search(copy.cbegin(), copy.cend(), true))
+                         if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
+                                         {
+                                             return state == true;
+                                         }))
                          {
                              if(channel < copy.size() - 1_z)
                              {
@@ -769,10 +777,11 @@ void Track::PropertyPanel::showChannelLayout()
                              }
                          }
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                         mDirector.endAction("Change track channels layout", ActionState::apply);
                          showChannelLayout();
                      });
     }
-    menu.showAt(&mPropertyChannelLayout);
+    menu.showAt(&mPropertyChannelLayout.entry);
 }
 
 ANALYSE_FILE_END
