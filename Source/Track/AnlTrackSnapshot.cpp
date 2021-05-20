@@ -200,12 +200,14 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
         return;
     }
     auto const y = Tools::valueToPixel(*value, accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>(), bounds.toFloat());
-    g.setColour(juce::Colours::black.withAlpha(0.25f));
-    g.drawLine(clipBounds.getX(), y + 3.0f, clipBounds.getRight(), y + 3.0f, 1.0f);
-    g.setColour(juce::Colours::black.withAlpha(0.5f));
-    g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f, 1.0f);
-    g.setColour(juce::Colours::black.withAlpha(0.75f));
-    g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, 1.0f);
+    auto const shadowColour = accessor.getAttr<AttrType::colours>().shadow;
+    if(!shadowColour.isTransparent())
+    {
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        g.drawLine(clipBounds.getX(), y + 2.0f, clipBounds.getRight(), y + 2.0f, 1.0f);
+        g.setColour(juce::Colours::black.withAlpha(0.75f));
+        g.drawLine(clipBounds.getX(), y + 1.0f, clipBounds.getRight(), y + 1.0f, 1.0f);
+    }
     g.setColour(accessor.getAttr<AttrType::colours>().foreground);
     g.drawLine(clipBounds.getX(), y, clipBounds.getRight(), y, 1.0f);
 }
