@@ -145,7 +145,6 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
-    auto const& globalRange = mSnapshot.mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
     auto const time = mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>();
     auto tooltip = Format::secondsToString(time);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
@@ -155,9 +154,7 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
         if(trackAcsr.has_value())
         {
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
-            auto const& binZoomAcsr = trackAcsr->get().getAcsr<Track::AcsrType::binZoom>();
-            auto const bin = Zoom::Tools::getScaledValueFromHeight(binZoomAcsr, *this, pt.y);
-            auto const tip = Track::Tools::getResultText(trackAcsr->get(), globalRange, time, static_cast<size_t>(std::floor(bin)), 0.0);
+            auto const tip = Track::Tools::getValueTootip(trackAcsr->get(), mSnapshot.mTimeZoomAccessor, *this, pt.y, time);
             tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
         }
     }

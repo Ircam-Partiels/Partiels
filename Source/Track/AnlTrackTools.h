@@ -76,11 +76,7 @@ namespace Track
         std::optional<float> getValue(Results::SharedPoints results, size_t channel, Zoom::Range const& globalRange, double time);
         std::optional<float> getValue(Results::SharedColumns results, size_t channel, Zoom::Range const& globalRange, double time, size_t bin);
 
-        juce::String getText(Results::SharedMarkers results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, double timeEpsilon);
-        juce::String getText(Results::SharedPoints results, Plugin::Output const& output, Zoom::Range const& globalRange, double time);
-        juce::String getText(Results::SharedColumns results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin);
-
-        juce::String getResultText(Accessor const& acsr, Zoom::Range const& globalRange, double time, size_t bin, double timeEpsilon);
+        juce::String getValueTootip(Accessor const& acsr, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time);
         juce::String getStateTootip(Accessor const& acsr);
 
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
