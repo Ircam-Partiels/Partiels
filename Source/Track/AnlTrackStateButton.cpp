@@ -22,7 +22,7 @@ Track::StateButton::StateButton(Accessor& accessor)
                     return warnings == WarningType::none ? IconManager::IconType::checked : IconManager::IconType::alert;
                 };
                 mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
-                auto const tooltip = Tools::getProcessingTooltip(acsr);
+                auto const tooltip = Tools::getStateTootip(acsr);
                 mProcessingButton.setTooltip(tooltip);
                 setTooltip(tooltip);
                 mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));

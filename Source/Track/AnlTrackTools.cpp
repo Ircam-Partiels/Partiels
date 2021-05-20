@@ -189,7 +189,7 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, Zoom::Range const
     return "";
 }
 
-juce::String Track::Tools::getProcessingTooltip(Accessor const& acsr)
+juce::String Track::Tools::getStateTootip(Accessor const& acsr)
 {
     auto const& state = acsr.getAttr<AttrType::processing>();
     auto const& warnings = acsr.getAttr<AttrType::warnings>();

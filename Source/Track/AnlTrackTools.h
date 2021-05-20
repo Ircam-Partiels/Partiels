@@ -81,7 +81,7 @@ namespace Track
         juce::String getText(Results::SharedColumns results, Plugin::Output const& output, Zoom::Range const& globalRange, double time, size_t bin);
 
         juce::String getResultText(Accessor const& acsr, Zoom::Range const& globalRange, double time, size_t bin, double timeEpsilon);
-        juce::String getProcessingTooltip(Accessor const& acsr);
+        juce::String getStateTootip(Accessor const& acsr);
 
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getValueRange(Results const& results);

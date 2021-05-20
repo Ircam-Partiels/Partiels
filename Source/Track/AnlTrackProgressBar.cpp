@@ -70,7 +70,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                     mMessage = getMessage();
                 }
                 
-                auto const tooltip = Tools::getProcessingTooltip(acsr);
+                auto const tooltip = Tools::getStateTootip(acsr);
                 mProgressBar.setTooltip(tooltip);
                 setTooltip(tooltip);
                 
