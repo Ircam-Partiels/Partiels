@@ -389,7 +389,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         // clang-format on
                     }
                     break;
-                    case Tools::DisplayType::segments:
+                    case Tools::DisplayType::points:
                     {
                         mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
                         // clang-format off
@@ -406,7 +406,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         // clang-format on
                     }
                     break;
-                    case Tools::DisplayType::grid:
+                    case Tools::DisplayType::columns:
                     {
                         mPropertyRangeLink.title.setText("Bin Range Link", juce::NotificationType::dontSendNotification);
                         mPropertyNumBins.entry.setEnabled(false);

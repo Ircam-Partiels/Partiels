@@ -4,6 +4,22 @@ ANALYSE_FILE_BEGIN
 
 Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
 {
+    auto const results = acsr.getAttr<AttrType::results>();
+    if(results.isEmpty())
+    {
+        if(results.getMarkers() != nullptr)
+        {
+            return DisplayType::markers;
+        }
+        if(results.getPoints() != nullptr)
+        {
+            return DisplayType::points;
+        }
+        if(results.getColumns() != nullptr)
+        {
+            return DisplayType::columns;
+        }
+    }
     auto const& output = acsr.getAttr<AttrType::description>().output;
     if(output.hasFixedBinCount)
     {
@@ -16,27 +32,17 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
             break;
             case 1:
             {
-                return DisplayType::segments;
+                return DisplayType::points;
             }
             break;
             default:
             {
-                return DisplayType::grid;
+                return DisplayType::columns;
             }
             break;
         }
     }
-
-    auto const& results = acsr.getAttr<AttrType::results>();
-    if(results.getMarkers() != nullptr)
-    {
-        return DisplayType::markers;
-    }
-    if(results.getColumns() != nullptr)
-    {
-        return DisplayType::grid;
-    }
-    return DisplayType::segments;
+    return DisplayType::points;
 }
 
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
@@ -166,12 +172,12 @@ juce::String Track::Tools::getResultText(Accessor const& acsr, Zoom::Range const
             return Tools::getText(results.getMarkers(), output, globalRange, time, timeEpsilon);
         }
         break;
-        case DisplayType::segments:
+        case DisplayType::points:
         {
             return Tools::getText(results.getPoints(), output, globalRange, time);
         }
         break;
-        case DisplayType::grid:
+        case DisplayType::columns:
         {
             auto const hasBinName = bin < output.binNames.size() && !output.binNames[bin].empty();
             auto const binName = "bin" + juce::String(bin) + (hasBinName ? ("-" + output.binNames[bin]) : "");

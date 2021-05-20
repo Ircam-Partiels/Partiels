@@ -107,7 +107,7 @@ void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Recta
             paintChannels(markers->size(), paintMarkers);
         }
         break;
-        case Tools::DisplayType::segments:
+        case Tools::DisplayType::points:
         {
             auto const points = accessor.getAttr<AttrType::results>().getPoints();
             if(points == nullptr || points->empty())
@@ -117,7 +117,7 @@ void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Recta
             paintChannels(points->size(), paintPoints);
         }
         break;
-        case Tools::DisplayType::grid:
+        case Tools::DisplayType::columns:
         {
             auto const columns = accessor.getAttr<AttrType::results>().getColumns();
             if(columns == nullptr || columns->empty())

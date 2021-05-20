@@ -94,14 +94,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         {
             case Tools::DisplayType::markers:
                 break;
-            case Tools::DisplayType::segments:
+            case Tools::DisplayType::points:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                 auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
                 sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
             }
             break;
-            case Tools::DisplayType::grid:
+            case Tools::DisplayType::columns:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
                 auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
@@ -138,7 +138,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     mValueRangeMode = ValueRangeMode::custom;
                 }
 
-                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments)
+                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -149,7 +149,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case Zoom::AttrType::visibleRange:
             {
                 runRendering();
-                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments)
+                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -168,7 +168,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid)
+                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -196,14 +196,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 {
                     case Tools::DisplayType::markers:
                         break;
-                    case Tools::DisplayType::segments:
+                    case Tools::DisplayType::points:
                     {
                         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                         auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
                         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                     }
                     break;
-                    case Tools::DisplayType::grid:
+                    case Tools::DisplayType::columns:
                     {
                         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
                         auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());

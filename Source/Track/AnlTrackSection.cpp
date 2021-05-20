@@ -34,10 +34,10 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
                 break;
             case AttrType::description:
             {
-                mValueRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments);
-                mValueScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::segments);
-                mBinRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid);
-                mBinScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::grid);
+                mValueRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points);
+                mValueScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points);
+                mBinRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns);
+                mBinScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns);
             }
             break;
             case AttrType::state:
@@ -132,7 +132,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
     {
         case Tools::DisplayType::markers:
             break;
-        case Tools::DisplayType::segments:
+        case Tools::DisplayType::points:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
             auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -140,7 +140,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
         }
         break;
-        case Tools::DisplayType::grid:
+        case Tools::DisplayType::columns:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
             auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -163,7 +163,7 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
     {
         case Tools::DisplayType::markers:
             break;
-        case Tools::DisplayType::segments:
+        case Tools::DisplayType::points:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
@@ -181,7 +181,7 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
         }
         break;
-        case Tools::DisplayType::grid:
+        case Tools::DisplayType::columns:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();

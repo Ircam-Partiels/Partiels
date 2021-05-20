@@ -12,8 +12,8 @@ namespace Track
         enum class DisplayType
         {
               markers
-            , segments
-            , grid
+            , points
+            , columns
         };
         // clang-format on
 
