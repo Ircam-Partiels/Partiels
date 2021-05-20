@@ -271,6 +271,10 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
 
     auto const& channelResults = points->at(channel);
     auto it = Tools::findFirstAt(channelResults, globalRange, clipTimeStart);
+    if(it != channelResults.cbegin())
+    {
+        it = std::prev(it);
+    }
 
     // Time distance corresponding to epsilon pixels
     auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
