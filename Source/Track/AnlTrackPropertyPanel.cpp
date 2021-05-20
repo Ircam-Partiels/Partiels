@@ -125,6 +125,10 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                       updatePresets();
                   })
 
+, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
+                         {
+                             showChannelLayout();
+                         })
 , mPropertyColourMap("Color Map", "The color map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
                      {
                          mDirector.startAction();
@@ -381,7 +385,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     {
                         // clang-format off
                         mGraphicalSection.setComponents({
-                                                              mPropertyForegroundColour
+                                                              mPropertyChannelLayout
+                                                            , mPropertyForegroundColour
                                                             , mPropertyTextColour
                                                             , mPropertyBackgroundColour
                                                             , mPropertyShadowColour
@@ -394,7 +399,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
                         // clang-format off
                         mGraphicalSection.setComponents({
-                                                              mPropertyForegroundColour
+                                                              mPropertyChannelLayout
+                                                            , mPropertyForegroundColour
                                                             , mPropertyTextColour
                                                             , mPropertyBackgroundColour
                                                             , mPropertyShadowColour
@@ -412,7 +418,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         mPropertyNumBins.entry.setEnabled(false);
                         // clang-format off
                         mGraphicalSection.setComponents({
-                                                              mPropertyColourMap
+                                                              mPropertyChannelLayout
+                                                            , mPropertyColourMap
                                                             , mPropertyColourMapAlpha
                                                             , mPropertyValueRangeMode
                                                             , mPropertyValueRangeMin
@@ -524,6 +531,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::channelsLayout:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::zoomAcsr:
@@ -714,6 +722,57 @@ void Track::PropertyPanel::updateZoomMode()
     {
         mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
     }
+}
+
+void Track::PropertyPanel::showChannelLayout()
+{
+    auto const channelLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+    auto const numChannels = channelLayout.size();
+    auto const numVisibleChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+    juce::PopupMenu menu;
+    if(numChannels > 2_z)
+    {
+        auto const allActive = numChannels != numVisibleChannels;
+        menu.addItem(juce::translate("All Channels"), allActive, !allActive, [this]()
+                     {
+                         auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
+                         std::fill(copy.begin(), copy.end(), true);
+                         mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                         showChannelLayout();
+                     });
+
+        auto const oneActive = numVisibleChannels > 1_z || !channelLayout[0_z];
+        menu.addItem(juce::translate("Channel 1 Only"), oneActive, oneActive, [this]()
+                     {
+                         auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
+                         copy[0_z] = true;
+                         std::fill(copy.begin() + 1l, copy.end(), false);
+                         mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                         showChannelLayout();
+                     });
+    }
+    for(size_t channel = 0_z; channel < channelLayout.size(); ++channel)
+    {
+        menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelLayout[channel], [this, channel]()
+                     {
+                         auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
+                         copy[channel] = !copy[channel];
+                         if(!std::binary_search(copy.cbegin(), copy.cend(), true))
+                         {
+                             if(channel < copy.size() - 1_z)
+                             {
+                                 copy[channel + 1_z] = true;
+                             }
+                             else
+                             {
+                                 copy[channel - 1_z] = true;
+                             }
+                         }
+                         mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                         showChannelLayout();
+                     });
+    }
+    menu.showAt(&mPropertyChannelLayout);
 }
 
 ANALYSE_FILE_END

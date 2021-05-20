@@ -30,6 +30,7 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::colours:
+            case AttrType::channelsLayout:
             {
 #ifdef jUCE_MAC
                 if(Tools::getDisplayType(acsr) == Tools::DisplayType::points)
@@ -80,56 +81,46 @@ void Track::Plot::paint(juce::Graphics& g)
 
 void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    auto paintChannels = [&](size_t numChannels, std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
+    auto paintChannels = [&](std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
     {
-        auto const fullHeight = bounds.getHeight();
-        auto const channelHeight = (fullHeight - static_cast<int>(numChannels) + 1) / static_cast<int>(numChannels);
-
-        size_t channel = 1;
-        while(channel < numChannels)
+        auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
+        auto const numVisibleChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+        if(numVisibleChannels == 0_z)
         {
-            juce::Graphics::ScopedSaveState sss(g);
-            auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(1);
-            g.reduceClipRegion(region);
-            fn(accessor, channel - 1_z, g, region, timeZoomAcsr);
-            ++channel;
+            return;
         }
+        auto const fullHeight = bounds.getHeight();
+        auto const channelHeight = (fullHeight - static_cast<int>(numVisibleChannels) + 1) / static_cast<int>(numVisibleChannels);
 
-        juce::Graphics::ScopedSaveState sss(g);
-        g.reduceClipRegion(bounds);
-        fn(accessor, channel - 1_z, g, bounds, timeZoomAcsr);
+        auto channelCounter = 0_z;
+        for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
+        {
+            if(channelLayout[channel])
+            {
+                ++channelCounter;
+                juce::Graphics::ScopedSaveState sss(g);
+                auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(channelCounter == numVisibleChannels ? 1 : 0);
+                g.reduceClipRegion(region);
+                fn(accessor, channel, g, region, timeZoomAcsr);
+            }
+        }
     };
 
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
         {
-            auto const markers = accessor.getAttr<AttrType::results>().getMarkers();
-            if(markers == nullptr || markers->empty())
-            {
-                return;
-            }
-            paintChannels(markers->size(), paintMarkers);
+            paintChannels(paintMarkers);
         }
         break;
         case Tools::DisplayType::points:
         {
-            auto const points = accessor.getAttr<AttrType::results>().getPoints();
-            if(points == nullptr || points->empty())
-            {
-                return;
-            }
-            paintChannels(points->size(), paintPoints);
+            paintChannels(paintPoints);
         }
         break;
         case Tools::DisplayType::columns:
         {
-            auto const columns = accessor.getAttr<AttrType::results>().getColumns();
-            if(columns == nullptr || columns->empty())
-            {
-                return;
-            }
-            paintChannels(columns->size(), paintColumns);
+            paintChannels(paintColumns);
         }
         break;
     }
@@ -644,14 +635,18 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::focused:
+            case AttrType::processing:
                 break;
             case AttrType::colours:
             {
                 setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
             }
             break;
-            case AttrType::processing:
-                break;
+            case AttrType::channelsLayout:
+            {
+                updateTooltip(getMouseXYRelative());
+            }
+            break;
         }
     };
 

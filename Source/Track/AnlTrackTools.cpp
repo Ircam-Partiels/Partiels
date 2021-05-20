@@ -123,84 +123,83 @@ std::optional<float> Track::Tools::getValue(Results::SharedColumns results, size
     return column[bin];
 }
 
-juce::String Track::Tools::getValueTootip(Accessor const& acsr, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time)
+juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time)
 {
-    auto const results = acsr.getAttr<AttrType::results>();
+    auto const results = accessor.getAttr<AttrType::results>();
     auto const& timeGlobalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     if(results.isEmpty() || timeGlobalRange.isEmpty())
     {
         return "-";
     }
-    
-    auto getChannel = [&](size_t numChannels) -> std::optional<std::tuple<size_t, juce::Range<int>>>
+
+    auto getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
     {
-        if(numChannels == 0_z)
-        {
-            return {};
-        }
         auto bounds = component.getLocalBounds();
         if(!bounds.getVerticalRange().contains(y - 1))
         {
             return {};
         }
-        
+
+        auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
+        auto const numChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+        if(numChannels == 0_z)
+        {
+            return {};
+        }
+
         auto const fullHeight = component.getHeight();
         auto const channelHeight = (fullHeight - static_cast<int>(numChannels) + 1) / static_cast<int>(numChannels);
-        for(size_t channel = 0; channel < numChannels - 1; channel++)
+
+        auto channelCounter = 0_z;
+        for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
         {
-            auto range = bounds.removeFromTop(channelHeight + 1).getVerticalRange();
-            if(range.contains(y - 1))
+            if(channelLayout[channel])
             {
-                range = range.withEnd(range.getEnd() - 1);
+                ++channelCounter;
+                auto range = bounds.removeFromTop(channelHeight + 1).getVerticalRange();
                 if(range.contains(y - 1))
                 {
-                    return std::make_tuple(channel, range);
+                    range = range.withEnd(range.getEnd() - (channelCounter == numChannels ? 1 : 0));
+                    if(range.contains(y - 1))
+                    {
+                        return std::make_tuple(channel, range);
+                    }
+                    return {};
                 }
-                return {};
             }
         }
-        return std::make_tuple(numChannels - 1, bounds.getVerticalRange());
+        return {};
     };
-    
+
+    auto const channel = getChannel();
+    if(!channel.has_value())
+    {
+        return "-";
+    }
+
     if(auto markers = results.getMarkers())
     {
-        auto const channel = getChannel(markers->size());
-        if(!channel.has_value())
-        {
-            return "-";
-        }
         auto const value = getValue(markers, std::get<0>(*channel), timeGlobalRange, time);
         if(value.has_value())
         {
-            return *value + acsr.getAttr<AttrType::description>().output.unit;
+            return *value + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }
     if(auto points = results.getPoints())
     {
-        auto const channel = getChannel(points->size());
-        if(!channel.has_value())
-        {
-            return "-";
-        }
         auto const value = getValue(points, std::get<0>(*channel), timeGlobalRange, time);
         if(value.has_value())
         {
-            return juce::String(*value, 2) + acsr.getAttr<AttrType::description>().output.unit;
+            return juce::String(*value, 2) + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }
     if(auto columns = results.getColumns())
     {
-        auto const channel = getChannel(columns->size());
-        if(!channel.has_value())
-        {
-            return "-";
-        }
-        
         auto getBinIndex = [&]() -> std::optional<size_t>
         {
-            auto const binVisibleRange = acsr.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
+            auto const binVisibleRange = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
             auto const start = std::get<1>(*channel).getStart();
             auto const length = std::get<1>(*channel).getLength();
             if(length <= 0 || binVisibleRange.isEmpty())
@@ -212,17 +211,17 @@ juce::String Track::Tools::getValueTootip(Accessor const& acsr, Zoom::Accessor c
             auto const ratio = static_cast<double>(std::min(revertY, length - 1)) / static_cast<double>(length - 1);
             return static_cast<size_t>(std::floor(ratio * binVisibleRange.getLength() + binVisibleRange.getStart()));
         };
-        
+
         auto binIndex = getBinIndex();
         if(!binIndex.has_value())
         {
             return "-";
         }
-        
+
         auto const value = getValue(columns, std::get<0>(*channel), timeGlobalRange, time, *binIndex);
         if(value.has_value())
         {
-            auto const& output = acsr.getAttr<AttrType::description>().output;
+            auto const& output = accessor.getAttr<AttrType::description>().output;
             auto getBinName = [&]()
             {
                 if(*binIndex >= output.binNames.size())
@@ -231,7 +230,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& acsr, Zoom::Accessor c
                 }
                 return "[" + juce::String(*binIndex) + " - " + output.binNames[*binIndex] + "]";
             };
-            return getBinName() + juce::String(*value, 2) + acsr.getAttr<AttrType::description>().output.unit;
+            return getBinName() + juce::String(*value, 2) + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }

@@ -61,6 +61,7 @@ Group::StateButton::StateButton(Accessor& accessor)
         {
             case Track::AttrType::processing:
             case Track::AttrType::warnings:
+            case Track::AttrType::channelsLayout:
             {
                 updateToolTip();
             }

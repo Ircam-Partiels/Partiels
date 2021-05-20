@@ -24,6 +24,7 @@ namespace Track
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
         void updatePresets();
         void updateZoomMode();
+        void showChannelLayout();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -43,6 +44,7 @@ namespace Track
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mAccessor, ProgressBar::Mode::analysis};
 
+        PropertyTextButton mPropertyChannelLayout;
         PropertyList mPropertyColourMap;
         PropertySlider mPropertyColourMapAlpha;
         PropertyColourButton mPropertyForegroundColour;

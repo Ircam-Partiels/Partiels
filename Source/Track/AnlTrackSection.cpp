@@ -48,6 +48,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             }
             break;
             case AttrType::colours:
+            case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::results:
             case AttrType::graphics:

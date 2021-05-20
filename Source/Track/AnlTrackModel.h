@@ -162,6 +162,7 @@ namespace Track
         
         , height
         , colours
+        , channelsLayout
         , zoomLink
         , zoomAcsr
         
@@ -192,6 +193,7 @@ namespace Track
     
     , Model::Attr<AttrType::height, int, Model::Flag::basic>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
+    , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
@@ -225,6 +227,7 @@ namespace Track
                                  
                                  , {120}
                                  , {}
+                                 , {std::vector<bool>{}}
                                  , {true}
                                  , {}
                                  
@@ -237,6 +240,28 @@ namespace Track
         {
         }
         // clang-format on
+
+        template <attr_enum_type type, typename value_v>
+        void setAttr(value_v const& value, NotificationType notification)
+        {
+            if constexpr(type == AttrType::channelsLayout)
+            {
+                if(!value.empty() && !std::binary_search(value.cbegin(), value.cend(), true))
+                {
+                    auto copy = value;
+                    copy[0_z] = true;
+                    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(copy, notification);
+                }
+                else
+                {
+                    Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
+                }
+            }
+            else
+            {
+                Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
+            }
+        }
     };
 } // namespace Track
 

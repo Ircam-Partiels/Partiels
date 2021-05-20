@@ -63,6 +63,7 @@ Track::Thumbnail::Thumbnail(Director& director)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:
+            case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::focused:

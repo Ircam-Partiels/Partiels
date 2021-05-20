@@ -42,6 +42,31 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::results:
             {
                 sanitizeZooms(notification);
+                auto getNumChannels = [this]() -> std::optional<size_t>
+                {
+                    auto const results = mAccessor.getAttr<AttrType::results>();
+                    if(auto markers = results.getMarkers())
+                    {
+                        return markers->size();
+                    }
+                    if(auto points = results.getPoints())
+                    {
+                        return points->size();
+                    }
+                    if(auto columns = results.getColumns())
+                    {
+                        return columns->size();
+                    }
+                    return {};
+                };
+
+                auto const numChannels = getNumChannels();
+                if(numChannels.has_value())
+                {
+                    auto channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+                    channelsLayout.resize(*numChannels, true);
+                    mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, NotificationType::synchronous);
+                }
             }
             break;
             case AttrType::graphics:
@@ -54,6 +79,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 runRendering();
             }
             break;
+            case AttrType::channelsLayout:
+                break;
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             {
