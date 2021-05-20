@@ -125,10 +125,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                       updatePresets();
                   })
 
-, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
-                         {
-                             showChannelLayout();
-                         })
 , mPropertyColourMap("Color Map", "The color map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
                      {
                          mDirector.startAction();
@@ -299,6 +295,10 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                          mDirector.endAction(juce::translate("Change range link state"), ActionState::apply);
                      })
 , mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
+, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
+                         {
+                             showChannelLayout();
+                         })
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -385,11 +385,11 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     {
                         // clang-format off
                         mGraphicalSection.setComponents({
-                                                              mPropertyChannelLayout
-                                                            , mPropertyForegroundColour
+                                                              mPropertyForegroundColour
                                                             , mPropertyTextColour
                                                             , mPropertyBackgroundColour
                                                             , mPropertyShadowColour
+                                                            , mPropertyChannelLayout
                                                         });
                         // clang-format on
                     }
@@ -399,8 +399,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
                         // clang-format off
                         mGraphicalSection.setComponents({
-                                                              mPropertyChannelLayout
-                                                            , mPropertyForegroundColour
+                                                              mPropertyForegroundColour
                                                             , mPropertyTextColour
                                                             , mPropertyBackgroundColour
                                                             , mPropertyShadowColour
@@ -408,6 +407,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                                             , mPropertyValueRangeMin
                                                             , mPropertyValueRangeMax
                                                             , mPropertyRangeLink
+                                                            , mPropertyChannelLayout
                                                         });
                         // clang-format on
                     }
@@ -418,8 +418,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         mPropertyNumBins.entry.setEnabled(false);
                         // clang-format off
                         mGraphicalSection.setComponents({
-                                                              mPropertyChannelLayout
-                                                            , mPropertyColourMap
+                                                              mPropertyColourMap
                                                             , mPropertyColourMapAlpha
                                                             , mPropertyValueRangeMode
                                                             , mPropertyValueRangeMin
@@ -427,6 +426,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                                             , mPropertyValueRange
                                                             , mPropertyNumBins
                                                             , mPropertyRangeLink
+                                                            , mPropertyChannelLayout
                                                             , mProgressBarRendering
                                                         });
                         // clang-format on

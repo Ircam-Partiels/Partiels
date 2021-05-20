@@ -44,7 +44,6 @@ namespace Track
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mAccessor, ProgressBar::Mode::analysis};
 
-        PropertyTextButton mPropertyChannelLayout;
         PropertyList mPropertyColourMap;
         PropertySlider mPropertyColourMapAlpha;
         PropertyColourButton mPropertyForegroundColour;
@@ -57,6 +56,7 @@ namespace Track
         PropertyRangeSlider mPropertyValueRange;
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
+        PropertyTextButton mPropertyChannelLayout;
         ProgressBar mProgressBarRendering{mAccessor, ProgressBar::Mode::rendering};
 
         PropertyLabel mPropertyPluginName{"Name", "The name of the plugin"};
