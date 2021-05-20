@@ -108,11 +108,34 @@ Group::Plot::Overlay::Overlay(Plot& plot)
         }
     };
 
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::expanded:
+            case AttrType::layout:
+            case AttrType::tracks:
+            case AttrType::focused:
+                break;
+            case AttrType::colour:
+            {
+                setOpaque(acsr.getAttr<AttrType::colour>().isOpaque());
+                repaint();
+            }
+            break;
+        }
+    };
+
     mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::Plot::Overlay::~Overlay()
 {
+    mAccessor.removeListener(mListener);
     mTimeZoomAccessor.removeListener(mTimeZoomListener);
 }
 
@@ -121,6 +144,11 @@ void Group::Plot::Overlay::resized()
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
     mTransportPlayheadBar.setBounds(bounds);
+}
+
+void Group::Plot::Overlay::paint(juce::Graphics& g)
+{
+    g.fillAll(mAccessor.getAttr<AttrType::colour>());
 }
 
 void Group::Plot::Overlay::mouseMove(juce::MouseEvent const& event)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlGroupButtonState.h"
-#include "AnlGroupDirector.h"
+#include "AnlGroupPropertyPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -35,9 +35,11 @@ namespace Group
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
+        Accessor::Receiver mReceiver;
 
+        PropertyPanel mPropertyPanel{mDirector};
         juce::ImageButton mDropdownButton;
-        juce::ImageButton mNameButton;
+        juce::ImageButton mPropertiesButton;
         StateButton mStateButton{mAccessor};
         juce::ImageButton mExpandButton;
     };

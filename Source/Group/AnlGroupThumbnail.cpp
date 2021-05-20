@@ -6,8 +6,8 @@ ANALYSE_FILE_BEGIN
 Group::Thumbnail::Thumbnail(Director& director)
 : mDirector(director)
 {
-    addAndMakeVisible(mNameButton);
-    mNameButton.setWantsKeyboardFocus(false);
+    addAndMakeVisible(mPropertiesButton);
+    mPropertiesButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
@@ -15,7 +15,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     addAndMakeVisible(mDropdownButton);
     mDropdownButton.setWantsKeyboardFocus(false);
 
-    mNameButton.setTooltip(juce::translate("Change the name of the group or the tracks' properties"));
+    mPropertiesButton.setTooltip(juce::translate("Change the group properties"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
@@ -24,95 +24,21 @@ Group::Thumbnail::Thumbnail(Director& director)
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
 
-    auto getNameMenu = [&]()
+    mPropertiesButton.onClick = [this]()
     {
-        juce::PopupMenu menu;
-        menu.addItem("Change Group Name", [&]()
-                     {
-                         class Editor
-                         : public juce::TextEditor
-                         {
-                         public:
-                             Editor(Accessor& accessor)
-                             : mAccessor(accessor)
-                             {
-                                 setMultiLine(false);
-                                 setJustification(juce::Justification::left);
-                                 setText(mAccessor.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
-                                 onTextChange = [&]()
-                                 {
-                                     mAccessor.setAttr<AttrType::name>(getText(), NotificationType::synchronous);
-                                 };
-                                 onReturnKey = onEscapeKey = onFocusLost = [&]()
-                                 {
-                                     exitModalState(0);
-                                 };
-                                 setColour(juce::TextEditor::ColourIds::backgroundColourId, getLookAndFeel().findColour(FloatingWindow::ColourIds::backgroundColourId));
-                             }
-
-                             void inputAttemptWhenModal() override
-                             {
-                                 exitModalState(0);
-                             }
-
-                         private:
-                             Accessor& mAccessor;
-                         };
-
-                         auto const previousName = mAccessor.getAttr<AttrType::name>();
-                         mDirector.startAction();
-                         Editor editor(mAccessor);
-                         auto const buttonBounds = mNameButton.getScreenBounds();
-                         editor.setBounds(buttonBounds.getRight(), buttonBounds.getY(), 80, 22);
-                         editor.addToDesktop(juce::ComponentPeer::windowHasDropShadow | juce::ComponentPeer::windowIsTemporary);
-                         editor.enterModalState(true, nullptr, false);
-                         editor.runModalLoop();
-
-                         auto const newName = mAccessor.getAttr<AttrType::name>();
-                         if(newName != previousName)
-                         {
-                             mDirector.endAction("Change Group Name " + previousName + " to " + newName, ActionState::apply);
-                         }
-                         else
-                         {
-                             mDirector.endAction("Change Group Name", ActionState::abort);
-                         }
-                     });
-        auto const layout = mAccessor.getAttr<AttrType::layout>();
-        for(auto const& identifier : layout)
+        auto var = std::make_unique<juce::DynamicObject>();
+        if(var != nullptr)
         {
-            auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-            if(trackAcsr.has_value())
-            {
-                auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-                menu.addItem("Show " + trackName + " properties", [=]
-                             {
-                                 auto var = std::make_unique<juce::DynamicObject>();
-                                 if(var != nullptr)
-                                 {
-                                     auto const position = juce::Desktop::getInstance().getMousePosition();
-                                     var->setProperty("x", position.x);
-                                     var->setProperty("y", position.y - 40);
-                                     trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
-                                 }
-                             });
-            }
+            auto const center = mPropertiesButton.getScreenBounds().getCentre();
+            var->setProperty("x", center.x);
+            var->setProperty("y", center.y - 40);
+            mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
         }
-        return menu;
-    };
-
-    mNameButton.onClick = [=, this]()
-    {
-        getNameMenu().showAt(&mNameButton);
     };
 
     mDropdownButton.onClick = [=, this]()
     {
         juce::PopupMenu menu;
-        if(!mNameButton.isVisible())
-        {
-            menu.addSubMenu(mNameButton.getTooltip(), getNameMenu());
-        }
         auto addItem = [&](juce::Button& button)
         {
             if(!button.isVisible())
@@ -120,7 +46,7 @@ Group::Thumbnail::Thumbnail(Director& director)
                 menu.addItem(button.getTooltip(), button.onClick);
             }
         };
-        addItem(mNameButton);
+        addItem(mPropertiesButton);
         addItem(mExpandButton);
         menu.showAt(&mDropdownButton);
     };
@@ -156,11 +82,28 @@ Group::Thumbnail::Thumbnail(Director& director)
         }
     };
 
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    {
+        juce::ignoreUnused(acsr);
+        switch(signal)
+        {
+            case SignalType::showProperties:
+            {
+                auto const x = static_cast<int>(value.getProperty("x", 0.0));
+                auto const y = static_cast<int>(value.getProperty("y", 0.0));
+                mPropertyPanel.show({x, y});
+            }
+            break;
+        }
+    };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.addReceiver(mReceiver);
 }
 
 Group::Thumbnail::~Thumbnail()
 {
+    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 
@@ -186,7 +129,7 @@ void Group::Thumbnail::resized()
     mExpandButton.setEnabled(hasTrack);
     layoutButton(mStateButton);
     mStateButton.setEnabled(hasTrack);
-    layoutButton(mNameButton);
+    layoutButton(mPropertiesButton);
     mDropdownButton.setVisible(hasTrack && useDropdown);
     if(useDropdown)
     {
@@ -219,7 +162,7 @@ void Group::Thumbnail::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
-        laf->setButtonIcon(mNameButton, IconManager::IconType::properties);
+        laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
         if(mAccessor.getAttr<AttrType::expanded>())
         {
             laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);

@@ -110,11 +110,34 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
         }
     };
 
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::expanded:
+            case AttrType::layout:
+            case AttrType::tracks:
+            case AttrType::focused:
+                break;
+            case AttrType::colour:
+            {
+                setOpaque(acsr.getAttr<AttrType::colour>().isOpaque());
+                repaint();
+            }
+            break;
+        }
+    };
+
     mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::Snapshot::Overlay::~Overlay()
 {
+    mAccessor.removeListener(mListener);
     mTransportAccessor.removeListener(mTransportListener);
 }
 
@@ -125,7 +148,7 @@ void Group::Snapshot::Overlay::resized()
 
 void Group::Snapshot::Overlay::paint(juce::Graphics& g)
 {
-    juce::ignoreUnused(g);
+    g.fillAll(mAccessor.getAttr<AttrType::colour>());
 }
 
 void Group::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
