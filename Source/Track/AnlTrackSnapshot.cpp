@@ -83,7 +83,7 @@ void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::R
     auto paintChannels = [&](size_t numChannels, std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
     {
         auto const fullHeight = bounds.getHeight();
-        auto const channelHeight = (fullHeight / static_cast<int>(numChannels)) - static_cast<int>(numChannels) + 1;
+        auto const channelHeight = (fullHeight  - static_cast<int>(numChannels) + 1) / static_cast<int>(numChannels);
         
         size_t channel = 1;
         while(channel < numChannels)
@@ -99,6 +99,7 @@ void Track::Snapshot::paint(Accessor const& accessor, juce::Graphics& g, juce::R
         g.reduceClipRegion(bounds);
         fn(accessor, channel - 1_z, g, bounds, timeZoomAcsr);
     };
+    
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
