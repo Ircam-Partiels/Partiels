@@ -100,18 +100,21 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     return mOutputBuffer.data();
 }
 
-Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::unique_ptr<Vamp::Plugin> plugin, size_t const feature, State const& state)
-: mPlugin(std::move(plugin))
+Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Vamp::Plugin>> plugins, size_t const feature, State const& state)
+: mPlugins(std::move(plugins))
 , mCircularReader(audioFormatReader, state.blockSize, state.stepSize)
 , mFeature(feature)
 , mState(state)
 {
 }
 
-bool Plugin::Processor::prepareToAnalyze(std::vector<Result>& results)
+bool Plugin::Processor::prepareToAnalyze(std::vector<std::vector<Result>>& results)
 {
-    anlStrongAssert(mPlugin != nullptr);
-    if(mPlugin == nullptr)
+    anlStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty() || std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
+                                       {
+                                           return plugin == nullptr;
+                                       }))
     {
         return false;
     }
@@ -124,32 +127,44 @@ bool Plugin::Processor::prepareToAnalyze(std::vector<Result>& results)
         return false;
     }
 
-    auto const descriptors = mPlugin->getOutputDescriptors();
+    auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
     anlStrongAssert(mFeature < descriptors.size());
     if(mFeature >= descriptors.size())
     {
         return false;
     }
 
+    results.resize(mPlugins.size());
     auto const& descriptor = descriptors[mFeature];
     if(descriptor.sampleType == Output::SampleType::OneSamplePerStep)
     {
         auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
-        results.reserve(static_cast<size_t>(std::ceil(length / static_cast<double>(mState.stepSize))));
+        auto const size = static_cast<size_t>(std::ceil(length / static_cast<double>(mState.stepSize)));
+        for(auto& channelResults : results)
+        {
+            channelResults.reserve(size);
+        }
     }
     else if(descriptor.sampleType == Output::SampleType::FixedSampleRate)
     {
         auto const length = static_cast<double>(mCircularReader.getLengthInSamples());
         auto const duration = length / mCircularReader.getSampleRate();
-        results.reserve(static_cast<size_t>(std::ceil(duration * descriptor.sampleRate)));
+        auto const size = static_cast<size_t>(std::ceil(duration * descriptor.sampleRate));
+        for(auto& channelResults : results)
+        {
+            channelResults.reserve(size);
+        }
     }
     return true;
 }
 
-bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
+bool Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& results)
 {
-    anlStrongAssert(mPlugin != nullptr);
-    if(mPlugin == nullptr)
+    anlStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty() || std::any_of(mPlugins.cbegin(), mPlugins.cend(), [](auto const& plugin)
+                                       {
+                                           return plugin == nullptr;
+                                       }))
     {
         return false;
     }
@@ -169,7 +184,30 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
 
     if(mCircularReader.hasReachedEnd())
     {
-        auto result = mPlugin->getRemainingFeatures();
+        for(size_t index = 0; index < mPlugins.size(); ++index)
+        {
+            auto result = mPlugins[index]->getRemainingFeatures();
+            auto it = result.find(static_cast<int>(feature));
+            if(it != result.end())
+            {
+                for(auto& that : it->second)
+                {
+                    if(!that.hasTimestamp)
+                    {
+                        that.hasTimestamp = true;
+                        that.timestamp = rt;
+                    }
+                    results[index].emplace_back(std::move(that));
+                }
+            }
+        }
+        return false;
+    }
+
+    auto const** block = mCircularReader.getNextBlock();
+    for(size_t index = 0; index < mPlugins.size(); ++index)
+    {
+        auto result = mPlugins[index]->process(block, rt);
         auto it = result.find(static_cast<int>(feature));
         if(it != result.end())
         {
@@ -180,25 +218,10 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<Result>& results)
                     that.hasTimestamp = true;
                     that.timestamp = rt;
                 }
-                results.emplace_back(std::move(that));
+                results[index].emplace_back(std::move(that));
             }
         }
-        return false;
-    }
-
-    auto result = mPlugin->process(mCircularReader.getNextBlock(), rt);
-    auto it = result.find(static_cast<int>(feature));
-    if(it != result.end())
-    {
-        for(auto& that : it->second)
-        {
-            if(!that.hasTimestamp)
-            {
-                that.hasTimestamp = true;
-                that.timestamp = rt;
-            }
-            results.emplace_back(std::move(that));
-        }
+        block += mPlugins[index]->getMinChannelCount();
     }
     return true;
 }
@@ -211,20 +234,21 @@ float Plugin::Processor::getAdvancement() const
 
 Plugin::Output Plugin::Processor::getOutput() const
 {
-    anlStrongAssert(mPlugin != nullptr);
-    if(mPlugin == nullptr)
+    anlStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty() || mPlugins.at(0) == nullptr)
     {
         return {};
     }
 
-    auto const descriptors = mPlugin->getOutputDescriptors();
+    auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
     anlStrongAssert(descriptors.size() > mFeature);
     return descriptors.size() > mFeature ? descriptors[mFeature] : Plugin::Output{};
 }
 
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
 {
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    using namespace Vamp::HostExt;
+    auto* pluginLoader = PluginLoader::getInstance();
     anlStrongAssert(pluginLoader != nullptr);
     if(pluginLoader == nullptr)
     {
@@ -252,7 +276,49 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         throw std::invalid_argument("step size cannot be null");
     }
 
-    auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(audioFormatReader.sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
+    std::vector<std::unique_ptr<Vamp::Plugin>> plugins;
+    auto addAndInitializeInstance = [&](std::unique_ptr<Vamp::Plugin>& plugin, size_t numChannels) -> bool
+    {
+        if(plugin == nullptr)
+        {
+            throw std::runtime_error("allocation failed");
+        }
+
+        auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin.get());
+        if(wrapper != nullptr)
+        {
+            if(auto* adapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
+            {
+                adapter->setWindowType(state.windowType);
+            }
+        }
+
+        auto const descriptors = plugin->getParameterDescriptors();
+        for(auto const& parameter : state.parameters)
+        {
+            if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
+                           {
+                               return descriptor.identifier == parameter.first;
+                           }))
+            {
+                plugin->setParameter(parameter.first, parameter.second);
+            }
+            else
+            {
+                throw std::invalid_argument("invalid parameters");
+            }
+        }
+
+        if(!plugin->initialise(numChannels, state.stepSize, state.blockSize))
+        {
+            return false;
+        }
+        plugins.push_back(std::move(plugin));
+        return true;
+    };
+
+    auto const sampleRate = static_cast<float>(audioFormatReader.sampleRate);
+    auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
     if(instance == nullptr)
     {
         throw std::runtime_error("allocation failed");
@@ -267,39 +333,29 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     {
         throw std::runtime_error("plugin feature is not invalid");
     }
-
-    auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(instance.get());
-    if(wrapper != nullptr)
-    {
-        if(auto* adapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-        {
-            adapter->setWindowType(state.windowType);
-        }
-    }
-
-    auto const descriptors = instance->getParameterDescriptors();
-    for(auto const& parameter : state.parameters)
-    {
-        if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-                       {
-                           return descriptor.identifier == parameter.first;
-                       }))
-        {
-            instance->setParameter(parameter.first, parameter.second);
-        }
-        else
-        {
-            throw std::invalid_argument("invalid parameters");
-        }
-    }
-
-    if(!instance->initialise(static_cast<size_t>(audioFormatReader.numChannels), state.stepSize, state.blockSize))
-    {
-        return nullptr;
-    }
-
     auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
-    auto processor = std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(instance), featureIndex, state));
+
+    auto const maxChannels = instance->getMaxChannelCount();
+    auto numReaderChannels = static_cast<size_t>(audioFormatReader.numChannels);
+    while(instance != nullptr)
+    {
+        auto const numChannels = std::min(maxChannels, numReaderChannels);
+        numReaderChannels -= numChannels;
+        if(!addAndInitializeInstance(instance, numChannels))
+        {
+            return nullptr;
+        }
+        if(numReaderChannels > 0_z)
+        {
+            instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
+            if(instance == nullptr)
+            {
+                throw std::runtime_error("allocation failed");
+            }
+        }
+    }
+    
+    auto processor = std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), featureIndex, state));
     if(processor == nullptr)
     {
         throw std::runtime_error("allocation failed");

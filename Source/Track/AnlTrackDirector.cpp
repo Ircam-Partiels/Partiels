@@ -414,7 +414,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
             }
             else if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning,
                                               "Plugin cannot be loaded",
-                                              "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size or the block size might not be supported. Would you like to use the plugin default value for the block size and the step size?",
+                                              "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size, the block size or the number of channels might not be supported. Would you like to use the plugin default value for the block size and the step size?",
                                               {{"KEYID", mAccessor.getAttr<AttrType::key>().identifier}, {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}, {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}}))
 
             {
