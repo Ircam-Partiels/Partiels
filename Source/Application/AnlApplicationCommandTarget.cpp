@@ -397,7 +397,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(identifier.has_value())
             {
                 auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *identifier);
-                documentDir.endAction(juce::translate("New \"GROUPNAME\" Group").replace("GROUPNAME", groupAcsr.getAttr<Group::AttrType::name>()), ActionState::apply);
+                documentDir.endAction(ActionState::newTransaction, juce::translate("New \"GROUPNAME\" Group").replace("GROUPNAME", groupAcsr.getAttr<Group::AttrType::name>()));
                 if(auto* window = Instance::get().getWindow())
                 {
                     window->moveKeyboardFocusTo(*identifier);
@@ -405,7 +405,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             else
             {
-                documentDir.endAction(juce::translate("New Group"), ActionState::abort);
+                documentDir.endAction(ActionState::abort);
                 AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group cannot be inserted into the document.");
             }
             return true;
@@ -456,7 +456,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     anlStrongAssert(identifier.has_value());
                     if(!identifier.has_value())
                     {
-                        documentDir.endAction(juce::translate("New Track"), ActionState::abort);
+                        documentDir.endAction(ActionState::abort);
                         AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group necessary for the new track cannot be inserted into the document.");
                         return;
                     }
@@ -482,7 +482,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, std::get<0>(position));
                     groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
-                    documentDir.endAction(juce::translate("New \"TRACKNAME\" Track").replace("TRACKNAME", description.name), ActionState::apply);
+                    documentDir.endAction(ActionState::newTransaction, juce::translate("New \"TRACKNAME\" Track").replace("TRACKNAME", description.name));
                     if(auto* window = Instance::get().getWindow())
                     {
                         window->moveKeyboardFocusTo(*identifier);
@@ -490,7 +490,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 }
                 else
                 {
-                    documentDir.endAction(juce::translate("New Track"), ActionState::abort);
+                    documentDir.endAction(ActionState::abort);
                 }
             };
 
@@ -532,11 +532,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 documentDir.startAction();
                 if(documentDir.removeTrack(*focusedTrack, NotificationType::synchronous))
                 {
-                    documentDir.endAction(juce::translate("Remove Track"), ActionState::apply);
+                    documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Track"));
                 }
                 else
                 {
-                    documentDir.endAction(juce::translate("Remove Track"), ActionState::abort);
+                    documentDir.endAction(ActionState::abort);
                 }
             }
             else if(focusedGroup.has_value())
@@ -551,11 +551,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 documentDir.startAction();
                 if(documentDir.removeGroup(*focusedGroup, NotificationType::synchronous))
                 {
-                    documentDir.endAction(juce::translate("Remove Group").replace("GROUPNAME", groupName), ActionState::apply);
+                    documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group").replace("GROUPNAME", groupName));
                 }
                 else
                 {
-                    documentDir.endAction(juce::translate("Remove  Group").replace("GROUPNAME", groupName), ActionState::abort);
+                    documentDir.endAction(ActionState::abort);
                 }
             }
             return true;
@@ -576,7 +576,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
             documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
-            documentDir.endAction("Load template", ActionState::apply);
+            documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
             return true;
         }
 

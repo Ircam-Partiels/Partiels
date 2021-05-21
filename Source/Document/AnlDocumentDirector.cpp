@@ -233,7 +233,7 @@ void Document::Director::startAction()
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
 }
 
-void Document::Director::endAction(juce::String const& name, ActionState state)
+void Document::Director::endAction(ActionState state, juce::String const& name)
 {
     if(mAccessor.isEquivalentTo(mSavedState))
     {
@@ -276,15 +276,20 @@ void Document::Director::endAction(juce::String const& name, ActionState state)
     {
         switch(state)
         {
-            case ActionState::apply:
+            case ActionState::abort:
+            {
+                action->undo();
+            }
+            break;
+            case ActionState::newTransaction:
             {
                 mUndoManager.beginNewTransaction(name);
                 mUndoManager.perform(action.release());
             }
             break;
-            case ActionState::abort:
+            case ActionState::continueTransaction:
             {
-                action->undo();
+                mUndoManager.perform(action.release());
             }
             break;
         }

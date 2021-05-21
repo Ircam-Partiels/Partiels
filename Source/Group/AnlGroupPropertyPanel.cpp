@@ -11,7 +11,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                 {
                     mDirector.startAction();
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
-                    mDirector.endAction(juce::translate("Change track name"), ActionState::apply);
+                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change track name"));
                 })
 , mPropertyBackgroundColour(
       "Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
@@ -23,7 +23,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
           mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
-              mDirector.endAction(juce::translate("Change group background color"), ActionState::apply);
+              mDirector.endAction(ActionState::newTransaction, juce::translate("Change group background color"));
           }
       },
       [&]()
@@ -32,7 +32,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
       },
       [&]()
       {
-          mDirector.endAction(juce::translate("Change group background color"), ActionState::apply);
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change group background color"));
       })
 , mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
                          {

@@ -25,7 +25,7 @@ namespace Document
         void sanitize(NotificationType const notification);
 
         void startAction();
-        void endAction(juce::String const& name, ActionState state);
+        void endAction(ActionState state, juce::String const& name = {});
 
         std::optional<juce::String> addTrack(juce::String const groupIdentifer, size_t position, NotificationType const notification);
         bool removeTrack(juce::String const identifier, NotificationType const notification);

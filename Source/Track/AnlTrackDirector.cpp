@@ -313,7 +313,7 @@ void Track::Director::startAction()
     mIsPerformingAction = true;
 }
 
-void Track::Director::endAction(juce::String const& name, ActionState state)
+void Track::Director::endAction(ActionState state, juce::String const& name)
 {
     anlStrongAssert(mIsPerformingAction == true);
     if(mAccessor.isEquivalentTo(mSavedState))
@@ -358,15 +358,20 @@ void Track::Director::endAction(juce::String const& name, ActionState state)
     {
         switch(state)
         {
-            case ActionState::apply:
+            case ActionState::abort:
+            {
+                action->undo();
+            }
+            break;
+            case ActionState::newTransaction:
             {
                 mUndoManager.beginNewTransaction(name);
                 mUndoManager.perform(action.release());
             }
             break;
-            case ActionState::abort:
+            case ActionState::continueTransaction:
             {
-                action->undo();
+                mUndoManager.perform(action.release());
             }
             break;
         }
@@ -454,7 +459,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
                 mAccessor.setAttr<AttrType::state>(defaultState, notification);
                 if(!isPerformingAction)
                 {
-                    endAction("Restore track factory properties", ActionState::apply);
+                    endAction(ActionState::newTransaction, juce::translate("Restore track factory properties"));
                 }
             }
         }

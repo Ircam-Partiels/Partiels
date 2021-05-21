@@ -154,7 +154,7 @@ Application::Interface::Loader::Loader()
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
             documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
-            documentDir.endAction("Load template", ActionState::apply);
+            documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
         }
     };
 

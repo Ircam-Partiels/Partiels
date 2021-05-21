@@ -17,7 +17,7 @@ namespace Group
         Accessor& getAccessor();
 
         void startAction();
-        void endAction(juce::String const& name, ActionState state);
+        void endAction(ActionState state, juce::String const& name = {});
 
         Track::Director& getTrackDirector(juce::String const& identifier) override;
 

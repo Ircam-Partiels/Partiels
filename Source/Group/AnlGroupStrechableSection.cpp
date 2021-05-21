@@ -72,7 +72,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
         auto const trackName = trackAcsr.has_value() ? trackAcsr->get().getAttr<Track::AttrType::name>() : "-";
         auto const groupName = mAccessor.getAttr<AttrType::name>();
-        mDirector.endAction(juce::translate("Move \"TRACKNAME\" Track in the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName), ActionState::apply);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Move \"TRACKNAME\" Track in the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName));
     };
 
     mBoundsListener.onComponentResized = [&](juce::Component& component)

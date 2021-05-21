@@ -279,12 +279,12 @@ void Document::Section::updateLayout()
                     auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
                     auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
                     auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
-                    mDirector.endAction(juce::translate("Move \"TRACKNAME\" Track to the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName), ActionState::apply);
+                    mDirector.endAction(ActionState::newTransaction, juce::translate("Move \"TRACKNAME\" Track to the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName));
                     moveKeyboardFocusTo(identifier);
                 }
                 else
                 {
-                    mDirector.endAction(juce::translate("Move Track"), ActionState::abort);
+                    mDirector.endAction(ActionState::abort);
                 }
             };
         }

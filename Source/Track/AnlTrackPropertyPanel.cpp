@@ -13,7 +13,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 {
                     mDirector.startAction();
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
-                    mDirector.endAction(juce::translate("Change track name"), ActionState::apply);
+                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change track name"));
                 })
 
 , mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [&](size_t index)
@@ -22,7 +22,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                           auto state = mAccessor.getAttr<AttrType::state>();
                           state.windowType = static_cast<Plugin::WindowType>(index);
                           mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                          mDirector.endAction(juce::translate("Change track window type"), ActionState::apply);
+                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window type"));
                       })
 , mPropertyWindowSize("Window Size", "The window size of the FFT.", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [&](size_t index)
                       {
@@ -32,7 +32,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                           state.blockSize = static_cast<size_t>(std::pow(2.0, static_cast<int>(index) + 3));
                           state.stepSize = state.blockSize / overlapping;
                           mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                          mDirector.endAction(juce::translate("Change track window size"), ActionState::apply);
+                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window size"));
                       })
 , mPropertyWindowOverlapping("Window Overlapping", "The window overlapping of the FFT.", "x", std::vector<std::string>{}, [&](size_t index)
                              {
@@ -40,7 +40,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                  auto state = mAccessor.getAttr<AttrType::state>();
                                  state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
                                  mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                                 mDirector.endAction(juce::translate("Change track window overlapping"), ActionState::apply);
+                                 mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window overlapping"));
                              })
 , mPropertyBlockSize("Block Size", "The block size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
                      {
@@ -48,7 +48,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                          auto state = mAccessor.getAttr<AttrType::state>();
                          state.blockSize = static_cast<size_t>(value);
                          mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                         mDirector.endAction(juce::translate("Change track block size"), ActionState::apply);
+                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track block size"));
                      })
 , mPropertyStepSize("Step Size", "The step size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
                     {
@@ -56,7 +56,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         auto state = mAccessor.getAttr<AttrType::state>();
                         state.stepSize = static_cast<size_t>(value);
                         mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                        mDirector.endAction(juce::translate("Change track step size"), ActionState::apply);
+                        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track step size"));
                     })
 , mPropertyPreset("Preset", "The preset of the track", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
                   {
@@ -66,7 +66,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                           {
                               mDirector.startAction();
                               mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
-                              mDirector.endAction(juce::translate("Restore track factory properties"), ActionState::apply);
+                              mDirector.endAction(ActionState::newTransaction, juce::translate("Restore track factory properties"));
                           }
                           break;
                           case 1:
@@ -87,12 +87,12 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                       auto const result = Exporter::fromPreset(mAccessor, fc.getResult());
                                       if(result.failed())
                                       {
-                                          mDirector.endAction(juce::translate("Load track properties from preset file"), ActionState::abort);
+                                          mDirector.endAction(ActionState::abort);
                                           AlertWindow::showMessage(AlertWindow::MessageType::warning, "Load from preset failed!", result.getErrorMessage());
                                       }
                                       else
                                       {
-                                          mDirector.endAction(juce::translate("Load track properties from preset file"), ActionState::apply);
+                                          mDirector.endAction(ActionState::newTransaction, juce::translate("Load track properties from preset file"));
                                       }
                                   }
                                   break;
@@ -118,7 +118,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               auto const it = std::next(programs.cbegin(), static_cast<long>(index));
                               mDirector.startAction();
                               mAccessor.setAttr<AttrType::state>(it->second, NotificationType::synchronous);
-                              mDirector.endAction(juce::translate("Apply track preset properties"), ActionState::apply);
+                              mDirector.endAction(ActionState::newTransaction, juce::translate("Apply track preset properties"));
                           }
                           break;
                       };
@@ -131,7 +131,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                          auto colours = mAccessor.getAttr<AttrType::colours>();
                          colours.map = static_cast<ColourMap>(index);
                          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                         mDirector.endAction(juce::translate("Change track color map"), ActionState::apply);
+                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track color map"));
                      })
 , mPropertyColourMapAlpha("Transparency", "The transparency of the graphical renderer", "", {0.0f, 1.0f}, 0.0f, [&](float value)
                           {
@@ -139,7 +139,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               auto colours = mAccessor.getAttr<AttrType::colours>();
                               colours.background = juce::Colours::black.withAlpha(value);
                               mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                              mDirector.endAction(juce::translate("Change track transparency"), ActionState::apply);
+                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track transparency"));
                           })
 , mPropertyForegroundColour(
       "Foreground Color", "The foreground current color of the graphical renderer.", "Select the foreground color", [&](juce::Colour const& colour)
@@ -153,7 +153,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
           mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
           if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
           {
-              mDirector.endAction(juce::translate("Change track foreground color"), ActionState::apply);
+              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
           }
       },
       [&]()
@@ -162,7 +162,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
       },
       [&]()
       {
-          mDirector.endAction(juce::translate("Change track foreground color"), ActionState::apply);
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
       })
 , mPropertyBackgroundColour(
       "Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
@@ -176,7 +176,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
           mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
-              mDirector.endAction(juce::translate("Change track background color"), ActionState::apply);
+              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
           }
       },
       [&]()
@@ -185,7 +185,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
       },
       [&]()
       {
-          mDirector.endAction(juce::translate("Change track background color"), ActionState::apply);
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
       })
 , mPropertyTextColour(
       "Text Color", "The text current color of the graphical renderer.", "Select the text color", [&](juce::Colour const& colour)
@@ -199,7 +199,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
           mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
           if(!mPropertyTextColour.entry.isColourSelectorVisible())
           {
-              mDirector.endAction(juce::translate("Change track text color"), ActionState::apply);
+              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
           }
       },
       [&]()
@@ -208,7 +208,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
       },
       [&]()
       {
-          mDirector.endAction(juce::translate("Change track text color"), ActionState::apply);
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
       })
 , mPropertyShadowColour(
       "Shadow Color", "The shadow current color of the graphical renderer.", "Select the shadow color", [&](juce::Colour const& colour)
@@ -222,7 +222,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
           mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
           if(!mPropertyShadowColour.entry.isColourSelectorVisible())
           {
-              mDirector.endAction(juce::translate("Change track shadow color"), ActionState::apply);
+              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
           }
       },
       [&]()
@@ -231,7 +231,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
       },
       [&]()
       {
-          mDirector.endAction(juce::translate("Change track shadow color"), ActionState::apply);
+          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
       })
 , mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Plugin", "Results", "Manual"}, [&](size_t index)
                           {
@@ -246,7 +246,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                   auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, *globalRange);
                                   zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*globalRange, NotificationType::synchronous);
                                   zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
-                                  mDirector.endAction(juce::translate("Change track minimum and maximum values"), ActionState::apply);
+                                  mDirector.endAction(ActionState::newTransaction, juce::translate("Change track minimum and maximum values"));
                               };
 
                               switch(index)
@@ -271,7 +271,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                              auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                              auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), static_cast<double>(value) + 1.0);
                              zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(value), end}, NotificationType::synchronous);
-                             mDirector.endAction(juce::translate("Change track minimum value"), ActionState::apply);
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track minimum value"));
                          })
 , mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
                          {
@@ -279,20 +279,20 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                              auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                              auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), static_cast<double>(value) - 1.0);
                              zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{start, static_cast<double>(value)}, NotificationType::synchronous);
-                             mDirector.endAction(juce::translate("Change track maximum value"), ActionState::apply);
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track maximum value"));
                          })
 , mPropertyValueRange("Value Range", "The range of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
                       {
                           mDirector.startAction();
                           auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                           zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
-                          mDirector.endAction(juce::translate("Change track value range"), ActionState::apply);
+                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                       })
 , mPropertyRangeLink("Range Link", "Toggle the group link for zoom range.", [&](bool value)
                      {
                          mDirector.startAction();
                          mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
-                         mDirector.endAction(juce::translate("Change range link state"), ActionState::apply);
+                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change range link state"));
                      })
 , mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 , mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
@@ -671,7 +671,7 @@ void Track::PropertyPanel::applyParameterValue(Plugin::Parameter const& paramete
     anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
     state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
     mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-    mDirector.endAction(juce::translate("Change track property"), ActionState::apply);
+    mDirector.endAction(ActionState::newTransaction, juce::translate("Change track property"));
 }
 
 void Track::PropertyPanel::updatePresets()
@@ -778,7 +778,7 @@ void Track::PropertyPanel::showChannelLayout()
     auto const result = menu.showAt(&mPropertyChannelLayout.entry);
     if(result == 0 && std::exchange(mChannelLayoutActionStarted, false))
     {
-        mDirector.endAction("Change track channels layout", ActionState::apply);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track channels layout"));
     }
 }
 

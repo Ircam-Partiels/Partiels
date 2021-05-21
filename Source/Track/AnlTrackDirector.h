@@ -19,7 +19,7 @@ namespace Track
         Accessor& getAccessor();
 
         void startAction();
-        void endAction(juce::String const& name, ActionState state);
+        void endAction(ActionState state, juce::String const& name = {});
 
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
 

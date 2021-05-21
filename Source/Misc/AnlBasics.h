@@ -53,7 +53,7 @@ namespace Format
         auto const ms = static_cast<int>(std::floor(time * 1000.0));
         return juce::String::formatted("%02d" + separators[0] + "%02d" + separators[1] + "%02d" + separators[2] + "%03d" + separators[3], h, m, s, ms);
     }
-    
+
     inline std::string withFirstCharUpperCase(std::string text)
     {
         text[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(text[0_z])));
@@ -87,10 +87,11 @@ enum class AlertType : bool
     , window = true
 };
 
-enum class ActionState : bool
+enum class ActionState
 {
       abort
-    , apply
+    , newTransaction
+    , continueTransaction
 };
 // clang-format on
 
