@@ -45,6 +45,37 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
     return DisplayType::points;
 }
 
+size_t Track::Tools::getNumColumns(Accessor const& acsr)
+{
+    auto const& results = acsr.getAttr<AttrType::results>();
+    if(results.isEmpty())
+    {
+        return 0_z;
+    }
+    if(auto markers = results.getMarkers())
+    {
+        return std::accumulate(markers->cbegin(), markers->cend(), 0_z, [](auto const& val, auto const& channel)
+                               {
+                                   return std::max(val, channel.size());
+                               });
+    }
+    if(auto points = results.getPoints())
+    {
+        return std::accumulate(points->cbegin(), points->cend(), 0_z, [](auto const& val, auto const& channel)
+                               {
+                                   return std::max(val, channel.size());
+                               });
+    }
+    if(auto columns = results.getColumns())
+    {
+        return std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
+                               {
+                                   return std::max(val, channel.size());
+                               });
+    }
+    return 0_z;
+}
+
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
 {
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
