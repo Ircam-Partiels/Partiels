@@ -15,7 +15,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     addAndMakeVisible(mDropdownButton);
     mDropdownButton.setWantsKeyboardFocus(false);
 
-    mPropertiesButton.setTooltip(juce::translate("Change the group properties"));
+    mPropertiesButton.setTooltip(juce::translate("Change the group and tracks' properties"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
@@ -23,22 +23,55 @@ Group::Thumbnail::Thumbnail(Director& director)
     {
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
-
-    mPropertiesButton.onClick = [this]()
+    
+    auto getPropertiesMenu = [&]()
     {
-        auto var = std::make_unique<juce::DynamicObject>();
-        if(var != nullptr)
+        juce::PopupMenu menu;
+        menu.addItem("Change the group properties", [&]()
         {
-            auto const center = mPropertiesButton.getScreenBounds().getCentre();
-            var->setProperty("x", center.x);
-            var->setProperty("y", center.y - 40);
-            mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
+            if(auto var = std::make_unique<juce::DynamicObject>())
+            {
+                auto const position = juce::Desktop::getInstance().getMousePosition();
+                var->setProperty("x", position.x);
+                var->setProperty("y", position.y - 40);
+                mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
+            }
+        });
+        auto const layout = mAccessor.getAttr<AttrType::layout>();
+        for(auto const& identifier : layout)
+        {
+            auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+            if(trackAcsr.has_value())
+            {
+                auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+                menu.addItem(juce::translate("Show TRACKNAME properties").replace("TRACKNAME", trackName), [=]
+                {
+                    if(auto var = std::make_unique<juce::DynamicObject>())
+                    {
+                        auto const position = juce::Desktop::getInstance().getMousePosition();
+                        var->setProperty("x", position.x);
+                        var->setProperty("y", position.y - 40);
+                        trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                    }
+                });
+            }
         }
+        return menu;
+    };
+    
+    mPropertiesButton.onClick = [=, this]()
+    {
+        auto menu = getPropertiesMenu();
+        menu.showAt(&mPropertiesButton);
     };
 
     mDropdownButton.onClick = [=, this]()
     {
         juce::PopupMenu menu;
+        if(!mPropertiesButton.isVisible())
+        {
+            menu = getPropertiesMenu();
+        }
         auto addItem = [&](juce::Button& button)
         {
             if(!button.isVisible())
@@ -46,7 +79,6 @@ Group::Thumbnail::Thumbnail(Director& director)
                 menu.addItem(button.getTooltip(), button.onClick);
             }
         };
-        addItem(mPropertiesButton);
         addItem(mExpandButton);
         menu.showAt(&mDropdownButton);
     };
