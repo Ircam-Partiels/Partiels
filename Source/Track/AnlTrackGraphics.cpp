@@ -1,4 +1,5 @@
 #include "AnlTrackGraphics.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,8 +35,8 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
-    auto const width = static_cast<int>(columns->at(0).size());
-    auto const height = static_cast<int>(std::get<2>(columns->at(0).front()).size());
+    auto const width = static_cast<int>(Tools::getNumColumns(accessor));
+    auto const height = static_cast<int>(Tools::getNumBins(accessor));
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
@@ -77,18 +78,13 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             }
 
                                             anlStrongAssert(imageWidth > 0 && imageHeight > 0);
-                                            if(imageWidth <= 0 || imageHeight <= 0)
+                                            if(imageWidth <= 0 || imageHeight <= 0 || width <= 0 || height <= 0)
                                             {
                                                 return {};
                                             }
 
-                                            auto const numColumns = static_cast<int>(channel.size());
-                                            auto const numRows = static_cast<int>(std::get<2>(channel.front()).size());
-                                            anlStrongAssert(numColumns > 0 && numRows > 0 && numColumns >= width && numRows >= imageHeight);
-                                            if(numColumns <= 0 || numRows <= 0)
-                                            {
-                                                return {};
-                                            }
+                                            auto const numColumns = width;
+                                            auto const numRows = height;
                                             imageWidth = std::min(numColumns, imageWidth);
                                             imageHeight = std::min(numRows, imageHeight);
 
@@ -116,21 +112,34 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             for(int i = 0; i < imageWidth && predicate(); ++i)
                                             {
                                                 auto* pixel = data + static_cast<size_t>(i) * pixelStride + columnStride;
-                                                auto const columnIndex = std::min(static_cast<size_t>(std::round(i * wd)), static_cast<size_t>(numColumns - 1));
-                                                auto const& values = std::get<2>(channel.at(columnIndex));
-                                                auto const valuesSize = values.size();
-                                                for(int j = 0; j < imageHeight; ++j)
+                                                auto const columnIndex = static_cast<size_t>(std::round(i * wd));
+                                                if(columnIndex >= channel.size())
                                                 {
-                                                    auto const rowIndex = std::min(static_cast<size_t>(std::round(j * hd)), static_cast<size_t>(numRows - 1));
-                                                    if(rowIndex >= valuesSize)
+                                                    for(int j = 0; j < imageHeight; ++j)
                                                     {
-                                                        anlDebug("Track::Graphics::Process", "inconsistent values at [" + juce::String(columnIndex) + "][" + juce::String(rowIndex) + "]");
+                                                        reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
+                                                        pixel -= lineStride;
                                                     }
-                                                    auto const& value = rowIndex < valuesSize ? values.at(rowIndex) : valueStart;
-                                                    auto const colorIndex = std::min(std::max(static_cast<size_t>(std::ceil(value - valueStart) * valueScale), 0_z), colours.size() - 1_z);
-                                                    reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
-                                                    pixel -= lineStride;
                                                 }
+                                                else
+                                                {
+                                                    auto const& values = std::get<2>(channel.at(columnIndex));
+                                                    for(int j = 0; j < imageHeight; ++j)
+                                                    {
+                                                        auto const rowIndex = static_cast<size_t>(std::round(j * hd));
+                                                        if(rowIndex >= values.size())
+                                                        {
+                                                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[0_z]);
+                                                        }
+                                                        else
+                                                        {
+                                                            auto const colorIndex = std::min(std::max(static_cast<size_t>(std::ceil(values.at(rowIndex) - valueStart) * valueScale), 0_z), colours.size() - 1_z);
+                                                            reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
+                                                        }
+                                                        pixel -= lineStride;
+                                                    }
+                                                }
+                                                
                                                 advancement = static_cast<float>(i) / static_cast<float>(imageWidth);
                                             }
                                             advancement = 1.0f;
@@ -156,17 +165,13 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                                              return mRenderingState.load() != ProcessState::aborted;
                                                                          });
 
-                                                if(image.isNull())
+                                                if(image.isValid())
                                                 {
-                                                    mRenderingState = ProcessState::aborted;
+                                                    std::unique_lock<std::mutex> imageLock(mMutex);
+                                                    mImages[channel].push_back(image);
+                                                    imageLock.unlock();
                                                     triggerAsyncUpdate();
-                                                    return;
                                                 }
-
-                                                std::unique_lock<std::mutex> imageLock(mMutex);
-                                                mImages[channel].push_back(image);
-                                                imageLock.unlock();
-                                                triggerAsyncUpdate();
 
                                                 mAdvancement.store(0.05f * (static_cast<float>(channel) / static_cast<float>(numChannels)));
                                             }
@@ -186,38 +191,35 @@ void Track::Graphics::runRendering(Accessor const& accessor)
 
                                             tempImages.push_back(image);
                                             mAdvancement.store(0.98f * (static_cast<float>(channel) / static_cast<float>(numChannels)));
-                                            if(image.isNull())
-                                            {
-                                                mRenderingState = ProcessState::aborted;
-                                                triggerAsyncUpdate();
-                                                return;
-                                            }
                                         }
                                         mAdvancement.store(0.98f);
 
                                         for(size_t channel = 0; channel < numChannels; ++channel)
                                         {
                                             auto const& image = tempImages[channel];
-                                            for(int i = maxImageSize; i < dimension; i *= 2)
+                                            if(image.isValid())
                                             {
-                                                auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
+                                                for(int i = maxImageSize; i < dimension; i *= 2)
+                                                {
+                                                    auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
+                                                    std::unique_lock<std::mutex> imageLock(mMutex);
+                                                    if(i == maxImageSize)
+                                                    {
+                                                        mImages[channel] = {rescaledImage};
+                                                    }
+                                                    else
+                                                    {
+                                                        mImages[channel].push_back(rescaledImage);
+                                                    }
+                                                    imageLock.unlock();
+                                                    triggerAsyncUpdate();
+                                                    mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
+                                                }
+                                                
                                                 std::unique_lock<std::mutex> imageLock(mMutex);
-                                                if(i == maxImageSize)
-                                                {
-                                                    mImages[channel] = {rescaledImage};
-                                                }
-                                                else
-                                                {
-                                                    mImages[channel].push_back(rescaledImage);
-                                                }
+                                                mImages[channel].push_back(image);
                                                 imageLock.unlock();
-                                                triggerAsyncUpdate();
-                                                mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
                                             }
-
-                                            std::unique_lock<std::mutex> imageLock(mMutex);
-                                            mImages[channel].push_back(image);
-                                            imageLock.unlock();
                                         }
 
                                         mAdvancement.store(1.0f);
