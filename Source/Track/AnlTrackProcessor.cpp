@@ -108,7 +108,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                                                                                     });
                                                                          if(it != channelResults.cend())
                                                                          {
-                                                                             return val + it->values.size();
+                                                                             return std::max(val, it->values.size());
                                                                          }
                                                                          return val;
                                                                      });
