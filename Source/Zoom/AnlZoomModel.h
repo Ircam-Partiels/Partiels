@@ -7,22 +7,23 @@ ANALYSE_FILE_BEGIN
 namespace Zoom
 {
     using Range = juce::Range<double>;
-    
+
     static auto constexpr lowest()
     {
         return static_cast<double>(std::numeric_limits<float>::lowest());
     }
-    
+
     static auto constexpr max()
     {
         return static_cast<double>(std::numeric_limits<float>::max());
     }
-    
+
     static auto constexpr epsilon()
     {
         return static_cast<double>(std::numeric_limits<float>::epsilon());
     }
-    
+
+    // clang-format off
     enum class AttrType : size_t
     {
           globalRange
@@ -37,18 +38,19 @@ namespace Zoom
     , Model::Attr<AttrType::visibleRange, Range, Model::Flag::basic>
     , Model::Attr<AttrType::anchor, std::tuple<bool, double>, Model::Flag::notifying>
     >;
-    
+    // clang-format on
+
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
-        
+
         Accessor(Range const range = {0.0, 0.0}, double const length = 0.0)
         : Accessor(AttrContainer({range}, {length}, {range}, {{range.getStart(), false}}))
         {
         }
-        
+
         template <attr_enum_type type, typename value_v>
         void setAttr(value_v const& value, NotificationType notification)
         {
@@ -72,10 +74,10 @@ namespace Zoom
                 setAttr<AttrType::anchor, std::tuple<bool, double>>(getAttr<AttrType::anchor>(), notification);
             }
         }
-        
+
     private:
         static Range sanitize(Range const& visible, Range const& global, double minLength);
     };
-}
+} // namespace Zoom
 
 ANALYSE_FILE_END

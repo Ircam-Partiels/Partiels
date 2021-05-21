@@ -11,26 +11,29 @@ namespace Zoom
     , private juce::ScrollBar::Listener
     {
     public:
+        // clang-format off
         enum Orientation : bool
         {
               vertical
             , horizontal
         };
-        
+        // clang-format on
+
         ScrollBar(Accessor& accessor, Orientation orientation, bool isInversed = false);
         ~ScrollBar() override;
-        
+
         // juce::Component
-        void resized() override;        
+        void resized() override;
+
     private:
         // juce::ScrollBar::Listener
         void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
-        
+
         Accessor& mAccessor;
         Accessor::Listener mListener;
         juce::ScrollBar mScrollBar;
         bool const mIsInversed;
     };
-}
+} // namespace Zoom
 
 ANALYSE_FILE_END
