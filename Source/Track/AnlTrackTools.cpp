@@ -389,8 +389,14 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
     {
         return std::optional<Zoom::Range>();
     }
-    auto const& channel = columns->at(0);
-    return Zoom::Range(0.0, static_cast<double>(channel.size()));
+    auto const size = std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
+                                      {
+                                          return std::accumulate(channel.cbegin(), channel.cend(), val, [](auto const& rval, auto const& column)
+                                                                 {
+                                                                     return std::max(rval, std::get<2>(column).size());
+                                                                 });
+                                      });
+    return Zoom::Range(0.0, static_cast<double>(size));
 }
 
 ANALYSE_FILE_END
