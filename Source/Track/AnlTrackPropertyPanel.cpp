@@ -731,23 +731,19 @@ void Track::PropertyPanel::showChannelLayout()
         auto const allActive = numChannels != numVisibleChannels;
         menu.addItem(juce::translate("All Channels"), allActive, !allActive, [this]()
                      {
-                         mDirector.startAction();
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          std::fill(copy.begin(), copy.end(), true);
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                         mDirector.endAction("Change track channels layout", ActionState::apply);
                          showChannelLayout();
                      });
 
         auto const oneActive = !channelsLayout[0_z] || numVisibleChannels > 1_z;
         menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [this]()
                      {
-                         mDirector.startAction();
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          copy[0_z] = true;
                          std::fill(std::next(copy.begin()), copy.end(), false);
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                         mDirector.endAction("Change track channels layout", ActionState::apply);
                          showChannelLayout();
                      });
     }
@@ -755,7 +751,6 @@ void Track::PropertyPanel::showChannelLayout()
     {
         menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelsLayout[channel], [this, channel]()
                      {
-                         mDirector.startAction();
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          copy[channel] = !copy[channel];
                          if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
@@ -773,11 +768,18 @@ void Track::PropertyPanel::showChannelLayout()
                              }
                          }
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                         mDirector.endAction("Change track channels layout", ActionState::apply);
                          showChannelLayout();
                      });
     }
-    menu.showAt(&mPropertyChannelLayout.entry);
+    if(!std::exchange(mChannelLayoutActionStarted, true))
+    {
+        mDirector.startAction();
+    }
+    auto const result = menu.showAt(&mPropertyChannelLayout.entry);
+    if(result == 0 && std::exchange(mChannelLayoutActionStarted, false))
+    {
+        mDirector.endAction("Change track channels layout", ActionState::apply);
+    }
 }
 
 ANALYSE_FILE_END

@@ -73,6 +73,7 @@ namespace Track
                                        juce::translate("The plugin information")};
 
         juce::Viewport mViewport;
+        bool mChannelLayoutActionStarted{false};
         static auto constexpr sInnerWidth = 300;
     };
 } // namespace Track
