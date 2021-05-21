@@ -261,12 +261,42 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     auto const& colours = accessor.getAttr<AttrType::colours>();
     auto const& unit = accessor.getAttr<AttrType::description>().output.unit;
 
+    auto const font = g.getCurrentFont();
+    auto const fontAscent = font.getAscent();
+    auto const fontDescent = font.getDescent();
+
     auto constexpr epsilonPixel = 1.0f;
     auto const clipBounds = g.getClipBounds();
     auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(clipBounds.getX()) - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(clipBounds.getRight()) + epsilonPixel, timeRange, fbounds);
 
     auto const& channelResults = points->at(channel);
+    if(channelResults.size() == 1_z)
+    {
+        if(std::get<2>(channelResults[0]).has_value())
+        {
+            auto const value = *std::get<2>(channelResults[0]);
+            auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+
+            if(!colours.shadow.isTransparent())
+            {
+                g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
+                g.drawLine(fbounds.getX(), y + 2.f, fbounds.getRight(), y + 2.f);
+                g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
+                g.drawLine(fbounds.getX(), y + 1.f, fbounds.getRight(), y + 1.f);
+            }
+            g.setColour(colours.foreground);
+            g.drawLine(fbounds.getX(), y, fbounds.getRight(), y);
+
+            if(!colours.text.isTransparent())
+            {
+                g.setColour(colours.text);
+                g.drawSingleLineText(juce::String(value, 2) + unit, 4, static_cast<int>(y - fontDescent) - 2, juce::Justification::left);
+            }
+        }
+        return;
+    }
+
     auto it = Tools::findFirstAt(channelResults, globalRange, clipTimeStart);
     if(it != channelResults.cbegin())
     {
@@ -283,9 +313,6 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     labelInfo labelInfoHigh;
     std::vector<labelInfo> labels;
 
-    auto const font = g.getCurrentFont();
-    auto const fontAscent = font.getAscent();
-    auto const fontDescent = font.getDescent();
     auto insertLabel = [&](int x, float y, float value)
     {
         auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
