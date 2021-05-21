@@ -4,8 +4,8 @@ ANALYSE_FILE_BEGIN
 
 Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
 {
-    auto const results = acsr.getAttr<AttrType::results>();
-    if(results.isEmpty())
+    auto const& results = acsr.getAttr<AttrType::results>();
+    if(!results.isEmpty())
     {
         if(results.getMarkers() != nullptr)
         {
