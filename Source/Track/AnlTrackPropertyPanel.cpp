@@ -316,6 +316,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::key:
                 break;
             case AttrType::description:
+            case AttrType::results:
             {
                 auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<juce::Component>
                 {
@@ -509,11 +510,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 }
 
                 updatePresets();
-            }
-            break;
-            case AttrType::results:
-            {
-                updateZoomMode();
             }
             break;
             case AttrType::graphics:
