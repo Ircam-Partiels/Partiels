@@ -181,6 +181,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             }
             break;
             case Zoom::AttrType::visibleRange:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
         }

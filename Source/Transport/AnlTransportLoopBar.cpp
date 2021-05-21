@@ -25,7 +25,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
             {
                 clearCurrentRange();
             }
-                break;
+            break;
             case AttrType::loopRange:
             {
                 clearCurrentRange();
@@ -36,7 +36,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
                 break;
         }
     };
-    
+
     mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType const attribute)
     {
         juce::ignoreUnused(acsr);
@@ -44,16 +44,17 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:
             {
                 repaint();
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
@@ -138,28 +139,27 @@ void Transport::LoopBar::mouseDrag(juce::MouseEvent const& event)
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
             mAccessor.setAttr<AttrType::loopRange>(juce::Range<double>::between(mCickTime, time), NotificationType::synchronous);
         }
-            break;
+        break;
         case EditMode::drag:
         {
             auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.getDistanceFromDragStartX()) - timeRange.getStart();
             mAccessor.setAttr<AttrType::loopRange>(mSavedRange + time, NotificationType::synchronous);
         }
-            break;
+        break;
         case EditMode::resizeLeft:
         {
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
             mAccessor.setAttr<AttrType::loopRange>(mSavedRange.withStart(time), NotificationType::synchronous);
         }
-            break;
+        break;
         case EditMode::resizeRight:
         {
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
             mAccessor.setAttr<AttrType::loopRange>(mSavedRange.withEnd(time), NotificationType::synchronous);
         }
-            break;
+        break;
     }
-    
 }
 
 void Transport::LoopBar::mouseUp(juce::MouseEvent const& event)

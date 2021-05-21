@@ -574,6 +574,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             }
             break;
             case Zoom::AttrType::anchor:
+            case Zoom::AttrType::gridInfo:
                 break;
         }
     };
@@ -590,6 +591,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             break;
             case Zoom::AttrType::minimumLength:
             case Zoom::AttrType::visibleRange:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
         }

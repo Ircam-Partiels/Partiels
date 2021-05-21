@@ -170,8 +170,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 }
             }
             break;
-            case Zoom::AttrType::minimumLength:
-                break;
             case Zoom::AttrType::visibleRange:
             {
                 runRendering();
@@ -181,6 +179,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 }
             }
             break;
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
         }
@@ -201,6 +201,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             }
             break;
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
         }
@@ -240,6 +241,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             }
             break;
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
         }

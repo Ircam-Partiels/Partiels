@@ -19,21 +19,21 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
                 mStartPlayhead = acsr.getAttr<AttrType::startPlayhead>();
                 repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
             }
-                break;
+            break;
             case AttrType::runningPlayhead:
             {
                 repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
                 mRunningPlayhead = acsr.getAttr<AttrType::runningPlayhead>();
                 repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
             }
-                break;
+            break;
             case AttrType::looping:
             case AttrType::loopRange:
             case AttrType::gain:
                 break;
         }
     };
-    
+
     mZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType const attribute)
     {
         juce::ignoreUnused(acsr);
@@ -41,16 +41,17 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:
             {
                 repaint();
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }

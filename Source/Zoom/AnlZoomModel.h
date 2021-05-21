@@ -23,12 +23,30 @@ namespace Zoom
         return static_cast<double>(std::numeric_limits<float>::epsilon());
     }
 
+    struct GridInfo
+    {
+        double tickReference{0.0};
+        double ticksSpacing{1.0};
+        size_t largeTickInterval{0_z};
+
+        inline bool operator==(GridInfo const& rhd) const noexcept
+        {
+            return std::abs(tickReference - rhd.tickReference) < std::numeric_limits<double>::epsilon() && std::abs(ticksSpacing - rhd.ticksSpacing) < std::numeric_limits<double>::epsilon() && largeTickInterval == rhd.largeTickInterval;
+        }
+
+        inline bool operator!=(GridInfo const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+
     // clang-format off
     enum class AttrType : size_t
     {
           globalRange
         , minimumLength
         , visibleRange
+        , gridInfo
         , anchor
     };
     
@@ -36,6 +54,7 @@ namespace Zoom
     < Model::Attr<AttrType::globalRange, Range, Model::Flag::basic>
     , Model::Attr<AttrType::minimumLength, double, Model::Flag::basic>
     , Model::Attr<AttrType::visibleRange, Range, Model::Flag::basic>
+    , Model::Attr<AttrType::gridInfo, GridInfo, Model::Flag::basic>
     , Model::Attr<AttrType::anchor, std::tuple<bool, double>, Model::Flag::notifying>
     >;
     // clang-format on
@@ -47,7 +66,7 @@ namespace Zoom
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
 
         Accessor(Range const range = {0.0, 0.0}, double const length = 0.0)
-        : Accessor(AttrContainer({range}, {length}, {range}, {{range.getStart(), false}}))
+        : Accessor(AttrContainer({range}, {length}, {range}, {GridInfo{}}, {{range.getStart(), false}}))
         {
         }
 
@@ -80,4 +99,13 @@ namespace Zoom
     };
 } // namespace Zoom
 
+namespace XmlParser
+{
+    template <>
+    void toXml<Zoom::GridInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Zoom::GridInfo const& value);
+
+    template <>
+    auto fromXml<Zoom::GridInfo>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Zoom::GridInfo const& defaultValue)
+        -> Zoom::GridInfo;
+} // namespace XmlParser
 ANALYSE_FILE_END

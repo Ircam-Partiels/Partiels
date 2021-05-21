@@ -51,11 +51,11 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
+            case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:
                 repaint();
-                break;
-            case Zoom::AttrType::anchor:
                 break;
         }
     };
@@ -685,14 +685,14 @@ Track::Plot::Overlay::Overlay(Plot& plot)
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
+            case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:
             {
                 updateTooltip(getMouseXYRelative());
             }
             break;
-            case Zoom::AttrType::anchor:
-                break;
         }
     };
 

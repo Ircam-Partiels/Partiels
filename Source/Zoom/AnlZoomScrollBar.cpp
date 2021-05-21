@@ -9,7 +9,7 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
 {
     mScrollBar.setAutoHide(false);
     addAndMakeVisible(mScrollBar);
-    
+
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -34,14 +34,14 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
                 }
                 repaint();
             }
-                break;
-            
+            break;
             case AttrType::minimumLength:
+            case Zoom::AttrType::gridInfo:
             case AttrType::anchor:
                 break;
         }
     };
-    
+
     mScrollBar.addListener(this);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
