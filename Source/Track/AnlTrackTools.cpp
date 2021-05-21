@@ -115,7 +115,6 @@ std::optional<float> Track::Tools::getValue(Results::SharedColumns results, size
         return {};
     }
     auto const& column = std::get<2>(*it);
-    anlWeakAssert(bin < column.size());
     if(bin >= column.size())
     {
         return {};
