@@ -29,6 +29,7 @@ namespace Group
         PropertyColourButton mPropertyBackgroundColour;
         PropertyTextButton mPropertyChannelLayout;
         
+        bool mChannelLayoutActionStarted{false};
         static auto constexpr sInnerWidth = 300;
     };
 } // namespace Group

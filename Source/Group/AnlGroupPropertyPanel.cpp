@@ -204,7 +204,31 @@ void Group::PropertyPanel::showChannelLayout()
         menu.addItem(std::move(item));
     }
     
-    menu.showAt(&mPropertyChannelLayout.entry);
+    if(!std::exchange(mChannelLayoutActionStarted, true))
+    {
+        mDirector.startAction();
+        for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
+        {
+            auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
+            if(trackAcsr.has_value())
+            {
+                mDirector.getTrackDirector(trackIdentifer).startAction();
+            }
+        }
+    }
+    auto const result = menu.showAt(&mPropertyChannelLayout.entry);
+    if(result == 0 && std::exchange(mChannelLayoutActionStarted, false))
+    {
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Change tracks' channels layout"));
+        for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
+        {
+            auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
+            if(trackAcsr.has_value())
+            {
+                mDirector.getTrackDirector(trackIdentifer).endAction(ActionState::continueTransaction);
+            }
+        }
+    }
 }
 
 ANALYSE_FILE_END
