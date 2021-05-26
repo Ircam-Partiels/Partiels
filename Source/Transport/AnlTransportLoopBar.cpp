@@ -57,12 +57,18 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+    colourChanged();
 }
 
 Transport::LoopBar::~LoopBar()
 {
     mZoomAccessor.removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
+}
+
+void Transport::LoopBar::colourChanged()
+{
+    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
 }
 
 void Transport::LoopBar::paint(juce::Graphics& g)
