@@ -2,6 +2,7 @@
 
 #include "../Transport/AnlTransportPlayheadBar.h"
 #include "AnlTrackModel.h"
+#include "AnlTrackGrid.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -45,6 +46,7 @@ namespace Track
             Accessor::Listener mListener;
             Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadBar mTransportPlayheadBar;
+            Grid mGrid{mAccessor};
             bool mSnapshotMode{false};
         };
 

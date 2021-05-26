@@ -640,6 +640,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mTransportPlayheadBar(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
 {
+    //addAndMakeVisible(mGrid);
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
@@ -710,6 +711,7 @@ void Track::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
+    mGrid.setBounds(bounds);
     mTransportPlayheadBar.setBounds(bounds);
 }
 
