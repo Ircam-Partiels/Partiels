@@ -6,3 +6,5 @@
 - output all key shortcuts
 - Multichannel
   - Fix value/bin rulers
+- Resize main window height
+- Right click on ruler to edit zoom values
