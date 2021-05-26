@@ -39,7 +39,7 @@ double Zoom::Tools::getScaledValueFromHeight(Accessor const& zoomAcsr, juce::Com
     return static_cast<double>((height - 1) - y) / static_cast<double>(height) * range.getLength() + range.getStart();
 }
 
-int Zoom::Tools::getScaledXFromValue(Accessor const& zoomAcsr, juce::Component const& component, double value)
+double Zoom::Tools::getScaledXFromValue(Accessor const& zoomAcsr, juce::Component const& component, double value)
 {
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const width = component.getWidth();
@@ -47,10 +47,10 @@ int Zoom::Tools::getScaledXFromValue(Accessor const& zoomAcsr, juce::Component c
     {
         return 0;
     }
-    return static_cast<int>(std::round((value - range.getStart()) / range.getLength() * static_cast<double>(width)));
+    return (value - range.getStart()) / range.getLength() * static_cast<double>(width);
 }
 
-int Zoom::Tools::getScaledYFromValue(Accessor const& zoomAcsr, juce::Component const& component, double value)
+double Zoom::Tools::getScaledYFromValue(Accessor const& zoomAcsr, juce::Component const& component, double value)
 {
     auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     auto const height = component.getHeight();
@@ -58,7 +58,7 @@ int Zoom::Tools::getScaledYFromValue(Accessor const& zoomAcsr, juce::Component c
     {
         return 0;
     }
-    return (height - 1) - static_cast<int>(std::round((value - range.getStart()) / range.getLength() * static_cast<double>(height)));
+    return static_cast<double>(height - 1) - ((value - range.getStart()) / range.getLength() * static_cast<double>(height));
 }
 
 ANALYSE_FILE_END

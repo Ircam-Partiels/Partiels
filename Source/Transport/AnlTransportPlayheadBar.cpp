@@ -9,22 +9,28 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType const attribute)
     {
+        auto clearPosition = [&](double position)
+        {
+            auto const x = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, position)));
+            repaint(x, 0, 1, getHeight());
+        };
+        
         switch(attribute)
         {
             case AttrType::playback:
                 break;
             case AttrType::startPlayhead:
             {
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
+                clearPosition(mStartPlayhead);
                 mStartPlayhead = acsr.getAttr<AttrType::startPlayhead>();
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
+                clearPosition(mStartPlayhead);
             }
             break;
             case AttrType::runningPlayhead:
             {
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
+                clearPosition(mRunningPlayhead);
                 mRunningPlayhead = acsr.getAttr<AttrType::runningPlayhead>();
-                repaint(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
+                clearPosition(mRunningPlayhead);
             }
             break;
             case AttrType::looping:
@@ -65,9 +71,11 @@ Transport::PlayheadBar::~PlayheadBar()
 void Transport::PlayheadBar::paint(juce::Graphics& g)
 {
     g.setColour(findColour(ColourIds::startPlayheadColourId));
-    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead), 0, 1, getHeight());
+    auto const start = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead)));
+    g.fillRect(start, 0, 1, getHeight());
     g.setColour(findColour(ColourIds::runningPlayheadColourId));
-    g.fillRect(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead), 0, 1, getHeight());
+    auto const running = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead)));
+    g.fillRect(running, 0, 1, getHeight());
 }
 
 void Transport::PlayheadBar::mouseDown(juce::MouseEvent const& event)
