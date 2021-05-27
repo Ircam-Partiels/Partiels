@@ -353,11 +353,11 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(Results const& results)
         auto const& channel = points->at(0);
         auto const [min, max] = std::minmax_element(channel.cbegin(), channel.cend(), [](auto const& lhs, auto const& rhs)
                                                     {
-                                                        if(!std::get<2>(lhs).has_value())
-                                                        {
-                                                            return true;
-                                                        }
                                                         if(!std::get<2>(rhs).has_value())
+                                                        {
+                                                            return false;
+                                                        }
+                                                        if(!std::get<2>(lhs).has_value())
                                                         {
                                                             return false;
                                                         }
