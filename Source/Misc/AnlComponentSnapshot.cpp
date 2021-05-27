@@ -46,26 +46,26 @@ void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String co
         juce::MouseCursor::hideWaitCursor();
         return;
     }
-
-    juce::FileOutputStream stream(temp.getFile());
-    if(!stream.openedOk())
-    {
-        anlWeakAssert(false);
-        juce::MouseCursor::hideWaitCursor();
-        return;
-    }
     const auto* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect(component.getScreenBounds(), true);
     auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(component.getScreenBounds());
     auto const scale = (display != nullptr ? static_cast<float>(display->scale) : 1.0f) * juce::Component::getApproximateScaleFactorForComponent(&component);
     auto const image = createSnapshot(bounds.withZeroOrigin(), scale);
-
-    if(!imageFormat->writeImageToStream(image, stream))
     {
-        anlWeakAssert(false);
-        juce::MouseCursor::hideWaitCursor();
-        return;
-    }
+        juce::FileOutputStream stream(temp.getFile());
+        if (!stream.openedOk())
+        {
+            anlWeakAssert(false);
+            juce::MouseCursor::hideWaitCursor();
+            return;
+        }
 
+        if (!imageFormat->writeImageToStream(image, stream))
+        {
+            anlWeakAssert(false);
+            juce::MouseCursor::hideWaitCursor();
+            return;
+        }
+    }
     if(!temp.overwriteTargetFileWithTemporary())
     {
         anlWeakAssert(false);
