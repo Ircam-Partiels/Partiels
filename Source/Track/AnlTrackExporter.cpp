@@ -75,12 +75,6 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    juce::FileOutputStream stream(temp.getFile());
-    if(!stream.openedOk())
-    {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-    }
-
     auto getImage = [&]()
     {
         if(!lock.tryEnter())
@@ -95,9 +89,22 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     };
 
     auto const image = getImage();
-    if(!imageFormat->writeImageToStream(image, stream))
+    if(image.isValid())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        juce::FileOutputStream stream(temp.getFile());
+        if(!stream.openedOk())
+        {
+            return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        }
+
+        if(!imageFormat->writeImageToStream(image, stream))
+        {
+            return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        }
+    }
+    else
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the image connott be created.").replace("ANLNAME", name));
     }
 
     if(!temp.overwriteTargetFileWithTemporary())
@@ -124,158 +131,160 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     }
 
     juce::TemporaryFile temp(file);
-    juce::FileOutputStream stream(temp.getFile());
 
-    if(!stream.openedOk())
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-    }
-
-    auto state = false;
-    auto addLine = [&]()
-    {
-        state = false;
-        stream << '\n';
-    };
-
-    auto addColumn = [&](juce::StringRef const& text)
-    {
-        if(state)
+        juce::FileOutputStream stream(temp.getFile());
+        if(!stream.openedOk())
         {
-            stream << separator;
+            return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
         }
-        stream << text;
-        state = true;
-        return true;
-    };
 
-    auto const markers = results.getMarkers();
-    auto const points = results.getPoints();
-    auto const columns = results.getColumns();
-    if(markers != nullptr)
-    {
-        if(includeHeader)
+        auto state = false;
+        auto addLine = [&]()
         {
-            addColumn("ROW");
-            for(size_t i = 0; i < markers->size(); ++i)
+            state = false;
+            stream << '\n';
+        };
+
+        auto addColumn = [&](juce::StringRef const& text)
+        {
+            if(state)
             {
-                addColumn("TIME" + juce::String(i));
-                addColumn("DURATION" + juce::String(i));
-                addColumn("LABEL " + juce::String(i));
+                stream << separator;
             }
-            addLine();
-        }
+            stream << text;
+            state = true;
+            return true;
+        };
 
-        auto const maxChannel = std::max_element(markers->cbegin(), markers->cend(), [](auto const& lhs, auto const& rhs)
-                                                 {
-                                                     return lhs.size() < rhs.size();
-                                                 });
-        auto const numValues = maxChannel != markers->cend() ? maxChannel->size() : 0_z;
-        for(size_t i = 0; i < numValues; ++i)
+        auto const markers = results.getMarkers();
+        auto const points = results.getPoints();
+        auto const columns = results.getColumns();
+        if(markers != nullptr)
         {
-            addColumn(juce::String(i));
-            for(auto const& channelResults : *markers)
+            if(includeHeader)
             {
-                if(channelResults.size() > i)
+                addColumn("ROW");
+                for(size_t i = 0; i < markers->size(); ++i)
                 {
-                    addColumn(juce::String(std::get<0>(channelResults[i])));
-                    addColumn(juce::String(std::get<1>(channelResults[i])));
-                    addColumn(std::get<2>(channelResults[i]));
+                    addColumn("TIME" + juce::String(i));
+                    addColumn("DURATION" + juce::String(i));
+                    addColumn("LABEL " + juce::String(i));
                 }
-                else
-                {
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                }
+                addLine();
             }
-            addLine();
-        }
-    }
-    else if(points != nullptr)
-    {
-        if(includeHeader)
-        {
-            addColumn("ROW");
-            for(size_t i = 0; i < points->size(); ++i)
-            {
-                addColumn("TIME" + juce::String(i));
-                addColumn("DURATION" + juce::String(i));
-                addColumn("VALUE " + juce::String(i));
-            }
-            addLine();
-        }
 
-        auto const maxChannel = std::max_element(points->cbegin(), points->cend(), [](auto const& lhs, auto const& rhs)
-                                                 {
-                                                     return lhs.size() < rhs.size();
-                                                 });
-        auto const numValues = maxChannel != points->cend() ? maxChannel->size() : 0_z;
-        for(size_t i = 0; i < numValues; ++i)
-        {
-            addColumn(juce::String(i));
-            for(auto const& channelResults : *points)
+            auto const maxChannel = std::max_element(markers->cbegin(), markers->cend(), [](auto const& lhs, auto const& rhs)
+                                                     {
+                                                         return lhs.size() < rhs.size();
+                                                     });
+            auto const numValues = maxChannel != markers->cend() ? maxChannel->size() : 0_z;
+            for(size_t i = 0; i < numValues; ++i)
             {
-                if(channelResults.size() > i)
+                addColumn(juce::String(i));
+                for(auto const& channelResults : *markers)
                 {
-                    addColumn(juce::String(std::get<0>(channelResults[i])));
-                    addColumn(juce::String(std::get<1>(channelResults[i])));
-                    addColumn(!std::get<2>(channelResults[i]).has_value() ? "\"\"" : juce::String(*std::get<2>(channelResults[i])));
-                }
-                else
-                {
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                }
-            }
-            addLine();
-        }
-    }
-    else if(columns != nullptr)
-    {
-        if(includeHeader)
-        {
-            addColumn("ROW");
-            for(size_t i = 0; i < columns->size(); ++i)
-            {
-                addColumn("TIME" + juce::String(i));
-                addColumn("DURATION" + juce::String(i));
-                auto const& channelResults = columns->at(i);
-                for(size_t j = 0; j < std::get<2>(channelResults.front()).size(); ++j)
-                {
-                    addColumn("BIN " + juce::String(i) + juce::String(j));
-                }
-            }
-            addLine();
-        }
-
-        auto const maxChannel = std::max_element(columns->cbegin(), columns->cend(), [](auto const& lhs, auto const& rhs)
-                                                 {
-            return lhs.size() < rhs.size();
-        });
-        auto const numValues = maxChannel != columns->cend() ? maxChannel->size() : 0_z;
-        for(size_t i = 0; i < numValues; ++i)
-        {
-            addColumn(juce::String(i));
-            for(auto const& channelResults : *columns)
-            {
-                if(channelResults.size() > i)
-                {
-                    addColumn(juce::String(std::get<0>(channelResults[i])));
-                    addColumn(juce::String(std::get<1>(channelResults[i])));
-                    for(auto const& value : std::get<2>(channelResults[i]))
+                    if(channelResults.size() > i)
                     {
-                        addColumn(juce::String(value));
+                        addColumn(juce::String(std::get<0>(channelResults[i])));
+                        addColumn(juce::String(std::get<1>(channelResults[i])));
+                        addColumn(std::get<2>(channelResults[i]));
+                    }
+                    else
+                    {
+                        addColumn("\"\"");
+                        addColumn("\"\"");
+                        addColumn("\"\"");
                     }
                 }
-                else
-                {
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                }
+                addLine();
             }
-            addLine();
+        }
+        else if(points != nullptr)
+        {
+            if(includeHeader)
+            {
+                addColumn("ROW");
+                for(size_t i = 0; i < points->size(); ++i)
+                {
+                    addColumn("TIME" + juce::String(i));
+                    addColumn("DURATION" + juce::String(i));
+                    addColumn("VALUE " + juce::String(i));
+                }
+                addLine();
+            }
+
+            auto const maxChannel = std::max_element(points->cbegin(), points->cend(), [](auto const& lhs, auto const& rhs)
+                                                     {
+                                                         return lhs.size() < rhs.size();
+                                                     });
+            auto const numValues = maxChannel != points->cend() ? maxChannel->size() : 0_z;
+            for(size_t i = 0; i < numValues; ++i)
+            {
+                addColumn(juce::String(i));
+                for(auto const& channelResults : *points)
+                {
+                    if(channelResults.size() > i)
+                    {
+                        addColumn(juce::String(std::get<0>(channelResults[i])));
+                        addColumn(juce::String(std::get<1>(channelResults[i])));
+                        addColumn(!std::get<2>(channelResults[i]).has_value() ? "\"\"" : juce::String(*std::get<2>(channelResults[i])));
+                    }
+                    else
+                    {
+                        addColumn("\"\"");
+                        addColumn("\"\"");
+                        addColumn("\"\"");
+                    }
+                }
+                addLine();
+            }
+        }
+        else if(columns != nullptr)
+        {
+            if(includeHeader)
+            {
+                addColumn("ROW");
+                for(size_t i = 0; i < columns->size(); ++i)
+                {
+                    addColumn("TIME" + juce::String(i));
+                    addColumn("DURATION" + juce::String(i));
+                    auto const& channelResults = columns->at(i);
+                    for(size_t j = 0; j < std::get<2>(channelResults.front()).size(); ++j)
+                    {
+                        addColumn("BIN " + juce::String(i) + juce::String(j));
+                    }
+                }
+                addLine();
+            }
+
+            auto const maxChannel = std::max_element(columns->cbegin(), columns->cend(), [](auto const& lhs, auto const& rhs)
+                                                     {
+                                                         return lhs.size() < rhs.size();
+                                                     });
+            auto const numValues = maxChannel != columns->cend() ? maxChannel->size() : 0_z;
+            for(size_t i = 0; i < numValues; ++i)
+            {
+                addColumn(juce::String(i));
+                for(auto const& channelResults : *columns)
+                {
+                    if(channelResults.size() > i)
+                    {
+                        addColumn(juce::String(std::get<0>(channelResults[i])));
+                        addColumn(juce::String(std::get<1>(channelResults[i])));
+                        for(auto const& value : std::get<2>(channelResults[i]))
+                        {
+                            addColumn(juce::String(value));
+                        }
+                    }
+                    else
+                    {
+                        addColumn("\"\"");
+                        addColumn("\"\"");
+                    }
+                }
+                addLine();
+            }
         }
     }
 
