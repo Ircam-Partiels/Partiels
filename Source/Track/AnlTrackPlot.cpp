@@ -619,9 +619,9 @@ void Track::Plot::paintColumns(Accessor const& accessor, size_t channel, juce::G
 
     auto const& binZoomAcsr = accessor.getAcsr<AcsrType::binZoom>();
 
-    auto const timezoomRatio = getZoomRatio(timeZoomAcsr);
+    auto const timeZoomRatio = getZoomRatio(timeZoomAcsr);
     auto const binZoomRatio = getZoomRatio(binZoomAcsr);
-    auto const boundsDimension = std::max(bounds.getWidth() * timezoomRatio, bounds.getHeight() * binZoomRatio);
+    auto const boundsDimension = std::max(bounds.getWidth() * timeZoomRatio, bounds.getHeight() * binZoomRatio);
     for(auto const& image : images.at(channel))
     {
         auto const imageDimension = std::max(image.getWidth(), image.getHeight());
