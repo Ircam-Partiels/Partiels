@@ -185,6 +185,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 break;
         }
     };
+    valueZoomAcsr.onAttrUpdated(Zoom::AttrType::globalRange, NotificationType::synchronous);
 
     auto& binZoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
     binZoomAcsr.onAttrUpdated = [=, this](Zoom::AttrType attr, NotificationType notification)
