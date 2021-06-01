@@ -33,11 +33,13 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::key:
                 break;
             case AttrType::description:
+            case AttrType::results:
             {
-                mValueRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points);
-                mValueScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points);
-                mBinRuler.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns);
-                mBinScrollBar.setVisible(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns);
+                auto const displayType = Tools::getDisplayType(mAccessor);
+                mValueRuler.setVisible(displayType == Tools::DisplayType::points);
+                mValueScrollBar.setVisible(displayType == Tools::DisplayType::points);
+                mBinRuler.setVisible(displayType == Tools::DisplayType::columns);
+                mBinScrollBar.setVisible(displayType == Tools::DisplayType::columns);
             }
             break;
             case AttrType::state:
@@ -50,7 +52,6 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::colours:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
-            case AttrType::results:
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::processing:
