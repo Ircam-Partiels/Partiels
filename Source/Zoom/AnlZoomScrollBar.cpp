@@ -26,7 +26,9 @@ Zoom::ScrollBar::ScrollBar(Accessor& accessor, Orientation orientation, bool isI
                 if(mIsInversed)
                 {
                     auto const globalRange = acsr.getAttr<AttrType::globalRange>();
-                    mScrollBar.setCurrentRange({globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, juce::NotificationType::dontSendNotification);
+                    auto const end = globalRange.getEnd() + globalRange.getStart() - range.getStart();
+                    auto const start = globalRange.getEnd() + globalRange.getStart() - range.getEnd();
+                    mScrollBar.setCurrentRange({start, end}, juce::NotificationType::dontSendNotification);
                 }
                 else
                 {
@@ -64,8 +66,10 @@ void Zoom::ScrollBar::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, dou
     if(mIsInversed)
     {
         auto const globalRange = mAccessor.getAttr<AttrType::globalRange>();
-        auto const range = mScrollBar.getCurrentRange();
-        mAccessor.setAttr<AttrType::visibleRange>(Range{globalRange.getEnd() - range.getEnd(), globalRange.getEnd() - range.getStart()}, NotificationType::synchronous);
+        auto const currentRange = mScrollBar.getCurrentRange();
+        auto const end = globalRange.getEnd() + globalRange.getStart() - currentRange.getStart();
+        auto const start = globalRange.getEnd() + globalRange.getStart() - currentRange.getEnd();
+        mAccessor.setAttr<AttrType::visibleRange>(Range{start, end}, NotificationType::synchronous);
     }
     else
     {
