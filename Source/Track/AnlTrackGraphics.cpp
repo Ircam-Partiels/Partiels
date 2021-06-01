@@ -64,7 +64,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                         std::array<juce::PixelARGB, 256> colours;
                                         for(size_t i = 0; i < colours.size(); ++i)
                                         {
-                                            auto const color = tinycolormap::GetColor(static_cast<double>(i) / 256.0, colourMap);
+                                            auto const color = tinycolormap::GetColor(static_cast<double>(i) / 255.0, colourMap);
                                             colours[i] = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
                                         }
 
@@ -100,7 +100,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             juce::Image::BitmapData const bitmapData(image, juce::Image::BitmapData::writeOnly);
 
                                             auto const valueStart = static_cast<float>(valueRange.getStart());
-                                            auto const valueScale = static_cast<float>(colours.size()) / static_cast<float>(valueRange.getLength());
+                                            auto const valueScale = 255.f / static_cast<float>(valueRange.getLength());
 
                                             auto* data = bitmapData.data;
                                             auto const pixelStride = static_cast<size_t>(bitmapData.pixelStride);
@@ -133,7 +133,8 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                         }
                                                         else
                                                         {
-                                                            auto const colorIndex = std::min(std::max(static_cast<size_t>(std::ceil(values.at(rowIndex) - valueStart) * valueScale), 0_z), colours.size() - 1_z);
+                                                            auto const value = std::round((values.at(rowIndex) - valueStart) * valueScale);
+                                                            auto const colorIndex = static_cast<size_t>(std::min(std::max(value, 0.0f), 255.0f));
                                                             reinterpret_cast<juce::PixelARGB*>(pixel)->set(colours[colorIndex]);
                                                         }
                                                         pixel -= lineStride;
