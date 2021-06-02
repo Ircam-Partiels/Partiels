@@ -441,7 +441,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyPluginMaker.entry.setText(description.maker, silent);
                 mPropertyPluginVersion.entry.setText(juce::String(description.version), silent);
                 mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, silent);
-                mPropertyPluginDetails.setText(description.details + " - " + description.output.description, silent);
+                auto const details = juce::String(description.output.description) + (description.output.description.empty() ? "" : "\n") + description.details;
+                mPropertyPluginDetails.setText(details, silent);
 
                 auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);

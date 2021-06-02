@@ -150,6 +150,11 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
             auto const categories = pluginLoader->getPluginCategory(key.identifier);
             description.category = categories.empty() ? "" : categories.front();
             description.details = plugin.getDescription();
+            if(!description.details.isEmpty())
+            {
+                description.details += "\n";
+            }
+            description.details += juce::String(plugin.getCopyright());
             auto const parameters = plugin.getParameterDescriptors();
             description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
             
