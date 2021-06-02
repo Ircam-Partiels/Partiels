@@ -48,7 +48,6 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
         {
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::minimumLength:
-            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:

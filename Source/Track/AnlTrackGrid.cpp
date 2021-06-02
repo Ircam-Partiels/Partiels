@@ -70,7 +70,6 @@ Track::Grid::Grid(Accessor& accessor)
             case Zoom::AttrType::minimumLength:
             case Zoom::AttrType::anchor:
                 break;
-            case Zoom::AttrType::gridInfo:
             case Zoom::AttrType::visibleRange:
             {
                 repaint();
@@ -93,9 +92,37 @@ Track::Grid::~Grid()
 
 void Track::Grid::paint(juce::Graphics& g)
 {
-    auto stringify = [unit = mAccessor.getAttr<AttrType::description>().output.unit](double value)
+    auto paintChannels = [&](Zoom::Accessor const& zoomAcsr)
     {
-        return value >= 1000.0 ? juce::String(value / 1000.0, 2) + "k" : juce::String(value, 2);
+        auto const channelLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+        auto const numVisibleChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+        if(numVisibleChannels == 0_z)
+        {
+            return;
+        }
+        
+        auto stringify = [unit = mAccessor.getAttr<AttrType::description>().output.unit](double value)
+        {
+            auto const text = value >= 1000.0 ? juce::String(value / 1000.0, 4) + "k" : juce::String(value, 4);
+            return text.trimCharactersAtEnd("0").trimCharactersAtEnd(".");
+        };
+        
+        auto bounds = getLocalBounds();
+        auto const fullHeight = bounds.getHeight();
+        auto const channelHeight = (fullHeight - static_cast<int>(numVisibleChannels) + 1) / static_cast<int>(numVisibleChannels);
+        
+        auto channelCounter = 0_z;
+        for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
+        {
+            if(channelLayout[channel])
+            {
+                ++channelCounter;
+                juce::Graphics::ScopedSaveState sss(g);
+                auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(channelCounter == numVisibleChannels ? 1 : 0);
+                g.reduceClipRegion(region);
+                Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, juce::Justification::left);
+            }
+        }
     };
     
     switch(Tools::getDisplayType(mAccessor))
@@ -104,14 +131,12 @@ void Track::Grid::paint(juce::Graphics& g)
             break;
         case Tools::DisplayType::points:
         {
-            auto const& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-            Zoom::Grid::paintVertical(g, zoomAcsr, getLocalBounds(), stringify, juce::Justification::left);
+            paintChannels(mAccessor.getAcsr<AcsrType::valueZoom>());
         }
             break;
         case Tools::DisplayType::columns:
         {
-            auto const& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-            Zoom::Grid::paintVertical(g, zoomAcsr, getLocalBounds(), stringify, juce::Justification::left);
+            paintChannels(mAccessor.getAcsr<AcsrType::binZoom>());
         }
             break;
     }

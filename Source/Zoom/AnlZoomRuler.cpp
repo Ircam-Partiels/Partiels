@@ -17,7 +17,6 @@ Zoom::Ruler::Ruler(Accessor& accessor, Orientation orientation, size_t primaryTi
         {
             case AttrType::globalRange:
             case AttrType::minimumLength:
-            case Zoom::AttrType::gridInfo:
                 break;
             case AttrType::visibleRange:
             {

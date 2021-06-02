@@ -2,37 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-template <>
-void XmlParser::toXml<Zoom::GridInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Zoom::GridInfo const& value)
-{
-    auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "tickReference", value.tickReference);
-        toXml(*child, "ticksSpacing", value.ticksSpacing);
-        toXml(*child, "largeTickInterval", value.largeTickInterval);
-        xml.addChildElement(child.release());
-    }
-}
-
-template <>
-auto XmlParser::fromXml<Zoom::GridInfo>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Zoom::GridInfo const& defaultValue)
-    -> Zoom::GridInfo
-{
-    auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child == nullptr)
-    {
-        return defaultValue;
-    }
-    Zoom::GridInfo value;
-    value.tickReference = fromXml(*child, "tickReference", defaultValue.tickReference);
-    value.ticksSpacing = fromXml(*child, "ticksSpacing", defaultValue.ticksSpacing);
-    value.largeTickInterval = fromXml(*child, "largeTickInterval", defaultValue.largeTickInterval);
-    return value;
-}
-
 class ZoomModelUnitTest
 : public juce::UnitTest
 {
