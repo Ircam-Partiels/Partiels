@@ -33,7 +33,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         return {};
     }
 
-    anlStrongAssert(state.blockSize > 0 && state.stepSize > 0);
+    anlWeakAssert(state.blockSize > 0 && state.stepSize > 0);
     if(state.blockSize == 0 || state.stepSize == 0)
     {
         return {};
