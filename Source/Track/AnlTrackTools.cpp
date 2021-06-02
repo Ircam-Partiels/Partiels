@@ -246,7 +246,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         auto const value = getValue(points, std::get<0>(*channel), timeGlobalRange, time);
         if(value.has_value())
         {
-            return juce::String(*value, 2) + accessor.getAttr<AttrType::description>().output.unit;
+            return juce::String(*value, 4) + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }
@@ -285,7 +285,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
                 }
                 return "[" + juce::String(*binIndex) + " - " + output.binNames[*binIndex] + "]";
             };
-            return getBinName() + juce::String(*value, 2) + accessor.getAttr<AttrType::description>().output.unit;
+            return getBinName() + juce::String(*value, 4) + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }
