@@ -55,7 +55,10 @@ Track::Grid::Grid(Accessor& accessor)
                 break;
             case AttrType::channelsLayout:
             {
-                repaint();
+                if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                {
+                    repaint();
+                }
             }
             break;
         }
