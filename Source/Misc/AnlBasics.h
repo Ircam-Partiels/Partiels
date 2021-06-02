@@ -72,6 +72,8 @@ namespace App
     {
         return "*" + getFileExtensionFor(suffix);
     }
+    
+    juce::ApplicationCommandManager* getApplicationCommandManager();
 } // namespace App
 
 // clang-format off

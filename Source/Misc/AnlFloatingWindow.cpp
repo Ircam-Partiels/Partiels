@@ -10,6 +10,11 @@ FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersC
 #else
     juce::Desktop::getInstance().addFocusChangeListener(this);
 #endif
+    lookAndFeelChanged();
+    if(auto* commandManager = App::getApplicationCommandManager())
+    {
+        addKeyListener(commandManager->getKeyMappings());
+    }
 }
 
 FloatingWindow::~FloatingWindow()
@@ -17,6 +22,10 @@ FloatingWindow::~FloatingWindow()
 #ifndef JUCE_MAC
     juce::Desktop::getInstance().removeFocusChangeListener(this);
 #endif
+    if(auto* commandManager = App::getApplicationCommandManager())
+    {
+        removeKeyListener(commandManager->getKeyMappings());
+    }
 }
 
 void FloatingWindow::closeButtonPressed()

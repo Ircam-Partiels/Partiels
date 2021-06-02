@@ -308,4 +308,9 @@ juce::File Application::Instance::getBackupFile() const
     return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getFileExtension());
 }
 
+juce::ApplicationCommandManager* App::getApplicationCommandManager()
+{
+    return &Application::Instance::get().getApplicationCommandManager();
+}
+
 ANALYSE_FILE_END
