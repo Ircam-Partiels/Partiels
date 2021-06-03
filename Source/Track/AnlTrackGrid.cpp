@@ -1,6 +1,6 @@
 #include "AnlTrackGrid.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "../Zoom/AnlZoomGrid.h"
+#include "../Zoom/AnlZoomTools.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -24,7 +24,6 @@ Track::Grid::Grid(Accessor& accessor)
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::focused:
-            case AttrType::colours:
             case AttrType::graphics:
                 break;
             case AttrType::description:
@@ -37,23 +36,26 @@ Track::Grid::Grid(Accessor& accessor)
                         mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
                         mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
                     }
-                        break;
+                    break;
                     case Tools::DisplayType::points:
                     {
                         mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
                         mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+                        mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
                     }
-                        break;
+                    break;
                     case Tools::DisplayType::columns:
                     {
                         mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
                         mAccessor.getAcsr<AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
+                        mAccessor.getAcsr<AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
                     }
-                        break;
+                    break;
                 }
             }
-                break;
+            break;
             case AttrType::channelsLayout:
+            case AttrType::colours:
             {
                 if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
                 {
@@ -77,17 +79,23 @@ Track::Grid::Grid(Accessor& accessor)
             {
                 repaint();
             }
-                break;
+            break;
         }
     };
 
+    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr, attribute);
+        repaint();
+    };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
-    mAccessor.getAcsr<AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Track::Grid::~Grid()
 {
+    mAccessor.getAcsr<AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
+    mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
     mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
     mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
@@ -95,53 +103,37 @@ Track::Grid::~Grid()
 
 void Track::Grid::paint(juce::Graphics& g)
 {
-    auto paintChannels = [&](Zoom::Accessor const& zoomAcsr)
+    auto const stringify = [unit = mAccessor.getAttr<AttrType::description>().output.unit](double value)
     {
-        auto const channelLayout = mAccessor.getAttr<AttrType::channelsLayout>();
-        auto const numVisibleChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
-        if(numVisibleChannels == 0_z)
-        {
-            return;
-        }
-        
-        auto stringify = [unit = mAccessor.getAttr<AttrType::description>().output.unit](double value)
-        {
-            auto const text = value >= 1000.0 ? juce::String(value / 1000.0, 4) + "k" : juce::String(value, 4);
-            return text.trimCharactersAtEnd("0").trimCharactersAtEnd(".");
-        };
-        
-        auto bounds = getLocalBounds();
-        auto const fullHeight = bounds.getHeight();
-        auto const channelHeight = (fullHeight - static_cast<int>(numVisibleChannels) + 1) / static_cast<int>(numVisibleChannels);
-        
-        auto channelCounter = 0_z;
-        for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
-        {
-            if(channelLayout[channel])
-            {
-                ++channelCounter;
-                juce::Graphics::ScopedSaveState sss(g);
-                auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(channelCounter == numVisibleChannels ? 1 : 0);
-                g.reduceClipRegion(region);
-                Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, juce::Justification::left);
-            }
-        }
+        return juce::String(value, 4).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
     };
-    
+
+    auto const const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
+    {
+        g.setColour(mAccessor.getAttr<AttrType::colours>().grid);
+        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, juce::Justification::left);
+    };
+
     switch(Tools::getDisplayType(mAccessor))
     {
         case Tools::DisplayType::markers:
             break;
         case Tools::DisplayType::points:
         {
-            paintChannels(mAccessor.getAcsr<AcsrType::valueZoom>());
+            Tools::paintChannels(mAccessor, g, getLocalBounds(), [&](juce::Rectangle<int> region, size_t)
+                                 {
+                                     paintChannel(mAccessor.getAcsr<AcsrType::valueZoom>(), region);
+                                 });
         }
-            break;
+        break;
         case Tools::DisplayType::columns:
         {
-            paintChannels(mAccessor.getAcsr<AcsrType::binZoom>());
+            Tools::paintChannels(mAccessor, g, getLocalBounds(), [&](juce::Rectangle<int> region, size_t)
+                                 {
+                                     paintChannel(mAccessor.getAcsr<AcsrType::binZoom>(), region);
+                                 });
         }
-            break;
+        break;
     }
 }
 

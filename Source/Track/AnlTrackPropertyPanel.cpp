@@ -288,6 +288,28 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                           zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
                           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                       })
+, mPropertyTickReference("Ruler Value Reference", "The value reference used as the ruler origin", "", {std::numeric_limits<float>::min(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+                         {
+                             mDirector.startAction();
+                             auto& acsr = mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>();
+                             acsr.setAttr<Zoom::Grid::AttrType::tickReference>(static_cast<double>(value), NotificationType::synchronous);
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track grid"));
+                         })
+, mPropertyTickBase("Ruler Mode", "The mode of the ruler numeral system.", "", std::vector<std::string>{"1", "2", "3", "4", "5", "6"}, [&](size_t index)
+                    {
+                        anlWeakAssert(index < sGridBaseInfoArray.size());
+                        if(index >= sGridBaseInfoArray.size())
+                        {
+                            return;
+                        }
+                        auto const gridBaseInfo = sGridBaseInfoArray[index];
+                        mDirector.startAction();
+                        auto& acsr = mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>();
+                        acsr.setAttr<Zoom::Grid::AttrType::mainTickInterval>(std::get<0>(gridBaseInfo), NotificationType::synchronous);
+                        acsr.setAttr<Zoom::Grid::AttrType::tickPowerBase>(std::get<1>(gridBaseInfo), NotificationType::synchronous);
+                        acsr.setAttr<Zoom::Grid::AttrType::tickDivisionFactor>(std::get<2>(gridBaseInfo), NotificationType::synchronous);
+                        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track grid"));
+                    })
 , mPropertyRangeLink("Range Link", "Toggle the group link for zoom range.", [&](bool value)
                      {
                          mDirector.startAction();
@@ -407,6 +429,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                                             , mPropertyValueRangeMode
                                                             , mPropertyValueRangeMin
                                                             , mPropertyValueRangeMax
+                                                            , mPropertyTickReference
+                                                            , mPropertyTickBase
                                                             , mPropertyRangeLink
                                                             , mPropertyChannelLayout
                                                         });
@@ -596,6 +620,34 @@ Track::PropertyPanel::PropertyPanel(Director& director)
         }
     };
 
+    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    {
+        using GridAttrType = Zoom::Grid::AttrType;
+        switch(attribute)
+        {
+            case GridAttrType::tickReference:
+            {
+                mPropertyTickReference.entry.setValue(acsr.getAttr<GridAttrType::tickReference>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case Zoom::Grid::AttrType::mainTickInterval:
+            case Zoom::Grid::AttrType::tickPowerBase:
+            case Zoom::Grid::AttrType::tickDivisionFactor:
+            {
+                auto const mainTickInterval = acsr.getAttr<GridAttrType::mainTickInterval>();
+                auto const tickPowerBase = acsr.getAttr<GridAttrType::tickPowerBase>();
+                auto const tickDivisionFactor = acsr.getAttr<GridAttrType::tickDivisionFactor>();
+                auto it = std::find_if(sGridBaseInfoArray.cbegin(), sGridBaseInfoArray.cend(), [&](auto const& rhs)
+                                       {
+                                           return mainTickInterval == std::get<0>(rhs) && std::abs(tickPowerBase - std::get<1>(rhs)) < std::numeric_limits<double>::epsilon() && std::abs(tickDivisionFactor - std::get<2>(rhs)) < std::numeric_limits<double>::epsilon();
+                                       });
+                mPropertyTickBase.entry.setSelectedItemIndex(static_cast<int>(std::distance(sGridBaseInfoArray.cbegin(), it)), juce::NotificationType::dontSendNotification);
+                mPropertyTickBase.entry.setTextWhenNothingSelected(juce::translate("Custom"));
+            }
+            break;
+        }
+    };
+
     mBoundsListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
@@ -640,6 +692,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mBoundsConstrainer.setMinimumHeight(120);
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 
+    mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -653,6 +706,7 @@ Track::PropertyPanel::~PropertyPanel()
     mAccessor.removeListener(mListener);
     mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mBinZoomListener);
     mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mValueZoomListener);
+    mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
 }
 
 void Track::PropertyPanel::resized()

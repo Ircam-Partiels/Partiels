@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-template<>
+template <>
 void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -14,13 +14,14 @@ void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier 
         toXml(*child, "foreground", value.foreground);
         toXml(*child, "text", value.text);
         toXml(*child, "shadow", value.shadow);
+        toXml(*child, "grid", value.grid);
         xml.addChildElement(child.release());
     }
 }
 
-template<>
+template <>
 auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
--> Track::ColourSet
+    -> Track::ColourSet
 {
     auto const* child = xml.getChildByName(attributeName);
     anlWeakAssert(child != nullptr);
@@ -34,6 +35,7 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
     value.text = fromXml(*child, "text", defaultValue.text);
     value.shadow = fromXml(*child, "shadow", defaultValue.shadow);
+    value.grid = fromXml(*child, "grid", defaultValue.grid);
     return value;
 }
 

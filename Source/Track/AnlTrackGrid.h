@@ -19,8 +19,9 @@ namespace Track
 
     private:
         Accessor& mAccessor;
-        Zoom::Accessor::Listener mZoomListener;
         Accessor::Listener mListener;
+        Zoom::Accessor::Listener mZoomListener;
+        Zoom::Grid::Accessor::Listener mGridListener;
     };
 } // namespace Track
 
