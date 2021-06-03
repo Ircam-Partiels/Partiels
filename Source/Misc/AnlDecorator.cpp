@@ -22,22 +22,28 @@ void Decorator::setHighlighted(bool state)
 
 void Decorator::resized()
 {
-    auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 1.5f));
-    juce::BorderSize<int> const borderSize(offset);
-    mContent.setBounds(borderSize.subtractedFrom(getLocalBounds()));
+    mContent.setBounds(getLocalBounds().reduced(mBorderThickness));
 }
 
 void Decorator::paint(juce::Graphics& g)
 {
-    g.setColour(findColour(ColourIds::backgroundColourId));
-    g.fillRoundedRectangle(getLocalBounds().toFloat(), mCornerSize);
+    g.fillAll(findColour(ColourIds::backgroundColourId));
 }
 
 void Decorator::paintOverChildren(juce::Graphics& g)
 {
     auto const offset = static_cast<int>(std::ceil(static_cast<float>(mBorderThickness) * 0.5f));
+    auto const bounds = getLocalBounds().reduced(offset).toFloat();
+    juce::Path path;
+    path.addRectangle(bounds);
+    path.setUsingNonZeroWinding(false);
+    path.addRoundedRectangle(bounds, mCornerSize);
+    
+    g.setColour(findColour(ColourIds::backgroundColourId));
+    g.fillPath(path);
+    
     g.setColour(findColour(mIsHighlighted ? ColourIds::highlightedBorderColourId : ColourIds::normalBorderColourId));
-    g.drawRoundedRectangle(getLocalBounds().reduced(offset).toFloat(), mCornerSize, static_cast<float>(mBorderThickness));
+    g.drawRoundedRectangle(bounds, mCornerSize, static_cast<float>(mBorderThickness));
 }
 
 void Decorator::colourChanged()
