@@ -135,13 +135,10 @@ target_link_libraries(Partiels PRIVATE
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
+    juce::juce_opengl
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
-
-if(NOT APPLE)
-    target_link_libraries(Partiels PRIVATE juce::juce_opengl)
-endif()
 
 target_link_libraries(PartielsTest PRIVATE
     vamp
@@ -154,16 +151,13 @@ target_link_libraries(PartielsTest PRIVATE
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
+    juce::juce_opengl
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
-
-if(NOT APPLE)
-    target_link_libraries(PartielsTest PRIVATE juce::juce_opengl)
-endif()
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "3BD2P55TR2")

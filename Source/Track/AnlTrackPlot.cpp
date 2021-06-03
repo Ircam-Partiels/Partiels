@@ -32,12 +32,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::colours:
             case AttrType::channelsLayout:
             {
-#ifdef jUCE_MAC
-                if(Tools::getDisplayType(acsr) == Tools::DisplayType::points)
-                {
-                    setBufferedToImage(true);
-                }
-#endif
                 repaint();
             }
             break;
