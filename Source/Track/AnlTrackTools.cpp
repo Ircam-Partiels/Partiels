@@ -454,4 +454,39 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
     return Zoom::Range(0.0, static_cast<double>(size));
 }
 
+void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> bounds, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
+{
+    auto const channelLayout = acsr.getAttr<AttrType::channelsLayout>();
+    auto const numVisibleChannels = static_cast<int>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+    if(numVisibleChannels == 0)
+    {
+        return;
+    }
+
+    auto const channelHeight = (bounds.getHeight() - (numVisibleChannels - 1)) / static_cast<int>(numVisibleChannels);
+
+    auto channelCounter = 0;
+    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+    auto const separatorColour = acsr.getAttr<AttrType::focused>() ? laf.findColour(Decorator::ColourIds::highlightedBorderColourId) : laf.findColour(Decorator::ColourIds::normalBorderColourId);
+    for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
+    {
+        if(channelLayout[channel])
+        {
+            ++channelCounter;
+            juce::Graphics::ScopedSaveState sss(g);
+            auto region = bounds.removeFromTop(channelHeight);
+            if(channelCounter != numVisibleChannels)
+            {
+                g.setColour(separatorColour);
+                g.fillRect(region.removeFromBottom(1));
+            }
+            g.reduceClipRegion(region);
+            if(fn != nullptr)
+            {
+                fn(region, channel);
+            }
+        }
+    }
+}
+
 ANALYSE_FILE_END

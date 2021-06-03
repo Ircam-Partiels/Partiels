@@ -89,6 +89,8 @@ namespace Track
         std::optional<Zoom::Range> getValueRange(Results const& results);
         std::optional<Zoom::Range> getBinRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getBinRange(Results const& results);
+
+        void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> bounds, std::function<void(juce::Rectangle<int>, size_t)> fn);
     } // namespace Tools
 } // namespace Track
 
