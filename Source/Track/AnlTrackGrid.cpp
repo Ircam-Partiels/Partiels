@@ -108,7 +108,7 @@ void Track::Grid::paint(juce::Graphics& g)
         return juce::String(value, 4).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
     };
 
-    auto const const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
+    auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
     {
         g.setColour(mAccessor.getAttr<AttrType::colours>().grid);
         Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, juce::Justification::left);
