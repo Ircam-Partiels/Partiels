@@ -74,46 +74,30 @@ void Track::Plot::paint(juce::Graphics& g)
 
 void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    auto paintChannels = [&](std::function<void(Accessor const&, size_t, juce::Graphics&, juce::Rectangle<int> const&, Zoom::Accessor const&)> fn)
-    {
-        auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
-        auto const numVisibleChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
-        if(numVisibleChannels == 0_z)
-        {
-            return;
-        }
-        auto const fullHeight = bounds.getHeight();
-        auto const channelHeight = (fullHeight - static_cast<int>(numVisibleChannels) + 1) / static_cast<int>(numVisibleChannels);
-
-        auto channelCounter = 0_z;
-        for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
-        {
-            if(channelLayout[channel])
-            {
-                ++channelCounter;
-                juce::Graphics::ScopedSaveState sss(g);
-                auto const region = bounds.removeFromTop(channelHeight + 1).withTrimmedBottom(channelCounter == numVisibleChannels ? 1 : 0);
-                g.reduceClipRegion(region);
-                fn(accessor, channel, g, region, timeZoomAcsr);
-            }
-        }
-    };
-
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
         {
-            paintChannels(paintMarkers);
+            Tools::paintChannels(accessor, g, bounds, [&](juce::Rectangle<int> region, size_t channel)
+                                 {
+                                     paintMarkers(accessor, channel, g, region, timeZoomAcsr);
+                                 });
         }
         break;
         case Tools::DisplayType::points:
         {
-            paintChannels(paintPoints);
+            Tools::paintChannels(accessor, g, bounds, [&](juce::Rectangle<int> region, size_t channel)
+                                 {
+                                     paintPoints(accessor, channel, g, region, timeZoomAcsr);
+                                 });
         }
         break;
         case Tools::DisplayType::columns:
         {
-            paintChannels(paintColumns);
+            Tools::paintChannels(accessor, g, bounds, [&](juce::Rectangle<int> region, size_t channel)
+                                 {
+                                     paintColumns(accessor, channel, g, region, timeZoomAcsr);
+                                 });
         }
         break;
     }
@@ -633,7 +617,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mTransportPlayheadBar(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
 {
-    //addAndMakeVisible(mGrid);
+    addAndMakeVisible(mGrid);
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
