@@ -15,7 +15,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     addAndMakeVisible(mDropdownButton);
     mDropdownButton.setWantsKeyboardFocus(false);
 
-    mPropertiesButton.setTooltip(juce::translate("Change the group and tracks' properties"));
+    mPropertiesButton.setTooltip(juce::translate("Group and tracks' properties"));
     mExpandButton.setTooltip(juce::translate("Expand the group"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
@@ -27,7 +27,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     auto getPropertiesMenu = [&]()
     {
         juce::PopupMenu menu;
-        menu.addItem("Change the group properties", [&]()
+        menu.addItem("Group properties", [&]()
         {
             if(auto var = std::make_unique<juce::DynamicObject>())
             {
