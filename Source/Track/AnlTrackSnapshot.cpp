@@ -299,6 +299,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 , mAccessor(mSnapshot.mAccessor)
 , mTransportAccessor(mSnapshot.mTransportAccessor)
 {
+    addAndMakeVisible(mGrid);
     addAndMakeVisible(mSnapshot);
     setInterceptsMouseClicks(true, true);
 
@@ -374,7 +375,9 @@ Track::Snapshot::Overlay::~Overlay()
 
 void Track::Snapshot::Overlay::resized()
 {
-    mSnapshot.setBounds(getLocalBounds());
+    auto const bounds = getLocalBounds();
+    mSnapshot.setBounds(bounds);
+    mGrid.setBounds(bounds);
 }
 
 void Track::Snapshot::Overlay::paint(juce::Graphics& g)

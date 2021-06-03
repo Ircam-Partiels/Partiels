@@ -2,6 +2,7 @@
 
 #include "../Transport/AnlTransportModel.h"
 #include "AnlTrackModel.h"
+#include "AnlTrackGrid.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -40,6 +41,7 @@ namespace Track
             Transport::Accessor& mTransportAccessor;
             Accessor::Listener mListener;
             Transport::Accessor::Listener mTransportListener;
+            Grid mGrid{mAccessor};
         };
 
         static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr, double time);
