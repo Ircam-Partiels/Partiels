@@ -52,8 +52,12 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                 mFloatingWindow.setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
             }
             break;
-            case AttrType::height:
             case AttrType::colour:
+            {
+                mPropertyBackgroundColour.entry.setCurrentColour(acsr.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
+            }
+                break;
+            case AttrType::height:
             case AttrType::expanded:
             case AttrType::layout:
             case AttrType::tracks:
