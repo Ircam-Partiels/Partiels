@@ -50,11 +50,15 @@ namespace Track
             }
             else if(position >= time)
             {
-                return std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
-                                    {
-                                        return std::get<0>(result) + std::get<1>(result) <= time;
-                                    })
-                    .base();
+                auto it = std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
+                                       {
+                                           return std::get<0>(result) + std::get<1>(result) <= time;
+                                       });
+                if(it == results.crend())
+                {
+                    return results.cbegin();
+                }
+                return std::next(it).base();
             }
             else
             {
