@@ -247,6 +247,26 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(clipBounds.getX()) - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(clipBounds.getRight()) + epsilonPixel, timeRange, fbounds);
 
+    auto getNumDecimals = [&]()
+    {
+        auto const rangeLength = valueRange.getLength();
+        int numDecimals = 0;
+        while(numDecimals < 4 && std::pow(10.0, static_cast<double>(numDecimals)) / rangeLength < 1.0)
+        {
+            ++numDecimals;
+        }
+        return 4 - numDecimals;
+    };
+    auto const numDecimals = getNumDecimals();
+    auto const getTextValue = [unit, numDecimals](float value)
+    {
+        if(numDecimals == 0)
+        {
+            return juce::String(static_cast<int>(value)) + unit;
+        }
+        return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".") + unit;
+    };
+    
     auto const& channelResults = points->at(channel);
     if(channelResults.size() == 1_z)
     {
@@ -268,7 +288,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             if(!colours.text.isTransparent())
             {
                 g.setColour(colours.text);
-                g.drawSingleLineText(juce::String(value, 2) + unit, 4, static_cast<int>(y - fontDescent) - 2, juce::Justification::left);
+                g.drawSingleLineText(getTextValue(value), 4, static_cast<int>(y - fontDescent) - 2, juce::Justification::left);
             }
         }
         return;
@@ -290,7 +310,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     labelInfo labelInfoHigh;
     std::vector<labelInfo> labels;
 
-    auto insertLabel = [&](int x, float y, float value)
+    auto const insertLabel = [&](int x, float y, float value)
     {
         auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
         auto canInsertLow = !std::get<0>(labelInfoLow).isEmpty() && x > std::get<1>(labelInfoLow) + std::get<2>(labelInfoLow) + 2;
@@ -313,7 +333,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         }
         if(std::get<0>(labelInfoHigh).isEmpty() || y < std::get<3>(labelInfoHigh))
         {
-            auto const text = juce::String(value, 2) + unit;
+            auto const text = getTextValue(value);
             auto const textWidth = font.getStringWidth(text) + 2;
             labelInfoHigh = std::make_tuple(text, x, textWidth, y);
         }
@@ -330,7 +350,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         }
         if(std::get<0>(labelInfoLow).isEmpty() || y > std::get<3>(labelInfoLow))
         {
-            auto const text = juce::String(value, 2) + unit;
+            auto const text = getTextValue(value);
             auto const textWidth = font.getStringWidth(text) + 2;
             labelInfoLow = std::make_tuple(text, x, textWidth, y);
         }
