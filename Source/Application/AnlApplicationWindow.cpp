@@ -6,6 +6,7 @@ ANALYSE_FILE_BEGIN
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
+    mOpenGLContext.setTextureMagnificationFilter(juce::OpenGLContext::TextureMagnificationFilter::nearest);
     mOpenGLContext.setComponentPaintingEnabled(true);
     mOpenGLContext.attachTo(*this);
 
