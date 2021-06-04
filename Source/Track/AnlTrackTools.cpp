@@ -150,11 +150,11 @@ std::optional<float> Track::Tools::getValue(Results::SharedPoints results, size_
         return std::get<2>(*first);
     }
     auto const next = std::get<0>(*second);
-    if(next <= end || !std::get<2>(*first).has_value())
+    if((next - end) > std::numeric_limits<double>::epsilon() || !std::get<2>(*first).has_value())
     {
         return std::get<2>(*second);
     }
-    auto const ratio = (time - end) / (next - end);
+    auto const ratio = std::min((time - end) / (next - end), 1.0);
     return (1.0 - ratio) * *std::get<2>(*first) + ratio * *std::get<2>(*second);
 }
 
