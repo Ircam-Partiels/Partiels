@@ -302,7 +302,7 @@ namespace Model
             {
                 auto& lock = getLock();
                 auto const canAccess = lock.exchange(false);
-                anlStrongAssert(canAccess == true);
+                anlWeakAssert(canAccess == true);
                 if(!canAccess)
                 {
                     return;
