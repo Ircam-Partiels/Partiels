@@ -30,6 +30,7 @@ public:
     void paint(juce::Graphics& g) override;
     void mouseDown(juce::MouseEvent const& event) override;
     void mouseDrag(juce::MouseEvent const& event) override;
+    void mouseUp(juce::MouseEvent const& event) override;
 
     std::function<void(int)> onMoved = nullptr;
 
