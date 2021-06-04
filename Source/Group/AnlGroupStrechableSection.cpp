@@ -41,7 +41,6 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
                     if(it != contents.cend())
                     {
                         components.push_back(*it->second.get());
-                        it->second->setViewport(mViewport);
                     }
                 }
                 mDraggableTable.setComponents(components);
@@ -145,16 +144,6 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     }
     anlWeakAssert(false);
     return {};
-}
-
-void Group::StrechableSection::setViewport(juce::Viewport* viewport)
-{
-    mViewport = viewport;
-    mSection.setViewport(viewport);
-    for(auto& content : mTrackSections.getContents())
-    {
-        content.second->setViewport(viewport);
-    }
 }
 
 std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createFocusTraverser()

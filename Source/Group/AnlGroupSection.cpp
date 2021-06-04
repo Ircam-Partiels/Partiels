@@ -48,10 +48,13 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
     mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
-        if(mViewport != nullptr)
+        if(auto* viewport = findParentComponentOfClass<juce::Viewport>())
         {
-            auto const point = mViewport->getLocalPoint(this, juce::Point<int>{0, size + 1});
-            mViewport->autoScroll(point.x, point.y, 20, 10);
+            if(viewport->canScrollVertically())
+            {
+                auto const point = viewport->getLocalPoint(this, juce::Point<int>{0, size + 1});
+                viewport->autoScroll(point.x, point.y, 20, 10);
+            }
         }
     };
 
@@ -74,11 +77,6 @@ Group::Section::~Section()
 juce::Rectangle<int> Group::Section::getPlotBounds() const
 {
     return mPlot.getBounds();
-}
-
-void Group::Section::setViewport(juce::Viewport* viewport)
-{
-    mViewport = viewport;
 }
 
 void Group::Section::resized()

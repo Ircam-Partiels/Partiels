@@ -71,10 +71,13 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
     mResizerBar.onMoved = [&](int size)
     {
         mAccessor.setAttr<AttrType::height>(size, NotificationType::synchronous);
-        if(mViewport != nullptr)
+        if(auto* viewport = findParentComponentOfClass<juce::Viewport>())
         {
-            auto const point = mViewport->getLocalPoint(this, juce::Point<int>{0, size + 1});
-            mViewport->autoScroll(point.x, point.y, 20, 10);
+            if(viewport->canScrollVertically())
+            {
+                auto const point = viewport->getLocalPoint(this, juce::Point<int>{0, size + 1});
+                viewport->autoScroll(point.x, point.y, 20, 10);
+            }
         }
     };
 
@@ -99,11 +102,6 @@ Track::Section::~Section()
 juce::Rectangle<int> Track::Section::getPlotBounds() const
 {
     return mPlot.getBounds();
-}
-
-void Track::Section::setViewport(juce::Viewport* viewport)
-{
-    mViewport = viewport;
 }
 
 void Track::Section::resized()

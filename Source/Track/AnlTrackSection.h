@@ -25,7 +25,6 @@ namespace Track
         ~Section() override;
         
         juce::Rectangle<int> getPlotBounds() const;
-        void setViewport(juce::Viewport* viewport);
 
         // juce::Component
         void resized() override;
@@ -59,7 +58,6 @@ namespace Track
         Zoom::ScrollBar mBinScrollBar{mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
-        juce::Viewport* mViewport{nullptr};
     };
 } // namespace Track
 
