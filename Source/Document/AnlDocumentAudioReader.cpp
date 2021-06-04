@@ -46,6 +46,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             }
                 break;
             case AttrType::layout:
+            case AttrType::viewport:
                 break;
         }
     };

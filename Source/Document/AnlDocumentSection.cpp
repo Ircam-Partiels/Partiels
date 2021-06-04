@@ -3,6 +3,14 @@
 
 ANALYSE_FILE_BEGIN
 
+void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const& newVisibleArea)
+{
+    if(onVisibleAreaChanged != nullptr)
+    {
+        onVisibleAreaChanged(newVisibleArea);        
+    }
+}
+
 Document::Section::Section(Director& director)
 : mDirector(director)
 {
@@ -70,6 +78,7 @@ Document::Section::Section(Director& director)
             }
             break;
             case AttrType::layout:
+            case AttrType::viewport:
             {
                 updateLayout();
             }
@@ -93,14 +102,43 @@ Document::Section::Section(Director& director)
             break;
         }
     };
+    
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    {
+        juce::ignoreUnused(acsr);
+        switch(signal)
+        {
+            case SignalType::viewport:
+            {
+                auto const x = static_cast<int>(value.getProperty("x", mViewport.getViewPositionX()));
+                auto const y = static_cast<int>(value.getProperty("y", mViewport.getViewPositionY()));
+                mViewport.setViewPosition(x, y);
+            }
+            break;
+        }
+    };
 
+    mViewport.onVisibleAreaChanged = [this](juce::Rectangle<int> const& area)
+    {
+        juce::WeakReference<juce::Component> target(this);
+        juce::MessageManager::callAsync([=, point = area.getTopLeft(), this]
+        {
+            if(target.get() != nullptr)
+            {
+                mAccessor.setAttr<AttrType::viewport>(point, NotificationType::synchronous);
+            }
+        });
+    };
+    
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.addReceiver(mReceiver);
     juce::Desktop::getInstance().addFocusChangeListener(this);
 }
 
 Document::Section::~Section()
 {
     juce::Desktop::getInstance().removeFocusChangeListener(this);
+    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 

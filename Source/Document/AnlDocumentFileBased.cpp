@@ -4,7 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::AttrContainer const& Document::FileBased::getDefaultContainer()
 {
-    static AttrContainer const document{{juce::File{}}, {}};
+    static AttrContainer const document{{juce::File{}}, {}, {}};
     return document;
 }
 
@@ -111,8 +111,16 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
+    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
+    auto var = std::make_unique<juce::DynamicObject>();
+    if(var != nullptr)
+    {
+        var->setProperty("x", viewport.getX());
+        var->setProperty("y", viewport.getY());
+        mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
+    }
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     triggerAsyncUpdate();
     return juce::Result::ok();
@@ -150,8 +158,16 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
         setFile({});
     }
     mAccessor.copyFrom({getDefaultContainer()}, NotificationType::synchronous);
+    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
+    auto var = std::make_unique<juce::DynamicObject>();
+    if(var != nullptr)
+    {
+        var->setProperty("x", viewport.getX());
+        var->setProperty("y", viewport.getY());
+        mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
+    }
     triggerAsyncUpdate();
     return juce::Result::ok();
 }

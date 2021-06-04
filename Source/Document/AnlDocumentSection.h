@@ -46,10 +46,22 @@ namespace Document
         void globalFocusChanged(juce::Component* focusedComponent) override;
 
         void updateLayout();
+        
+        class Viewport
+        : public juce::Viewport
+        {
+        public:
+            using juce::Viewport::Viewport;
+            ~Viewport() override = default;
+            
+            void visibleAreaChanged(juce::Rectangle<int> const& newVisibleArea) override;
+            std::function<void(juce::Rectangle<int> const&)> onVisibleAreaChanged = nullptr;
+        };
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
+        Accessor::Receiver mReceiver;
 
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
@@ -65,7 +77,7 @@ namespace Document
 
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
         DraggableTable mDraggableTable{"Group"};
-        juce::Viewport mViewport;
+        Viewport mViewport;
         Zoom::ScrollBar mTimeScrollBar{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;

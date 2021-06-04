@@ -61,6 +61,7 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
             }
             break;
             case AttrType::layout:
+            case AttrType::viewport:
                 break;
         }
     };

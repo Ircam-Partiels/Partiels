@@ -93,6 +93,7 @@ Application::Exporter::Exporter()
         switch(attribute)
         {
             case Document::AttrType::file:
+            case Document::AttrType::viewport:
                 break;
             case Document::AttrType::layout:
             {

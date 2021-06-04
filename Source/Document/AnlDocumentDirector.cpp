@@ -38,6 +38,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             }
             break;
             case AttrType::layout:
+            case AttrType::viewport:
                 break;
         }
     };

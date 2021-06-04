@@ -15,6 +15,7 @@ namespace Document
     {
           file
         , layout
+        , viewport
     };
     
     enum class AcsrType : size_t
@@ -25,9 +26,15 @@ namespace Document
         , tracks
     };
     
+    enum class SignalType
+    {
+          viewport
+    };
+    
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
+    , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
     >;
     
     using AcsrContainer = Model::Container
@@ -40,12 +47,13 @@ namespace Document
 
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
+    , public Broadcaster<Accessor, SignalType>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({juce::File{}}, {}))
+        : Accessor(AttrContainer({juce::File{}}, {}, {}))
         {
         }
 

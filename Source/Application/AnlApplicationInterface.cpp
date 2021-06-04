@@ -169,6 +169,7 @@ Application::Interface::Loader::Loader()
             }
             break;
             case Document::AttrType::layout:
+            case Document::AttrType::viewport:
                 break;
         }
     };
