@@ -10,14 +10,8 @@ void XmlParser::toXml<juce::Range<double>>(juce::XmlElement& xml, juce::Identifi
 }
 
 template <>
-void XmlParser::toXml<juce::File>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::File const& value)
-{
-    xml.setAttribute(attributeName, value.getFullPathName());
-}
-
-template <>
 auto XmlParser::fromXml<juce::Range<double>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Range<double> const& defaultValue)
-    -> juce::Range<double>
+-> juce::Range<double>
 {
     anlWeakAssert(xml.hasAttribute(attributeName + "::start"));
     anlWeakAssert(xml.hasAttribute(attributeName + "::end"));
@@ -25,10 +19,32 @@ auto XmlParser::fromXml<juce::Range<double>>(juce::XmlElement const& xml, juce::
 }
 
 template <>
+void XmlParser::toXml<juce::File>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::File const& value)
+{
+    xml.setAttribute(attributeName, value.getFullPathName());
+}
+
+template <>
 auto XmlParser::fromXml<juce::File>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::File const& defaultValue)
-    -> juce::File
+-> juce::File
 {
     return {xml.getStringAttribute(attributeName, defaultValue.getFullPathName())};
+}
+
+template <>
+void XmlParser::toXml<juce::Point<int>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Point<int> const& value)
+{
+    xml.setAttribute(attributeName + "::x", value.getX());
+    xml.setAttribute(attributeName + "::y", value.getY());
+}
+
+template <>
+auto XmlParser::fromXml<juce::Point<int>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Point<int> const& defaultValue)
+-> juce::Point<int>
+{
+    anlWeakAssert(xml.hasAttribute(attributeName + "::x"));
+    anlWeakAssert(xml.hasAttribute(attributeName + "::y"));
+    return {xml.getIntAttribute(attributeName + "::x", defaultValue.getX()), xml.getIntAttribute(attributeName + "::y", defaultValue.getY())};
 }
 
 class XmlParserUnitTest
