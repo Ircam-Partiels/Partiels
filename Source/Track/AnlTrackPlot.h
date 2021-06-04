@@ -46,7 +46,7 @@ namespace Track
             Accessor::Listener mListener;
             Zoom::Accessor::Listener mTimeZoomListener;
             Transport::PlayheadBar mTransportPlayheadBar;
-            Grid mGrid{mAccessor};
+            Grid mGrid{mAccessor, juce::Justification::horizontallyJustified};
             bool mSnapshotMode{false};
         };
 

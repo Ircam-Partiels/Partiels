@@ -11,7 +11,7 @@ namespace Track
     : public juce::Component
     {
     public:
-        Grid(Accessor& accessor);
+        Grid(Accessor& accessor, juce::Justification const justification);
         ~Grid() override;
 
         // juce::Component
@@ -22,6 +22,7 @@ namespace Track
         Accessor::Listener mListener;
         Zoom::Accessor::Listener mZoomListener;
         Zoom::Grid::Accessor::Listener mGridListener;
+        juce::Justification mJustification;
     };
 } // namespace Track
 

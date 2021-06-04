@@ -5,8 +5,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Grid::Grid(Accessor& accessor)
+Track::Grid::Grid(Accessor& accessor, juce::Justification const justification)
 : mAccessor(accessor)
+, mJustification(justification)
 {
     setInterceptsMouseClicks(false, false);
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -111,7 +112,7 @@ void Track::Grid::paint(juce::Graphics& g)
     auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
     {
         g.setColour(mAccessor.getAttr<AttrType::colours>().grid);
-        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, juce::Justification::left);
+        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, mJustification.getOnlyHorizontalFlags());
     };
 
     switch(Tools::getDisplayType(mAccessor))

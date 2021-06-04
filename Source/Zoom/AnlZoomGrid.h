@@ -6,7 +6,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Zoom
 {
-    namespace Grid
+    struct Grid
     {
         // clang-format off
         enum class AttrType : size_t
@@ -37,8 +37,15 @@ namespace Zoom
             }
         };
 
-        void paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, juce::Justification justification);
-    } // namespace Grid
+        static void paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, juce::Justification justification);
+        
+        static void paintHorizontal(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, double maxStringWidth, juce::Justification justification);
+        
+    private:
+        using TickDrawingInfo = std::tuple<size_t, double, double, double, double>;
+        static TickDrawingInfo getTickDrawingInfo(Accessor const& accessor, juce::Range<double> const& visibleRange, int size, double maxStringSize);
+        static bool isMainTick(Accessor const& accessor, TickDrawingInfo const& info, double const value);
+    };
 } // namespace Zoom
 
 ANALYSE_FILE_END

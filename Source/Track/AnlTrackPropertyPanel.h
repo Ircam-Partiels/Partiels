@@ -77,7 +77,7 @@ namespace Track
 
         using GridBaseInfo = std::tuple<size_t, double, double>;
         static constexpr std::array<GridBaseInfo, 6> sGridBaseInfoArray{
-            GridBaseInfo{0_z, 10.0, 4.0}, GridBaseInfo{0_z, 2.0, 5.0}, GridBaseInfo{3_z, 2.0, 5.0}, GridBaseInfo{0_z, 4.0, 4.0}, GridBaseInfo{0_z, 5.0, 2.0}, GridBaseInfo{0_z, 6.0, 5.0}};
+            GridBaseInfo{0_z, 10.0, 4.0}, GridBaseInfo{0_z, 2.0, 5.0}, GridBaseInfo{3_z, 2.0, 5.0}, GridBaseInfo{0_z, 4.0, 4.0}, GridBaseInfo{0_z, 10.0, 2.0}, GridBaseInfo{0_z, 6.0, 5.0}};
         juce::Viewport mViewport;
         bool mChannelLayoutActionStarted{false};
         static auto constexpr sInnerWidth = 300;
