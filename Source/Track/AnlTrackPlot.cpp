@@ -651,17 +651,43 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::identifier:
             case AttrType::name:
             case AttrType::key:
-            case AttrType::description:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
-            case AttrType::results:
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::focused:
             case AttrType::processing:
                 break;
+            case AttrType::description:
+            case AttrType::results:
+            {
+                removeChildComponent(&mGrid);
+                removeChildComponent(&mPlot);
+                removeChildComponent(&mTransportPlayheadBar);
+                switch(Tools::getDisplayType(mAccessor))
+                {
+                    case Tools::DisplayType::markers:
+                    {
+                        addAndMakeVisible(mPlot);
+                    }
+                        break;
+                    case Tools::DisplayType::points:
+                    {
+                        addAndMakeVisible(mGrid);
+                        addAndMakeVisible(mPlot);
+                    }
+                        break;
+                    case Tools::DisplayType::columns:
+                    {
+                        addAndMakeVisible(mPlot);
+                        addAndMakeVisible(mGrid);
+                    }
+                        break;
+                }
+                addAndMakeVisible(mTransportPlayheadBar);
+            }
             case AttrType::colours:
             {
                 setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
