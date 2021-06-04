@@ -58,7 +58,6 @@ Document::Section::Section(Director& director)
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::file:
