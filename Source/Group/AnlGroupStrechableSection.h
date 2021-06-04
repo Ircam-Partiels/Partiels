@@ -16,6 +16,7 @@ namespace Group
 
         void moveKeyboardFocusTo(juce::String const& identifier);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        void setViewport(juce::Viewport* viewport);
         
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
 
@@ -35,6 +36,7 @@ namespace Group
         DraggableTable mDraggableTable{"Track"};
         ConcertinaTable mConcertinaTable{"", false};
         BoundsListener mBoundsListener;
+        juce::Viewport* mViewport;
     };
 } // namespace Group
 

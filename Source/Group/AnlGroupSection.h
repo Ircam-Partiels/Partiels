@@ -29,6 +29,7 @@ namespace Group
 
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
         juce::Rectangle<int> getPlotBounds() const;
+        void setViewport(juce::Viewport* viewport);
         
         // juce::Component
         void resized() override;
@@ -68,6 +69,7 @@ namespace Group
         Zoom::ScrollBar mScrollBar{mAccessor.getAcsr<AcsrType::zoom>(), Zoom::ScrollBar::Orientation::vertical, true};
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
+        juce::Viewport* mViewport{nullptr};
         bool mIsItemDragged{false};
     };
 } // namespace Group

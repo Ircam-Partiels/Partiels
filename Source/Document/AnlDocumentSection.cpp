@@ -287,6 +287,7 @@ void Document::Section::updateLayout()
                     mDirector.endAction(ActionState::abort);
                 }
             };
+            groupSection->setViewport(&mViewport);
         }
         return groupSection;
     };
