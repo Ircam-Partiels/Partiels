@@ -26,7 +26,6 @@ public:
     void resized() override;
     void paint(juce::Graphics& g) override;
     void paintOverChildren(juce::Graphics& g) override;
-    void colourChanged() override;
     void lookAndFeelChanged() override;
     
 private:

@@ -323,7 +323,6 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 break;
             case AttrType::colours:
             {
-                setOpaque(acsr.getAttr<AttrType::colours>().background.isOpaque());
                 repaint();
             }
             break;

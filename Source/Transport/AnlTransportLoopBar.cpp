@@ -65,11 +65,6 @@ Transport::LoopBar::~LoopBar()
     mAccessor.removeListener(mListener);
 }
 
-void Transport::LoopBar::colourChanged()
-{
-    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
-}
-
 void Transport::LoopBar::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));

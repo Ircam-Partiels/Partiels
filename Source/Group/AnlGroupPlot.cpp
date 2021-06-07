@@ -121,7 +121,6 @@ Group::Plot::Overlay::Overlay(Plot& plot)
                 break;
             case AttrType::colour:
             {
-                setOpaque(acsr.getAttr<AttrType::colour>().isOpaque());
                 repaint();
             }
             break;

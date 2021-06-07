@@ -175,11 +175,6 @@ void Document::Section::paint(juce::Graphics& g)
     g.fillAll(findColour(ColourIds::backgroundColourId));
 }
 
-void Document::Section::colourChanged()
-{
-    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
-}
-
 void Document::Section::lookAndFeelChanged()
 {
     auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());

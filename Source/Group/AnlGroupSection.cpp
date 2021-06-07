@@ -105,11 +105,6 @@ void Group::Section::paintOverChildren(juce::Graphics& g)
     }
 }
 
-void Group::Section::colourChanged()
-{
-    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque());
-}
-
 bool Group::Section::isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
 {
     auto* source = dragSourceDetails.sourceComponent.get();

@@ -29,8 +29,7 @@ namespace Transport
         void mouseDrag(juce::MouseEvent const& event) override;
         void mouseUp(juce::MouseEvent const& event) override;
         void mouseDoubleClick(juce::MouseEvent const& event) override;
-        void colourChanged() override;
-        
+
     private:
         // clang-format off
         enum class EditMode

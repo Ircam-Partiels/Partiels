@@ -46,14 +46,4 @@ void Decorator::paintOverChildren(juce::Graphics& g)
     g.drawRoundedRectangle(bounds, mCornerSize, static_cast<float>(mBorderThickness));
 }
 
-void Decorator::colourChanged()
-{
-    setOpaque(findColour(ColourIds::backgroundColourId).isOpaque() && mCornerSize <= 0.0f);
-}
-
-void Decorator::lookAndFeelChanged()
-{
-    colourChanged();
-}
-
 ANALYSE_FILE_END

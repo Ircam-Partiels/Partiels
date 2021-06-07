@@ -124,7 +124,6 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
                 break;
             case AttrType::colour:
             {
-                setOpaque(acsr.getAttr<AttrType::colour>().isOpaque());
                 repaint();
             }
             break;
