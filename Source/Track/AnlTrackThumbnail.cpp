@@ -88,6 +88,7 @@ Track::Thumbnail::Thumbnail(Director& director)
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
+    setMouseCursor(juce::MouseCursor::DraggingHandCursor);
 }
 
 Track::Thumbnail::~Thumbnail()
