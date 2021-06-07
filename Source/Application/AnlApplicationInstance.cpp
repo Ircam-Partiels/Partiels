@@ -96,20 +96,27 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mApplicationAccessor.addListener(mApplicationListener, NotificationType::synchronous);
 
     anlDebug("Application", "Ready!");
-    auto const path = commandLine.removeCharacters("\"");
-    if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+    auto const paths = juce::StringArray::fromTokens(commandLine, " ", "\"");
+    std::vector<juce::File> files;
+    for(auto const& path : paths)
     {
-        mDocumentFileBased.addChangeListener(this);
-        anlDebug("Application", "Opening new file...");
-        openFile(juce::File(path));
-        return;
+        if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+        {
+            files.push_back(juce::File(path));
+        }
     }
-
+    if(!files.empty())
+    {
+        anlDebug("Application", "Opening new file(s)...");
+        openFiles(files);
+    }
+    
     auto const backupFile = getBackupFile();
     if(backupFile.existsAsFile())
     {
         if(AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Do you want to restore your document?", "The application unexpectedly quit. Do you want to restore the last saved state of the document before this?"))
         {
+            anlDebug("Application", "Restoring saved document...");
             auto const result = mDocumentFileBased.loadBackup(backupFile);
             anlWeakAssert(!result.failed());
             if(!result.failed())
@@ -123,7 +130,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentFileBased.addChangeListener(this);
     anlDebug("Application", "Reopening last document...");
-    openFile(mApplicationAccessor.getAttr<AttrType::currentDocumentFile>());
+    openFiles({mApplicationAccessor.getAttr<AttrType::currentDocumentFile>()});
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -133,11 +140,19 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
         anlDebug("Application", "Failed: not initialized.");
         return;
     }
-    auto const path = commandLine.removeCharacters("\"");
-    if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+    auto const paths = juce::StringArray::fromTokens(commandLine, " ", "\"");
+    std::vector<juce::File> files;
+    for(auto const& path : paths)
     {
-        anlDebug("Application", "Opening new file...");
-        openFile(juce::File(path));
+        if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+        {
+            anlDebug("Application", "Opening new file(s)...");
+            files.push_back(juce::File(path));
+        }
+    }
+    if(!files.empty())
+    {
+        openFiles(files);
     }
 }
 
@@ -195,30 +210,40 @@ juce::String Application::Instance::getFileWildCard()
     return App::getFileWildCardFor("doc");
 }
 
-void Application::Instance::openFile(juce::File const& file)
+void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
-    auto const fileExtension = file.getFileExtension();
-    if(file == juce::File{})
+    std::vector<juce::File> audioFiles;
+    juce::StringArray array;
+    for(auto const& file : files)
     {
-        mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
-        mDocumentFileBased.setFile(file);
-    }
-    else if(getFileExtension() == fileExtension)
-    {
-        if(!mDocumentFileBased.loadFrom(file, true))
+        if(file.hasFileExtension(getFileExtension()))
         {
+            mDocumentFileBased.loadFrom(file, true);
             return;
         }
+        if(mAudioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension()))
+        {
+            audioFiles.push_back(file);
+        }
+        else
+        {
+            array.add(file.getFullPathName());
+        }
     }
-    else if(mAudioFormatManager.getWildcardForAllFormats().contains(fileExtension))
+    if(!audioFiles.empty())
     {
         mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
-        mDocumentAccessor.setAttr<Document::AttrType::file>(file, NotificationType::synchronous);
+        mDocumentAccessor.setAttr<Document::AttrType::files>(files, NotificationType::synchronous);
+        mDocumentFileBased.setFile({});
+    }
+    else if(array.isEmpty())
+    {
+        mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
     }
     else
     {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File format not supported!", "The format of the file FILENAME is not supported by thee application.", {{"FILENAME", file.getFullPathName()}});
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File format not supported!", "The format(s) of the file(s) FILENAMES is not supported by the application.", {{"FILENAMES", array.joinIntoString(",")}});
     }
 }
 

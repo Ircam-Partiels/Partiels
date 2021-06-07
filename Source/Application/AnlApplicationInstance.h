@@ -39,7 +39,7 @@ namespace Application
         static juce::String getFileExtension();
         static juce::String getFileWildCard();
 
-        void openFile(juce::File const& file);
+        void openFiles(std::vector<juce::File> const& files);
 
         Accessor& getApplicationAccessor();
         AudioSettings* getAudioSettings();

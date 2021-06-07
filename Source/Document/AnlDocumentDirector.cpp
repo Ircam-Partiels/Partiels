@@ -15,9 +15,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
     {
         switch(attribute)
         {
-            case AttrType::file:
+            case AttrType::files:
             {
-                auto const file = mAccessor.getAttr<AttrType::file>();
+                auto const files = mAccessor.getAttr<AttrType::files>();
+                auto const file = files.empty() ? juce::File() : files.front();
                 if(file != juce::File() && !file.existsAsFile())
                 {
                     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
@@ -29,7 +30,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                             setFile(file);
                             return;
                         }
-                        mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+                        mAccessor.setAttr<AttrType::files>(std::vector<juce::File>{fc.getResult()}, NotificationType::synchronous);
                         return;
                     }
                 }
@@ -592,7 +593,8 @@ void Document::Director::sanitize(NotificationType const notification)
 
 void Document::Director::fileHasBeenRemoved()
 {
-    auto const file = mAccessor.getAttr<AttrType::file>();
+    auto const files = mAccessor.getAttr<AttrType::files>();
+    auto const file = files.empty() ? juce::File() : files.front();
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannt be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
     {
         auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
@@ -601,13 +603,14 @@ void Document::Director::fileHasBeenRemoved()
         {
             return;
         }
-        mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::files>(std::vector<juce::File>{fc.getResult()}, NotificationType::synchronous);
     }
 }
 
 void Document::Director::fileHasBeenModified()
 {
-    auto const file = mAccessor.getAttr<AttrType::file>();
+    auto const files = mAccessor.getAttr<AttrType::files>();
+    auto const file = files.empty() ? juce::File() : files.front();
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file  has been modified!", "The audio file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
     {
         initializeAudioReaders(NotificationType::synchronous);
@@ -616,7 +619,8 @@ void Document::Director::fileHasBeenModified()
 
 void Document::Director::initializeAudioReaders(NotificationType notification)
 {
-    auto const file = mAccessor.getAttr<AttrType::file>();
+    auto const files = mAccessor.getAttr<AttrType::files>();
+    auto const file = files.empty() ? juce::File() : files.front();
     auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     if(!file.existsAsFile())
     {

@@ -13,7 +13,7 @@ namespace Document
     // clang-format off
     enum class AttrType : size_t
     {
-          file
+          files
         , layout
         , viewport
     };
@@ -32,7 +32,7 @@ namespace Document
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
+    < Model::Attr<AttrType::files, std::vector<juce::File>, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
     >;
@@ -53,7 +53,7 @@ namespace Document
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({juce::File{}}, {}, {}))
+        : Accessor(AttrContainer({}, {}, {}))
         {
         }
 
@@ -88,6 +88,17 @@ namespace Document
                 }
                 return static_cast<size_t>(std::distance(trackAcsrs.cbegin(), it));
             }
+        }
+
+        std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override
+        {
+            auto copy = std::make_unique<juce::XmlElement>(xml);
+            if(copy != nullptr && version < ProjectInfo::versionNumber)
+            {
+                auto const file = XmlParser::fromXml(*copy.get(), "file", juce::File{});
+                XmlParser::toXml(*copy.get(), "files", std::vector<juce::File>{file});
+            }
+            return copy;
         }
     };
 } // namespace Document

@@ -11,11 +11,13 @@ Document::FileInfoPanel::FileInfoPanel(Accessor& accessor, juce::AudioFormatMana
     {
         switch(attribute)
         {
-            case AttrType::file:
+            case AttrType::files:
             {
                 mConcertinaTable.setComponents({});
 
-                auto const file = acsr.getAttr<AttrType::file>();
+                auto const files = acsr.getAttr<AttrType::files>();
+                auto const file = files.empty() ? juce::File() : files.front();
+
                 mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mPanelFilePath.entry.setEditable(false);
 

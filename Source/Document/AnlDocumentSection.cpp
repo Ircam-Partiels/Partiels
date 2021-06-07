@@ -68,9 +68,10 @@ Document::Section::Section(Director& director)
     {
         switch(attribute)
         {
-            case AttrType::file:
+            case AttrType::files:
             {
-                auto const file = acsr.getAttr<AttrType::file>();
+                auto const files = acsr.getAttr<AttrType::files>();
+                auto const file = files.empty() ? juce::File() : files.front();
                 mFileInfoLabel.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
                 mFileInfoLabel.setTooltip(file.getFullPathName());
                 mFileInfoLabel.setVisible(file != juce::File());

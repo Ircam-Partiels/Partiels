@@ -133,10 +133,10 @@ Application::Interface::Loader::Loader()
     mFileTable.onFileSelected = [](juce::File const& file)
     {
         auto& documentAcsr = Instance::get().getDocumentAccessor();
-        auto const documentHasFile = documentAcsr.getAttr<Document::AttrType::file>().existsAsFile();
+        auto const documentHasFile = !documentAcsr.getAttr<Document::AttrType::files>().empty();
         if(!documentHasFile)
         {
-            Instance::get().openFile(file);
+            Instance::get().openFiles({file});
         }
         else
         {
@@ -149,7 +149,7 @@ Application::Interface::Loader::Loader()
                 return;
             }
 
-            copyAcsr.setAttr<Document::AttrType::file>(documentAcsr.getAttr<Document::AttrType::file>(), NotificationType::synchronous);
+            copyAcsr.setAttr<Document::AttrType::files>(documentAcsr.getAttr<Document::AttrType::files>(), NotificationType::synchronous);
 
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
@@ -163,7 +163,7 @@ Application::Interface::Loader::Loader()
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case Document::AttrType::file:
+            case Document::AttrType::files:
             {
                 updateState();
             }
@@ -195,7 +195,7 @@ Application::Interface::Loader::~Loader()
 void Application::Interface::Loader::updateState()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasFile = documentAccessor.getAttr<Document::AttrType::file>().existsAsFile();
+    auto const documentHasFile = !documentAccessor.getAttr<Document::AttrType::files>().empty();
     auto const documentHasTrackOrGroup = documentAccessor.getNumAcsrs<Document::AcsrType::tracks>() > 0_z || documentAccessor.getNumAcsrs<Document::AcsrType::groups>() > 0_z;
 
     removeChildComponent(&mLoadFileButton);
@@ -312,23 +312,25 @@ void Application::Interface::Loader::filesDropped(juce::StringArray const& files
     juce::ignoreUnused(x, y);
     mLoadFileButton.setState(juce::Button::ButtonState::buttonNormal);
     auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
-    auto getFile = [&]()
+    auto getFiles = [&]()
     {
+        std::vector<juce::File> juceFiles;
         for(auto const& fileName : files)
         {
-            if(audioFormatWildcard.contains(juce::File(fileName).getFileExtension()))
+            juce::File const file(fileName);
+            if(audioFormatWildcard.contains(file.getFileExtension()))
             {
-                return juce::File(fileName);
+                juceFiles.push_back(file);
             }
         }
-        return juce::File();
+        return juceFiles;
     };
-    auto const file = getFile();
-    if(file == juce::File())
+    auto const juceFiles = getFiles();
+    if(juceFiles.empty())
     {
         return;
     }
-    Instance::get().openFile(file);
+    Instance::get().openFiles(juceFiles);
     repaint();
 }
 

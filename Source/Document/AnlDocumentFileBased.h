@@ -35,6 +35,7 @@ namespace Document
 
         Accessor& mAccessor;
         Director& mDirector;
+        juce::String const mFileExtension;
         Accessor::Listener mListener;
         Track::Accessor::Listener mTrackListener;
         std::vector<std::reference_wrapper<Track::Accessor>> mTrackAccessors;

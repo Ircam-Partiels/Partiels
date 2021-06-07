@@ -4,7 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::AttrContainer const& Document::FileBased::getDefaultContainer()
 {
-    static AttrContainer const document{{juce::File{}}, {}, {}};
+    static AttrContainer const document{{{}}, {}, {}};
     return document;
 }
 
@@ -12,6 +12,7 @@ Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::Str
 : juce::FileBasedDocument(fileExtension, fileWildCard, juce::translate(openFileDialogTitle), juce::translate(saveFileDialogTitle))
 , mAccessor(accessor)
 , mDirector(director)
+, mFileExtension(fileExtension)
 {
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -101,7 +102,17 @@ Document::FileBased::~FileBased()
 
 juce::String Document::FileBased::getDocumentTitle()
 {
-    return getFile().existsAsFile() ? getFile().getFileNameWithoutExtension() : (mAccessor.getAttr<AttrType::file>().existsAsFile() ? mAccessor.getAttr<AttrType::file>().getFileNameWithoutExtension() : "");
+    auto const file = getFile();
+    if(file.existsAsFile())
+    {
+        return file.getFileNameWithoutExtension();
+    }
+    auto const files = mAccessor.getAttr<AttrType::files>();
+    if(!files.empty())
+    {
+        return files.front().getFileNameWithoutExtension();
+    }
+    return "";
 }
 
 juce::Result Document::FileBased::loadDocument(juce::File const& file)
@@ -192,7 +203,17 @@ juce::Result Document::FileBased::saveBackup(juce::File const& file)
 
 juce::File Document::FileBased::getLastDocumentOpened()
 {
-    return getFile().existsAsFile() ? getFile() : (mAccessor.getAttr<AttrType::file>().existsAsFile() ? mAccessor.getAttr<AttrType::file>().getFullPathName() : mLastFile.getParentDirectory());
+    auto const file = getFile();
+    if(file.existsAsFile())
+    {
+        return file;
+    }
+    auto const files = mAccessor.getAttr<AttrType::files>();
+    if(!files.empty())
+    {
+        return files.front().withFileExtension(mFileExtension);
+    }
+    return mLastFile.getParentDirectory();
 }
 
 void Document::FileBased::setLastDocumentOpened(juce::File const& file)

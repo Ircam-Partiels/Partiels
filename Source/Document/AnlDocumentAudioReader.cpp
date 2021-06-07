@@ -6,19 +6,19 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
 {
     using AlertIconType = juce::AlertWindow::AlertIconType;
     auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
-    
-    auto const file = accessor.getAttr<AttrType::file>();
-    if(file == juce::File())
+
+    auto const files = accessor.getAttr<AttrType::files>();
+    if(files.empty())
     {
         return nullptr;
     }
-    
-    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
+
+    auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(files.front()));
     if(audioFormatReader == nullptr)
     {
         if(alertType == AlertType::window)
         {
-            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format reader cannot be allocated for the input stream FLNAME.").replace("FLNAME", file.getFullPathName()));
+            juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format reader cannot be allocated for the input stream FLNAME.").replace("FLNAME", files.front().getFullPathName()));
         }
         return nullptr;
     }
@@ -34,23 +34,23 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
     {
         switch(attribute)
         {
-            case AttrType::file:
+            case AttrType::files:
             {
-                auto const file = acsr.getAttr<AttrType::file>();
-                if(file == juce::File{})
+                auto const files = acsr.getAttr<AttrType::files>();
+                if(files.empty())
                 {
                     mTransportAudioReader.setAudioFormatReader(nullptr);
                     return;
                 }
                 mTransportAudioReader.setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window));
             }
-                break;
+            break;
             case AttrType::layout:
             case AttrType::viewport:
                 break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
