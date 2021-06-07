@@ -7,7 +7,7 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 {
     if(onVisibleAreaChanged != nullptr)
     {
-        onVisibleAreaChanged(newVisibleArea);        
+        onVisibleAreaChanged(newVisibleArea);
     }
 }
 
@@ -102,7 +102,7 @@ Document::Section::Section(Director& director)
             break;
         }
     };
-    
+
     mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
         juce::ignoreUnused(acsr);
@@ -122,14 +122,14 @@ Document::Section::Section(Director& director)
     {
         juce::WeakReference<juce::Component> target(this);
         juce::MessageManager::callAsync([=, point = area.getTopLeft(), this]
-        {
-            if(target.get() != nullptr)
-            {
-                mAccessor.setAttr<AttrType::viewport>(point, NotificationType::synchronous);
-            }
-        });
+                                        {
+                                            if(target.get() != nullptr)
+                                            {
+                                                mAccessor.setAttr<AttrType::viewport>(point, NotificationType::synchronous);
+                                            }
+                                        });
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
     juce::Desktop::getInstance().addFocusChangeListener(this);
@@ -277,7 +277,7 @@ juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identi
         }
         return identifier;
     };
-    
+
     auto it = mGroupSections.find(getGroupIdentifier());
     anlWeakAssert(it != mGroupSections.end());
     if(it != mGroupSections.end())

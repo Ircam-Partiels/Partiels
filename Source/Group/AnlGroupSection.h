@@ -29,7 +29,7 @@ namespace Group
 
         std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
         juce::Rectangle<int> getPlotBounds() const;
-        
+
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;

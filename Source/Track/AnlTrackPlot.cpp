@@ -266,7 +266,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         }
         return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".") + unit;
     };
-    
+
     auto const& channelResults = points->at(channel);
     if(channelResults.size() == 1_z)
     {
@@ -672,19 +672,19 @@ Track::Plot::Overlay::Overlay(Plot& plot)
                     {
                         addAndMakeVisible(mPlot);
                     }
-                        break;
+                    break;
                     case Tools::DisplayType::points:
                     {
                         addAndMakeVisible(mGrid);
                         addAndMakeVisible(mPlot);
                     }
-                        break;
+                    break;
                     case Tools::DisplayType::columns:
                     {
                         addAndMakeVisible(mPlot);
                         addAndMakeVisible(mGrid);
                     }
-                        break;
+                    break;
                 }
                 addAndMakeVisible(mTransportPlayheadBar);
             }

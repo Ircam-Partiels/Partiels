@@ -38,10 +38,10 @@ void Decorator::paintOverChildren(juce::Graphics& g)
     path.addRectangle(bounds);
     path.setUsingNonZeroWinding(false);
     path.addRoundedRectangle(bounds, mCornerSize);
-    
+
     g.setColour(findColour(ColourIds::backgroundColourId));
     g.fillPath(path);
-    
+
     g.setColour(findColour(mIsHighlighted ? ColourIds::highlightedBorderColourId : ColourIds::normalBorderColourId));
     g.drawRoundedRectangle(bounds, mCornerSize, static_cast<float>(mBorderThickness));
 }

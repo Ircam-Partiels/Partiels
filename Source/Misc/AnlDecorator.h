@@ -26,8 +26,7 @@ public:
     void resized() override;
     void paint(juce::Graphics& g) override;
     void paintOverChildren(juce::Graphics& g) override;
-    void lookAndFeelChanged() override;
-    
+
 private:
     juce::Component& mContent;
     int const mBorderThickness;

@@ -45,14 +45,14 @@ namespace Document
         void globalFocusChanged(juce::Component* focusedComponent) override;
 
         void updateLayout();
-        
+
         class Viewport
         : public juce::Viewport
         {
         public:
             using juce::Viewport::Viewport;
             ~Viewport() override = default;
-            
+
             void visibleAreaChanged(juce::Rectangle<int> const& newVisibleArea) override;
             std::function<void(juce::Rectangle<int> const&)> onVisibleAreaChanged = nullptr;
         };
