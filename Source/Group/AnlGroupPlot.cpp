@@ -109,6 +109,7 @@ Group::Plot::Overlay::Overlay(Plot& plot)
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
+        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
