@@ -109,8 +109,7 @@ bool Group::Section::isInterestedInDragSource(juce::DragAndDropTarget::SourceDet
 {
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
-    auto* parent = findParentComponentOfClass<StrechableSection>();
-    if(source == nullptr || obj == nullptr || dynamic_cast<Track::Section*>(source) == nullptr || source->findParentComponentOfClass<StrechableSection>() == parent)
+    if(source == nullptr || obj == nullptr || dynamic_cast<Track::Section*>(source) == nullptr)
     {
         return false;
     }
@@ -122,7 +121,8 @@ void Group::Section::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
     anlWeakAssert(obj != nullptr && source != nullptr);
-    if(obj == nullptr || source == nullptr)
+    auto* parent = findParentComponentOfClass<StrechableSection>();
+    if(obj == nullptr || source == nullptr || source->findParentComponentOfClass<StrechableSection>() == parent)
     {
         mIsItemDragged = false;
         repaint();
@@ -135,7 +135,14 @@ void Group::Section::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
 
 void Group::Section::itemDragMove(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
 {
-    juce::ignoreUnused(dragSourceDetails);
+    if(auto* viewport = findParentComponentOfClass<juce::Viewport>())
+    {
+        if(viewport->canScrollVertically())
+        {
+            auto const point = viewport->getLocalPoint(this, dragSourceDetails.localPosition);
+            viewport->autoScroll(point.x, point.y, 20, 10);
+        }
+    }
 }
 
 void Group::Section::itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)

@@ -89,7 +89,7 @@ bool DraggableTable::isInterestedInDragSource(juce::DragAndDropTarget::SourceDet
     }
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
-    if(source == nullptr || obj == nullptr || source->findParentComponentOfClass<DraggableTable>() != this)
+    if(source == nullptr || obj == nullptr)
     {
         return false;
     }
@@ -101,7 +101,7 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
     auto* source = dragSourceDetails.sourceComponent.get();
     auto* obj = dragSourceDetails.description.getDynamicObject();
     anlWeakAssert(obj != nullptr && source != nullptr);
-    if(obj == nullptr || source == nullptr)
+    if(obj == nullptr || source == nullptr || source->findParentComponentOfClass<DraggableTable>() != this)
     {
         mIsDragging = false;
         return;
@@ -133,6 +133,19 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
         return;
     }
 
+    if(auto* viewport = findParentComponentOfClass<juce::Viewport>())
+    {
+        if(viewport->canScrollVertically())
+        {
+            auto const point = viewport->getLocalPoint(this, dragSourceDetails.localPosition);
+            viewport->autoScroll(point.x, point.y, 20, 10);
+        }
+    }
+
+    if(source->findParentComponentOfClass<DraggableTable>() != this)
+    {
+        return;
+    }
 
     auto const offset = static_cast<int>(obj->getProperty("offset"));
     auto const it = std::find_if(mContents.cbegin(), mContents.cend(), [source](auto const& content)
