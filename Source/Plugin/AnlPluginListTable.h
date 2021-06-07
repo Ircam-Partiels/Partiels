@@ -34,6 +34,7 @@ namespace PluginList
         void returnKeyPressed(int lastRowSelected) override;
         void cellDoubleClicked (int rowNumber, int columnId, juce::MouseEvent const& e) override;
         void sortOrderChanged(int newSortColumnId, bool isForwards) override;
+        juce::String getCellTooltip(int rowNumber, int columnId) override;
         
         Accessor& mAccessor;
         Scanner& mScanner;
@@ -48,6 +49,7 @@ namespace PluginList
         bool mIsBeingUpdated = false;
         std::set<Plugin::Key> mBlacklist;
         
+        juce::TooltipWindow mTooltipWindow{this};
         JUCE_LEAK_DETECTOR(Table)
     };
 }

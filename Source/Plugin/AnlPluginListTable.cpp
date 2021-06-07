@@ -332,4 +332,16 @@ void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
     }
 }
 
+juce::String PluginList::Table::getCellTooltip(int rowNumber, int columnId)
+{
+    juce::ignoreUnused(columnId);
+    if(rowNumber >= static_cast<int>(mFilteredList.size()))
+    {
+        return "";
+    }
+    auto const index = static_cast<size_t>(rowNumber);
+    auto const& description = mFilteredList[index].second;
+    return description.details;
+}
+
 ANALYSE_FILE_END
