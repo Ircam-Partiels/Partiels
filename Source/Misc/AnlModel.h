@@ -118,7 +118,7 @@ namespace Model
         }
 
         //! @brief The destructor
-        ~Accessor()
+        virtual ~Accessor()
         {
             if constexpr(std::is_same<acsr_container_type, default_empty_container>::value == false)
             {
@@ -361,6 +361,7 @@ namespace Model
             {
                 return std::unique_ptr<juce::XmlElement>();
             }
+            xml->setAttribute("AnlModelVersion", ProjectInfo::versionNumber);
 
             detail::for_each(mAttributes, [&](auto const& d)
                              {
@@ -400,7 +401,11 @@ namespace Model
         void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType const notification)
         {
             Accessor temporary;
-            fromXml(temporary, xml, name);
+            auto copy = parseXml(xml, xml.getIntAttribute("AnlModelVersion", 0));
+            if(copy != nullptr)
+            {
+                fromXml(temporary, *copy.get(), name);
+            }
             copyFrom(temporary, notification);
         }
 
@@ -667,6 +672,12 @@ namespace Model
         {
             juce::ignoreUnused(other);
             return npos;
+        }
+
+        virtual std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version)
+        {
+            juce::ignoreUnused(version);
+            return std::make_unique<juce::XmlElement>(xml);
         }
 
     private:
