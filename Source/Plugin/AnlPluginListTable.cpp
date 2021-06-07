@@ -268,7 +268,10 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
             case ColumnType::Version:
                 return juce::String(description.version);
             case ColumnType::Details:
-                return description.details;
+            {
+                auto const position = description.details.indexOf("\n");
+                return description.details.substring(0, position > 0 ? position : description.details.length());
+            }
             case ColumnType::Category:
                 return description.category.isEmpty() ? "-" : description.category;
         }
