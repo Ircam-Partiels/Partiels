@@ -111,7 +111,7 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
                                           {
                                               return (content != nullptr) ? value + content->getHeight() : value;
                                           });
-    setSize(getWidth(), fullSize + source->getHeight());
+    setSize(getWidth(), fullSize + source->getHeight() + 2);
     source->setAlpha(0.4f);
 
     if(auto* description = dynamic_cast<Description*>(obj))
@@ -133,13 +133,8 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
         return;
     }
 
-    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [&](int value, auto const& content)
-                                          {
-                                              return (content != nullptr) ? value + content->getHeight() : value;
-                                          });
-    setSize(getWidth(), fullSize + source->getHeight());
 
-    auto offset = static_cast<int>(obj->getProperty("offset"));
+    auto const offset = static_cast<int>(obj->getProperty("offset"));
     auto const it = std::find_if(mContents.cbegin(), mContents.cend(), [source](auto const& content)
                                  {
                                      return content.getComponent() == source;
@@ -164,8 +159,8 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
             if(i != index && i != index + 1)
             {
                 auto const difference = std::abs(bounds.getY() - position);
-                auto const distance = static_cast<double>(difference) / sourceHeight;
-                auto const scale = 1.0 - std::max((0.8 - std::cos(std::min(distance * pi, pi))) / 1.8, 0.0);
+                auto const distance = static_cast<double>(difference) / mContents[i]->getHeight();
+                auto const scale = 1.0 - std::min(std::max((0.8 - std::cos(std::min(distance * pi, pi))) / 1.8, 0.0), 1.0);
                 bounds.removeFromTop(static_cast<int>(std::ceil(scale * sourceHeight)));
             }
             mContents[i]->setBounds(bounds.removeFromTop(mContents[i]->getHeight()));
