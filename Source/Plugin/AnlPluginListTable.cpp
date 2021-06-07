@@ -41,8 +41,8 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Feature"), ColumnType::Feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
     header.addColumn(juce::translate("Description"), ColumnType::Details, 200, 100, 500, ColumnFlags::notSortable);
     header.addColumn(juce::translate("Maker"), ColumnType::Maker, 120, 100, 300);
-    header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 100, 200);
-    header.addColumn(juce::translate("Version"), ColumnType::Version, 60, 60, 60, ColumnFlags::notResizable | ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 60, 200);
+    header.addColumn(juce::translate("Version"), ColumnType::Version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
     addAndMakeVisible(mSeparator);
     
