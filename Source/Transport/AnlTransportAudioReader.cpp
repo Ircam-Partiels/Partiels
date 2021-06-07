@@ -276,12 +276,12 @@ void Transport::AudioReader::setAudioFormatReader(std::unique_ptr<juce::AudioFor
     auto source = std::make_shared<ResamplingSource>(std::move(audioFormatReader));
     if(source != nullptr)
     {
-        source->setPlaying(mAccessor.getAttr<AttrType::playback>());
         source->setGain(static_cast<float>(mAccessor.getAttr<AttrType::gain>()));
         source->setStartPlayheadPosition(mAccessor.getAttr<AttrType::startPlayhead>());
         source->setLooping(mAccessor.getAttr<AttrType::looping>());
         source->setLoopRange(mAccessor.getAttr<AttrType::loopRange>());
         source->prepareToPlay(mSamplesPerBlockExpected, mSampleRate);
+        source->setPlaying(mAccessor.getAttr<AttrType::playback>());
     }
     mSourceManager.setInstance(source);
 }
@@ -295,7 +295,7 @@ void Transport::AudioReader::prepareToPlay(int samplesPerBlockExpected, double s
     {
         instance->setGain(static_cast<float>(mAccessor.getAttr<AttrType::gain>()));
         instance->setLooping(mAccessor.getAttr<AttrType::looping>());
-        instance->setLooping(mAccessor.getAttr<AttrType::playback>());
+        instance->setPlaying(mAccessor.getAttr<AttrType::playback>());
         instance->prepareToPlay(samplesPerBlockExpected, sampleRate);
     }
 }
