@@ -23,20 +23,20 @@ Group::Thumbnail::Thumbnail(Director& director)
     {
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
-    
+
     auto getPropertiesMenu = [&]()
     {
         juce::PopupMenu menu;
         menu.addItem("Group properties", [&]()
-        {
-            if(auto var = std::make_unique<juce::DynamicObject>())
-            {
-                auto const position = juce::Desktop::getInstance().getMousePosition();
-                var->setProperty("x", position.x);
-                var->setProperty("y", position.y - 40);
-                mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
-            }
-        });
+                     {
+                         if(auto var = std::make_unique<juce::DynamicObject>())
+                         {
+                             auto const position = juce::Desktop::getInstance().getMousePosition();
+                             var->setProperty("x", position.x);
+                             var->setProperty("y", position.y - 40);
+                             mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
+                         }
+                     });
         auto const layout = mAccessor.getAttr<AttrType::layout>();
         for(auto const& identifier : layout)
         {
@@ -45,20 +45,20 @@ Group::Thumbnail::Thumbnail(Director& director)
             {
                 auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
                 menu.addItem(juce::translate("Show TRACKNAME properties").replace("TRACKNAME", trackName), [=]
-                {
-                    if(auto var = std::make_unique<juce::DynamicObject>())
-                    {
-                        auto const position = juce::Desktop::getInstance().getMousePosition();
-                        var->setProperty("x", position.x);
-                        var->setProperty("y", position.y - 40);
-                        trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
-                    }
-                });
+                             {
+                                 if(auto var = std::make_unique<juce::DynamicObject>())
+                                 {
+                                     auto const position = juce::Desktop::getInstance().getMousePosition();
+                                     var->setProperty("x", position.x);
+                                     var->setProperty("y", position.y - 40);
+                                     trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                                 }
+                             });
             }
         }
         return menu;
     };
-    
+
     mPropertiesButton.onClick = [=, this]()
     {
         auto menu = getPropertiesMenu();
@@ -214,10 +214,15 @@ void Group::Thumbnail::parentHierarchyChanged()
     lookAndFeelChanged();
 }
 
+void Group::Thumbnail::mouseMove(juce::MouseEvent const& event)
+{
+    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
+}
+
 void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
-    juce::ignoreUnused(event);
     beginDragAutoRepeat(5);
+    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
 }
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
@@ -226,6 +231,7 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     {
         return;
     }
+    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StrechableSection>();
@@ -257,6 +263,11 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
                                          }),
                                      parent, snapshot, true, &p, &event.source);
     }
+}
+
+void Group::Thumbnail::mouseUp(juce::MouseEvent const& event)
+{
+    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
 }
 
 ANALYSE_FILE_END

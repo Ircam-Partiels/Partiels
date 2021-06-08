@@ -28,8 +28,10 @@ namespace Group
         void paint(juce::Graphics& g) override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
+        void mouseMove(juce::MouseEvent const& event) override;
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
+        void mouseUp(juce::MouseEvent const& event) override;
 
     private:
         Director& mDirector;
