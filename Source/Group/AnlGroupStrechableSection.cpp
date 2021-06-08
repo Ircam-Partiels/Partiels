@@ -55,24 +55,31 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
         }
     };
 
-    mSection.onTrackInserted = [&](juce::String const& identifier)
+    mSection.onTrackInserted = [&](juce::String const& identifier, bool copy)
     {
         if(onTrackInserted != nullptr)
         {
-            onTrackInserted(identifier);
+            onTrackInserted(identifier, 0_z, copy);
         }
     };
 
-    mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
+    mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index, bool copy)
     {
-        mDirector.startAction();
-        auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
-        layout.insert(layout.begin() + static_cast<long>(index), identifier);
-        mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
-        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-        auto const trackName = trackAcsr.has_value() ? trackAcsr->get().getAttr<Track::AttrType::name>() : "-";
-        auto const groupName = mAccessor.getAttr<AttrType::name>();
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Move \"TRACKNAME\" Track in the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName));
+        if(copy)
+        {
+            if(onTrackInserted != nullptr)
+            {
+                onTrackInserted(identifier, index, true);
+            }
+        }
+        else
+        {
+            mDirector.startAction();
+            auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
+            layout.insert(layout.begin() + static_cast<long>(index), identifier);
+            mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+            mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
+        }
     };
 
     mBoundsListener.onComponentResized = [&](juce::Component& component)
