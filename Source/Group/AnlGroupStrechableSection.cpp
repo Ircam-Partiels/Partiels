@@ -97,6 +97,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 Group::StrechableSection::~StrechableSection()
 {
     mBoundsListener.detachFrom(mConcertinaTable);
+    mBoundsListener.detachFrom(mSection);
     mAccessor.removeListener(mListener);
 }
 
