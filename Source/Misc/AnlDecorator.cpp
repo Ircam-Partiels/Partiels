@@ -7,6 +7,7 @@ Decorator::Decorator(juce::Component& content, int borderThickness, float corner
 , mBorderThickness(borderThickness)
 , mCornerSize(cornerSize)
 {
+    setInterceptsMouseClicks(false, true);
     addAndMakeVisible(mContent);
     colourChanged();
 }
