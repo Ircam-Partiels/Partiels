@@ -110,6 +110,12 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
         mIsDragging = false;
         return;
     }
+    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
+                                          {
+                                              return (content != nullptr) ? value + content->getHeight() : value;
+                                          });
+    setSize(getWidth(), fullSize + static_cast<int>(obj->getProperty("height")));
+
     mIsDragging = true;
     if(auto* description = dynamic_cast<Description*>(obj))
     {
@@ -180,7 +186,6 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
             mContents[i]->setBounds(bounds.removeFromTop(mContents[i]->getHeight()));
         }
     }
-    setSize(getWidth(), bounds.getY());
 }
 
 void DraggableTable::itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
