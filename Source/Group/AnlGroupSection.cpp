@@ -128,7 +128,8 @@ void Group::Section::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
         repaint();
         return;
     }
-    source->setAlpha(0.4f);
+    auto const isCopy = juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown();
+    source->setAlpha(isCopy ? 1.0f : 0.4f);
     mIsItemDragged = true;
     repaint();
 }
@@ -171,9 +172,10 @@ void Group::Section::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
     }
 
     source->setAlpha(1.0f);
+    auto const isCopy = juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown();
     if(onTrackInserted != nullptr)
     {
-        onTrackInserted(obj->getProperty("identifier"));
+        onTrackInserted(obj->getProperty("identifier"), isCopy);
     }
 }
 

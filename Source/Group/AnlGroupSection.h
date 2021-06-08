@@ -27,7 +27,7 @@ namespace Group
         Section(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~Section() override;
 
-        std::function<void(juce::String const& identifier)> onTrackInserted = nullptr;
+        std::function<void(juce::String const& identifier, bool copy)> onTrackInserted = nullptr;
         juce::Rectangle<int> getPlotBounds() const;
 
         // juce::Component
