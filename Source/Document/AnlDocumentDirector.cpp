@@ -407,7 +407,7 @@ bool Document::Director::removeGroup(juce::String const identifier, Notification
     return true;
 }
 
-bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::String const trackIdentifier, NotificationType const notification)
+bool Document::Director::moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
 {
     anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
     anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
@@ -417,35 +417,46 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, juce::Str
     }
     // The track should already be in a group
     anlWeakAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
-    if(Tools::isTrackInGroup(mAccessor, trackIdentifier))
+    if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
     {
-        auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
-        auto const identifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-
-        // The previous groups is the same as the new group
-        anlWeakAssert(identifier != groupIdentifier);
-        if(identifier == groupIdentifier)
-        {
-            return false;
-        }
-
-        auto const layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
-        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
-    }
-
-    auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
-    auto layout = groupAcsr.getAttr<Group::AttrType::layout>();
-    if(std::any_of(layout.cbegin(), layout.cend(), [&](auto const& identifier)
-                   {
-                       return identifier == trackIdentifier;
-                   }))
-    {
-        anlWeakAssert(false);
         return false;
     }
-    layout.insert(layout.cbegin(), trackIdentifier);
+    
+    auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
+    auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
+    layout.insert(layout.cbegin() + static_cast<long>(index), trackIdentifier);
     groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
     groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
+    sanitize(notification);
+    return true;
+}
+
+bool Document::Director::copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification)
+{
+    anlStrongAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
+    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
+    if(!Tools::hasGroupAcsr(mAccessor, groupIdentifier) || !Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    {
+        return false;
+    }
+    // The track should already be in a group
+    anlWeakAssert(Tools::isTrackInGroup(mAccessor, trackIdentifier));
+    if(!Tools::isTrackInGroup(mAccessor, trackIdentifier))
+    {
+        return false;
+    }
+    
+    auto newTrackIdentifier = addTrack(groupIdentifier, index, NotificationType::synchronous);
+    if(!newTrackIdentifier.has_value())
+    {
+        return false;
+    }
+        
+    auto& newTrackAcsr = Tools::getTrackAcsr(mAccessor, *newTrackIdentifier);
+    Track::Accessor copy;
+    copy.copyFrom(Tools::getTrackAcsr(mAccessor, trackIdentifier), NotificationType::synchronous);
+    copy.setAttr<Track::AttrType::identifier>(*newTrackIdentifier, NotificationType::synchronous);
+    newTrackAcsr.copyFrom(copy, NotificationType::synchronous);
     sanitize(notification);
     return true;
 }
