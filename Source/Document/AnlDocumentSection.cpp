@@ -29,11 +29,50 @@ Document::Section::Section(Director& director)
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
 
-    mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index)
+    mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index, bool copy)
     {
-        auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
-        layout.insert(layout.begin() + static_cast<long>(index), identifier);
-        mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+        if(copy)
+        {
+            anlStrongAssert(Tools::hasGroupAcsr(mAccessor, identifier));
+            if(!Tools::hasGroupAcsr(mAccessor, identifier))
+            {
+                return;
+            }
+            mDirector.startAction();
+            auto const groupIdentifier = mDirector.addGroup(index, NotificationType::synchronous);
+            if(!groupIdentifier.has_value())
+            {
+                mDirector.endAction(ActionState::abort);
+            }
+
+            auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
+
+            Group::Accessor copyAcsr;
+            copyAcsr.copyFrom(groupAcsr, NotificationType::synchronous);
+            copyAcsr.setAttr<Group::AttrType::identifier>(*groupIdentifier, NotificationType::synchronous);
+            copyAcsr.setAttr<Group::AttrType::layout>(std::vector<juce::String>(), NotificationType::synchronous);
+            auto& newGroupAcsr = Tools::getGroupAcsr(mAccessor, *groupIdentifier);
+            newGroupAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
+
+            auto const trackIdentifiers = groupAcsr.getAttr<Group::AttrType::layout>();
+            for(size_t i = 0; i < trackIdentifiers.size(); ++i)
+            {
+                if(!mDirector.copyTrack(*groupIdentifier, i, trackIdentifiers[i], NotificationType::synchronous))
+                {
+                    mDirector.endAction(ActionState::abort);
+                    return;
+                }
+            }
+            mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Group"));
+        }
+        else
+        {
+            mDirector.startAction();
+            auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
+            layout.insert(layout.begin() + static_cast<long>(index), identifier);
+            mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
+            mDirector.endAction(ActionState::newTransaction, juce::translate("Move Group"));
+        }
     };
 
     mViewport.setViewedComponent(&mDraggableTable, false);
