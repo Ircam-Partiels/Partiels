@@ -26,6 +26,10 @@ DraggableTable::DraggableTable(juce::String const type, juce::String const& tool
 
 void DraggableTable::resized()
 {
+    if(mIsDragging)
+    {
+        return;
+    }
     auto bounds = getLocalBounds();
     for(auto& content : mContents)
     {
@@ -107,13 +111,6 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
         return;
     }
     mIsDragging = true;
-    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-                                          {
-                                              return (content != nullptr) ? value + content->getHeight() : value;
-                                          });
-    setSize(getWidth(), fullSize + source->getHeight() + 2);
-    source->setAlpha(0.4f);
-
     if(auto* description = dynamic_cast<Description*>(obj))
     {
         if(description->onEnter != nullptr)
@@ -121,6 +118,7 @@ void DraggableTable::itemDragEnter(juce::DragAndDropTarget::SourceDetails const&
             description->onEnter();
         }
     }
+    itemDragMove(dragSourceDetails);
 }
 
 void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
@@ -147,6 +145,9 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
         return;
     }
 
+    auto const isCopy = juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown();
+    source->setAlpha(isCopy ? 1.0f : 0.4f);
+
     auto const offset = static_cast<int>(obj->getProperty("offset"));
     auto const it = std::find_if(mContents.cbegin(), mContents.cend(), [source](auto const& content)
                                  {
@@ -169,7 +170,7 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
     {
         if(mContents[i] != nullptr)
         {
-            if(i != index && i != index + 1)
+            if(isCopy || (i != index && i != index + 1))
             {
                 auto const difference = std::abs(bounds.getY() - position);
                 auto const distance = static_cast<double>(difference) / mContents[i]->getHeight();
@@ -179,15 +180,11 @@ void DraggableTable::itemDragMove(juce::DragAndDropTarget::SourceDetails const& 
             mContents[i]->setBounds(bounds.removeFromTop(mContents[i]->getHeight()));
         }
     }
+    setSize(getWidth(), bounds.getY());
 }
 
 void DraggableTable::itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
 {
-    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-                                          {
-                                              return (content != nullptr) ? value + content->getHeight() : value;
-                                          });
-    setSize(getWidth(), fullSize);
     auto* source = dragSourceDetails.sourceComponent.get();
     anlWeakAssert(source != nullptr);
     if(source != nullptr)
@@ -202,6 +199,11 @@ void DraggableTable::itemDragExit(juce::DragAndDropTarget::SourceDetails const& 
             description->onExit();
         }
     }
+    auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
+                                          {
+                                              return (content != nullptr) ? value + content->getHeight() : value;
+                                          });
+    setSize(getWidth(), fullSize);
 }
 
 void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
@@ -226,7 +228,7 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
         mIsDragging = false;
         return;
     }
-
+    auto const isCopy = juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown();
     auto const index = static_cast<size_t>(std::distance(mContents.cbegin(), it));
     auto getNewIndex = [&]()
     {
@@ -238,9 +240,9 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
             if(mContents[i] != nullptr)
             {
                 auto const distance = std::abs(contentY - 1 - position);
-                if(i != index && i != index + 1 && distance <= sourceHeight / 2)
+                if((isCopy || (i != index && i != index + 1)) && distance <= sourceHeight / 2)
                 {
-                    return i < index ? i : i - 1;
+                    return isCopy ? i : (i < index ? i : i - 1);
                 }
                 contentY += mContents[i]->getHeight();
             }
@@ -260,11 +262,13 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
             description->onExit();
         }
     }
+    source->setAlpha(1.0f);
+    mIsDragging = false;
 
     auto const newIndex = getNewIndex();
-    if(index != newIndex && onComponentDropped != nullptr)
+    if((isCopy || index != newIndex) && onComponentDropped != nullptr)
     {
-        onComponentDropped(obj->getProperty("identifier"), newIndex);
+        onComponentDropped(obj->getProperty("identifier"), newIndex, isCopy);
     }
 
     auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
@@ -272,8 +276,6 @@ void DraggableTable::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
                                               return (content != nullptr) ? value + content->getHeight() : value;
                                           });
     setSize(getWidth(), fullSize);
-    source->setAlpha(1.0f);
-    mIsDragging = false;
 }
 
 ANALYSE_FILE_END

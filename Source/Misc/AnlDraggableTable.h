@@ -19,7 +19,7 @@ public:
     void setComponents(std::vector<ComponentRef> const& component);
     std::vector<juce::Component::SafePointer<juce::Component>> getComponents();
 
-    std::function<void(juce::String const& identifier, size_t index)> onComponentDropped = nullptr;
+    std::function<void(juce::String const& identifier, size_t index, bool copy)> onComponentDropped = nullptr;
 
     // juce::Component
     void resized() override;
