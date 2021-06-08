@@ -68,6 +68,7 @@ namespace Application
 
         // juce::ComboBox::LookAndFeelMethods
         void drawComboBox(juce::Graphics& g, int width, int height, const bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box) override;
+        void positionComboBoxText(juce::ComboBox& box, juce::Label& label) override;
 
         // juce::AlertWindow::LookAndFeelMethods
         void drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, juce::Rectangle<int> const& textArea, juce::TextLayout& textLayout) override;

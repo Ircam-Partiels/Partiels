@@ -313,6 +313,13 @@ void Application::LookAndFeel::drawComboBox(juce::Graphics& g, int width, int he
     g.fillPath(p);
 }
 
+void Application::LookAndFeel::positionComboBoxText(juce::ComboBox& box, juce::Label& label)
+{
+    auto const height = box.getHeight();
+    label.setBounds(1, 1, box.getWidth() - 2 - height / 2, height - 2);
+    label.setFont(getComboBoxFont(box));
+}
+
 void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, juce::Rectangle<int> const& textArea, juce::TextLayout& textLayout)
 {
     auto constexpr cornerSize = 4.0f;
