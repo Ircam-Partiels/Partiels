@@ -297,27 +297,15 @@ void Document::Section::updateLayout()
         auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
-            groupSection->onTrackInserted = [&](juce::String const& identifier)
+            groupSection->onTrackInserted = [&](juce::String const& trackIdentifier, size_t index,  bool copy)
             {
-                anlStrongAssert(Tools::hasTrackAcsr(mAccessor, identifier));
-                if(!Tools::hasTrackAcsr(mAccessor, identifier))
+                if(copy)
                 {
-                    return;
-                }
-
-                mDirector.startAction();
-                auto& groupAcsr = groupDirector.getAccessor();
-                if(mDirector.moveTrack(groupAcsr.getAttr<Group::AttrType::identifier>(), identifier, NotificationType::synchronous))
-                {
-                    auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-                    auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
-                    auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
-                    mDirector.endAction(ActionState::newTransaction, juce::translate("Move \"TRACKNAME\" Track to the \"GROUPNAME\" Group").replace("TRACKNAME", trackName).replace("GROUPNAME", groupName));
-                    moveKeyboardFocusTo(identifier);
+                    copyTrackToGroup(groupDirector, index, trackIdentifier);
                 }
                 else
                 {
-                    mDirector.endAction(ActionState::abort);
+                    moveTrackToGroup(groupDirector, index, trackIdentifier);
                 }
             };
         }
@@ -378,6 +366,50 @@ void Document::Section::updateLayout()
 
     mDraggableTable.setComponents(components);
     resized();
+}
+
+void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier)
+{
+    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
+    if(!Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    {
+        return;
+    }
+
+    mDirector.startAction();
+    auto& groupAcsr = groupDirector.getAccessor();
+    auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+    if(mDirector.moveTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
+    {
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
+        moveKeyboardFocusTo(trackIdentifier);
+    }
+    else
+    {
+        mDirector.endAction(ActionState::abort);
+    }
+}
+
+void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier)
+{
+    anlStrongAssert(Tools::hasTrackAcsr(mAccessor, trackIdentifier));
+    if(!Tools::hasTrackAcsr(mAccessor, trackIdentifier))
+    {
+        return;
+    }
+    
+    mDirector.startAction();
+    auto& groupAcsr = groupDirector.getAccessor();
+    auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+    if(mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
+    {
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Track"));
+        moveKeyboardFocusTo(trackIdentifier);
+    }
+    else
+    {
+        mDirector.endAction(ActionState::abort);
+    }
 }
 
 std::unique_ptr<juce::ComponentTraverser> Document::Section::createFocusTraverser()

@@ -45,6 +45,8 @@ namespace Document
         void globalFocusChanged(juce::Component* focusedComponent) override;
 
         void updateLayout();
+        void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
+        void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
 
         class Viewport
         : public juce::Viewport
