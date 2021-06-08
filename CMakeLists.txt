@@ -88,12 +88,12 @@ set(PartielsDefinitions
     JUCE_USE_CURL=0
     JUCE_WEB_BROWSER=0
     JUCE_ENABLE_REPAINT_DEBUGGING=0
-    JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
     JUCE_JACK
     JUCE_ALSA
     JUCE_WASAPI
     JUCE_DIRECTSOUND
-    JUCE_ASIO)
+    JUCE_ASIO
+    )
 
 target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
 target_compile_definitions(PartielsTest PRIVATE ${PartielsDefinitions})
