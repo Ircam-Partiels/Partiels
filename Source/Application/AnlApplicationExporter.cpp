@@ -92,7 +92,7 @@ Application::Exporter::Exporter()
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case Document::AttrType::files:
+            case Document::AttrType::reader:
             case Document::AttrType::viewport:
                 break;
             case Document::AttrType::layout:
