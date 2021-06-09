@@ -37,6 +37,9 @@ juce::Image IconManager::getIcon(IconType const type)
         case IconType::loop:
             return juce::ImageCache::getFromMemory(IconsData::repeat_png, IconsData::repeat_pngSize);
             break;
+        case IconType::music:
+            return juce::ImageCache::getFromMemory(IconsData::musicplayer_png, IconsData::musicplayer_pngSize);
+            break;
         case IconType::navigate:
             return juce::ImageCache::getFromMemory(IconsData::naviguer_png, IconsData::naviguer_pngSize);
             break;

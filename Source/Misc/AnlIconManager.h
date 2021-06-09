@@ -29,6 +29,7 @@ public:
         , information
         , loading
         , loop
+        , music
         , navigate
         , pause
         , photocamera
