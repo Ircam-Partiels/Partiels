@@ -13,7 +13,7 @@ namespace Document
     // clang-format off
     enum class AttrType : size_t
     {
-          files
+          reader
         , layout
         , viewport
     };
@@ -55,7 +55,7 @@ namespace Document
     };
     
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::files, std::vector<juce::File>, Model::Flag::basic>
+    < Model::Attr<AttrType::reader, std::vector<ReaderChannel>, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
     >;
@@ -119,7 +119,7 @@ namespace Document
             if(copy != nullptr && version < ProjectInfo::versionNumber)
             {
                 auto const file = XmlParser::fromXml(*copy.get(), "file", juce::File{});
-                XmlParser::toXml(*copy.get(), "files", std::vector<juce::File>{file});
+                XmlParser::toXml(*copy.get(), "reader", std::vector<ReaderChannel>{{file}});
             }
             return copy;
         }
