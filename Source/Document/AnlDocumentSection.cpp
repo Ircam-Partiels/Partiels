@@ -182,9 +182,7 @@ void Document::Section::resized()
         auto header = bounds.removeFromTop(40);
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
         header.removeFromRight(rightSize);
-        mFileInfoButton.setBounds(header.removeFromRight(18).withSizeKeepingCentre(18, 18));
-        auto const maxWidth = header.getRight() - mTransportDisplay.getRight() - 4;
-        mFileInfoLabel.setBounds(header.removeFromRight(maxWidth));
+        mReaderLayoutButton.setBounds(header.removeFromRight(24).withSizeKeepingCentre(24, 24));
     }
 
     auto topPart = bounds.removeFromTop(28);
@@ -325,7 +323,7 @@ void Document::Section::updateLayout()
         auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
-            groupSection->onTrackInserted = [&](juce::String const& trackIdentifier, size_t index,  bool copy)
+            groupSection->onTrackInserted = [&](juce::String const& trackIdentifier, size_t index, bool copy)
             {
                 if(copy)
                 {
@@ -425,7 +423,7 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
     {
         return;
     }
-    
+
     mDirector.startAction();
     auto& groupAcsr = groupDirector.getAccessor();
     auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
