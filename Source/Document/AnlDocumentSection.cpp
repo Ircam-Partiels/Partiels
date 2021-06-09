@@ -105,6 +105,10 @@ Document::Section::Section(Director& director)
         switch(attribute)
         {
             case AttrType::reader:
+            {
+                auto const& reader = acsr.getAttr<AttrType::reader>();
+                setEnabled(!reader.empty());
+            }
                 break;
             case AttrType::layout:
             case AttrType::viewport:
