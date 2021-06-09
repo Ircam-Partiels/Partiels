@@ -132,7 +132,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::DocumentOpen:
         {
-            result.setInfo(juce::translate("Open..."), juce::translate("Open a document or an audio file"), "Application", 0);
+            result.setInfo(juce::translate("Open..."), juce::translate("Open a document or audio files"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('o', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
         }
@@ -155,7 +155,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidate the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty());
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
         case CommandIDs::DocumentExport:
@@ -187,14 +187,14 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty());
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
         case CommandIDs::EditNewTrack:
         {
             result.setInfo(juce::translate("Add New Track"), juce::translate("Adds a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty());
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
         case CommandIDs::EditRemoveItem:
@@ -222,7 +222,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::EditLoadTemplate:
         {
             result.setInfo(juce::translate("Load Template..."), juce::translate("Load a template"), "Edit", 0);
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty());
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
 
@@ -230,7 +230,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty());
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::playback>());
         }
         break;
@@ -238,7 +238,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty());
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
         }
         break;
@@ -246,7 +246,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::files>().empty() && transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() > 0.0);
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty() && transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() > 0.0);
         }
         break;
 
@@ -576,7 +576,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
 
-            copyAcsr.setAttr<Document::AttrType::files>(documentAcsr.getAttr<Document::AttrType::files>(), NotificationType::synchronous);
+            copyAcsr.setAttr<Document::AttrType::reader>(documentAcsr.getAttr<Document::AttrType::reader>(), NotificationType::synchronous);
 
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
