@@ -110,7 +110,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
         anlDebug("Application", "Opening new file(s)...");
         openFiles(files);
     }
-    
+
     auto const backupFile = getBackupFile();
     if(backupFile.existsAsFile())
     {
@@ -173,12 +173,12 @@ void Application::Instance::systemRequestedQuit()
             return;
         }
     }
-    
+
     if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
     {
         return;
     }
-    
+
     anlDebug("Application", "Ready");
     quit();
 }
