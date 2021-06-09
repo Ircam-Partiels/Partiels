@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Document/AnlDocumentFileInfoPanel.h"
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentSection.h"
 #include "../Transport/AnlTransportDisplay.h"
