@@ -107,10 +107,10 @@ juce::String Document::FileBased::getDocumentTitle()
     {
         return file.getFileNameWithoutExtension();
     }
-    auto const files = mAccessor.getAttr<AttrType::files>();
+    auto const files = mAccessor.getAttr<AttrType::reader>();
     if(!files.empty())
     {
-        return files.front().getFileNameWithoutExtension();
+        return files.front().file.getFileNameWithoutExtension();
     }
     return "";
 }
@@ -208,10 +208,10 @@ juce::File Document::FileBased::getLastDocumentOpened()
     {
         return file;
     }
-    auto const files = mAccessor.getAttr<AttrType::files>();
+    auto const files = mAccessor.getAttr<AttrType::reader>();
     if(!files.empty())
     {
-        return files.front().withFileExtension(mFileExtension);
+        return files.front().file.withFileExtension(mFileExtension);
     }
     return mLastFile.getParentDirectory();
 }
