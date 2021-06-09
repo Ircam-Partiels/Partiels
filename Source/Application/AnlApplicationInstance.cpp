@@ -235,7 +235,12 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     if(!audioFiles.empty())
     {
         mDocumentAccessor.copyFrom({Document::FileBased::getDefaultContainer()}, NotificationType::synchronous);
-        mDocumentAccessor.setAttr<Document::AttrType::files>(files, NotificationType::synchronous);
+        std::vector<Document::ReaderChannel> reader;
+        for(auto const& file : files)
+        {
+            reader.emplace_back(file);
+        }
+        mDocumentAccessor.setAttr<Document::AttrType::reader>(reader, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
     }
     else if(array.isEmpty())
