@@ -2,17 +2,25 @@
 
 ANALYSE_FILE_BEGIN
 
-void FileWatcher::setFile(juce::File const& file)
+void FileWatcher::clearFilesToWatch()
 {
-    if(mFile == file)
+    mFileStates.clear();
+    stopTimer();
+}
+
+void FileWatcher::addFileToWatch(juce::File const& file)
+{
+    if(mFileStates.count(file) > 0_z)
     {
         return;
     }
     
     stopTimer();
-    mFile = file;
-    mModificationTime = file.getLastModificationTime();
-    if(file.existsAsFile())
+    mFileStates[file] = std::make_tuple(file.getLastModificationTime(), file.existsAsFile());
+    if(std::any_of(mFileStates.cbegin(), mFileStates.cend(), [](auto const fileState)
+    {
+        return fileState.first.existsAsFile();
+    }))
     {
         startTimer(200);
     }
@@ -20,17 +28,30 @@ void FileWatcher::setFile(juce::File const& file)
 
 void FileWatcher::timerCallback()
 {
-    if(!mFile.existsAsFile())
+    if(std::none_of(mFileStates.cbegin(), mFileStates.cend(), [](auto const fileState)
+    {
+        return fileState.first.existsAsFile();
+    }))
     {
         stopTimer();
-        fileHasBeenRemoved();
-        return;
     }
-    auto const time = mFile.getLastModificationTime();
-    if(time != mModificationTime)
+    for(auto& fileState : mFileStates)
     {
-        mModificationTime = time;
-        fileHasBeenModified();
+        if(std::get<1>(fileState.second) && !fileState.first.existsAsFile())
+        {
+            std::get<1>(fileState.second) = false;
+            fileHasBeenRemoved(fileState.first);
+        }
+        else if(fileState.first.existsAsFile())
+        {
+            auto const time = fileState.first.getLastModificationTime();
+            if(!std::get<1>(fileState.second) || std::get<0>(fileState.second) != time)
+            {
+                std::get<0>(fileState.second) = time;
+                std::get<1>(fileState.second) = true;
+                fileHasBeenModified(fileState.first);
+            }
+        }
     }
 }
 
