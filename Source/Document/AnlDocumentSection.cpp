@@ -81,16 +81,12 @@ Document::Section::Section(Director& director)
     setWantsKeyboardFocus(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
-    addAndMakeVisible(mFileInfoLabel);
-    mFileInfoLabel.setWantsKeyboardFocus(false);
-    mFileInfoLabel.setJustificationType(juce::Justification::centredRight);
-
-    addAndMakeVisible(mFileInfoButton);
-    mFileInfoButton.setWantsKeyboardFocus(false);
-    mFileInfoButton.setTooltip(juce::translate("Show audio file info"));
-    mFileInfoButton.onClick = [&]()
+    addAndMakeVisible(mReaderLayoutButton);
+    mReaderLayoutButton.setWantsKeyboardFocus(false);
+    mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
+    mReaderLayoutButton.onClick = [this]()
     {
-        mFileInfoPanel.show(mFileInfoButton.getBounds().getCentre());
+        mReaderLayoutPanel.show();
     };
 
     addAndMakeVisible(mTransportDisplay);
@@ -105,18 +101,11 @@ Document::Section::Section(Director& director)
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
+        juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case AttrType::files:
-            {
-                auto const files = acsr.getAttr<AttrType::files>();
-                auto const file = files.empty() ? juce::File() : files.front();
-                mFileInfoLabel.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
-                mFileInfoLabel.setTooltip(file.getFullPathName());
-                mFileInfoLabel.setVisible(file != juce::File());
-                mFileInfoButton.setVisible(file != juce::File());
-            }
-            break;
+            case AttrType::reader:
+                break;
             case AttrType::layout:
             case AttrType::viewport:
             {
@@ -221,7 +210,7 @@ void Document::Section::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(mFileInfoButton, IconManager::IconType::information);
+        laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
     }
 }
 

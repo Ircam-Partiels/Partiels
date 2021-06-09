@@ -4,9 +4,7 @@
 #include "../Transport/AnlTransportDisplay.h"
 #include "../Transport/AnlTransportLoopBar.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
-#include "AnlDocumentDirector.h"
-#include "AnlDocumentFileInfoPanel.h"
-#include "AnlDocumentModel.h"
+#include "AnlDocumentReaderLayoutPanel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -66,9 +64,8 @@ namespace Document
 
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
-        FileInfoPanel mFileInfoPanel{mAccessor, mDirector.getAudioFormatManager()};
-        juce::ImageButton mFileInfoButton;
-        juce::Label mFileInfoLabel;
+        ReaderLayoutPanel mReaderLayoutPanel{mDirector};
+        juce::ImageButton mReaderLayoutButton;
 
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration{mTimeRuler};
