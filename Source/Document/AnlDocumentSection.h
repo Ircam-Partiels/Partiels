@@ -66,6 +66,7 @@ namespace Document
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
         juce::ImageButton mReaderLayoutButton;
+        juce::ImageButton mAlertButton;
 
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration{mTimeRuler};

@@ -78,11 +78,10 @@ namespace Document
             void focusOfChildComponentChanged(juce::Component::FocusChangeType cause) override;
 
         private:
-            class Entry
+            struct Entry
             : public juce::Component
             {
-            public:
-                Entry(int index, juce::File const& file, int channel, juce::AudioFormatReader const* reader);
+                Entry();
                 ~Entry() override = default;
 
                 // juce::Component
@@ -90,12 +89,9 @@ namespace Document
                 void paint(juce::Graphics& g) override;
 
                 juce::Label thumbLabel;
+                juce::Label fileNameLabel;
                 juce::ComboBox channelMenu;
-
-            private:
-                juce::Label mFileNameLabel;
-                juce::ImageButton mInfoButton;
-                juce::ImageButton mDeleteButton;
+                juce::ImageButton warningButton;
             };
 
             FileInfoPanel& mFileInfoPanel;
@@ -115,7 +111,9 @@ namespace Document
         DraggableTable mDraggableTable{"Channel"};
         juce::Viewport mViewport;
         juce::ImageButton mAddButton;
-        juce::Label mInfoLabel;
+        juce::Label mAddLabel;
+        juce::ImageButton mAlertButton;
+        juce::Label mAlertLabel;
         ColouredPanel mSeparator;
         FileInfoPanel mFileInfoPanel;
         BoundsListener mBoundsListener;

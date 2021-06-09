@@ -64,38 +64,20 @@ void Document::ReaderLayoutPanel::FileInfoPanel::resized()
     mViewport.setBounds(getLocalBounds());
 }
 
-Document::ReaderLayoutPanel::Channel::Entry::Entry(int i, juce::File const& f, int c, juce::AudioFormatReader const* r)
+Document::ReaderLayoutPanel::Channel::Entry::Entry()
 {
     setWantsKeyboardFocus(true);
     setMouseClickGrabsKeyboardFocus(true);
-    setEnabled(r != nullptr);
 
     addAndMakeVisible(thumbLabel);
-    thumbLabel.setText("#" + juce::String(i + 1), juce::NotificationType::dontSendNotification);
-    thumbLabel.setEditable(false);
-
-    addAndMakeVisible(mFileNameLabel);
-    mFileNameLabel.setMinimumHorizontalScale(1.f);
-    mFileNameLabel.setText(f.getFileName(), juce::NotificationType::dontSendNotification);
-    mFileNameLabel.setInterceptsMouseClicks(false, false);
-    mFileNameLabel.setEditable(false);
-
+    addAndMakeVisible(fileNameLabel);
     addAndMakeVisible(channelMenu);
+    
+    thumbLabel.setEditable(false);
+    fileNameLabel.setEditable(false);
+    fileNameLabel.setMinimumHorizontalScale(1.f);
+    fileNameLabel.setInterceptsMouseClicks(false, false);
     channelMenu.setJustificationType(juce::Justification::right);
-    channelMenu.setTextWhenNoChoicesAvailable(juce::String(c));
-
-    if(r != nullptr)
-    {
-        if(r->numChannels > 1u)
-        {
-            channelMenu.addItem(juce::translate("Mono"), -1);
-        }
-        for(auto numChannel = 1u; numChannel <= r->numChannels; ++numChannel)
-        {
-            channelMenu.addItem(juce::String(numChannel), static_cast<int>(numChannel));
-        }
-        channelMenu.setSelectedId(c == -1 ? -1 : c + 1, juce::NotificationType::dontSendNotification);
-    }
 }
 
 void Document::ReaderLayoutPanel::Channel::Entry::resized()
@@ -103,7 +85,7 @@ void Document::ReaderLayoutPanel::Channel::Entry::resized()
     auto bounds = getLocalBounds();
     thumbLabel.setBounds(bounds.removeFromLeft(26));
     channelMenu.setBounds(bounds.removeFromRight(72));
-    mFileNameLabel.setBounds(bounds);
+    fileNameLabel.setBounds(bounds);
 }
 
 void Document::ReaderLayoutPanel::Channel::Entry::paint(juce::Graphics& g)
@@ -115,7 +97,6 @@ void Document::ReaderLayoutPanel::Channel::Entry::paint(juce::Graphics& g)
 
 Document::ReaderLayoutPanel::Channel::Channel(FileInfoPanel& fileInfoPanel, int index, juce::File const& file, int channel, std::unique_ptr<juce::AudioFormatReader> reader)
 : mFileInfoPanel(fileInfoPanel)
-, mEntry(index, file, channel, reader.get())
 , mIndex(index)
 , mFile(file)
 , mReader(std::move(reader))
@@ -125,6 +106,23 @@ Document::ReaderLayoutPanel::Channel::Channel(FileInfoPanel& fileInfoPanel, int 
     setMouseClickGrabsKeyboardFocus(true);
     setMouseCursor(juce::MouseCursor::DraggingHandCursor);
     addAndMakeVisible(mDecorator);
+    
+    mEntry.setEnabled(mReader != nullptr);
+    mEntry.thumbLabel.setText("#" + juce::String(mIndex + 1), juce::NotificationType::dontSendNotification);
+    mEntry.fileNameLabel.setText(mFile.getFileName(), juce::NotificationType::dontSendNotification);
+    mEntry.channelMenu.setTextWhenNoChoicesAvailable(juce::String(channel));
+    if(mReader != nullptr)
+    {
+        if(mReader->numChannels > 1u)
+        {
+            mEntry.channelMenu.addItem(juce::translate("Mono"), -1);
+        }
+        for(auto numChannel = 1u; numChannel <= mReader->numChannels; ++numChannel)
+        {
+            mEntry.channelMenu.addItem(juce::String(numChannel), static_cast<int>(numChannel));
+        }
+        mEntry.channelMenu.setSelectedId(channel == -1 ? -1 : channel + 1, juce::NotificationType::dontSendNotification);
+    }
     mEntry.thumbLabel.addMouseListener(this, true);
     mEntry.channelMenu.onChange = [this]()
     {
@@ -134,6 +132,7 @@ Document::ReaderLayoutPanel::Channel::Channel(FileInfoPanel& fileInfoPanel, int 
             onChannelChange(selectedId == -1 ? -1 : selectedId - 1);
         }
     };
+    
     setSize(300, 24);
 }
 
@@ -231,6 +230,9 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         {
             case AttrType::reader:
             {
+                bool allReadersValid = true;
+                bool allSampleRatesValid = true;
+                double currentSampleRate = 0.0;
                 using ComponentRef = DraggableTable::ComponentRef;
                 decltype(mChannels) channelComponents;
                 std::vector<ComponentRef> contents;
@@ -238,6 +240,15 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
                 for(auto const& channel : channels)
                 {
                     auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(channel.file));
+                    if(reader != nullptr)
+                    {
+                        currentSampleRate = currentSampleRate > 0.0 ? currentSampleRate : reader->sampleRate;
+                        allSampleRatesValid = std::abs(currentSampleRate - reader->sampleRate) > std::numeric_limits<double>::epsilon() ? false : allSampleRatesValid;
+                    }
+                    else
+                    {
+                        allReadersValid = false;
+                    }
                     auto const index = static_cast<int>(contents.size());
                     if(index == 0)
                     {
@@ -285,6 +296,22 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
                 {
                     mFileInfoPanel.setAudioFormatReader(juce::File{}, nullptr);
                 }
+                
+                mAlertLabel.setVisible(!allReadersValid || !allSampleRatesValid);
+                if(!allReadersValid && allSampleRatesValid)
+                {
+                    mAlertLabel.setText(juce::translate("One or more audio file cannot be allocated and the sample rates of the audio files are not consistent."), juce::NotificationType::dontSendNotification);
+                }
+                else if(!allReadersValid)
+                {
+                    mAlertLabel.setText(juce::translate("One or more audio file cannot be allocated."), juce::NotificationType::dontSendNotification);
+                }
+                else if(!allSampleRatesValid)
+                {
+                    mAlertLabel.setText(juce::translate("The sample rates of the audio files are not consistent."), juce::NotificationType::dontSendNotification);
+                }
+                mAlertButton.setTooltip(mAlertLabel.getText());
+                mAlertButton.setVisible(mAlertLabel.isVisible());
                 resized();
             }
             break;
@@ -336,17 +363,19 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         mDirector.endAction(ActionState::newTransaction, juce::translate("Insert Audio Files"));
     };
 
-    mInfoLabel.setInterceptsMouseClicks(false, false);
-    mInfoLabel.setText(juce::translate("Insert audio files..."), juce::NotificationType::dontSendNotification);
-    mInfoLabel.setTooltip(juce::translate("Add audio files to the document..."));
+    mAddLabel.setInterceptsMouseClicks(false, false);
+    mAddLabel.setText(juce::translate("Insert audio files..."), juce::NotificationType::dontSendNotification);
+    mAddLabel.setTooltip(juce::translate("Add audio files to the document..."));
     mAddButton.setTooltip(juce::translate("Add audio files to the document..."));
-
+    
     mBoundsListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mAddButton);
-    addAndMakeVisible(mInfoLabel);
+    addAndMakeVisible(mAddLabel);
+    addChildComponent(mAlertButton);
+    addChildComponent(mAlertLabel);
     addAndMakeVisible(mSeparator);
     addAndMakeVisible(mFileInfoPanel);
     mAccessor.addListener(mListener, NotificationType::synchronous);
@@ -364,9 +393,15 @@ void Document::ReaderLayoutPanel::resized()
     auto bounds = getLocalBounds();
     mFileInfoPanel.setBounds(bounds.removeFromBottom(168));
     mSeparator.setBounds(bounds.removeFromBottom(1));
+    if(mAlertButton.isVisible())
+    {
+        auto alertBounds = bounds.removeFromBottom(24);
+        mAlertButton.setBounds(alertBounds.removeFromLeft(24).reduced(4));
+        mAlertLabel.setBounds(alertBounds);
+    }
     auto addBounds = bounds.removeFromBottom(24);
     mAddButton.setBounds(addBounds.removeFromLeft(24).reduced(4));
-    mInfoLabel.setBounds(addBounds);
+    mAddLabel.setBounds(addBounds);
     auto const scrollbarWidth = mViewport.getVerticalScrollBar().isVisible() ? mViewport.getScrollBarThickness() : 0;
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
@@ -388,6 +423,7 @@ void Document::ReaderLayoutPanel::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mAddButton, IconManager::IconType::plus);
+        laf->setButtonIcon(mAlertButton, IconManager::IconType::alert);
     }
 }
 

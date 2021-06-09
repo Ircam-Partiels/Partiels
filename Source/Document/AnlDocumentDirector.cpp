@@ -67,8 +67,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     return;
                 }
                 auto& trackAcsr = trackAcsrs[index].get();
-                auto audioFormatReader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent);
-                auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, std::move(audioFormatReader));
+                auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
                 anlStrongAssert(director != nullptr);
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
@@ -653,18 +652,25 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
         transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range{}, notification);
         return;
     }
-
-    auto reader = createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window);
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    auto const result = createAudioFormatReader(mAccessor, mAudioFormatManager);
+    auto const& reader = std::get<0>(result);
+    auto const& errors = std::get<1>(result);
     if(reader == nullptr)
     {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Audio format reader cannot be loaded!", errors.joinIntoString("\n"));
         mDuration = 0.0;
         mSampleRate = 44100.0;
-        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 0.0}, notification);
-        zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(0.0, notification);
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 0.0}, notification);
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
+        zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(Zoom::epsilon(), notification);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
         return;
     }
+    else if(!errors.isEmpty())
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Invalid audio format reader!", errors.joinIntoString("\n"));
+    }
+
     mSampleRate = reader->sampleRate > 0.0 ? reader->sampleRate : 44100.0;
     mDuration = static_cast<double>(reader->lengthInSamples) / mSampleRate;
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -692,7 +698,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     {
         if(anl != nullptr)
         {
-            anl->setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::silent), notification);
+            anl->setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)), notification);
         }
     }
 }

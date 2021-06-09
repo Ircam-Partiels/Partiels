@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager& audioFormatManager, AlertType alertType)
+std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager& audioFormatManager)
 {
     using ReaderLayout = std::tuple<std::unique_ptr<juce::AudioFormatReader>, int>;
 
@@ -15,6 +15,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
         , mChannels(std::move(channels))
         {
             int maxChannels = 0;
+            hasMultipleSampleRate = false;
             numChannels = static_cast<unsigned int>(mChannels.size());
             usesFloatingPointData = true;
             for(auto const& channel : mChannels)
@@ -22,7 +23,8 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
                 auto const& reader = std::get<0>(channel);
                 if(reader != nullptr)
                 {
-                    sampleRate = std::max(reader->sampleRate, sampleRate);
+                    sampleRate = sampleRate > 0.0 ? sampleRate : reader->sampleRate;
+                    hasMultipleSampleRate = std::abs(sampleRate - reader->sampleRate) > std::numeric_limits<double>::epsilon() ? true : hasMultipleSampleRate;
                     bitsPerSample = std::max(reader->bitsPerSample, bitsPerSample);
                     lengthInSamples = std::max(reader->lengthInSamples, lengthInSamples);
                     maxChannels = static_cast<int>(std::max(reader->numChannels, numChannels));
@@ -35,7 +37,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
 
         bool readSamples(int** destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override
         {
-            constexpr auto scaleFactor = 1.0f / static_cast<float>(0x7fffffff);
+            auto constexpr scaleFactor = 1.0f / static_cast<float>(0x7fffffff);
 
             for(int channelIndex = 0; channelIndex < numDestChannels; ++channelIndex)
             {
@@ -87,36 +89,43 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
             }
             return true;
         }
+        
+        bool hasMultipleSampleRate = false;
 
     private:
         std::vector<ReaderLayout> mChannels;
         juce::AudioBuffer<float> mBuffer;
     };
-    using AlertIconType = juce::AlertWindow::AlertIconType;
-    auto const errorMessage = juce::translate("Audio format reader cannot be loaded!");
 
+    juce::StringArray errors;
     auto const audioReaderLayout = accessor.getAttr<AttrType::reader>();
-    if(audioReaderLayout.empty())
-    {
-        return nullptr;
-    }
-
     std::vector<ReaderLayout> readers;
-    for(auto const& audioReaderChannel : audioReaderLayout)
+    for(size_t i = 0; i < audioReaderLayout.size(); ++i)
     {
-        auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(audioReaderChannel.file));
-        if(audioFormatReader == nullptr && audioReaderChannel.file.existsAsFile())
+        auto const errorPrepend = juce::translate("Channel CHINDEX:").replace("CHINDEX", juce::String(i + 1));
+        auto const& file = audioReaderLayout[i].file;
+        auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
+        if(!file.existsAsFile())
         {
-            if(alertType == AlertType::window)
-            {
-                juce::AlertWindow::showMessageBox(AlertIconType::WarningIcon, errorMessage, juce::translate("The audio format reader cannot be allocated for the input stream FLNAME.").replace("FLNAME", audioReaderChannel.file.getFullPathName()));
-            }
-            return nullptr;
+            errors.add(errorPrepend + " " + juce::translate("The file FILENAME doesn't exist.").replace("FILENAME", file.getFullPathName()));
         }
-        readers.emplace_back(std::move(audioFormatReader), audioReaderChannel.channel);
+        else if(audioFormatReader == nullptr)
+        {
+            errors.add(errorPrepend + " " + juce::translate("The input stream cannot be created for the file FILENAME.").replace("FILENAME", file.getFullPathName()));
+        }
+        readers.emplace_back(std::move(audioFormatReader), audioReaderLayout[i].channel);
     }
-
-    return std::make_unique<AudioFormatReader>(std::move(readers));
+    
+    auto reader = std::make_unique<AudioFormatReader>(std::move(readers));
+    if(reader == nullptr)
+    {
+        errors.add(juce::translate("The audio reader cannot be allocated!"));
+    }
+    else if(reader->hasMultipleSampleRate)
+    {
+        errors.add(juce::translate("The sample rates of the audio files are not identical!"));
+    }
+    return std::make_tuple(std::move(reader), errors);
 }
 
 Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager& audioFormatManager)
@@ -136,7 +145,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
                     mTransportAudioReader.setAudioFormatReader(nullptr);
                     return;
                 }
-                mTransportAudioReader.setAudioFormatReader(createAudioFormatReader(mAccessor, mAudioFormatManager, AlertType::window));
+                mTransportAudioReader.setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
             }
             break;
             case AttrType::layout:

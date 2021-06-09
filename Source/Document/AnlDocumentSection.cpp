@@ -1,5 +1,6 @@
 #include "AnlDocumentSection.h"
 #include "AnlDocumentTools.h"
+#include "AnlDocumentAudioReader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -88,6 +89,8 @@ Document::Section::Section(Director& director)
     {
         mReaderLayoutPanel.show();
     };
+    mAlertButton.onClick = mReaderLayoutButton.onClick;
+    addChildComponent(mAlertButton);
 
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -108,6 +111,12 @@ Document::Section::Section(Director& director)
             {
                 auto const& reader = acsr.getAttr<AttrType::reader>();
                 setEnabled(!reader.empty());
+                auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
+                if(!std::get<1>(result).isEmpty())
+                {
+                    mAlertButton.setTooltip(std::get<1>(result).joinIntoString(""));
+                }
+                mAlertButton.setVisible(!std::get<1>(result).isEmpty());
             }
                 break;
             case AttrType::layout:
@@ -187,6 +196,7 @@ void Document::Section::resized()
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
         header.removeFromRight(rightSize);
         mReaderLayoutButton.setBounds(header.removeFromRight(24).withSizeKeepingCentre(24, 24));
+        mAlertButton.setBounds(header.removeFromRight(18).withSizeKeepingCentre(16, 16));
     }
 
     auto topPart = bounds.removeFromTop(28);
@@ -213,6 +223,7 @@ void Document::Section::lookAndFeelChanged()
     if(laf != nullptr)
     {
         laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
+        laf->setButtonIcon(mAlertButton, IconManager::IconType::alert);
     }
 }
 
