@@ -33,6 +33,7 @@ public:
         , pause
         , photocamera
         , play
+        , plus
         , properties
         , question
         , rewind

@@ -49,6 +49,9 @@ juce::Image IconManager::getIcon(IconType const type)
         case IconType::play:
             return juce::ImageCache::getFromMemory(IconsData::play_png, IconsData::play_pngSize);
             break;
+        case IconType::plus:
+            return juce::ImageCache::getFromMemory(IconsData::plus_png, IconsData::plus_pngSize);
+            break;
         case IconType::properties:
             return juce::ImageCache::getFromMemory(IconsData::reglages_png, IconsData::reglages_pngSize);
             break;
