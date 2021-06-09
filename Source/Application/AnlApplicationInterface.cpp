@@ -133,7 +133,7 @@ Application::Interface::Loader::Loader()
     mFileTable.onFileSelected = [](juce::File const& file)
     {
         auto& documentAcsr = Instance::get().getDocumentAccessor();
-        auto const documentHasFile = !documentAcsr.getAttr<Document::AttrType::files>().empty();
+        auto const documentHasFile = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
         if(!documentHasFile)
         {
             Instance::get().openFiles({file});
@@ -149,7 +149,7 @@ Application::Interface::Loader::Loader()
                 return;
             }
 
-            copyAcsr.setAttr<Document::AttrType::files>(documentAcsr.getAttr<Document::AttrType::files>(), NotificationType::synchronous);
+            copyAcsr.setAttr<Document::AttrType::reader>(documentAcsr.getAttr<Document::AttrType::reader>(), NotificationType::synchronous);
 
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
@@ -163,7 +163,7 @@ Application::Interface::Loader::Loader()
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case Document::AttrType::files:
+            case Document::AttrType::reader:
             {
                 updateState();
             }
@@ -195,7 +195,7 @@ Application::Interface::Loader::~Loader()
 void Application::Interface::Loader::updateState()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasFile = !documentAccessor.getAttr<Document::AttrType::files>().empty();
+    auto const documentHasFile = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
     auto const documentHasTrackOrGroup = documentAccessor.getNumAcsrs<Document::AcsrType::tracks>() > 0_z || documentAccessor.getNumAcsrs<Document::AcsrType::groups>() > 0_z;
 
     removeChildComponent(&mLoadFileButton);
