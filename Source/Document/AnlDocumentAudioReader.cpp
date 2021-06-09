@@ -105,7 +105,7 @@ std::unique_ptr<juce::AudioFormatReader> Document::createAudioFormatReader(Acces
     for(auto const& audioReaderChannel : audioReaderLayout)
     {
         auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(audioReaderChannel.file));
-        if(audioFormatReader == nullptr)
+        if(audioFormatReader == nullptr && audioReaderChannel.file.existsAsFile())
         {
             if(alertType == AlertType::window)
             {
