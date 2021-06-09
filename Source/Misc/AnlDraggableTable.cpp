@@ -87,7 +87,7 @@ void DraggableTable::componentMovedOrResized(juce::Component& component, bool wa
 
 bool DraggableTable::isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)
 {
-    if(mContents.size() <= 1)
+    if(mContents.empty())
     {
         return false;
     }
