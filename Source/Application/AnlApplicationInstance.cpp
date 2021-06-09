@@ -159,10 +159,6 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 void Application::Instance::systemRequestedQuit()
 {
     anlDebug("Application", "Begin...");
-    if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
-    {
-        return;
-    }
     mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(mDocumentFileBased.getFile(), NotificationType::synchronous);
 
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
@@ -177,6 +173,12 @@ void Application::Instance::systemRequestedQuit()
             return;
         }
     }
+    
+    if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
+    {
+        return;
+    }
+    
     anlDebug("Application", "Ready");
     quit();
 }
