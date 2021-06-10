@@ -14,7 +14,7 @@ namespace PluginList
     public:
         Table(Accessor& accessor, Scanner& scanner);
         ~Table() override;
-        
+
         // juce::Component
         void resized() override;
         void lookAndFeelChanged() override;
@@ -23,21 +23,22 @@ namespace PluginList
 
         // FloatingWindowContainer
         void showAt(juce::Point<int> const& pt) override;
+
         std::function<void(Plugin::Key const& key, Plugin::Description const& description)> onPluginSelected = nullptr;
-        
+
     private:
         void updateContent();
-        
+
         // juce::TableListBoxModel
         int getNumRows() override;
         void paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected) override;
         void paintCell(juce::Graphics& g, int row, int columnId, int width, int height, bool rowIsSelected) override;
         void deleteKeyPressed(int lastRowSelected) override;
         void returnKeyPressed(int lastRowSelected) override;
-        void cellDoubleClicked (int rowNumber, int columnId, juce::MouseEvent const& e) override;
+        void cellDoubleClicked(int rowNumber, int columnId, juce::MouseEvent const& e) override;
         void sortOrderChanged(int newSortColumnId, bool isForwards) override;
         juce::String getCellTooltip(int rowNumber, int columnId) override;
-        
+
         Accessor& mAccessor;
         Scanner& mScanner;
         Accessor::Listener mListener;
@@ -50,10 +51,10 @@ namespace PluginList
         juce::String mLookingWord;
         bool mIsBeingUpdated = false;
         std::set<Plugin::Key> mBlacklist;
-        
+
         juce::TooltipWindow mTooltipWindow{this};
         JUCE_LEAK_DETECTOR(Table)
     };
-}
+} // namespace PluginList
 
 ANALYSE_FILE_END

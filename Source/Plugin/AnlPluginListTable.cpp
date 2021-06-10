@@ -46,7 +46,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Version"), ColumnType::Version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
     addAndMakeVisible(mSeparator);
-    
+
     addAndMakeVisible(mClearButton);
     mClearButton.setClickingTogglesState(false);
     mClearButton.onClick = [this]()
@@ -67,12 +67,12 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
             catch(std::exception& e)
             {
                 AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                  "Plugins scan failed!", e.what());
+                                         "Plugins scan failed!", e.what());
             }
             catch(...)
             {
                 AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                  "Plugins scan failed!", "");
+                                         "Plugins scan failed!", "");
             }
             return {};
         };
@@ -81,8 +81,8 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         if(!std::get<1>(results).isEmpty())
         {
             AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                              "Plugins scan has encountered errors!",
-                              "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
+                                     "Plugins scan has encountered errors!",
+                                     "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
         }
     };
 
@@ -235,8 +235,8 @@ void PluginList::Table::updateContent()
     if(!errors.isEmpty())
     {
         AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                          "Plugins listing has encountered errors!",
-                          "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
+                                 "Plugins listing has encountered errors!",
+                                 "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
     }
 }
 
