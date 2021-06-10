@@ -223,7 +223,10 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
             mDocumentFileBased.loadFrom(file, true);
             return;
         }
-        if(mAudioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension()))
+        if(file == juce::File{})
+        {
+        }
+        else if(!file.getFileExtension().isEmpty() && mAudioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension()))
         {
             audioFiles.push_back(file);
         }
