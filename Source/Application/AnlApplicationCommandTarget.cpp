@@ -718,7 +718,7 @@ std::tuple<juce::String, size_t> Application::CommandTarget::getNewTrackPosition
     return std::make_tuple(juce::String(""), 0_z);
 }
 
-void Application::CommandTarget::addPlugin(Plugin::Key const& key, Plugin::Description const& description, juce::String groupIdentifier, size_t position)
+void Application::CommandTarget::addPluginTrack(Plugin::Key const& key, Plugin::Description const& description, juce::String groupIdentifier, size_t position)
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& documentDir = Instance::get().getDocumentDirector();
@@ -771,7 +771,7 @@ void Application::CommandTarget::addPlugin(Plugin::Key const& key, Plugin::Descr
     }
 }
 
-void Application::CommandTarget::addPlugin(juce::File const& file, juce::String groupIdentifier, size_t position)
+void Application::CommandTarget::addFileTrack(juce::File const& file, juce::String groupIdentifier, size_t position)
 {
     if(!file.hasFileExtension("json"))
     {

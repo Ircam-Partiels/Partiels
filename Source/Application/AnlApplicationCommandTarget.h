@@ -62,8 +62,8 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         std::tuple<juce::String, size_t> getNewTrackPosition() const;
-        void addPlugin(Plugin::Key const& key, Plugin::Description const& description, juce::String groupIdentifier, size_t position);
-        void addPlugin(juce::File const& file, juce::String groupIdentifier, size_t position);
+        void addPluginTrack(Plugin::Key const& key, Plugin::Description const& description, juce::String groupIdentifier, size_t position);
+        void addFileTrack(juce::File const& file, juce::String groupIdentifier, size_t position);
 
         Accessor::Listener mListener;
         PluginList::Table mPluginListTable;
