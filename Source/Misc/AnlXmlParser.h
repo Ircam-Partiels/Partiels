@@ -39,6 +39,10 @@ namespace XmlParser
         }
         else if constexpr(is_specialization<T, std::vector>::value || is_specialization<T, std::set>::value)
         {
+            while(auto* child = xml.getChildByName(attributeName))
+            {
+                xml.removeChildElement(child, true);
+            }
             for(auto const& element : value)
             {
                 auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -52,6 +56,10 @@ namespace XmlParser
         }
         else if constexpr(is_specialization<T, std::map>::value)
         {
+            while(auto* child = xml.getChildByName(attributeName))
+            {
+                xml.removeChildElement(child, true);
+            }
             for(auto const& element : value)
             {
                 auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -66,6 +74,10 @@ namespace XmlParser
         }
         else if constexpr(is_specialization<T, std::unique_ptr>::value)
         {
+            while(auto* child = xml.getChildByName(attributeName))
+            {
+                xml.removeChildElement(child, true);
+            }
             if(value != nullptr)
             {
                 auto child = std::make_unique<juce::XmlElement>(attributeName);
