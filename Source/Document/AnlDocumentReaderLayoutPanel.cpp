@@ -84,7 +84,7 @@ void Document::ReaderLayoutPanel::Channel::Entry::resized()
 {
     auto bounds = getLocalBounds();
     thumbLabel.setBounds(bounds.removeFromLeft(26));
-    channelMenu.setBounds(bounds.removeFromRight(72));
+    channelMenu.setBounds(bounds.removeFromRight(54));
     fileNameLabel.setBounds(bounds);
 }
 
