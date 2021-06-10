@@ -192,9 +192,9 @@ void Application::Exporter::resized()
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::Exporter::show(juce::Point<int> const& pt)
+void Application::Exporter::showAt(juce::Point<int> const& pt)
 {
-    FloatingWindowContainer::show(pt);
+    FloatingWindowContainer::showAt(pt);
     mFloatingWindow.runModalLoop();
 }
 

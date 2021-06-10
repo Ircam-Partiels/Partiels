@@ -123,7 +123,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             {
                 auto const x = static_cast<int>(value.getProperty("x", 0.0));
                 auto const y = static_cast<int>(value.getProperty("y", 0.0));
-                mPropertyPanel.show({x, y});
+                mPropertyPanel.showAt({x, y});
             }
             break;
         }

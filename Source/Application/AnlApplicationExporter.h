@@ -19,8 +19,7 @@ namespace Application
         void resized() override;
 
         // FloatingWindowContainer
-        using FloatingWindowContainer::show;
-        void show(juce::Point<int> const& pt) override;
+        void showAt(juce::Point<int> const& pt) override;
 
     private:
         // juce::AsyncUpdater

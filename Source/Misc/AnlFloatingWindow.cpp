@@ -108,11 +108,11 @@ void FloatingWindowContainer::show()
     anlStrongAssert(display != nullptr);
     if(display != nullptr)
     {
-        show(display->userArea.getCentre().translated(-mFloatingWindow.getWidth() / 2, -mFloatingWindow.getHeight() / 2));
+        showAt(display->userArea.getCentre().translated(-mFloatingWindow.getWidth() / 2, -mFloatingWindow.getHeight() / 2));
     }
 }
 
-void FloatingWindowContainer::show(juce::Point<int> const& pt)
+void FloatingWindowContainer::showAt(juce::Point<int> const& pt)
 {
     if(mFloatingWindow.getContentComponent() == nullptr)
     {
