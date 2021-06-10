@@ -402,7 +402,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(identifier.has_value())
             {
                 auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *identifier);
-                documentDir.endAction(ActionState::newTransaction, juce::translate("New \"GROUPNAME\" Group").replace("GROUPNAME", groupAcsr.getAttr<Group::AttrType::name>()));
+                documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
                 if(auto* window = Instance::get().getWindow())
                 {
                     window->moveKeyboardFocusTo(*identifier);
