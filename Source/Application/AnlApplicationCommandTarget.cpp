@@ -771,4 +771,65 @@ void Application::CommandTarget::addPlugin(Plugin::Key const& key, Plugin::Descr
     }
 }
 
+void Application::CommandTarget::addPlugin(juce::File const& file, juce::String groupIdentifier, size_t position)
+{
+    if(!file.hasFileExtension("json"))
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File forrmat not supported!", "The....");
+        return;
+    }
+
+    auto& documentAcsr = Instance::get().getDocumentAccessor();
+    auto& documentDir = Instance::get().getDocumentDirector();
+    documentDir.startAction();
+
+    // Creates a group if there is none
+    if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
+    {
+        anlStrongAssert(groupIdentifier.isEmpty());
+
+        auto const identifier = documentDir.addGroup(0, NotificationType::synchronous);
+        anlStrongAssert(identifier.has_value());
+        if(!identifier.has_value())
+        {
+            documentDir.endAction(ActionState::abort);
+            AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group necessary for the new track cannot be inserted into the document.");
+            return;
+        }
+        groupIdentifier = *identifier;
+        position = 0_z;
+    }
+
+    anlStrongAssert(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() > 0_z);
+    if(groupIdentifier.isEmpty())
+    {
+        auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
+        groupIdentifier = layout.front();
+        position = 0_z;
+    }
+
+    auto const identifier = documentDir.addTrack(groupIdentifier, position, NotificationType::synchronous);
+    if(identifier.has_value())
+    {
+        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
+        trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
+        juce::MouseCursor::showWaitCursor();
+        Track::Exporter::fromJson(trackAcsr, file);
+        juce::MouseCursor::hideWaitCursor();
+
+        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
+        groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
+
+        documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
+        if(auto* window = Instance::get().getWindow())
+        {
+            window->moveKeyboardFocusTo(*identifier);
+        }
+    }
+    else
+    {
+        documentDir.endAction(ActionState::abort);
+    }
+}
+
 ANALYSE_FILE_END
