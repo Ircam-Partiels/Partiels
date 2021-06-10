@@ -453,7 +453,8 @@ void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
         auto const caretWidth = label.isEditable() ? 3 : 0;
         auto const textArea = getLabelBorderSize(label).subtractedFrom(label.getLocalBounds()).withTrimmedRight(caretWidth);
 
-        g.drawFittedText(label.getText(), textArea, label.getJustificationType(), std::max(1, static_cast<int>(std::ceil(static_cast<float>(textArea.getHeight()) / font.getHeight()))), label.getMinimumHorizontalScale());
+        auto const numLines = std::max(1, static_cast<int>(std::floor(static_cast<float>(textArea.getHeight()) / (font.getHeight() + 2.0f))));
+        g.drawFittedText(label.getText(), textArea, label.getJustificationType(), numLines, label.getMinimumHorizontalScale());
 
         g.setColour(label.findColour(juce::Label::outlineColourId).withMultipliedAlpha(alpha));
     }
