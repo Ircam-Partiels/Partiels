@@ -89,8 +89,6 @@ Document::Section::Section(Director& director)
     {
         mReaderLayoutPanel.show();
     };
-    mAlertButton.onClick = mReaderLayoutButton.onClick;
-    addChildComponent(mAlertButton);
 
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -104,16 +102,12 @@ Document::Section::Section(Director& director)
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
+        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::reader:
             {
-                auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
-                if(!std::get<1>(result).isEmpty())
-                {
-                    mAlertButton.setTooltip(std::get<1>(result).joinIntoString(""));
-                }
-                mAlertButton.setVisible(!std::get<1>(result).isEmpty());
+                lookAndFeelChanged();
             }
                 break;
             case AttrType::layout:
@@ -193,7 +187,6 @@ void Document::Section::resized()
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
         header.removeFromRight(rightSize);
         mReaderLayoutButton.setBounds(header.removeFromRight(24).withSizeKeepingCentre(24, 24));
-        mAlertButton.setBounds(header.removeFromRight(18).withSizeKeepingCentre(16, 16));
     }
 
     auto topPart = bounds.removeFromTop(28);
@@ -219,8 +212,17 @@ void Document::Section::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
-        laf->setButtonIcon(mAlertButton, IconManager::IconType::alert);
+        auto const result = createAudioFormatReader(mAccessor, mDirector.getAudioFormatManager());
+        if(!std::get<1>(result).isEmpty())
+        {
+            mReaderLayoutButton.setTooltip(std::get<1>(result).joinIntoString(""));
+            laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::alert);
+        }
+        else
+        {
+            mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
+            laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
+        }
     }
 }
 
