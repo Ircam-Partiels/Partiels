@@ -20,8 +20,8 @@ namespace Document
         Group::Accessor& getGroupAcsr(Accessor& accessor, juce::String const& identifier);
         Group::Accessor& getGroupAcsrForTrack(Accessor& accessor, juce::String const& identifier);
 
-        size_t getTrackPosition(Accessor& accessor, juce::String const& identifier);
-        size_t getGroupPosition(Accessor& accessor, juce::String const& identifier);
+        size_t getTrackPosition(Accessor const& accessor, juce::String const& identifier);
+        size_t getGroupPosition(Accessor const& accessor, juce::String const& identifier);
 
         std::optional<juce::String> getFocusedTrack(Accessor const& accessor);
         std::optional<juce::String> getFocusedGroup(Accessor const& accessor);

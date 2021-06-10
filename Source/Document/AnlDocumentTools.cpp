@@ -96,7 +96,7 @@ Group::Accessor& Document::Tools::getGroupAcsrForTrack(Accessor& accessor, juce:
     return it->get();
 }
 
-size_t Document::Tools::getTrackPosition(Accessor& accessor, juce::String const& identifier)
+size_t Document::Tools::getTrackPosition(Accessor const& accessor, juce::String const& identifier)
 {
     auto const& groupAcsr = getGroupAcsrForTrack(accessor, identifier);
     auto const& layout = groupAcsr.getAttr<Group::AttrType::layout>();
@@ -105,7 +105,7 @@ size_t Document::Tools::getTrackPosition(Accessor& accessor, juce::String const&
     return static_cast<size_t>(std::distance(layout.cbegin(), it));
 }
 
-size_t Document::Tools::getGroupPosition(Accessor& accessor, juce::String const& identifier)
+size_t Document::Tools::getGroupPosition(Accessor const& accessor, juce::String const& identifier)
 {
     auto const& layout = accessor.getAttr<AttrType::layout>();
     auto it = std::find(layout.cbegin(), layout.cend(), identifier);
