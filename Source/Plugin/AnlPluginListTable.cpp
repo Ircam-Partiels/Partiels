@@ -3,7 +3,8 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
-: mAccessor(accessor)
+: FloatingWindowContainer("Add Plugin...", *this)
+, mAccessor(accessor)
 , mScanner(scanner)
 , mClearButton(juce::translate("Clear"))
 , mScanButton(juce::translate("Scan"))
@@ -143,6 +144,12 @@ void PluginList::Table::parentHierarchyChanged()
 void PluginList::Table::visibilityChanged()
 {
     lookAndFeelChanged();
+}
+
+void PluginList::Table::showAt(juce::Point<int> const& pt)
+{
+    FloatingWindowContainer::showAt(pt);
+    mFloatingWindow.runModalLoop();
 }
 
 void PluginList::Table::updateContent()

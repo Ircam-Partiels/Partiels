@@ -8,7 +8,7 @@ ANALYSE_FILE_BEGIN
 namespace PluginList
 {
     class Table
-    : public juce::Component
+    : public FloatingWindowContainer
     , private juce::TableListBoxModel
     {
     public:
@@ -20,7 +20,9 @@ namespace PluginList
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
         void visibilityChanged() override;
-        
+
+        // FloatingWindowContainer
+        void showAt(juce::Point<int> const& pt) override;
         std::function<void(Plugin::Key const& key, Plugin::Description const& description)> onPluginSelected = nullptr;
         
     private:
