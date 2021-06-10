@@ -140,21 +140,18 @@ Application::Interface::Loader::Loader()
         }
         else
         {
-            Document::Accessor copyAcsr;
-            juce::UndoManager copyUndoManager;
-            Document::Director copyDirector{copyAcsr, Instance::get().getAudioFormatManager(), copyUndoManager};
-            Document::FileBased copyFileBased{copyAcsr, copyDirector, Instance::getFileExtension(), Instance::getFileWildCard(), "Open a document", "Save the document"};
-            if(copyFileBased.loadFrom(file, true).failed())
-            {
-                return;
-            }
-
-            copyAcsr.setAttr<Document::AttrType::reader>(documentAcsr.getAttr<Document::AttrType::reader>(), NotificationType::synchronous);
-
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
-            documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
-            documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
+            auto const results = Instance::get().getDocumentFileBased().loadTemplate(file);
+            if(results.failed())
+            {
+                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Failed to load template!", results.getErrorMessage());
+                documentDir.endAction(ActionState::abort);
+            }
+            else
+            {
+                documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
+            }
         }
     };
 
