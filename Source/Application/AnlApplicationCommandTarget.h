@@ -61,6 +61,7 @@ namespace Application
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
+        std::tuple<juce::String, size_t> getNewTrackPosition() const;
         Accessor::Listener mListener;
         PluginList::Table mPluginListTable;
         juce::Component* mModalWindow = nullptr;

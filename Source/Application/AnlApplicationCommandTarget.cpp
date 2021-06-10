@@ -699,4 +699,23 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     }
 }
 
+std::tuple<juce::String, size_t> Application::CommandTarget::getNewTrackPosition() const
+{
+    auto const& documentAcsr = Instance::get().getDocumentAccessor();
+    auto const focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
+    if(focusedTrack.has_value())
+    {
+        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *focusedTrack);
+        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+        auto const position = Document::Tools::getTrackPosition(documentAcsr, *focusedTrack);
+        return std::make_tuple(groupIdentifier, position + 1_z);
+    }
+    auto const focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
+    if(focusedGroup.has_value())
+    {
+        return std::make_tuple(*focusedGroup, 0_z);
+    }
+    return std::make_tuple(juce::String(""), 0_z);
+}
+
 ANALYSE_FILE_END
