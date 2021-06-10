@@ -205,7 +205,7 @@ void Application::Interface::Loader::updateState()
     removeChildComponent(&mAddTrackInfo);
     removeChildComponent(&mLoadTemplateButton);
     removeChildComponent(&mLoadTemplateInfo);
-    setVisible(!documentHasFile || !documentHasTrackOrGroup);
+    setVisible(!documentHasFile && !documentHasTrackOrGroup);
     if(!documentHasFile)
     {
         addAndMakeVisible(mLoadFileButton);
@@ -420,6 +420,7 @@ void Application::Interface::componentVisibilityChanged(juce::Component& compone
         return;
     }
     mLoaderDecorator.setVisible(mLoader.isVisible());
+    mDocumentSection.setEnabled(!mLoader.isVisible());
 }
 
 ANALYSE_FILE_END

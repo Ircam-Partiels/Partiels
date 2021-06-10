@@ -104,13 +104,10 @@ Document::Section::Section(Director& director)
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::reader:
             {
-                auto const& reader = acsr.getAttr<AttrType::reader>();
-                setEnabled(!reader.empty());
                 auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
                 if(!std::get<1>(result).isEmpty())
                 {
