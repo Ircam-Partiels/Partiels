@@ -91,6 +91,8 @@ namespace Track
         std::optional<Zoom::Range> getBinRange(Results const& results);
 
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> bounds, std::function<void(juce::Rectangle<int>, size_t)> fn);
+
+        Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults);
     } // namespace Tools
 } // namespace Track
 

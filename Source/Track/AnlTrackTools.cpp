@@ -493,4 +493,100 @@ void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::
     }
 }
 
+Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults)
+{
+    auto rtToS = [](Vamp::RealTime const& rt)
+    {
+        return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
+    };
+
+    auto getBinCount = [&]() -> size_t
+    {
+        if(output.hasFixedBinCount)
+        {
+            return output.binCount;
+        }
+        return std::accumulate(pluginResults.cbegin(), pluginResults.cend(), 0_z, [](auto val, auto const& channelResults)
+                               {
+                                   auto it = std::max_element(channelResults.cbegin(), channelResults.cend(), [](auto const& lhs, auto const& rhs)
+                                                              {
+                                                                  return lhs.values.size() < rhs.values.size();
+                                                              });
+                                   if(it != channelResults.cend())
+                                   {
+                                       return std::max(val, it->values.size());
+                                   }
+                                   return val;
+                               });
+    };
+
+    switch(getBinCount())
+    {
+        case 0_z:
+        {
+            std::vector<Results::Markers> results;
+            results.reserve(pluginResults.size());
+            for(auto const& channelResults : pluginResults)
+            {
+                std::vector<Results::Marker> markers;
+                markers.reserve(pluginResults.size());
+                for(auto const& result : channelResults)
+                {
+                    anlWeakAssert(result.hasTimestamp);
+                    if(result.hasTimestamp)
+                    {
+                        markers.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, result.label));
+                    }
+                }
+                results.push_back(std::move(markers));
+            }
+            return Results(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
+        }
+        break;
+        case 1_z:
+        {
+            std::vector<Results::Points> results;
+            results.reserve(pluginResults.size());
+            for(auto const& channelResults : pluginResults)
+            {
+                std::vector<Results::Point> points;
+                points.reserve(pluginResults.size());
+                for(auto const& result : channelResults)
+                {
+                    anlWeakAssert(result.hasTimestamp);
+                    if(result.hasTimestamp)
+                    {
+                        auto const valid = !result.values.empty() && std::isfinite(result.values[0]) && !std::isnan(result.values[0]);
+                        points.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, valid ? result.values[0] : std::optional<float>()));
+                    }
+                }
+                results.push_back(std::move(points));
+            }
+            return Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
+        }
+        break;
+        default:
+        {
+            std::vector<Results::Columns> results;
+            results.reserve(pluginResults.size());
+            for(auto const& channelResults : pluginResults)
+            {
+                std::vector<Results::Column> columns;
+                columns.reserve(pluginResults.size());
+                for(auto& result : channelResults)
+                {
+                    anlWeakAssert(result.hasTimestamp);
+                    if(result.hasTimestamp)
+                    {
+                        columns.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, std::move(result.values)));
+                    }
+                }
+                results.push_back(std::move(columns));
+            }
+            return Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+        }
+        break;
+    }
+}
+
 ANALYSE_FILE_END
