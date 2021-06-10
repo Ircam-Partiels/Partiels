@@ -247,16 +247,12 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
     mProcessor.onAnalysisEnded = [&](Results const& results)
     {
-        stopTimer();
-        timerCallback();
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
     };
 
     mProcessor.onAnalysisAborted = [&]()
     {
-        stopTimer();
-        timerCallback();
         mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
         mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
@@ -433,6 +429,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
             description.output = std::get<2>(*result);
             mAccessor.setAttr<AttrType::description>(description, notification);
             startTimer(50);
+            timerCallback();
         }
         break;
         case WarningType::state:
@@ -474,8 +471,9 @@ void Track::Director::runAnalysis(NotificationType const notification)
 
 void Track::Director::runRendering()
 {
-    startTimer(50);
     mGraphics.runRendering(mAccessor);
+    startTimer(50);
+    timerCallback();
 }
 
 void Track::Director::sanitizeZooms(NotificationType const notification)
@@ -536,6 +534,10 @@ void Track::Director::timerCallback()
     auto const processorProgress = mProcessor.getAdvancement();
     auto const graphicsRunning = mGraphics.isRunning();
     auto const graphicsProgress = mGraphics.getAdvancement();
+    if(!processorRunning && !graphicsRunning)
+    {
+        stopTimer();
+    }
     mAccessor.setAttr<AttrType::processing>(std::make_tuple(processorRunning, processorProgress, graphicsRunning, graphicsProgress), NotificationType::synchronous);
 }
 
