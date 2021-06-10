@@ -24,7 +24,7 @@ public:
 
     std::function<void()> onChanged = nullptr;
     void setCanBeClosedByUser(bool state);
-    
+
 private:
     // juce::DialogWindow
     void closeButtonPressed() override;
@@ -41,7 +41,7 @@ private:
     // juce::FocusChangeListener
     void globalFocusChanged(juce::Component* focusedComponent) override;
 #endif
-    
+
     bool mCanBeClosedByUser{true};
 };
 
