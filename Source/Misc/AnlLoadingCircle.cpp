@@ -35,11 +35,12 @@ void LoadingCircle::timerCallback()
 
 void LoadingCircle::setActive(bool state)
 {
-    if(state)
+    if(state && !isTimerRunning())
     {
         startTimer(50);
+        repaint();
     }
-    else
+    else if(!state && isTimerRunning())
     {
         stopTimer();
         repaint();
