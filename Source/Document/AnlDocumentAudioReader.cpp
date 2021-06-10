@@ -125,6 +125,10 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
     {
         errors.add(juce::translate("The sample rates of the audio files are not identical!"));
     }
+    else if(reader->sampleRate < std::numeric_limits<double>::epsilon())
+    {
+        return std::make_tuple(nullptr, errors);
+    }
     return std::make_tuple(std::move(reader), errors);
 }
 
