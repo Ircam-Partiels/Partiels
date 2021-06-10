@@ -155,6 +155,10 @@ std::optional<float> Track::Tools::getValue(Results::SharedPoints results, size_
         return std::get<2>(*second);
     }
     auto const ratio = std::min((time - end) / (next - end), 1.0);
+    if(std::isnan(ratio) || !std::isfinite(ratio)) // Extra check in case (next - end) < std::numeric_limits<double>::epsilon()
+    {
+        return std::get<2>(*second);
+    }
     return (1.0 - ratio) * *std::get<2>(*first) + ratio * *std::get<2>(*second);
 }
 
