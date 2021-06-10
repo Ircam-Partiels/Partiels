@@ -195,7 +195,7 @@ Application::Interface::Loader::~Loader()
 void Application::Interface::Loader::updateState()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasFile = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
+    auto const documentHasFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
     auto const documentHasTrackOrGroup = documentAccessor.getNumAcsrs<Document::AcsrType::tracks>() > 0_z || documentAccessor.getNumAcsrs<Document::AcsrType::groups>() > 0_z;
 
     removeChildComponent(&mLoadFileButton);
@@ -205,8 +205,8 @@ void Application::Interface::Loader::updateState()
     removeChildComponent(&mAddTrackInfo);
     removeChildComponent(&mLoadTemplateButton);
     removeChildComponent(&mLoadTemplateInfo);
-    setVisible(!documentHasFile && !documentHasTrackOrGroup);
-    if(!documentHasFile)
+    setVisible(!documentHasTrackOrGroup);
+    if(!documentHasFiles)
     {
         addAndMakeVisible(mLoadFileButton);
         addAndMakeVisible(mLoadFileInfo);
