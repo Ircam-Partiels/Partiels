@@ -1,5 +1,6 @@
 #include "AnlApplicationCommandTarget.h"
 #include "../Document/AnlDocumentTools.h"
+#include "../Track/AnlTrackExporter.h"
 #include "AnlApplicationInstance.h"
 #include <ImagesData.h>
 
@@ -417,105 +418,66 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::EditNewTrack:
         {
-            if(mModalWindow != nullptr)
+            class NewTrackPanel
+            : public FloatingWindowContainer
             {
-                mModalWindow->exitModalState(0);
-                mModalWindow = nullptr;
-            }
-
-            auto getNewTrackPosition = [&]()
-            {
-                auto const focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
-                if(focusedTrack.has_value())
+            public:
+                NewTrackPanel(CommandTarget& commandTarget)
+                : FloatingWindowContainer("New Track...", *this)
+                , mCommandTarget(commandTarget)
                 {
-                    auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *focusedTrack);
-                    auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-                    auto const position = Document::Tools::getTrackPosition(documentAcsr, *focusedTrack);
-                    return std::make_tuple(groupIdentifier, position + 1_z);
-                }
-                auto const focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
-                if(focusedGroup.has_value())
-                {
-                    return std::make_tuple(*focusedGroup, 0_z);
-                }
-                return std::make_tuple(juce::String(""), 0_z);
-            };
+                    addAndMakeVisible(mAddPluginButton);
+                    addAndMakeVisible(mAddResultButton);
 
-            mPluginListTable.onPluginSelected = [&, position = getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description) mutable
-            {
-                if(mModalWindow != nullptr)
-                {
-                    mModalWindow->exitModalState(0);
-                    mModalWindow = nullptr;
-                }
-
-                auto& documentDir = Instance::get().getDocumentDirector();
-                documentDir.startAction();
-
-                // Creates a group if there is none
-                if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
-                {
-                    anlStrongAssert(std::get<0>(position).isEmpty());
-
-                    auto const identifier = documentDir.addGroup(0, NotificationType::synchronous);
-                    anlStrongAssert(identifier.has_value());
-                    if(!identifier.has_value())
+                    mAddPluginButton.onClick = [this]()
                     {
-                        documentDir.endAction(ActionState::abort);
-                        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group necessary for the new track cannot be inserted into the document.");
-                        return;
-                    }
-                    std::get<0>(position) = *identifier;
-                    std::get<1>(position) = 0_z;
-                }
+                        hide();
+                        mCommandTarget.mPluginListTable.onPluginSelected = [this, position = mCommandTarget.getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description)
+                        {
+                            mCommandTarget.mPluginListTable.hide();
+                            mCommandTarget.addPluginTrack(key, description, std::get<0>(position), std::get<1>(position));
+                        };
+                        mCommandTarget.mPluginListTable.show();
+                    };
 
-                anlStrongAssert(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() > 0_z);
-                if(std::get<0>(position).isEmpty())
-                {
-                    auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
-                    std::get<0>(position) = layout.front();
-                    std::get<1>(position) = 0_z;
-                }
-
-                auto const identifier = documentDir.addTrack(std::get<0>(position), std::get<1>(position), NotificationType::synchronous);
-                if(identifier.has_value())
-                {
-                    auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-                    trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
-                    trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
-
-                    auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, std::get<0>(position));
-                    groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
-
-                    documentDir.endAction(ActionState::newTransaction, juce::translate("New \"TRACKNAME\" Track").replace("TRACKNAME", description.name));
-                    if(auto* window = Instance::get().getWindow())
+                    mAddResultButton.onClick = [this, position = mCommandTarget.getNewTrackPosition()]()
                     {
-                        window->moveKeyboardFocusTo(*identifier);
-                    }
+                        hide();
+                        juce::FileChooser fc(juce::translate("Load file"), {}, "*.csv;*.json");
+                        if(!fc.browseForFileToOpen())
+                        {
+                            return;
+                        }
+                        mCommandTarget.addFileTrack(fc.getResult(), std::get<0>(position), std::get<1>(position));
+                    };
+
+                    setSize(400, 120);
                 }
-                else
+
+                ~NewTrackPanel() override = default;
+
+                // juce::Component
+                void resized() override
                 {
-                    documentDir.endAction(ActionState::abort);
+                    auto bounds = getLocalBounds().withSizeKeepingCentre(160 * 2 + 2, 32);
+                    mAddPluginButton.setBounds(bounds.removeFromLeft(160));
+                    mAddResultButton.setBounds(bounds.withTrimmedLeft(2));
                 }
+
+                void showAt(juce::Point<int> const& pt) override
+                {
+                    FloatingWindowContainer::showAt(pt);
+                    mFloatingWindow.runModalLoop();
+                }
+
+            private:
+                CommandTarget& mCommandTarget;
+                juce::TextButton mAddPluginButton{juce::translate("Load Plugin"), juce::translate("Insert a new track with a plugin.")};
+                juce::TextButton mAddResultButton{juce::translate("Load File"), juce::translate("Insert a new track with a file.")};
             };
 
-            auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-            auto const bgColor = laf.findColour(juce::ResizableWindow::backgroundColourId);
-
-            juce::DialogWindow::LaunchOptions o;
-            o.dialogTitle = juce::translate("New Track...");
-            o.content.setNonOwned(&mPluginListTable);
-            o.componentToCentreAround = nullptr;
-            o.dialogBackgroundColour = bgColor;
-            o.escapeKeyTriggersCloseButton = true;
-            o.useNativeTitleBar = false;
-            o.resizable = false;
-            o.useBottomRightCornerResizer = false;
-            mModalWindow = o.launchAsync();
-            if(mModalWindow != nullptr)
-            {
-                mModalWindow->runModalLoop();
-            };
+            NewTrackPanel newTrackPanel(*this);
+            newTrackPanel.show();
 
             return true;
         }

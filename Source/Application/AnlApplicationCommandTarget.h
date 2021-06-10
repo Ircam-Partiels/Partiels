@@ -67,7 +67,6 @@ namespace Application
 
         Accessor::Listener mListener;
         PluginList::Table mPluginListTable;
-        juce::Component* mModalWindow = nullptr;
     };
 } // namespace Application
 
