@@ -153,6 +153,29 @@ juce::Result Document::FileBased::saveDocument(juce::File const& file)
     return juce::Result::ok();
 }
 
+juce::Result Document::FileBased::loadTemplate(juce::File const& file)
+{
+    auto xml = juce::XmlDocument::parse(file);
+    if(xml == nullptr || !xml->hasTagName("document"))
+    {
+        return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
+    }
+    XmlParser::toXml(*xml.get(), "reader", mAccessor.getAttr<AttrType::reader>());
+    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
+    mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
+    mDirector.sanitize(NotificationType::synchronous);
+    auto var = std::make_unique<juce::DynamicObject>();
+    if(var != nullptr)
+    {
+        var->setProperty("x", viewport.getX());
+        var->setProperty("y", viewport.getY());
+        mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
+    }
+    mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+    triggerAsyncUpdate();
+    return juce::Result::ok();
+}
+
 juce::Result Document::FileBased::loadBackup(juce::File const& file)
 {
     auto xml = juce::XmlDocument::parse(file);
