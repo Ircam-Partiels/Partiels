@@ -2,11 +2,6 @@
 #include "../Transport/AnlTransportModel.h"
 #include "AnlTrackPlot.h"
 #include "AnlTrackTools.h"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-#include <json/json.hpp>
-#pragma GCC diagnostic pop
-#include <fstream>
 
 ANALYSE_FILE_BEGIN
 

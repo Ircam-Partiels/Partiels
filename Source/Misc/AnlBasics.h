@@ -2,6 +2,7 @@
 
 #include "JuceHeader.h"
 
+#include <fstream>
 #include <atomic>
 #include <cassert>
 #include <functional>
@@ -16,6 +17,11 @@
 #include <type_traits>
 #include <utility>
 #include <variant>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#include <json/json.hpp>
+#pragma GCC diagnostic pop
 
 // clang-format off
 #define ANALYSE_FILE_BEGIN namespace Anl {
