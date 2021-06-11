@@ -39,4 +39,31 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     return value;
 }
 
+template <>
+void XmlParser::toXml<Track::Results>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Results const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        toXml(*child, "file", value.file.getFullPathName());
+        xml.addChildElement(child.release());
+    }
+}
+
+template <>
+auto XmlParser::fromXml<Track::Results>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::Results const& defaultValue)
+    -> Track::Results
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    Track::Results value;
+    value.file = fromXml(*child, "file", defaultValue.file);
+    return value;
+}
+
 ANALYSE_FILE_END

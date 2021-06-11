@@ -106,7 +106,7 @@ namespace Track
             return getMarkers() == rhd.getMarkers() &&
                    getPoints() == rhd.getPoints() &&
                    getColumns() == rhd.getColumns() &&
-                   mFile == rhd.mFile;
+                   file == rhd.file;
         }
 
         inline bool operator!=(Results const& rhd) const noexcept
@@ -114,9 +114,10 @@ namespace Track
             return !(*this == rhd);
         }
 
+        juce::File file{};
+
     private:
         std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
-        juce::File mFile{};
     };
 
     using Images = std::vector<std::vector<juce::Image>>;
@@ -278,6 +279,13 @@ namespace XmlParser
     template <>
     auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
         -> Track::ColourSet;
+
+    template <>
+    void toXml<Track::Results>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Results const& value);
+
+    template <>
+    auto fromXml<Track::Results>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::Results const& defaultValue)
+        -> Track::Results;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
