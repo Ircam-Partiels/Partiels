@@ -56,8 +56,6 @@ namespace Application
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
-        JUCE_DEPRECATED(static void showUnsupportedAction());
-
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 

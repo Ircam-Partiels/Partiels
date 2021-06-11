@@ -2,44 +2,8 @@
 #include "../Document/AnlDocumentTools.h"
 #include "../Track/AnlTrackExporter.h"
 #include "AnlApplicationInstance.h"
-#include <ImagesData.h>
 
 ANALYSE_FILE_BEGIN
-
-void Application::CommandTarget::showUnsupportedAction()
-{
-    juce::ImageComponent imageComponent;
-    auto const image = juce::ImageCache::getFromMemory(ImagesData::MagicWord_jpeg, ImagesData::MagicWord_jpegSize);
-    imageComponent.setImage(image);
-    imageComponent.setImagePlacement(juce::RectanglePlacement::fillDestination);
-    imageComponent.setSize(image.getWidth() / 2, image.getHeight() / 2);
-
-    juce::TextButton button("OK");
-    button.setBounds({480, 270, 80, 32});
-    imageComponent.addAndMakeVisible(button);
-
-    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-    auto const bgColor = laf.findColour(juce::ResizableWindow::backgroundColourId);
-
-    juce::DialogWindow::LaunchOptions o;
-    o.dialogTitle = juce::translate("Action Unavailable!");
-    o.content.setNonOwned(&imageComponent);
-    o.componentToCentreAround = nullptr;
-    o.dialogBackgroundColour = bgColor;
-    o.escapeKeyTriggersCloseButton = true;
-    o.useNativeTitleBar = false;
-    o.resizable = false;
-    o.useBottomRightCornerResizer = false;
-    auto* window = o.launchAsync();
-    if(window != nullptr)
-    {
-        button.onClick = [&]()
-        {
-            window->exitModalState(0);
-        };
-        window->runModalLoop();
-    }
-}
 
 Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
