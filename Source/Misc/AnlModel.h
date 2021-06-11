@@ -500,18 +500,9 @@ namespace Model
                                              anlStrongAssert(acsrPtr != nullptr);
                                              if(acsrPtr != nullptr && static_cast<parent_t*>(this)->template getAcsrPosition<acsr_type>(*acsrPtr) == npos)
                                              {
-                                                 if(static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
+                                                 if(!static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
                                                  {
-                                                     anlStrongAssert(accessors[index] != nullptr);
-                                                     if(accessors[index] != nullptr)
-                                                     {
-                                                         accessors[index]->copyFrom(*(d.accessors[index].get()), notification);
-                                                     }
-                                                     notifyAccessorInsertion<acsr_type>(index, notification);
-                                                 }
-                                                 else
-                                                 {
-                                                     anlStrongAssert(false && "allocation failed");
+                                                     anlWeakAssert(false);
                                                  }
                                              }
                                          }
@@ -818,7 +809,6 @@ namespace Model
                                                  {
                                                      accessors[index]->fromXml(*childs[index], enumname.c_str(), NotificationType::synchronous);
                                                  }
-                                                 accessor.template notifyAccessorInsertion<acsr_type>(index, NotificationType::synchronous);
                                              }
                                              else
                                              {
