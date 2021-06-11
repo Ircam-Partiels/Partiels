@@ -366,7 +366,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::DocumentConsolidate:
         {
-            showUnsupportedAction();
+            if(fileBased.save(true, true) == juce::FileBasedDocument::SaveResult::savedOk)
+            {
+                fileBased.consolidate();
+            }
             return true;
         }
 
