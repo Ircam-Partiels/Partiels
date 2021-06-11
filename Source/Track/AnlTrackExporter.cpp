@@ -97,7 +97,8 @@ juce::Result Track::Exporter::fromJson(Accessor& accessor, juce::File const& fil
 
     Plugin::Output output;
     output.hasFixedBinCount = false;
-    auto const results = Tools::getResults(output, pluginResults);
+    auto results = Tools::getResults(output, pluginResults);
+    results.file = file;
     accessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
     return juce::Result::ok();
 }
