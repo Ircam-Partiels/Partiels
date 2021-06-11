@@ -500,7 +500,6 @@ namespace Model
                                              anlStrongAssert(acsrPtr != nullptr);
                                              if(acsrPtr != nullptr && static_cast<parent_t*>(this)->template getAcsrPosition<acsr_type>(*acsrPtr) == npos)
                                              {
-                                                 mDelayInsertionNotification = true;
                                                  if(static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
                                                  {
                                                      anlStrongAssert(accessors[index] != nullptr);
@@ -514,7 +513,6 @@ namespace Model
                                                  {
                                                      anlStrongAssert(false && "allocation failed");
                                                  }
-                                                 mDelayInsertionNotification = false;
                                              }
                                          }
                                      }
@@ -691,10 +689,7 @@ namespace Model
                 // Attaches the mutex to prevent recursive changes
                 (*it)->setLock(&getLock());
                 lock = true;
-                if(!mDelayInsertionNotification)
-                {
-                    notifyAccessorInsertion<type>(index, notification);
-                }
+                notifyAccessorInsertion<type>(index, notification);
                 return true;
             }
             lock = true;
@@ -816,7 +811,6 @@ namespace Model
                                          anlWeakAssert(accessors.empty());
                                          for(auto index = 0_z; index < childs.size(); ++index)
                                          {
-                                             accessor.mDelayInsertionNotification = true;
                                              if(static_cast<parent_t*>(&accessor)->template insertAcsr<acsr_type>(index, NotificationType::synchronous))
                                              {
                                                  anlWeakAssert(accessors[index] != nullptr && childs[index] != nullptr);
@@ -831,7 +825,6 @@ namespace Model
                                                  accessors.push_back(nullptr);
                                                  anlWeakAssert(false && "allocation failed");
                                              }
-                                             accessor.mDelayInsertionNotification = false;
                                          }
                                      }
                                      else
@@ -967,7 +960,6 @@ namespace Model
 
         std::atomic<bool> mLock{true};
         std::atomic<bool>* mSharedLock = nullptr;
-        bool mDelayInsertionNotification = false;
 
         template <class, class, class>
         friend class Accessor;
