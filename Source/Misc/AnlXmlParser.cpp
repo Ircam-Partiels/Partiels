@@ -5,17 +5,19 @@ ANALYSE_FILE_BEGIN
 template <>
 void XmlParser::toXml<juce::Range<double>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Range<double> const& value)
 {
-    xml.setAttribute(attributeName + "::start", value.getStart());
-    xml.setAttribute(attributeName + "::end", value.getEnd());
+    xml.setAttribute(attributeName + "_start", value.getStart());
+    xml.setAttribute(attributeName + "_end", value.getEnd());
 }
 
 template <>
 auto XmlParser::fromXml<juce::Range<double>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Range<double> const& defaultValue)
 -> juce::Range<double>
 {
-    anlWeakAssert(xml.hasAttribute(attributeName + "::start"));
-    anlWeakAssert(xml.hasAttribute(attributeName + "::end"));
-    return {xml.getDoubleAttribute(attributeName + "::start", defaultValue.getStart()), xml.getDoubleAttribute(attributeName + "::end", defaultValue.getEnd())};
+    anlWeakAssert(xml.hasAttribute(attributeName + "_start") || xml.hasAttribute(attributeName + "::start"));
+    anlWeakAssert(xml.hasAttribute(attributeName + "_end") || xml.hasAttribute(attributeName + "::end"));
+    auto const start = xml.hasAttribute(attributeName + "_start") ? xml.getDoubleAttribute(attributeName + "_start") : xml.getDoubleAttribute(attributeName + "::start", defaultValue.getStart());
+    auto const end = xml.hasAttribute(attributeName + "_end") ? xml.getDoubleAttribute(attributeName + "_end") : xml.getDoubleAttribute(attributeName + "::end", defaultValue.getEnd());
+    return {start, end};
 }
 
 template <>
@@ -34,17 +36,19 @@ auto XmlParser::fromXml<juce::File>(juce::XmlElement const& xml, juce::Identifie
 template <>
 void XmlParser::toXml<juce::Point<int>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Point<int> const& value)
 {
-    xml.setAttribute(attributeName + "::x", value.getX());
-    xml.setAttribute(attributeName + "::y", value.getY());
+    xml.setAttribute(attributeName + "_x", value.getX());
+    xml.setAttribute(attributeName + "_y", value.getY());
 }
 
 template <>
 auto XmlParser::fromXml<juce::Point<int>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Point<int> const& defaultValue)
 -> juce::Point<int>
 {
-    anlWeakAssert(xml.hasAttribute(attributeName + "::x"));
-    anlWeakAssert(xml.hasAttribute(attributeName + "::y"));
-    return {xml.getIntAttribute(attributeName + "::x", defaultValue.getX()), xml.getIntAttribute(attributeName + "::y", defaultValue.getY())};
+    anlWeakAssert(xml.hasAttribute(attributeName + "_x") || xml.hasAttribute(attributeName + "::x"));
+    anlWeakAssert(xml.hasAttribute(attributeName + "_y") || xml.hasAttribute(attributeName + "::y"));
+    auto const x = xml.hasAttribute(attributeName + "_x") ? xml.getIntAttribute(attributeName + "_x") : xml.getIntAttribute(attributeName + "::x", defaultValue.getX());
+    auto const y = xml.hasAttribute(attributeName + "_y") ? xml.getIntAttribute(attributeName + "_y") : xml.getIntAttribute(attributeName + "::y", defaultValue.getY());
+    return {x, y};
 }
 
 class XmlParserUnitTest
