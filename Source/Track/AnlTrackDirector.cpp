@@ -1,5 +1,6 @@
 #include "AnlTrackDirector.h"
 #include "../Zoom/AnlZoomTools.h"
+#include "AnlTrackExporter.h"
 #include "AnlTrackProcessor.h"
 #include "AnlTrackTools.h"
 
@@ -23,7 +24,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
                     mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
                 }
-                else
+                else if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -31,7 +32,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::state:
             {
-                runAnalysis(notification);
+                if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+                {
+                    runAnalysis(notification);
+                }
             }
             break;
             case AttrType::description:
@@ -41,10 +45,39 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::results:
             {
-                sanitizeZooms(notification);
-                auto getNumChannels = [this]() -> std::optional<size_t>
+                auto results = mAccessor.getAttr<AttrType::results>();
+                if(results.file != juce::File{} && results.isEmpty())
                 {
-                    auto const results = mAccessor.getAttr<AttrType::results>();
+                    auto const exportResult = Exporter::fromJson(mAccessor, results.file);
+                    if(exportResult.failed())
+                    {
+                        auto answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "The results cannot be restored to the track TRACKNAME due to: ERRORMESSAGE. Would you like to select another file? If cancel, the application will try to run the analysis if possible.", {{"TRACKNAME", mAccessor.getAttr<AttrType::name>()}, {"ERRORMESSAGE", exportResult.getErrorMessage()}});
+                        switch(answer)
+                        {
+                            case AlertWindow::Answer::yes:
+                            {
+                                juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
+                                if(fc.browseForFileToOpen())
+                                {
+                                    results.file = fc.getResult();
+                                    mAccessor.setAttr<AttrType::results>(results, notification);
+                                }
+                            }
+                            break;
+                            case AlertWindow::Answer::no:
+                                break;
+                            case AlertWindow::Answer::cancel:
+                            {
+                                runAnalysis(notification);
+                            }
+                            break;
+                        }
+                    }
+                    return;
+                }
+                sanitizeZooms(notification);
+                auto getNumChannels = [&]() -> std::optional<size_t>
+                {
                     if(auto markers = results.getMarkers())
                     {
                         return markers->size();
@@ -275,7 +308,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         timerCallback();
     };
 
-    runAnalysis(NotificationType::synchronous);
+    if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+    {
+        runAnalysis(NotificationType::synchronous);
+    }
 }
 
 Track::Director::~Director()
@@ -384,7 +420,10 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 
     std::swap(mAudioFormatReaderManager, audioFormatReader);
-    runAnalysis(notification);
+    if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+    {
+        runAnalysis(notification);
+    }
 }
 
 void Track::Director::runAnalysis(NotificationType const notification)
