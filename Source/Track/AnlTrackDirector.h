@@ -18,6 +18,8 @@ namespace Track
 
         Accessor& getAccessor();
 
+        bool consolidate(juce::File const& file);
+
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 

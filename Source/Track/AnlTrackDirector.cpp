@@ -56,7 +56,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                         {
                             case AlertWindow::Answer::yes:
                             {
-                                juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
+                                juce::FileChooser fc(juce::translate("Load file"), results.file, "*.json");
                                 if(fc.browseForFileToOpen())
                                 {
                                     results.file = fc.getResult();
@@ -578,6 +578,38 @@ void Track::Director::timerCallback()
         stopTimer();
     }
     mAccessor.setAttr<AttrType::processing>(std::make_tuple(processorRunning, processorProgress, graphicsRunning, graphicsProgress), NotificationType::synchronous);
+}
+
+bool Track::Director::consolidate(juce::File const& file)
+{
+    if(file.createDirectory().failed())
+    {
+        return false;
+    }
+
+    auto results = mAccessor.getAttr<AttrType::results>();
+    if(results.file.getParentDirectory() == file)
+    {
+        return true;
+    }
+    auto const resultsFile = file.getNonexistentChildFile(mAccessor.getAttr<AttrType::name>(), ".json");
+    if(results.file == juce::File{})
+    {
+        if(Exporter::toJson(mAccessor, resultsFile).failed())
+        {
+            return false;
+        }
+    }
+    else if(results.file.existsAsFile())
+    {
+        if(!results.file.copyFileTo(resultsFile))
+        {
+            return false;
+        }
+    }
+    results.file = resultsFile;
+    mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+    return true;
 }
 
 ANALYSE_FILE_END
