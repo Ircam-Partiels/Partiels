@@ -422,7 +422,7 @@ namespace Model
                              });
             return json;
         }
-        
+
         void fromJson(nlohmann::json const& json, NotificationType const notification)
         {
             Accessor temporary;
@@ -916,13 +916,13 @@ namespace Model
             {
                 detail::for_each(t, f, make_index_sequence_reverse<sizeof...(Ts)>());
             }
-            
+
             template <typename... Ts, typename F>
             static void for_each(std::tuple<Ts...>& t, F f)
             {
                 detail::for_each(t, f, std::make_integer_sequence<size_t, sizeof...(Ts)>());
             }
-            
+
             template <typename... Ts, typename F>
             static void for_each_inv(std::tuple<Ts...>& t, F f)
             {
