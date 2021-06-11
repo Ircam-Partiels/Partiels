@@ -8,6 +8,10 @@ struct DummyAttr
     bool operator!=(DummyAttr const&) const { return false; }
 };
 
+void to_json(nlohmann::json&, DummyAttr const&) {}
+
+void from_json(nlohmann::json const&, DummyAttr&) {}
+
 namespace XmlParser
 {
     template <>
@@ -164,6 +168,14 @@ public:
             expect(acsr1.getAttr<AttrType::attr3>() != acsr2.getAttr<AttrType::attr3>());
             expectNotEquals(acsr1.getAttr<AttrType::attr4>(), acsr2.getAttr<AttrType::attr4>());
             expect(acsr1.getAttr<AttrType::attr5>() == acsr2.getAttr<AttrType::attr5>());
+        }
+
+        beginTest("accessor json");
+        {
+            ModelAcsr acsr1;
+            expectEquals(acsr1.toJson().dump(), nlohmann::json::string_t("{\"attr0\":0,\"attr2\":0.0,\"attr5\":[],\"attr6\":null}"));
+            acsr1.fromJson("{\"attr0\":1,\"attr2\":3.0,\"attr5\":[7.0,8.0],\"attr6\":null}"_json, NotificationType::synchronous);
+            expectEquals(acsr1.toJson().dump(), nlohmann::json::string_t("{\"attr0\":1,\"attr2\":3.0,\"attr5\":[7.0,8.0],\"attr6\":null}"));
         }
 
         beginTest("is equivalent");
