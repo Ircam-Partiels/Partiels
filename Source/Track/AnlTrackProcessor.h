@@ -29,13 +29,15 @@ namespace Track
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
 
+        // clang-format off
         enum class ProcessState
         {
-            available,
-            aborted,
-            running,
-            ended
+              available
+            , aborted
+            , running
+            , ended
         };
+        // clang-format on
 
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
 
