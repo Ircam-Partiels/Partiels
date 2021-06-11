@@ -159,6 +159,7 @@ namespace Track
     {
           identifier
         , name
+        , results
         , key
         , description
         , state
@@ -169,7 +170,6 @@ namespace Track
         , zoomLink
         , zoomAcsr
         
-        , results
         , graphics
         , warnings
         , processing
@@ -190,6 +190,7 @@ namespace Track
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::results, Results, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
@@ -200,7 +201,6 @@ namespace Track
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
-    , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::graphics, Images, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
@@ -227,6 +227,7 @@ namespace Track
                                  , {}
                                  , {}
                                  , {}
+                                 , {}
                                  
                                  , {120}
                                  , {}
@@ -234,7 +235,6 @@ namespace Track
                                  , {true}
                                  , {}
                                  
-                                 , {}
                                  , {}
                                  , {WarningType::none}
                                  , {{false, 0.0, false, 0.0}}
