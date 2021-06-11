@@ -395,6 +395,41 @@ namespace Model
             return xml;
         }
 
+        auto toJson()
+        {
+            anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+            nlohmann::json json;
+            detail::for_each(mAttributes, [&](auto const& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     json[std::string(magic_enum::enum_name(element_type::type))] = d.value;
+                                 }
+                             });
+
+            detail::for_each(mAccessors, [&](auto const& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     auto& j = json[std::string(magic_enum::enum_name(element_type::type))];
+                                     for(auto const& acsr : getAcsrs<element_type::type>())
+                                     {
+                                         j.push_back(acsr.get().toJson());
+                                     }
+                                 }
+                             });
+            return json;
+        }
+        
+        void fromJson(nlohmann::json const& json, NotificationType const notification)
+        {
+            Accessor temporary;
+            fromJson(temporary, json);
+            copyFrom(temporary, notification);
+        }
+
         //! @brief Parse the container from xml
         //! @details Only the saveable attributes are restored from the xml.
         //! If the value changed and the attribute is marked as notifying, the method notifies the listeners .
@@ -681,6 +716,64 @@ namespace Model
         }
 
     private:
+        static auto fromJson(Accessor& accessor, nlohmann::json const& json)
+        {
+            detail::for_each(accessor.mAttributes, [&](auto& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     auto it = json.find(std::string(magic_enum::enum_name(element_type::type)));
+                                     anlWeakAssert(it != json.cend());
+                                     if(it != json.cend())
+                                     {
+                                         it->get_to(d.value);
+                                     }
+                                 }
+                             });
+
+            detail::for_each(accessor.mAccessors, [&](auto& d)
+                             {
+                                 using element_type = typename std::remove_reference<decltype(d)>::type;
+                                 if constexpr((element_type::flags & Flag::saveable) != 0)
+                                 {
+                                     auto it = json.find(std::string(magic_enum::enum_name(element_type::type)));
+                                     anlWeakAssert(it != json.cend());
+                                     if(it == json.cend())
+                                     {
+                                         return;
+                                     }
+                                     auto& accessors = std::get<static_cast<size_t>(element_type::type)>(accessor.mAccessors).accessors;
+                                     anlWeakAssert((element_type::size_flags == 0 && accessors.empty()) || (element_type::size_flags != 0 && it->size() == accessors.size()));
+                                     if constexpr(element_type::size_flags == 0)
+                                     {
+                                         for(auto index = 0_z; index < it->size(); ++index)
+                                         {
+                                             if(static_cast<parent_t*>(&accessor)->template insertAcsr<element_type::type>(index, NotificationType::synchronous))
+                                             {
+                                                 anlWeakAssert(accessors[index] != nullptr);
+                                                 if(accessors[index] != nullptr)
+                                                 {
+                                                     fromJson(*accessors[index].get(), it->at(index));
+                                                 }
+                                             }
+                                         }
+                                     }
+                                     else
+                                     {
+                                         for(auto index = 0_z; index < std::min(accessors.size(), it->size()); ++index)
+                                         {
+                                             anlWeakAssert(accessors[index] != nullptr);
+                                             if(accessors[index] != nullptr)
+                                             {
+                                                 fromJson(*accessors[index].get(), it->at(index));
+                                             }
+                                         }
+                                     }
+                                 }
+                             });
+        }
+
         static void fromXml(Accessor& accessor, juce::XmlElement const& xml, juce::StringRef const& name)
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
@@ -820,6 +913,18 @@ namespace Model
 
             template <typename... Ts, typename F>
             static void for_each_inv(std::tuple<Ts...> const& t, F f)
+            {
+                detail::for_each(t, f, make_index_sequence_reverse<sizeof...(Ts)>());
+            }
+            
+            template <typename... Ts, typename F>
+            static void for_each(std::tuple<Ts...>& t, F f)
+            {
+                detail::for_each(t, f, std::make_integer_sequence<size_t, sizeof...(Ts)>());
+            }
+            
+            template <typename... Ts, typename F>
+            static void for_each_inv(std::tuple<Ts...>& t, F f)
             {
                 detail::for_each(t, f, make_index_sequence_reverse<sizeof...(Ts)>());
             }
