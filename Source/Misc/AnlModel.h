@@ -466,14 +466,13 @@ namespace Model
                                      {
                                          auto constexpr acsr_type = element_type::type;
                                          auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                         anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
-
+                                         anlWeakAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
                                          if constexpr(element_type::size_flags == 0)
                                          {
                                              for(auto index = accessors.size(); index > 0_z; --index)
                                              {
                                                  auto const& acsrPtr = accessors[index - 1].get();
-                                                 anlStrongAssert(acsrPtr != nullptr);
+                                                 anlWeakAssert(acsrPtr != nullptr);
                                                  if(acsrPtr == nullptr || static_cast<parent_t const*>(&accessor)->template getAcsrPosition<acsr_type>(*acsrPtr) == npos)
                                                  {
                                                      static_cast<parent_t*>(this)->template eraseAcsr<acsr_type>(index - 1, notification);
@@ -491,13 +490,13 @@ namespace Model
                                  {
                                      auto constexpr acsr_type = element_type::type;
                                      auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                     anlStrongAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
+                                     anlWeakAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
                                      if constexpr(element_type::size_flags == 0)
                                      {
                                          for(auto index = 0_z; index < d.accessors.size(); ++index)
                                          {
                                              auto const& acsrPtr = d.accessors[index].get();
-                                             anlStrongAssert(acsrPtr != nullptr);
+                                             anlWeakAssert(acsrPtr != nullptr);
                                              if(acsrPtr != nullptr && static_cast<parent_t*>(this)->template getAcsrPosition<acsr_type>(*acsrPtr) == npos)
                                              {
                                                  if(!static_cast<parent_t*>(this)->template insertAcsr<acsr_type>(index, notification))
@@ -518,16 +517,16 @@ namespace Model
                                  {
                                      auto constexpr acsr_type = element_type::type;
                                      auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
-                                     anlStrongAssert(d.accessors.size() == accessors.size());
+                                     anlWeakAssert(d.accessors.size() == accessors.size());
                                      for(size_t index = 0; index < std::min(accessors.size(), d.accessors.size()); ++index)
                                      {
                                          if constexpr(element_type::size_flags == 0)
                                          {
-                                             anlStrongAssert(accessors[index] != nullptr);
+                                             anlWeakAssert(accessors[index] != nullptr);
                                              if(accessors[index] != nullptr)
                                              {
                                                  auto const position = static_cast<parent_t*>(this)->template getAcsrPosition<acsr_type>(*accessors[index]);
-                                                 anlStrongAssert(position != npos);
+                                                 anlWeakAssert(position != npos);
                                                  if(position != npos && d.accessors[position] != nullptr)
                                                  {
                                                      accessors[index]->copyFrom(*(d.accessors[position].get()), notification);
@@ -536,7 +535,7 @@ namespace Model
                                          }
                                          else
                                          {
-                                             anlStrongAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
+                                             anlWeakAssert(accessors[index] != nullptr && d.accessors[index] != nullptr);
                                              if(accessors[index] != nullptr && d.accessors[index] != nullptr)
                                              {
                                                  accessors[index]->copyFrom(*(d.accessors[index].get()), notification);
