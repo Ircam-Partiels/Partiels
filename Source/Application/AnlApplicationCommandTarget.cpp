@@ -402,7 +402,6 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
             if(identifier.has_value())
             {
-                auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *identifier);
                 documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
                 if(auto* window = Instance::get().getWindow())
                 {
