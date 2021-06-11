@@ -55,10 +55,6 @@ juce::Result Track::Exporter::fromJson(Accessor& accessor, juce::File const& fil
         return juce::Result::fail(juce::translate("The JSON file FLNAME doesn't contain datas.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    using Markers = std::vector<Results::Marker>;
-    using Points = std::vector<Results::Point>;
-    using Columns = std::vector<Results::Column>;
-
     std::vector<std::vector<Plugin::Result>> pluginResults;
     pluginResults.resize(json.size());
     for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
@@ -103,7 +99,7 @@ juce::Result Track::Exporter::fromJson(Accessor& accessor, juce::File const& fil
             }
         }
     }
-    
+
     Plugin::Output output;
     output.hasFixedBinCount = false;
     auto const results = Tools::getResults(output, pluginResults);
