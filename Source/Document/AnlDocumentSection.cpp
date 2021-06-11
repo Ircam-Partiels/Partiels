@@ -1,6 +1,6 @@
 #include "AnlDocumentSection.h"
-#include "AnlDocumentTools.h"
 #include "AnlDocumentAudioReader.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -109,7 +109,7 @@ Document::Section::Section(Director& director)
             {
                 lookAndFeelChanged();
             }
-                break;
+            break;
             case AttrType::layout:
             case AttrType::viewport:
             {
@@ -119,7 +119,7 @@ Document::Section::Section(Director& director)
         }
     };
 
-    mListener.onAccessorInserted = mListener.onAccessorErased = [&](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr, index);
         switch(type)
@@ -130,7 +130,17 @@ Document::Section::Section(Director& director)
                 break;
             case AcsrType::groups:
             {
-                updateLayout();
+                // The group identifier is not yet defined when the group is inserted
+                // so the group cannot be found in the layout, delaying to the next message
+                // tick, ensure thatt both the groups and the layout are consistent
+                juce::WeakReference<juce::Component> target(this);
+                juce::MessageManager::callAsync([=, this]()
+                                                {
+                                                    if(target.get() != nullptr)
+                                                    {
+                                                        updateLayout();
+                                                    }
+                                                });
             }
             break;
         }
