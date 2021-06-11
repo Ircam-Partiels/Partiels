@@ -20,6 +20,17 @@ public:
     static void showMessage(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements = {});
 
     static bool showOkCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements = {});
+
+    // clang-format off
+    enum class Answer
+    {
+          yes
+        , no
+        , cancel
+    };
+    // clang-format on
+
+    static Answer showYesNoCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements = {});
 };
 
 ANALYSE_FILE_END
