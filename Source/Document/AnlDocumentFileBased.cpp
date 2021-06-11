@@ -123,6 +123,31 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
+    auto const original = XmlParser::fromXml(*xml.get(), "path", file);
+    auto const oldParent = file.getParentDirectory().getFullPathName();
+    auto const newParent = file.getParentDirectory().getFullPathName();
+    if(oldParent != newParent)
+    {
+        std::function<void(juce::XmlElement&)> replacePath = [&](juce::XmlElement& element)
+        {
+            for(int i = 0; i < element.getNumAttributes(); ++i)
+            {
+                auto const& currentValue = element.getAttributeValue(i);
+                if(currentValue.contains(oldParent))
+                {
+                    element.setAttribute(element.getAttributeName(i), currentValue.replace(oldParent, newParent));
+                }
+            }
+            for(auto* child : element.getChildIterator())
+            {
+                if(child != nullptr)
+                {
+                    replacePath(*child);
+                }
+            }
+        };
+        replacePath(*xml.get());
+    }
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     auto var = std::make_unique<juce::DynamicObject>();
@@ -139,17 +164,50 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
 
 juce::Result Document::FileBased::saveDocument(juce::File const& file)
 {
+    auto const previousPath = mAccessor.getAttr<AttrType::path>();
+    mAccessor.setAttr<AttrType::path>(file, NotificationType::synchronous);
     auto xml = mAccessor.toXml("document");
     if(xml == nullptr)
     {
+        mAccessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
         return juce::Result::fail(juce::translate("The document cannot be parsed!"));
     }
     if(!xml->writeTo(file))
     {
+        mAccessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
         return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
     }
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
     triggerAsyncUpdate();
+    return juce::Result::ok();
+}
+
+juce::Result Document::FileBased::consolidate()
+{
+    auto file = getFile();
+    if(!file.existsAsFile())
+    {
+        return juce::Result::fail("The document file doesn't exist!");
+    }
+    auto const subDirectory = file.getParentDirectory().getChildFile(file.getFileNameWithoutExtension() + "_" + "ConsolidatedFiles");
+    auto result = subDirectory.createDirectory();
+    if(result.failed())
+    {
+        return result;
+    }
+    mDirector.startAction();
+    if(!mDirector.consolidate(subDirectory))
+    {
+        mDirector.endAction(ActionState::abort);
+        return juce::Result::fail("The document file cannot be consolidated!");
+    }
+    result = saveDocument(file);
+    if(result.failed())
+    {
+        mDirector.endAction(ActionState::abort);
+        return result;
+    }
+    mDirector.endAction(ActionState::newTransaction, "Consolidate Document");
     return juce::Result::ok();
 }
 
@@ -161,6 +219,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
     XmlParser::toXml(*xml.get(), "reader", mAccessor.getAttr<AttrType::reader>());
+    XmlParser::toXml(*xml.get(), "path", mAccessor.getAttr<AttrType::path>());
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
@@ -252,6 +311,7 @@ void Document::FileBased::handleAsyncUpdate()
 
 void Document::FileBased::changed()
 {
+    mAccessor.setAttr<AttrType::path>(getFile(), NotificationType::synchronous);
     if(getFile() == juce::File{})
     {
         auto const state = mAccessor.isEquivalentTo(getDefaultContainer());
