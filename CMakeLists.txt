@@ -107,9 +107,6 @@ target_include_directories(Partiels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependenc
 target_include_directories(PartielsTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
 endif()
 
-file(GLOB ImagesDataSources ${BINARYDATA_DIRECTORY}/Images/MagicWord.jpeg)
-juce_add_binary_data(ImagesData HEADER_NAME "ImagesData.h" NAMESPACE ImagesData SOURCES ${ImagesDataSources})
-
 file(GLOB IconsDataSources ${BINARYDATA_DIRECTORY}/Icons/*.png)
 juce_add_binary_data(IconsData HEADER_NAME "IconsData.h" NAMESPACE IconsData SOURCES ${IconsDataSources})
 
@@ -127,7 +124,6 @@ juce_add_binary_data(MiscData HEADER_NAME "MiscData.h" NAMESPACE MiscData SOURCE
 
 target_link_libraries(Partiels PRIVATE
     vamp
-    ImagesData
     IconsData
     CursorsData
     FontsData
@@ -143,7 +139,6 @@ target_link_libraries(Partiels PRIVATE
 
 target_link_libraries(PartielsTest PRIVATE
     vamp
-    ImagesData
     IconsData
     CursorsData
     FontsData
