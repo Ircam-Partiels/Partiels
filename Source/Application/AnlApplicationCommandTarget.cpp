@@ -442,7 +442,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     mAddResultButton.onClick = [this, position = mCommandTarget.getNewTrackPosition()]()
                     {
                         hide();
-                        juce::FileChooser fc(juce::translate("Load file"), {}, "*.csv;*.json");
+                        juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
                         if(!fc.browseForFileToOpen())
                         {
                             return;
