@@ -94,6 +94,7 @@ Application::Exporter::Exporter()
         {
             case Document::AttrType::reader:
             case Document::AttrType::viewport:
+            case Document::AttrType::path:
                 break;
             case Document::AttrType::layout:
             {

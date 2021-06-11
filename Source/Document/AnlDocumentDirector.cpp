@@ -49,6 +49,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             break;
             case AttrType::layout:
             case AttrType::viewport:
+            case AttrType::path:
                 break;
         }
     };
@@ -623,7 +624,7 @@ bool Document::Director::consolidate(juce::File const& file)
         auto const newAudioFile = file.getChildFile(reader[i].file.getFileName());
         if(audioFiles.insert(reader[i].file).second)
         {
-            if(reader[i].file.exists() && reader[i].file != newAudioFile  && !reader[i].file.copyFileTo(newAudioFile))
+            if(reader[i].file.exists() && reader[i].file != newAudioFile && !reader[i].file.copyFileTo(newAudioFile))
             {
                 return false;
             }

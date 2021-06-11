@@ -89,7 +89,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
             }
             return true;
         }
-        
+
         bool hasMultipleSampleRate = false;
 
     private:
@@ -115,7 +115,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
         }
         readers.emplace_back(std::move(audioFormatReader), audioReaderLayout[i].channel);
     }
-    
+
     auto reader = std::make_unique<AudioFormatReader>(std::move(readers));
     if(reader == nullptr)
     {
@@ -154,6 +154,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             break;
             case AttrType::layout:
             case AttrType::viewport:
+            case AttrType::path:
                 break;
         }
     };

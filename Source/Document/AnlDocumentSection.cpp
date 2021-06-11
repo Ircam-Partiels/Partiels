@@ -116,6 +116,8 @@ Document::Section::Section(Director& director)
                 updateLayout();
             }
             break;
+            case AttrType::path:
+                break;
         }
     };
 

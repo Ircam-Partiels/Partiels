@@ -72,7 +72,7 @@ Document::ReaderLayoutPanel::Channel::Entry::Entry()
     addAndMakeVisible(thumbLabel);
     addAndMakeVisible(fileNameLabel);
     addAndMakeVisible(channelMenu);
-    
+
     thumbLabel.setEditable(false);
     fileNameLabel.setEditable(false);
     fileNameLabel.setMinimumHorizontalScale(1.f);
@@ -106,7 +106,7 @@ Document::ReaderLayoutPanel::Channel::Channel(FileInfoPanel& fileInfoPanel, int 
     setMouseClickGrabsKeyboardFocus(true);
     setMouseCursor(juce::MouseCursor::DraggingHandCursor);
     addAndMakeVisible(mDecorator);
-    
+
     mEntry.setEnabled(mReader != nullptr);
     mEntry.thumbLabel.setText("#" + juce::String(mIndex + 1), juce::NotificationType::dontSendNotification);
     mEntry.fileNameLabel.setText(mFile.getFileName(), juce::NotificationType::dontSendNotification);
@@ -132,7 +132,7 @@ Document::ReaderLayoutPanel::Channel::Channel(FileInfoPanel& fileInfoPanel, int 
             onChannelChange(selectedId == -1 ? -1 : selectedId - 1);
         }
     };
-    
+
     setSize(300, 24);
 }
 
@@ -296,7 +296,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
                 {
                     mFileInfoPanel.setAudioFormatReader(juce::File{}, nullptr);
                 }
-                
+
                 mAlertLabel.setVisible(!allReadersValid || !allSampleRatesValid);
                 if(!allReadersValid && allSampleRatesValid)
                 {
@@ -317,6 +317,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             break;
             case AttrType::layout:
             case AttrType::viewport:
+            case AttrType::path:
                 break;
         }
     };
@@ -367,7 +368,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
     mAddLabel.setText(juce::translate("Insert audio files..."), juce::NotificationType::dontSendNotification);
     mAddLabel.setTooltip(juce::translate("Add audio files to the document..."));
     mAddButton.setTooltip(juce::translate("Add audio files to the document..."));
-    
+
     mBoundsListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);

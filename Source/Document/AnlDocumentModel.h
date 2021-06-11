@@ -16,6 +16,7 @@ namespace Document
           reader
         , layout
         , viewport
+        , path
     };
     
     enum class AcsrType : size_t
@@ -58,6 +59,7 @@ namespace Document
     < Model::Attr<AttrType::reader, std::vector<ReaderChannel>, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
+    , Model::Attr<AttrType::path, juce::File, Model::Flag::saveable| Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -76,7 +78,7 @@ namespace Document
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({}, {}, {}))
+        : Accessor(AttrContainer({}, {}, {}, {}))
         {
         }
 
