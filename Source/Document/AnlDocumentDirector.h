@@ -22,6 +22,8 @@ namespace Document
         Group::Director& getGroupDirector(juce::String const& identifier);
         Track::Director& getTrackDirector(juce::String const& identifier) override;
 
+        bool consolidate(juce::File const& file);
+
         void sanitize(NotificationType const notification);
 
         void startAction();
@@ -39,7 +41,7 @@ namespace Document
         // FileWatcher
         void fileHasBeenRemoved(juce::File const& file) override;
         void fileHasBeenModified(juce::File const& file) override;
-        
+
         void initializeAudioReaders(NotificationType notification);
 
         Accessor& mAccessor;

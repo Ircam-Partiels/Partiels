@@ -610,6 +610,44 @@ void Document::Director::sanitize(NotificationType const notification)
     }
 }
 
+bool Document::Director::consolidate(juce::File const& file)
+{
+    if(file.createDirectory().failed())
+    {
+        return false;
+    }
+    auto reader = mAccessor.getAttr<AttrType::reader>();
+    std::set<juce::File> audioFiles;
+    for(auto i = 0_z; i < reader.size(); ++i)
+    {
+        auto const newAudioFile = file.getChildFile(reader[i].file.getFileName());
+        if(audioFiles.insert(reader[i].file).second)
+        {
+            if(reader[i].file.exists() && reader[i].file != newAudioFile  && !reader[i].file.copyFileTo(newAudioFile))
+            {
+                return false;
+            }
+        }
+        reader[i].file = newAudioFile;
+    }
+
+    auto const trackDirectory = file.getChildFile("Tracks");
+    if(trackDirectory.createDirectory().failed())
+    {
+        return false;
+    }
+
+    for(auto& trackDirector : mTracks)
+    {
+        if(trackDirector != nullptr && !trackDirector->consolidate(trackDirectory))
+        {
+            return false;
+        }
+    }
+    mAccessor.setAttr<AttrType::reader>(reader, NotificationType::synchronous);
+    return true;
+}
+
 void Document::Director::fileHasBeenRemoved(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
