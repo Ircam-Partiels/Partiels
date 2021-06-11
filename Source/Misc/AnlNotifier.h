@@ -31,9 +31,10 @@ public:
     {
         if(notification == NotificationType::asynchronous)
         {
-            triggerAsyncUpdate();
             std::unique_lock<std::mutex> queueLock(mQueueMutex);
             mQueue.push(method);
+            queueLock.unlock();
+            triggerAsyncUpdate();
         }
         else
         {
