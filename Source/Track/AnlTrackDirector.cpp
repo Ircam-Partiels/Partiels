@@ -265,13 +265,13 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
         mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
-    
+
     mLoader.onLoadingEnded = [&](Results const& results)
     {
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
     };
-    
+
     mLoader.onLoadingAborted = [&]()
     {
         mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
@@ -523,12 +523,12 @@ void Track::Director::runLoading(NotificationType const notification)
                     mAccessor.setAttr<AttrType::results>(results, notification);
                 }
             }
-                break;
+            break;
             case AlertWindow::Answer::cancel:
             {
                 runAnalysis(notification);
             }
-                break;
+            break;
         }
     }
 }
@@ -638,7 +638,7 @@ bool Track::Director::consolidate(juce::File const& file)
     {
         return true;
     }
-    auto const resultsFile = file.getNonexistentChildFile(mAccessor.getAttr<AttrType::name>(), ".json");
+    auto const resultsFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".json");
     if(results.file == juce::File{})
     {
         if(Exporter::toJson(mAccessor, resultsFile).failed())
