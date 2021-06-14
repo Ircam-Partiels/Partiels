@@ -443,7 +443,7 @@ void Application::LookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
     {
         auto const isEditable = (label.isEnabled() && label.isEditable());
         auto const alpha = label.isEnabled() ? 1.0f : 0.5f;
-        auto const contrast = (isEditable && label.isMouseOverOrDragging()) ? 0.1f : 0.0f;
+        auto const contrast = (isEditable && label.isMouseOverOrDragging()) ? 0.25f : 0.0f;
         auto const textColour = label.findColour(juce::Label::textColourId);
         g.setColour(isEditable && label.isMouseOver() ? textColour.contrasting(contrast) : textColour.withMultipliedAlpha(alpha));
 
