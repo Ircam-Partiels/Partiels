@@ -221,7 +221,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             return juce::Result::fail("Track is invalid");
         }
         auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-        if(options.ignoreGridResults && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::columns)
+        if(identifier != trackIdentifier && options.ignoreGridResults && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::columns)
         {
             return juce::Result::ok();
         }
