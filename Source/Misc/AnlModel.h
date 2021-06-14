@@ -395,7 +395,7 @@ namespace Model
             return xml;
         }
 
-        auto toJson()
+        auto toJson() const
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             nlohmann::json json;
