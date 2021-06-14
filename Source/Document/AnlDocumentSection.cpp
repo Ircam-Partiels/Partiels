@@ -89,6 +89,11 @@ Document::Section::Section(Director& director)
     {
         mReaderLayoutPanel.show();
     };
+    addAndMakeVisible(mDocumentName);
+    mDocumentName.onClick = [this]()
+    {
+        mAccessor.getAttr<AttrType::path>().revealToUser();
+    };
 
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -117,7 +122,14 @@ Document::Section::Section(Director& director)
             }
             break;
             case AttrType::path:
-                break;
+            {
+                auto const file = acsr.getAttr<AttrType::path>();
+                mDocumentName.setButtonText(file.getFileName());
+                mDocumentName.setTooltip(file.getFullPathName());
+                mDocumentName.setEnabled(file != juce::File{});
+                resized();
+            }
+            break;
         }
     };
 
@@ -197,8 +209,13 @@ void Document::Section::resized()
     {
         auto header = bounds.removeFromTop(40);
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-        header.removeFromRight(rightSize);
-        mReaderLayoutButton.setBounds(header.removeFromRight(24).withSizeKeepingCentre(24, 24));
+        header.removeFromLeft(leftSize);
+        header = header.withRight(mTransportDisplay.getX());
+        mReaderLayoutButton.setBounds(header.removeFromLeft(24).withSizeKeepingCentre(24, 24));
+        auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
+        auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
+        auto const buttonWidth = std::min(textWidth, header.getWidth());
+        mDocumentName.setBounds(header.removeFromLeft(buttonWidth).withSizeKeepingCentre(buttonWidth, 24));
     }
 
     auto topPart = bounds.removeFromTop(28);
