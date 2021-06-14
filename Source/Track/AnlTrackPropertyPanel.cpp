@@ -770,6 +770,9 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mBoundsConstrainer.setMinimumHeight(120);
     mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 
+    // This avoids to move the focus to the first component
+    // (the name property) when recreating properties.
+    setWantsKeyboardFocus(true);
     mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
