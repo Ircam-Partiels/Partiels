@@ -107,7 +107,17 @@ Application::Exporter::Exporter()
     mDocumentListener.onAccessorInserted = mDocumentListener.onAccessorErased = [this](Document::Accessor const& acsr, Document::AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr, type, index);
-        updateItems();
+        // The group identifier is not yet defined when the group is inserted
+        // so the group cannot be found in the layout, delaying to the next message
+        // tick, ensure thatt both the groups and the layout are consistent
+        juce::WeakReference<juce::Component> target(this);
+        juce::MessageManager::callAsync([=, this]()
+                                        {
+                                            if(target.get() != nullptr)
+                                            {
+                                                updateItems();
+                                            }
+                                        });
     };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
