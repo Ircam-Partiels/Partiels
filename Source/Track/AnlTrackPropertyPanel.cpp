@@ -16,9 +16,20 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     mDirector.endAction(ActionState::newTransaction, juce::translate("Change track name"));
                 })
 
+, mPropertyResultsFile("Results File", "The path of the results file", [this]()
+                       {
+                           mAccessor.getAttr<AttrType::results>().file.revealToUser();
+                       })
 , mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [&](size_t index)
                       {
                           mDirector.startAction();
+                          if(!canModifyProcessor())
+                          {
+                              mListener.onAttrChanged(mAccessor, AttrType::results);
+                              mDirector.endAction(ActionState::abort);
+                              return;
+                          }
+
                           auto state = mAccessor.getAttr<AttrType::state>();
                           state.windowType = static_cast<Plugin::WindowType>(index);
                           mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
@@ -27,6 +38,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 , mPropertyWindowSize("Window Size", "The window size of the FFT.", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [&](size_t index)
                       {
                           mDirector.startAction();
+                          if(!canModifyProcessor())
+                          {
+                              mListener.onAttrChanged(mAccessor, AttrType::results);
+                              mDirector.endAction(ActionState::abort);
+                              return;
+                          }
+
                           auto state = mAccessor.getAttr<AttrType::state>();
                           auto const overlapping = state.blockSize / state.stepSize;
                           state.blockSize = static_cast<size_t>(std::pow(2.0, static_cast<int>(index) + 3));
@@ -37,6 +55,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 , mPropertyWindowOverlapping("Window Overlapping", "The window overlapping of the FFT.", "x", std::vector<std::string>{}, [&](size_t index)
                              {
                                  mDirector.startAction();
+                                 if(!canModifyProcessor())
+                                 {
+                                     mListener.onAttrChanged(mAccessor, AttrType::results);
+                                     mDirector.endAction(ActionState::abort);
+                                     return;
+                                 }
+
                                  auto state = mAccessor.getAttr<AttrType::state>();
                                  state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
                                  mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
@@ -45,6 +70,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 , mPropertyBlockSize("Block Size", "The block size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
                      {
                          mDirector.startAction();
+                         if(!canModifyProcessor())
+                         {
+                             mListener.onAttrChanged(mAccessor, AttrType::results);
+                             mDirector.endAction(ActionState::abort);
+                             return;
+                         }
+
                          auto state = mAccessor.getAttr<AttrType::state>();
                          state.blockSize = static_cast<size_t>(value);
                          mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
@@ -53,6 +85,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 , mPropertyStepSize("Step Size", "The step size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
                     {
                         mDirector.startAction();
+                        if(!canModifyProcessor())
+                        {
+                            mListener.onAttrChanged(mAccessor, AttrType::results);
+                            mDirector.endAction(ActionState::abort);
+                            return;
+                        }
+
                         auto state = mAccessor.getAttr<AttrType::state>();
                         state.stepSize = static_cast<size_t>(value);
                         mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
@@ -65,6 +104,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                           case 0:
                           {
                               mDirector.startAction();
+                              if(!canModifyProcessor())
+                              {
+                                  mListener.onAttrChanged(mAccessor, AttrType::results);
+                                  mDirector.endAction(ActionState::abort);
+                                  return;
+                              }
+
                               mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
                               mDirector.endAction(ActionState::newTransaction, juce::translate("Restore track factory properties"));
                           }
@@ -84,6 +130,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                   if(fc.browseForFileToOpen())
                                   {
                                       mDirector.startAction();
+                                      if(!canModifyProcessor())
+                                      {
+                                          mListener.onAttrChanged(mAccessor, AttrType::results);
+                                          mDirector.endAction(ActionState::abort);
+                                          return;
+                                      }
+
                                       auto const result = Exporter::fromPreset(mAccessor, fc.getResult());
                                       if(result.failed())
                                       {
@@ -117,6 +170,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               }
                               auto const it = std::next(programs.cbegin(), static_cast<long>(index));
                               mDirector.startAction();
+                              if(!canModifyProcessor())
+                              {
+                                  mListener.onAttrChanged(mAccessor, AttrType::results);
+                                  mDirector.endAction(ActionState::abort);
+                                  return;
+                              }
+
                               mAccessor.setAttr<AttrType::state>(it->second, NotificationType::synchronous);
                               mDirector.endAction(ActionState::newTransaction, juce::translate("Apply track preset properties"));
                           }
@@ -336,7 +396,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             break;
 
             case AttrType::key:
-                break;
             case AttrType::description:
             case AttrType::results:
             {
@@ -365,35 +424,49 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                                             });
                 };
 
+                auto const key = mAccessor.getAttr<AttrType::key>();
                 auto const description = mAccessor.getAttr<AttrType::description>();
+                auto const results = mAccessor.getAttr<AttrType::results>();
                 std::vector<ConcertinaTable::ComponentRef> components;
 
                 // Processor Part
-                if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+                mPropertyResultsFile.entry.setButtonText(results.file.getFileName());
+                mPropertyResultsFile.entry.setTooltip(results.file.getFullPathName());
+                if(results.file != juce::File{})
                 {
-                    components.push_back(mPropertyWindowType);
-                    components.push_back(mPropertyWindowSize);
-                    components.push_back(mPropertyWindowOverlapping);
+                    components.push_back(mPropertyResultsFileInfo);
+                    components.push_back(mPropertyResultsFile);
                 }
-                else
+                if(!key.identifier.empty())
                 {
-                    components.push_back(mPropertyBlockSize);
-                    components.push_back(mPropertyStepSize);
+                    if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+                    {
+                        components.push_back(mPropertyWindowType);
+                        components.push_back(mPropertyWindowSize);
+                        components.push_back(mPropertyWindowOverlapping);
+                    }
+                    else
+                    {
+                        components.push_back(mPropertyBlockSize);
+                        components.push_back(mPropertyStepSize);
+                    }
+
+                    mParameterProperties.clear();
+                    for(auto const& parameter : description.parameters)
+                    {
+                        auto property = createProperty(parameter);
+                        anlWeakAssert(property != nullptr);
+                        if(property != nullptr)
+                        {
+                            components.push_back(*property.get());
+                            mParameterProperties[parameter.identifier] = std::move(property);
+                        }
+                    }
+
+                    components.push_back(mPropertyPreset);
+                    components.push_back(mProgressBarAnalysis);
                 }
 
-                mParameterProperties.clear();
-                for(auto const& parameter : description.parameters)
-                {
-                    auto property = createProperty(parameter);
-                    anlWeakAssert(property != nullptr);
-                    if(property != nullptr)
-                    {
-                        components.push_back(*property.get());
-                        mParameterProperties[parameter.identifier] = std::move(property);
-                    }
-                }
-                components.push_back(mPropertyPreset);
-                components.push_back(mProgressBarAnalysis);
                 mProcessorSection.setComponents(components);
                 components.clear();
 
@@ -460,6 +533,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 }
 
                 // Plugin Information Part
+                mPluginSection.setVisible(!key.identifier.empty());
                 mPropertyPluginName.entry.setText(description.name, silent);
                 mPropertyPluginFeature.entry.setText(description.output.name, silent);
                 mPropertyPluginMaker.entry.setText(description.maker, silent);
@@ -487,6 +561,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyPreset.entry.addItem("Save...", items.size() + 4);
 
                 updateZoomMode();
+                resized();
             }
             case AttrType::state:
             {
@@ -659,7 +734,10 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
     mProgressBarAnalysis.setSize(sInnerWidth, 36);
     mProgressBarRendering.setSize(sInnerWidth, 36);
-
+    
+    mPropertyResultsFileInfo.setText("Analysis results were consolidated or loaded from a file.", false);
+    mPropertyResultsFileInfo.setSize(sInnerWidth, 24);
+    
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);
     mPropertyPluginDetails.setJustification(juce::Justification::horizontallyJustified);
@@ -715,13 +793,38 @@ void Track::PropertyPanel::resized()
     mPropertyName.setBounds(bounds.removeFromTop(mPropertyName.getHeight()));
     mProcessorSection.setBounds(bounds.removeFromTop(mProcessorSection.getHeight()));
     mGraphicalSection.setBounds(bounds.removeFromTop(mGraphicalSection.getHeight()));
-    mPluginSection.setBounds(bounds.removeFromTop(mPluginSection.getHeight()));
+    if(mPluginSection.isVisible())
+    {
+        mPluginSection.setBounds(bounds.removeFromTop(mPluginSection.getHeight()));
+    }
     setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
+}
+
+bool Track::PropertyPanel::canModifyProcessor()
+{
+    auto results = mAccessor.getAttr<AttrType::results>();
+    if(results.file != juce::File{})
+    {
+        if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Locked Plugin", "Analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
+        {
+            return false;
+        }
+        results.file = juce::File{};
+        mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+    }
+    return true;
 }
 
 void Track::PropertyPanel::applyParameterValue(Plugin::Parameter const& parameter, float value)
 {
     mDirector.startAction();
+    if(!canModifyProcessor())
+    {
+        mListener.onAttrChanged(mAccessor, AttrType::results);
+        mDirector.endAction(ActionState::abort);
+        return;
+    }
+
     auto state = mAccessor.getAttr<AttrType::state>();
     anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
     state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);

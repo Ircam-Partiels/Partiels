@@ -20,6 +20,7 @@ namespace Track
         void resized() override;
 
     private:
+        bool canModifyProcessor();
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
         void updatePresets();
         void updateZoomMode();
@@ -35,6 +36,8 @@ namespace Track
 
         PropertyText mPropertyName;
 
+        PropertyTextButton mPropertyResultsFile;
+        juce::TextEditor mPropertyResultsFileInfo;
         PropertyList mPropertyWindowType;
         PropertyList mPropertyWindowSize;
         PropertyList mPropertyWindowOverlapping;
