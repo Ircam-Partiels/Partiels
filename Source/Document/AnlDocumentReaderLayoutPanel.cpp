@@ -3,8 +3,15 @@
 ANALYSE_FILE_BEGIN
 
 Document::ReaderLayoutPanel::FileInfoPanel::FileInfoPanel()
+: mFilePath("File", "Path", [this]()
+            {
+                if(juce::File::isAbsolutePath(mFilePath.entry.getTooltip()))
+                {
+                    juce::File(mFilePath.entry.getTooltip()).revealToUser();
+                }
+            })
 {
-    mPanelFilePath.entry.addMouseListener(this, true);
+    mFilePath.entry.addMouseListener(this, true);
     mViewport.setViewedComponent(&mConcertinaTable, false);
     addAndMakeVisible(mViewport);
     setSize(300, 400);
@@ -14,31 +21,31 @@ Document::ReaderLayoutPanel::FileInfoPanel::FileInfoPanel()
 void Document::ReaderLayoutPanel::FileInfoPanel::setAudioFormatReader(juce::File const& file, juce::AudioFormatReader const* reader)
 {
     mConcertinaTable.setComponents({});
-    mPanelFilePath.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
-    mPanelFilePath.entry.setEditable(false);
-    mPanelFilePath.entry.setTooltip(file.getFullPathName());
+    mFilePath.entry.setEnabled(file != juce::File{});
+    mFilePath.entry.setButtonText(file.getFileName());
+    mFilePath.entry.setTooltip(file.getFullPathName());
 
     if(reader == nullptr)
     {
         resized();
         return;
     }
-    mPanelFileFormat.entry.setText(reader->getFormatName(), juce::NotificationType::dontSendNotification);
-    mPanelFileFormat.entry.setEditable(false);
-    mPanelSampleRate.entry.setText(juce::String(reader->sampleRate, 1) + "Hz", juce::NotificationType::dontSendNotification);
-    mPanelSampleRate.entry.setEditable(false);
-    mPanelBitPerSample.entry.setText(juce::String(reader->bitsPerSample) + " (" + (reader->usesFloatingPointData ? "float" : "int") + ")", juce::NotificationType::dontSendNotification);
-    mPanelBitPerSample.entry.setEditable(false);
-    mPanelLengthInSamples.entry.setText(juce::String(reader->lengthInSamples) + " samples", juce::NotificationType::dontSendNotification);
-    mPanelLengthInSamples.entry.setEditable(false);
-    mPanelDurationInSeconds.entry.setText(juce::String(static_cast<double>(reader->lengthInSamples) / reader->sampleRate, 3).trimCharactersAtEnd("0").trimCharactersAtEnd(".") + "s", juce::NotificationType::dontSendNotification);
-    mPanelDurationInSeconds.entry.setEditable(false);
-    mPanelNumChannels.entry.setText(juce::String(reader->numChannels), juce::NotificationType::dontSendNotification);
-    mPanelNumChannels.entry.setEditable(false);
+    mFileFormat.entry.setText(reader->getFormatName(), juce::NotificationType::dontSendNotification);
+    mFileFormat.entry.setEditable(false);
+    mSampleRate.entry.setText(juce::String(reader->sampleRate, 1) + "Hz", juce::NotificationType::dontSendNotification);
+    mSampleRate.entry.setEditable(false);
+    mBitPerSample.entry.setText(juce::String(reader->bitsPerSample) + " (" + (reader->usesFloatingPointData ? "float" : "int") + ")", juce::NotificationType::dontSendNotification);
+    mBitPerSample.entry.setEditable(false);
+    mLengthInSamples.entry.setText(juce::String(reader->lengthInSamples) + " samples", juce::NotificationType::dontSendNotification);
+    mLengthInSamples.entry.setEditable(false);
+    mDurationInSeconds.entry.setText(juce::String(static_cast<double>(reader->lengthInSamples) / reader->sampleRate, 3).trimCharactersAtEnd("0").trimCharactersAtEnd(".") + "s", juce::NotificationType::dontSendNotification);
+    mDurationInSeconds.entry.setEditable(false);
+    mNumChannels.entry.setText(juce::String(reader->numChannels), juce::NotificationType::dontSendNotification);
+    mNumChannels.entry.setEditable(false);
 
     auto const& metadataValues = reader->metadataValues;
     mMetaDataPanels.clear();
-    std::vector<ConcertinaTable::ComponentRef> panels{mPanelFilePath, mPanelFileFormat, mPanelSampleRate, mPanelBitPerSample, mPanelLengthInSamples, mPanelDurationInSeconds, mPanelNumChannels};
+    std::vector<ConcertinaTable::ComponentRef> panels{mFilePath, mFileFormat, mSampleRate, mBitPerSample, mLengthInSamples, mDurationInSeconds, mNumChannels};
 
     for(auto const& key : metadataValues.getAllKeys())
     {
@@ -63,17 +70,6 @@ void Document::ReaderLayoutPanel::FileInfoPanel::resized()
     auto const scrollbarThickness = mViewport.getScrollBarThickness();
     mConcertinaTable.setBounds(getLocalBounds().withHeight(mConcertinaTable.getHeight()).withTrimmedRight(scrollbarThickness));
     mViewport.setBounds(getLocalBounds());
-}
-
-void Document::ReaderLayoutPanel::FileInfoPanel::mouseDown(juce::MouseEvent const& event)
-{
-    if(event.mods.isCtrlDown() && event.originalComponent == &mPanelFilePath.entry)
-    {
-        if(juce::File::isAbsolutePath(mPanelFilePath.entry.getTooltip()))
-        {
-            juce::File(mPanelFilePath.entry.getTooltip()).revealToUser();
-        }
-    }
 }
 
 Document::ReaderLayoutPanel::Channel::Entry::Entry()
