@@ -4,6 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::ReaderLayoutPanel::FileInfoPanel::FileInfoPanel()
 {
+    mPanelFilePath.entry.addMouseListener(this, true);
     mViewport.setViewedComponent(&mConcertinaTable, false);
     addAndMakeVisible(mViewport);
     setSize(300, 400);
@@ -62,6 +63,17 @@ void Document::ReaderLayoutPanel::FileInfoPanel::resized()
     auto const scrollbarThickness = mViewport.getScrollBarThickness();
     mConcertinaTable.setBounds(getLocalBounds().withHeight(mConcertinaTable.getHeight()).withTrimmedRight(scrollbarThickness));
     mViewport.setBounds(getLocalBounds());
+}
+
+void Document::ReaderLayoutPanel::FileInfoPanel::mouseDown(juce::MouseEvent const& event)
+{
+    if(event.mods.isCtrlDown() && event.originalComponent == &mPanelFilePath.entry)
+    {
+        if(juce::File::isAbsolutePath(mPanelFilePath.entry.getTooltip()))
+        {
+            juce::File(mPanelFilePath.entry.getTooltip()).revealToUser();
+        }
+    }
 }
 
 Document::ReaderLayoutPanel::Channel::Entry::Entry()

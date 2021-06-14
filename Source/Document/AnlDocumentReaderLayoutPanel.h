@@ -39,6 +39,7 @@ namespace Document
 
             // juce::Component
             void resized() override;
+            void mouseDown(juce::MouseEvent const& event) override;
 
         private:
             PropertyLabel mPanelFilePath{juce::translate("File"), juce::translate("The path of the audio file")};
