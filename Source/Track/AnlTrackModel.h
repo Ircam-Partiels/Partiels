@@ -34,7 +34,7 @@ namespace Track
         : file(f)
         {
         }
-        
+
         explicit Results(SharedMarkers ptr)
         : mResults(ptr)
         {
@@ -125,6 +125,9 @@ namespace Track
         std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
     };
 
+    void to_json(nlohmann::json& j, Results const& results);
+    void from_json(nlohmann::json const& j, Results& results);
+
     using Images = std::vector<std::vector<juce::Image>>;
 
     struct ColourSet
@@ -151,6 +154,9 @@ namespace Track
             return !(*this == rhd);
         }
     };
+
+    void to_json(nlohmann::json& j, ColourSet const& colourSet);
+    void from_json(nlohmann::json const& j, ColourSet& colourSet);
 
     // clang-format off
     enum class WarningType

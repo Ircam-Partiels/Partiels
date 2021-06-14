@@ -66,4 +66,34 @@ auto XmlParser::fromXml<Track::Results>(juce::XmlElement const& xml, juce::Ident
     return value;
 }
 
+void Track::to_json(nlohmann::json& j, Results const& results)
+{
+    j["file"] = results.file;
+}
+
+void Track::from_json(nlohmann::json const& j, Results& results)
+{
+    j.at("file").get_to(results.file);
+}
+
+void Track::to_json(nlohmann::json& j, ColourSet const& colourSet)
+{
+    j["map"] = colourSet.map;
+    j["background"] = colourSet.background;
+    j["foreground"] = colourSet.foreground;
+    j["text"] = colourSet.text;
+    j["shadow"] = colourSet.shadow;
+    j["grid"] = colourSet.grid;
+}
+
+void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
+{
+    j.at("map").get_to(colourSet.map);
+    j.at("background").get_to(colourSet.background);
+    j.at("foreground").get_to(colourSet.foreground);
+    j.at("text").get_to(colourSet.text);
+    j.at("shadow").get_to(colourSet.shadow);
+    j.at("grid").get_to(colourSet.grid);
+}
+
 ANALYSE_FILE_END
