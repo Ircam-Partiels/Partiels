@@ -265,6 +265,18 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
         mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
+    
+    mLoader.onLoadingEnded = [&](Results const& results)
+    {
+        mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+        runRendering();
+    };
+    
+    mLoader.onLoadingAborted = [&]()
+    {
+        mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
+    };
 
     mGraphics.onRenderingUpdated = [&](Images images)
     {
@@ -486,6 +498,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
 
 void Track::Director::runLoading(NotificationType const notification)
 {
+    clearFilesToWatch();
     mGraphics.stopRendering();
     auto results = mAccessor.getAttr<AttrType::results>();
     if(results.file != juce::File{})
@@ -493,6 +506,7 @@ void Track::Director::runLoading(NotificationType const notification)
         auto const result = mLoader.loadAnalysis(mAccessor, results.file);
         if(result.ok())
         {
+            addFileToWatch(results.file);
             return;
         }
         auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "ERRORMESSAGE. Would you like to select another file? If cancel, the application will try to run the analysis if possible.", {{"ERRORMESSAGE", result.getErrorMessage()}});
@@ -578,9 +592,30 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
     }
 }
 
+void Track::Director::fileHasBeenRemoved(juce::File const& file)
+{
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
+    {
+        juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.json");
+        if(!fc.browseForFileToOpen())
+        {
+            return;
+        }
+        mAccessor.setAttr<AttrType::results>(Results{fc.getResult()}, NotificationType::synchronous);
+    }
+}
+
+void Track::Director::fileHasBeenModified(juce::File const& file)
+{
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file  has been modified!", "The analysis file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
+    {
+        mAccessor.setAttr<AttrType::results>(Results{file}, NotificationType::synchronous);
+    }
+}
+
 void Track::Director::timerCallback()
 {
-    auto const processorRunning = mProcessor.isRunning();
+    auto const processorRunning = mProcessor.isRunning() || mLoader.isRunning();
     auto const processorProgress = mProcessor.getAdvancement();
     auto const graphicsRunning = mGraphics.isRunning();
     auto const graphicsProgress = mGraphics.getAdvancement();

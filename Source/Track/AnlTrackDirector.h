@@ -11,7 +11,8 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     class Director
-    : private juce::Timer
+    : private FileWatcher
+    , private juce::Timer
     {
     public:
         Director(Accessor& accessor, juce::UndoManager& undoManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
@@ -32,6 +33,10 @@ namespace Track
         void runLoading(NotificationType const notification);
         void runRendering();
 
+        // FileWatcher
+        void fileHasBeenRemoved(juce::File const& file) override;
+        void fileHasBeenModified(juce::File const& file) override;
+
         // juce::Timer
         void timerCallback() override;
 
@@ -51,6 +56,7 @@ namespace Track
         bool mIsPerformingAction{false};
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
         Processor mProcessor;
+        Loader mLoader;
         Graphics mGraphics;
         std::optional<std::reference_wrapper<Zoom::Accessor>> mSharedZoomAccessor;
         Zoom::Accessor::Listener mSharedZoomListener;
