@@ -431,11 +431,22 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, size_t in
         return false;
     }
 
-    auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
-    auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
-    layout.insert(layout.cbegin() + static_cast<long>(index), trackIdentifier);
-    groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
-    groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
+    // Remove track from previous group owner
+    {
+        auto& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackIdentifier);
+        auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
+        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
+    }
+    
+    // Add track to new group owner
+    {
+        auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
+        auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
+        layout.insert(layout.cbegin() + static_cast<long>(index), trackIdentifier);
+        groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
+        groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
+    }
+    
     sanitize(notification);
     return true;
 }
