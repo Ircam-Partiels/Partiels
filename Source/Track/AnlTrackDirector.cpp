@@ -48,31 +48,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 auto results = mAccessor.getAttr<AttrType::results>();
                 if(results.file != juce::File{} && results.isEmpty())
                 {
-                    auto const exportResult = Exporter::fromJson(mAccessor, results.file);
-                    if(exportResult.failed())
-                    {
-                        auto answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "The results cannot be restored to the track TRACKNAME due to: ERRORMESSAGE. Would you like to select another file? If cancel, the application will try to run the analysis if possible.", {{"TRACKNAME", mAccessor.getAttr<AttrType::name>()}, {"ERRORMESSAGE", exportResult.getErrorMessage()}});
-                        switch(answer)
-                        {
-                            case AlertWindow::Answer::yes:
-                            {
-                                juce::FileChooser fc(juce::translate("Load file"), results.file, "*.json");
-                                if(fc.browseForFileToOpen())
-                                {
-                                    results.file = fc.getResult();
-                                    mAccessor.setAttr<AttrType::results>(results, notification);
-                                }
-                            }
-                            break;
-                            case AlertWindow::Answer::no:
-                                break;
-                            case AlertWindow::Answer::cancel:
-                            {
-                                runAnalysis(notification);
-                            }
-                            break;
-                        }
-                    }
+                    runLoading(notification);
                     return;
                 }
                 sanitizeZooms(notification);
@@ -505,6 +481,41 @@ void Track::Director::runAnalysis(NotificationType const notification)
             showWarningWindow(message);
         }
         break;
+    }
+}
+
+void Track::Director::runLoading(NotificationType const notification)
+{
+    mGraphics.stopRendering();
+    auto results = mAccessor.getAttr<AttrType::results>();
+    if(results.file != juce::File{})
+    {
+        auto const result = mLoader.loadAnalysis(mAccessor, results.file);
+        if(result.ok())
+        {
+            return;
+        }
+        auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "ERRORMESSAGE. Would you like to select another file? If cancel, the application will try to run the analysis if possible.", {{"ERRORMESSAGE", result.getErrorMessage()}});
+        switch(answer)
+        {
+            case AlertWindow::Answer::no:
+                break;
+            case AlertWindow::Answer::yes:
+            {
+                juce::FileChooser fc(juce::translate("Load analysis results"), results.file, "*.json");
+                if(fc.browseForFileToOpen())
+                {
+                    results.file = fc.getResult();
+                    mAccessor.setAttr<AttrType::results>(results, notification);
+                }
+            }
+                break;
+            case AlertWindow::Answer::cancel:
+            {
+                runAnalysis(notification);
+            }
+                break;
+        }
     }
 }
 

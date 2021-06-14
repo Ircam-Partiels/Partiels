@@ -4,6 +4,7 @@
 #include "AnlTrackGraphics.h"
 #include "AnlTrackModel.h"
 #include "AnlTrackProcessor.h"
+#include "AnlTrackLoader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -28,6 +29,7 @@ namespace Track
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
+        void runLoading(NotificationType const notification);
         void runRendering();
 
         // juce::Timer
