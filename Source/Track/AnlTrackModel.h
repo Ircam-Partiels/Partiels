@@ -30,6 +30,11 @@ namespace Track
         Results(Results const& rhs) = default;
         ~Results() = default;
 
+        explicit Results(juce::File const& f)
+        : file(f)
+        {
+        }
+        
         explicit Results(SharedMarkers ptr)
         : mResults(ptr)
         {
