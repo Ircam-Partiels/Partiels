@@ -388,9 +388,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             : public FloatingWindowContainer
             {
             public:
-                NewTrackPanel(CommandTarget& commandTarget)
+                NewTrackPanel(CommandTarget& commandTarget, std::tuple<juce::String, size_t> const position)
                 : FloatingWindowContainer("New Track...", *this)
                 , mCommandTarget(commandTarget)
+                , mPosition(position)
                 {
                     addAndMakeVisible(mAddPluginButton);
                     addAndMakeVisible(mAddResultButton);
@@ -398,15 +399,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                     mAddPluginButton.onClick = [this]()
                     {
                         hide();
-                        mCommandTarget.mPluginListTable.onPluginSelected = [this, position = mCommandTarget.getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description)
+                        mCommandTarget.mPluginListTable.onPluginSelected = [this](Plugin::Key const& key, Plugin::Description const& description)
                         {
                             mCommandTarget.mPluginListTable.hide();
-                            mCommandTarget.addPluginTrack(key, description, std::get<0>(position), std::get<1>(position));
+                            mCommandTarget.addPluginTrack(key, description, std::get<0>(mPosition), std::get<1>(mPosition));
                         };
                         mCommandTarget.mPluginListTable.show();
                     };
 
-                    mAddResultButton.onClick = [this, position = mCommandTarget.getNewTrackPosition()]()
+                    mAddResultButton.onClick = [this]()
                     {
                         hide();
                         juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
@@ -414,7 +415,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                         {
                             return;
                         }
-                        mCommandTarget.addFileTrack(fc.getResult(), std::get<0>(position), std::get<1>(position));
+                        mCommandTarget.addFileTrack(fc.getResult(), std::get<0>(mPosition), std::get<1>(mPosition));
                     };
 
                     setSize(400, 120);
@@ -438,11 +439,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
             private:
                 CommandTarget& mCommandTarget;
+                std::tuple<juce::String, size_t> mPosition;
                 juce::TextButton mAddPluginButton{juce::translate("Load Plugin"), juce::translate("Insert a new track with a plugin.")};
                 juce::TextButton mAddResultButton{juce::translate("Load File"), juce::translate("Insert a new track with a file.")};
             };
 
-            NewTrackPanel newTrackPanel(*this);
+            NewTrackPanel newTrackPanel(*this, getNewTrackPosition());
             newTrackPanel.show();
 
             return true;
