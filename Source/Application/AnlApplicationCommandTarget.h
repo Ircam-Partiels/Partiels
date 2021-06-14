@@ -23,6 +23,7 @@ namespace Application
             , DocumentDuplicate
             , DocumentConsolidate
             , DocumentExport
+            , DocumentImport
             
             , EditUndo
             , EditRedo

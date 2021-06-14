@@ -58,6 +58,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::DocumentDuplicate
         , CommandIDs::DocumentConsolidate
         , CommandIDs::DocumentExport
+        , CommandIDs::DocumentImport
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
@@ -128,6 +129,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Export..."), juce::translate("Export the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
+        }
+        break;
+        case CommandIDs::DocumentImport:
+        {
+            result.setInfo(juce::translate("Import..."), juce::translate("Import to the document"), "Application", 0);
+            result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
 
@@ -333,6 +341,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(fileBased.save(true, true) == juce::FileBasedDocument::SaveResult::savedOk)
             {
                 fileBased.consolidate();
+                AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document have been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", fileBased.getFile().getFullPathName()}});
             }
             return true;
         }
@@ -342,6 +351,16 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(auto* exporter = Instance::get().getExporter())
             {
                 exporter->show();
+            }
+            return true;
+        }
+        case CommandIDs::DocumentImport:
+        {
+            auto const position = getNewTrackPosition();
+            juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
+            if(fc.browseForFileToOpen())
+            {
+                addFileTrack(fc.getResult(), std::get<0>(position), std::get<1>(position));
             }
             return true;
         }
@@ -384,69 +403,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::EditNewTrack:
         {
-            class NewTrackPanel
-            : public FloatingWindowContainer
+            mPluginListTable.onPluginSelected = [this, position = getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description)
             {
-            public:
-                NewTrackPanel(CommandTarget& commandTarget, std::tuple<juce::String, size_t> const position)
-                : FloatingWindowContainer("New Track...", *this)
-                , mCommandTarget(commandTarget)
-                , mPosition(position)
-                {
-                    addAndMakeVisible(mAddPluginButton);
-                    addAndMakeVisible(mAddResultButton);
-
-                    mAddPluginButton.onClick = [this]()
-                    {
-                        hide();
-                        mCommandTarget.mPluginListTable.onPluginSelected = [this](Plugin::Key const& key, Plugin::Description const& description)
-                        {
-                            mCommandTarget.mPluginListTable.hide();
-                            mCommandTarget.addPluginTrack(key, description, std::get<0>(mPosition), std::get<1>(mPosition));
-                        };
-                        mCommandTarget.mPluginListTable.show();
-                    };
-
-                    mAddResultButton.onClick = [this]()
-                    {
-                        hide();
-                        juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
-                        if(!fc.browseForFileToOpen())
-                        {
-                            return;
-                        }
-                        mCommandTarget.addFileTrack(fc.getResult(), std::get<0>(mPosition), std::get<1>(mPosition));
-                    };
-
-                    setSize(400, 120);
-                }
-
-                ~NewTrackPanel() override = default;
-
-                // juce::Component
-                void resized() override
-                {
-                    auto bounds = getLocalBounds().withSizeKeepingCentre(160 * 2 + 2, 32);
-                    mAddPluginButton.setBounds(bounds.removeFromLeft(160));
-                    mAddResultButton.setBounds(bounds.withTrimmedLeft(2));
-                }
-
-                void showAt(juce::Point<int> const& pt) override
-                {
-                    FloatingWindowContainer::showAt(pt);
-                    mFloatingWindow.runModalLoop();
-                }
-
-            private:
-                CommandTarget& mCommandTarget;
-                std::tuple<juce::String, size_t> mPosition;
-                juce::TextButton mAddPluginButton{juce::translate("Load Plugin"), juce::translate("Insert a new track with a plugin.")};
-                juce::TextButton mAddResultButton{juce::translate("Load File"), juce::translate("Insert a new track with a file.")};
+                mPluginListTable.hide();
+                addPluginTrack(key, description, std::get<0>(position), std::get<1>(position));
             };
-
-            NewTrackPanel newTrackPanel(*this, getNewTrackPosition());
-            newTrackPanel.show();
-
+            mPluginListTable.show();
             return true;
         }
         case CommandIDs::EditRemoveItem:
@@ -753,10 +715,12 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         {
             window->moveKeyboardFocusTo(*identifier);
         }
+        AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track have been imported friom the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
     }
     else
     {
         documentDir.endAction(ActionState::abort);
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Track cannot be created!", "The new track cannot be created into the document.");
     }
 }
 
