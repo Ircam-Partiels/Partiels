@@ -14,6 +14,7 @@ namespace Track
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height);
         juce::Result toCsv(Accessor const& accessor, juce::File const& file, bool includeHeader, char separator);
         juce::Result toJson(Accessor const& accessor, juce::File const& file);
+        juce::Result toBinary(Accessor const& accessor, juce::File const& file);
     } // namespace Exporter
 } // namespace Track
 
