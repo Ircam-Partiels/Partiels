@@ -643,12 +643,23 @@ bool Track::Director::consolidate(juce::File const& file)
     {
         return true;
     }
-    auto const resultsFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".json");
+    auto const isBinary = results.getColumns() != nullptr;
+    auto const resultsFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + "." + (isBinary ? ".dat" : ".json"));
     if(results.file == juce::File{})
     {
-        if(Exporter::toJson(mAccessor, resultsFile).failed())
+        if(isBinary)
         {
-            return false;
+            if(Exporter::toBinary(mAccessor, resultsFile).failed())
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if(Exporter::toJson(mAccessor, resultsFile).failed())
+            {
+                return false;
+            }
         }
     }
     else if(results.file.existsAsFile())
