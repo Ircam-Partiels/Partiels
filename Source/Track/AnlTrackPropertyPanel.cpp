@@ -839,8 +839,7 @@ bool Track::PropertyPanel::canModifyProcessor()
         {
             return false;
         }
-        results.file = juce::File{};
-        mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+        mDirector.setResultsFile(juce::File{}, NotificationType::synchronous);
     }
     return true;
 }
