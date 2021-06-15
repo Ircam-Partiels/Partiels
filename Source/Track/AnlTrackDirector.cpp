@@ -493,6 +493,8 @@ void Track::Director::runAnalysis(NotificationType const notification)
             showWarningWindow(message);
         }
         break;
+        case WarningType::file:
+            break;
     }
 }
 
@@ -504,7 +506,7 @@ void Track::Director::runLoading(NotificationType const notification)
     if(results.file != juce::File{})
     {
         auto const result = mLoader.loadAnalysis(mAccessor, results.file);
-        if(result.ok())
+        if(result.wasOk())
         {
             startTimer(50);
             timerCallback();
