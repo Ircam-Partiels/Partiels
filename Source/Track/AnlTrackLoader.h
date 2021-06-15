@@ -19,8 +19,10 @@ namespace Track
         std::function<void(void)> onLoadingAborted = nullptr;
 
         bool isRunning() const;
+        float getAdvancement() const;
 
     private:
+        Results performLoading(juce::File const& file, std::ifstream stream);
         void abortLoading();
 
         // juce::AsyncUpdater
@@ -39,6 +41,7 @@ namespace Track
         std::atomic<ProcessState> mLoadingState{ProcessState::available};
         std::future<Results> mLoadingProcess;
         std::mutex mLoadingMutex;
+        std::atomic<float> mAdvancement{0.0f};
         Chrono mChrono{"Track", "loading file ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Loader)
