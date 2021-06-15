@@ -506,6 +506,8 @@ void Track::Director::runLoading(NotificationType const notification)
         auto const result = mLoader.loadAnalysis(mAccessor, results.file);
         if(result.ok())
         {
+            startTimer(50);
+            timerCallback();
             addFileToWatch(results.file);
             return;
         }
@@ -616,7 +618,7 @@ void Track::Director::fileHasBeenModified(juce::File const& file)
 void Track::Director::timerCallback()
 {
     auto const processorRunning = mProcessor.isRunning() || mLoader.isRunning();
-    auto const processorProgress = mProcessor.getAdvancement();
+    auto const processorProgress = mProcessor.getAdvancement() + mLoader.getAdvancement();
     auto const graphicsRunning = mGraphics.isRunning();
     auto const graphicsProgress = mGraphics.getAdvancement();
     if(!processorRunning && !graphicsRunning)
