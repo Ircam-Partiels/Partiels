@@ -437,7 +437,7 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, size_t in
         auto layout = copy_with_erased(groupAcsr.getAttr<Group::AttrType::layout>(), trackIdentifier);
         groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
     }
-    
+
     // Add track to new group owner
     {
         auto& groupAcsr = Tools::getGroupAcsr(mAccessor, groupIdentifier);
@@ -446,7 +446,7 @@ bool Document::Director::moveTrack(juce::String const groupIdentifier, size_t in
         groupAcsr.setAttr<Group::AttrType::layout>(layout, notification);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, notification);
     }
-    
+
     sanitize(notification);
     return true;
 }
@@ -647,6 +647,19 @@ bool Document::Director::consolidate(juce::File const& file)
     if(trackDirectory.createDirectory().failed())
     {
         return false;
+    }
+
+    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    auto const childFiles = trackDirectory.findChildFiles(juce::File::TypesOfFileToFind::findFilesAndDirectories, true);
+    for(auto& childFile : childFiles)
+    {
+        if(childFile.isDirectory() || !childFile.hasFileExtension("dat") || std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcrs)
+                                                                                         {
+                                                                                             return trackAcrs.get().template getAttr<Track::AttrType::identifier>() == childFile.getFileNameWithoutExtension();
+                                                                                         }))
+        {
+            childFile.deleteRecursively();
+        }
     }
 
     for(auto& trackDirector : mTracks)
