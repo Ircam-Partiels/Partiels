@@ -17,14 +17,28 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME cannot import analysis results from JSON file FLNAME due to concurrency access.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The track ANLNAME cannot import analysis results from file FLNAME due to concurrency access.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
     abortLoading();
 
-    std::ifstream stream(file.getFullPathName().toStdString());
-    if(!stream.is_open() || !stream.good())
+    auto openStream = [&]() -> std::ifstream
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME cannot import analysis results from the JSON file FLNAME because the input stream cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        auto const path = file.getFullPathName().toStdString();
+        if(file.hasFileExtension("dat"))
+        {
+            return std::ifstream(path, std::ios::in | std::ios::binary);
+        }
+        else if(file.hasFileExtension("json"))
+        {
+            return std::ifstream(path);
+        }
+        return std::ifstream();
+    };
+
+    auto stream = openStream();
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME cannot import analysis results from the file FLNAME because the input stream cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     mAdvancement.store(0.0f);
@@ -34,7 +48,11 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
                                  {
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
                                      juce::Thread::setCurrentThreadPriority(10);
-                                     return performLoading(file, std::move(stream));
+                                     if(file.hasFileExtension("json"))
+                                     {
+                                         return loadFromJson(file, std::move(stream));
+                                     }
+                                     return loadFromBinary(file, std::move(stream));
                                  });
 
     return juce::Result::ok();
@@ -96,7 +114,7 @@ void Track::Loader::abortLoading()
     mLoadingState = ProcessState::available;
 }
 
-Track::Results Track::Loader::performLoading(juce::File const& file, std::ifstream stream)
+Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream stream)
 {
     auto expected = ProcessState::available;
     if(!mLoadingState.compare_exchange_weak(expected, ProcessState::running))
@@ -160,8 +178,8 @@ Track::Results Track::Loader::performLoading(juce::File const& file, std::ifstre
         {
             return state.load() == ProcessState::aborted ? false : iterator != rhs.iterator;
         }
+
     private:
-        
         std::istream_iterator<char, char, std::char_traits<char>, ptrdiff_t> iterator;
         std::atomic<ProcessState> const& state;
     };
@@ -256,6 +274,83 @@ Track::Results Track::Loader::performLoading(juce::File const& file, std::ifstre
         return results;
     }
 
+    triggerAsyncUpdate();
+    return {};
+}
+
+Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstream stream)
+{
+    auto expected = ProcessState::available;
+    if(!mLoadingState.compare_exchange_weak(expected, ProcessState::running))
+    {
+        triggerAsyncUpdate();
+        stream.close();
+        return {};
+    }
+    expected = ProcessState::running;
+    
+    std::vector<Results::Columns> results;
+    while(!stream.eof())
+    {
+        Results::Columns columns;
+        size_t numChannels;
+        if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
+        {
+            if(stream.eof())
+            {
+                break;
+            }
+            mLoadingState.store(ProcessState::aborted);
+            triggerAsyncUpdate();
+            return {};
+        }
+        columns.resize(numChannels);
+        for(auto& column : columns)
+        {
+            if(mLoadingState.load() == ProcessState::aborted)
+            {
+                triggerAsyncUpdate();
+                return {};
+            }
+            
+            if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
+            {
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+            if(!stream.read(reinterpret_cast<char*>(&std::get<1>(column)), sizeof(std::get<1>(column))))
+            {
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+            size_t numBins;
+            if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
+            {
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+            std::get<2>(column).resize(numBins);
+            if(!stream.read(reinterpret_cast<char*>(std::get<2>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
+            {
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+        }
+        results.push_back(std::move(columns));
+    }
+    
+    auto res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+    res.file = file;
+    if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
+    {
+        triggerAsyncUpdate();
+        return res;
+    }
+    
     triggerAsyncUpdate();
     return {};
 }
