@@ -514,14 +514,12 @@ void Track::Director::runLoading(NotificationType const notification)
             return;
         }
         mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-        auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "ERRORMESSAGE. Would you like to select another file? If cancel, the application will try to run the analysis if possible.", {{"ERRORMESSAGE", result.getErrorMessage()}});
+        auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "ERRORMESSAGE. Would you like to select another file? If no, the application will try to run the analysis if possible.", {{"ERRORMESSAGE", result.getErrorMessage()}});
         switch(answer)
         {
-            case AlertWindow::Answer::no:
-                break;
             case AlertWindow::Answer::yes:
             {
-                juce::FileChooser fc(juce::translate("Load analysis results"), results.file, "*.json");
+                juce::FileChooser fc(juce::translate("Load analysis results"), results.file, "*.json;*.dat");
                 if(fc.browseForFileToOpen())
                 {
                     results.file = fc.getResult();
@@ -529,11 +527,15 @@ void Track::Director::runLoading(NotificationType const notification)
                 }
             }
             break;
-            case AlertWindow::Answer::cancel:
+            case AlertWindow::Answer::no:
             {
+                results.file = juce::File{};
+                mAccessor.setAttr<AttrType::results>(results, notification);
                 runAnalysis(notification);
             }
             break;
+            case AlertWindow::Answer::cancel:
+                break;
         }
     }
 }
