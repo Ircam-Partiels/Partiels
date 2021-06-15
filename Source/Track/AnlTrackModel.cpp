@@ -61,7 +61,7 @@ auto XmlParser::fromXml<Track::Results>(juce::XmlElement const& xml, juce::Ident
     {
         return defaultValue;
     }
-    Track::Results value;
+    Track::Results value = defaultValue;
     value.file = fromXml(*child, "file", defaultValue.file);
     return value;
 }
