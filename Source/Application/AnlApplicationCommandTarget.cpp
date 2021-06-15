@@ -340,8 +340,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             if(fileBased.save(true, true) == juce::FileBasedDocument::SaveResult::savedOk)
             {
-                fileBased.consolidate();
-                AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document have been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", fileBased.getFile().getFullPathName()}});
+                auto const result = fileBased.consolidate();
+                if(result.wasOk())
+                {
+                    AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document have been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", fileBased.getFile().getFullPathName()}});
+                }
+                else
+                {
+                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Document consolidation failed!", "The document cannot be consolidated with the audio files and the analyses to FLNAME. ERROR", {{"FLNAME", fileBased.getFile().getFullPathName()}, {"ERROR", result.getErrorMessage()}});
+                }
             }
             return true;
         }

@@ -664,35 +664,37 @@ void Track::Director::timerCallback()
     mAccessor.setAttr<AttrType::processing>(std::make_tuple(processorRunning, processorProgress, graphicsRunning, graphicsProgress), NotificationType::synchronous);
 }
 
-bool Track::Director::consolidate(juce::File const& file)
+juce::Result Track::Director::consolidate(juce::File const& file)
 {
-    if(file.createDirectory().failed())
+    juce::Result result = file.createDirectory();
+    if(result.failed())
     {
-        return false;
+        return result;
     }
 
     auto const currentFile = mAccessor.getAttr<AttrType::results>().file;
     auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
     if(currentFile == expectedFile)
     {
-        return true;
+        return juce::Result::ok();
     }
     if(currentFile == juce::File{} || !currentFile.hasFileExtension("dat"))
     {
-        if(Exporter::toBinary(mAccessor, expectedFile).failed())
+        result = Exporter::toBinary(mAccessor, expectedFile);
+        if(result.failed())
         {
-            return false;
+            return result;
         }
     }
     else if(currentFile.existsAsFile())
     {
         if(!currentFile.copyFileTo(expectedFile))
         {
-            return false;
+            return juce::Result::fail(juce::translate("Cannot copy to SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", currentFile.getFullPathName()).replace("DSTFLNAME", expectedFile.getFullPathName()));
         }
     }
     setResultsFile(expectedFile, NotificationType::synchronous);
-    return true;
+    return juce::Result::ok();
 }
 
 ANALYSE_FILE_END

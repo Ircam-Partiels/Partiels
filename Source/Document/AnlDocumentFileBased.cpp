@@ -196,10 +196,11 @@ juce::Result Document::FileBased::consolidate()
         return result;
     }
     mDirector.startAction();
-    if(!mDirector.consolidate(subDirectory))
+    result = mDirector.consolidate(subDirectory);
+    if(result.failed())
     {
         mDirector.endAction(ActionState::abort);
-        return juce::Result::fail("The document file cannot be consolidated!");
+        return result;
     }
     result = saveDocument(file);
     if(result.failed())

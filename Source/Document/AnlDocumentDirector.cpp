@@ -622,11 +622,12 @@ void Document::Director::sanitize(NotificationType const notification)
     }
 }
 
-bool Document::Director::consolidate(juce::File const& file)
+juce::Result Document::Director::consolidate(juce::File const& file)
 {
-    if(file.createDirectory().failed())
+    juce::Result result = file.createDirectory();
+    if(result.failed())
     {
-        return false;
+        return result;
     }
     auto reader = mAccessor.getAttr<AttrType::reader>();
     std::set<juce::File> audioFiles;
@@ -637,16 +638,17 @@ bool Document::Director::consolidate(juce::File const& file)
         {
             if(reader[i].file.exists() && reader[i].file != newAudioFile && !reader[i].file.copyFileTo(newAudioFile))
             {
-                return false;
+                return juce::Result::fail(juce::translate("Cannot copy to SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", reader[i].file.getFullPathName()).replace("DSTFLNAME", newAudioFile.getFullPathName()));
             }
         }
         reader[i].file = newAudioFile;
     }
 
     auto const trackDirectory = file.getChildFile("Tracks");
-    if(trackDirectory.createDirectory().failed())
+    result = trackDirectory.createDirectory();
+    if(result.failed())
     {
-        return false;
+        return result;
     }
 
     auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
@@ -664,13 +666,17 @@ bool Document::Director::consolidate(juce::File const& file)
 
     for(auto& trackDirector : mTracks)
     {
-        if(trackDirector != nullptr && !trackDirector->consolidate(trackDirectory))
+        if(trackDirector != nullptr)
         {
-            return false;
+            result = trackDirector->consolidate(trackDirectory);
+            if(result.failed())
+            {
+                return result;
+            }
         }
     }
     mAccessor.setAttr<AttrType::reader>(reader, NotificationType::synchronous);
-    return true;
+    return juce::Result::ok();
 }
 
 bool Document::Director::fileHasBeenRemoved(juce::File const& file)
