@@ -10,6 +10,7 @@ namespace Group
 {
     using TrackList = std::vector<std::reference_wrapper<Track::Accessor>>;
 
+    // clang-format off
     enum class AttrType : size_t
     {
         identifier,
@@ -32,9 +33,21 @@ namespace Group
         showProperties
     };
 
-    using AttrContainer = Model::Container<Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>, Model::Attr<AttrType::name, juce::String, Model::Flag::basic>, Model::Attr<AttrType::height, int, Model::Flag::basic>, Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>, Model::Attr<AttrType::expanded, bool, Model::Flag::basic>, Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>, Model::Attr<AttrType::tracks, TrackList, Model::Flag::notifying>, Model::Attr<AttrType::focused, bool, Model::Flag::notifying>>;
+    using AttrContainer = Model::Container
+    < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
+    , Model::Attr<AttrType::height, int, Model::Flag::basic>
+    , Model::Attr<AttrType::colour, juce::Colour, Model::Flag::basic>
+    , Model::Attr<AttrType::expanded, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
+    , Model::Attr<AttrType::tracks, TrackList, Model::Flag::notifying>
+    , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
+    >;
 
-    using AcsrContainer = Model::Container<Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>>;
+    using AcsrContainer = Model::Container
+    < Model::Acsr<AcsrType::zoom, Zoom::Accessor, Model::Flag::saveable | Model::Flag::notifying, 1>
+    >;
+    // clang-format on
 
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer, AcsrContainer>
