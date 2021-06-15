@@ -39,7 +39,9 @@ public:
         else
         {
             std::unique_lock<std::mutex> listenerLock(mListenerMutex);
-            for(auto* listener : mListeners)
+            auto const listeners = mListeners;
+            listenerLock.unlock();
+            for(auto* listener : listeners)
             {
                 method(*listener);
             }
