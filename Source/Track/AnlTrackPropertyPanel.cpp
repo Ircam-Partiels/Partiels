@@ -18,7 +18,34 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 , mPropertyResultsFile("Results File", "The path of the results file", [this]()
                        {
-                           mAccessor.getAttr<AttrType::results>().file.revealToUser();
+                           auto const file = mAccessor.getAttr<AttrType::results>().file;
+                           if(file.existsAsFile())
+                           {
+                               file.revealToUser();
+                           }
+                           else
+                           {
+                               auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results file cannot be found!", "The results file cannot be found. Would you like to select another file? If no, the application will try to run the analysis if possible.");
+                               switch(answer)
+                               {
+                                   case AlertWindow::Answer::yes:
+                                   {
+                                       juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.json;*.dat");
+                                       if(fc.browseForFileToOpen())
+                                       {
+                                           mDirector.setResultsFile(file, NotificationType::synchronous);
+                                       }
+                                   }
+                                   break;
+                                   case AlertWindow::Answer::no:
+                                   {
+                                       mDirector.setResultsFile(juce::File{}, NotificationType::synchronous);
+                                   }
+                                   break;
+                                   case AlertWindow::Answer::cancel:
+                                       break;
+                               }
+                           }
                        })
 , mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [&](size_t index)
                       {

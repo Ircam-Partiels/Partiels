@@ -414,6 +414,20 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 }
 
+void Track::Director::setResultsFile(juce::File const& file, NotificationType const notification)
+{
+    auto results = mAccessor.getAttr<AttrType::results>();
+    if(results.file != file)
+    {
+        results.file = file;
+        mAccessor.setAttr<AttrType::results>(results, notification);
+        if(file == juce::File{})
+        {
+            runAnalysis(notification);
+        }
+    }
+}
+
 void Track::Director::runAnalysis(NotificationType const notification)
 {
     mGraphics.stopRendering();
@@ -522,16 +536,13 @@ void Track::Director::runLoading(NotificationType const notification)
                 juce::FileChooser fc(juce::translate("Load analysis results"), results.file, "*.json;*.dat");
                 if(fc.browseForFileToOpen())
                 {
-                    results.file = fc.getResult();
-                    mAccessor.setAttr<AttrType::results>(results, notification);
+                    setResultsFile(fc.getResult(), notification);
                 }
             }
             break;
             case AlertWindow::Answer::no:
             {
-                results.file = juce::File{};
-                mAccessor.setAttr<AttrType::results>(results, notification);
-                runAnalysis(notification);
+                setResultsFile(juce::File{}, notification);
             }
             break;
             case AlertWindow::Answer::cancel:
