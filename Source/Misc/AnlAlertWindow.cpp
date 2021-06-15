@@ -89,9 +89,9 @@ AlertWindow::Answer AlertWindow::showYesNoCancel(MessageType const type, juce::S
         case 1:
             return Answer::yes;
         case 0:
-            return Answer::no;
-        default:
             return Answer::cancel;
+        default:
+            return Answer::no;
     }
 }
 
