@@ -133,7 +133,7 @@ Document::Section::Section(Director& director)
         }
     };
 
-    mListener.onAccessorInserted = mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr, index);
         switch(type)
@@ -144,17 +144,45 @@ Document::Section::Section(Director& director)
                 break;
             case AcsrType::groups:
             {
-                // The group identifier is not yet defined when the group is inserted
-                // so the group cannot be found in the layout, delaying to the next message
-                // tick, ensure thatt both the groups and the layout are consistent
-                juce::WeakReference<juce::Component> target(this);
-                juce::MessageManager::callAsync([=, this]()
+                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), mAccessor.getAcsr<AcsrType::groups>(index),
+                                        [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttr)
+                                        {
+                                            juce::ignoreUnused(groupAcsr);
+                                            switch(groupAttr)
+                                            {
+                                                case Group::AttrType::identifier:
                                                 {
-                                                    if(target.get() != nullptr)
-                                                    {
-                                                        updateLayout();
-                                                    }
-                                                });
+                                                    updateLayout();
+                                                }
+                                                break;
+                                                case Group::AttrType::name:
+                                                case Group::AttrType::height:
+                                                case Group::AttrType::colour:
+                                                case Group::AttrType::expanded:
+                                                case Group::AttrType::layout:
+                                                case Group::AttrType::tracks:
+                                                case Group::AttrType::focused:
+                                                    break;
+                                            }
+                                        });
+            }
+            break;
+        }
+    };
+
+    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr, index);
+        switch(type)
+        {
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+            case AcsrType::tracks:
+                break;
+            case AcsrType::groups:
+            {
+                mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
+                updateLayout();
             }
             break;
         }

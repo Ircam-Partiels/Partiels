@@ -61,6 +61,7 @@ namespace Document
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
+        std::vector<Group::Accessor::SmartListener> mGroupListeners;
 
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
