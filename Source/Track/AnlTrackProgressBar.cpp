@@ -16,23 +16,17 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
             case AttrType::name:
             case AttrType::processing:
             case AttrType::warnings:
+            case AttrType::results:
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-
+                auto const isLoading = acsr.getAttr<AttrType::results>().file != juce::File{};
                 if(std::get<0>(state))
                 {
-                    if(mMode == Mode::analysis || mMode == Mode::both)
-                    {
-                        mProgressBar.setVisible(true);
-                        mProgressValue = static_cast<double>(std::get<1>(state));
-                        mProgressBar.setTextToDisplay("Analysing... ");
-                    }
-                    else
-                    {
-                        mProgressBar.setVisible(false);
-                        mMessage = "Analysing... ";
-                    }
+                    mMessage = isLoading ? "Loading... " : "Analysing... ";
+                    mProgressBar.setVisible(mMode == Mode::analysis || mMode == Mode::both);
+                    mProgressValue = static_cast<double>(std::get<1>(state));
+                    mProgressBar.setTextToDisplay(mMessage);
                 }
                 else if(std::get<2>(state) && (mMode == Mode::rendering || mMode == Mode::both))
                 {
@@ -54,17 +48,19 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                                 return "Analysis failed: the plugin cannot be found or allocated!";
                             case WarningType::state:
                                 return "Analysis failed: the step size or the block size might not be supported!";
+                            case WarningType::file:
+                                return "Loading failed: the results file cannot be parsed!";
                         }
                         switch(mMode)
                         {
                             case Mode::analysis:
-                                return "Analysis successfully completed!";
+                                return isLoading ? "Loading successfully completed!" : "Analysis successfully completed!";
                             case Mode::rendering:
                                 return "Rendering successfully completed!";
                             case Mode::both:
-                                return "Analysis and rendering successfully completed!";
+                                return isLoading ? "Loading and rendering successfully completed!" : "Analysis and rendering successfully completed!";
                         }
-                        return "Analysis and rendering successfully completed!";
+                        return "Loading and rendering successfully completed!";
                     };
 
                     mMessage = getMessage();
@@ -80,7 +76,6 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
-            case AttrType::results:
             case AttrType::graphics:
             case AttrType::identifier:
             case AttrType::height:

@@ -300,10 +300,14 @@ juce::String Track::Tools::getStateTootip(Accessor const& acsr)
 {
     auto const& state = acsr.getAttr<AttrType::processing>();
     auto const& warnings = acsr.getAttr<AttrType::warnings>();
-
+    auto const isLoading = acsr.getAttr<AttrType::results>().file != juce::File{};
     auto const name = acsr.getAttr<AttrType::name>() + ": ";
     if(std::get<0>(state))
     {
+        if(isLoading)
+        {
+            return name + juce::translate("loading... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)");
+        }
         return name + juce::translate("analysing... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)");
     }
     else if(std::get<2>(state))
@@ -318,8 +322,10 @@ juce::String Track::Tools::getStateTootip(Accessor const& acsr)
             return name + juce::translate("analysis failed: the plugin cannot be found or allocated!");
         case WarningType::state:
             return name + juce::translate("analysis failed: the step size or the block size might not be supported!");
+        case WarningType::file:
+            return name + juce::translate("loading failed: the results file cannot be parsed!");
     }
-    return name + juce::translate("analysis and rendering successfully completed!");
+    return name + (isLoading ? juce::translate("loading and rendering successfully completed!") : juce::translate("analysis and rendering successfully completed!"));
 }
 
 std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const& description)

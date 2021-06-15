@@ -511,6 +511,7 @@ void Track::Director::runLoading(NotificationType const notification)
             addFileToWatch(results.file);
             return;
         }
+        mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
         auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "ERRORMESSAGE. Would you like to select another file? If cancel, the application will try to run the analysis if possible.", {{"ERRORMESSAGE", result.getErrorMessage()}});
         switch(answer)
         {

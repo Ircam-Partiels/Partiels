@@ -164,6 +164,7 @@ namespace Track
           none
         , plugin
         , state
+        , file
     };
 
     enum class AttrType : size_t
