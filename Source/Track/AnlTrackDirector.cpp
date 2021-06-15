@@ -614,7 +614,7 @@ void Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.json");
+        juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.json;*.dat");
         if(!fc.browseForFileToOpen())
         {
             return;
@@ -652,27 +652,16 @@ bool Track::Director::consolidate(juce::File const& file)
     }
 
     auto results = mAccessor.getAttr<AttrType::results>();
-    if(results.file.getParentDirectory() == file)
+    auto const resultsFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
+    if(results.file == resultsFile)
     {
         return true;
     }
-    auto const isBinary = results.getColumns() != nullptr;
-    auto const resultsFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + "." + (isBinary ? ".dat" : ".json"));
     if(results.file == juce::File{})
     {
-        if(isBinary)
+        if(Exporter::toBinary(mAccessor, resultsFile).failed())
         {
-            if(Exporter::toBinary(mAccessor, resultsFile).failed())
-            {
-                return false;
-            }
-        }
-        else
-        {
-            if(Exporter::toJson(mAccessor, resultsFile).failed())
-            {
-                return false;
-            }
+            return false;
         }
     }
     else if(results.file.existsAsFile())

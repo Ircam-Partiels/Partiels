@@ -289,61 +289,191 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
     }
     expected = ProcessState::running;
     
-    std::vector<Results::Columns> results;
-    while(!stream.eof())
+    Results res;
+    char type[7] = {'\0'};
+    if(!stream.read(type, sizeof(char) * 6))
     {
-        Results::Columns columns;
-        size_t numChannels;
-        if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
-        {
-            if(stream.eof())
-            {
-                break;
-            }
-            mLoadingState.store(ProcessState::aborted);
-            triggerAsyncUpdate();
-            return {};
-        }
-        columns.resize(numChannels);
-        for(auto& column : columns)
-        {
-            if(mLoadingState.load() == ProcessState::aborted)
-            {
-                triggerAsyncUpdate();
-                return {};
-            }
-            
-            if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
-            {
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
-                return {};
-            }
-            if(!stream.read(reinterpret_cast<char*>(&std::get<1>(column)), sizeof(std::get<1>(column))))
-            {
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
-                return {};
-            }
-            size_t numBins;
-            if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
-            {
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
-                return {};
-            }
-            std::get<2>(column).resize(numBins);
-            if(!stream.read(reinterpret_cast<char*>(std::get<2>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
-            {
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
-                return {};
-            }
-        }
-        results.push_back(std::move(columns));
+        mLoadingState.store(ProcessState::aborted);
+        triggerAsyncUpdate();
+        return {};
     }
     
-    auto res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+    if(std::string(type) == "PTLMKS")
+    {
+        std::vector<Results::Markers> results;
+        while(!stream.eof())
+        {
+            Results::Markers markers;
+            size_t numChannels;
+            if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
+            {
+                if(stream.eof())
+                {
+                    break;
+                }
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+            markers.resize(numChannels);
+            for(auto& marker : markers)
+            {
+                if(mLoadingState.load() == ProcessState::aborted)
+                {
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                
+                if(!stream.read(reinterpret_cast<char*>(&std::get<0>(marker)), sizeof(std::get<0>(marker))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                if(!stream.read(reinterpret_cast<char*>(&std::get<1>(marker)), sizeof(std::get<1>(marker))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                size_t length;
+                if(!stream.read(reinterpret_cast<char*>(&length), sizeof(length)))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                std::get<2>(marker).resize(length);
+                if(!stream.read(reinterpret_cast<char*>(std::get<2>(marker).data()), static_cast<long>(sizeof(length) * sizeof(char))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+            }
+            results.push_back(std::move(markers));
+        }
+        res = Results(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
+    }
+    else if(std::string(type) == "PTLPTS")
+    {
+        std::vector<Results::Points> results;
+        while(!stream.eof())
+        {
+            Results::Points points;
+            size_t numChannels;
+            if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
+            {
+                if(stream.eof())
+                {
+                    break;
+                }
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+            points.resize(numChannels);
+            for(auto& point : points)
+            {
+                if(mLoadingState.load() == ProcessState::aborted)
+                {
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                
+                if(!stream.read(reinterpret_cast<char*>(&std::get<0>(point)), sizeof(std::get<0>(point))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                if(!stream.read(reinterpret_cast<char*>(&std::get<1>(point)), sizeof(std::get<1>(point))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                bool hasValue;
+                if(!stream.read(reinterpret_cast<char*>(&hasValue), sizeof(hasValue)))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                if(hasValue)
+                {
+                    float value;
+                    if(!stream.read(reinterpret_cast<char*>(&value), sizeof(value)))
+                    {
+                        mLoadingState.store(ProcessState::aborted);
+                        triggerAsyncUpdate();
+                        return {};
+                    }
+                    std::get<2>(point) = value;
+                }
+            }
+            results.push_back(std::move(points));
+        }
+        res = Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
+    }
+    else if(std::string(type) == "PTLCLS")
+    {
+        std::vector<Results::Columns> results;
+        while(!stream.eof())
+        {
+            Results::Columns columns;
+            size_t numChannels;
+            if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
+            {
+                if(stream.eof())
+                {
+                    break;
+                }
+                mLoadingState.store(ProcessState::aborted);
+                triggerAsyncUpdate();
+                return {};
+            }
+            columns.resize(numChannels);
+            for(auto& column : columns)
+            {
+                if(mLoadingState.load() == ProcessState::aborted)
+                {
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                
+                if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                if(!stream.read(reinterpret_cast<char*>(&std::get<1>(column)), sizeof(std::get<1>(column))))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                size_t numBins;
+                if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+                std::get<2>(column).resize(numBins);
+                if(!stream.read(reinterpret_cast<char*>(std::get<2>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
+                {
+                    mLoadingState.store(ProcessState::aborted);
+                    triggerAsyncUpdate();
+                    return {};
+                }
+            }
+            results.push_back(std::move(columns));
+        }
+        res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+    }
+    
     res.file = file;
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
     {

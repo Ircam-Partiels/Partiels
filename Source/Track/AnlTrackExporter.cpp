@@ -390,7 +390,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
-    
+
     if(!temp.overwriteTargetFileWithTemporary())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
@@ -414,12 +414,6 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as binary because the results are not valid.").replace("ANLNAME", name));
     }
 
-    auto const columns = results.getColumns();
-    if(columns == nullptr)
-    {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as binary because the results are not columns.").replace("ANLNAME", name));
-    }
-
     juce::TemporaryFile temp(file);
     std::ofstream stream(temp.getFile().getFullPathName().toStdString(), std::ios::out | std::ios::binary);
     if(!stream || !stream.is_open() || !stream.good())
@@ -427,17 +421,62 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    for(auto const& channelResults : *columns)
+    auto const markers = results.getMarkers();
+    auto const points = results.getPoints();
+    auto const columns = results.getColumns();
+    if(markers != nullptr)
     {
-        auto const numChannels = channelResults.size();
-        stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-        for(auto const& result : channelResults)
+        stream.write("PTLMKS", 6 * sizeof(char));
+        for(auto const& channelResults : *markers)
         {
-            stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
-            stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
-            auto const numBins = std::get<2>(result).size();
-            stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
-            stream.write(reinterpret_cast<char const*>(std::get<2>(result).data()), static_cast<long>(sizeof(*std::get<2>(result).data()) * numBins));
+            auto const numChannels = channelResults.size();
+            stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
+            for(auto const& result : channelResults)
+            {
+                stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
+                stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
+                auto const length = std::get<2>(result).size();
+                stream.write(reinterpret_cast<char const*>(&length), sizeof(length));
+                stream.write(std::get<2>(result).c_str(), static_cast<long>(sizeof(char) * std::get<2>(result).size()));
+            }
+        }
+    }
+    else if(points != nullptr)
+    {
+        stream.write("PTLPTS", 6 * sizeof(char));
+        for(auto const& channelResults : *points)
+        {
+            auto const numChannels = channelResults.size();
+            stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
+            for(auto const& result : channelResults)
+            {
+                stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
+                stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
+                auto const hasValue = std::get<2>(result).has_value();
+                stream.write(reinterpret_cast<char const*>(&hasValue), sizeof(hasValue));
+                if(hasValue)
+                {
+                    auto const value = *std::get<2>(result);
+                    stream.write(reinterpret_cast<char const*>(&value), sizeof(value));
+                }
+            }
+        }
+    }
+    else if(columns != nullptr)
+    {
+        stream.write("PTLCLS", 6 * sizeof(char));
+        for(auto const& channelResults : *columns)
+        {
+            auto const numChannels = channelResults.size();
+            stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
+            for(auto const& result : channelResults)
+            {
+                stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
+                stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
+                auto const numBins = std::get<2>(result).size();
+                stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
+                stream.write(reinterpret_cast<char const*>(std::get<2>(result).data()), static_cast<long>(sizeof(*std::get<2>(result).data()) * numBins));
+            }
         }
     }
     stream.close();
@@ -445,7 +484,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
-    
+
     if(!temp.overwriteTargetFileWithTemporary())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
