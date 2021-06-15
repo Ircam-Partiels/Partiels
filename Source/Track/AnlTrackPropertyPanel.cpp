@@ -464,9 +464,9 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     }
 
                     components.push_back(mPropertyPreset);
-                    components.push_back(mProgressBarAnalysis);
                 }
 
+                components.push_back(mProgressBarAnalysis);
                 mProcessorSection.setComponents(components);
                 components.clear();
 
@@ -734,10 +734,10 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
     mProgressBarAnalysis.setSize(sInnerWidth, 36);
     mProgressBarRendering.setSize(sInnerWidth, 36);
-    
+
     mPropertyResultsFileInfo.setText("Analysis results were consolidated or loaded from a file.", false);
     mPropertyResultsFileInfo.setSize(sInnerWidth, 24);
-    
+
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
     mPropertyPluginDetails.setSize(sInnerWidth, 48);
     mPropertyPluginDetails.setJustification(juce::Justification::horizontallyJustified);
