@@ -8,55 +8,13 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
 : mAccessor(accessor)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mTrackLayoutNotifier(accessor, [this]()
+                       {
+                           updateContent();
+                       })
 {
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
-
-    mListener.onAttrChanged = [this](class Accessor const& acsr, AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case AttrType::identifier:
-            case AttrType::name:
-            case AttrType::height:
-            case AttrType::colour:
-            case AttrType::expanded:
-            case AttrType::focused:
-                break;
-            case AttrType::layout:
-            case AttrType::tracks:
-            {
-                removeAllChildren();
-                mTrackSnapshots.updateContents(
-                    mAccessor,
-                    [this](Track::Accessor& trackAccessor)
-                    {
-                        return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
-                    },
-                    nullptr);
-
-                auto const& layout = acsr.getAttr<AttrType::layout>();
-                auto const& group = mTrackSnapshots.getContents();
-                for(auto const& identifier : layout)
-                {
-                    auto it = group.find(identifier);
-                    if(it != group.cend() && it->second != nullptr)
-                    {
-                        addAndMakeVisible(it->second.get(), 0);
-                    }
-                }
-                resized();
-            }
-            break;
-        }
-    };
-
-    mAccessor.addListener(mListener, NotificationType::synchronous);
-}
-
-Group::Snapshot::~Snapshot()
-{
-    mAccessor.removeListener(mListener);
 }
 
 void Group::Snapshot::resized()
@@ -72,6 +30,30 @@ void Group::Snapshot::resized()
             it->second->setBounds(bounds);
         }
     }
+}
+
+void Group::Snapshot::updateContent()
+{
+    removeAllChildren();
+    mTrackSnapshots.updateContents(
+        mAccessor,
+        [this](Track::Accessor& trackAccessor)
+        {
+            return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+        },
+        nullptr);
+
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const& group = mTrackSnapshots.getContents();
+    for(auto const& identifier : layout)
+    {
+        auto it = group.find(identifier);
+        if(it != group.cend() && it->second != nullptr)
+        {
+            addAndMakeVisible(it->second.get(), 0);
+        }
+    }
+    resized();
 }
 
 Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)

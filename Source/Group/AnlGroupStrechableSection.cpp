@@ -6,8 +6,12 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mTrackLayoutNotifier(mAccessor, [this]()
+                       {
+                           updateContent();
+                       })
 {
-    mListener.onAttrChanged = [this](Group::Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -17,36 +21,9 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
             case AttrType::height:
             case AttrType::colour:
             case AttrType::focused:
-                break;
             case AttrType::layout:
             case AttrType::tracks:
-            {
-                mTrackSections.updateContents(
-                    mAccessor,
-                    [this](Track::Accessor& trackAccessor)
-                    {
-                        auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
-                        auto& trackDirector = mDirector.getTrackDirector(identifier);
-                        return std::make_unique<Track::Section>(trackDirector, mTimeZoomAccessor, mTransportAccessor);
-                    },
-                    nullptr);
-
-                auto const& contents = mTrackSections.getContents();
-                std::vector<ConcertinaTable::ComponentRef> components;
-                components.reserve(contents.size());
-                auto const& layout = mAccessor.getAttr<AttrType::layout>();
-                for(auto const& identifier : layout)
-                {
-                    auto it = contents.find(identifier);
-                    if(it != contents.cend())
-                    {
-                        components.push_back(*it->second.get());
-                    }
-                }
-                mDraggableTable.setComponents(components);
-                resized();
-            }
-            break;
+                break;
             case AttrType::expanded:
             {
                 mConcertinaTable.setOpen(acsr.getAttr<AttrType::expanded>(), true);
@@ -271,6 +248,34 @@ std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createFocusT
     };
 
     return std::make_unique<FocusTraverser>(*this);
+}
+
+void Group::StrechableSection::updateContent()
+{
+    mTrackSections.updateContents(
+        mAccessor,
+        [this](Track::Accessor& trackAccessor)
+        {
+            auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
+            auto& trackDirector = mDirector.getTrackDirector(identifier);
+            return std::make_unique<Track::Section>(trackDirector, mTimeZoomAccessor, mTransportAccessor);
+        },
+        nullptr);
+
+    auto const& contents = mTrackSections.getContents();
+    std::vector<ConcertinaTable::ComponentRef> components;
+    components.reserve(contents.size());
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto const& identifier : layout)
+    {
+        auto it = contents.find(identifier);
+        if(it != contents.cend())
+        {
+            components.push_back(*it->second.get());
+        }
+    }
+    mDraggableTable.setComponents(components);
+    resized();
 }
 
 ANALYSE_FILE_END

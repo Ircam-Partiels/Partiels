@@ -4,6 +4,10 @@ ANALYSE_FILE_BEGIN
 
 Group::StateButton::StateButton(Accessor& accessor)
 : mAccessor(accessor)
+, mTrackLayoutNotifier(accessor, [this]()
+                       {
+                           updateContent();
+                       })
 {
     addAndMakeVisible(mProcessingButton);
 
@@ -82,7 +86,7 @@ Group::StateButton::StateButton(Accessor& accessor)
         }
     };
 
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -98,23 +102,9 @@ Group::StateButton::StateButton(Accessor& accessor)
             case AttrType::colour:
             case AttrType::expanded:
             case AttrType::focused:
-                break;
             case AttrType::layout:
             case AttrType::tracks:
-            {
-                mTrackAccessors.updateContents(
-                    mAccessor,
-                    [this](Track::Accessor& trackAccessor)
-                    {
-                        trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
-                        return std::ref(trackAccessor);
-                    },
-                    [this](std::reference_wrapper<Track::Accessor>& content)
-                    {
-                        content.get().removeListener(mTrackListener);
-                    });
-            }
-            break;
+                break;
         }
     };
 
@@ -135,6 +125,21 @@ Group::StateButton::~StateButton()
 void Group::StateButton::resized()
 {
     mProcessingButton.setBounds(getLocalBounds());
+}
+
+void Group::StateButton::updateContent()
+{
+    mTrackAccessors.updateContents(
+        mAccessor,
+        [this](Track::Accessor& trackAccessor)
+        {
+            trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
+            return std::ref(trackAccessor);
+        },
+        [this](std::reference_wrapper<Track::Accessor>& content)
+        {
+            content.get().removeListener(mTrackListener);
+        });
 }
 
 ANALYSE_FILE_END

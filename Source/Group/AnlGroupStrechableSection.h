@@ -24,6 +24,8 @@ namespace Group
         std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
 
     private:
+        void updateContent();
+
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
@@ -35,6 +37,8 @@ namespace Group
         DraggableTable mDraggableTable{"Track"};
         ConcertinaTable mConcertinaTable{"", false};
         BoundsListener mBoundsListener;
+
+        TrackLayoutNotifier mTrackLayoutNotifier;
     };
 } // namespace Group
 

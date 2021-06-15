@@ -14,7 +14,7 @@ namespace Group
     {
     public:
         Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
-        ~Plot() override;
+        ~Plot() override = default;
 
         // juce::Component
         void resized() override;
@@ -51,11 +51,13 @@ namespace Group
         };
 
     private:
+        void updateContent();
+
         Accessor& mAccessor;
-        Accessor::Listener mListener;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         TrackMap<std::unique_ptr<Track::Plot>> mTrackPlots;
+        TrackLayoutNotifier mTrackLayoutNotifier;
     };
 } // namespace Group
 

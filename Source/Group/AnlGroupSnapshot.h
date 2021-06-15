@@ -14,7 +14,7 @@ namespace Group
     {
     public:
         Snapshot(Accessor& groupAccessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
-        ~Snapshot() override;
+        ~Snapshot() override = default;
 
         // juce::Component
         void resized() override;
@@ -45,11 +45,13 @@ namespace Group
         };
 
     private:
+        void updateContent();
+
         Accessor& mAccessor;
-        Accessor::Listener mListener;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         TrackMap<std::unique_ptr<Track::Snapshot>> mTrackSnapshots;
+        TrackLayoutNotifier mTrackLayoutNotifier;
     };
 } // namespace Group
 

@@ -13,18 +13,21 @@ namespace Group
     public:
         StateButton(Accessor& groupAccessor);
         ~StateButton() override;
-        
+
         // juce::Component
         void resized() override;
-        
+
     private:
+        void updateContent();
+
         Accessor& mAccessor;
         Accessor::Listener mListener;
-        TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
-        
         Track::Accessor::Listener mTrackListener;
         LoadingCircle mProcessingButton;
+
+        TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
+        TrackLayoutNotifier mTrackLayoutNotifier;
     };
-}
+} // namespace Group
 
 ANALYSE_FILE_END
