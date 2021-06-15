@@ -108,7 +108,7 @@ void FloatingWindowContainer::show()
     anlStrongAssert(display != nullptr);
     if(display != nullptr)
     {
-        showAt(display->userArea.getCentre().translated(-mFloatingWindow.getWidth() / 2, -mFloatingWindow.getHeight() / 2));
+        showAt((mContent.getBounds().withCentre(display->userArea.getCentre())).getTopLeft());
     }
 }
 
