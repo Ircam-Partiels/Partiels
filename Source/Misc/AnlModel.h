@@ -589,15 +589,35 @@ namespace Model
             return result;
         }
 
-        class Listener
+        struct Listener
         {
-        public:
             Listener() = default;
             virtual ~Listener() = default;
 
             std::function<void(parent_t const&, attr_enum_type)> onAttrChanged = nullptr;
             std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInserted = nullptr;
             std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErased = nullptr;
+        };
+
+        struct SmartListener
+        : public Listener
+        {
+        public:
+            SmartListener(parent_t& acsr, std::function<void(parent_t const&, attr_enum_type)> onAttrChangedFn, std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInsertedFn = nullptr, std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErasedFn = nullptr)
+            : accessor(std::ref(acsr))
+            {
+                this->onAttrChanged = onAttrChangedFn;
+                this->onAccessorInserted = onAccessorInsertedFn;
+                this->onAccessorErased = onAccessorErasedFn;
+                accessor.get().addListener(*this, NotificationType::synchronous);
+            }
+
+            ~SmartListener() override
+            {
+                accessor.get().removeListener(*this);
+            }
+
+            std::reference_wrapper<parent_t> accessor;
         };
 
         void addListener(Listener& listener, NotificationType const notification)
