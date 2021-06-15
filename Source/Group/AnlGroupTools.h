@@ -10,20 +10,44 @@ namespace Group
     {
         bool hasTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         std::optional<std::reference_wrapper<Track::Accessor>> getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
-    }
-    
-    template<typename T>
+    } // namespace Tools
+
+    class TrackLayoutNotifier
+    {
+    public:
+        TrackLayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr);
+        ~TrackLayoutNotifier();
+
+    private:
+        Accessor& mAccessor;
+        Accessor::Listener mListener;
+
+    public:
+        std::function<void(void)> onLayoutUpdated = nullptr;
+
+    private:
+        struct cmp
+        {
+            bool operator()(auto const& lhs, auto const& rhs) const
+            {
+                return std::addressof(lhs.accessor.get()) > std::addressof(rhs.accessor.get());
+            }
+        };
+        std::set<Track::Accessor::SmartListener, cmp> mTrackListeners;
+    };
+
+    template <typename T>
     class TrackMap
     {
     public:
         TrackMap() = default;
         virtual ~TrackMap() = default;
-        
+
         std::map<juce::String, T> const& getContents() const
         {
             return mContents;
         }
-        
+
         void updateContents(Accessor const& accessor, std::function<T(Track::Accessor&)> createContent, std::function<void(T&)> removeContent)
         {
             auto const& layout = accessor.getAttr<AttrType::layout>();
@@ -43,7 +67,7 @@ namespace Group
                     ++it;
                 }
             }
-            
+
             for(auto const& identifier : layout)
             {
                 auto contentIt = mContents.find(identifier);
@@ -57,10 +81,10 @@ namespace Group
                 }
             }
         }
-        
+
     private:
         std::map<juce::String, T> mContents;
     };
-}
+} // namespace Group
 
 ANALYSE_FILE_END
