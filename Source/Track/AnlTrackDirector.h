@@ -2,9 +2,9 @@
 
 #include "../Plugin/AnlPluginListScanner.h"
 #include "AnlTrackGraphics.h"
+#include "AnlTrackLoader.h"
 #include "AnlTrackModel.h"
 #include "AnlTrackProcessor.h"
-#include "AnlTrackLoader.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -34,8 +34,9 @@ namespace Track
         void runRendering();
 
         // FileWatcher
-        void fileHasBeenRemoved(juce::File const& file) override;
-        void fileHasBeenModified(juce::File const& file) override;
+        bool fileHasBeenRemoved(juce::File const& file) override;
+        bool fileHasBeenRestored(juce::File const& file) override;
+        bool fileHasBeenModified(juce::File const& file) override;
 
         // juce::Timer
         void timerCallback() override;

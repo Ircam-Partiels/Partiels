@@ -39,8 +39,9 @@ namespace Document
 
     private:
         // FileWatcher
-        void fileHasBeenRemoved(juce::File const& file) override;
-        void fileHasBeenModified(juce::File const& file) override;
+        bool fileHasBeenRemoved(juce::File const& file) override;
+        bool fileHasBeenRestored(juce::File const& file) override;
+        bool fileHasBeenModified(juce::File const& file) override;
 
         void initializeAudioReaders(NotificationType notification);
 

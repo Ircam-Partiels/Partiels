@@ -673,7 +673,7 @@ bool Document::Director::consolidate(juce::File const& file)
     return true;
 }
 
-void Document::Director::fileHasBeenRemoved(juce::File const& file)
+bool Document::Director::fileHasBeenRemoved(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
     {
@@ -681,7 +681,7 @@ void Document::Director::fileHasBeenRemoved(juce::File const& file)
         juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
         if(!fc.browseForFileToOpen())
         {
-            return;
+            return true;
         }
         auto const newFile = fc.getResult();
         auto reader = mAccessor.getAttr<AttrType::reader>();
@@ -692,16 +692,28 @@ void Document::Director::fileHasBeenRemoved(juce::File const& file)
                 channelLayout.file = newFile;
             }
         }
-        mAccessor.setAttr<AttrType::reader>(reader, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::reader>(reader, NotificationType::asynchronous);
+        return false;
     }
+    return true;
 }
 
-void Document::Director::fileHasBeenModified(juce::File const& file)
+bool Document::Director::fileHasBeenRestored(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file  has been modified!", "The audio file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file has been restored!", "The audio file FILENAME has been restored. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        initializeAudioReaders(NotificationType::synchronous);
+        initializeAudioReaders(NotificationType::asynchronous);
     }
+    return true;
+}
+
+bool Document::Director::fileHasBeenModified(juce::File const& file)
+{
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file has been modified!", "The audio file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
+    {
+        initializeAudioReaders(NotificationType::asynchronous);
+    }
+    return true;
 }
 
 void Document::Director::initializeAudioReaders(NotificationType notification)

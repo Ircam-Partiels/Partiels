@@ -15,8 +15,9 @@ public:
     void addFileToWatch(juce::File const& file);
 
 protected:
-    virtual void fileHasBeenRemoved(juce::File const& file) = 0;
-    virtual void fileHasBeenModified(juce::File const& file) = 0;
+    virtual bool fileHasBeenRemoved(juce::File const& file) = 0;
+    virtual bool fileHasBeenRestored(juce::File const& file) = 0;
+    virtual bool fileHasBeenModified(juce::File const& file) = 0;
 
 private:
     TimerClock mTimerClock;

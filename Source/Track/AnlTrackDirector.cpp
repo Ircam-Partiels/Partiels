@@ -48,6 +48,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 auto results = mAccessor.getAttr<AttrType::results>();
                 if(results.file != juce::File{} && results.isEmpty())
                 {
+                    clearFilesToWatch();
                     runLoading(notification);
                     return;
                 }
@@ -419,11 +420,16 @@ void Track::Director::setResultsFile(juce::File const& file, NotificationType co
     auto results = mAccessor.getAttr<AttrType::results>();
     if(results.file != file)
     {
+        clearFilesToWatch();
         results.file = file;
         mAccessor.setAttr<AttrType::results>(results, notification);
         if(file == juce::File{})
         {
             runAnalysis(notification);
+        }
+        else
+        {
+            runLoading(notification);
         }
     }
 }
@@ -514,7 +520,6 @@ void Track::Director::runAnalysis(NotificationType const notification)
 
 void Track::Director::runLoading(NotificationType const notification)
 {
-    clearFilesToWatch();
     mGraphics.stopRendering();
     auto results = mAccessor.getAttr<AttrType::results>();
     if(results.file != juce::File{})
@@ -525,6 +530,7 @@ void Track::Director::runLoading(NotificationType const notification)
             startTimer(50);
             timerCallback();
             addFileToWatch(results.file);
+            mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
             return;
         }
         mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
@@ -610,25 +616,39 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
     }
 }
 
-void Track::Director::fileHasBeenRemoved(juce::File const& file)
+bool Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore it?", {{"FILENAME", file.getFullPathName()}}))
     {
         juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.json;*.dat");
-        if(!fc.browseForFileToOpen())
+        if(fc.browseForFileToOpen())
         {
-            return;
+            setResultsFile(fc.getResult(), NotificationType::asynchronous);
+            return false;
         }
-        mAccessor.setAttr<AttrType::results>(Results{fc.getResult()}, NotificationType::synchronous);
     }
+    mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
+    return true;
 }
 
-void Track::Director::fileHasBeenModified(juce::File const& file)
+bool Track::Director::fileHasBeenRestored(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file  has been modified!", "The analysis file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been restored!", "The analysis file FILENAME has been restored. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        mAccessor.setAttr<AttrType::results>(Results{file}, NotificationType::synchronous);
+        runLoading(NotificationType::asynchronous);
+        return false;
     }
+    return true;
+}
+
+bool Track::Director::fileHasBeenModified(juce::File const& file)
+{
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been modified!", "The analysis file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
+    {
+        runLoading(NotificationType::asynchronous);
+        return false;
+    }
+    return true;
 }
 
 void Track::Director::timerCallback()
@@ -651,28 +671,27 @@ bool Track::Director::consolidate(juce::File const& file)
         return false;
     }
 
-    auto results = mAccessor.getAttr<AttrType::results>();
-    auto const resultsFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
-    if(results.file == resultsFile)
+    auto const currentFile = mAccessor.getAttr<AttrType::results>().file;
+    auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
+    if(currentFile == expectedFile)
     {
         return true;
     }
-    if(results.file == juce::File{})
+    if(currentFile == juce::File{} || !currentFile.hasFileExtension("dat"))
     {
-        if(Exporter::toBinary(mAccessor, resultsFile).failed())
+        if(Exporter::toBinary(mAccessor, expectedFile).failed())
         {
             return false;
         }
     }
-    else if(results.file.existsAsFile())
+    else if(currentFile.existsAsFile())
     {
-        if(!results.file.copyFileTo(resultsFile))
+        if(!currentFile.copyFileTo(expectedFile))
         {
             return false;
         }
     }
-    results.file = resultsFile;
-    mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
+    setResultsFile(expectedFile, NotificationType::synchronous);
     return true;
 }
 

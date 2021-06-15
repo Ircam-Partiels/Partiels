@@ -6,28 +6,36 @@ FileWatcher::FileWatcher()
 {
     mTimerClock.callback = [this]()
     {
-        if(std::none_of(mFileStates.cbegin(), mFileStates.cend(), [](auto const fileState)
-                        {
-                            return fileState.first.existsAsFile();
-                        }))
-        {
-            mTimerClock.stopTimer();
-        }
         for(auto& fileState : mFileStates)
         {
             if(std::get<1>(fileState.second) && !fileState.first.existsAsFile())
             {
                 std::get<1>(fileState.second) = false;
-                fileHasBeenRemoved(fileState.first);
+                if(!fileHasBeenRemoved(fileState.first))
+                {
+                    return;
+                }
+            }
+            else if(!std::get<1>(fileState.second) && fileState.first.existsAsFile())
+            {
+                std::get<0>(fileState.second) = fileState.first.getLastModificationTime();
+                std::get<1>(fileState.second) = true;
+                if(!fileHasBeenRestored(fileState.first))
+                {
+                    return;
+                }
             }
             else if(fileState.first.existsAsFile())
             {
                 auto const time = fileState.first.getLastModificationTime();
-                if(!std::get<1>(fileState.second) || std::get<0>(fileState.second) != time)
+                if(std::get<0>(fileState.second) != time)
                 {
                     std::get<0>(fileState.second) = time;
                     std::get<1>(fileState.second) = true;
-                    fileHasBeenModified(fileState.first);
+                    if(!fileHasBeenModified(fileState.first))
+                    {
+                        return;
+                    }
                 }
             }
         }
@@ -49,10 +57,7 @@ void FileWatcher::addFileToWatch(juce::File const& file)
 
     mTimerClock.stopTimer();
     mFileStates[file] = std::make_tuple(file.getLastModificationTime(), file.existsAsFile());
-    if(std::any_of(mFileStates.cbegin(), mFileStates.cend(), [](auto const fileState)
-                   {
-                       return fileState.first.existsAsFile();
-                   }))
+    if(!mFileStates.empty())
     {
         mTimerClock.startTimer(200);
     }
