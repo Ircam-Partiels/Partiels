@@ -70,6 +70,19 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 auto& trackAcsr = trackAcsrs[index].get();
                 auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
                 anlStrongAssert(director != nullptr);
+                if(director != nullptr)
+                {
+                    director->onIdentifierUpdated = [this](NotificationType localNotification)
+                    {
+                        for(auto& group : mGroups)
+                        {
+                            if(group != nullptr)
+                            {
+                                group->updateTracks(localNotification);
+                            }
+                        }
+                    };
+                }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
                 auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();

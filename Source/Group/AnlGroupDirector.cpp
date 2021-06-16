@@ -22,17 +22,7 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
             case AttrType::layout:
             case AttrType::tracks:
             {
-                auto trackAcsrs = mAccessor.getAttr<AttrType::tracks>();
-                auto const layout = mAccessor.getAttr<AttrType::layout>();
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
-                for(auto const& identifier : layout)
-                {
-                    auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-                    if(trackAcsr.has_value())
-                    {
-                        trackAcsr->get().setAttr<Track::AttrType::zoomAcsr>(std::ref(zoomAcsr), notification);
-                    }
-                }
+                updateTracks(notification);
             }
             break;
         }
@@ -49,6 +39,21 @@ Group::Director::~Director()
 Group::Accessor& Group::Director::getAccessor()
 {
     return mAccessor;
+}
+
+void Group::Director::updateTracks(NotificationType notification)
+{
+    auto trackAcsrs = mAccessor.getAttr<AttrType::tracks>();
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
+    for(auto const& identifier : layout)
+    {
+        auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        if(trackAcsr.has_value())
+        {
+            trackAcsr->get().setAttr<Track::AttrType::zoomAcsr>(std::ref(zoomAcsr), notification);
+        }
+    }
 }
 
 void Group::Director::startAction()

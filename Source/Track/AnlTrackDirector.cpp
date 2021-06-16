@@ -15,6 +15,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
     {
         switch(attr)
         {
+            case AttrType::identifier:
+            {
+                if(onIdentifierUpdated != nullptr)
+                {
+                    onIdentifierUpdated(notification);
+                }
+            }
+                break;
             case AttrType::key:
             {
                 if(mAccessor.getAttr<AttrType::state>() == Plugin::State{})
@@ -81,7 +89,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::graphics:
             case AttrType::name:
-            case AttrType::identifier:
             case AttrType::height:
                 break;
             case AttrType::colours:
