@@ -48,7 +48,9 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case Zoom::AttrType::anchor:
                 break;
             case Zoom::AttrType::visibleRange:
+            {
                 repaint();
+            }
                 break;
         }
     };
@@ -258,13 +260,15 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         return 4 - numDecimals;
     };
     auto const numDecimals = getNumDecimals();
-    auto const getTextValue = [unit, numDecimals](float value)
+    auto const charWidth = font.getStringWidthFloat("0");
+    auto const unitWidth = font.getStringWidthFloat(unit);
+    auto const getTextValue = [numDecimals](float value)
     {
         if(numDecimals == 0)
         {
-            return juce::String(static_cast<int>(value)) + unit;
+            return juce::String(static_cast<int>(value));
         }
-        return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".") + unit;
+        return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
     };
 
     auto const& channelResults = points->at(channel);
@@ -288,7 +292,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             if(!colours.text.isTransparent())
             {
                 g.setColour(colours.text);
-                g.drawSingleLineText(getTextValue(value), 4, static_cast<int>(y - fontDescent) - 2, juce::Justification::left);
+                g.drawSingleLineText(getTextValue(value) + unit, 4, static_cast<int>(y - fontDescent) - 2, juce::Justification::left);
             }
         }
         return;
@@ -308,8 +312,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     using labelInfo = std::tuple<juce::String, int, int, float>;
     labelInfo labelInfoLow;
     labelInfo labelInfoHigh;
-    std::vector<labelInfo> labels;
-
+    juce::GlyphArrangement glyphArr;
     auto const insertLabel = [&](int x, float y, float value)
     {
         auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
@@ -327,15 +330,14 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             {
                 std::get<0>(labelInfoLow).clear();
             }
-            std::get<3>(labelInfoHigh) -= fontDescent - 2.0f;
-            labels.push_back(labelInfoHigh);
+            glyphArr.addLineOfText(font, std::get<0>(labelInfoHigh), static_cast<float>(std::get<1>(labelInfoHigh)), std::get<3>(labelInfoHigh) - fontDescent + 2.0f);
             std::get<0>(labelInfoHigh).clear();
         }
         if(std::get<0>(labelInfoHigh).isEmpty() || y < std::get<3>(labelInfoHigh))
         {
             auto const text = getTextValue(value);
-            auto const textWidth = font.getStringWidth(text) + 2;
-            labelInfoHigh = std::make_tuple(text, x, textWidth, y);
+            auto const textWidth = text.length() * charWidth + unitWidth + 2;
+            labelInfoHigh = std::make_tuple(text + unit, x, textWidth, y);
         }
 
         if(canInsertLow)
@@ -344,15 +346,14 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             {
                 std::get<0>(labelInfoHigh).clear();
             }
-            std::get<3>(labelInfoLow) += fontAscent + 2.0f;
-            labels.push_back(labelInfoLow);
+            glyphArr.addLineOfText(font, std::get<0>(labelInfoLow), static_cast<float>(std::get<1>(labelInfoLow)), std::get<3>(labelInfoLow) + fontAscent + 2.0f);
             std::get<0>(labelInfoLow).clear();
         }
         if(std::get<0>(labelInfoLow).isEmpty() || y > std::get<3>(labelInfoLow))
         {
             auto const text = getTextValue(value);
-            auto const textWidth = font.getStringWidth(text) + 2;
-            labelInfoLow = std::make_tuple(text, x, textWidth, y);
+            auto const textWidth = text.length() * charWidth + unitWidth + 2;
+            labelInfoLow = std::make_tuple(text + unit, x, textWidth, y);
         }
     };
 
@@ -504,10 +505,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     if(showLabel)
     {
         g.setColour(colours.text);
-        for(auto const& label : labels)
-        {
-            g.drawSingleLineText(std::get<0>(label), std::get<1>(label), static_cast<int>(std::round(std::get<3>(label))), juce::Justification::left);
-        }
+        glyphArr.draw(g);
     }
 }
 
