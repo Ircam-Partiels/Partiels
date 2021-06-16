@@ -74,6 +74,10 @@ Application::Exporter::Exporter()
                   {
                       exportToFile();
                   })
+, mDocumentLayoutNotifier(Instance::get().getDocumentAccessor(), [this]()
+                          {
+    updateItems();
+})
 {
     addAndMakeVisible(mPropertyItem);
     addAndMakeVisible(mPropertyFormat);
@@ -86,39 +90,6 @@ Application::Exporter::Exporter()
     addChildComponent(mPropertyIgnoreGrids);
     addAndMakeVisible(mPropertyExport);
     addAndMakeVisible(mLoadingCircle);
-
-    mDocumentListener.onAttrChanged = [this](Document::Accessor const& acsr, Document::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case Document::AttrType::reader:
-            case Document::AttrType::viewport:
-            case Document::AttrType::path:
-                break;
-            case Document::AttrType::layout:
-            {
-                updateItems();
-            }
-            break;
-        }
-    };
-
-    mDocumentListener.onAccessorInserted = mDocumentListener.onAccessorErased = [this](Document::Accessor const& acsr, Document::AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr, type, index);
-        // The group identifier is not yet defined when the group is inserted
-        // so the group cannot be found in the layout, delaying to the next message
-        // tick, ensure thatt both the groups and the layout are consistent
-        juce::WeakReference<juce::Component> target(this);
-        juce::MessageManager::callAsync([=, this]()
-                                        {
-                                            if(target.get() != nullptr)
-                                            {
-                                                updateItems();
-                                            }
-                                        });
-    };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -159,8 +130,6 @@ Application::Exporter::Exporter()
         }
     };
 
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    documentAcsr.addListener(mDocumentListener, NotificationType::synchronous);
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.addListener(mListener, NotificationType::synchronous);
     setSize(300, 200);
@@ -170,8 +139,6 @@ Application::Exporter::~Exporter()
 {
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.removeListener(mListener);
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    documentAcsr.removeListener(mDocumentListener);
 
     if(mProcess.valid())
     {

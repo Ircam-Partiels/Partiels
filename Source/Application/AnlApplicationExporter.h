@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Document/AnlDocumentModel.h"
+#include "../Document/AnlDocumentTools.h"
 #include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -33,7 +33,6 @@ namespace Application
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
         Accessor::Listener mListener;
-        Document::Accessor::Listener mDocumentListener;
         PropertyList mPropertyItem;
         PropertyList mPropertyFormat;
         PropertyToggle mPropertyGroupMode;
@@ -46,7 +45,8 @@ namespace Application
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
         std::future<std::tuple<AlertWindow::MessageType, juce::String, juce::String>> mProcess;
-
+        Document::LayoutNotifier mDocumentLayoutNotifier;
+        
         auto static constexpr documentItemFactor = 1000000;
         auto static constexpr groupItemFactor = documentItemFactor / 1000;
     };
