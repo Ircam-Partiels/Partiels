@@ -125,9 +125,14 @@ Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream
     }
 
     class ThreadedStreamIterator
-    : public std::iterator<std::input_iterator_tag, char, ptrdiff_t, const char*, const char&>
     {
     public:
+        typedef char value_type;
+        typedef ptrdiff_t difference_type;
+        typedef const char* pointer;
+        typedef const char& reference;
+        typedef std::input_iterator_tag iterator_category;
+        
         ThreadedStreamIterator(std::atomic<ProcessState>& s)
         : state(s)
         {
