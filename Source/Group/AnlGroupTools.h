@@ -28,9 +28,9 @@ namespace Group
     private:
         struct cmp
         {
-            bool operator()(auto const& lhs, auto const& rhs) const
+            bool operator()(Track::Accessor::SmartListener const& lhs, Track::Accessor::SmartListener const& rhs) const
             {
-                return &lhs.accessor.get() > &rhs.accessor.get();
+                return std::addressof(lhs.accessor.get()) > std::addressof(rhs.accessor.get());
             }
         };
         std::set<Track::Accessor::SmartListener, cmp> mTrackListeners;
