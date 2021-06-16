@@ -102,7 +102,7 @@ void Group::PropertyPanel::showChannelLayout()
             {
                 if(i < trackChannelsLayout.size())
                 {
-                    if(channelslayout[i] != trackChannelsLayout[i])
+                    if(channelslayout[i] != static_cast<int>(trackChannelsLayout[i]))
                     {
                         channelslayout[i] = -1;
                     }
