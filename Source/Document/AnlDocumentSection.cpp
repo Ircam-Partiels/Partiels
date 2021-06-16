@@ -14,6 +14,10 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 
 Document::Section::Section(Director& director)
 : mDirector(director)
+, mLayoutNotifier(mAccessor, [this]()
+{
+    updateLayout();
+})
 {
     mTimeRuler.setPrimaryTickInterval(0);
     mTimeRuler.setTickReferenceValue(0.0);
@@ -115,12 +119,6 @@ Document::Section::Section(Director& director)
                 lookAndFeelChanged();
             }
             break;
-            case AttrType::layout:
-            case AttrType::viewport:
-            {
-                updateLayout();
-            }
-            break;
             case AttrType::path:
             {
                 auto const file = acsr.getAttr<AttrType::path>();
@@ -130,61 +128,9 @@ Document::Section::Section(Director& director)
                 resized();
             }
             break;
-        }
-    };
-
-    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr, index);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-            case AcsrType::tracks:
+            case AttrType::layout:
+            case AttrType::viewport:
                 break;
-            case AcsrType::groups:
-            {
-                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), mAccessor.getAcsr<AcsrType::groups>(index),
-                                        [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttr)
-                                        {
-                                            juce::ignoreUnused(groupAcsr);
-                                            switch(groupAttr)
-                                            {
-                                                case Group::AttrType::identifier:
-                                                {
-                                                    updateLayout();
-                                                }
-                                                break;
-                                                case Group::AttrType::name:
-                                                case Group::AttrType::height:
-                                                case Group::AttrType::colour:
-                                                case Group::AttrType::expanded:
-                                                case Group::AttrType::layout:
-                                                case Group::AttrType::tracks:
-                                                case Group::AttrType::focused:
-                                                    break;
-                                            }
-                                        });
-            }
-            break;
-        }
-    };
-
-    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr, index);
-        switch(type)
-        {
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-            case AcsrType::tracks:
-                break;
-            case AcsrType::groups:
-            {
-                mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
-                updateLayout();
-            }
-            break;
         }
     };
 

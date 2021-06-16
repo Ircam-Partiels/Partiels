@@ -5,6 +5,7 @@
 #include "../Transport/AnlTransportLoopBar.h"
 #include "../Transport/AnlTransportPlayheadBar.h"
 #include "AnlDocumentReaderLayoutPanel.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -61,7 +62,6 @@ namespace Document
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
         Accessor::Receiver mReceiver;
-        std::vector<Group::Accessor::SmartListener> mGroupListeners;
 
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
@@ -82,6 +82,8 @@ namespace Document
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
         juce::Component* mFocusComponent{nullptr};
+        
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Document
 
