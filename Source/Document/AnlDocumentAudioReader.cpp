@@ -69,7 +69,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[static_cast<size_t>(channelToCopy)], bufferSize);
                         if(layout < 0)
                         {
-                            while(channelToCopy >= 0)
+                            while(--channelToCopy >= 0)
                             {
                                 if(!reader->usesFloatingPointData)
                                 {
@@ -77,7 +77,6 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                                     juce::FloatVectorOperations::convertFixedToFloat(internalBufferChannel, reinterpret_cast<int*>(internalBufferChannel), scaleFactor, bufferSize);
                                 }
                                 juce::FloatVectorOperations::add(outputBuffer, internalBuffer[static_cast<size_t>(channelToCopy)], bufferSize);
-                                --channelToCopy;
                             }
                             juce::FloatVectorOperations::multiply(outputBuffer, 1.0f / static_cast<float>(numChannels), bufferSize);
                         }
