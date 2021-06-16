@@ -8,7 +8,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
 : mAccessor(accessor)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
-, mTrackLayoutNotifier(accessor, [this]()
+, mLayoutNotifier(accessor, [this]()
                        {
                            updateContent();
                        })

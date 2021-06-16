@@ -4,7 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Group::StateButton::StateButton(Accessor& accessor)
 : mAccessor(accessor)
-, mTrackLayoutNotifier(accessor, [this]()
+, mLayoutNotifier(accessor, [this]()
                        {
                            updateContent();
                        })

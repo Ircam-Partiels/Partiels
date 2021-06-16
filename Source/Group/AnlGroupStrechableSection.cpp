@@ -6,7 +6,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
-, mTrackLayoutNotifier(mAccessor, [this]()
+, mLayoutNotifier(mAccessor, [this]()
                        {
                            updateContent();
                        })

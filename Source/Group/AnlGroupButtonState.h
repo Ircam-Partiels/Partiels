@@ -26,7 +26,7 @@ namespace Group
         LoadingCircle mProcessingButton;
 
         TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
-        TrackLayoutNotifier mTrackLayoutNotifier;
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
 

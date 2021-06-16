@@ -38,7 +38,7 @@ namespace Group
         ConcertinaTable mConcertinaTable{"", false};
         BoundsListener mBoundsListener;
 
-        TrackLayoutNotifier mTrackLayoutNotifier;
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
 

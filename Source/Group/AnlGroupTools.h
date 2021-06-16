@@ -12,11 +12,11 @@ namespace Group
         std::optional<std::reference_wrapper<Track::Accessor>> getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
     } // namespace Tools
 
-    class TrackLayoutNotifier
+    class LayoutNotifier
     {
     public:
-        TrackLayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr);
-        ~TrackLayoutNotifier();
+        LayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr);
+        ~LayoutNotifier();
 
     private:
         Accessor& mAccessor;

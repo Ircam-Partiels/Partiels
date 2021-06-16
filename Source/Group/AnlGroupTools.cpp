@@ -38,7 +38,7 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getTrackAcs
     return it != trackAcsrs.cend() ? *it : std::optional<std::reference_wrapper<Track::Accessor>>{};
 }
 
-Group::TrackLayoutNotifier::TrackLayoutNotifier(Accessor& accessor, std::function<void(void)> fn)
+Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(void)> fn)
 : mAccessor(accessor)
 , onLayoutUpdated(fn)
 {
@@ -131,7 +131,7 @@ Group::TrackLayoutNotifier::TrackLayoutNotifier(Accessor& accessor, std::functio
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
-Group::TrackLayoutNotifier::~TrackLayoutNotifier()
+Group::LayoutNotifier::~LayoutNotifier()
 {
     mAccessor.removeListener(mListener);
 }

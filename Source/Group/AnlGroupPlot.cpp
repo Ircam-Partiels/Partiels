@@ -8,7 +8,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
 : mAccessor(accessor)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
-, mTrackLayoutNotifier(accessor, [this]()
+, mLayoutNotifier(accessor, [this]()
                        {
                            updateContent();
                        })

@@ -57,7 +57,7 @@ namespace Group
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         TrackMap<std::unique_ptr<Track::Plot>> mTrackPlots;
-        TrackLayoutNotifier mTrackLayoutNotifier;
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
 
