@@ -26,6 +26,24 @@ namespace Document
         std::optional<juce::String> getFocusedTrack(Accessor const& accessor);
         std::optional<juce::String> getFocusedGroup(Accessor const& accessor);
     } // namespace Tools
+    
+    class LayoutNotifier
+    {
+    public:
+        LayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr);
+        ~LayoutNotifier();
+        
+    private:
+        Accessor& mAccessor;
+        Accessor::Listener mListener;
+        
+    public:
+        std::function<void(void)> onLayoutUpdated = nullptr;
+        
+    private:
+        std::vector<Track::Accessor::SmartListener> mTrackListeners;
+        std::vector<Group::Accessor::SmartListener> mGroupListeners;
+    };
 } // namespace Document
 
 ANALYSE_FILE_END
