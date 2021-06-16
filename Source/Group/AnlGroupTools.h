@@ -30,7 +30,7 @@ namespace Group
         {
             bool operator()(auto const& lhs, auto const& rhs) const
             {
-                return std::addressof(lhs.accessor.get()) > std::addressof(rhs.accessor.get());
+                return &lhs.accessor.get() > &rhs.accessor.get();
             }
         };
         std::set<Track::Accessor::SmartListener, cmp> mTrackListeners;

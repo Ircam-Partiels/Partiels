@@ -69,7 +69,7 @@ Group::TrackLayoutNotifier::TrackLayoutNotifier(Accessor& accessor, std::functio
                 {
                     if(std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
                                     {
-                                        return std::addressof(it->accessor.get()) == std::addressof(trackAcsr.get());
+                                        return &it->accessor.get() == &trackAcsr.get();
                                     }))
                     {
                         it = mTrackListeners.erase(it);
