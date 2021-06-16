@@ -262,7 +262,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
                     {
                         mFileInfoPanel.setAudioFormatReader(channel.file, reader.get());
                     }
-                    auto channelComponent = std::make_unique<Channel>(mFileInfoPanel, contents.size(), channel.file, channel.channel, std::move(reader));
+                    auto channelComponent = std::make_unique<Channel>(mFileInfoPanel, index, channel.file, channel.channel, std::move(reader));
                     if(channelComponent != nullptr)
                     {
                         channelComponent->onDelete = [this, index]()
