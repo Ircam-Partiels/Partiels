@@ -28,6 +28,9 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::focused:
                 break;
             case AttrType::results:
+            {
+                setBufferedToImage(Tools::getDisplayType(acsr) == Tools::DisplayType::points);
+            }
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::channelsLayout:
