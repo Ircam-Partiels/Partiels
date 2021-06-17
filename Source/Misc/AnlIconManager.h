@@ -27,11 +27,13 @@ public:
         , edit
         , expand
         , information
+        , layers
         , loading
         , loop
         , music
         , navigate
         , pause
+        , perspective
         , photocamera
         , play
         , plus

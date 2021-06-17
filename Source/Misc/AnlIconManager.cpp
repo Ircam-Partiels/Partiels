@@ -21,6 +21,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::editer_png, IconsData::editer_pngSize);
         case IconType::expand:
             return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
+        case IconType::layers:
+            return juce::ImageCache::getFromMemory(IconsData::layers_png, IconsData::layers_pngSize);
         case IconType::information:
             return juce::ImageCache::getFromMemory(IconsData::information_png, IconsData::information_pngSize);
         case IconType::loading:
@@ -33,6 +35,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::naviguer_png, IconsData::naviguer_pngSize);
         case IconType::pause:
             return juce::ImageCache::getFromMemory(IconsData::pause_png, IconsData::pause_pngSize);
+        case IconType::perspective:
+            return juce::ImageCache::getFromMemory(IconsData::perspective_png, IconsData::perspective_pngSize);
         case IconType::photocamera:
             return juce::ImageCache::getFromMemory(IconsData::photocamera_png, IconsData::photocamera_pngSize);
         case IconType::play:

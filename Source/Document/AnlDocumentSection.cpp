@@ -107,6 +107,43 @@ Document::Section::Section(Director& director)
             commandManager->invokeDirectly(Application::CommandTarget::CommandIDs::DocumentSave, true);
         }
     };
+    
+    addAndMakeVisible(mExpandLayoutButton);
+    mExpandLayoutButton.setTooltip(juce::translate("Expand or shrink all the groups"));
+    mExpandLayoutButton.onClick = [this]()
+    {
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        auto const expanded = std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [](auto const groupAcsr)
+        {
+            return groupAcsr.get().template getAttr<Group::AttrType::expanded>();
+        });
+        
+        for(auto groupAcsr : groupAcsrs)
+        {
+            groupAcsr.get().setAttr<Group::AttrType::expanded>(!expanded, NotificationType::synchronous);
+        }
+    };
+    
+    addAndMakeVisible(mResizeLayoutButton);
+    mResizeLayoutButton.setTooltip(juce::translate("Optimize the height of groups to fit the height of the document"));
+    mResizeLayoutButton.onClick = [this]()
+    {
+        auto height = mViewport.getHeight();
+        auto const size = std::accumulate(mGroupSections.cbegin(), mGroupSections.cend(), 0, [](auto s, auto const& groupSection)
+        {
+            return groupSection.second != nullptr ? s + groupSection.second->getHeight() : s;
+        });
+        auto const ratio = static_cast<float>(height) / static_cast<float>(size);
+        for(auto& groupSection : mGroupSections)
+        {
+            if(groupSection.second != nullptr)
+            {
+                auto const newHeight = std::min(static_cast<int>(std::round(static_cast<float>(groupSection.second->getHeight()) * ratio)), height);
+                groupSection.second->setHeight(newHeight);
+                height -= newHeight;
+            }
+        }
+    };
 
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -201,7 +238,9 @@ void Document::Section::resized()
     }
 
     auto topPart = bounds.removeFromTop(28);
-    topPart.removeFromLeft(leftSize);
+    mExpandLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
+    mResizeLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
+    topPart.removeFromLeft(48);
     topPart.removeFromRight(rightSize);
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
     mLoopBarDecoration.setBounds(topPart);
@@ -234,6 +273,8 @@ void Document::Section::lookAndFeelChanged()
             mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
             laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
         }
+        laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::layers);
+        laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::perspective);
     }
 }
 
