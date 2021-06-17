@@ -48,7 +48,6 @@ namespace Track
         ProgressBar mProgressBarAnalysis{mAccessor, ProgressBar::Mode::analysis};
 
         PropertyList mPropertyColourMap;
-        PropertySlider mPropertyColourMapAlpha;
         PropertyColourButton mPropertyForegroundColour;
         PropertyColourButton mPropertyBackgroundColour;
         PropertyColourButton mPropertyTextColour;

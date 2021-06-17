@@ -220,14 +220,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track color map"));
                      })
-, mPropertyColourMapAlpha("Transparency", "The transparency of the graphical renderer", "", {0.0f, 1.0f}, 0.0f, [&](float value)
-                          {
-                              mDirector.startAction();
-                              auto colours = mAccessor.getAttr<AttrType::colours>();
-                              colours.background = juce::Colours::black.withAlpha(value);
-                              mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track transparency"));
-                          })
 , mPropertyForegroundColour(
       "Foreground Color", "The foreground current color of the graphical renderer.", "Select the foreground color", [&](juce::Colour const& colour)
       {
@@ -544,7 +536,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         // clang-format off
                         mGraphicalSection.setComponents({
                                                               mPropertyColourMap
-                                                            , mPropertyColourMapAlpha
                                                             , mPropertyValueRangeMode
                                                             , mPropertyValueRangeMin
                                                             , mPropertyValueRangeMax
@@ -651,7 +642,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyTextColour.entry.setCurrentColour(colours.text, juce::NotificationType::dontSendNotification);
                 mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
-                mPropertyColourMapAlpha.entry.setValue(static_cast<double>(colours.background.getFloatAlpha()), juce::NotificationType::dontSendNotification);
             }
             break;
             case AttrType::channelsLayout:
