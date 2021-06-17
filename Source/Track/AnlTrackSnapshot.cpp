@@ -23,12 +23,12 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::height:
             case AttrType::zoomLink:
             case AttrType::warnings:
+            case AttrType::processing:
             case AttrType::zoomAcsr:
             case AttrType::focused:
                 break;
             case AttrType::results:
             case AttrType::graphics:
-            case AttrType::processing:
             case AttrType::colours:
             case AttrType::channelsLayout:
             {
