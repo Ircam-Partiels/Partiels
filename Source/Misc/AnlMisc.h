@@ -18,6 +18,7 @@
 #include "AnlIconManager.h"
 #include "AnlJsonParser.h"
 #include "AnlLoadingCircle.h"
+#include "AnlLowResCachedImageComponent.h"
 #include "AnlModel.h"
 #include "AnlNotifier.h"
 #include "AnlNumberField.h"
