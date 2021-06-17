@@ -18,12 +18,14 @@ create-dmg \
 	--volname "$APP_NAME-v$APP_VERSION" \
 	--background "$REPO_PATH/BinaryData/Misc/macos-dmg-background.png" \
 	--volicon "$REPO_PATH/BinaryData/Misc/macos-dmg-icon.icns" \
-	--window-size 600 380 \
+	--window-size 600 410 \
 	--window-pos 200 120 \
 	--icon-size 64 \
-	--icon "Partiels.app" 128 90 \
-  --app-drop-link 432 90 \
-	--add-file "About.txt" 	"$REPO_PATH/BinaryData/Misc/About.txt" 128 200 \
+	--icon "Partiels.app" 166 94 \
+  --app-drop-link 432 94 \
+	--add-file "About.txt" "$REPO_PATH/BinaryData/Misc/About.txt" 392 280 \
+	--add-file "ChangeLog.txt" "$REPO_PATH/BinaryData/Misc/ChangeLog.txt" 512 280 \
+	--no-internet-enable \
 	"$APP_NAME-v$APP_VERSION.dmg" \
 	"app"
 
