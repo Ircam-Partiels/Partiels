@@ -28,9 +28,6 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::focused:
                 break;
             case AttrType::results:
-            {
-                setBufferedToImage(Tools::getDisplayType(acsr) == Tools::DisplayType::points);
-            }
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::channelsLayout:
@@ -54,10 +51,11 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             {
                 repaint();
             }
-                break;
+            break;
         }
     };
 
+    setCachedComponentImage(new LowResCachedComponentImage(*this));
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
