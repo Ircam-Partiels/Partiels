@@ -9,51 +9,135 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mLayoutNotifier(accessor, [this]()
-                       {
-                           updateContent();
-                       })
+                  {
+                      updateContent();
+                  })
 {
+    mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Track::AttrType::identifier:
+            case Track::AttrType::name:
+            case Track::AttrType::key:
+            case Track::AttrType::description:
+            case Track::AttrType::state:
+            case Track::AttrType::height:
+            case Track::AttrType::zoomLink:
+            case Track::AttrType::zoomAcsr:
+            case Track::AttrType::warnings:
+            case Track::AttrType::processing:
+            case Track::AttrType::focused:
+                break;
+            case Track::AttrType::results:
+            case Track::AttrType::graphics:
+            case Track::AttrType::colours:
+            case Track::AttrType::channelsLayout:
+            {
+                repaint();
+            }
+            break;
+        }
+    };
+
+    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::anchor:
+                break;
+            case Zoom::AttrType::visibleRange:
+            {
+                repaint();
+            }
+            break;
+        }
+    };
+
+    mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Transport::AttrType::startPlayhead:
+            {
+                if(!acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    repaint();
+                }
+            }
+            break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                if(acsr.getAttr<Transport::AttrType::playback>())
+                {
+                    repaint();
+                }
+            }
+            break;
+            case Transport::AttrType::playback:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::gain:
+                break;
+        }
+    };
+
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
+    mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
+    mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
-void Group::Snapshot::resized()
+Group::Snapshot::~Snapshot()
 {
-    auto bounds = getLocalBounds();
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& group = mTrackSnapshots.getContents();
-    for(auto const& identifier : layout)
+    mTimeZoomAccessor.removeListener(mZoomListener);
+    mTransportAccessor.removeListener(mTransportListener);
+    for(auto& trackAcsr : mTrackAccessors.getContents())
     {
-        auto it = group.find(identifier);
-        if(it != group.cend() && it->second != nullptr)
+        trackAcsr.second.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+        trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
+        trackAcsr.second.get().removeListener(mTrackListener);
+    }
+}
+
+void Group::Snapshot::paint(juce::Graphics& g)
+{
+    auto const bounds = getLocalBounds();
+    auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
+    auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
+    auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    for(auto it = layout.crbegin(); it != layout.crend(); ++it)
+    {
+        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
+        if(trackAcsr.has_value())
         {
-            it->second->setBounds(bounds);
+            Track::Snapshot::paint(*trackAcsr, g, bounds, mTimeZoomAccessor, time);
         }
     }
 }
 
 void Group::Snapshot::updateContent()
 {
-    removeAllChildren();
-    mTrackSnapshots.updateContents(
+    mTrackAccessors.updateContents(
         mAccessor,
         [this](Track::Accessor& trackAccessor)
         {
-            return std::make_unique<Track::Snapshot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+            trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            return std::ref(trackAccessor);
         },
-        nullptr);
-
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& group = mTrackSnapshots.getContents();
-    for(auto const& identifier : layout)
-    {
-        auto it = group.find(identifier);
-        if(it != group.cend() && it->second != nullptr)
+        [this](std::reference_wrapper<Track::Accessor>& content)
         {
-            addAndMakeVisible(it->second.get(), 0);
-        }
-    }
-    resized();
+            content.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+            content.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
+            content.get().removeListener(mTrackListener);
+        });
 }
 
 Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)

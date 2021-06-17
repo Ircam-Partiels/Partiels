@@ -14,10 +14,10 @@ namespace Group
     {
     public:
         Snapshot(Accessor& groupAccessor, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
-        ~Snapshot() override = default;
+        ~Snapshot() override;
 
         // juce::Component
-        void resized() override;
+        void paint(juce::Graphics& g) override;
 
         class Overlay
         : public juce::Component
@@ -50,7 +50,10 @@ namespace Group
         Accessor& mAccessor;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        TrackMap<std::unique_ptr<Track::Snapshot>> mTrackSnapshots;
+        Transport::Accessor::Listener mTransportListener;
+        Zoom::Accessor::Listener mZoomListener;
+        Track::Accessor::Listener mTrackListener;
+        TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
