@@ -121,7 +121,7 @@ namespace Document
             }
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::function<std::pair<int, int>(juce::String const& identifier)> getSizeFor = nullptr);
+        juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, std::function<std::pair<int, int>(juce::String const& identifier)> getSizeFor = nullptr);
     } // namespace Exporter
 } // namespace Document
 

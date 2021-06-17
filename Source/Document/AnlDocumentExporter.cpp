@@ -6,7 +6,7 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::function<std::pair<int, int>(juce::String const& identifier)> getSizeFor)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, std::function<std::pair<int, int>(juce::String const& identifier)> getSizeFor)
 {
     if(file == juce::File())
     {
@@ -39,7 +39,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, trackFile, std::get<0>(size), std::get<1>(size));
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, trackFile, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -65,7 +65,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, groupFile, std::get<0>(size), std::get<1>(size));
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, groupFile, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
@@ -234,9 +234,9 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, trackFile, options.includeHeaderRaw, options.getSeparatorChar());
+                return Track::Exporter::toCsv(trackAcsr, trackFile, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, trackFile);
+                return Track::Exporter::toJson(trackAcsr, trackFile, shouldAbort);
         }
         return juce::Result::fail("Unsupported format");
     };

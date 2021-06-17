@@ -4,7 +4,7 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height)
+juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -26,6 +26,11 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
         return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     juce::FileOutputStream stream(temp.getFile());
     if(!stream.openedOk())
     {
@@ -45,9 +50,20 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
     };
 
     auto const image = getImage();
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     if(!imageFormat->writeImageToStream(image, stream))
     {
         return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     if(!temp.overwriteTargetFileWithTemporary())

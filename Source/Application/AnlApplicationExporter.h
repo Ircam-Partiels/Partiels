@@ -44,9 +44,10 @@ namespace Application
         PropertyToggle mPropertyIgnoreGrids;
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
+        std::atomic<bool> mShoulAbort{false};
         std::future<std::tuple<AlertWindow::MessageType, juce::String, juce::String>> mProcess;
         Document::LayoutNotifier mDocumentLayoutNotifier;
-        
+
         auto static constexpr documentItemFactor = 1000000;
         auto static constexpr groupItemFactor = documentItemFactor / 1000;
     };

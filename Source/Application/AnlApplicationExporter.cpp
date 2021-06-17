@@ -72,12 +72,21 @@ Application::Exporter::Exporter()
                        })
 , mPropertyExport("Export", "Export the results", [this]()
                   {
-                      exportToFile();
+                      if(mProcess.valid())
+                      {
+                          mShoulAbort.store(true);
+                          mPropertyExport.entry.setButtonText(juce::translate("Aborting..."));
+                          mPropertyExport.setEnabled(false);
+                      }
+                      else
+                      {
+                          exportToFile();
+                      }
                   })
 , mDocumentLayoutNotifier(Instance::get().getDocumentAccessor(), [this]()
                           {
-    updateItems();
-})
+                              updateItems();
+                          })
 {
     addAndMakeVisible(mPropertyItem);
     addAndMakeVisible(mPropertyFormat);
@@ -355,17 +364,28 @@ void Application::Exporter::exportToFile()
 
     mLoadingCircle.setActive(true);
     juce::MouseCursor::showWaitCursor();
-    setEnabled(false);
     mFloatingWindow.onCloseButtonPressed = [this]()
     {
         getLookAndFeel().playAlertSound();
         return false;
     };
 
+    mPropertyItem.setEnabled(false);
+    mPropertyFormat.setEnabled(false);
+    mPropertyGroupMode.setEnabled(false);
+    mPropertyAutoSizeMode.setEnabled(false);
+    mPropertyWidth.setEnabled(false);
+    mPropertyHeight.setEnabled(false);
+    mPropertyRawHeader.setEnabled(false);
+    mPropertyRawSeparator.setEnabled(false);
+    mPropertyIgnoreGrids.setEnabled(false);
+    mPropertyExport.entry.setButtonText(juce::translate("Abort"));
+
+    mShoulAbort.store(false);
     mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
                           {
                               juce::Thread::setCurrentThreadName("Exporter");
-                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, identifier, options, getSizeFor);
+                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, identifier, options, mShoulAbort, getSizeFor);
                               triggerAsyncUpdate();
                               if(result.failed())
                               {
@@ -377,10 +397,22 @@ void Application::Exporter::exportToFile()
 
 void Application::Exporter::handleAsyncUpdate()
 {
+    mPropertyItem.setEnabled(true);
+    mPropertyFormat.setEnabled(true);
+    mPropertyGroupMode.setEnabled(true);
+    mPropertyAutoSizeMode.setEnabled(true);
+    mPropertyWidth.setEnabled(true);
+    mPropertyHeight.setEnabled(true);
+    mPropertyRawHeader.setEnabled(true);
+    mPropertyRawSeparator.setEnabled(true);
+    mPropertyIgnoreGrids.setEnabled(true);
+    mPropertyExport.setEnabled(true);
+
+    mShoulAbort.store(false);
+    mPropertyExport.entry.setButtonText(juce::translate("Export"));
     mFloatingWindow.onCloseButtonPressed = nullptr;
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
-    setEnabled(true);
     anlStrongAssert(mProcess.valid());
     if(!mProcess.valid())
     {

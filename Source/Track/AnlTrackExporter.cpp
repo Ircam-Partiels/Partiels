@@ -48,7 +48,7 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height)
+juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -70,6 +70,11 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     auto getImage = [&]()
     {
         if(!lock.tryEnter())
@@ -84,6 +89,12 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     };
 
     auto const image = getImage();
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     if(image.isValid())
     {
         juce::FileOutputStream stream(temp.getFile());
@@ -102,6 +113,11 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the image connott be created.").replace("ANLNAME", name));
     }
 
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     if(!temp.overwriteTargetFileWithTemporary())
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
@@ -109,7 +125,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& file, bool includeHeader, char separator)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -131,6 +147,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     if(!stream || !stream.is_open() || !stream.good())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     auto state = false;
@@ -175,6 +196,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         auto const numValues = maxChannel != markers->cend() ? maxChannel->size() : 0_z;
         for(size_t i = 0; i < numValues; ++i)
         {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
             addColumn(juce::String(i));
             for(auto const& channelResults : *markers)
             {
@@ -215,6 +241,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         auto const numValues = maxChannel != points->cend() ? maxChannel->size() : 0_z;
         for(size_t i = 0; i < numValues; ++i)
         {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
             addColumn(juce::String(i));
             for(auto const& channelResults : *points)
             {
@@ -262,6 +293,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
             addColumn(juce::String(i));
             for(auto const& channelResults : *columns)
             {
+                if(shouldAbort)
+                {
+                    return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+                }
+
                 if(channelResults.size() > i)
                 {
                     addColumn(juce::String(std::get<0>(channelResults[i])));
@@ -286,6 +322,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     if(!temp.overwriteTargetFileWithTemporary())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
@@ -293,7 +334,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -309,6 +350,11 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the results are not valid.").replace("ANLNAME", name));
     }
 
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     nlohmann::json json;
 
     auto const markers = results.getMarkers();
@@ -318,6 +364,11 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         for(auto const& channelResults : *markers)
         {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
             nlohmann::json cjson;
             for(auto const& result : channelResults)
             {
@@ -340,6 +391,11 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         for(auto const& channelResults : *points)
         {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
             nlohmann::json cjson;
             for(auto const& result : channelResults)
             {
@@ -365,6 +421,11 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
             nlohmann::json cjson;
             for(auto const& result : channelResults)
             {
+                if(shouldAbort)
+                {
+                    return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+                }
+
                 nlohmann::json vjson;
                 vjson["time"] = std::get<0>(result);
                 if(std::get<1>(result) > 0.0)
@@ -391,6 +452,11 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
     if(!temp.overwriteTargetFileWithTemporary())
     {
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
@@ -398,7 +464,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File const& file)
+juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -418,7 +484,12 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     std::ofstream stream(temp.getFile().getFullPathName().toStdString(), std::ios::out | std::ios::binary);
     if(!stream || !stream.is_open() || !stream.good())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The track ANLNAME cannot be exported as binary because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     auto const markers = results.getMarkers();
@@ -429,6 +500,11 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
         stream.write("PTLMKS", 6 * sizeof(char));
         for(auto const& channelResults : *markers)
         {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
             auto const numChannels = channelResults.size();
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
             for(auto const& result : channelResults)
@@ -446,6 +522,11 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
         stream.write("PTLPTS", 6 * sizeof(char));
         for(auto const& channelResults : *points)
         {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
             auto const numChannels = channelResults.size();
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
             for(auto const& result : channelResults)
@@ -471,6 +552,11 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
             for(auto const& result : channelResults)
             {
+                if(shouldAbort)
+                {
+                    return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+                }
+
                 stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
                 stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
                 auto const numBins = std::get<2>(result).size();
@@ -483,6 +569,11 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     if(!stream.good())
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     if(!temp.overwriteTargetFileWithTemporary())

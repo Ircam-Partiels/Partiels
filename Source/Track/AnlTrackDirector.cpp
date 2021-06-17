@@ -22,7 +22,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     onIdentifierUpdated(notification);
                 }
             }
-                break;
+            break;
             case AttrType::key:
             {
                 if(mAccessor.getAttr<AttrType::state>() == Plugin::State{})
@@ -687,7 +687,8 @@ juce::Result Track::Director::consolidate(juce::File const& file)
     }
     if(currentFile == juce::File{} || !currentFile.hasFileExtension("dat"))
     {
-        result = Exporter::toBinary(mAccessor, expectedFile);
+        std::atomic<bool> shouldAbort = false;
+        result = Exporter::toBinary(mAccessor, expectedFile, shouldAbort);
         if(result.failed())
         {
             return result;
