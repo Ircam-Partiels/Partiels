@@ -356,7 +356,11 @@ void Application::Exporter::exportToFile()
     mLoadingCircle.setActive(true);
     juce::MouseCursor::showWaitCursor();
     setEnabled(false);
-    mFloatingWindow.setCanBeClosedByUser(false);
+    mFloatingWindow.onCloseButtonPressed = [this]()
+    {
+        getLookAndFeel().playAlertSound();
+        return false;
+    };
 
     mProcess = std::async([=, this, file = fc.getResult()]() -> std::tuple<AlertWindow::MessageType, juce::String, juce::String>
                           {
@@ -373,7 +377,7 @@ void Application::Exporter::exportToFile()
 
 void Application::Exporter::handleAsyncUpdate()
 {
-    mFloatingWindow.setCanBeClosedByUser(true);
+    mFloatingWindow.onCloseButtonPressed = nullptr;
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     setEnabled(true);

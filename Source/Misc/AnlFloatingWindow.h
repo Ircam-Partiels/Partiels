@@ -22,9 +22,8 @@ public:
     FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton = true, bool addToDesktop = true);
     ~FloatingWindow() override;
 
-    std::function<void()> onChanged = nullptr;
-    void setCanBeClosedByUser(bool state);
-
+    std::function<void(void)> onChanged = nullptr;
+    std::function<bool(void)> onCloseButtonPressed = nullptr;
 private:
     // juce::DialogWindow
     void closeButtonPressed() override;
@@ -41,8 +40,6 @@ private:
     // juce::FocusChangeListener
     void globalFocusChanged(juce::Component* focusedComponent) override;
 #endif
-
-    bool mCanBeClosedByUser{true};
 };
 
 class FloatingWindowContainer

@@ -30,13 +30,9 @@ FloatingWindow::~FloatingWindow()
 
 void FloatingWindow::closeButtonPressed()
 {
-    if(mCanBeClosedByUser)
+    if(onCloseButtonPressed == nullptr || onCloseButtonPressed())
     {
         setVisible(false);
-    }
-    else
-    {
-        getLookAndFeel().playAlertSound();
     }
 }
 
@@ -85,11 +81,6 @@ void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
     setAlwaysOnTop(focusedComponent != nullptr);
 }
 #endif
-
-void FloatingWindow::setCanBeClosedByUser(bool state)
-{
-    mCanBeClosedByUser = state;
-}
 
 FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce::Component& content)
 : mContent(content)
