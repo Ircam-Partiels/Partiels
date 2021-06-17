@@ -66,7 +66,7 @@ namespace Transport
         {
         public:
             
-            ResamplingSource(std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
+            ResamplingSource(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, int numChannels);
             ~ResamplingSource() override = default;
             
             // juce::AudioSource
@@ -85,7 +85,7 @@ namespace Transport
             
         private:
             Source mSource;
-            juce::ResamplingAudioSource mResamplingAudioSource {&mSource, false};
+            juce::ResamplingAudioSource mResamplingAudioSource;
         };
         
         Accessor& mAccessor;

@@ -125,8 +125,9 @@ void Transport::AudioReader::Source::setLoopRange(juce::Range<double> const& loo
     mLoopRange.store({start, end});
 }
 
-Transport::AudioReader::ResamplingSource::ResamplingSource(std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
+Transport::AudioReader::ResamplingSource::ResamplingSource(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, int numChannels)
 : mSource(std::move(audioFormatReader))
+, mResamplingAudioSource(&mSource, false, numChannels)
 {
 }
 
@@ -273,7 +274,7 @@ void Transport::AudioReader::setAudioFormatReader(std::unique_ptr<juce::AudioFor
         mSourceManager.setInstance(nullptr);
         return;
     }
-    auto source = std::make_shared<ResamplingSource>(std::move(audioFormatReader));
+    auto source = std::make_shared<ResamplingSource>(std::move(audioFormatReader), static_cast<int>(audioFormatReader->numChannels));
     if(source != nullptr)
     {
         source->setGain(static_cast<float>(mAccessor.getAttr<AttrType::gain>()));
