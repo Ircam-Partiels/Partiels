@@ -9,54 +9,106 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mLayoutNotifier(accessor, [this]()
-                       {
-                           updateContent();
-                       })
+                  {
+                      updateContent();
+                  })
 {
     juce::ignoreUnused(mAccessor);
     juce::ignoreUnused(mTransportAccessor);
-    juce::ignoreUnused(mTimeZoomAccessor);
+
+    mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Track::AttrType::identifier:
+            case Track::AttrType::name:
+            case Track::AttrType::key:
+            case Track::AttrType::description:
+            case Track::AttrType::state:
+            case Track::AttrType::height:
+            case Track::AttrType::zoomLink:
+            case Track::AttrType::zoomAcsr:
+            case Track::AttrType::warnings:
+            case Track::AttrType::processing:
+            case Track::AttrType::focused:
+                break;
+            case Track::AttrType::results:
+            case Track::AttrType::graphics:
+            case Track::AttrType::colours:
+            case Track::AttrType::channelsLayout:
+            {
+                repaint();
+            }
+            break;
+        }
+    };
+
+    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::anchor:
+                break;
+            case Zoom::AttrType::visibleRange:
+            {
+                repaint();
+            }
+            break;
+        }
+    };
+
     setInterceptsMouseClicks(false, false);
+    setCachedComponentImage(new LowResCachedComponentImage(*this));
     setSize(100, 80);
+    mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
-void Group::Plot::resized()
+Group::Plot::~Plot()
+{
+    mTimeZoomAccessor.removeListener(mZoomListener);
+    for(auto& trackAcsr : mTrackAccessors.getContents())
+    {
+        trackAcsr.second.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+        trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
+        trackAcsr.second.get().removeListener(mTrackListener);
+    }
+}
+
+void Group::Plot::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& contents = mTrackPlots.getContents();
-    for(auto const& identifier : layout)
+    for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
-        auto it = contents.find(identifier);
-        if(it != contents.cend() && it->second != nullptr)
+        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
+        if(trackAcsr.has_value())
         {
-            it->second->setBounds(bounds);
+            Track::Plot::paint(*trackAcsr, g, bounds, mTimeZoomAccessor);
         }
     }
 }
 
 void Group::Plot::updateContent()
 {
-    removeAllChildren();
-    mTrackPlots.updateContents(
+    mTrackAccessors.updateContents(
         mAccessor,
         [this](Track::Accessor& trackAccessor)
         {
-            return std::make_unique<Track::Plot>(trackAccessor, mTimeZoomAccessor, mTransportAccessor);
+            trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            return std::ref(trackAccessor);
         },
-        nullptr);
-
-    auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const& group = mTrackPlots.getContents();
-    for(auto const& identifier : layout)
-    {
-        auto it = group.find(identifier);
-        if(it != group.cend() && it->second != nullptr)
+        [this](std::reference_wrapper<Track::Accessor>& content)
         {
-            addAndMakeVisible(it->second.get(), 0);
-        }
-    }
-    resized();
+            content.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+            content.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
+            content.get().removeListener(mTrackListener);
+        });
 }
 
 Group::Plot::Overlay::Overlay(Plot& plot)
