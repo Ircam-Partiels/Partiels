@@ -1,6 +1,7 @@
 #include "AnlDocumentSection.h"
 #include "AnlDocumentAudioReader.h"
 #include "AnlDocumentTools.h"
+#include "../Application/AnlApplicationCommandTarget.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -96,7 +97,15 @@ Document::Section::Section(Director& director)
     addAndMakeVisible(mDocumentName);
     mDocumentName.onClick = [this]()
     {
-        mAccessor.getAttr<AttrType::path>().revealToUser();
+        auto const file = mAccessor.getAttr<AttrType::path>();
+        if(file != juce::File{})
+        {
+            mAccessor.getAttr<AttrType::path>().revealToUser();
+        }
+        else if(auto* commandManager = App::getApplicationCommandManager())
+        {
+            commandManager->invokeDirectly(Application::CommandTarget::CommandIDs::DocumentSave, true);
+        }
     };
 
     addAndMakeVisible(mTransportDisplay);
@@ -122,9 +131,8 @@ Document::Section::Section(Director& director)
             case AttrType::path:
             {
                 auto const file = acsr.getAttr<AttrType::path>();
-                mDocumentName.setButtonText(file.getFileName());
-                mDocumentName.setTooltip(file.getFullPathName());
-                mDocumentName.setEnabled(file != juce::File{});
+                mDocumentName.setButtonText(file != juce::File{} ? file.getFileName() : juce::translate("Untitled"));
+                mDocumentName.setTooltip(file != juce::File{} ? file.getFullPathName() : juce::translate("Document not saved"));
                 resized();
             }
             break;
