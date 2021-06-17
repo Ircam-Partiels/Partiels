@@ -28,6 +28,8 @@ namespace Document
         void filesDropped(juce::StringArray const& files, int x, int y) override;
 
     private:
+        void setLayout(std::vector<ReaderChannel> const& layout);
+        
         class FileInfoPanel
         : public juce::Component
         {
@@ -115,9 +117,12 @@ namespace Document
         juce::ImageButton mAlertButton;
         juce::Label mAlertLabel;
         ColouredPanel mSeparator;
+        juce::TextButton mApplyButton{juce::translate("Apply"), juce::translate("Apply the new audio reader layout to the document")};
+        juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current audio reader layout of the document")};
+        ColouredPanel mInfoSeparator;
         FileInfoPanel mFileInfoPanel;
         BoundsListener mBoundsListener;
-
+        std::vector<ReaderChannel> mLayout;
         juce::TooltipWindow mTooltipWindow{this};
         bool mIsDragging{false};
         JUCE_LEAK_DETECTOR(ReaderLayoutPanel)

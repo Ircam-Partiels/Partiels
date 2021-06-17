@@ -238,89 +238,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         {
             case AttrType::reader:
             {
-                bool allReadersValid = true;
-                bool allSampleRatesValid = true;
-                double currentSampleRate = 0.0;
-                using ComponentRef = DraggableTable::ComponentRef;
-                decltype(mChannels) channelComponents;
-                std::vector<ComponentRef> contents;
-                auto const channels = acsr.getAttr<AttrType::reader>();
-                for(auto const& channel : channels)
-                {
-                    auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(channel.file));
-                    if(reader != nullptr)
-                    {
-                        currentSampleRate = currentSampleRate > 0.0 ? currentSampleRate : reader->sampleRate;
-                        allSampleRatesValid = std::abs(currentSampleRate - reader->sampleRate) > std::numeric_limits<double>::epsilon() ? false : allSampleRatesValid;
-                    }
-                    else
-                    {
-                        allReadersValid = false;
-                    }
-                    auto const index = static_cast<int>(contents.size());
-                    if(index == 0)
-                    {
-                        mFileInfoPanel.setAudioFormatReader(channel.file, reader.get());
-                    }
-                    auto channelComponent = std::make_unique<Channel>(mFileInfoPanel, index, channel.file, channel.channel, std::move(reader));
-                    if(channelComponent != nullptr)
-                    {
-                        channelComponent->onDelete = [this, index]()
-                        {
-                            auto readerLayout = mAccessor.getAttr<AttrType::reader>();
-                            anlWeakAssert(static_cast<size_t>(index) < readerLayout.size());
-                            if(static_cast<size_t>(index) >= readerLayout.size())
-                            {
-                                return;
-                            }
-                            readerLayout.erase(readerLayout.begin() + static_cast<long>(index));
-                            mDirector.startAction();
-                            mAccessor.setAttr<AttrType::reader>(readerLayout, NotificationType::synchronous);
-                            mDirector.endAction(ActionState::newTransaction, juce::translate("Remove Audio Files"));
-                        };
-
-                        channelComponent->onChannelChange = [this, index](int c)
-                        {
-                            auto readerLayout = mAccessor.getAttr<AttrType::reader>();
-                            anlWeakAssert(static_cast<size_t>(index) < readerLayout.size());
-                            if(static_cast<size_t>(index) >= readerLayout.size())
-                            {
-                                return;
-                            }
-                            readerLayout[static_cast<size_t>(index)].channel = c;
-                            mDirector.startAction();
-                            mAccessor.setAttr<AttrType::reader>(readerLayout, NotificationType::synchronous);
-                            mDirector.endAction(ActionState::newTransaction, juce::translate("Change Audio Channel"));
-                        };
-
-                        contents.push_back(*channelComponent.get());
-                        channelComponents.push_back(std::move(channelComponent));
-                    }
-                }
-                mDraggableTable.setComponents(contents);
-                mChannels = std::move(channelComponents);
-                focusOfChildComponentChanged(juce::Component::FocusChangeType::focusChangedDirectly);
-                if(mChannels.empty())
-                {
-                    mFileInfoPanel.setAudioFormatReader(juce::File{}, nullptr);
-                }
-
-                mAlertLabel.setVisible(!allReadersValid || !allSampleRatesValid);
-                if(!allReadersValid && allSampleRatesValid)
-                {
-                    mAlertLabel.setText(juce::translate("One or more audio file cannot be allocated and the sample rates of the audio files are not consistent."), juce::NotificationType::dontSendNotification);
-                }
-                else if(!allReadersValid)
-                {
-                    mAlertLabel.setText(juce::translate("One or more audio file cannot be allocated."), juce::NotificationType::dontSendNotification);
-                }
-                else if(!allSampleRatesValid)
-                {
-                    mAlertLabel.setText(juce::translate("The sample rates of the audio files are not consistent."), juce::NotificationType::dontSendNotification);
-                }
-                mAlertButton.setTooltip(mAlertLabel.getText());
-                mAlertButton.setVisible(mAlertLabel.isVisible());
-                resized();
+                setLayout(acsr.getAttr<AttrType::reader>());
             }
             break;
             case AttrType::layout:
@@ -337,7 +255,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
 
     mDraggableTable.onComponentDropped = [this](juce::String const& identifier, size_t index, bool copy)
     {
-        auto readerLayout = mAccessor.getAttr<AttrType::reader>();
+        auto readerLayout = mLayout;
         auto const previousIndex = static_cast<size_t>(identifier.getIntValue());
         anlWeakAssert(previousIndex < readerLayout.size());
         if(previousIndex >= readerLayout.size())
@@ -350,9 +268,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             readerLayout.erase(readerLayout.begin() + static_cast<long>(previousIndex));
         }
         readerLayout.insert(readerLayout.begin() + static_cast<long>(index), previouslayout);
-        mDirector.startAction();
-        mAccessor.setAttr<AttrType::reader>(readerLayout, NotificationType::synchronous);
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Move Audio Files"));
+        setLayout(readerLayout);
     };
 
     mAddButton.onClick = [this]()
@@ -362,14 +278,40 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         {
             return;
         }
-        auto readerLayout = mAccessor.getAttr<AttrType::reader>();
+        auto readerLayout = mLayout;
         for(auto const& result : fc.getResults())
         {
             readerLayout.push_back({result});
         }
+        setLayout(readerLayout);
+    };
+    
+    mApplyButton.onClick = [this]()
+    {
         mDirector.startAction();
-        mAccessor.setAttr<AttrType::reader>(readerLayout, NotificationType::synchronous);
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Insert Audio Files"));
+        mAccessor.setAttr<AttrType::reader>(mLayout, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Change Audio Reader Layout"));
+    };
+    
+    mResetButton.onClick = [this]()
+    {
+        setLayout(mAccessor.getAttr<AttrType::reader>());
+    };
+    
+    mFloatingWindow.onCloseButtonPressed = [this]()
+    {
+        if(mApplyButton.isEnabled())
+        {
+            if(AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Apply audio reader modification?", "The audio reader layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+            {
+                mApplyButton.onClick();
+            }
+            else
+            {
+                mResetButton.onClick();
+            }
+        }
+        return true;
     };
 
     mAddLabel.setInterceptsMouseClicks(false, false);
@@ -386,6 +328,9 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
     addChildComponent(mAlertButton);
     addChildComponent(mAlertLabel);
     addAndMakeVisible(mSeparator);
+    addAndMakeVisible(mApplyButton);
+    addAndMakeVisible(mResetButton);
+    addAndMakeVisible(mInfoSeparator);
     addAndMakeVisible(mFileInfoPanel);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(300, 400);
@@ -400,8 +345,16 @@ Document::ReaderLayoutPanel::~ReaderLayoutPanel()
 void Document::ReaderLayoutPanel::resized()
 {
     auto bounds = getLocalBounds();
-    mFileInfoPanel.setBounds(bounds.removeFromBottom(168));
+    
+    auto applyResetBounds = bounds.removeFromBottom(30).withSizeKeepingCentre(201, 24);
+    mApplyButton.setBounds(applyResetBounds.removeFromLeft(100));
+    applyResetBounds.removeFromLeft(1);
+    mResetButton.setBounds(applyResetBounds);
     mSeparator.setBounds(bounds.removeFromBottom(1));
+    
+    mFileInfoPanel.setBounds(bounds.removeFromBottom(168));
+    mInfoSeparator.setBounds(bounds.removeFromBottom(1));
+    
     if(mAlertButton.isVisible())
     {
         auto alertBounds = bounds.removeFromBottom(24);
@@ -485,7 +438,7 @@ void Document::ReaderLayoutPanel::filesDropped(juce::StringArray const& files, i
 {
     juce::ignoreUnused(x, y);
     auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
-    auto readerLayout = mAccessor.getAttr<AttrType::reader>();
+    auto readerLayout = mLayout;
     for(auto const& result : files)
     {
         juce::File const file(result);
@@ -494,12 +447,92 @@ void Document::ReaderLayoutPanel::filesDropped(juce::StringArray const& files, i
             readerLayout.push_back({result});
         }
     }
-    mDirector.startAction();
-    mAccessor.setAttr<AttrType::reader>(readerLayout, NotificationType::synchronous);
-    mDirector.endAction(ActionState::newTransaction, juce::translate("Insert Audio Files"));
+    setLayout(readerLayout);
     focusOfChildComponentChanged(juce::Component::FocusChangeType::focusChangedDirectly);
     mIsDragging = false;
     repaint();
+}
+
+void Document::ReaderLayoutPanel::setLayout(std::vector<ReaderChannel> const& layout)
+{
+    mLayout = layout;
+    mApplyButton.setEnabled(mLayout != mAccessor.getAttr<AttrType::reader>());
+    mResetButton.setEnabled(mApplyButton.isEnabled());
+    
+    bool allReadersValid = true;
+    bool allSampleRatesValid = true;
+    double currentSampleRate = 0.0;
+    using ComponentRef = DraggableTable::ComponentRef;
+    decltype(mChannels) channelComponents;
+    std::vector<ComponentRef> contents;
+    for(auto const& channel : mLayout)
+    {
+        auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(channel.file));
+        if(reader != nullptr)
+        {
+            currentSampleRate = currentSampleRate > 0.0 ? currentSampleRate : reader->sampleRate;
+            allSampleRatesValid = std::abs(currentSampleRate - reader->sampleRate) > std::numeric_limits<double>::epsilon() ? false : allSampleRatesValid;
+        }
+        else
+        {
+            allReadersValid = false;
+        }
+        auto const index = static_cast<int>(contents.size());
+        if(index == 0)
+        {
+            mFileInfoPanel.setAudioFormatReader(channel.file, reader.get());
+        }
+        auto channelComponent = std::make_unique<Channel>(mFileInfoPanel, index, channel.file, channel.channel, std::move(reader));
+        if(channelComponent != nullptr)
+        {
+            channelComponent->onDelete = [this, index]()
+            {
+                anlWeakAssert(static_cast<size_t>(index) < mLayout.size());
+                if(static_cast<size_t>(index) >= mLayout.size())
+                {
+                    return;
+                }
+                mLayout.erase(mLayout.begin() + static_cast<long>(index));
+            };
+            
+            channelComponent->onChannelChange = [this, index](int c)
+            {
+                anlWeakAssert(static_cast<size_t>(index) < mLayout.size());
+                if(static_cast<size_t>(index) >= mLayout.size())
+                {
+                    return;
+                }
+                mLayout[static_cast<size_t>(index)].channel = c;
+            };
+            
+            contents.push_back(*channelComponent.get());
+            channelComponents.push_back(std::move(channelComponent));
+        }
+    }
+    mDraggableTable.setComponents(contents);
+    mChannels = std::move(channelComponents);
+    focusOfChildComponentChanged(juce::Component::FocusChangeType::focusChangedDirectly);
+    if(mChannels.empty())
+    {
+        mFileInfoPanel.setAudioFormatReader(juce::File{}, nullptr);
+    }
+    
+    mAlertLabel.setVisible(!allReadersValid || !allSampleRatesValid);
+    if(!allReadersValid && allSampleRatesValid)
+    {
+        mAlertLabel.setText(juce::translate("One or more audio file cannot be allocated and the sample rates of the audio files are not consistent."), juce::NotificationType::dontSendNotification);
+    }
+    else if(!allReadersValid)
+    {
+        mAlertLabel.setText(juce::translate("One or more audio file cannot be allocated."), juce::NotificationType::dontSendNotification);
+    }
+    else if(!allSampleRatesValid)
+    {
+        mAlertLabel.setText(juce::translate("The sample rates of the audio files are not consistent."), juce::NotificationType::dontSendNotification);
+    }
+    mAlertButton.setTooltip(mAlertLabel.getText());
+    mAlertButton.setVisible(mAlertLabel.isVisible());
+    resized();
 }
 
 ANALYSE_FILE_END
