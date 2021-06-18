@@ -8,7 +8,6 @@
   - Fix value/bin rulers
 - Right click on ruler to edit zoom values
 - Rename zoom grid -> ruler
-- Check warnings on windows and linux
 - Improve loading of Vamp plugins (background thread)
 - Use button names on alert window
 - Windows signature
