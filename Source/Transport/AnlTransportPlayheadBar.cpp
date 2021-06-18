@@ -14,7 +14,7 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
             auto const x = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, position)));
             repaint(x, 0, 1, getHeight());
         };
-        
+
         switch(attribute)
         {
             case AttrType::playback:
