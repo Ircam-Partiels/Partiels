@@ -93,6 +93,10 @@ namespace Track
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> bounds, std::function<void(juce::Rectangle<int>, size_t)> fn);
 
         Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults);
+
+        size_t getNumBins(std::vector<Results::Columns> const& results);
+        Zoom::Range getValueRange(std::vector<Results::Columns> const& results);
+        Zoom::Range getValueRange(std::vector<Results::Points> const& results);
     } // namespace Tools
 } // namespace Track
 

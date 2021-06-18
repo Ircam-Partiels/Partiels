@@ -595,4 +595,71 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
     }
 }
 
+size_t Track::Tools::getNumBins(std::vector<Results::Columns> const& results)
+{
+    return std::accumulate(results.cbegin(), results.cend(), 0_z, [](auto const& val, auto const& channel)
+                           {
+                               return std::accumulate(channel.cbegin(), channel.cend(), val, [](auto const& rval, auto const& column)
+                                                      {
+                                                          return std::max(rval, std::get<2>(column).size());
+                                                      });
+                           });
+}
+
+Zoom::Range Track::Tools::getValueRange(std::vector<Results::Columns> const& results)
+{
+    bool initialized = false;
+    return std::accumulate(results.cbegin(), results.cend(), Zoom::Range(0.0, 0.0), [&](auto const& range, auto const& channel)
+                           {
+                               auto const newRange = std::accumulate(std::next(channel.cbegin()), channel.cend(), range, [&](auto const& crange, auto const& column)
+                                                                     {
+                                                                         auto const& values = std::get<2>(column);
+                                                                         auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
+                                                                         if(min == values.cend() || max == values.cend())
+                                                                         {
+                                                                             return crange;
+                                                                         }
+                                                                         anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
+                                                                         if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
+                                                                         {
+                                                                             return crange;
+                                                                         }
+                                                                         Zoom::Range const newCrange{*min, *max};
+                                                                         return std::exchange(initialized, true) ? crange.getUnionWith(newCrange) : crange;
+                                                                     });
+                               return std::exchange(initialized, true) ? range.getUnionWith(newRange) : newRange;
+                           });
+}
+
+Zoom::Range Track::Tools::getValueRange(std::vector<Results::Points> const& results)
+{
+    bool initialized = false;
+    return std::accumulate(results.cbegin(), results.cend(), Zoom::Range(0.0, 0.0), [&](auto const& range, auto const& channel)
+                           {
+                               auto const [min, max] = std::minmax_element(channel.cbegin(), channel.cend(), [](auto const& lhs, auto const& rhs)
+                                                                           {
+                                                                               if(!std::get<2>(rhs).has_value())
+                                                                               {
+                                                                                   return false;
+                                                                               }
+                                                                               if(!std::get<2>(lhs).has_value())
+                                                                               {
+                                                                                   return false;
+                                                                               }
+                                                                               return *std::get<2>(lhs) < *std::get<2>(rhs);
+                                                                           });
+                               if(min == channel.cend() || max == channel.cend())
+                               {
+                                   return range;
+                               }
+                               anlWeakAssert(std::isfinite(*std::get<2>(*min)) && std::isfinite(*std::get<2>(*max)) && !std::isnan(*std::get<2>(*min)) && !std::isnan(*std::get<2>(*max)));
+                               if(!std::isfinite(*std::get<2>(*min)) || !std::isfinite(*std::get<2>(*max)) || std::isnan(*std::get<2>(*min)) || std::isnan(*std::get<2>(*max)))
+                               {
+                                   return range;
+                               }
+                               Zoom::Range const newRange{*std::get<2>(*min), *std::get<2>(*max)};
+                               return std::exchange(initialized, true) ? range.getUnionWith(newRange) : newRange;
+                           });
+}
+
 ANALYSE_FILE_END
