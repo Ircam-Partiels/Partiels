@@ -11,13 +11,13 @@ namespace nlohmann
         {
             j = string.toStdString();
         }
-        
+
         static void from_json(json const& j, juce::String& string)
         {
             string = juce::String(j.get<std::string>());
         }
     };
-    
+
     template <>
     struct adl_serializer<juce::Colour>
     {
@@ -25,13 +25,13 @@ namespace nlohmann
         {
             j = colour.toString().toStdString();
         }
-        
+
         static void from_json(json const& j, juce::Colour& colour)
         {
             colour.fromString(juce::String(j.get<std::string>()));
         }
     };
-    
+
     template <>
     struct adl_serializer<juce::File>
     {
@@ -39,13 +39,13 @@ namespace nlohmann
         {
             j = file.getFullPathName().toStdString();
         }
-        
+
         static void from_json(json const& j, juce::File& file)
         {
             file = juce::File(juce::String(j.get<std::string>()));
         }
     };
-    
+
     template <typename T>
     struct adl_serializer<juce::Range<T>>
     {
@@ -54,7 +54,7 @@ namespace nlohmann
             j["start"] = range.getStart();
             j["end"] = range.getEnd();
         }
-        
+
         static void from_json(json const& j, juce::Range<T>& range)
         {
             T start, end;
@@ -63,4 +63,4 @@ namespace nlohmann
             range = {start, end};
         }
     };
-}
+} // namespace nlohmann

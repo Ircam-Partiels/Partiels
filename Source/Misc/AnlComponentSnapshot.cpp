@@ -18,10 +18,10 @@ void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String co
         {
             return {};
         }
-        
+
         auto const w = static_cast<int>(std::round(scaleFactor * static_cast<float>(r.getWidth())));
         auto const h = static_cast<int>(std::round(scaleFactor * static_cast<float>(r.getHeight())));
-        
+
         juce::Image image(component.isOpaque() || backgroundColour.isOpaque() ? juce::Image::PixelFormat::RGB : juce::Image::PixelFormat::ARGB, w, h, true);
         juce::Graphics g(image);
         if(w != getWidth() || h != getHeight())
@@ -33,7 +33,7 @@ void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String co
         component.paintEntireComponent(g, false);
         return image;
     };
-    
+
     juce::MouseCursor::showWaitCursor();
     auto const date = juce::File::createLegalFileName(juce::Time::getCurrentTime().toString(true, true));
     auto const desktop = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
@@ -52,14 +52,14 @@ void ComponentSnapshot::takeSnapshot(juce::Component& component, juce::String co
     auto const image = createSnapshot(bounds.withZeroOrigin(), scale);
     {
         juce::FileOutputStream stream(temp.getFile());
-        if (!stream.openedOk())
+        if(!stream.openedOk())
         {
             anlWeakAssert(false);
             juce::MouseCursor::hideWaitCursor();
             return;
         }
 
-        if (!imageFormat->writeImageToStream(image, stream))
+        if(!imageFormat->writeImageToStream(image, stream))
         {
             anlWeakAssert(false);
             juce::MouseCursor::hideWaitCursor();

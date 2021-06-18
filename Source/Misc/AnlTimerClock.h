@@ -10,11 +10,10 @@ class TimerClock
 public:
     TimerClock() = default;
     ~TimerClock() override = default;
-    
+
     std::function<void(void)> callback = nullptr;
-    
+
 protected:
-    
     // juce::Timer
     void timerCallback() override;
 };

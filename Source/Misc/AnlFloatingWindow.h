@@ -24,6 +24,7 @@ public:
 
     std::function<void(void)> onChanged = nullptr;
     std::function<bool(void)> onCloseButtonPressed = nullptr;
+
 private:
     // juce::DialogWindow
     void closeButtonPressed() override;

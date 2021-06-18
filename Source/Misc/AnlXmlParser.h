@@ -190,13 +190,13 @@ namespace XmlParser
             return defaultValue;
         }
     }
-    
+
     template <>
     void toXml<juce::Range<double>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Range<double> const& value);
-    
+
     template <>
     auto fromXml<juce::Range<double>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Range<double> const& defaultValue)
-    -> juce::Range<double>;
+        -> juce::Range<double>;
 
     template <>
     void toXml<juce::File>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::File const& value);
@@ -204,13 +204,13 @@ namespace XmlParser
     template <>
     auto fromXml<juce::File>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::File const& defaultValue)
         -> juce::File;
-    
+
     template <>
     void toXml<juce::Point<int>>(juce::XmlElement& xml, juce::Identifier const& attributeName, juce::Point<int> const& value);
-    
+
     template <>
     auto fromXml<juce::Point<int>>(juce::XmlElement const& xml, juce::Identifier const& attributeName, juce::Point<int> const& defaultValue)
-    -> juce::Point<int>;
+        -> juce::Point<int>;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
