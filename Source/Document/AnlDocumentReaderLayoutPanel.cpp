@@ -285,19 +285,19 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         }
         setLayout(readerLayout);
     };
-    
+
     mApplyButton.onClick = [this]()
     {
         mDirector.startAction();
         mAccessor.setAttr<AttrType::reader>(mLayout, NotificationType::synchronous);
         mDirector.endAction(ActionState::newTransaction, juce::translate("Change Audio Reader Layout"));
     };
-    
+
     mResetButton.onClick = [this]()
     {
         setLayout(mAccessor.getAttr<AttrType::reader>());
     };
-    
+
     mFloatingWindow.onCloseButtonPressed = [this]()
     {
         if(mApplyButton.isEnabled())
@@ -345,16 +345,16 @@ Document::ReaderLayoutPanel::~ReaderLayoutPanel()
 void Document::ReaderLayoutPanel::resized()
 {
     auto bounds = getLocalBounds();
-    
+
     auto applyResetBounds = bounds.removeFromBottom(30).withSizeKeepingCentre(201, 24);
     mApplyButton.setBounds(applyResetBounds.removeFromLeft(100));
     applyResetBounds.removeFromLeft(1);
     mResetButton.setBounds(applyResetBounds);
     mSeparator.setBounds(bounds.removeFromBottom(1));
-    
+
     mFileInfoPanel.setBounds(bounds.removeFromBottom(168));
     mInfoSeparator.setBounds(bounds.removeFromBottom(1));
-    
+
     if(mAlertButton.isVisible())
     {
         auto alertBounds = bounds.removeFromBottom(24);
@@ -458,7 +458,7 @@ void Document::ReaderLayoutPanel::setLayout(std::vector<ReaderChannel> const& la
     mLayout = layout;
     mApplyButton.setEnabled(mLayout != mAccessor.getAttr<AttrType::reader>());
     mResetButton.setEnabled(mApplyButton.isEnabled());
-    
+
     bool allReadersValid = true;
     bool allSampleRatesValid = true;
     double currentSampleRate = 0.0;
@@ -494,7 +494,7 @@ void Document::ReaderLayoutPanel::setLayout(std::vector<ReaderChannel> const& la
                 }
                 mLayout.erase(mLayout.begin() + static_cast<long>(index));
             };
-            
+
             channelComponent->onChannelChange = [this, index](int c)
             {
                 anlWeakAssert(static_cast<size_t>(index) < mLayout.size());
@@ -504,7 +504,7 @@ void Document::ReaderLayoutPanel::setLayout(std::vector<ReaderChannel> const& la
                 }
                 mLayout[static_cast<size_t>(index)].channel = c;
             };
-            
+
             contents.push_back(*channelComponent.get());
             channelComponents.push_back(std::move(channelComponent));
         }
@@ -516,7 +516,7 @@ void Document::ReaderLayoutPanel::setLayout(std::vector<ReaderChannel> const& la
     {
         mFileInfoPanel.setAudioFormatReader(juce::File{}, nullptr);
     }
-    
+
     mAlertLabel.setVisible(!allReadersValid || !allSampleRatesValid);
     if(!allReadersValid && allSampleRatesValid)
     {

@@ -154,71 +154,69 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
             {
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                         {
-                    juce::ignoreUnused(trackAcsr);
-                    switch(trackAttribute)
-                    {
-                        case Track::AttrType::identifier:
-                        {
-                            if(onLayoutUpdated != nullptr)
-                            {
-                                onLayoutUpdated();
-                            }
-                        }
-                            break;
-                        case Track::AttrType::name:
-                        case Track::AttrType::results:
-                        case Track::AttrType::key:
-                        case Track::AttrType::description:
-                        case Track::AttrType::state:
-                        case Track::AttrType::height:
-                        case Track::AttrType::colours:
-                        case Track::AttrType::channelsLayout:
-                        case Track::AttrType::zoomLink:
-                        case Track::AttrType::zoomAcsr:
-                        case Track::AttrType::graphics:
-                        case Track::AttrType::warnings:
-                        case Track::AttrType::processing:
-                        case Track::AttrType::focused:
-                            break;
-                    }
-                });
+                                            juce::ignoreUnused(trackAcsr);
+                                            switch(trackAttribute)
+                                            {
+                                                case Track::AttrType::identifier:
+                                                {
+                                                    if(onLayoutUpdated != nullptr)
+                                                    {
+                                                        onLayoutUpdated();
+                                                    }
+                                                }
+                                                break;
+                                                case Track::AttrType::name:
+                                                case Track::AttrType::results:
+                                                case Track::AttrType::key:
+                                                case Track::AttrType::description:
+                                                case Track::AttrType::state:
+                                                case Track::AttrType::height:
+                                                case Track::AttrType::colours:
+                                                case Track::AttrType::channelsLayout:
+                                                case Track::AttrType::zoomLink:
+                                                case Track::AttrType::zoomAcsr:
+                                                case Track::AttrType::graphics:
+                                                case Track::AttrType::warnings:
+                                                case Track::AttrType::processing:
+                                                case Track::AttrType::focused:
+                                                    break;
+                                            }
+                                        });
             }
-                break;
+            break;
             case AcsrType::groups:
             {
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                         {
-                    juce::ignoreUnused(groupAcsr);
-                    switch(groupAttribute)
-                    {
-                        case Group::AttrType::identifier:
-                        {
-                            if(onLayoutUpdated != nullptr)
-                            {
-                                onLayoutUpdated();
-                            }
-                        }
-                            break;
-                        case Group::AttrType::name:
-                        case Group::AttrType::height:
-                        case Group::AttrType::colour:
-                        case Group::AttrType::expanded:
-                        case Group::AttrType::layout:
-                        case Group::AttrType::tracks:
-                        case Group::AttrType::focused:
-                            break;
-                    }
-                });
+                                            juce::ignoreUnused(groupAcsr);
+                                            switch(groupAttribute)
+                                            {
+                                                case Group::AttrType::identifier:
+                                                {
+                                                    if(onLayoutUpdated != nullptr)
+                                                    {
+                                                        onLayoutUpdated();
+                                                    }
+                                                }
+                                                break;
+                                                case Group::AttrType::name:
+                                                case Group::AttrType::height:
+                                                case Group::AttrType::colour:
+                                                case Group::AttrType::expanded:
+                                                case Group::AttrType::layout:
+                                                case Group::AttrType::tracks:
+                                                case Group::AttrType::focused:
+                                                    break;
+                                            }
+                                        });
             }
-                break;
+            break;
             case AcsrType::timeZoom:
             case AcsrType::transport:
                 break;
         }
-        
-        
     };
-    
+
     mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
@@ -228,18 +226,18 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
             {
                 mTrackListeners.erase(mTrackListeners.begin() + static_cast<long>(index));
             }
-                break;
+            break;
             case AcsrType::groups:
             {
                 mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
             }
-                break;
+            break;
             case AcsrType::timeZoom:
             case AcsrType::transport:
                 break;
         }
     };
-    
+
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -256,10 +254,10 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
                     onLayoutUpdated();
                 }
             }
-                break;
+            break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 

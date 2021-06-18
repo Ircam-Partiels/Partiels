@@ -29,7 +29,7 @@ namespace Document
 
     private:
         void setLayout(std::vector<ReaderChannel> const& layout);
-        
+
         class FileInfoPanel
         : public juce::Component
         {

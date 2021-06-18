@@ -84,7 +84,7 @@ namespace Document
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
         juce::Component* mFocusComponent{nullptr};
-        
+
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Document
