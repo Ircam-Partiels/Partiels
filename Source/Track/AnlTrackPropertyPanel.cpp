@@ -18,7 +18,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 , mPropertyResultsFile("Results File", "The path of the results file", [this]()
                        {
-                           auto const file = mAccessor.getAttr<AttrType::results>().file;
+                           auto const file = mAccessor.getAttr<AttrType::results>().getFile();
                            if(file.existsAsFile())
                            {
                                file.revealToUser();
@@ -449,9 +449,10 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 std::vector<ConcertinaTable::ComponentRef> components;
 
                 // Processor Part
-                mPropertyResultsFile.entry.setButtonText(results.file.getFileName());
-                mPropertyResultsFile.entry.setTooltip(results.file.getFullPathName());
-                if(results.file != juce::File{})
+                auto const resultsFile = results.getFile();
+                mPropertyResultsFile.entry.setButtonText(resultsFile.getFileName());
+                mPropertyResultsFile.entry.setTooltip(resultsFile.getFullPathName());
+                if(resultsFile != juce::File{})
                 {
                     components.push_back(mPropertyResultsFileInfo);
                     components.push_back(mPropertyResultsFile);
@@ -823,7 +824,7 @@ void Track::PropertyPanel::resized()
 bool Track::PropertyPanel::canModifyProcessor()
 {
     auto results = mAccessor.getAttr<AttrType::results>();
-    if(results.file != juce::File{})
+    if(results.getFile() != juce::File{})
     {
         if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Locked Plugin", "Analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
         {

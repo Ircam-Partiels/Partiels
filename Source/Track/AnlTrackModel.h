@@ -31,7 +31,7 @@ namespace Track
         ~Results() = default;
 
         explicit Results(juce::File const& f)
-        : file(f)
+        : mFile(f)
         {
         }
 
@@ -48,6 +48,13 @@ namespace Track
         explicit Results(SharedColumns ptr)
         : mResults(ptr)
         {
+        }
+
+        static Results withFile(Results const& result, juce::File const& f)
+        {
+            Results copy = result;
+            copy.mFile = f;
+            return copy;
         }
 
         inline SharedMarkers getMarkers() const noexcept
@@ -75,6 +82,11 @@ namespace Track
                 return *columnsPtr;
             }
             return nullptr;
+        }
+
+        inline juce::File const& getFile() const
+        {
+            return mFile;
         }
 
         inline bool isEmpty() const noexcept
@@ -111,7 +123,7 @@ namespace Track
             return getMarkers() == rhd.getMarkers() &&
                    getPoints() == rhd.getPoints() &&
                    getColumns() == rhd.getColumns() &&
-                   file == rhd.file;
+                   mFile == rhd.mFile;
         }
 
         inline bool operator!=(Results const& rhd) const noexcept
@@ -119,10 +131,9 @@ namespace Track
             return !(*this == rhd);
         }
 
-        juce::File file{};
-
     private:
         std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
+        juce::File mFile{};
     };
 
     void to_json(nlohmann::json& j, Results const& results);

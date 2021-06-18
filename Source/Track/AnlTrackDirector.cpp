@@ -32,7 +32,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
                     mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
                 }
-                else if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+                else if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -40,7 +40,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::state:
             {
-                if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+                if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -54,7 +54,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::results:
             {
                 auto results = mAccessor.getAttr<AttrType::results>();
-                if(results.file != juce::File{} && results.isEmpty())
+                if(results.getFile() != juce::File{} && results.isEmpty())
                 {
                     clearFilesToWatch();
                     runLoading(notification);
@@ -304,7 +304,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         timerCallback();
     };
 
-    if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+    if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
     {
         runAnalysis(NotificationType::synchronous);
     }
@@ -416,7 +416,7 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 
     std::swap(mAudioFormatReaderManager, audioFormatReader);
-    if(mAccessor.getAttr<AttrType::results>().file == juce::File{})
+    if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
     {
         runAnalysis(notification);
     }
@@ -424,12 +424,11 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
 
 void Track::Director::setResultsFile(juce::File const& file, NotificationType const notification)
 {
-    auto results = mAccessor.getAttr<AttrType::results>();
-    if(results.file != file)
+    auto const results = mAccessor.getAttr<AttrType::results>();
+    if(results.getFile() != file)
     {
         clearFilesToWatch();
-        results.file = file;
-        mAccessor.setAttr<AttrType::results>(results, notification);
+        mAccessor.setAttr<AttrType::results>(Results::withFile(results, file), notification);
         if(file == juce::File{})
         {
             runAnalysis(notification);
@@ -529,14 +528,14 @@ void Track::Director::runLoading(NotificationType const notification)
 {
     mGraphics.stopRendering();
     auto results = mAccessor.getAttr<AttrType::results>();
-    if(results.file != juce::File{})
+    if(results.getFile() != juce::File{})
     {
-        auto const result = mLoader.loadAnalysis(mAccessor, results.file);
+        auto const result = mLoader.loadAnalysis(mAccessor, results.getFile());
         if(result.wasOk())
         {
             startTimer(50);
             timerCallback();
-            addFileToWatch(results.file);
+            addFileToWatch(results.getFile());
             mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
             return;
         }
@@ -546,7 +545,7 @@ void Track::Director::runLoading(NotificationType const notification)
         {
             case AlertWindow::Answer::yes:
             {
-                juce::FileChooser fc(juce::translate("Load analysis results"), results.file, "*.json;*.dat");
+                juce::FileChooser fc(juce::translate("Load analysis results"), results.getFile(), "*.json;*.dat");
                 if(fc.browseForFileToOpen())
                 {
                     setResultsFile(fc.getResult(), notification);
@@ -679,7 +678,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
         return result;
     }
 
-    auto const currentFile = mAccessor.getAttr<AttrType::results>().file;
+    auto const currentFile = mAccessor.getAttr<AttrType::results>().getFile();
     auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
     if(currentFile == expectedFile)
     {

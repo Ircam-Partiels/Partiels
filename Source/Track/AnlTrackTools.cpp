@@ -300,7 +300,7 @@ juce::String Track::Tools::getStateTootip(Accessor const& acsr)
 {
     auto const& state = acsr.getAttr<AttrType::processing>();
     auto const& warnings = acsr.getAttr<AttrType::warnings>();
-    auto const isLoading = acsr.getAttr<AttrType::results>().file != juce::File{};
+    auto const isLoading = acsr.getAttr<AttrType::results>().getFile() != juce::File{};
     auto const name = acsr.getAttr<AttrType::name>() + ": ";
     if(std::get<0>(state))
     {

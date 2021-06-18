@@ -46,7 +46,7 @@ void XmlParser::toXml<Track::Results>(juce::XmlElement& xml, juce::Identifier co
     anlWeakAssert(child != nullptr);
     if(child != nullptr)
     {
-        toXml(*child, "file", value.file.getFullPathName());
+        toXml(*child, "file", value.getFile().getFullPathName());
         xml.addChildElement(child.release());
     }
 }
@@ -61,19 +61,19 @@ auto XmlParser::fromXml<Track::Results>(juce::XmlElement const& xml, juce::Ident
     {
         return defaultValue;
     }
-    Track::Results value = defaultValue;
-    value.file = fromXml(*child, "file", defaultValue.file);
-    return value;
+    return Track::Results::withFile(defaultValue, fromXml(*child, "file", defaultValue.getFile()));
 }
 
 void Track::to_json(nlohmann::json& j, Results const& results)
 {
-    j["file"] = results.file;
+    j["file"] = results.getFile();
 }
 
 void Track::from_json(nlohmann::json const& j, Results& results)
 {
-    j.at("file").get_to(results.file);
+    juce::File f;
+    j.at("file").get_to(f);
+    results = Track::Results::withFile(results, f);
 }
 
 void Track::to_json(nlohmann::json& j, ColourSet const& colourSet)

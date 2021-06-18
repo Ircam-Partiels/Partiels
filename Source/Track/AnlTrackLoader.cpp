@@ -276,9 +276,8 @@ Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream
     Plugin::Output output;
     output.hasFixedBinCount = false;
     mAdvancement.store(0.9f);
-    auto results = Tools::getResults(output, pluginResults);
+    auto results = Results::withFile(Tools::getResults(output, pluginResults), file);
     mAdvancement.store(1.0f);
-    results.file = file;
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
         triggerAsyncUpdate();
@@ -485,11 +484,10 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
         res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
     }
 
-    res.file = file;
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
         triggerAsyncUpdate();
-        return res;
+        return Results::withFile(res, file);
     }
 
     triggerAsyncUpdate();
