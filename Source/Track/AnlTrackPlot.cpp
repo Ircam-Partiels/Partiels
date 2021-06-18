@@ -337,7 +337,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         if(std::get<0>(labelInfoHigh).isEmpty() || y < std::get<3>(labelInfoHigh))
         {
             auto const text = getTextValue(value);
-            auto const textWidth = text.length() * charWidth + unitWidth + 2;
+            auto const textWidth = static_cast<int>(std::ceil(static_cast<float>(text.length()) * charWidth + unitWidth + 2.0f));
             labelInfoHigh = std::make_tuple(text + unit, x, textWidth, y);
         }
 
@@ -353,7 +353,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         if(std::get<0>(labelInfoLow).isEmpty() || y > std::get<3>(labelInfoLow))
         {
             auto const text = getTextValue(value);
-            auto const textWidth = text.length() * charWidth + unitWidth + 2;
+            auto const textWidth = static_cast<int>(std::ceil(static_cast<float>(text.length()) * charWidth + unitWidth + 2.0f));
             labelInfoLow = std::make_tuple(text + unit, x, textWidth, y);
         }
     };
