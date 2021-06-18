@@ -363,6 +363,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
             }
             results.push_back(std::move(markers));
         }
+
         res = Results(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
     }
     else if(std::string(type) == "PTLPTS")
@@ -424,7 +425,9 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
             }
             results.push_back(std::move(points));
         }
-        res = Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
+
+        auto const valueRange = Tools::getValueRange(results);
+        res = Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)), valueRange);
     }
     else if(std::string(type) == "PTLCLS")
     {
@@ -481,7 +484,10 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
             }
             results.push_back(std::move(columns));
         }
-        res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+
+        auto const numBins = Tools::getNumBins(results);
+        auto const valueRange = Tools::getValueRange(results);
+        res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)), numBins, valueRange);
     }
 
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))

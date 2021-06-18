@@ -37,16 +37,22 @@ namespace Track
 
         explicit Results(SharedMarkers ptr)
         : mResults(ptr)
+        , mNumBins(0_z)
+        , mValueRange(0.0, 0.0)
         {
         }
 
-        explicit Results(SharedPoints ptr)
+        explicit Results(SharedPoints ptr, Zoom::Range const& valueRange)
         : mResults(ptr)
+        , mNumBins(1_z)
+        , mValueRange(valueRange)
         {
         }
 
-        explicit Results(SharedColumns ptr)
+        explicit Results(SharedColumns ptr, size_t const numBins, Zoom::Range const& valueRange)
         : mResults(ptr)
+        , mNumBins(numBins)
+        , mValueRange(valueRange)
         {
         }
 
@@ -87,6 +93,16 @@ namespace Track
         inline juce::File const& getFile() const
         {
             return mFile;
+        }
+
+        inline size_t const& getNumBins() const
+        {
+            return mNumBins;
+        }
+
+        inline Zoom::Range const& getValueRange() const
+        {
+            return mValueRange;
         }
 
         inline bool isEmpty() const noexcept
@@ -134,6 +150,8 @@ namespace Track
     private:
         std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
         juce::File mFile{};
+        size_t mNumBins{0_z};
+        Zoom::Range mValueRange{};
     };
 
     void to_json(nlohmann::json& j, Results const& results);

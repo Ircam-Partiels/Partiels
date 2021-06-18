@@ -349,80 +349,7 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(Results const& results)
     {
         return std::optional<Zoom::Range>();
     }
-    if(results.getMarkers() != nullptr)
-    {
-        return Zoom::Range(0.0, 0.0);
-    }
-    auto const points = results.getPoints();
-    if(points != nullptr)
-    {
-        if(points->empty())
-        {
-            return std::optional<Zoom::Range>();
-        }
-        auto const& channel = points->at(0);
-        auto const [min, max] = std::minmax_element(channel.cbegin(), channel.cend(), [](auto const& lhs, auto const& rhs)
-                                                    {
-                                                        if(!std::get<2>(rhs).has_value())
-                                                        {
-                                                            return false;
-                                                        }
-                                                        if(!std::get<2>(lhs).has_value())
-                                                        {
-                                                            return false;
-                                                        }
-                                                        return *std::get<2>(lhs) < *std::get<2>(rhs);
-                                                    });
-        if(min == channel.cend() || max == channel.cend())
-        {
-            return std::optional<Zoom::Range>();
-        }
-        return Zoom::Range(*std::get<2>(*min), *std::get<2>(*max));
-    }
-    auto const columns = results.getColumns();
-    if(columns != nullptr)
-    {
-        if(columns->empty())
-        {
-            return std::optional<Zoom::Range>();
-        }
-        auto const& channel = columns->at(0);
-        if(channel.empty())
-        {
-            return std::optional<Zoom::Range>();
-        }
-        auto const [min, max] = std::minmax_element(std::get<2>(channel.front()).cbegin(), get<2>(channel.front()).cend());
-        if(min == std::get<2>(channel.front()).cend() || max == std::get<2>(channel.front()).cend())
-        {
-            return std::optional<Zoom::Range>();
-        }
-        anlWeakAssert(std::isfinite(*min) && std::isfinite(*max));
-        if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
-        {
-            return std::optional<Zoom::Range>();
-        }
-
-        return std::accumulate(std::next(channel.cbegin()), channel.cend(), Zoom::Range{*min, *max}, [](auto const& range, auto const& column)
-                               {
-                                   auto const& values = std::get<2>(column);
-                                   if(values.empty())
-                                   {
-                                       return range;
-                                   }
-                                   auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
-                                   if(min == values.cend() || max == values.cend())
-                                   {
-                                       return range;
-                                   }
-                                   anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
-                                   if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
-                                   {
-                                       return range;
-                                   }
-                                   return range.getUnionWith({*min, *max});
-                               });
-    }
-    return std::optional<Zoom::Range>();
+    return results.getValueRange().isEmpty() ? std::optional<Zoom::Range>() : results.getValueRange();
 }
 
 std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& description)
@@ -441,27 +368,7 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
     {
         return std::optional<Zoom::Range>();
     }
-    if(results.getMarkers() != nullptr)
-    {
-        return Zoom::Range(0.0, 0.0);
-    }
-    if(results.getPoints() != nullptr)
-    {
-        return Zoom::Range(0.0, 1.0);
-    }
-    auto const columns = results.getColumns();
-    if(columns == nullptr || columns->empty())
-    {
-        return std::optional<Zoom::Range>();
-    }
-    auto const size = std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
-                                      {
-                                          return std::accumulate(channel.cbegin(), channel.cend(), val, [](auto const& rval, auto const& column)
-                                                                 {
-                                                                     return std::max(rval, std::get<2>(column).size());
-                                                                 });
-                                      });
-    return Zoom::Range(0.0, static_cast<double>(size));
+    return Zoom::Range(0.0, static_cast<double>(results.getNumBins()));
 }
 
 void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> bounds, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
@@ -568,7 +475,9 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
                 }
                 results.push_back(std::move(points));
             }
-            return Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
+
+            auto const valueRange = getValueRange(results);
+            return Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)), valueRange);
         }
         break;
         default:
@@ -589,7 +498,10 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
                 }
                 results.push_back(std::move(columns));
             }
-            return Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+
+            auto const numBins = getNumBins(results);
+            auto const valueRange = getValueRange(results);
+            return Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)), numBins, valueRange);
         }
         break;
     }
