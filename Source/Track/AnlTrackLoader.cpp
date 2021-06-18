@@ -1,6 +1,12 @@
 #include "AnlTrackLoader.h"
 #include "AnlTrackTools.h"
 
+#if JUCE_GCC
+#define ANL_ATTR_UNUSED __attribute__((unused))
+#else
+#define ANL_ATTR_UNUSED
+#endif
+
 ANALYSE_FILE_BEGIN
 
 Track::Loader::~Loader()
@@ -127,11 +133,11 @@ Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream
     class ThreadedStreamIterator
     {
     public:
-        typedef char value_type;
-        typedef ptrdiff_t difference_type;
-        typedef const char* pointer;
-        typedef const char& reference;
-        typedef std::input_iterator_tag iterator_category;
+        typedef char value_type ANL_ATTR_UNUSED;
+        typedef ptrdiff_t difference_type ANL_ATTR_UNUSED;
+        typedef const char* pointer ANL_ATTR_UNUSED;
+        typedef const char& reference ANL_ATTR_UNUSED;
+        typedef std::input_iterator_tag iterator_category ANL_ATTR_UNUSED;
 
         ThreadedStreamIterator(std::atomic<ProcessState>& s)
         : state(s)
