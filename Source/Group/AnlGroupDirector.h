@@ -17,7 +17,7 @@ namespace Group
         Accessor& getAccessor();
 
         void updateTracks(NotificationType notification);
-        
+
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 

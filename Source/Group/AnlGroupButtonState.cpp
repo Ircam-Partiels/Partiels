@@ -5,9 +5,9 @@ ANALYSE_FILE_BEGIN
 Group::StateButton::StateButton(Accessor& accessor)
 : mAccessor(accessor)
 , mLayoutNotifier(accessor, [this]()
-                       {
-                           updateContent();
-                       })
+                  {
+                      updateContent();
+                  })
 {
     addAndMakeVisible(mProcessingButton);
 

@@ -56,7 +56,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
             {
                 mPropertyBackgroundColour.entry.setCurrentColour(acsr.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
             }
-                break;
+            break;
             case AttrType::height:
             case AttrType::expanded:
             case AttrType::layout:
@@ -98,7 +98,7 @@ void Group::PropertyPanel::showChannelLayout()
         if(trackAcsr.has_value())
         {
             auto const& trackChannelsLayout = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-            for(size_t i =  0; i < channelslayout.size(); ++i)
+            for(size_t i = 0; i < channelslayout.size(); ++i)
             {
                 if(i < trackChannelsLayout.size())
                 {
@@ -114,54 +114,54 @@ void Group::PropertyPanel::showChannelLayout()
             }
         }
     }
-    
+
     auto const numChannels = channelslayout.size();
     juce::PopupMenu menu;
     if(numChannels > 2_z)
     {
         auto const allActive = std::any_of(channelslayout.cbegin(), channelslayout.cend(), [](int state)
-        {
-            return state < 1;
-        });
+                                           {
+                                               return state < 1;
+                                           });
         menu.addItem(juce::translate("All Channels"), allActive, !allActive, [this]()
-        {
-            for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-            {
-                auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-                if(trackAcsr.has_value())
-                {
-                    auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-                    std::fill(copy.begin(), copy.end(), true);
-                    trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                }
-            }
-            showChannelLayout();
-        });
-        
+                     {
+                         for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
+                         {
+                             auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
+                             if(trackAcsr.has_value())
+                             {
+                                 auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
+                                 std::fill(copy.begin(), copy.end(), true);
+                                 trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                             }
+                         }
+                         showChannelLayout();
+                     });
+
         auto const oneActive = channelslayout[0_z] != 1 || std::any_of(std::next(channelslayout.cbegin()), channelslayout.cend(), [](int state)
-        {
-            return state == 1;
-        });
+                                                                       {
+                                                                           return state == 1;
+                                                                       });
         menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [this]()
-        {
-            for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-            {
-                auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-                if(trackAcsr.has_value())
-                {
-                    auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-                    if(!copy.empty())
-                    {
-                        copy[0_z] = true;
-                        std::fill(std::next(copy.begin()), copy.end(), false);
-                        trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                    }
-                }
-            }
-            showChannelLayout();
-        });
+                     {
+                         for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
+                         {
+                             auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
+                             if(trackAcsr.has_value())
+                             {
+                                 auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
+                                 if(!copy.empty())
+                                 {
+                                     copy[0_z] = true;
+                                     std::fill(std::next(copy.begin()), copy.end(), false);
+                                     trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
+                                 }
+                             }
+                         }
+                         showChannelLayout();
+                     });
     }
-    
+
     auto const colour = juce::Colour::contrasting(findColour(juce::PopupMenu::ColourIds::backgroundColourId), findColour(juce::PopupMenu::ColourIds::textColourId));
     for(size_t channel = 0_z; channel < channelslayout.size(); ++channel)
     {
@@ -185,8 +185,8 @@ void Group::PropertyPanel::showChannelLayout()
                         copy[channel] = newState;
                         if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
                                         {
-                            return state == true;
-                        }))
+                                            return state == true;
+                                        }))
                         {
                             if(channel < copy.size() - 1_z)
                             {
@@ -203,11 +203,10 @@ void Group::PropertyPanel::showChannelLayout()
             }
             showChannelLayout();
         };
-        
-        
+
         menu.addItem(std::move(item));
     }
-    
+
     if(!std::exchange(mChannelLayoutActionStarted, true))
     {
         mDirector.startAction();

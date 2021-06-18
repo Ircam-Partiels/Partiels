@@ -108,7 +108,7 @@ void Group::Director::endAction(ActionState state, juce::String const& name)
             {
                 action->undo();
             }
-                break;
+            break;
             case ActionState::newTransaction:
             {
                 mUndoManager.beginNewTransaction(name);
@@ -119,7 +119,7 @@ void Group::Director::endAction(ActionState state, juce::String const& name)
             {
                 mUndoManager.perform(action.release());
             }
-                break;
+            break;
         }
     }
 }

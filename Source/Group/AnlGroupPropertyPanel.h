@@ -14,21 +14,21 @@ namespace Group
     public:
         PropertyPanel(Director& director);
         ~PropertyPanel() override;
-        
+
         // juce::Component
         void resized() override;
-        
+
     private:
         void showChannelLayout();
-        
+
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener;
-        
+
         PropertyText mPropertyName;
         PropertyColourButton mPropertyBackgroundColour;
         PropertyTextButton mPropertyChannelLayout;
-        
+
         bool mChannelLayoutActionStarted{false};
         static auto constexpr sInnerWidth = 300;
     };
