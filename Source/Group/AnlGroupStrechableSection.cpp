@@ -7,9 +7,9 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
 , mLayoutNotifier(mAccessor, [this]()
-                       {
-                           updateContent();
-                       })
+                  {
+                      updateContent();
+                  })
 {
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
@@ -129,25 +129,6 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     }
     anlWeakAssert(false);
     return {};
-}
-
-void Group::StrechableSection::setHeight(int height)
-{
-    if(mConcertinaTable.isOpen())
-    {
-        auto const ratio = static_cast<float>(height) / static_cast<float>(getHeight());
-        auto setHeightOfContent = [&](juce::Component& c)
-        {
-            auto const newHeight = std::min(static_cast<int>(std::round(static_cast<float>(c.getHeight()) * ratio)), height);
-            c.setBounds(c.getBounds().withHeight(newHeight));
-            height -= newHeight;
-        };
-        for(auto& content : mTrackSections.getContents())
-        {
-            setHeightOfContent(*content.second.get());
-        }
-    }
-    mSection.setBounds(mSection.getBounds().withHeight(height));
 }
 
 std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createFocusTraverser()

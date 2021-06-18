@@ -1,7 +1,7 @@
 #include "AnlDocumentSection.h"
+#include "../Application/AnlApplicationCommandTarget.h"
 #include "AnlDocumentAudioReader.h"
 #include "AnlDocumentTools.h"
-#include "../Application/AnlApplicationCommandTarget.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -16,9 +16,9 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 Document::Section::Section(Director& director)
 : mDirector(director)
 , mLayoutNotifier(mAccessor, [this]()
-{
-    updateLayout();
-})
+                  {
+                      updateLayout();
+                  })
 {
     mTimeRuler.setPrimaryTickInterval(0);
     mTimeRuler.setTickReferenceValue(0.0);
@@ -107,40 +107,61 @@ Document::Section::Section(Director& director)
             commandManager->invokeDirectly(Application::CommandTarget::CommandIDs::DocumentSave, true);
         }
     };
-    
+
     addAndMakeVisible(mExpandLayoutButton);
     mExpandLayoutButton.setTooltip(juce::translate("Expand or shrink all the groups"));
     mExpandLayoutButton.onClick = [this]()
     {
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
         auto const expanded = std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [](auto const groupAcsr)
-        {
-            return groupAcsr.get().template getAttr<Group::AttrType::expanded>();
-        });
-        
+                                          {
+                                              return groupAcsr.get().template getAttr<Group::AttrType::expanded>();
+                                          });
+
         for(auto groupAcsr : groupAcsrs)
         {
             groupAcsr.get().setAttr<Group::AttrType::expanded>(!expanded, NotificationType::synchronous);
         }
     };
-    
+
     addAndMakeVisible(mResizeLayoutButton);
-    mResizeLayoutButton.setTooltip(juce::translate("Optimize the height of groups to fit the height of the document"));
+    mResizeLayoutButton.setTooltip(juce::translate("Optimize the height of groups and tracks to fit the height of the document"));
     mResizeLayoutButton.onClick = [this]()
     {
         auto height = mViewport.getHeight();
-        auto const size = std::accumulate(mGroupSections.cbegin(), mGroupSections.cend(), 0, [](auto s, auto const& groupSection)
+        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+        auto const numElements = std::accumulate(groupAcsrs.cbegin(), groupAcsrs.cend(), 0_z, [this](auto v, auto const groupAcsr)
+                                                 {
+                                                     auto const expanded = groupAcsr.get().template getAttr<Group::AttrType::expanded>();
+                                                     auto const layout = copy_with_erased_if(groupAcsr.get().template getAttr<Group::AttrType::layout>(), [this](auto const& identifier)
+                                                                                             {
+                                                                                                 return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                                                                             });
+                                                     return v + 1_z + (expanded ? layout.size() : 0_z);
+                                                 });
+        auto const elementHeight = static_cast<float>(height) / static_cast<float>(numElements);
+        auto remainder = 0.0f;
+        for(auto groupAcsr : groupAcsrs)
         {
-            return groupSection.second != nullptr ? s + groupSection.second->getHeight() : s;
-        });
-        auto const ratio = static_cast<float>(height) / static_cast<float>(size);
-        for(auto& groupSection : mGroupSections)
-        {
-            if(groupSection.second != nullptr)
+            auto const groupHeight = std::min(static_cast<int>(std::round(elementHeight - remainder)), height);
+            remainder = elementHeight - static_cast<float>(groupHeight);
+            height -= groupHeight;
+            groupAcsr.get().setAttr<Group::AttrType::height>(groupHeight - 1, NotificationType::synchronous);
+            auto const expanded = groupAcsr.get().getAttr<Group::AttrType::expanded>();
+            if(expanded)
             {
-                auto const newHeight = std::min(static_cast<int>(std::round(static_cast<float>(groupSection.second->getHeight()) * ratio)), height);
-                groupSection.second->setHeight(newHeight);
-                height -= newHeight;
+                auto const layout = copy_with_erased_if(groupAcsr.get().template getAttr<Group::AttrType::layout>(), [this](auto const& identifier)
+                                                        {
+                                                            return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                                        });
+                for(auto const& identifier : layout)
+                {
+                    auto& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+                    auto const trackHeight = std::min(static_cast<int>(std::round(elementHeight - remainder)), height);
+                    remainder = elementHeight - static_cast<float>(trackHeight);
+                    height -= groupHeight;
+                    trackAcsr.setAttr<Track::AttrType::height>(trackHeight - 1, NotificationType::synchronous);
+                }
             }
         }
     };

@@ -16,8 +16,7 @@ namespace Group
 
         void moveKeyboardFocusTo(juce::String const& identifier);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
-        void setHeight(int height);
-        
+
         std::function<void(juce::String const& identifier, size_t index, bool copy)> onTrackInserted = nullptr;
 
         // juce::Component
