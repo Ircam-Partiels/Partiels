@@ -140,7 +140,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                         pixel -= lineStride;
                                                     }
                                                 }
-                                                
+
                                                 advancement = static_cast<float>(i) / static_cast<float>(imageWidth);
                                             }
                                             advancement = 1.0f;
@@ -216,7 +216,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                     triggerAsyncUpdate();
                                                     mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
                                                 }
-                                                
+
                                                 std::unique_lock<std::mutex> imageLock(mMutex);
                                                 mImages[channel].push_back(image);
                                                 imageLock.unlock();

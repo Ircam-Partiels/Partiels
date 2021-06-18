@@ -132,7 +132,7 @@ Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream
         typedef const char* pointer;
         typedef const char& reference;
         typedef std::input_iterator_tag iterator_category;
-        
+
         ThreadedStreamIterator(std::atomic<ProcessState>& s)
         : state(s)
         {
@@ -293,7 +293,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
         return {};
     }
     expected = ProcessState::running;
-    
+
     Results res;
     char type[7] = {'\0'};
     if(!stream.read(type, sizeof(char) * 6))
@@ -302,7 +302,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
         triggerAsyncUpdate();
         return {};
     }
-    
+
     if(std::string(type) == "PTLMKS")
     {
         std::vector<Results::Markers> results;
@@ -328,7 +328,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
                     triggerAsyncUpdate();
                     return {};
                 }
-                
+
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(marker)), sizeof(std::get<0>(marker))))
                 {
                     mLoadingState.store(ProcessState::aborted);
@@ -385,7 +385,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
                     triggerAsyncUpdate();
                     return {};
                 }
-                
+
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(point)), sizeof(std::get<0>(point))))
                 {
                     mLoadingState.store(ProcessState::aborted);
@@ -446,7 +446,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
                     triggerAsyncUpdate();
                     return {};
                 }
-                
+
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
                 {
                     mLoadingState.store(ProcessState::aborted);
@@ -478,14 +478,14 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
         }
         res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
     }
-    
+
     res.file = file;
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
         triggerAsyncUpdate();
         return res;
     }
-    
+
     triggerAsyncUpdate();
     return {};
 }

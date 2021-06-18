@@ -28,6 +28,7 @@ namespace Track
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
+
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);

@@ -13,15 +13,15 @@ namespace Track
     public:
         StateButton(Accessor& accessor);
         ~StateButton() override;
-        
+
         // juce::Component
         void resized() override;
-        
+
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
         LoadingCircle mProcessingButton;
     };
-}
+} // namespace Track
 
 ANALYSE_FILE_END

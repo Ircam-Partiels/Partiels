@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../Transport/AnlTransportPlayheadBar.h"
-#include "AnlTrackModel.h"
 #include "AnlTrackGrid.h"
+#include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -56,7 +56,7 @@ namespace Track
         static void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
-        
+
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;

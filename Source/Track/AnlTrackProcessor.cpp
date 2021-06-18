@@ -1,6 +1,6 @@
 #include "AnlTrackProcessor.h"
-#include "AnlTrackTools.h"
 #include "../Plugin/AnlPluginProcessor.h"
+#include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
