@@ -404,15 +404,15 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             if(it != next)
             {
                 auto const nend = std::get<0>(*next) + std::get<1>(*next);
-                auto const x2 = static_cast<int>(Tools::secondsToPixel(nend, timeRange, fbounds));
-                auto const y1 = static_cast<int>(Tools::valueToPixel(min, valueRange, fbounds));
-                auto const y2 = static_cast<int>(Tools::valueToPixel(max, valueRange, fbounds));
+                auto const x2 = Tools::secondsToPixel(nend, timeRange, fbounds);
+                auto const y1 = Tools::valueToPixel(min, valueRange, fbounds);
+                auto const y2 = Tools::valueToPixel(max, valueRange, fbounds);
                 if(!std::exchange(shouldStartSubPath, true))
                 {
                     path.lineTo(x, y1);
                 }
 
-                rectangles.addWithoutMerging({static_cast<int>(x), y2, std::max(x2 - static_cast<int>(x), 1), std::max(y1 - y2, 1)});
+                rectangles.addWithoutMerging({static_cast<int>(x), static_cast<int>(y2), std::max(static_cast<int>(x2) - static_cast<int>(x), 1), std::max(static_cast<int>(y1 - y2), 1)});
                 if(showLabel)
                 {
                     insertLabel(static_cast<int>(x), y1, min);
