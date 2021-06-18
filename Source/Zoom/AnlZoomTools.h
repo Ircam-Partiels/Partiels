@@ -13,7 +13,7 @@ namespace Zoom
         double getScaledValueFromHeight(Accessor const& zoomAcsr, juce::Component const& component, int y);
         double getScaledXFromValue(Accessor const& zoomAcsr, juce::Component const& component, double value);
         double getScaledYFromValue(Accessor const& zoomAcsr, juce::Component const& component, double value);
-    }
-}
+    } // namespace Tools
+} // namespace Zoom
 
 ANALYSE_FILE_END
