@@ -12,12 +12,12 @@ namespace Transport
     public:
         Display(Accessor& accessor);
         ~Display() override;
-        
+
         // juce::Component
         void resized() override;
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
-        
+
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener;
@@ -25,10 +25,10 @@ namespace Transport
         juce::ImageButton mRewindButton;
         juce::ImageButton mPlaybackButton;
         juce::ImageButton mLoopButton;
-        
+
         HMSmsField mPosition;
-        juce::Slider mVolumeSlider {juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};
+        juce::Slider mVolumeSlider{juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::NoTextBox};
     };
-}
+} // namespace Transport
 
 ANALYSE_FILE_END
