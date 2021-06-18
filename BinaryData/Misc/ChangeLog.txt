@@ -1,4 +1,32 @@
 
+v0.0.6 (alpha)
+- Fix: Viewport moves even when an analyse or a group is partially visible
+- Fix: The group's expand button not always clickable
+- Fix: Color text/background/shadow selection of analyses
+- Fix: Missing audio file popups a window indefinitely
+- Add: Multichannel support
+- Add: Image snapshot of track/group components
+- Add: Double click on loop bar to select the full length
+- Imp: New document user experience
+- Imp: File info button
+- Imp: Property window initial position
+- Imp: Optimize tooltip bubble window
+- Imp: Optimize plot and snapshot rendering of markers and segments analyses
+- Add: Apple Silicon support
+- Imp: Optimize grid rendering and color map changes
+- Add: Template mechanism
+- Imp: Plugin Table List interface
+- Imp: Toggle buttons
+- Imp: Force upper case for the 1st character of properties' name
+- Imp: Recent files using folder when duplicata
+- Add: Installer for linux system
+- Add: Backward compatibility for documents
+- Add: Temporary backup file support
+- Imp: Color management
+- Add: Support for plugin factory presets (programs)
+- Add: Installer for Windows
+- Add: Track and group export
+
 v0.0.5 (alpha)
 - Fix: Integer number fields should not display decimals (#24)
 - Fix: Time ruler bounds are not consistent when resizing the snapshot interface (#7)
