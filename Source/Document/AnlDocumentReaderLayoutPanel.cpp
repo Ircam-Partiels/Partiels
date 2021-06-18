@@ -487,22 +487,26 @@ void Document::ReaderLayoutPanel::setLayout(std::vector<ReaderChannel> const& la
         {
             channelComponent->onDelete = [this, index]()
             {
-                anlWeakAssert(static_cast<size_t>(index) < mLayout.size());
-                if(static_cast<size_t>(index) >= mLayout.size())
+                auto readerLayout = mLayout;
+                anlWeakAssert(static_cast<size_t>(index) < readerLayout.size());
+                if(static_cast<size_t>(index) >= readerLayout.size())
                 {
                     return;
                 }
-                mLayout.erase(mLayout.begin() + static_cast<long>(index));
+                readerLayout.erase(readerLayout.begin() + static_cast<long>(index));
+                setLayout(readerLayout);
             };
 
             channelComponent->onChannelChange = [this, index](int c)
             {
-                anlWeakAssert(static_cast<size_t>(index) < mLayout.size());
-                if(static_cast<size_t>(index) >= mLayout.size())
+                auto readerLayout = mLayout;
+                anlWeakAssert(static_cast<size_t>(index) < readerLayout.size());
+                if(static_cast<size_t>(index) >= readerLayout.size())
                 {
                     return;
                 }
-                mLayout[static_cast<size_t>(index)].channel = c;
+                readerLayout[static_cast<size_t>(index)].channel = c;
+                setLayout(readerLayout);
             };
 
             contents.push_back(*channelComponent.get());
