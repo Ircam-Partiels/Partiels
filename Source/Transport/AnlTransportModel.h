@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 
 namespace Transport
 {
+    // clang-format off
     enum class AttrType : size_t
     {
           playback
@@ -43,6 +44,7 @@ namespace Transport
         {
         }
     };
-}
+    // clang-format on
+} // namespace Transport
 
 ANALYSE_FILE_END
