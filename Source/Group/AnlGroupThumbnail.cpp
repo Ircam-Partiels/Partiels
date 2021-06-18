@@ -227,7 +227,7 @@ void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
-    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(100))
+    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(200))
     {
         return;
     }

@@ -170,7 +170,7 @@ void Track::Thumbnail::mouseDown(juce::MouseEvent const& event)
 
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
-    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(100))
+    if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(200))
     {
         return;
     }

@@ -61,8 +61,6 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             {
                 auto const focused = mAccessor.getAttr<AttrType::focused>();
                 mThumbnailDecoration.setHighlighted(focused);
-                mSnapshotDecoration.setHighlighted(focused);
-                mPlotDecoration.setHighlighted(focused);
             }
             break;
         }
