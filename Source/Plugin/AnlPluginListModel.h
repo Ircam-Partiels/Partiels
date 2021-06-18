@@ -6,6 +6,7 @@ ANALYSE_FILE_BEGIN
 
 namespace PluginList
 {
+    // clang-format off
     enum class AttrType : size_t
     {
           keys
@@ -28,13 +29,14 @@ namespace PluginList
     , Model::Attr<AttrType::sortColumn, ColumnType, Model::Flag::basic>
     , Model::Attr<AttrType::sortIsFowards, bool, Model::Flag::basic>
     >;
-    
+    // clang-format on
+
     class Accessor
     : public Model::Accessor<Accessor, Container>
     {
     public:
         using Model::Accessor<Accessor, Container>::Accessor;
     };
-}
+} // namespace PluginList
 
 ANALYSE_FILE_END

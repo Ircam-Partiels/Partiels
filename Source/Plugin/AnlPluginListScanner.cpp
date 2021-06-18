@@ -127,7 +127,7 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
     {
         return {};
     }
-    
+
     auto const outputs = plugin.getOutputDescriptors();
     for(size_t feature = 0; feature < outputs.size(); ++feature)
     {
@@ -144,7 +144,7 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
                     description.defaultState.windowType = inputDomainAdapter->getWindowType();
                 }
             }
-            
+
             description.maker = plugin.getMaker();
             description.version = static_cast<unsigned int>(plugin.getPluginVersion());
             auto const categories = pluginLoader->getPluginCategory(key.identifier);
@@ -157,7 +157,7 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
             description.details += juce::String(plugin.getCopyright());
             auto const parameters = plugin.getParameterDescriptors();
             description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-            
+
             auto initializeState = [&](Plugin::State& state, bool defaultValues)
             {
                 auto const blockSize = plugin.getPreferredBlockSize();
@@ -176,7 +176,7 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
                 plugin.selectProgram(programName);
                 initializeState(description.programs[programName], false);
             }
-            
+
             description.output = outputs[feature];
             return description;
         }

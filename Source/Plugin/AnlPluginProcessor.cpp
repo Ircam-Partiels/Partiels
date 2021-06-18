@@ -354,7 +354,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
             }
         }
     }
-    
+
     auto processor = std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), featureIndex, state));
     if(processor == nullptr)
     {
