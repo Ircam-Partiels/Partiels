@@ -95,7 +95,7 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
             }
         }
 
-        if(isPrimaryTick && stringify != nullptr && yPos > y && yPos < y + height)
+        if(isPrimaryTick && stringify != nullptr && yPos > static_cast<float>(y) && yPos < static_cast<float>(y + height))
         {
             auto const text = stringify(value);
             g.drawText(text, 2, static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width - 4), static_cast<int>(std::ceil(font.getHeight())), justification);
@@ -141,11 +141,11 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         }
         else if(justification.testFlags(juce::Justification::right))
         {
-            path.addLineSegment(juce::Line<float>(width - 8.f, yPos, 8.f, yPos), 1.0f);
+            path.addLineSegment(juce::Line<float>(static_cast<float>(width) - 8.f, yPos, 8.f, yPos), 1.0f);
         }
         else // juce::Justification::horizontallyJustified
         {
-            path.addLineSegment(juce::Line<float>(0.0f, yPos, width, yPos), 1.0f);
+            path.addLineSegment(juce::Line<float>(0.0f, yPos, static_cast<float>(width), yPos), 1.0f);
         }
 
         if(isPrimaryTick && stringify != nullptr)
