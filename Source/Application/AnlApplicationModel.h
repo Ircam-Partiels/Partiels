@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnlApplicationLookAndFeel.h"
 #include "../Document/AnlDocumentExporter.h"
+#include "AnlApplicationLookAndFeel.h"
 
 ANALYSE_FILE_BEGIN
 

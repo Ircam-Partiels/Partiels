@@ -11,14 +11,14 @@ namespace Application
     public:
         FontManager();
         ~FontManager() = default;
-        
+
         juce::Typeface::Ptr getDefaultSansSerifTypeface();
         juce::String getDefaultSansSerifTypefaceName();
+
     private:
         std::vector<juce::Typeface::Ptr> mFonts;
         juce::Typeface::Ptr mDefaultSansSerifTypeface;
     };
-}
+} // namespace Application
 
 ANALYSE_FILE_END
-

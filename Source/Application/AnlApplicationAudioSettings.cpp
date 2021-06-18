@@ -6,117 +6,117 @@ ANALYSE_FILE_BEGIN
 Application::AudioSettings::AudioSettings()
 : FloatingWindowContainer("Audio Settings", *this)
 , mPropertyDriver("Driver", "The current audio device driver", "", {}, [&](size_t index)
-{
-    auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));
-    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-    if(audioDeviceManager.getCurrentAudioDeviceType() == driverName)
-    {
-        return;
-    }
-    
-    audioDeviceManager.setCurrentAudioDeviceType(driverName, true);
-})
+                  {
+                      auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));
+                      auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                      if(audioDeviceManager.getCurrentAudioDeviceType() == driverName)
+                      {
+                          return;
+                      }
+
+                      audioDeviceManager.setCurrentAudioDeviceType(driverName, true);
+                  })
 , mPropertyOutputDevice("Output Device", "The current output device", "", {}, [&](size_t index)
-{
-    auto const deviceName = mPropertyOutputDevice.entry.getItemText(static_cast<int>(index));
-    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-    auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
-    if(currentAudioSetup.outputDeviceName == deviceName)
-    {
-        return;
-    }
-        
-    currentAudioSetup.outputDeviceName = deviceName;
-    auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
-    if(error.isNotEmpty())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
-    }
-})
+                        {
+                            auto const deviceName = mPropertyOutputDevice.entry.getItemText(static_cast<int>(index));
+                            auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                            auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
+                            if(currentAudioSetup.outputDeviceName == deviceName)
+                            {
+                                return;
+                            }
+
+                            currentAudioSetup.outputDeviceName = deviceName;
+                            auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
+                            if(error.isNotEmpty())
+                            {
+                                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                            }
+                        })
 , mPropertySampleRate("Sample Rate", "The current device sample rate", "Hz", {}, [&](size_t index)
-{
-    auto const sampleRate = static_cast<double>(mPropertySampleRate.entry.getItemId(static_cast<int>(index)));
-    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-    auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
-    if(std::abs(currentAudioSetup.sampleRate - sampleRate) <= std::numeric_limits<double>::epsilon())
-    {
-        return;
-    }
-        
-    currentAudioSetup.sampleRate = sampleRate;
-    auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
-    if(error.isNotEmpty())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
-    }
-})
+                      {
+                          auto const sampleRate = static_cast<double>(mPropertySampleRate.entry.getItemId(static_cast<int>(index)));
+                          auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                          auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
+                          if(std::abs(currentAudioSetup.sampleRate - sampleRate) <= std::numeric_limits<double>::epsilon())
+                          {
+                              return;
+                          }
+
+                          currentAudioSetup.sampleRate = sampleRate;
+                          auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
+                          if(error.isNotEmpty())
+                          {
+                              AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                          }
+                      })
 , mPropertyBufferSize("Buffer Size", "The current buffer size", "samples", {}, [&](size_t index)
-{
-    auto const bufferSize = mPropertyBufferSize.entry.getItemId(static_cast<int>(index));
-    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-    auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
-    if(currentAudioSetup.bufferSize == bufferSize)
-    {
-        return;
-    }
-    
-    currentAudioSetup.bufferSize = bufferSize;
-    auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
-    if(error.isNotEmpty())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
-    }
-})
+                      {
+                          auto const bufferSize = mPropertyBufferSize.entry.getItemId(static_cast<int>(index));
+                          auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                          auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
+                          if(currentAudioSetup.bufferSize == bufferSize)
+                          {
+                              return;
+                          }
+
+                          currentAudioSetup.bufferSize = bufferSize;
+                          auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
+                          if(error.isNotEmpty())
+                          {
+                              AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                          }
+                      })
 , mPropertyBufferSizeNumber("Buffer Size", "The current buffer size", "samples", {8.0f, 8192.0f}, 1.0f, [&](float value)
-{
-    auto const bufferSize = static_cast<int>(std::round(value));
-    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-    auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
-    if(currentAudioSetup.bufferSize == bufferSize)
-    {
-        return;
-    }
-    auto* currentDevice = audioDeviceManager.getCurrentAudioDevice();
-    anlStrongAssert(currentDevice != nullptr);
-    if(currentDevice == nullptr)
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", "No audio device selected.");
-        return;
-    }
-    
-    auto const bufferSizes = currentDevice->getAvailableBufferSizes();
-    auto const it = std::lower_bound(bufferSizes.begin(), bufferSizes.end(), bufferSize);
-    if(it == bufferSizes.end())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", "Buffer size BUFFERSIZE is not supported by the audio device.", {{"BUFFERSIZE", juce::String(bufferSize)}});
-        return;
-    }
-    
-    currentAudioSetup.bufferSize = bufferSize;
-    auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
-    if(error.isNotEmpty())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
-    }
-})
+                            {
+                                auto const bufferSize = static_cast<int>(std::round(value));
+                                auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                                auto currentAudioSetup = audioDeviceManager.getAudioDeviceSetup();
+                                if(currentAudioSetup.bufferSize == bufferSize)
+                                {
+                                    return;
+                                }
+                                auto* currentDevice = audioDeviceManager.getCurrentAudioDevice();
+                                anlStrongAssert(currentDevice != nullptr);
+                                if(currentDevice == nullptr)
+                                {
+                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", "No audio device selected.");
+                                    return;
+                                }
+
+                                auto const bufferSizes = currentDevice->getAvailableBufferSizes();
+                                auto const it = std::lower_bound(bufferSizes.begin(), bufferSizes.end(), bufferSize);
+                                if(it == bufferSizes.end())
+                                {
+                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", "Buffer size BUFFERSIZE is not supported by the audio device.", {{"BUFFERSIZE", juce::String(bufferSize)}});
+                                    return;
+                                }
+
+                                currentAudioSetup.bufferSize = bufferSize;
+                                auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
+                                if(error.isNotEmpty())
+                                {
+                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                                }
+                            })
 , mPropertyDriverPanel("Audio Device Panel...", "Show audio device panel", []()
-{
+                       {
 #ifdef JUCE_MAC
-    juce::File("/System/Applications/Utilities/Audio MIDI Setup.app").startAsProcess();
+                           juce::File("/System/Applications/Utilities/Audio MIDI Setup.app").startAsProcess();
 #else
-    auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
-    auto* audioDevice = audioDeviceManager.getCurrentAudioDevice();
-    if(audioDevice != nullptr && audioDevice->hasControlPanel())
-    {
-        if(audioDevice->showControlPanel())
-        {
-            // Force to update the audio device
-            audioDeviceManager.closeAudioDevice();
-            audioDeviceManager.restartLastAudioDevice();
-        }
-    }
+          auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+          auto* audioDevice = audioDeviceManager.getCurrentAudioDevice();
+          if(audioDevice != nullptr && audioDevice->hasControlPanel())
+          {
+              if(audioDevice->showControlPanel())
+              {
+                  // Force to update the audio device
+                  audioDeviceManager.closeAudioDevice();
+                  audioDeviceManager.restartLastAudioDevice();
+              }
+          }
 #endif
-})
+                       })
 {
     addAndMakeVisible(mPropertyDriver);
     addAndMakeVisible(mPropertyOutputDevice);
@@ -165,12 +165,12 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
     {
         return;
     }
-    
+
     mPropertyDriver.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertyOutputDevice.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertySampleRate.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertyBufferSize.entry.clear(juce::NotificationType::dontSendNotification);
-    
+
     // Update drivers list
     auto const currentDriverName = deviceManager.getCurrentAudioDeviceType();
     auto const& driverTypes = deviceManager.getAvailableDeviceTypes();
@@ -184,7 +184,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
             mPropertyDriver.entry.setSelectedItemIndex(i, juce::NotificationType::dontSendNotification);
         }
     }
-    
+
     // Update output devices list
     auto* currentDriverObject = deviceManager.getCurrentDeviceTypeObject();
     auto* currentAudioDevice = deviceManager.getCurrentAudioDevice();
@@ -202,7 +202,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         }
         mPropertyOutputDevice.entry.addItem(juce::translate("None"), -1);
     }
-    
+
     // Update sample rates and buffer sizes lists
     mPropertySampleRate.setEnabled(currentAudioDevice != nullptr);
     mPropertyBufferSize.setEnabled(currentAudioDevice != nullptr);
@@ -210,12 +210,12 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
 #ifndef JUCE_MAC
     mPropertyDriverPanel.setEnabled(currentAudioDevice != nullptr);
 #endif
-    
+
     if(currentAudioDevice != nullptr)
     {
         auto const currentSampleRate = currentAudioDevice->getCurrentSampleRate();
         auto const currentBufferSize = currentAudioDevice->getCurrentBufferSizeSamples();
-        
+
         auto const availableSampleRates = currentAudioDevice->getAvailableSampleRates();
         mPropertyBufferSize.setEnabled(availableSampleRates.isEmpty());
         for(auto const sampleRate : availableSampleRates)
@@ -225,12 +225,12 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         mPropertySampleRate.setEnabled(mPropertySampleRate.entry.getNumItems() > 1);
         mPropertySampleRate.entry.setSelectedId(static_cast<int>(currentSampleRate), juce::NotificationType::dontSendNotification);
         mPropertySampleRate.entry.setTextWhenNothingSelected(juce::String(static_cast<int>(currentSampleRate)) + "Hz");
-        
+
         auto availableBufferSizes = currentAudioDevice->getAvailableBufferSizes();
         availableBufferSizes.removeIf([&](int value)
-        {
-            return !juce::isPowerOfTwo(value) && value != currentBufferSize;
-        });
+                                      {
+                                          return !juce::isPowerOfTwo(value) && value != currentBufferSize;
+                                      });
         mPropertyBufferSize.setEnabled(availableBufferSizes.isEmpty());
         for(auto const bufferSize : availableBufferSizes)
         {
@@ -239,7 +239,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         mPropertyBufferSize.setEnabled(mPropertyBufferSize.entry.getNumItems() > 1);
         mPropertyBufferSize.entry.setSelectedId(currentBufferSize, juce::NotificationType::dontSendNotification);
         mPropertyBufferSize.entry.setTextWhenNothingSelected(juce::String(currentBufferSize) + " samples (" + juce::String(currentBufferSize * 1000.0 / currentSampleRate, 1) + " ms)");
-        
+
         mPropertyBufferSizeNumber.setEnabled(!availableBufferSizes.isEmpty());
         if(!availableBufferSizes.isEmpty())
         {
@@ -247,10 +247,10 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
             auto const maxBufferSize = static_cast<double>(availableBufferSizes.getLast());
             mPropertyBufferSizeNumber.entry.setRange({minBufferSize, maxBufferSize}, 1.0, juce::NotificationType::dontSendNotification);
         }
-        
+
         mPropertyBufferSizeNumber.entry.setValue(static_cast<double>(currentBufferSize), juce::NotificationType::dontSendNotification);
         mPropertyBufferSizeNumber.entry.setTextValueSuffix(" samples (" + juce::String(currentBufferSize * 1000.0 / currentSampleRate, 1) + " ms)");
-        
+
 #ifndef JUCE_MAC
         mPropertyDriverPanel.setVisible(currentAudioDevice->hasControlPanel());
 #endif

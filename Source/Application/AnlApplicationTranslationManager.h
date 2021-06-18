@@ -12,6 +12,6 @@ namespace Application
         TranslationManager();
         ~TranslationManager() = default;
     };
-}
+} // namespace Application
 
 ANALYSE_FILE_END

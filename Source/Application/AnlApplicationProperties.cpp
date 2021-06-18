@@ -10,26 +10,26 @@ Application::Properties::Properties()
         juce::ignoreUnused(acsr, attribute);
         saveToFile(PropertyType::Application);
     };
-    
+
     mPluginListListener.onAttrChanged = [this](PluginList::Accessor const& acsr, PluginList::AttrType attribute)
     {
         juce::ignoreUnused(acsr, attribute);
         saveToFile(PropertyType::PluginList);
     };
-    
+
     if(getFile("").getParentDirectory().createDirectory().failed())
     {
         anlStrongAssert(false && "cannot create parent directory");
     }
-    
+
     loadFromFile(PropertyType::Application);
     loadFromFile(PropertyType::PluginList);
     loadFromFile(PropertyType::AudioSetup);
-    
+
     Instance::get().getApplicationAccessor().addListener(mApplicationListener, NotificationType::synchronous);
     Instance::get().getPluginListAccessor().addListener(mPluginListListener, NotificationType::synchronous);
     Instance::get().getAudioDeviceManager().addChangeListener(this);
-    
+
     saveToFile(PropertyType::Application);
     saveToFile(PropertyType::PluginList);
     saveToFile(PropertyType::AudioSetup);
@@ -75,19 +75,19 @@ void Application::Properties::saveToFile(PropertyType type)
             }
         }
     };
-    
+
     switch(type)
     {
         case PropertyType::Application:
         {
             writeTo(Instance::get().getApplicationAccessor().toXml("AppSettings"), "application.settings");
         }
-            break;
+        break;
         case PropertyType::PluginList:
         {
             writeTo(Instance::get().getPluginListAccessor().toXml("PluginList"), "plugin.settings");
         }
-            break;
+        break;
         case PropertyType::AudioSetup:
         {
             auto xml = Instance::get().getAudioDeviceManager().createStateXml();
@@ -96,7 +96,7 @@ void Application::Properties::saveToFile(PropertyType type)
                 writeTo(std::move(xml), "audio.settings");
             }
         }
-            break;
+        break;
     }
 }
 
@@ -114,7 +114,7 @@ void Application::Properties::loadFromFile(PropertyType type)
                 acsr.fromXml(*xml, "AppSettings", NotificationType::synchronous);
             }
         }
-            break;
+        break;
         case PropertyType::PluginList:
         {
             auto xml = juce::parseXML(getFile("plugin.settings"));
@@ -124,7 +124,7 @@ void Application::Properties::loadFromFile(PropertyType type)
                 acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
             }
         }
-            break;
+        break;
         case PropertyType::AudioSetup:
         {
             auto xml = juce::parseXML(getFile("audio.settings"));
@@ -135,7 +135,7 @@ void Application::Properties::loadFromFile(PropertyType type)
                 AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
             }
         }
-            break;
+        break;
     }
 }
 

@@ -15,4 +15,3 @@ Application::TranslationManager::TranslationManager()
 }
 
 ANALYSE_FILE_END
-

@@ -18,7 +18,7 @@ void Application::About::paint(juce::Graphics& g)
     {
         mImage->drawWithin(g, {150.0f, 140.0f, 240.0f, 280.0f}, juce::RectanglePlacement::onlyReduceInSize | juce::RectanglePlacement::centred, 1.0f);
     }
-    
+
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
     g.setFont(16.0f);
     juce::String const text(MiscData::About_txt, MiscData::About_txtSize);
