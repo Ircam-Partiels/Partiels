@@ -109,6 +109,7 @@ void Group::Plot::updateContent()
             content.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
             content.get().removeListener(mTrackListener);
         });
+    repaint();
 }
 
 Group::Plot::Overlay::Overlay(Plot& plot)

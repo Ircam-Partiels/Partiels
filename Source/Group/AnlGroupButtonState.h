@@ -19,6 +19,7 @@ namespace Group
 
     private:
         void updateContent();
+        void updateTooltip();
 
         Accessor& mAccessor;
         Accessor::Listener mListener;

@@ -103,6 +103,7 @@ Group::Snapshot::~Snapshot()
         trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
         trackAcsr.second.get().removeListener(mTrackListener);
     }
+    repaint();
 }
 
 void Group::Snapshot::paint(juce::Graphics& g)
