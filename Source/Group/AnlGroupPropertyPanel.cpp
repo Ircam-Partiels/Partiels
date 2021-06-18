@@ -188,11 +188,11 @@ void Group::PropertyPanel::showChannelLayout()
                                             return state == true;
                                         }))
                         {
-                            if(channel < copy.size() - 1_z)
+                            if(channel + 1_z < copy.size())
                             {
                                 copy[channel + 1_z] = true;
                             }
-                            else
+                            else if(channel > 0_z)
                             {
                                 copy[channel - 1_z] = true;
                             }
