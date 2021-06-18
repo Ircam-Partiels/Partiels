@@ -11,9 +11,9 @@ Zoom::Grid::TickDrawingInfo Zoom::Grid::getTickDrawingInfo(Accessor const& acces
     auto const tickDivisionFactor = accessor.getAttr<AttrType::tickDivisionFactor>();
     auto const intervalPower = std::ceil(std::log(intervalValue) / std::log(tickPowerBase));
     auto const discreteIntervalValueNonDivided = std::pow(tickPowerBase, intervalPower);
-    
+
     auto const tickReferenceValue = accessor.getAttr<AttrType::tickReference>();
-    
+
     auto discreteIntervalValue = discreteIntervalValueNonDivided;
     if(tickDivisionFactor > 1.0)
     {
@@ -22,7 +22,7 @@ Zoom::Grid::TickDrawingInfo Zoom::Grid::getTickDrawingInfo(Accessor const& acces
             discreteIntervalValue /= tickDivisionFactor;
         }
     }
-    
+
     auto const firstValue = std::floor((visibleRange.getStart() - tickReferenceValue) / discreteIntervalValue) * discreteIntervalValue + tickReferenceValue;
     auto const discreteNumTick = static_cast<size_t>(std::ceil(rangeLength / discreteIntervalValue)) + 1;
     auto const mainTickSpacing = discreteIntervalValue * static_cast<double>(accessor.getAttr<AttrType::mainTickInterval>() + 1_z);
@@ -113,28 +113,27 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
     {
         return;
     }
-    
+
     auto const x = bounds.getX();
     auto const width = bounds.getWidth();
     auto const font = g.getCurrentFont();
-    
-    
+
     //auto const height = static_cast<float>(bounds.getHeight());
-    
+
     auto const rangeStart = visibleRange.getStart();
     auto const rangeLength = visibleRange.getLength();
     auto getPosition = [&](double value)
     {
         return (1.0 - (value - rangeStart) / rangeLength) * static_cast<double>(width) + static_cast<double>(x);
     };
-    
+
     auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, width - 1, maxStringWidth);
     juce::Path path;
     for(auto index = 0_z; index < std::get<0>(tickDrawingInfo); ++index)
     {
         auto const value = std::get<1>(tickDrawingInfo) + static_cast<double>(index) * std::get<2>(tickDrawingInfo);
         auto const isPrimaryTick = isMainTick(accessor, tickDrawingInfo, value);
-        
+
         auto const yPos = static_cast<float>(getPosition(value));
         if(justification.testFlags(juce::Justification::left))
         {
@@ -148,11 +147,11 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         {
             path.addLineSegment(juce::Line<float>(0.0f, yPos, width, yPos), 1.0f);
         }
-        
+
         if(isPrimaryTick && stringify != nullptr)
         {
-//            auto const text = stringify(value);
-//            g.drawText(text, 2, static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width), static_cast<int>(std::ceil(font.getHeight())), justification);
+            //            auto const text = stringify(value);
+            //            g.drawText(text, 2, static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width), static_cast<int>(std::ceil(font.getHeight())), justification);
         }
     }
     g.fillPath(path);
