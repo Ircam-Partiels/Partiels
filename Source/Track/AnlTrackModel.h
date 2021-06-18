@@ -207,7 +207,7 @@ namespace Track
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     
-    , Model::Attr<AttrType::height, int, Model::Flag::basic>
+    , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::colours, ColourSet, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
