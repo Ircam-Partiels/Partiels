@@ -164,7 +164,7 @@ Document::Section::Section(Director& director)
             }
         }
     };
-    
+
     addAndMakeVisible(tooltipButton);
 
     addAndMakeVisible(mTransportDisplay);
@@ -265,7 +265,7 @@ void Document::Section::resized()
     mResizeLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
     tooltipButton.setBounds(topPart.removeFromRight(rightSize).withSizeKeepingCentre(20, 20));
     topPart.removeFromLeft(48);
-    
+
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
     mLoopBarDecoration.setBounds(topPart);
     mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
