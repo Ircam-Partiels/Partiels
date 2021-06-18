@@ -339,14 +339,17 @@ Application::Interface::Interface()
     addAndMakeVisible(mLoaderDecorator);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
-    addAndMakeVisible(mTooltipButton);
     mLoader.addComponentListener(this);
 
-    mTooltipButton.setClickingTogglesState(true);
-    mTooltipButton.onClick = [&]()
+    mDocumentSection.tooltipButton.setClickingTogglesState(true);
+    mDocumentSection.tooltipButton.setTooltip(juce::translate(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::ViewInfoBubble)));
+    mDocumentSection.tooltipButton.onClick = [&]()
     {
-        auto& accessor = Instance::get().getApplicationAccessor();
-        accessor.setAttr<AttrType::showInfoBubble>(mTooltipButton.getToggleState(), NotificationType::synchronous);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::ViewInfoBubble, true);
+    };
+    mDocumentSection.onSaveButtonClicked = [&]()
+    {
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::DocumentSave, true);
     };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
@@ -362,7 +365,7 @@ Application::Interface::Interface()
             case AttrType::showInfoBubble:
             {
                 mDocumentSection.showBubbleInfo(acsr.getAttr<AttrType::showInfoBubble>());
-                mTooltipButton.setToggleState(acsr.getAttr<AttrType::showInfoBubble>(), juce::NotificationType::dontSendNotification);
+                mDocumentSection.tooltipButton.setToggleState(acsr.getAttr<AttrType::showInfoBubble>(), juce::NotificationType::dontSendNotification);
             }
             break;
         }
@@ -382,22 +385,11 @@ void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
     auto bottom = bounds.removeFromBottom(24);
-    mTooltipButton.setBounds(bottom.removeFromRight(24).withSizeKeepingCentre(20, 20));
     mToolTipDisplay.setBounds(bottom);
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     mDocumentSection.setBounds(bounds);
     auto const loaderBounds = bounds.withSizeKeepingCentre(800, 600);
     mLoaderDecorator.setBounds(loaderBounds.withY(std::max(loaderBounds.getY(), 80)));
-}
-
-void Application::Interface::lookAndFeelChanged()
-{
-    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(laf != nullptr);
-    if(laf != nullptr)
-    {
-        laf->setButtonIcon(mTooltipButton, IconManager::IconType::conversation);
-    }
 }
 
 void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)

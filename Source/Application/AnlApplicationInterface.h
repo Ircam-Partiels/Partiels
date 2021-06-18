@@ -23,7 +23,6 @@ namespace Application
 
         // juce::Component
         void resized() override;
-        void lookAndFeelChanged() override;
 
     private:
         // juce::ComponentListener
@@ -103,7 +102,6 @@ namespace Application
         Decorator mLoaderDecorator{mLoader};
         ColouredPanel mToolTipSeparator;
         Tooltip::Display mToolTipDisplay;
-        juce::ImageButton mTooltipButton{"TooltipButton"};
     };
 } // namespace Application
 

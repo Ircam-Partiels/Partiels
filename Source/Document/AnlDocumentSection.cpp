@@ -1,5 +1,4 @@
 #include "AnlDocumentSection.h"
-#include "../Application/AnlApplicationCommandTarget.h"
 #include "AnlDocumentAudioReader.h"
 #include "AnlDocumentTools.h"
 
@@ -102,9 +101,9 @@ Document::Section::Section(Director& director)
         {
             mAccessor.getAttr<AttrType::path>().revealToUser();
         }
-        else if(auto* commandManager = App::getApplicationCommandManager())
+        else if(onSaveButtonClicked != nullptr)
         {
-            commandManager->invokeDirectly(Application::CommandTarget::CommandIDs::DocumentSave, true);
+            onSaveButtonClicked();
         }
     };
 
@@ -165,6 +164,8 @@ Document::Section::Section(Director& director)
             }
         }
     };
+    
+    addAndMakeVisible(tooltipButton);
 
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
@@ -249,9 +250,10 @@ void Document::Section::resized()
     {
         auto header = bounds.removeFromTop(40);
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-        header.removeFromLeft(leftSize);
+        header.removeFromLeft(2);
         header = header.withRight(mTransportDisplay.getX());
         mReaderLayoutButton.setBounds(header.removeFromLeft(24).withSizeKeepingCentre(24, 24));
+        header.removeFromLeft(2);
         auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
         auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
         auto const buttonWidth = std::min(textWidth, header.getWidth());
@@ -261,8 +263,9 @@ void Document::Section::resized()
     auto topPart = bounds.removeFromTop(28);
     mExpandLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
     mResizeLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
+    tooltipButton.setBounds(topPart.removeFromRight(rightSize).withSizeKeepingCentre(20, 20));
     topPart.removeFromLeft(48);
-    topPart.removeFromRight(rightSize);
+    
     mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
     mLoopBarDecoration.setBounds(topPart);
     mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
@@ -296,6 +299,7 @@ void Document::Section::lookAndFeelChanged()
         }
         laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::layers);
         laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::perspective);
+        laf->setButtonIcon(tooltipButton, IconManager::IconType::conversation);
     }
 }
 

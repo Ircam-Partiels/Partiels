@@ -31,6 +31,9 @@ namespace Document
         void showBubbleInfo(bool state);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
+        juce::ImageButton tooltipButton;
+        std::function<void(void)> onSaveButtonClicked = nullptr;
+        
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
@@ -70,7 +73,7 @@ namespace Document
         juce::TextButton mDocumentName;
         juce::ImageButton mExpandLayoutButton;
         juce::ImageButton mResizeLayoutButton;
-
+        
         Zoom::Ruler mTimeRuler{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal};
         Decorator mTimeRulerDecoration{mTimeRuler};
         Transport::LoopBar mLoopBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
