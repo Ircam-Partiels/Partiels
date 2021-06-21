@@ -154,35 +154,35 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AcsrType::tracks:
             {
                 auto listener = std::make_unique<Track::Accessor::SmartListener>(mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
-                                        {
-                                            juce::ignoreUnused(trackAcsr);
-                                            switch(trackAttribute)
-                                            {
-                                                case Track::AttrType::identifier:
-                                                {
-                                                    if(onLayoutUpdated != nullptr)
-                                                    {
-                                                        onLayoutUpdated();
-                                                    }
-                                                }
-                                                break;
-                                                case Track::AttrType::name:
-                                                case Track::AttrType::results:
-                                                case Track::AttrType::key:
-                                                case Track::AttrType::description:
-                                                case Track::AttrType::state:
-                                                case Track::AttrType::height:
-                                                case Track::AttrType::colours:
-                                                case Track::AttrType::channelsLayout:
-                                                case Track::AttrType::zoomLink:
-                                                case Track::AttrType::zoomAcsr:
-                                                case Track::AttrType::graphics:
-                                                case Track::AttrType::warnings:
-                                                case Track::AttrType::processing:
-                                                case Track::AttrType::focused:
-                                                    break;
-                                            }
-                                        });
+                                                                                 {
+                                                                                     juce::ignoreUnused(trackAcsr);
+                                                                                     switch(trackAttribute)
+                                                                                     {
+                                                                                         case Track::AttrType::identifier:
+                                                                                         {
+                                                                                             if(onLayoutUpdated != nullptr)
+                                                                                             {
+                                                                                                 onLayoutUpdated();
+                                                                                             }
+                                                                                         }
+                                                                                         break;
+                                                                                         case Track::AttrType::name:
+                                                                                         case Track::AttrType::results:
+                                                                                         case Track::AttrType::key:
+                                                                                         case Track::AttrType::description:
+                                                                                         case Track::AttrType::state:
+                                                                                         case Track::AttrType::height:
+                                                                                         case Track::AttrType::colours:
+                                                                                         case Track::AttrType::channelsLayout:
+                                                                                         case Track::AttrType::zoomLink:
+                                                                                         case Track::AttrType::zoomAcsr:
+                                                                                         case Track::AttrType::graphics:
+                                                                                         case Track::AttrType::warnings:
+                                                                                         case Track::AttrType::processing:
+                                                                                         case Track::AttrType::focused:
+                                                                                             break;
+                                                                                     }
+                                                                                 });
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
                 anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
             }
@@ -190,28 +190,28 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AcsrType::groups:
             {
                 auto listener = std::make_unique<Group::Accessor::SmartListener>(mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
-                                        {
-                                            juce::ignoreUnused(groupAcsr);
-                                            switch(groupAttribute)
-                                            {
-                                                case Group::AttrType::identifier:
-                                                {
-                                                    if(onLayoutUpdated != nullptr)
-                                                    {
-                                                        onLayoutUpdated();
-                                                    }
-                                                }
-                                                break;
-                                                case Group::AttrType::name:
-                                                case Group::AttrType::height:
-                                                case Group::AttrType::colour:
-                                                case Group::AttrType::expanded:
-                                                case Group::AttrType::layout:
-                                                case Group::AttrType::tracks:
-                                                case Group::AttrType::focused:
-                                                    break;
-                                            }
-                                        });
+                                                                                 {
+                                                                                     juce::ignoreUnused(groupAcsr);
+                                                                                     switch(groupAttribute)
+                                                                                     {
+                                                                                         case Group::AttrType::identifier:
+                                                                                         {
+                                                                                             if(onLayoutUpdated != nullptr)
+                                                                                             {
+                                                                                                 onLayoutUpdated();
+                                                                                             }
+                                                                                         }
+                                                                                         break;
+                                                                                         case Group::AttrType::name:
+                                                                                         case Group::AttrType::height:
+                                                                                         case Group::AttrType::colour:
+                                                                                         case Group::AttrType::expanded:
+                                                                                         case Group::AttrType::layout:
+                                                                                         case Group::AttrType::tracks:
+                                                                                         case Group::AttrType::focused:
+                                                                                             break;
+                                                                                     }
+                                                                                 });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
                 anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
             }

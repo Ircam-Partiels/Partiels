@@ -92,35 +92,35 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                                     }))
                     {
                         auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get(), [this](Track::Accessor const& cTrackAcsr, Track::AttrType cTrackAttribute)
-                                                {
-                                                    juce::ignoreUnused(cTrackAcsr);
-                                                    switch(cTrackAttribute)
-                                                    {
-                                                        case Track::AttrType::identifier:
-                                                        {
-                                                            if(onLayoutUpdated != nullptr)
-                                                            {
-                                                                onLayoutUpdated();
-                                                            }
-                                                        }
-                                                        break;
-                                                        case Track::AttrType::name:
-                                                        case Track::AttrType::results:
-                                                        case Track::AttrType::key:
-                                                        case Track::AttrType::description:
-                                                        case Track::AttrType::state:
-                                                        case Track::AttrType::height:
-                                                        case Track::AttrType::colours:
-                                                        case Track::AttrType::channelsLayout:
-                                                        case Track::AttrType::zoomLink:
-                                                        case Track::AttrType::zoomAcsr:
-                                                        case Track::AttrType::graphics:
-                                                        case Track::AttrType::warnings:
-                                                        case Track::AttrType::processing:
-                                                        case Track::AttrType::focused:
-                                                            break;
-                                                    }
-                                                });
+                                                                                         {
+                                                                                             juce::ignoreUnused(cTrackAcsr);
+                                                                                             switch(cTrackAttribute)
+                                                                                             {
+                                                                                                 case Track::AttrType::identifier:
+                                                                                                 {
+                                                                                                     if(onLayoutUpdated != nullptr)
+                                                                                                     {
+                                                                                                         onLayoutUpdated();
+                                                                                                     }
+                                                                                                 }
+                                                                                                 break;
+                                                                                                 case Track::AttrType::name:
+                                                                                                 case Track::AttrType::results:
+                                                                                                 case Track::AttrType::key:
+                                                                                                 case Track::AttrType::description:
+                                                                                                 case Track::AttrType::state:
+                                                                                                 case Track::AttrType::height:
+                                                                                                 case Track::AttrType::colours:
+                                                                                                 case Track::AttrType::channelsLayout:
+                                                                                                 case Track::AttrType::zoomLink:
+                                                                                                 case Track::AttrType::zoomAcsr:
+                                                                                                 case Track::AttrType::graphics:
+                                                                                                 case Track::AttrType::warnings:
+                                                                                                 case Track::AttrType::processing:
+                                                                                                 case Track::AttrType::focused:
+                                                                                                     break;
+                                                                                             }
+                                                                                         });
                         mTrackListeners.insert(std::move(listener));
                     }
                 }
