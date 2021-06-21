@@ -57,6 +57,49 @@ namespace Track
         static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
 
+        class LabelArrangement
+        {
+        public:
+            LabelArrangement(juce::Font const& font, juce::String const unit, int numDecimals);
+            ~LabelArrangement() = default;
+
+            void addValue(float value, float x, float y);
+            void draw(juce::Graphics& g);
+
+        private:
+            auto static constexpr invalid_value = std::numeric_limits<float>::max();
+            auto static constexpr epsilon = std::numeric_limits<float>::epsilon();
+
+            struct LabelInfo
+            {
+                LabelInfo(float o)
+                : offset(o)
+                {
+                }
+
+                float const offset;
+                juce::String text;
+                float x;
+                float y;
+                float w;
+
+                inline bool operator==(LabelInfo const& rhs) const
+                {
+                    return text == rhs.text && std::abs(x - rhs.x) < epsilon && std::abs(y - rhs.y) < epsilon;
+                }
+            };
+
+            juce::Font const& mFont;
+            juce::String const mUnit;
+            int const mNumDecimal;
+            float const mCharWidth{mFont.getStringWidthFloat("0")};
+            float const mUnitWidth{mFont.getStringWidthFloat(mUnit)};
+            LabelInfo mLowInfo{2.0f + mFont.getAscent()};
+            LabelInfo mHighInfo{2.0f - mFont.getDescent()};
+            float mLastValue = invalid_value;
+            juce::GlyphArrangement mGlyphArrangement;
+        };
+
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;

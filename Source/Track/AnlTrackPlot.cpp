@@ -4,6 +4,63 @@
 
 ANALYSE_FILE_BEGIN
 
+Track::Plot::LabelArrangement::LabelArrangement(juce::Font const& font, juce::String const unit, int numDecimals)
+: mFont(font)
+, mUnit(unit)
+, mNumDecimal(numDecimals)
+{
+}
+
+void Track::Plot::LabelArrangement::addValue(float value, float x, float y)
+{
+    if(std::abs(mLastValue - value) < std::numeric_limits<float>::epsilon())
+    {
+        return;
+    }
+
+    if(!mHighInfo.text.isEmpty() && x > mHighInfo.x + mHighInfo.w)
+    {
+        if(mLowInfo.text.isEmpty() && y < mHighInfo.y)
+        {
+            mGlyphArrangement.addLineOfText(mFont, mHighInfo.text + mUnit, mHighInfo.x, mHighInfo.y + mLowInfo.offset);
+        }
+        else
+        {
+            mGlyphArrangement.addLineOfText(mFont, mHighInfo.text + mUnit, mHighInfo.x, mHighInfo.y + mHighInfo.offset);
+        }
+        mHighInfo.text.clear();
+    }
+    if(!mLowInfo.text.isEmpty() && x > mLowInfo.x + mLowInfo.w)
+    {
+        mGlyphArrangement.addLineOfText(mFont, mLowInfo.text + mUnit, mLowInfo.x, mLowInfo.y + mLowInfo.offset);
+        mLowInfo.text.clear();
+    }
+
+    auto const shouldInsertHight = !mHighInfo.text.isEmpty() && y < mHighInfo.y;
+    auto const shouldInsertLow = !mLowInfo.text.isEmpty() && y > mLowInfo.y;
+    if(shouldInsertHight || (!shouldInsertLow && mHighInfo.text.isEmpty()))
+    {
+        mHighInfo.text = Format::valueToString(value, mNumDecimal);
+        mHighInfo.x = x;
+        mHighInfo.y = y;
+        mHighInfo.w = std::ceil(static_cast<float>(mHighInfo.text.length()) * mCharWidth + mUnitWidth + 4.0f);
+        mLastValue = value;
+    }
+    else if(shouldInsertLow || mLowInfo.text.isEmpty())
+    {
+        mLowInfo.text = Format::valueToString(value, mNumDecimal);
+        mLowInfo.x = x;
+        mLowInfo.y = y;
+        mLowInfo.w = std::ceil(static_cast<float>(mLowInfo.text.length()) * mCharWidth + mUnitWidth + 4.0f);
+        mLastValue = value;
+    }
+}
+
+void Track::Plot::LabelArrangement::draw(juce::Graphics& g)
+{
+    mGlyphArrangement.draw(g);
+}
+
 Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor)
 : mAccessor(accessor)
 , mTimeZoomAccessor(timeZoomAccessor)
@@ -242,8 +299,6 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     auto const& unit = accessor.getAttr<AttrType::description>().output.unit;
 
     auto const font = g.getCurrentFont();
-    auto const fontAscent = font.getAscent();
-    auto const fontDescent = font.getDescent();
 
     auto constexpr epsilonPixel = 1.0f;
     auto const clipBounds = g.getClipBounds();
@@ -261,16 +316,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         return 4 - numDecimals;
     };
     auto const numDecimals = getNumDecimals();
-    auto const charWidth = font.getStringWidthFloat("0");
-    auto const unitWidth = font.getStringWidthFloat(unit);
-    auto const getTextValue = [numDecimals](float value)
-    {
-        if(numDecimals == 0)
-        {
-            return juce::String(static_cast<int>(value));
-        }
-        return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
-    };
+    LabelArrangement labelArr(font, unit, getNumDecimals());
 
     auto const& channelResults = points->at(channel);
     if(channelResults.size() == 1_z)
@@ -293,7 +339,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             if(!colours.text.isTransparent())
             {
                 g.setColour(colours.text);
-                g.drawSingleLineText(getTextValue(value) + unit, 4, static_cast<int>(y - fontDescent) - 2, juce::Justification::left);
+                g.drawSingleLineText(Format::valueToString(value, numDecimals) + unit, 4, static_cast<int>(y - font.getDescent()) - 2, juce::Justification::left);
             }
         }
         return;
@@ -310,53 +356,6 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
 
     juce::Path path;
     juce::RectangleList<int> rectangles;
-    using labelInfo = std::tuple<juce::String, int, int, float>;
-    labelInfo labelInfoLow;
-    labelInfo labelInfoHigh;
-    juce::GlyphArrangement glyphArr;
-    auto const insertLabel = [&](int x, float y, float value)
-    {
-        auto canInsertHight = !std::get<0>(labelInfoHigh).isEmpty() && x > std::get<1>(labelInfoHigh) + std::get<2>(labelInfoHigh) + 2;
-        auto canInsertLow = !std::get<0>(labelInfoLow).isEmpty() && x > std::get<1>(labelInfoLow) + std::get<2>(labelInfoLow) + 2;
-
-        if(canInsertHight && canInsertLow && labelInfoHigh == labelInfoLow)
-        {
-            canInsertHight = y >= std::get<3>(labelInfoHigh);
-            canInsertLow = !canInsertHight;
-        }
-
-        if(canInsertHight)
-        {
-            if(labelInfoHigh == labelInfoLow)
-            {
-                std::get<0>(labelInfoLow).clear();
-            }
-            glyphArr.addLineOfText(font, std::get<0>(labelInfoHigh), static_cast<float>(std::get<1>(labelInfoHigh)), std::get<3>(labelInfoHigh) - fontDescent + 2.0f);
-            std::get<0>(labelInfoHigh).clear();
-        }
-        if(std::get<0>(labelInfoHigh).isEmpty() || y < std::get<3>(labelInfoHigh))
-        {
-            auto const text = getTextValue(value);
-            auto const textWidth = static_cast<int>(std::ceil(static_cast<float>(text.length()) * charWidth + unitWidth + 2.0f));
-            labelInfoHigh = std::make_tuple(text + unit, x, textWidth, y);
-        }
-
-        if(canInsertLow)
-        {
-            if(labelInfoLow == labelInfoHigh)
-            {
-                std::get<0>(labelInfoHigh).clear();
-            }
-            glyphArr.addLineOfText(font, std::get<0>(labelInfoLow), static_cast<float>(std::get<1>(labelInfoLow)), std::get<3>(labelInfoLow) + fontAscent + 2.0f);
-            std::get<0>(labelInfoLow).clear();
-        }
-        if(std::get<0>(labelInfoLow).isEmpty() || y > std::get<3>(labelInfoLow))
-        {
-            auto const text = getTextValue(value);
-            auto const textWidth = static_cast<int>(std::ceil(static_cast<float>(text.length()) * charWidth + unitWidth + 2.0f));
-            labelInfoLow = std::make_tuple(text + unit, x, textWidth, y);
-        }
-    };
 
     auto getNextItBeforeTime = [](decltype(it) _start, decltype(it) _end, double const& l)
     {
@@ -415,8 +414,8 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
                 rectangles.addWithoutMerging({static_cast<int>(x), static_cast<int>(y2), std::max(static_cast<int>(x2) - static_cast<int>(x), 1), std::max(static_cast<int>(y1 - y2), 1)});
                 if(showLabel)
                 {
-                    insertLabel(static_cast<int>(x), y1, min);
-                    insertLabel(static_cast<int>(x), y2, max);
+                    labelArr.addValue(min, x, y1);
+                    labelArr.addValue(max, x, y2);
                 }
 
                 hasExceededEnd = nend >= clipTimeEnd;
@@ -427,7 +426,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
                 auto const y = Tools::valueToPixel(value, valueRange, fbounds);
                 if(showLabel)
                 {
-                    insertLabel(static_cast<int>(x), y, value);
+                    labelArr.addValue(value, x, y);
                 }
                 if(std::exchange(shouldStartSubPath, false))
                 {
@@ -453,7 +452,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             auto const y = Tools::valueToPixel(value, valueRange, fbounds);
             if(showLabel)
             {
-                insertLabel(static_cast<int>(x), y, value);
+                labelArr.addValue(value, x, y);
             }
             if(std::exchange(shouldStartSubPath, false))
             {
@@ -506,7 +505,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     if(showLabel)
     {
         g.setColour(colours.text);
-        glyphArr.draw(g);
+        labelArr.draw(g);
     }
 }
 
