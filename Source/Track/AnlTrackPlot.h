@@ -57,6 +57,19 @@ namespace Track
         static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
 
+        class PathArrangement
+        {
+        public:
+            void stopLine();
+            void addLine(float x1, float x2, float y);
+            void draw(juce::Graphics& g, juce::Colour const& foreground, juce::Colour const& shadow);
+
+        private:
+            juce::Path mPath;
+            juce::Point<float> mLastPoint;
+            bool mShouldStartNewPath{true};
+        };
+
         class LabelArrangement
         {
         public:
@@ -64,7 +77,7 @@ namespace Track
             ~LabelArrangement() = default;
 
             void addValue(float value, float x, float y);
-            void draw(juce::Graphics& g);
+            void draw(juce::Graphics& g, juce::Colour const& colour);
 
         private:
             auto static constexpr invalid_value = std::numeric_limits<float>::max();

@@ -4,6 +4,59 @@
 
 ANALYSE_FILE_BEGIN
 
+void Track::Plot::PathArrangement::stopLine()
+{
+    if(!std::exchange(mShouldStartNewPath, true))
+    {
+        mPath.lineTo(mLastPoint);
+    }
+}
+
+void Track::Plot::PathArrangement::addLine(float x1, float x2, float y)
+{
+    if(std::exchange(mShouldStartNewPath, false))
+    {
+        mPath.startNewSubPath(x1, y);
+        mLastPoint = {x2, y};
+    }
+    else if(std::abs(y - mLastPoint.y) > std::numeric_limits<float>::epsilon())
+    {
+        mPath.lineTo(mLastPoint);
+        mPath.lineTo(x1, y);
+        mLastPoint = {x2, y};
+    }
+    else
+    {
+        mLastPoint = {x2, y};
+    }
+}
+
+void Track::Plot::PathArrangement::draw(juce::Graphics& g, juce::Colour const& foreground, juce::Colour const& shadow)
+{
+    stopLine();
+    if(mPath.isEmpty())
+    {
+        return;
+    }
+
+    juce::PathStrokeType const pathStrokeType(1.0f);
+    pathStrokeType.createStrokedPath(mPath, mPath);
+
+    if(!shadow.isTransparent())
+    {
+        g.setColour(shadow.withMultipliedAlpha(0.5f));
+        g.fillPath(mPath, juce::AffineTransform::translation(0.0f, 2.0f));
+        g.setColour(shadow.withMultipliedAlpha(0.75f));
+        g.fillPath(mPath, juce::AffineTransform::translation(1.0f, 1.0f));
+    }
+
+    if(!foreground.isTransparent())
+    {
+        g.setColour(foreground);
+        g.fillPath(mPath);
+    }
+}
+
 Track::Plot::LabelArrangement::LabelArrangement(juce::Font const& font, juce::String const unit, int numDecimals)
 : mFont(font)
 , mUnit(unit)
@@ -56,8 +109,9 @@ void Track::Plot::LabelArrangement::addValue(float value, float x, float y)
     }
 }
 
-void Track::Plot::LabelArrangement::draw(juce::Graphics& g)
+void Track::Plot::LabelArrangement::draw(juce::Graphics& g, juce::Colour const& colour)
 {
+    g.setColour(colour);
     mGlyphArrangement.draw(g);
 }
 
@@ -354,9 +408,8 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     // Time distance corresponding to epsilon pixels
     auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
 
-    juce::Path path;
     juce::RectangleList<int> rectangles;
-
+    PathArrangement pathArr;
     auto getNextItBeforeTime = [](decltype(it) _start, decltype(it) _end, double const& l)
     {
         float min = *std::get<2>(*_start);
@@ -376,13 +429,12 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     };
 
     auto const showLabel = !colours.text.isTransparent();
-    auto shouldStartSubPath = true;
     auto hasExceededEnd = false;
     while(!hasExceededEnd && it != channelResults.cend())
     {
         if(!std::get<2>(*it).has_value())
         {
-            shouldStartSubPath = true;
+            pathArr.stopLine();
             it = std::find_if(std::next(it), channelResults.cend(), [&](auto const& result)
                               {
                                   return std::get<2>(result).has_value();
@@ -400,16 +452,15 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             auto const next = std::get<0>(nextResult);
             auto const min = std::get<1>(nextResult);
             auto const max = std::get<2>(nextResult);
-            if(it != next)
+            auto const nend = std::get<0>(*next) + std::get<1>(*next);
+            auto const x2 = Tools::secondsToPixel(nend, timeRange, fbounds);
+
+            if(it != next && (max - min) > std::numeric_limits<float>::epsilon())
             {
-                auto const nend = std::get<0>(*next) + std::get<1>(*next);
-                auto const x2 = Tools::secondsToPixel(nend, timeRange, fbounds);
                 auto const y1 = Tools::valueToPixel(min, valueRange, fbounds);
                 auto const y2 = Tools::valueToPixel(max, valueRange, fbounds);
-                if(!std::exchange(shouldStartSubPath, true))
-                {
-                    path.lineTo(x, y1);
-                }
+                pathArr.addLine(x, x, y1);
+                pathArr.stopLine();
 
                 rectangles.addWithoutMerging({static_cast<int>(x), static_cast<int>(y2), std::max(static_cast<int>(x2) - static_cast<int>(x), 1), std::max(static_cast<int>(y1 - y2), 1)});
                 if(showLabel)
@@ -428,19 +479,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
                 {
                     labelArr.addValue(value, x, y);
                 }
-                if(std::exchange(shouldStartSubPath, false))
-                {
-                    path.startNewSubPath(x, y);
-                }
-                else
-                {
-                    path.lineTo(x, y);
-                }
-                if(std::get<1>(*it) > 0.0)
-                {
-                    auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
-                    path.lineTo(x2, y);
-                }
+                pathArr.addLine(x, x2, y);
                 it = std::next(it);
                 hasExceededEnd = end >= clipTimeEnd;
             }
@@ -450,21 +489,14 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
             auto const value = *std::get<2>(*it);
             auto const x = Tools::secondsToPixel(std::get<0>(*it), timeRange, fbounds);
             auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+            auto const end = std::get<0>(*it) + std::get<1>(*it);
+            auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
             if(showLabel)
             {
                 labelArr.addValue(value, x, y);
             }
-            if(std::exchange(shouldStartSubPath, false))
-            {
-                path.startNewSubPath(x, y);
-            }
-            else
-            {
-                path.lineTo(x, y);
-            }
-            auto const end = std::get<0>(*it) + std::get<1>(*it);
-            auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
-            path.lineTo(x2, y);
+            pathArr.addLine(x, x2, y);
+
             it = std::next(it);
             hasExceededEnd = end >= clipTimeEnd;
         }
@@ -487,25 +519,11 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         g.setColour(colours.foreground);
         g.fillRectList(rectangles);
     }
-    if(!path.isEmpty())
-    {
-        juce::PathStrokeType const pathStrokeType(1.0f);
-        pathStrokeType.createStrokedPath(path, path);
-        if(!colours.shadow.isTransparent())
-        {
-            g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
-            g.fillPath(path, juce::AffineTransform::translation(0.0f, 2.0f));
-            g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
-            g.fillPath(path, juce::AffineTransform::translation(1.0f, 1.0f));
-        }
-        g.setColour(colours.foreground);
-        g.fillPath(path);
-    }
 
+    pathArr.draw(g, colours.foreground, colours.shadow);
     if(showLabel)
     {
-        g.setColour(colours.text);
-        labelArr.draw(g);
+        labelArr.draw(g, colours.text);
     }
 }
 
