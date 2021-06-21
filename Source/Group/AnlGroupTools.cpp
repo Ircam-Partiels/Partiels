@@ -91,7 +91,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                                         return &trackListener.accessor.get() == &trackAcsr.get();
                                     }))
                     {
-                        mTrackListeners.emplace(trackAcsr.get(), [this](Track::Accessor const& cTrackAcsr, Track::AttrType cTrackAttribute)
+                        mTrackListeners.emplace(typeid(*this).name(), trackAcsr.get(), [this](Track::Accessor const& cTrackAcsr, Track::AttrType cTrackAttribute)
                                                 {
                                                     juce::ignoreUnused(cTrackAcsr);
                                                     switch(cTrackAttribute)
@@ -123,6 +123,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                                                 });
                     }
                 }
+                anlWeakAssert(mTrackListeners.size() == trackAcsrs.size());
             }
             break;
         }

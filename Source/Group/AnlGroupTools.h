@@ -20,7 +20,7 @@ namespace Group
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
     public:
         std::function<void(void)> onLayoutUpdated = nullptr;

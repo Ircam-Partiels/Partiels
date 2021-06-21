@@ -74,12 +74,12 @@ namespace Application
                 void returnKeyPressed(int lastRowSelected) override;
                 void listBoxItemDoubleClicked(int row, juce::MouseEvent const& event) override;
 
-                Accessor::Listener mListener;
+                Accessor::Listener mListener{typeid(*this).name()};
                 juce::ListBox mListBox{"", this};
                 JUCE_LEAK_DETECTOR(FileTable)
             };
 
-            Document::Accessor::Listener mDocumentListener;
+            Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
 
             juce::TextButton mLoadFileButton{juce::translate("Load")};
             juce::Label mLoadFileInfo{"", ""};
@@ -96,7 +96,7 @@ namespace Application
             bool mIsDragging{false};
         };
 
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         Document::Section mDocumentSection;
         Loader mLoader;
         Decorator mLoaderDecorator{mLoader};

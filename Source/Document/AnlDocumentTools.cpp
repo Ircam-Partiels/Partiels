@@ -141,9 +141,10 @@ std::optional<juce::String> Document::Tools::getFocusedGroup(Accessor const& acc
     return groupIt->get().getAttr<Group::AttrType::identifier>();
 }
 
-Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(void)> fn)
+Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn)
 : mAccessor(accessor)
 , onLayoutUpdated(fn)
+, mName(name)
 {
     mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
@@ -152,7 +153,7 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
         {
             case AcsrType::tracks:
             {
-                mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
+                mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                         {
                                             juce::ignoreUnused(trackAcsr);
                                             switch(trackAttribute)
@@ -182,11 +183,12 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
                                                     break;
                                             }
                                         });
+                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
             {
-                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                         {
                                             juce::ignoreUnused(groupAcsr);
                                             switch(groupAttribute)
@@ -209,6 +211,7 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
                                                     break;
                                             }
                                         });
+                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
             case AcsrType::timeZoom:
@@ -225,11 +228,13 @@ Document::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(
             case AcsrType::tracks:
             {
                 mTrackListeners.erase(mTrackListeners.begin() + static_cast<long>(index));
+                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
             {
                 mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
+                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
             case AcsrType::timeZoom:

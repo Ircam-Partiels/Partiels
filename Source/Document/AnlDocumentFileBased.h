@@ -39,10 +39,10 @@ namespace Document
         Accessor& mAccessor;
         Director& mDirector;
         juce::String const mFileExtension;
-        Accessor::Listener mListener;
-        Track::Accessor::Listener mTrackListener;
+        Accessor::Listener mListener{typeid(*this).name()};
+        Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         std::vector<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
-        Group::Accessor::Listener mGroupListener;
+        Group::Accessor::Listener mGroupListener{typeid(*this).name()};
         std::vector<std::reference_wrapper<Group::Accessor>> mGroupAccessors;
 
         juce::File mLastFile;

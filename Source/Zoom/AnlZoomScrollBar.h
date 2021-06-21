@@ -30,7 +30,7 @@ namespace Zoom
         void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
 
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         juce::ScrollBar mScrollBar;
         bool const mIsInversed;
     };

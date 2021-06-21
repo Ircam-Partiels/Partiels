@@ -30,7 +30,7 @@ namespace Track
     private:
         Accessor& mAccessor;
         Mode const mMode;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         double mProgressValue;
         juce::ProgressBar mProgressBar{mProgressValue};
         juce::Image mStateImage;

@@ -22,8 +22,8 @@ namespace Group
         void updateTooltip();
 
         Accessor& mAccessor;
-        Accessor::Listener mListener;
-        Track::Accessor::Listener mTrackListener;
+        Accessor::Listener mListener{typeid(*this).name()};
+        Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         LoadingCircle mProcessingButton;
 
         TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;

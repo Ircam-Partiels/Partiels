@@ -14,7 +14,7 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 
 Document::Section::Section(Director& director)
 : mDirector(director)
-, mLayoutNotifier(mAccessor, [this]()
+, mLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                   {
                       updateLayout();
                   })

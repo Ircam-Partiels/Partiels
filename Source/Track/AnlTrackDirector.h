@@ -62,7 +62,7 @@ namespace Track
         Loader mLoader;
         Graphics mGraphics;
         std::optional<std::reference_wrapper<Zoom::Accessor>> mSharedZoomAccessor;
-        Zoom::Accessor::Listener mSharedZoomListener;
+        Zoom::Accessor::Listener mSharedZoomListener{typeid(*this).name()};
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
 

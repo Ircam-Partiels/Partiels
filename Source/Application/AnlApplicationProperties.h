@@ -34,8 +34,8 @@ namespace Application
         void saveToFile(PropertyType type);
         void loadFromFile(PropertyType type);
 
-        Accessor::Listener mApplicationListener;
-        PluginList::Accessor::Listener mPluginListListener;
+        Accessor::Listener mApplicationListener{typeid(*this).name()};
+        PluginList::Accessor::Listener mPluginListListener{typeid(*this).name()};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Properties)
     };

@@ -30,7 +30,7 @@ namespace Group
         Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         Section mSection{mDirector, mTransportAccessor, mTimeZoomAccessor};
         TrackMap<std::unique_ptr<Track::Section>> mTrackSections;

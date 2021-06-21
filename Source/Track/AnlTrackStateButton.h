@@ -19,7 +19,7 @@ namespace Track
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         LoadingCircle mProcessingButton;
     };
 } // namespace Track

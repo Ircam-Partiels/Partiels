@@ -30,17 +30,18 @@ namespace Document
     class LayoutNotifier
     {
     public:
-        LayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr);
+        LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn = nullptr);
         ~LayoutNotifier();
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
     public:
         std::function<void(void)> onLayoutUpdated = nullptr;
 
     private:
+        juce::String const mName;
         std::vector<Track::Accessor::SmartListener> mTrackListeners;
         std::vector<Group::Accessor::SmartListener> mGroupListeners;
     };

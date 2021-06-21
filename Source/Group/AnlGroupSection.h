@@ -50,7 +50,7 @@ namespace Group
         Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         Thumbnail mThumbnail{mDirector};
         Decorator mThumbnailDecoration{mThumbnail};

@@ -19,9 +19,9 @@ namespace Track
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
-        Zoom::Accessor::Listener mZoomListener;
-        Zoom::Grid::Accessor::Listener mGridListener;
+        Accessor::Listener mListener{typeid(*this).name()};
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Zoom::Grid::Accessor::Listener mGridListener{typeid(*this).name()};
         juce::Justification mJustification;
     };
 } // namespace Track

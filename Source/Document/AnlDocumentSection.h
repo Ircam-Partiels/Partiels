@@ -63,7 +63,7 @@ namespace Document
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
 
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};

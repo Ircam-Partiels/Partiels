@@ -23,7 +23,7 @@ namespace Group
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         PropertyText mPropertyName;
         PropertyColourButton mPropertyBackgroundColour;

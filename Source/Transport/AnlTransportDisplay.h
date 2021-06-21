@@ -20,7 +20,7 @@ namespace Transport
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         juce::ImageButton mRewindButton;
         juce::ImageButton mPlaybackButton;

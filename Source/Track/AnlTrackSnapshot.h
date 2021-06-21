@@ -39,8 +39,8 @@ namespace Track
             Snapshot& mSnapshot;
             Accessor& mAccessor;
             Transport::Accessor& mTransportAccessor;
-            Accessor::Listener mListener;
-            Transport::Accessor::Listener mTransportListener;
+            Accessor::Listener mListener{typeid(*this).name()};
+            Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
             Grid mGrid{mAccessor, juce::Justification::left};
         };
 
@@ -53,9 +53,9 @@ namespace Track
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        Accessor::Listener mListener;
-        Zoom::Accessor::Listener mZoomListener;
-        Transport::Accessor::Listener mTransportListener;
+        Accessor::Listener mListener{typeid(*this).name()};
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
     };
 } // namespace Track
 

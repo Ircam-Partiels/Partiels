@@ -38,7 +38,7 @@ namespace Track
         Accessor& mAccessor{mDirector.getAccessor()};
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         Thumbnail mThumbnail{mDirector};
         Decorator mThumbnailDecoration{mThumbnail};

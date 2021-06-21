@@ -29,9 +29,9 @@ namespace Transport
 
     private:
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         Zoom::Accessor& mZoomAccessor;
-        Zoom::Accessor::Listener mZoomListener;
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
         double mStartPlayhead = 0.0;
         double mRunningPlayhead = 0.0;
     };

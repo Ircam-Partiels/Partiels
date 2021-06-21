@@ -101,7 +101,7 @@ namespace Zoom
         // clang-format on
 
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         size_t mPrimaryTickInterval = 3;
         double mTickReferenceValue = 0.0;

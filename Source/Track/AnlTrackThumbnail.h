@@ -36,7 +36,7 @@ namespace Track
     private:
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
 
         PropertyPanel mPropertyPanel{mDirector};

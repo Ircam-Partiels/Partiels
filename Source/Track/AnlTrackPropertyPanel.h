@@ -28,10 +28,10 @@ namespace Track
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
-        Accessor::Listener mListener;
-        Zoom::Accessor::Listener mValueZoomListener;
-        Zoom::Accessor::Listener mBinZoomListener;
-        Zoom::Grid::Accessor::Listener mGridListener;
+        Accessor::Listener mListener{typeid(*this).name()};
+        Zoom::Accessor::Listener mValueZoomListener{typeid(*this).name()};
+        Zoom::Accessor::Listener mBinZoomListener{typeid(*this).name()};
+        Zoom::Grid::Accessor::Listener mGridListener{typeid(*this).name()};
         BoundsListener mBoundsListener;
 
         PropertyText mPropertyName;

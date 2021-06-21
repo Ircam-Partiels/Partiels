@@ -44,8 +44,8 @@ namespace Group
             Plot& mPlot;
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
-            Accessor::Listener mListener;
-            Zoom::Accessor::Listener mTimeZoomListener;
+            Accessor::Listener mListener{typeid(*this).name()};
+            Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             Transport::PlayheadBar mTransportPlayheadBar;
             bool mSnapshotMode{false};
         };
@@ -56,8 +56,8 @@ namespace Group
         Accessor& mAccessor;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        Zoom::Accessor::Listener mZoomListener;
-        Track::Accessor::Listener mTrackListener;
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         LayoutNotifier mLayoutNotifier;
     };

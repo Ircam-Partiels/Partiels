@@ -591,20 +591,26 @@ namespace Model
 
         struct Listener
         {
-            Listener() = default;
+            Listener(juce::String const n) : name(n)
+            {
+            }
+            
             virtual ~Listener() = default;
 
             std::function<void(parent_t const&, attr_enum_type)> onAttrChanged = nullptr;
             std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInserted = nullptr;
             std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErased = nullptr;
+            
+            juce::String name;
         };
 
         struct SmartListener
         : public Listener
         {
         public:
-            SmartListener(parent_t& acsr, std::function<void(parent_t const&, attr_enum_type)> onAttrChangedFn, std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInsertedFn = nullptr, std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErasedFn = nullptr)
-            : accessor(std::ref(acsr))
+            SmartListener(juce::String const n, parent_t& acsr, std::function<void(parent_t const&, attr_enum_type)> onAttrChangedFn, std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInsertedFn = nullptr, std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErasedFn = nullptr)
+            : Listener(n)
+            , accessor(std::ref(acsr))
             {
                 this->onAttrChanged = onAttrChangedFn;
                 this->onAccessorInserted = onAccessorInsertedFn;

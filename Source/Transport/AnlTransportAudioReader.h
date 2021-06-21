@@ -87,7 +87,7 @@ namespace Transport
         };
 
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         double mSampleRate = 44100.0;
         int mSamplesPerBlockExpected = 512;
 

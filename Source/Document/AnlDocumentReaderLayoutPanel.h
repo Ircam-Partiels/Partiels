@@ -107,7 +107,7 @@ namespace Document
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         juce::AudioFormatManager& mAudioFormatManager{mDirector.getAudioFormatManager()};
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         std::vector<std::unique_ptr<Channel>> mChannels;
         DraggableTable mDraggableTable{"Channel"};

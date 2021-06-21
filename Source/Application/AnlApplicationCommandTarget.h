@@ -64,7 +64,7 @@ namespace Application
         void addPluginTrack(Plugin::Key const& key, Plugin::Description const& description, juce::String groupIdentifier, size_t position);
         void addFileTrack(juce::File const& file, juce::String groupIdentifier, size_t position);
 
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         PluginList::Table mPluginListTable;
     };
 } // namespace Application

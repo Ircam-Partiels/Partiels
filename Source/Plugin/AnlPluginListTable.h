@@ -41,7 +41,7 @@ namespace PluginList
 
         Accessor& mAccessor;
         Scanner& mScanner;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{"PluginList::Table"};
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         juce::TableListBox mPluginTable;
         ColouredPanel mSeparator;

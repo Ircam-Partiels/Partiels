@@ -43,9 +43,9 @@ namespace Transport
         // clang-format on
 
         Accessor& mAccessor;
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         Zoom::Accessor& mZoomAccessor;
-        Zoom::Accessor::Listener mZoomListener;
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
         juce::Range<double> mLoopRange;
         double mCickTime = 0.0;
         juce::Range<double> mSavedRange;

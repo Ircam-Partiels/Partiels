@@ -43,8 +43,8 @@ namespace Track
             Plot& mPlot;
             Accessor& mAccessor;
             Zoom::Accessor& mTimeZoomAccessor;
-            Accessor::Listener mListener;
-            Zoom::Accessor::Listener mTimeZoomListener;
+            Accessor::Listener mListener{typeid(*this).name()};
+            Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             Transport::PlayheadBar mTransportPlayheadBar;
             Grid mGrid{mAccessor, juce::Justification::horizontallyJustified};
             bool mSnapshotMode{false};
@@ -103,8 +103,8 @@ namespace Track
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        Zoom::Accessor::Listener mZoomListener;
-        Accessor::Listener mListener;
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Accessor::Listener mListener{typeid(*this).name()};
     };
 } // namespace Track
 

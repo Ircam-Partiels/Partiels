@@ -83,7 +83,7 @@ Application::Exporter::Exporter()
                           exportToFile();
                       }
                   })
-, mDocumentLayoutNotifier(Instance::get().getDocumentAccessor(), [this]()
+, mDocumentLayoutNotifier(typeid(*this).name(), Instance::get().getDocumentAccessor(), [this]()
                           {
                               updateItems();
                           })

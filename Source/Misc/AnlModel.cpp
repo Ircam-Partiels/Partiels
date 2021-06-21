@@ -195,7 +195,7 @@ public:
         {
             std::array<bool, magic_enum::enum_count<AttrType>()> notifications;
 
-            ModelLtnr ltnr;
+            ModelLtnr ltnr{"Listener"};
             ltnr.onAttrChanged = [&](ModelAcsr const& acsr, AttrType attribute)
             {
                 juce::ignoreUnused(acsr);

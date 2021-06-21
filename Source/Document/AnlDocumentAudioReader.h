@@ -27,7 +27,7 @@ namespace Document
         juce::AudioFormatManager& mAudioFormatManager;
         Transport::AudioReader mTransportAudioReader;
 
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioReader)
     };

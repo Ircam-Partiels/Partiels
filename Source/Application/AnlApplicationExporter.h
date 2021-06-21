@@ -32,7 +32,7 @@ namespace Application
 
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
-        Accessor::Listener mListener;
+        Accessor::Listener mListener{typeid(*this).name()};
         PropertyList mPropertyItem;
         PropertyList mPropertyFormat;
         PropertyToggle mPropertyGroupMode;

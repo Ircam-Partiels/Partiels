@@ -40,8 +40,8 @@ namespace Group
             Snapshot& mSnapshot;
             Accessor& mAccessor;
             Transport::Accessor& mTransportAccessor;
-            Accessor::Listener mListener;
-            Transport::Accessor::Listener mTransportListener;
+            Accessor::Listener mListener{typeid(*this).name()};
+            Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         };
 
     private:
@@ -50,9 +50,9 @@ namespace Group
         Accessor& mAccessor;
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
-        Transport::Accessor::Listener mTransportListener;
-        Zoom::Accessor::Listener mZoomListener;
-        Track::Accessor::Listener mTrackListener;
+        Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         LayoutNotifier mLayoutNotifier;
     };
