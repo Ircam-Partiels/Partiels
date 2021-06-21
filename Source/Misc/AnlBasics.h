@@ -69,6 +69,24 @@ namespace Format
         text[0_z] = static_cast<std::string::value_type>(std::toupper(static_cast<int>(text[0_z])));
         return text;
     }
+    
+    inline juce::String valueToString(double value, int numDecimals)
+    {
+        if(numDecimals == 0)
+        {
+            return juce::String(static_cast<int>(value));
+        }
+        return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
+    }
+    
+    inline juce::String valueToString(float value, int numDecimals)
+    {
+        if(numDecimals == 0)
+        {
+            return juce::String(static_cast<int>(value));
+        }
+        return juce::String(value, numDecimals).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
+    }
 } // namespace Format
 
 namespace App
