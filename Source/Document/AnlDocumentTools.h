@@ -42,8 +42,8 @@ namespace Document
 
     private:
         juce::String const mName;
-        std::vector<Track::Accessor::SmartListener> mTrackListeners;
-        std::vector<Group::Accessor::SmartListener> mGroupListeners;
+        std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
+        std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
     };
 } // namespace Document
 

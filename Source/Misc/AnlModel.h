@@ -601,7 +601,9 @@ namespace Model
             std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorInserted = nullptr;
             std::function<void(parent_t const&, acsr_enum_type, size_t)> onAccessorErased = nullptr;
             
-            juce::String name;
+            juce::String const name;
+            
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Listener)
         };
 
         struct SmartListener
@@ -617,13 +619,15 @@ namespace Model
                 this->onAccessorErased = onAccessorErasedFn;
                 accessor.get().addListener(*this, NotificationType::synchronous);
             }
-
+            
             ~SmartListener() override
             {
                 accessor.get().removeListener(*this);
             }
 
-            std::reference_wrapper<parent_t> accessor;
+            std::reference_wrapper<parent_t> const accessor;
+            
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SmartListener)
         };
 
         void addListener(Listener& listener, NotificationType const notification)

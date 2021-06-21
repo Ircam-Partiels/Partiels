@@ -69,7 +69,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                 {
                     if(std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
                                     {
-                                        return std::addressof(it->accessor.get()) == std::addressof(trackAcsr.get());
+                                        return *it == nullptr || std::addressof((*it)->accessor.get()) == std::addressof(trackAcsr.get());
                                     }))
                     {
                         it = mTrackListeners.erase(it);
@@ -88,10 +88,10 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                 {
                     if(std::none_of(mTrackListeners.cbegin(), mTrackListeners.cend(), [&](auto const& trackListener)
                                     {
-                                        return &trackListener.accessor.get() == &trackAcsr.get();
+                                        return trackListener != nullptr && std::addressof(trackListener->accessor.get()) == std::addressof(trackAcsr.get());
                                     }))
                     {
-                        mTrackListeners.emplace(typeid(*this).name(), trackAcsr.get(), [this](Track::Accessor const& cTrackAcsr, Track::AttrType cTrackAttribute)
+                        auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), trackAcsr.get(), [this](Track::Accessor const& cTrackAcsr, Track::AttrType cTrackAttribute)
                                                 {
                                                     juce::ignoreUnused(cTrackAcsr);
                                                     switch(cTrackAttribute)
@@ -121,6 +121,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                                                             break;
                                                     }
                                                 });
+                        mTrackListeners.insert(std::move(listener));
                     }
                 }
                 anlWeakAssert(mTrackListeners.size() == trackAcsrs.size());

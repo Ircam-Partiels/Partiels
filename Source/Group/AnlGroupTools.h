@@ -28,12 +28,12 @@ namespace Group
     private:
         struct cmp
         {
-            bool operator()(Track::Accessor::SmartListener const& lhs, Track::Accessor::SmartListener const& rhs) const
+            bool operator()(std::unique_ptr<Track::Accessor::SmartListener> const& lhs, std::unique_ptr<Track::Accessor::SmartListener> const& rhs) const
             {
-                return std::addressof(lhs.accessor.get()) > std::addressof(rhs.accessor.get());
+                return rhs == nullptr || (lhs != nullptr && std::addressof(lhs->accessor.get()) > std::addressof(rhs->accessor.get()));
             }
         };
-        std::set<Track::Accessor::SmartListener, cmp> mTrackListeners;
+        std::set<std::unique_ptr<Track::Accessor::SmartListener>, cmp> mTrackListeners;
     };
 
     template <typename T>

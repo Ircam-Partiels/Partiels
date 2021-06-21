@@ -153,7 +153,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
         {
             case AcsrType::tracks:
             {
-                mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
+                auto listener = std::make_unique<Track::Accessor::SmartListener>(mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                         {
                                             juce::ignoreUnused(trackAcsr);
                                             switch(trackAttribute)
@@ -183,12 +183,13 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                     break;
                                             }
                                         });
+                mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
                 anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
             }
             break;
             case AcsrType::groups:
             {
-                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                auto listener = std::make_unique<Group::Accessor::SmartListener>(mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                         {
                                             juce::ignoreUnused(groupAcsr);
                                             switch(groupAttribute)
@@ -211,6 +212,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                     break;
                                             }
                                         });
+                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
                 anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
             }
             break;
