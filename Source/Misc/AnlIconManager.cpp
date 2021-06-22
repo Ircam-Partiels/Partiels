@@ -21,6 +21,12 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::editer_png, IconsData::editer_pngSize);
         case IconType::expand:
             return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
+        case IconType::grid_off:
+            return juce::ImageCache::getFromMemory(IconsData::gridoff_png, IconsData::gridoff_pngSize);
+        case IconType::grid_partial:
+            return juce::ImageCache::getFromMemory(IconsData::gridpartial_png, IconsData::gridpartial_pngSize);
+        case IconType::grid_full:
+            return juce::ImageCache::getFromMemory(IconsData::gridfull_png, IconsData::gridfull_pngSize);
         case IconType::layers:
             return juce::ImageCache::getFromMemory(IconsData::layers_png, IconsData::layers_pngSize);
         case IconType::information:

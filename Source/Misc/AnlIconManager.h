@@ -26,6 +26,9 @@ public:
         , conversation
         , edit
         , expand
+        , grid_off
+        , grid_partial
+        , grid_full
         , information
         , layers
         , loading
