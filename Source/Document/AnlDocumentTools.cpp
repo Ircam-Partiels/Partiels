@@ -254,6 +254,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AttrType::reader:
             case AttrType::viewport:
             case AttrType::path:
+            case AttrType::grid:
                 break;
             case AttrType::layout:
             {

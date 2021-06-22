@@ -154,6 +154,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::path:
+            case AttrType::grid:
                 break;
         }
     };

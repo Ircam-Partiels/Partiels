@@ -244,6 +244,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::path:
+            case AttrType::grid:
                 break;
         }
     };

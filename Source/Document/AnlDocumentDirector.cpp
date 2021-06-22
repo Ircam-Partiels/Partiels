@@ -47,6 +47,16 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 initializeAudioReaders(notification);
             }
             break;
+            case AttrType::grid:
+            {
+                auto const mode = mAccessor.getAttr<AttrType::grid>();
+                auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+                for(auto trackAcsr : trackAcsrs)
+                {
+                    trackAcsr.get().setAttr<Track::AttrType::grid>(mode, notification);
+                }
+            }
+            break;
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::path:
@@ -68,6 +78,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     return;
                 }
                 auto& trackAcsr = trackAcsrs[index].get();
+                trackAcsr.setAttr<Track::AttrType::grid>(mAccessor.getAttr<AttrType::grid>(), notification);
                 auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
                 anlStrongAssert(director != nullptr);
                 if(director != nullptr)
