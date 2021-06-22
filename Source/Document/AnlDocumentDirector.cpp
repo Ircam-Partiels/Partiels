@@ -209,6 +209,17 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 break;
         }
     };
+
+    auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
+    gridAcsr.onAttrUpdated = [&](Zoom::Grid::AttrType attribute, NotificationType notification)
+    {
+        juce::ignoreUnused(attribute);
+        gridAcsr.setAttr<Zoom::Grid::AttrType::tickReference>(0.0, notification);
+        gridAcsr.setAttr<Zoom::Grid::AttrType::mainTickInterval>(0_z, notification);
+        gridAcsr.setAttr<Zoom::Grid::AttrType::tickPowerBase>(10.0, notification);
+        gridAcsr.setAttr<Zoom::Grid::AttrType::tickDivisionFactor>(2.0, notification);
+    };
+    gridAcsr.onAttrUpdated(Zoom::Grid::AttrType::tickReference, notification);
 }
 
 Document::Director::~Director()
