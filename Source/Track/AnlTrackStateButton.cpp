@@ -40,6 +40,7 @@ Track::StateButton::StateButton(Accessor& accessor)
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::grid:
                 break;
         }
     };

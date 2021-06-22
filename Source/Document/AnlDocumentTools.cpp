@@ -180,6 +180,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                                                          case Track::AttrType::warnings:
                                                                                          case Track::AttrType::processing:
                                                                                          case Track::AttrType::focused:
+                                                                                         case Track::AttrType::grid:
                                                                                              break;
                                                                                      }
                                                                                  });

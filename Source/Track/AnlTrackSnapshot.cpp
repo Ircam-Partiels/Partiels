@@ -26,6 +26,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::processing:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::grid:
                 break;
             case AttrType::results:
             case AttrType::graphics:
@@ -320,6 +321,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::results:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::grid:
             case AttrType::warnings:
             case AttrType::processing:
                 break;

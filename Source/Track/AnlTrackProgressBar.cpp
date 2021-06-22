@@ -84,6 +84,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::grid:
                 break;
         }
     };

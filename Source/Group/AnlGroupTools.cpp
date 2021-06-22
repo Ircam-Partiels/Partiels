@@ -118,6 +118,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                                                                                                  case Track::AttrType::warnings:
                                                                                                  case Track::AttrType::processing:
                                                                                                  case Track::AttrType::focused:
+                                                                                                 case Track::AttrType::grid:
                                                                                                      break;
                                                                                              }
                                                                                          });

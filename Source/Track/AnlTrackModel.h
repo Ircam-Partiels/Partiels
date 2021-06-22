@@ -9,8 +9,6 @@ ANALYSE_FILE_BEGIN
 
 namespace Track
 {
-    using ColourMap = tinycolormap::ColormapType;
-
     class Results
     {
     public:
@@ -159,6 +157,8 @@ namespace Track
 
     using Images = std::vector<std::vector<juce::Image>>;
 
+    using ColourMap = tinycolormap::ColormapType;
+
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
@@ -188,6 +188,13 @@ namespace Track
     void from_json(nlohmann::json const& j, ColourSet& colourSet);
 
     // clang-format off
+    enum class GridMode
+    {
+          hidden
+        , partial
+        , full
+    };
+
     enum class WarningType
     {
           none
@@ -215,6 +222,7 @@ namespace Track
         , warnings
         , processing
         , focused
+        , grid
     };
 
     enum class AcsrType : size_t
@@ -246,6 +254,7 @@ namespace Track
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
     , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::grid, GridMode, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -280,6 +289,7 @@ namespace Track
                                  , {WarningType::none}
                                  , {{false, 0.0, false, 0.0}}
                                  , {false}
+                                 , {GridMode::partial}
                                  ))
         {
         }

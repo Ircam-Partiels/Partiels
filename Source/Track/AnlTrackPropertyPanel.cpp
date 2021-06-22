@@ -650,6 +650,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::height:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::grid:
                 break;
             case AttrType::zoomLink:
             {

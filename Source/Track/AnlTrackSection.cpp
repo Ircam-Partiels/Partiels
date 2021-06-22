@@ -56,6 +56,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
+            case AttrType::grid:
                 break;
             case AttrType::focused:
             {

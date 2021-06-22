@@ -32,6 +32,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case Track::AttrType::warnings:
             case Track::AttrType::processing:
             case Track::AttrType::focused:
+            case Track::AttrType::grid:
                 break;
             case Track::AttrType::results:
             case Track::AttrType::graphics:

@@ -67,6 +67,7 @@ Track::Thumbnail::Thumbnail(Director& director)
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::focused:
+            case AttrType::grid:
                 break;
         }
     };
