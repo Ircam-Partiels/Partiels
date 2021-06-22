@@ -227,8 +227,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         juce::ignoreUnused(attribute);
         gridAcsr.setAttr<Zoom::Grid::AttrType::tickReference>(0.0, notification);
         gridAcsr.setAttr<Zoom::Grid::AttrType::mainTickInterval>(0_z, notification);
-        gridAcsr.setAttr<Zoom::Grid::AttrType::tickPowerBase>(10.0, notification);
-        gridAcsr.setAttr<Zoom::Grid::AttrType::tickDivisionFactor>(2.0, notification);
+        gridAcsr.setAttr<Zoom::Grid::AttrType::tickPowerBase>(2.0, notification);
+        gridAcsr.setAttr<Zoom::Grid::AttrType::tickDivisionFactor>(10.0, notification);
     };
     gridAcsr.onAttrUpdated(Zoom::Grid::AttrType::tickReference, NotificationType::synchronous);
 }
