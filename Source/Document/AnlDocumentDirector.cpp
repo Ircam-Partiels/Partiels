@@ -37,7 +37,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                                         copyChannelLayout.file = newFile;
                                     }
                                 }
-                                mAccessor.setAttr<AttrType::reader>(reader, NotificationType::synchronous);
+                                mAccessor.setAttr<AttrType::reader>(reader, notification);
                                 return;
                             }
                         }
