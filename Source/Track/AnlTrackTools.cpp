@@ -193,38 +193,12 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
 
     auto getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
     {
-        auto bounds = component.getLocalBounds();
-        if(!bounds.getVerticalRange().contains(y - 1))
+        auto const verticalRanges = getChannelVerticalRanges(accessor, component.getLocalBounds());
+        for(auto const& verticalRange : verticalRanges)
         {
-            return {};
-        }
-
-        auto const channelLayout = accessor.getAttr<AttrType::channelsLayout>();
-        auto const numChannels = static_cast<size_t>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
-        if(numChannels == 0_z)
-        {
-            return {};
-        }
-
-        auto const fullHeight = component.getHeight();
-        auto const channelHeight = (fullHeight - static_cast<int>(numChannels) + 1) / static_cast<int>(numChannels);
-
-        auto channelCounter = 0_z;
-        for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
-        {
-            if(channelLayout[channel])
+            if(verticalRange.second.contains(y))
             {
-                ++channelCounter;
-                auto range = bounds.removeFromTop(channelHeight + 1).getVerticalRange();
-                if(range.contains(y - 1))
-                {
-                    range = range.withEnd(range.getEnd() - (channelCounter == numChannels ? 1 : 0));
-                    if(range.contains(y - 1))
-                    {
-                        return std::make_tuple(channel, range);
-                    }
-                    return {};
-                }
+                return std::make_tuple(verticalRange.first, verticalRange.second);
             }
         }
         return {};
@@ -371,42 +345,61 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
     return Zoom::Range(0.0, static_cast<double>(results.getNumBins()));
 }
 
-void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> bounds, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
+std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
 {
     auto const channelLayout = acsr.getAttr<AttrType::channelsLayout>();
     auto const numVisibleChannels = static_cast<int>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
     if(numVisibleChannels == 0)
     {
-        return;
+        return {};
     }
-
+    
+    std::map<size_t, juce::Range<int>> verticalRanges;
+    
     auto fullHeight = static_cast<float>(bounds.getHeight() - (numVisibleChannels - 1));
     auto const channelHeight = fullHeight / static_cast<float>(numVisibleChannels);
     auto remainder = 0.0f;
     
     auto channelCounter = 0;
-    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-    auto const separatorColour = acsr.getAttr<AttrType::focused>() ? laf.findColour(Decorator::ColourIds::highlightedBorderColourId) : laf.findColour(Decorator::ColourIds::normalBorderColourId);
     for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
     {
         if(channelLayout[channel])
         {
             ++channelCounter;
-            juce::Graphics::ScopedSaveState sss(g);
             auto const currentHeight = std::min(channelHeight, fullHeight) + remainder;
             remainder = channelHeight - std::round(currentHeight);
             fullHeight -= std::round(currentHeight);
             auto region = bounds.removeFromTop(static_cast<int>(std::round(currentHeight)));
             if(channelCounter != numVisibleChannels)
             {
-                g.setColour(separatorColour);
-                g.fillRect(region.removeFromBottom(1));
+                region.removeFromBottom(1);
             }
-            g.reduceClipRegion(region);
-            if(fn != nullptr)
-            {
-                fn(region, channel);
-            }
+            verticalRanges[channel] = region.getVerticalRange();
+        }
+    }
+    return verticalRanges;
+}
+
+void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
+{
+    auto const verticalRanges = getChannelVerticalRanges(acsr, bounds);
+    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+    auto const separatorColour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
+    for(auto const& verticalRange : verticalRanges)
+    {
+        juce::Graphics::ScopedSaveState sss(g);
+        auto const top = verticalRange.second.getStart();
+        auto const bottom = verticalRange.second.getEnd();
+        auto const region = bounds.withTop(top).withBottom(bottom);
+        if(bottom < bounds.getHeight())
+        {
+            g.setColour(separatorColour);
+            g.fillRect(bounds.withTop(bottom).withBottom(bottom + 1));
+        }
+        g.reduceClipRegion(region);
+        if(fn != nullptr)
+        {
+            fn(region, verticalRange.first);
         }
     }
 }
