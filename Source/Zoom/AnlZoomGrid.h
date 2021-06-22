@@ -36,7 +36,7 @@ namespace Zoom
             {
             }
         };
-        
+
         using Justification = juce::Justification;
 
         static void paintVertical(juce::Graphics& g, Accessor const& accessor, juce::Range<double> const& visibleRange, juce::Rectangle<int> const& bounds, std::function<juce::String(double)> const stringify, Justification justification);

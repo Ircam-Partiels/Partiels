@@ -132,7 +132,7 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         auto const value = std::get<1>(tickDrawingInfo) + static_cast<double>(index) * std::get<2>(tickDrawingInfo);
         auto const isPrimaryTick = isMainTick(accessor, tickDrawingInfo, value);
         auto const tickHeight = isPrimaryTick ? 8.0f : 6.0f;
-        
+
         auto const xPos = static_cast<float>(getPosition(value));
         if(justification.testFlags(Justification::top) || justification.testFlags(Justification::verticallyCentred))
         {
