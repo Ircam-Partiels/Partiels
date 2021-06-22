@@ -14,20 +14,15 @@ void Document::Section::Viewport::visibleAreaChanged(juce::Rectangle<int> const&
 
 Document::Section::Section(Director& director)
 : mDirector(director)
+, mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [](double value)
+             {
+                 return Format::secondsToString(value, {":", ":", ":", ""});
+             })
 , mLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
                   {
                       updateLayout();
                   })
 {
-    mTimeRuler.setPrimaryTickInterval(0);
-    mTimeRuler.setTickReferenceValue(0.0);
-    mTimeRuler.setTickPowerInterval(10.0, 2.0);
-    mTimeRuler.setMaximumStringWidth(70.0);
-    mTimeRuler.setValueAsStringMethod([](double value)
-                                      {
-                                          return Format::secondsToString(value, {":", ":", ":", ""});
-                                      });
-
     mTimeRuler.onDoubleClick = [&]()
     {
         auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
