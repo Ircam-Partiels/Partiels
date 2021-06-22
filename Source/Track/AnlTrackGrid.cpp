@@ -28,6 +28,11 @@ Track::Grid::Grid(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Zoom::Gr
             case AttrType::focused:
             case AttrType::graphics:
                 break;
+            case AttrType::grid:
+            {
+                repaint();
+            }
+            break;
             case AttrType::description:
             case AttrType::results:
             {
@@ -121,6 +126,34 @@ Track::Grid::~Grid()
 
 void Track::Grid::paint(juce::Graphics& g)
 {
+    using Justification = Zoom::Grid::Justification;
+    auto getJustification = [this](Justification const& justification)
+    {
+        auto const mode = mAccessor.getAttr<AttrType::grid>();
+        switch(mode)
+        {
+            case GridMode::hidden:
+                return Justification(0);
+            case GridMode::partial:
+                return justification;
+            case GridMode::full:
+            {
+                if(justification.testFlags(Justification::left) && justification.testFlags(Justification::right))
+                {
+                    return Justification(Justification::horizontallyCentred);
+                }
+                if(justification.testFlags(Justification::top) && justification.testFlags(Justification::bottom))
+                {
+                    return Justification(Justification::verticallyCentred);
+                }
+                return justification;
+            }
+        }
+    };
+
+    auto const justificationHorizontal = getJustification(mJustification.getOnlyHorizontalFlags());
+    auto const justificationVertical = getJustification(mJustification.getOnlyVerticalFlags());
+    auto const colour = findColour(Decorator::ColourIds::normalBorderColourId);
     auto const stringify = [unit = mAccessor.getAttr<AttrType::description>().output.unit](double value)
     {
         return Format::valueToString(value, 4) + unit;
@@ -128,8 +161,8 @@ void Track::Grid::paint(juce::Graphics& g)
 
     auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
     {
-        g.setColour(mAccessor.getAttr<AttrType::colours>().grid);
-        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, mJustification.getOnlyHorizontalFlags());
+        g.setColour(colour);
+        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
     };
 
     switch(Tools::getDisplayType(mAccessor))
@@ -154,8 +187,8 @@ void Track::Grid::paint(juce::Graphics& g)
         break;
     }
 
-    g.setColour(mAccessor.getAttr<AttrType::colours>().grid);
-    Zoom::Grid::paintHorizontal(g, mTimeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), getLocalBounds(), nullptr, 70, mJustification.getOnlyVerticalFlags());
+    g.setColour(colour);
+    Zoom::Grid::paintHorizontal(g, mTimeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), getLocalBounds(), nullptr, 70, justificationVertical);
 }
 
 ANALYSE_FILE_END
