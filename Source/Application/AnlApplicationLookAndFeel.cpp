@@ -110,8 +110,7 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(ResizerBar::ColourIds::inactiveColourId, juce::Colours::transparentBlack);
 
     setColour(Zoom::Ruler::ColourIds::backgroundColourId, colourChart.get(Type::background));
-    setColour(Zoom::Ruler::ColourIds::tickColourId, colourChart.get(Type::text));
-    setColour(Zoom::Ruler::ColourIds::textColourId, colourChart.get(Type::text));
+    setColour(Zoom::Ruler::ColourIds::gridColourId, colourChart.get(Type::text));
     setColour(Zoom::Ruler::ColourIds::anchorColourId, colourChart.get(Type::active));
     setColour(Zoom::Ruler::ColourIds::selectionColourId, colourChart.get(Type::active));
 
