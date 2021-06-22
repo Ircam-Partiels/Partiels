@@ -143,7 +143,7 @@ void Zoom::Grid::paintHorizontal(juce::Graphics& g, Accessor const& accessor, ju
         {
             path.addLineSegment(juce::Line<float>(xPos, fheight - tickHeight, xPos, fheight), 1.0f);
         }
-        else if(justification.testFlags(Justification::verticallyCentred) || isPrimaryTick)
+        if(justification.testFlags(Justification::verticallyCentred) && isPrimaryTick)
         {
             path.addLineSegment(juce::Line<float>(xPos, 0.0f, xPos, fheight), 1.0f);
         }
