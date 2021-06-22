@@ -67,6 +67,7 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
         return (1.0 - (value - rangeStart) / rangeLength) * static_cast<double>(height + 1) + static_cast<double>(y);
     };
 
+    auto const textJustification = justification.testFlags(Justification::left) ? juce::Justification::left : juce::Justification::right;
     auto const tickDrawingInfo = getTickDrawingInfo(accessor, visibleRange, height - 1, font.getHeight() + 2.0f);
     juce::Path path;
     for(auto index = 0_z; index < std::get<0>(tickDrawingInfo); ++index)
@@ -92,7 +93,7 @@ void Zoom::Grid::paintVertical(juce::Graphics& g, Accessor const& accessor, juce
         if(isPrimaryTick && stringify != nullptr && yPos > static_cast<float>(y) && yPos < static_cast<float>(y + height))
         {
             auto const text = stringify(value);
-            g.drawText(text, 2, static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width - 4), static_cast<int>(std::ceil(font.getHeight())), justification);
+            g.drawText(text, 2, static_cast<int>(std::floor(yPos) - font.getAscent()) - 1, static_cast<int>(width - 4), static_cast<int>(std::ceil(font.getHeight())), textJustification);
         }
     }
     g.fillPath(path);
