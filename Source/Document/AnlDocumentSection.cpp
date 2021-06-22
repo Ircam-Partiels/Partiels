@@ -179,6 +179,13 @@ Document::Section::Section(Director& director)
         {
             case AttrType::reader:
             {
+                auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
+                mReaderAlertMessage = std::get<1>(result).joinIntoString("");
+                lookAndFeelChanged();
+            }
+            break;
+            case AttrType::grid:
+            {
                 lookAndFeelChanged();
             }
             break;
@@ -281,10 +288,9 @@ void Document::Section::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        auto const result = createAudioFormatReader(mAccessor, mDirector.getAudioFormatManager());
-        if(!std::get<1>(result).isEmpty())
+        if(!mReaderAlertMessage.isEmpty())
         {
-            mReaderLayoutButton.setTooltip(std::get<1>(result).joinIntoString(""));
+            mReaderLayoutButton.setTooltip(mReaderAlertMessage);
             laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::alert);
         }
         else
