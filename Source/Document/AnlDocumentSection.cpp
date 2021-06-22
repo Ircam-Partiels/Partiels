@@ -160,6 +160,31 @@ Document::Section::Section(Director& director)
         }
     };
 
+    addAndMakeVisible(mGridButton);
+    mGridButton.setTooltip(juce::translate("Change the mode of the grid"));
+    mGridButton.onClick = [this]()
+    {
+        auto const mode = mAccessor.getAttr<AttrType::grid>();
+        switch(mode)
+        {
+            case GridMode::hidden:
+            {
+                mAccessor.setAttr<AttrType::grid>(GridMode::partial, NotificationType::synchronous);
+            }
+            break;
+            case GridMode::partial:
+            {
+                mAccessor.setAttr<AttrType::grid>(GridMode::full, NotificationType::synchronous);
+            }
+            break;
+            case GridMode::full:
+            {
+                mAccessor.setAttr<AttrType::grid>(GridMode::hidden, NotificationType::synchronous);
+            }
+            break;
+        }
+    };
+
     addAndMakeVisible(tooltipButton);
 
     addAndMakeVisible(mTransportDisplay);
@@ -244,34 +269,34 @@ Document::Section::~Section()
 
 void Document::Section::resized()
 {
-    auto constexpr leftSize = 96;
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
-    auto const rightSize = 24 + scrollbarWidth;
     auto bounds = getLocalBounds();
 
     {
         auto header = bounds.removeFromTop(40);
         mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-        header.removeFromLeft(2);
+        header.removeFromLeft(5);
         header = header.withRight(mTransportDisplay.getX());
         mReaderLayoutButton.setBounds(header.removeFromLeft(24).withSizeKeepingCentre(24, 24));
-        header.removeFromLeft(2);
+        header.removeFromLeft(4);
         auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
         auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
         auto const buttonWidth = std::min(textWidth, header.getWidth());
         mDocumentName.setBounds(header.removeFromLeft(buttonWidth).withSizeKeepingCentre(buttonWidth, 24));
     }
 
-    auto topPart = bounds.removeFromTop(28);
-    mExpandLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
-    mResizeLayoutButton.setBounds(topPart.removeFromLeft(24).withSizeKeepingCentre(20, 20));
-    tooltipButton.setBounds(topPart.removeFromRight(rightSize).withSizeKeepingCentre(20, 20));
-    topPart.removeFromLeft(48);
+    {
+        auto topPart = bounds.removeFromTop(28);
+        mGridButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(18, 18));
+        mExpandLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
+        mResizeLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
+        tooltipButton.setBounds(topPart.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
+        mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
+        mLoopBarDecoration.setBounds(topPart);
+    }
 
-    mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
-    mLoopBarDecoration.setBounds(topPart);
     mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
-    auto const timeScrollBarBounds = bounds.removeFromBottom(8).withTrimmedLeft(leftSize).withTrimmedRight(rightSize);
+    auto const timeScrollBarBounds = bounds.removeFromBottom(8).withX(mTimeRulerDecoration.getX()).withRight(mTimeRulerDecoration.getRight());
     mTimeScrollBar.setBounds(timeScrollBarBounds);
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
@@ -301,6 +326,24 @@ void Document::Section::lookAndFeelChanged()
         laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::layers);
         laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::perspective);
         laf->setButtonIcon(tooltipButton, IconManager::IconType::conversation);
+        switch(mAccessor.getAttr<AttrType::grid>())
+        {
+            case GridMode::hidden:
+            {
+                laf->setButtonIcon(mGridButton, IconManager::IconType::grid_off);
+            }
+            break;
+            case GridMode::partial:
+            {
+                laf->setButtonIcon(mGridButton, IconManager::IconType::grid_partial);
+            }
+            break;
+            case GridMode::full:
+            {
+                laf->setButtonIcon(mGridButton, IconManager::IconType::grid_full);
+            }
+            break;
+        }
     }
 }
 

@@ -83,7 +83,7 @@ void Group::Section::resized()
 
     auto bounds = getLocalBounds();
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
-    mSnapshotDecoration.setBounds(bounds.removeFromLeft(48));
+    mSnapshotDecoration.setBounds(bounds.removeFromLeft(36));
 
     mScrollBar.setBounds(bounds.removeFromRight(8));
     mRuler.setBounds(bounds.removeFromRight(16));

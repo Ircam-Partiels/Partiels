@@ -70,7 +70,9 @@ namespace Document
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
         juce::ImageButton mReaderLayoutButton;
+        juce::String mReaderAlertMessage;
         juce::TextButton mDocumentName;
+        juce::ImageButton mGridButton;
         juce::ImageButton mExpandLayoutButton;
         juce::ImageButton mResizeLayoutButton;
 
