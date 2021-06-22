@@ -380,8 +380,10 @@ void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::
         return;
     }
 
-    auto const channelHeight = (bounds.getHeight() - (numVisibleChannels - 1)) / static_cast<int>(numVisibleChannels);
-
+    auto fullHeight = static_cast<float>(bounds.getHeight() - (numVisibleChannels - 1));
+    auto const channelHeight = fullHeight / static_cast<float>(numVisibleChannels);
+    auto remainder = 0.0f;
+    
     auto channelCounter = 0;
     auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
     auto const separatorColour = acsr.getAttr<AttrType::focused>() ? laf.findColour(Decorator::ColourIds::highlightedBorderColourId) : laf.findColour(Decorator::ColourIds::normalBorderColourId);
@@ -391,7 +393,10 @@ void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::
         {
             ++channelCounter;
             juce::Graphics::ScopedSaveState sss(g);
-            auto region = bounds.removeFromTop(channelHeight);
+            auto const currentHeight = std::min(channelHeight, fullHeight) + remainder;
+            remainder = channelHeight - std::round(currentHeight);
+            fullHeight -= std::round(currentHeight);
+            auto region = bounds.removeFromTop(static_cast<int>(std::round(currentHeight)));
             if(channelCounter != numVisibleChannels)
             {
                 g.setColour(separatorColour);
