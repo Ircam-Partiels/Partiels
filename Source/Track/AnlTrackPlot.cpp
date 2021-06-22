@@ -652,6 +652,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mTransportPlayheadBar(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
+, mGrid(mAccessor, mTimeZoomAccessor, Zoom::Grid::Justification::bottomLeft | Zoom::Grid::Justification::topRight)
 {
     addAndMakeVisible(mGrid);
     addAndMakeVisible(mPlot);

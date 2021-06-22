@@ -46,7 +46,7 @@ namespace Track
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             Transport::PlayheadBar mTransportPlayheadBar;
-            Grid mGrid{mAccessor, juce::Justification::horizontallyJustified};
+            Grid mGrid;
             bool mSnapshotMode{false};
         };
 

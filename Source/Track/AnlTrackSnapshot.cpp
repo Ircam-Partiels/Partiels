@@ -298,6 +298,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 : mSnapshot(snapshot)
 , mAccessor(mSnapshot.mAccessor)
 , mTransportAccessor(mSnapshot.mTransportAccessor)
+, mGrid(mAccessor, mSnapshot.mTimeZoomAccessor, Zoom::Grid::Justification::left)
 {
     addAndMakeVisible(mGrid);
     addAndMakeVisible(mSnapshot);

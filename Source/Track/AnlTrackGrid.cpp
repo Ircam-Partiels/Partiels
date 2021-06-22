@@ -5,8 +5,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Grid::Grid(Accessor& accessor, juce::Justification const justification)
+Track::Grid::Grid(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Zoom::Grid::Justification const justification)
 : mAccessor(accessor)
+, mTimeZoomAccessor(timeZoomAccessor)
 , mJustification(justification)
 {
     setInterceptsMouseClicks(false, false);
@@ -90,23 +91,39 @@ Track::Grid::Grid(Accessor& accessor, juce::Justification const justification)
         repaint();
     };
 
-    mAccessor.addListener(mListener, NotificationType::synchronous);
+    if(mJustification.getOnlyVerticalFlags() != 0)
+    {
+        mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+        mTimeZoomAccessor.getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
+    }
+    if(mJustification.getOnlyHorizontalFlags() != 0)
+    {
+        mAccessor.addListener(mListener, NotificationType::synchronous);
+    }
 }
 
 Track::Grid::~Grid()
 {
-    mAccessor.getAcsr<AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
-    mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
-    mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
-    mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
-    mAccessor.removeListener(mListener);
+    if(mJustification.getOnlyHorizontalFlags() != 0)
+    {
+        mAccessor.getAcsr<AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
+        mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
+        mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
+        mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
+        mAccessor.removeListener(mListener);
+    }
+    if(mJustification.getOnlyVerticalFlags() != 0)
+    {
+        mTimeZoomAccessor.getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
+        mTimeZoomAccessor.removeListener(mZoomListener);
+    }
 }
 
 void Track::Grid::paint(juce::Graphics& g)
 {
     auto const stringify = [unit = mAccessor.getAttr<AttrType::description>().output.unit](double value)
     {
-        return juce::String(value, 4).trimCharactersAtEnd("0").trimCharactersAtEnd(".");
+        return Format::valueToString(value, 4) + unit;
     };
 
     auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
@@ -136,6 +153,9 @@ void Track::Grid::paint(juce::Graphics& g)
         }
         break;
     }
+
+    g.setColour(mAccessor.getAttr<AttrType::colours>().grid);
+    Zoom::Grid::paintHorizontal(g, mTimeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), getLocalBounds(), nullptr, 70, mJustification.getOnlyVerticalFlags());
 }
 
 ANALYSE_FILE_END

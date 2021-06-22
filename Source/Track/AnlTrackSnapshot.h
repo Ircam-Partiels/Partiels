@@ -41,7 +41,7 @@ namespace Track
             Transport::Accessor& mTransportAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-            Grid mGrid{mAccessor, juce::Justification::left};
+            Grid mGrid;
         };
 
         static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr, double time);
