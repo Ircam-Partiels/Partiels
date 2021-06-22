@@ -353,13 +353,13 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
     {
         return {};
     }
-    
+
     std::map<size_t, juce::Range<int>> verticalRanges;
-    
+
     auto fullHeight = static_cast<float>(bounds.getHeight() - (numVisibleChannels - 1));
     auto const channelHeight = fullHeight / static_cast<float>(numVisibleChannels);
     auto remainder = 0.0f;
-    
+
     auto channelCounter = 0;
     for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
     {
