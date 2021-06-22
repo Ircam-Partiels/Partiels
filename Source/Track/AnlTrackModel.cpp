@@ -14,7 +14,6 @@ void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier 
         toXml(*child, "foreground", value.foreground);
         toXml(*child, "text", value.text);
         toXml(*child, "shadow", value.shadow);
-        toXml(*child, "grid", value.grid);
         xml.addChildElement(child.release());
     }
 }
@@ -35,7 +34,6 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     value.foreground = fromXml(*child, "foreground", defaultValue.foreground);
     value.text = fromXml(*child, "text", defaultValue.text);
     value.shadow = fromXml(*child, "shadow", defaultValue.shadow);
-    value.grid = fromXml(*child, "grid", defaultValue.grid);
     return value;
 }
 
@@ -83,7 +81,6 @@ void Track::to_json(nlohmann::json& j, ColourSet const& colourSet)
     j["foreground"] = colourSet.foreground;
     j["text"] = colourSet.text;
     j["shadow"] = colourSet.shadow;
-    j["grid"] = colourSet.grid;
 }
 
 void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
@@ -93,7 +90,6 @@ void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
     j.at("foreground").get_to(colourSet.foreground);
     j.at("text").get_to(colourSet.text);
     j.at("shadow").get_to(colourSet.shadow);
-    j.at("grid").get_to(colourSet.grid);
 }
 
 ANALYSE_FILE_END

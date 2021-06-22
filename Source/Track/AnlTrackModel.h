@@ -166,7 +166,6 @@ namespace Track
         juce::Colour foreground = juce::Colours::white;
         juce::Colour text = juce::Colours::white;
         juce::Colour shadow = juce::Colours::black;
-        juce::Colour grid = juce::Colours::black.withAlpha(0.7f);
 
         inline bool operator==(ColourSet const& rhd) const noexcept
         {
@@ -174,8 +173,7 @@ namespace Track
                    background == rhd.background &&
                    foreground == rhd.foreground &&
                    text == rhd.text &&
-                   shadow == rhd.shadow &&
-                   grid == rhd.grid;
+                   shadow == rhd.shadow;
         }
 
         inline bool operator!=(ColourSet const& rhd) const noexcept
