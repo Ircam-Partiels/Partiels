@@ -89,6 +89,9 @@ Group::Thumbnail::Thumbnail(Director& director)
         switch(attribute)
         {
             case AttrType::identifier:
+            case AttrType::height:
+            case AttrType::colour:
+            case AttrType::focused:
                 break;
             case AttrType::name:
             {
@@ -96,10 +99,6 @@ Group::Thumbnail::Thumbnail(Director& director)
                 repaint();
             }
             break;
-            case AttrType::height:
-            case AttrType::colour:
-            case AttrType::focused:
-                break;
             case AttrType::expanded:
             {
                 lookAndFeelChanged();
