@@ -380,11 +380,9 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
     return verticalRanges;
 }
 
-void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
+void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
 {
     auto const verticalRanges = getChannelVerticalRanges(acsr, bounds);
-    auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-    auto const separatorColour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
     for(auto const& verticalRange : verticalRanges)
     {
         juce::Graphics::ScopedSaveState sss(g);

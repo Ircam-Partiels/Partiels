@@ -32,8 +32,8 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case Track::AttrType::warnings:
             case Track::AttrType::processing:
             case Track::AttrType::focused:
-            case Track::AttrType::grid:
                 break;
+            case Track::AttrType::grid:
             case Track::AttrType::results:
             case Track::AttrType::graphics:
             case Track::AttrType::colours:
@@ -62,6 +62,12 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
         }
     };
 
+    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr, attribute);
+        repaint();
+    };
+
     setInterceptsMouseClicks(false, false);
     setCachedComponentImage(new LowResCachedComponentImage(*this));
     setSize(100, 80);
@@ -73,7 +79,9 @@ Group::Plot::~Plot()
     mTimeZoomAccessor.removeListener(mZoomListener);
     for(auto& trackAcsr : mTrackAccessors.getContents())
     {
+        trackAcsr.second.get().getAcsr<Track::AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
         trackAcsr.second.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+        trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
         trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
         trackAcsr.second.get().removeListener(mTrackListener);
     }
@@ -88,7 +96,8 @@ void Group::Plot::paint(juce::Graphics& g)
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value())
         {
-            Track::Plot::paint(*trackAcsr, g, bounds, mTimeZoomAccessor);
+            auto const colour = it == std::prev(layout.crend()) ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            Track::Plot::paint(*trackAcsr, mTimeZoomAccessor, g, bounds, colour);
         }
     }
 }
@@ -101,12 +110,16 @@ void Group::Plot::updateContent()
         {
             trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
             trackAccessor.getAcsr<Track::AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
             trackAccessor.getAcsr<Track::AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
             return std::ref(trackAccessor);
         },
         [this](std::reference_wrapper<Track::Accessor>& content)
         {
+            content.get().getAcsr<Track::AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
             content.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+            content.get().getAcsr<Track::AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
             content.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
             content.get().removeListener(mTrackListener);
         });
@@ -118,10 +131,6 @@ Group::Plot::Overlay::Overlay(Plot& plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mTransportPlayheadBar(mPlot.mTransportAccessor, mTimeZoomAccessor)
-, mLayoutNotifier(mAccessor, [this]()
-                  {
-                      updateContent();
-                  })
 {
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
@@ -182,10 +191,6 @@ void Group::Plot::Overlay::resized()
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
     mTransportPlayheadBar.setBounds(bounds);
-    if(mGrid != nullptr)
-    {
-        mGrid->setBounds(bounds);
-    }
 }
 
 void Group::Plot::Overlay::paint(juce::Graphics& g)
@@ -267,36 +272,6 @@ void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         }
     }
     setTooltip(tooltip);
-}
-
-void Group::Plot::Overlay::updateContent()
-{
-    auto const layout = mAccessor.getAttr<AttrType::layout>();
-    if(layout.empty())
-    {
-        mGrid.reset();
-        mGridIdentier.clear();
-    }
-    else if(mGridIdentier != layout.front())
-    {
-        auto trackAcrs = Tools::getTrackAcsr(mAccessor, layout.front());
-        if(trackAcrs.has_value())
-        {
-            mGrid = std::make_unique<Track::Grid>(*trackAcrs, mTimeZoomAccessor, Zoom::Grid::Justification::bottomLeft | Zoom::Grid::Justification::topRight);
-            if(mGrid != nullptr)
-            {
-                addAndMakeVisible(mGrid.get());
-            }
-            mGridIdentier = layout.front();
-        }
-        else
-        {
-            mGrid.reset();
-            mGridIdentier.clear();
-        }
-    }
-
-    resized();
 }
 
 ANALYSE_FILE_END

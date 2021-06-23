@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Transport/AnlTransportModel.h"
-#include "AnlTrackGrid.h"
 #include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -41,12 +40,12 @@ namespace Track
             Transport::Accessor& mTransportAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-            Grid mGrid;
         };
 
-        static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr, double time);
+        static void paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, double time, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour);
 
     private:
+        static void paintGrid(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour);
         static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time);
         static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr, double time);
 
@@ -55,6 +54,7 @@ namespace Track
         Transport::Accessor& mTransportAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
         Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Zoom::Grid::Accessor::Listener mGridListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
     };
 } // namespace Track

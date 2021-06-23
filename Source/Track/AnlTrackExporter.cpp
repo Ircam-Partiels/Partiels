@@ -81,10 +81,13 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         {
             return juce::Image{};
         }
+        auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
+        auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
+
         juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
         juce::Graphics g(image);
         g.fillAll(accessor.getAttr<AttrType::colours>().background);
-        Plot::paint(accessor, g, {0, 0, width, height}, timeZoomAccessor);
+        Plot::paint(accessor, timeZoomAccessor, g, {0, 0, width, height}, colour);
         return image;
     };
 

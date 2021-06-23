@@ -29,8 +29,8 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::warnings:
             case Track::AttrType::processing:
             case Track::AttrType::focused:
-            case Track::AttrType::grid:
                 break;
+            case Track::AttrType::grid:
             case Track::AttrType::results:
             case Track::AttrType::graphics:
             case Track::AttrType::colours:
@@ -88,6 +88,12 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
         }
     };
 
+    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr, attribute);
+        repaint();
+    };
+
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
     mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
@@ -100,7 +106,9 @@ Group::Snapshot::~Snapshot()
     mTransportAccessor.removeListener(mTransportListener);
     for(auto& trackAcsr : mTrackAccessors.getContents())
     {
+        trackAcsr.second.get().getAcsr<Track::AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
         trackAcsr.second.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+        trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
         trackAcsr.second.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
         trackAcsr.second.get().removeListener(mTrackListener);
     }
@@ -118,7 +126,8 @@ void Group::Snapshot::paint(juce::Graphics& g)
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value())
         {
-            Track::Snapshot::paint(*trackAcsr, g, bounds, mTimeZoomAccessor, time);
+            auto const colour = it == std::prev(layout.crend()) ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            Track::Snapshot::paint(*trackAcsr, mTimeZoomAccessor, time, g, bounds, colour);
         }
     }
 }
@@ -130,13 +139,17 @@ void Group::Snapshot::updateContent()
         [this](Track::Accessor& trackAccessor)
         {
             trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
             trackAccessor.getAcsr<Track::AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+            trackAccessor.getAcsr<Track::AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
             trackAccessor.getAcsr<Track::AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
             return std::ref(trackAccessor);
         },
         [this](std::reference_wrapper<Track::Accessor>& content)
         {
+            content.get().getAcsr<Track::AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
             content.get().getAcsr<Track::AcsrType::binZoom>().removeListener(mZoomListener);
+            content.get().getAcsr<Track::AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
             content.get().getAcsr<Track::AcsrType::valueZoom>().removeListener(mZoomListener);
             content.get().removeListener(mTrackListener);
         });

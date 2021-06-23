@@ -52,6 +52,7 @@ namespace Group
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Zoom::Grid::Accessor::Listener mGridListener{typeid(*this).name()};
         Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         LayoutNotifier mLayoutNotifier;

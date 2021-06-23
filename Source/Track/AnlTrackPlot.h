@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Transport/AnlTransportPlayheadBar.h"
-#include "AnlTrackGrid.h"
 #include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -46,13 +45,13 @@ namespace Track
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             Transport::PlayheadBar mTransportPlayheadBar;
-            Grid mGrid;
             bool mSnapshotMode{false};
         };
 
-        static void paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr);
+        static void paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const colour);
 
     private:
+        static void paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour);
         static void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         static void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
@@ -116,8 +115,9 @@ namespace Track
         Accessor& mAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
-        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
         Accessor::Listener mListener{typeid(*this).name()};
+        Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        Zoom::Grid::Accessor::Listener mGridListener{typeid(*this).name()};
     };
 } // namespace Track
 

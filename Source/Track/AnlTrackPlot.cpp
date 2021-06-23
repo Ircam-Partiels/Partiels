@@ -137,8 +137,8 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::focused:
-            case AttrType::grid:
                 break;
+            case AttrType::grid:
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::colours:
@@ -167,33 +167,124 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
         }
     };
 
+    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr, attribute);
+        repaint();
+    };
+
     setCachedComponentImage(new LowResCachedComponentImage(*this));
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
     mAccessor.getAcsr<AcsrType::binZoom>().addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().addListener(mGridListener, NotificationType::synchronous);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
 }
 
 Track::Plot::~Plot()
 {
     mTimeZoomAccessor.removeListener(mZoomListener);
+    mAccessor.getAcsr<AcsrType::binZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
     mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mZoomListener);
+    mAccessor.getAcsr<AcsrType::valueZoom>().getAcsr<Zoom::AcsrType::grid>().removeListener(mGridListener);
     mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mZoomListener);
     mAccessor.removeListener(mListener);
 }
 
 void Track::Plot::paint(juce::Graphics& g)
 {
-    paint(mAccessor, g, getLocalBounds(), mTimeZoomAccessor);
+    paint(mAccessor, mTimeZoomAccessor, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId));
 }
 
-void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, Zoom::Accessor const& timeZoomAcsr)
+void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour)
+{
+    if(colour.isTransparent() || accessor.getAttr<AttrType::grid>() == GridMode::hidden)
+    {
+        return;
+    }
+    using Justification = Zoom::Grid::Justification;
+    auto const justificationHorizontal = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::left | Zoom::Grid::Justification::right) : Justification(Justification::horizontallyCentred);
+    auto const justificationVertical = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::top | Zoom::Grid::Justification::bottom) : Justification(Justification::verticallyCentred);
+
+    auto getStringify = [&]() -> std::function<juce::String(double)>
+    {
+        switch(Tools::getDisplayType(accessor))
+        {
+            case Tools::DisplayType::markers:
+            {
+                return nullptr;
+            }
+            case Tools::DisplayType::points:
+            {
+                return [unit = accessor.getAttr<AttrType::description>().output.unit](double value)
+                {
+                    return Format::valueToString(value, 4) + unit;
+                };
+            }
+            case Tools::DisplayType::columns:
+            {
+                return [&](double value)
+                {
+                    auto const& output = accessor.getAttr<AttrType::description>().output;
+                    auto const binIndex = value >= 0.0 ? static_cast<size_t>(std::round(value)) : 0_z;
+                    if(binIndex >= output.binNames.size())
+                    {
+                        return juce::String(binIndex);
+                    }
+                    return juce::String(binIndex) + " - " + output.binNames[binIndex];
+                };
+            }
+        }
+        return nullptr;
+    };
+
+    auto const stringify = getStringify();
+    auto const paintChannel = [&](Zoom::Accessor const& zoomAcsr, juce::Rectangle<int> const& region)
+    {
+        g.setColour(colour);
+        Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
+    };
+
+    switch(Tools::getDisplayType(accessor))
+    {
+        case Tools::DisplayType::markers:
+        {
+            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                                 {
+                                 });
+        }
+        break;
+        case Tools::DisplayType::points:
+        {
+            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                                 {
+                                     paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
+                                 });
+        }
+        break;
+        case Tools::DisplayType::columns:
+        {
+            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                                 {
+                                     paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
+                                 });
+        }
+        break;
+    }
+
+    g.setColour(colour);
+    Zoom::Grid::paintHorizontal(g, timeZoomAccessor.getAcsr<Zoom::AcsrType::grid>(), timeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>(), bounds, nullptr, 70, justificationVertical);
+}
+
+void Track::Plot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const colour)
 {
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
         {
-            Tools::paintChannels(accessor, g, bounds, [&](juce::Rectangle<int> region, size_t channel)
+            paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
+            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
                                  {
                                      paintMarkers(accessor, channel, g, region, timeZoomAcsr);
                                  });
@@ -201,7 +292,8 @@ void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Recta
         break;
         case Tools::DisplayType::points:
         {
-            Tools::paintChannels(accessor, g, bounds, [&](juce::Rectangle<int> region, size_t channel)
+            paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
+            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
                                  {
                                      paintPoints(accessor, channel, g, region, timeZoomAcsr);
                                  });
@@ -209,10 +301,11 @@ void Track::Plot::paint(Accessor const& accessor, juce::Graphics& g, juce::Recta
         break;
         case Tools::DisplayType::columns:
         {
-            Tools::paintChannels(accessor, g, bounds, [&](juce::Rectangle<int> region, size_t channel)
+            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
                                  {
                                      paintColumns(accessor, channel, g, region, timeZoomAcsr);
                                  });
+            paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
         }
         break;
     }
@@ -611,6 +704,7 @@ void Track::Plot::paintColumns(Accessor const& accessor, size_t channel, juce::G
             auto const scaleX = graphicsBounds.getWidth() / rectangle.getWidth();
             auto const scaleY = graphicsBounds.getHeight() / rectangle.getHeight();
 
+            g.setColour(juce::Colours::black);
             g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
             g.drawImageTransformed(clippedImage, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
         };
@@ -652,10 +746,8 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mTransportPlayheadBar(plot.mTransportAccessor, mPlot.mTimeZoomAccessor)
-, mGrid(mAccessor, mTimeZoomAccessor, Zoom::Grid::Justification::bottomLeft | Zoom::Grid::Justification::topRight)
+, mTransportPlayheadBar(mPlot.mTransportAccessor, mTimeZoomAccessor)
 {
-    addAndMakeVisible(mGrid);
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
     mTransportPlayheadBar.setInterceptsMouseClicks(false, false);
@@ -679,35 +771,9 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::processing:
-                break;
             case AttrType::description:
             case AttrType::results:
-            {
-                removeChildComponent(&mGrid);
-                removeChildComponent(&mPlot);
-                removeChildComponent(&mTransportPlayheadBar);
-                switch(Tools::getDisplayType(mAccessor))
-                {
-                    case Tools::DisplayType::markers:
-                    {
-                        addAndMakeVisible(mPlot);
-                    }
-                    break;
-                    case Tools::DisplayType::points:
-                    {
-                        addAndMakeVisible(mGrid);
-                        addAndMakeVisible(mPlot);
-                    }
-                    break;
-                    case Tools::DisplayType::columns:
-                    {
-                        addAndMakeVisible(mPlot);
-                        addAndMakeVisible(mGrid);
-                    }
-                    break;
-                }
-                addAndMakeVisible(mTransportPlayheadBar);
-            }
+                break;
             case AttrType::colours:
             {
                 repaint();
@@ -752,7 +818,6 @@ void Track::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
-    mGrid.setBounds(bounds);
     mTransportPlayheadBar.setBounds(bounds);
 }
 
