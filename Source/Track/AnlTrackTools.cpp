@@ -347,8 +347,8 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
 
 std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
 {
-    auto const channelLayout = acsr.getAttr<AttrType::channelsLayout>();
-    auto const numVisibleChannels = static_cast<int>(std::count(channelLayout.cbegin(), channelLayout.cend(), true));
+    auto const channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
+    auto const numVisibleChannels = static_cast<int>(std::count(channelsLayout.cbegin(), channelsLayout.cend(), true));
     if(numVisibleChannels == 0)
     {
         return {};
@@ -361,9 +361,9 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
     auto remainder = 0.0f;
 
     auto channelCounter = 0;
-    for(auto channel = 0_z; channel < channelLayout.size(); ++channel)
+    for(auto channel = 0_z; channel < channelsLayout.size(); ++channel)
     {
-        if(channelLayout[channel])
+        if(channelsLayout[channel])
         {
             ++channelCounter;
             auto const currentHeight = std::min(channelHeight, fullHeight) + remainder;
