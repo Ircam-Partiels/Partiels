@@ -1,8 +1,6 @@
 #pragma once
 
 #include "../Transport/AnlTransportPlayheadBar.h"
-#include "../Zoom/AnlZoomRuler.h"
-#include "../Zoom/AnlZoomScrollBar.h"
 #include "AnlGroupPlot.h"
 #include "AnlGroupSnapshot.h"
 #include "AnlGroupThumbnail.h"
@@ -46,6 +44,8 @@ namespace Group
         void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
         void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
 
+        void updateContent();
+
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Transport::Accessor& mTransportAccessor;
@@ -63,11 +63,15 @@ namespace Group
         Plot::Overlay mPlotOverlay{mPlot};
         Decorator mPlotDecoration{mPlotOverlay};
 
-        Zoom::Ruler mRuler{mAccessor.getAcsr<AcsrType::zoom>(), Zoom::Ruler::Orientation::vertical};
-        Zoom::ScrollBar mScrollBar{mAccessor.getAcsr<AcsrType::zoom>(), Zoom::ScrollBar::Orientation::vertical, true};
+        std::unique_ptr<juce::Component> mRuler;
+        std::unique_ptr<Decorator> mDecoratorRuler;
+        std::unique_ptr<juce::Component> mScrollBar;
+        juce::String mGridIdentier;
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
         bool mIsItemDragged{false};
+
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
 

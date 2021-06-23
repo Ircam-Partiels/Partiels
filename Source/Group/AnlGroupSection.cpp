@@ -9,14 +9,11 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
 : mDirector(director)
 , mTransportAccessor(transportAcsr)
 , mTimeZoomAccessor(timeZoomAcsr)
+, mLayoutNotifier(mAccessor, [this]()
+                  {
+                      updateContent();
+                  })
 {
-    mRuler.onDoubleClick = [&]()
-    {
-        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
-        auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-    };
-
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         juce::ignoreUnused(acsr);
@@ -26,8 +23,8 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
             case AttrType::name:
             case AttrType::colour:
             case AttrType::expanded:
-            case AttrType::layout:
             case AttrType::tracks:
+            case AttrType::layout:
                 break;
             case AttrType::height:
             {
@@ -40,6 +37,7 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
                 auto const focused = mAccessor.getAttr<AttrType::focused>();
                 mThumbnailDecoration.setHighlighted(focused);
             }
+            break;
         }
     };
 
@@ -56,8 +54,6 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
         }
     };
 
-    addAndMakeVisible(mRuler);
-    addAndMakeVisible(mScrollBar);
     addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
@@ -85,8 +81,16 @@ void Group::Section::resized()
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
     mSnapshotDecoration.setBounds(bounds.removeFromLeft(36));
 
-    mScrollBar.setBounds(bounds.removeFromRight(8));
-    mRuler.setBounds(bounds.removeFromRight(16));
+    auto const scrollBarBounds = bounds.removeFromRight(8);
+    if(mScrollBar != nullptr)
+    {
+        mScrollBar->setBounds(scrollBarBounds);
+    }
+    auto const rulerBounds = bounds.removeFromRight(16);
+    if(mDecoratorRuler != nullptr)
+    {
+        mDecoratorRuler->setBounds(rulerBounds);
+    }
     mPlotDecoration.setBounds(bounds);
 }
 
@@ -227,6 +231,53 @@ void Group::Section::focusOfChildComponentChanged(juce::Component::FocusChangeTy
                                             mAccessor.setAttr<AttrType::focused>(hasFocus, NotificationType::synchronous);
                                         }
                                     });
+}
+
+void Group::Section::updateContent()
+{
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    if(layout.empty())
+    {
+        mScrollBar.reset();
+        mDecoratorRuler.reset();
+        mRuler.reset();
+    }
+    else if(mGridIdentier != layout.front())
+    {
+        auto trackAcrs = Tools::getTrackAcsr(mAccessor, layout.front());
+        if(trackAcrs.has_value())
+        {
+            mRuler = std::make_unique<Track::Ruler>(*trackAcrs);
+            if(mRuler != nullptr)
+            {
+                mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
+                addAndMakeVisible(mDecoratorRuler.get());
+            }
+            mScrollBar = std::make_unique<Track::ScrollBar>(*trackAcrs);
+            if(mScrollBar != nullptr)
+            {
+                addAndMakeVisible(mScrollBar.get());
+            }
+            mGridIdentier = layout.front();
+        }
+        else
+        {
+            mScrollBar.reset();
+            mDecoratorRuler.reset();
+            mRuler.reset();
+        }
+    }
+
+    if(mRuler == nullptr)
+    {
+        mRuler = std::make_unique<juce::Component>();
+        if(mRuler != nullptr)
+        {
+            mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
+            addAndMakeVisible(mDecoratorRuler.get());
+        }
+    }
+    resized();
 }
 
 ANALYSE_FILE_END
