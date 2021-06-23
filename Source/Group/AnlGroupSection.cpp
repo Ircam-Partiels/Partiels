@@ -241,6 +241,7 @@ void Group::Section::updateContent()
         mScrollBar.reset();
         mDecoratorRuler.reset();
         mRuler.reset();
+        mGridIdentier.clear();
     }
     else if(mGridIdentier != layout.front())
     {
@@ -265,6 +266,7 @@ void Group::Section::updateContent()
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
+            mGridIdentier.clear();
         }
     }
 
