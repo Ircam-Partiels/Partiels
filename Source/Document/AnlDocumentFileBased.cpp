@@ -4,7 +4,7 @@ ANALYSE_FILE_BEGIN
 
 Document::AttrContainer const& Document::FileBased::getDefaultContainer()
 {
-    static AttrContainer const document;
+    static AttrContainer const document({}, {}, {}, {}, {GridMode::partial});
     return document;
 }
 
