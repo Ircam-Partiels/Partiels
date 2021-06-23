@@ -142,26 +142,31 @@ void ColourButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlig
 {
     auto constexpr cornerSize = 4.0f;
     auto constexpr thickness = 1.0f;
+    auto constexpr cellSize = 8;
     auto const bounds = getLocalBounds().toFloat().reduced(thickness);
     auto const colour = mDraggedColour != nullptr ? mDraggedColour->mColour : mColour;
-    if(!colour.isTransparent())
+
+    g.saveState();
+    juce::Path p;
+    p.addRoundedRectangle(bounds, cornerSize);
+    g.reduceClipRegion(p);
+    g.fillAll(juce::Colours::black);
+    g.setColour(juce::Colours::white);
+    for(auto i = 0; i < getWidth(); i += cellSize)
     {
-        g.setColour(colour);
-        g.fillRoundedRectangle(bounds, cornerSize);
-    }
-    else
-    {
-        juce::Path p;
-        p.addRoundedRectangle(bounds, cornerSize);
-        g.saveState();
-        g.reduceClipRegion(p);
-        g.setColour(juce::Colours::white);
-        for(int i = 0; i < getWidth() * 2; i += 4)
+        auto const iIsOdd = (i / (cellSize)) % 2;
+        for(auto j = 0; j < getHeight(); j += cellSize)
         {
-            g.drawLine(static_cast<float>(i), 0.0f, 0.0f, static_cast<float>(i), 1.0f);
+            auto const jIsOdd = (j / (cellSize)) % 2;
+            if(iIsOdd != jIsOdd)
+            {
+                g.fillRect(i, j, cellSize, cellSize);
+            }
         }
-        g.restoreState();
     }
+    g.setColour(colour);
+    g.fillAll(colour);
+    g.restoreState();
 
     if(shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown)
     {
