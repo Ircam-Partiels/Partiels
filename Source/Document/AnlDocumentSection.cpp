@@ -193,7 +193,9 @@ Document::Section::Section(Director& director)
     mPlayheadBar.setInterceptsMouseClicks(false, false);
     mLoopBar.addMouseListener(&mPlayheadBar, false);
     addAndMakeVisible(mLoopBarDecoration);
+    addAndMakeVisible(mTopSeparator);
     addAndMakeVisible(mViewport);
+    addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mTimeScrollBar);
     setSize(480, 200);
 
@@ -293,11 +295,13 @@ void Document::Section::resized()
         tooltipButton.setBounds(topPart.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
         mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
         mLoopBarDecoration.setBounds(topPart);
+        mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
     }
 
-    mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
+    mTopSeparator.setBounds(bounds.removeFromTop(1));
     auto const timeScrollBarBounds = bounds.removeFromBottom(8).withX(mTimeRulerDecoration.getX()).withRight(mTimeRulerDecoration.getRight());
     mTimeScrollBar.setBounds(timeScrollBarBounds);
+    mBottomSeparator.setBounds(bounds.removeFromBottom(1));
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
 }
