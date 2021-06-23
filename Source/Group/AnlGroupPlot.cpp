@@ -118,6 +118,10 @@ Group::Plot::Overlay::Overlay(Plot& plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
 , mTransportPlayheadBar(mPlot.mTransportAccessor, mTimeZoomAccessor)
+, mLayoutNotifier(mAccessor, [this]()
+                  {
+                      updateContent();
+                  })
 {
     addAndMakeVisible(mPlot);
     addAndMakeVisible(mTransportPlayheadBar);
@@ -178,6 +182,10 @@ void Group::Plot::Overlay::resized()
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
     mTransportPlayheadBar.setBounds(bounds);
+    if(mGrid != nullptr)
+    {
+        mGrid->setBounds(bounds);
+    }
 }
 
 void Group::Plot::Overlay::paint(juce::Graphics& g)
@@ -259,6 +267,36 @@ void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         }
     }
     setTooltip(tooltip);
+}
+
+void Group::Plot::Overlay::updateContent()
+{
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    if(layout.empty())
+    {
+        mGrid.reset();
+        mGridIdentier.clear();
+    }
+    else if(mGridIdentier != layout.front())
+    {
+        auto trackAcrs = Tools::getTrackAcsr(mAccessor, layout.front());
+        if(trackAcrs.has_value())
+        {
+            mGrid = std::make_unique<Track::Grid>(*trackAcrs, mTimeZoomAccessor, Zoom::Grid::Justification::bottomLeft | Zoom::Grid::Justification::topRight);
+            if(mGrid != nullptr)
+            {
+                addAndMakeVisible(mGrid.get());
+            }
+            mGridIdentier = layout.front();
+        }
+        else
+        {
+            mGrid.reset();
+            mGridIdentier.clear();
+        }
+    }
+
+    resized();
 }
 
 ANALYSE_FILE_END

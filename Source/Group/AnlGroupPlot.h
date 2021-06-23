@@ -40,6 +40,7 @@ namespace Group
         private:
             void updateTooltip(juce::Point<int> const& pt);
             void updateMode(juce::MouseEvent const& event);
+            void updateContent();
 
             Plot& mPlot;
             Accessor& mAccessor;
@@ -47,7 +48,10 @@ namespace Group
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             Transport::PlayheadBar mTransportPlayheadBar;
+            std::unique_ptr<juce::Component> mGrid;
+            juce::String mGridIdentier;
             bool mSnapshotMode{false};
+            LayoutNotifier mLayoutNotifier;
         };
 
     private:
