@@ -10,20 +10,6 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
 , mTimeZoomAccessor(timeZoomAcsr)
 , mTransportAccessor(transportAcsr)
 {
-    mValueRuler.onDoubleClick = [&]()
-    {
-        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-        auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-    };
-
-    mBinRuler.onDoubleClick = [&]()
-    {
-        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-        auto const range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-    };
-
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
         switch(type)
@@ -36,9 +22,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::results:
             {
                 auto const displayType = Tools::getDisplayType(mAccessor);
-                mValueRuler.setVisible(displayType == Tools::DisplayType::points);
                 mValueScrollBar.setVisible(displayType == Tools::DisplayType::points);
-                mBinRuler.setVisible(displayType == Tools::DisplayType::columns);
                 mBinScrollBar.setVisible(displayType == Tools::DisplayType::columns);
             }
             break;
@@ -80,10 +64,9 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
         }
     };
 
-    addChildComponent(mValueRuler);
     addChildComponent(mValueScrollBar);
-    addChildComponent(mBinRuler);
     addChildComponent(mBinScrollBar);
+    addAndMakeVisible(mRulerDecoration);
     addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
     addAndMakeVisible(mPlotDecoration);
@@ -113,8 +96,7 @@ void Track::Section::resized()
 
     mValueScrollBar.setBounds(bounds.removeFromRight(8));
     mBinScrollBar.setBounds(mValueScrollBar.getBounds());
-    mValueRuler.setBounds(bounds.removeFromRight(16));
-    mBinRuler.setBounds(mValueRuler.getBounds());
+    mRulerDecoration.setBounds(bounds.removeFromRight(16));
     mPlotDecoration.setBounds(bounds);
 }
 

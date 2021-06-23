@@ -3,6 +3,7 @@
 #include "../Zoom/AnlZoomRuler.h"
 #include "../Zoom/AnlZoomScrollBar.h"
 #include "AnlTrackPlot.h"
+#include "AnlTrackRuler.h"
 #include "AnlTrackSnapshot.h"
 #include "AnlTrackThumbnail.h"
 
@@ -51,9 +52,9 @@ namespace Track
         Plot::Overlay mPlotOverlay{mPlot};
         Decorator mPlotDecoration{mPlotOverlay};
 
-        Zoom::Ruler mValueRuler{mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::Ruler::Orientation::vertical};
+        Ruler mRuler{mAccessor};
+        Decorator mRulerDecoration{mRuler};
         Zoom::ScrollBar mValueScrollBar{mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
-        Zoom::Ruler mBinRuler{mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::Ruler::Orientation::vertical};
         Zoom::ScrollBar mBinScrollBar{mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
