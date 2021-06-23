@@ -263,7 +263,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
                 }
                 return "[" + juce::String(*binIndex) + " - " + output.binNames[*binIndex] + "]";
             };
-            return Format::valueToString(*value, 4) + accessor.getAttr<AttrType::description>().output.unit + " " + getBinName();
+            return Format::valueToString(*value, 4) + output.unit + " " + getBinName();
         }
         return "-";
     }
