@@ -13,24 +13,24 @@ namespace Group
     // clang-format off
     enum class AttrType : size_t
     {
-        identifier,
-        name,
-        height,
-        colour,
-        expanded,
-        layout,
-        tracks,
-        focused
+          identifier
+        , name
+        , height
+        , colour
+        , expanded
+        , layout
+        , tracks
+        , focused
     };
 
     enum class AcsrType : size_t
     {
-        zoom
+          zoom
     };
 
     enum class SignalType
     {
-        showProperties
+          showProperties
     };
 
     using AttrContainer = Model::Container
