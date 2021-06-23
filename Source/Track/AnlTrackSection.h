@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../Zoom/AnlZoomRuler.h"
-#include "../Zoom/AnlZoomScrollBar.h"
 #include "AnlTrackPlot.h"
 #include "AnlTrackRuler.h"
 #include "AnlTrackSnapshot.h"
@@ -54,8 +52,7 @@ namespace Track
 
         Ruler mRuler{mAccessor};
         Decorator mRulerDecoration{mRuler};
-        Zoom::ScrollBar mValueScrollBar{mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
-        Zoom::ScrollBar mBinScrollBar{mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
+        ScrollBar mScrollBar{mAccessor};
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
     };

@@ -120,4 +120,55 @@ void Track::Ruler::lookAndFeelChanged()
     }
 }
 
+Track::ScrollBar::ScrollBar(Accessor& accessor)
+: mAccessor(accessor)
+{
+    addChildComponent(mValueScrollBar);
+    addChildComponent(mBinScrollBar);
+
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
+    {
+        switch(type)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::key:
+            case AttrType::state:
+            case AttrType::height:
+            case AttrType::colours:
+            case AttrType::channelsLayout:
+            case AttrType::zoomLink:
+            case AttrType::graphics:
+            case AttrType::warnings:
+            case AttrType::processing:
+            case AttrType::zoomAcsr:
+            case AttrType::grid:
+            case AttrType::focused:
+                break;
+            case AttrType::description:
+            case AttrType::results:
+            {
+                auto const displayType = Tools::getDisplayType(acsr);
+                mValueScrollBar.setVisible(displayType == Tools::DisplayType::points);
+                mBinScrollBar.setVisible(displayType == Tools::DisplayType::columns);
+            }
+            break;
+        }
+    };
+    
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+}
+
+Track::ScrollBar::~ScrollBar()
+{
+    mAccessor.removeListener(mListener);
+}
+
+void Track::ScrollBar::resized()
+{
+    auto const bounds = getLocalBounds();
+    mValueScrollBar.setBounds(bounds);
+    mBinScrollBar.setBounds(bounds);
+}
+
 ANALYSE_FILE_END

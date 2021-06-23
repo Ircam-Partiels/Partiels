@@ -17,22 +17,9 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::identifier:
             case AttrType::name:
             case AttrType::key:
-                break;
             case AttrType::description:
             case AttrType::results:
-            {
-                auto const displayType = Tools::getDisplayType(mAccessor);
-                mValueScrollBar.setVisible(displayType == Tools::DisplayType::points);
-                mBinScrollBar.setVisible(displayType == Tools::DisplayType::columns);
-            }
-            break;
             case AttrType::state:
-                break;
-            case AttrType::height:
-            {
-                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
-            }
-            break;
             case AttrType::colours:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
@@ -42,6 +29,11 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::zoomAcsr:
             case AttrType::grid:
                 break;
+            case AttrType::height:
+            {
+                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
+            }
+            break;
             case AttrType::focused:
             {
                 auto const focused = mAccessor.getAttr<AttrType::focused>();
@@ -64,8 +56,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
         }
     };
 
-    addChildComponent(mValueScrollBar);
-    addChildComponent(mBinScrollBar);
+    addAndMakeVisible(mScrollBar);
     addAndMakeVisible(mRulerDecoration);
     addAndMakeVisible(mThumbnailDecoration);
     addAndMakeVisible(mSnapshotDecoration);
@@ -93,9 +84,7 @@ void Track::Section::resized()
     auto bounds = getLocalBounds();
     mThumbnailDecoration.setBounds(bounds.removeFromLeft(48));
     mSnapshotDecoration.setBounds(bounds.removeFromLeft(36));
-
-    mValueScrollBar.setBounds(bounds.removeFromRight(8));
-    mBinScrollBar.setBounds(mValueScrollBar.getBounds());
+    mScrollBar.setBounds(bounds.removeFromRight(8));
     mRulerDecoration.setBounds(bounds.removeFromRight(16));
     mPlotDecoration.setBounds(bounds);
 }

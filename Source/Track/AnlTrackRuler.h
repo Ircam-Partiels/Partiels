@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Zoom/AnlZoomRuler.h"
+#include "../Zoom/AnlZoomScrollBar.h"
 #include "AnlTrackModel.h"
 #include "AnlTrackTools.h"
 
@@ -25,6 +26,23 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
         std::vector<std::unique_ptr<Zoom::Ruler>> mRulers;
         Tools::DisplayType mDisplayType{Tools::DisplayType::points};
+    };
+
+    class ScrollBar
+    : public juce::Component
+    {
+    public:
+        ScrollBar(Accessor& accessor);
+        ~ScrollBar() override;
+
+        // juce::Component
+        void resized() override;
+
+    private:
+        Accessor& mAccessor;
+        Accessor::Listener mListener{typeid(*this).name()};
+        Zoom::ScrollBar mValueScrollBar{mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
+        Zoom::ScrollBar mBinScrollBar{mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
     };
 } // namespace Track
 
