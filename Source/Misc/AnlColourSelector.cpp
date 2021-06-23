@@ -150,7 +150,7 @@ void ColourButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlig
     juce::Path p;
     p.addRoundedRectangle(bounds, cornerSize);
     g.reduceClipRegion(p);
-    g.fillAll(juce::Colours::black);
+    g.fillAll(juce::Colours::lightgrey);
     g.setColour(juce::Colours::white);
     for(auto i = 0; i < getWidth(); i += cellSize)
     {
