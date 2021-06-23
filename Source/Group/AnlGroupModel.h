@@ -57,7 +57,7 @@ namespace Group
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({}, {}, {144}, {juce::Colours::black}, {true}, {}, {}, {false}))
+        : Accessor(AttrContainer({}, {}, {144}, {juce::Colours::transparentBlack}, {true}, {}, {}, {false}))
         {
         }
 
