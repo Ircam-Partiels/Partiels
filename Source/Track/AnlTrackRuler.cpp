@@ -155,7 +155,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             break;
         }
     };
-    
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
