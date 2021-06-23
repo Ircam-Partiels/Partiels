@@ -299,7 +299,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
 : mSnapshot(snapshot)
 , mAccessor(mSnapshot.mAccessor)
 , mTransportAccessor(mSnapshot.mTransportAccessor)
-, mGrid(mAccessor, mSnapshot.mTimeZoomAccessor, Zoom::Grid::Justification::left)
+, mGrid(mAccessor, Zoom::Grid::Justification::left)
 {
     addAndMakeVisible(mGrid);
     addAndMakeVisible(mSnapshot);
@@ -317,14 +317,38 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::zoomLink:
             case AttrType::graphics:
             case AttrType::name:
-            case AttrType::description:
-            case AttrType::results:
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::warnings:
             case AttrType::processing:
                 break;
+            case AttrType::description:
+            case AttrType::results:
+            {
+                removeChildComponent(&mGrid);
+                removeChildComponent(&mSnapshot);
+                switch(Tools::getDisplayType(mAccessor))
+                {
+                    case Tools::DisplayType::markers:
+                    {
+                        addAndMakeVisible(mSnapshot);
+                    }
+                    break;
+                    case Tools::DisplayType::points:
+                    {
+                        addAndMakeVisible(mGrid);
+                        addAndMakeVisible(mSnapshot);
+                    }
+                    break;
+                    case Tools::DisplayType::columns:
+                    {
+                        addAndMakeVisible(mSnapshot);
+                        addAndMakeVisible(mGrid);
+                    }
+                    break;
+                }
+            }
             case AttrType::colours:
             {
                 repaint();
