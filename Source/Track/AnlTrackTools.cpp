@@ -409,7 +409,7 @@ void Track::Tools::paintClippedImage(juce::Graphics& g, juce::Image const& image
     auto const deltaY = -bounds.getY();
     auto const scaleX = graphicsBounds.getWidth() / bounds.getWidth();
     auto const scaleY = graphicsBounds.getHeight() / bounds.getHeight();
-    
+
     g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
 }
 

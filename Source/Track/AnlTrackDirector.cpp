@@ -39,7 +39,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                         }
                         return Plugin::Description();
                     };
-                    
+
                     auto const description = getDescription();
                     if(description != Plugin::Description())
                     {
