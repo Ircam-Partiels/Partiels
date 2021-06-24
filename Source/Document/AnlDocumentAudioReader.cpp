@@ -27,10 +27,11 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                     hasMultipleSampleRate = std::abs(sampleRate - reader->sampleRate) > std::numeric_limits<double>::epsilon() ? true : hasMultipleSampleRate;
                     bitsPerSample = std::max(reader->bitsPerSample, bitsPerSample);
                     lengthInSamples = std::max(reader->lengthInSamples, lengthInSamples);
-                    maxChannels = static_cast<int>(std::max(reader->numChannels, numChannels));
+                    maxChannels = std::max(static_cast<int>(reader->numChannels), maxChannels);
                 }
             }
-            mBuffer.setSize(maxChannels, 8192);
+            anlWeakAssert(maxChannels > 0);
+            mBuffer.setSize(std::max(maxChannels, 1), 8192);
         }
 
         ~AudioFormatReader() override = default;
