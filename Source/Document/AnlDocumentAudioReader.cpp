@@ -30,7 +30,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                     maxChannels = std::max(static_cast<int>(reader->numChannels), maxChannels);
                 }
             }
-            anlWeakAssert(maxChannels > 0);
+            anlWeakAssert(mChannels.empty() || maxChannels > 0);
             mBuffer.setSize(std::max(maxChannels, 1), 8192);
         }
 
