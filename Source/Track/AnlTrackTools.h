@@ -92,6 +92,7 @@ namespace Track
 
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
+        void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);
 
         Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults);
 

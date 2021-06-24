@@ -313,30 +313,6 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
             return juce::Range<float>{scaleValue(visibleRange.getStart()), scaleValue(visibleRange.getEnd())};
         };
 
-        // Draws a range of an image
-        auto drawImage = [&](juce::Rectangle<float> const& rectangle)
-        {
-            auto const graphicsBounds = g.getClipBounds().toFloat();
-            auto const imageBounds = rectangle.getSmallestIntegerContainer();
-            auto const clippedImage = image.getClippedImage(imageBounds);
-            if(!clippedImage.isValid())
-            {
-                return;
-            }
-            anlWeakAssert(clippedImage.getWidth() == imageBounds.getWidth());
-            anlWeakAssert(clippedImage.getHeight() == imageBounds.getHeight());
-            auto const deltaX = static_cast<float>(imageBounds.getX()) - rectangle.getX();
-            auto const deltaY = static_cast<float>(imageBounds.getY()) - rectangle.getY();
-            anlWeakAssert(deltaX <= 0);
-            anlWeakAssert(deltaY <= 0);
-            auto const scaleX = graphicsBounds.getWidth() / rectangle.getWidth();
-            auto const scaleY = graphicsBounds.getHeight() / rectangle.getHeight();
-
-            g.setColour(juce::Colours::black);
-            g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-            g.drawImageTransformed(clippedImage, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
-        };
-
         auto const clipBounds = g.getClipBounds().constrainedWithin(bounds);
         if(clipBounds.isEmpty())
         {
@@ -349,7 +325,9 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
         auto const yClippedRange = clipZoomRange(bounds.getVerticalRange(), clipBounds.getVerticalRange(), getZoomRange(yZoomAcsr, true));
         auto const yRange = toImageRange(yZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), yClippedRange, image.getHeight());
 
-        drawImage({std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
+        g.setColour(juce::Colours::black);
+        g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
+        Tools::paintClippedImage(g, image, {std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
 
     renderImage(images.at(channel).back(), time, timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());

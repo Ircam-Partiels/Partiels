@@ -402,6 +402,17 @@ void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::
     }
 }
 
+void Track::Tools::paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds)
+{
+    auto const graphicsBounds = g.getClipBounds().toFloat();
+    auto const deltaX = -bounds.getX();
+    auto const deltaY = -bounds.getY();
+    auto const scaleX = graphicsBounds.getWidth() / bounds.getWidth();
+    auto const scaleY = graphicsBounds.getHeight() / bounds.getHeight();
+    
+    g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
+}
+
 Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults)
 {
     auto rtToS = [](Vamp::RealTime const& rt)
