@@ -93,7 +93,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("New..."), juce::translate("Create a new document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!documentAcsr.isEquivalentTo(Document::FileBased::getDefaultContainer()));
+            result.setActive(!documentAcsr.isEquivalentTo(Instance::get().getDocumentFileBased().getDefaultAccessor()));
         }
         break;
         case CommandIDs::DocumentOpen:

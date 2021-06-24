@@ -2,10 +2,9 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::AttrContainer const& Document::FileBased::getDefaultContainer()
+Document::Accessor const& Document::FileBased::getDefaultAccessor()
 {
-    static AttrContainer const document({}, {}, {}, {}, {GridMode::partial});
-    return document;
+    return mDefaultDdocument;
 }
 
 Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
@@ -251,7 +250,7 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     {
         setFile({});
     }
-    mAccessor.copyFrom({getDefaultContainer()}, NotificationType::synchronous);
+    mAccessor.copyFrom(getDefaultAccessor(), NotificationType::synchronous);
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
@@ -315,7 +314,7 @@ void Document::FileBased::changed()
     mAccessor.setAttr<AttrType::path>(getFile(), NotificationType::synchronous);
     if(getFile() == juce::File{})
     {
-        auto const state = mAccessor.isEquivalentTo(getDefaultContainer());
+        auto const state = mAccessor.isEquivalentTo(getDefaultAccessor());
         setChangedFlag(!state);
     }
     else

@@ -15,7 +15,7 @@ namespace Document
         FileBased(Accessor& accessor, Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
         ~FileBased() override;
 
-        static Document::AttrContainer const& getDefaultContainer();
+        Accessor const& getDefaultAccessor();
 
         juce::Result consolidate();
 
@@ -47,6 +47,7 @@ namespace Document
 
         juce::File mLastFile;
         Accessor mSavedStateAccessor;
+        Accessor const mDefaultDdocument;
     };
 } // namespace Document
 
