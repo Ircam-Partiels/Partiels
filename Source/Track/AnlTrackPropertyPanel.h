@@ -31,7 +31,6 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
         Zoom::Accessor::Listener mValueZoomListener{typeid(*this).name()};
         Zoom::Accessor::Listener mBinZoomListener{typeid(*this).name()};
-        Zoom::Grid::Accessor::Listener mGridListener{typeid(*this).name()};
         BoundsListener mBoundsListener;
 
         PropertyText mPropertyName;
@@ -56,8 +55,7 @@ namespace Track
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;
         PropertyRangeSlider mPropertyValueRange;
-        PropertyNumber mPropertyTickReference;
-        PropertyList mPropertyTickBase;
+        PropertyTextButton mPropertyGrid;
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
         PropertyTextButton mPropertyChannelLayout;
@@ -77,9 +75,7 @@ namespace Track
         ConcertinaTable mPluginSection{juce::translate("PLUGIN"), true,
                                        juce::translate("The plugin information")};
 
-        using GridBaseInfo = std::tuple<size_t, double, double>;
-        static constexpr std::array<GridBaseInfo, 6> sGridBaseInfoArray{
-            GridBaseInfo{0_z, 10.0, 4.0}, GridBaseInfo{0_z, 2.0, 5.0}, GridBaseInfo{3_z, 2.0, 5.0}, GridBaseInfo{0_z, 4.0, 4.0}, GridBaseInfo{0_z, 10.0, 2.0}, GridBaseInfo{0_z, 6.0, 5.0}};
+        Zoom::Grid::PropertyPanel mZoomGridPropertyPanel;
         juce::Viewport mViewport;
         bool mChannelLayoutActionStarted{false};
         static auto constexpr sInnerWidth = 300;
