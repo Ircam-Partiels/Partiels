@@ -1,3 +1,37 @@
+v0.0.7 (alpha)
+
+- Add: Multi-audio file support
+- Add: Consolidate document
+- Add: Track import in JSON format
+- Imp: Optimize track graphical rendering
+- Fix: Multichannel playback
+- Fix: Grid track export with ignore grid tracks option enabled
+- Fix: Tracks and groups not well updated in the export panel
+- Fix: Drag and drop of tracks and groups overlaps components
+- Fix: The drag and drop of tracks and groups move the viewport in a strange way
+- Fix: Text disappears when the play head overlaps it
+- Fix: Tooltip value is not consistent
+- Fix: Group background color is not well initialized in the group property panel
+- Fix: Tootip values are not consistent with the mouse position
+- Fix: Command target manager isn't linked with floating windowss
+- Fix: Zoom scrollbar use inconsistent range values
+- Fix: Value range is not well mapped on color map
+- Fix: Global value range is not preserved with Vamp plugin that doesn't give value ranges
+- Imp: Zoom ruler interface
+- Fix: Track and group height and expand state marked the document as dirty
+- Imp: Optimize analyse results rendering
+- Add: Button to optimize group's and track's height
+- Add: Button to expand or shrink all groups
+- Add: Abort button on export panel
+- Add: "Reveal in Finder" buttons for document and audio files
+- Add: Duplicate group and track action using move with control key
+- Imp: Show dragging hand cursor on track and group thumbnails
+- Add: Tooltip bubble window on top of the audior reader window
+- Imp: Add MP3 support
+- Imp: Save viewport position in the document
+- Imp: Move viewport when resizing group and track section
+- Imp: Improve number of digits displayed for results based on the zoom length
+- Imp: Automatic scroll when moving groups or tracks
 
 v0.0.6 (alpha)
 - Fix: Viewport moves even when an analyse or a group is partially visible
