@@ -2,6 +2,127 @@
 
 ANALYSE_FILE_BEGIN
 
+Zoom::Grid::PropertyPanel::PropertyPanel()
+: FloatingWindowContainer("Grid Properties", *this)
+, mPropertyTickReference("Tick Reference Value", "The reference value used as the ruler origin", "", {std::numeric_limits<float>::min(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+                         {
+                             mAccessor.setAttr<AttrType::tickReference>(static_cast<double>(value), NotificationType::synchronous);
+                         })
+, mPropertyTickBase("Ruler Mode", "The mode of the ruler numeral system.", "", std::vector<std::string>{"1", "2", "3", "4", "5", "6"}, [&](size_t index)
+                    {
+                        anlWeakAssert(index < sGridBaseInfoArray.size());
+                        if(index >= sGridBaseInfoArray.size())
+                        {
+                            return;
+                        }
+                        auto const gridBaseInfo = sGridBaseInfoArray[index];
+                        mAccessor.setAttr<Zoom::Grid::AttrType::mainTickInterval>(std::get<0>(gridBaseInfo), NotificationType::synchronous);
+                        mAccessor.setAttr<Zoom::Grid::AttrType::tickPowerBase>(std::get<1>(gridBaseInfo), NotificationType::synchronous);
+                        mAccessor.setAttr<Zoom::Grid::AttrType::tickDivisionFactor>(std::get<2>(gridBaseInfo), NotificationType::synchronous);
+                    })
+, mPropertyMainTickInterval("Main Tick Interval", "The interval between two main ticks", "", {0.0f, 100000.0f}, 1.0f, [&](float value)
+                            {
+                                mAccessor.setAttr<AttrType::mainTickInterval>(static_cast<size_t>(value), NotificationType::synchronous);
+                            })
+, mPropertyTickPowerBase("Power Base", "The power base of the ruler", "", {1.0, 20.0f}, 0.0f, [&](float value)
+                         {
+                             mAccessor.setAttr<AttrType::tickPowerBase>(static_cast<double>(value), NotificationType::synchronous);
+                         })
+, mPropertyTickDivisionFactor("Division Factor", "The division factor of the ruler", "", {1.0, 20.0f}, 0.0f, [&](float value)
+                              {
+                                  mAccessor.setAttr<AttrType::tickDivisionFactor>(static_cast<double>(value), NotificationType::synchronous);
+                              })
+{
+    addAndMakeVisible(mPropertyTickReference);
+    addAndMakeVisible(mPropertyTickBase);
+    addAndMakeVisible(mPropertyMainTickInterval);
+    addAndMakeVisible(mPropertyTickPowerBase);
+    addAndMakeVisible(mPropertyTickDivisionFactor);
+
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::tickReference:
+            {
+                mPropertyTickReference.entry.setValue(acsr.getAttr<AttrType::tickReference>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case AttrType::mainTickInterval:
+            case AttrType::tickPowerBase:
+            case AttrType::tickDivisionFactor:
+            {
+                auto const mainTickInterval = acsr.getAttr<AttrType::mainTickInterval>();
+                auto const tickPowerBase = acsr.getAttr<AttrType::tickPowerBase>();
+                auto const tickDivisionFactor = acsr.getAttr<AttrType::tickDivisionFactor>();
+                auto it = std::find_if(sGridBaseInfoArray.cbegin(), sGridBaseInfoArray.cend(), [&](auto const& rhs)
+                                       {
+                                           return mainTickInterval == std::get<0>(rhs) && std::abs(tickPowerBase - std::get<1>(rhs)) < std::numeric_limits<double>::epsilon() && std::abs(tickDivisionFactor - std::get<2>(rhs)) < std::numeric_limits<double>::epsilon();
+                                       });
+                mPropertyTickBase.entry.setSelectedItemIndex(static_cast<int>(std::distance(sGridBaseInfoArray.cbegin(), it)), juce::NotificationType::dontSendNotification);
+                mPropertyTickBase.entry.setTextWhenNothingSelected(juce::translate("Custom"));
+                mPropertyMainTickInterval.entry.setValue(static_cast<double>(mainTickInterval), juce::NotificationType::dontSendNotification);
+                mPropertyTickPowerBase.entry.setValue(tickPowerBase, juce::NotificationType::dontSendNotification);
+                mPropertyTickDivisionFactor.entry.setValue(tickDivisionFactor, juce::NotificationType::dontSendNotification);
+            }
+            break;
+        }
+
+        if(onChanged != nullptr)
+        {
+            onChanged(acsr);
+        }
+    };
+
+    mAccessor.addListener(mListener, NotificationType::synchronous);
+
+    setSize(sInnerWidth, 400);
+}
+
+Zoom::Grid::PropertyPanel::~PropertyPanel()
+{
+    mAccessor.removeListener(mListener);
+}
+
+void Zoom::Grid::PropertyPanel::resized()
+{
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+    auto layout = [&](juce::Component& component)
+    {
+        component.setBounds(bounds.removeFromTop(component.getHeight()));
+    };
+    layout(mPropertyTickReference);
+    layout(mPropertyTickBase);
+    layout(mPropertyMainTickInterval);
+    layout(mPropertyTickPowerBase);
+    layout(mPropertyTickDivisionFactor);
+    setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
+}
+
+void Zoom::Grid::PropertyPanel::setGrid(Accessor const& accessor)
+{
+    mAccessor.copyFrom(accessor, NotificationType::synchronous);
+}
+
+void Zoom::Grid::PropertyPanel::hide()
+{
+    FloatingWindowContainer::hide();
+    if(onHide != nullptr)
+    {
+        onHide();
+    }
+}
+
+void Zoom::Grid::PropertyPanel::showAt(juce::Point<int> const& pt)
+{
+    FloatingWindowContainer::showAt(pt);
+    if(onShow != nullptr)
+    {
+        onShow();
+    }
+    mFloatingWindow.runModalLoop();
+}
+
 Zoom::Grid::TickDrawingInfo Zoom::Grid::getTickDrawingInfo(Accessor const& accessor, juce::Range<double> const& visibleRange, int size, double maxStringSize)
 {
     auto const rangeLength = visibleRange.getLength();
