@@ -27,10 +27,25 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             {
                 if(mAccessor.getAttr<AttrType::state>() == Plugin::State{})
                 {
-                    auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
-                    auto const description = PluginList::Scanner::loadDescription(mAccessor.getAttr<AttrType::key>(), sampleRate);
-                    mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
-                    mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
+                    auto getDescription = [&]()
+                    {
+                        try
+                        {
+                            auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
+                            return PluginList::Scanner::loadDescription(mAccessor.getAttr<AttrType::key>(), sampleRate);
+                        }
+                        catch(...)
+                        {
+                        }
+                        return Plugin::Description();
+                    };
+                    
+                    auto const description = getDescription();
+                    if(description != Plugin::Description())
+                    {
+                        mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
+                        mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
+                    }
                 }
                 else if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
                 {
