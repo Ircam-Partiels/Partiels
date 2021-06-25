@@ -791,6 +791,13 @@ void Track::PropertyPanel::resized()
     setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
 }
 
+void Track::PropertyPanel::lookAndFeelChanged()
+{
+    auto const text = mPropertyPluginDetails.getText();
+    mPropertyPluginDetails.clear();
+    mPropertyPluginDetails.setText(text);
+}
+
 bool Track::PropertyPanel::canModifyProcessor()
 {
     auto results = mAccessor.getAttr<AttrType::results>();

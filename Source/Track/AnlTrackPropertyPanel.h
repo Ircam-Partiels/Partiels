@@ -18,7 +18,8 @@ namespace Track
 
         // juce::Component
         void resized() override;
-
+        void lookAndFeelChanged() override;
+        
     private:
         bool canModifyProcessor();
         void applyParameterValue(Plugin::Parameter const& parameter, float value);

@@ -133,6 +133,9 @@ void PluginList::Table::resized()
 
 void PluginList::Table::lookAndFeelChanged()
 {
+    auto const text = mSearchField.getText();
+    mSearchField.clear();
+    mSearchField.setText(text);
     mSearchField.setTextToShowWhenEmpty(juce::translate("Filter..."), getLookAndFeel().findColour(juce::TableListBox::ColourIds::textColourId));
 }
 
