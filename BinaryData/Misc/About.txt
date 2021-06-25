@@ -4,6 +4,6 @@ Conception & Development: Pierre Guillot
 Copyright 2021 Ircam. All rights reserved
 
 Credits:
-Vamp plugin format is developed at the Centre for Digital Music, Queen Mary, University of London.
+Vamp plugin format is developed at the Centre for Digital Music, Queen Mary, University of London
 ASIO is a registered trademark of Steinberg Media Technologies GmbH
 Nunito Sans Font by The Nunito Project Authors
