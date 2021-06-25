@@ -123,7 +123,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     }
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     auto const original = XmlParser::fromXml(*xml.get(), "path", file);
-    auto const oldParent = file.getParentDirectory().getFullPathName();
+    auto const oldParent = original.getParentDirectory().getFullPathName();
     auto const newParent = file.getParentDirectory().getFullPathName();
     if(oldParent != newParent)
     {
