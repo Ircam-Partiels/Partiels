@@ -27,7 +27,7 @@ v0.0.7 (alpha)
 - Add: "Reveal in Finder" buttons for document and audio files
 - Add: Duplicate group and track action using move with control key
 - Imp: Show dragging hand cursor on track and group thumbnails
-- Add: Tooltip bubble window on top of the audior reader window
+- Add: Tooltip bubble window on top of the audio reader window
 - Imp: Add MP3 support
 - Imp: Save viewport position in the document
 - Imp: Move viewport when resizing group and track section
