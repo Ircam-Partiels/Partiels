@@ -2,6 +2,7 @@ v0.0.7 (alpha)
 
 - Add: Multi-audio file support
 - Add: Consolidate document
+- Add: Support for a grid layer over the plot and snapshot of tracks and groups
 - Add: Track import in JSON format
 - Imp: Optimize track graphical rendering
 - Fix: Multichannel playback
