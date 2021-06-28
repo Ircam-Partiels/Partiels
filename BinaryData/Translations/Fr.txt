@@ -1,6 +1,11 @@
 language: French
 countries: fr be mc ch lu
 
+"Discard changes" = "Ignorer les changements"
+"Cancel" = "Annuler"
+"Closing document..." = "Quitter le document..."
+"Do you want to save the changes to \"DCNM\"?"= "Voulez-vous sauvegarder les changements de \"DCNM\"?"
+
 "The track ANLNAME cannot import analysis results from file FLNAME due to concurrency access." =
 "The track ANLNAME cannot import analysis results from the file FLNAME because the input stream cannot be opened." =
 "The file FLNAME cannot be parsed to preset format." =
@@ -79,17 +84,17 @@ countries: fr be mc ch lu
 "Show TRACKNAME properties" =
 "Shrink the analyses" =
 "Expand the analyses" =
-"Clear" =
-"Scan" =
-"Name" =
-"Feature" =
-"Description" =
-"Maker" =
-"Category" =
-"Version" =
-"Filter..." =
-"Copy Group" =
-"Move Group" =
+"Clear" = "Effacer"
+"Scan" = "Lister"
+"Name" = "Nom"
+"Feature" = "Fonctionnalité"
+"Description" = "Description"
+"Maker" = "Fabricant"
+"Category" = "Catégorie"
+"Version" = "Version"
+"Filter..." = "Filtrer..."
+"Copy Group" = "Copier Le Groupe"
+"Move Group" = "Déplacer Le Groupe"
 "Show audio reader layout panel" =
 "Expand or shrink all the groups" =
 "Optimize the height of groups and tracks to fit the height of the document" =
@@ -126,12 +131,12 @@ countries: fr be mc ch lu
 "The analyses have been exported as FORMATNAME to FILENAME." =
 "Export" =
 "None" =
-"New..." =
-"Create a new document" =
-"Open..." =
-"Open a document or audio files" =
-"Save" =
-"Save the document" =
+"New..." = "Nouveau..."
+"Create a new document" = "Créer un nouveau document"
+"Open..." = "Ouvrir..."
+"Open a document or audio files" = "Ouvrir un document ou des fichiers audio"
+"Save" = "Sauvegarder"
+"Save the document" = "Sauvegarder le document"
 "Duplicate..." =
 "Consolidate..." =
 "Consolidate the document" =
@@ -143,11 +148,11 @@ countries: fr be mc ch lu
 "Undo last action" =
 "Redo " =
 "Redo last action" =
-"Add New Group" =
-"Adds a new group" =
-"Add New Track" =
-"Adds a new track" =
-"Remove Track" =
+"Add New Group" = "Ajouter Un Nouveau Groupe"
+"Adds a new group" = "Ajoute un nouveau groupe"
+"Add New Track" = "Ajouter Une Nouvelle Piste"
+"Adds a new track" =  "Ajoute une nouvelle piste"
+"Remove Track" = "Supprimer La Piste"
 "Adds the selected track" =
 "Remove Group" =
 "Removes the selected group" =

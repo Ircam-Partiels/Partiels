@@ -4,21 +4,11 @@ countries: fr be mc ch lu
 ###########################
 # Plugin List Table
 ###########################
-"Clear" = "Effacer"
-"Scan" = "Lister"
-"Filter..." = "Filtrer..."
 "Enumeration of plugins failed!" = "L'énumération des plugiciels a échoué!"
 "Loading of plugin failed!" = "Le chargement du plugiciel a échoué!"
 "Cannot get the plugin loader." = "Impossible d'obtenir le chargeur de plugiciels."
 "Plugin \"PLGKEY\" cannot be found." = "Le plugiciel \"PLGKEY\" est introuvable."
 "Feature \"FTRID\" of plugin \"PLGKEY\" cannot be found." = "La fonctionnalité \"FTRID\" du plugin \"PLGKEY\" est introuvable."
-
-"Name" = "Nom"
-"Feature" = "Fonctionnalité"
-"Maker" = "Fabricant"
-"Version" = "Version"
-"Category" = "Catégorie"
-"Description" = "Description"
 
 ###########################
 # Processor
