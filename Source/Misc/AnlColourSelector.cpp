@@ -120,7 +120,7 @@ void ColourButton::clicked()
         setCurrentColour(colour, juce::NotificationType::sendNotificationSync);
     };
     juce::DialogWindow::LaunchOptions options;
-    options.dialogTitle = juce::translate(mTitle);
+    options.dialogTitle = mTitle;
     options.content.setNonOwned(&colourSelector);
     options.componentToCentreAround = this;
     options.escapeKeyTriggersCloseButton = true;
