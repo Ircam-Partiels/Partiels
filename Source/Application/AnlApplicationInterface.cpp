@@ -343,7 +343,7 @@ Application::Interface::Interface()
     mLoader.addComponentListener(this);
 
     mDocumentSection.tooltipButton.setClickingTogglesState(true);
-    mDocumentSection.tooltipButton.setTooltip(juce::translate(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::ViewInfoBubble)));
+    mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::ViewInfoBubble));
     mDocumentSection.tooltipButton.onClick = [&]()
     {
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::ViewInfoBubble, true);
