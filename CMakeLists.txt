@@ -68,11 +68,7 @@ file(GLOB GlobalSources
     )
 source_group("Source/Global" FILES ${GlobalSources})
 
-file(GLOB TranslationsSources
-    ${BINARYDATA_DIRECTORY}/Translations/Fr/Fr.txt
-    ${BINARYDATA_DIRECTORY}/Translations/Fr/Plugin.txt
-    ${BINARYDATA_DIRECTORY}/Translations/Fr/Track.txt
-    )
+file(GLOB TranslationsSources ${BINARYDATA_DIRECTORY}/Translations/*.txt)
 source_group("Source/Translations" FILES ${TranslationsSources})
 
 target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
