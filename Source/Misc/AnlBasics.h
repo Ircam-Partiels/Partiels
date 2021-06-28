@@ -31,7 +31,11 @@
 #define ANALYSE_FILE_BEGIN namespace Anl {
 #define ANALYSE_FILE_END }
 
-#define anlStrongAssert(condition) juce::ignoreUnused(condition); assert(condition)
+#ifdef JUCE_DEBUG
+#define anlStrongAssert(condition) assert(condition)
+#else
+#define anlStrongAssert(condition) juce::ignoreUnused(condition)
+#endif
 #define anlWeakAssert jassert
 // clang-format on
 
