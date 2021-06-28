@@ -64,7 +64,6 @@ namespace Application
 
         juce::File getBackupFile() const;
 
-        TranslationManager mTranslationManager;
         juce::ApplicationCommandManager mApplicationCommandManager;
         juce::AudioFormatManager mAudioFormatManager;
         juce::AudioDeviceManager mAudioDeviceManager;

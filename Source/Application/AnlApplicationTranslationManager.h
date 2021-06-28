@@ -6,12 +6,10 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class TranslationManager
+    namespace TranslationManager
     {
-    public:
-        TranslationManager();
-        ~TranslationManager() = default;
-    };
+        void loadFromBinaries();
+    } // namespace TranslationManager
 } // namespace Application
 
 ANALYSE_FILE_END

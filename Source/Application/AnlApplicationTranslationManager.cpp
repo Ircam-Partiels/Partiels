@@ -3,13 +3,18 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::TranslationManager::TranslationManager()
+void Application::TranslationManager::loadFromBinaries()
 {
-    auto ls = std::make_unique<juce::LocalisedStrings>(juce::String::createStringFromData(TranslationsData::Fr_txt, TranslationsData::Fr_txtSize), false);
+    auto ls = std::make_unique<juce::LocalisedStrings>(juce::String(), false);
     if(ls != nullptr)
     {
-        ls->addStrings({juce::String::createStringFromData(TranslationsData::Plugin_txt, TranslationsData::Plugin_txtSize), false});
-        ls->addStrings({juce::String::createStringFromData(TranslationsData::Track_txt, TranslationsData::Track_txtSize), false});
+        for(int i = 0; i < TranslationsData::namedResourceListSize; ++i)
+        {
+            int size = 0;
+            auto const* data = TranslationsData::namedResourceList[i];
+            TranslationsData::getNamedResource(data, size);
+            ls->addStrings({juce::String::createStringFromData(data, size), false});
+        }
     }
     juce::LocalisedStrings::setCurrentMappings(ls.release());
 }

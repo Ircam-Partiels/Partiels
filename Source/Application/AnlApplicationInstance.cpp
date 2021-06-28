@@ -21,7 +21,8 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 void Application::Instance::initialise(juce::String const& commandLine)
 {
     anlDebug("Application", "Begin...");
-    juce::ignoreUnused(commandLine);
+    TranslationManager::loadFromBinaries();
+
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
     juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
 
