@@ -115,12 +115,6 @@ enum class NotificationType : bool
     , asynchronous = true
 };
 
-enum class AlertType : bool
-{
-      silent = false
-    , window = true
-};
-
 enum class ActionState
 {
       abort
