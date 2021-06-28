@@ -243,10 +243,17 @@ void Group::Section::updateContent()
         mRuler.reset();
         mGridIdentier.clear();
     }
-    else if(mGridIdentier != layout.front())
+    else
     {
         auto trackAcrs = Tools::getTrackAcsr(mAccessor, layout.front());
-        if(trackAcrs.has_value())
+        if(!trackAcrs.has_value())
+        {
+            mScrollBar.reset();
+            mDecoratorRuler.reset();
+            mRuler.reset();
+            mGridIdentier.clear();
+        }
+        else if(mGridIdentier != layout.front())
         {
             mRuler = std::make_unique<Track::Ruler>(*trackAcrs);
             if(mRuler != nullptr)
@@ -260,13 +267,6 @@ void Group::Section::updateContent()
                 addAndMakeVisible(mScrollBar.get());
             }
             mGridIdentier = layout.front();
-        }
-        else
-        {
-            mScrollBar.reset();
-            mDecoratorRuler.reset();
-            mRuler.reset();
-            mGridIdentier.clear();
         }
     }
 
