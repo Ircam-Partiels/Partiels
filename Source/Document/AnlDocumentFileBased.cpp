@@ -218,10 +218,23 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
-    XmlParser::toXml(*xml.get(), "reader", mAccessor.getAttr<AttrType::reader>());
-    XmlParser::toXml(*xml.get(), "path", mAccessor.getAttr<AttrType::path>());
+
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
-    mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
+    
+    Accessor tempAcsr;
+    tempAcsr.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
+    tempAcsr.setAttr<AttrType::reader>(mAccessor.getAttr<AttrType::reader>(), NotificationType::synchronous);
+    tempAcsr.setAttr<AttrType::path>(mAccessor.getAttr<AttrType::path>(), NotificationType::synchronous);
+    for(auto const acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
+    {
+        auto const result = acsr.get().getAttr<Track::AttrType::results>();
+        if(result.getFile().hasFileExtension("dat"))
+        {
+            acsr.get().setAttr<Track::AttrType::results>(Track::Results::withFile(result, {}), NotificationType::synchronous);
+        }
+    }
+    
+    mAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     auto var = std::make_unique<juce::DynamicObject>();
     if(var != nullptr)
