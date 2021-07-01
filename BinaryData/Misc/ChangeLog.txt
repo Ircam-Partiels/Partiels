@@ -1,5 +1,6 @@
 v0.0.8 (alpha)
 
+- Fix: When loading/modifying the result file of a track the document is not marked as dirty (#102)
 - Fix: Inserting audio files doesn't add a channel for all the audio file channels (#101)
 - Fix: Results file are not dissociated when using a template (#100)
 - Fix: Audio files fail to load when using a template (#99)
