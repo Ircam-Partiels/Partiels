@@ -617,4 +617,28 @@ void Application::LookAndFeel::drawTickBox(juce::Graphics& g, juce::Component& b
     }
 }
 
+int Application::LookAndFeel::getCallOutBoxBorderSize(juce::CallOutBox const& box)
+{
+    juce::ignoreUnused(box);
+    return 2;
+}
+
+float Application::LookAndFeel::getCallOutBoxCornerSize(juce::CallOutBox const& box)
+{
+    juce::ignoreUnused(box);
+    return 2.0f;
+}
+
+void Application::LookAndFeel::drawCallOutBoxBackground(juce::CallOutBox& box, juce::Graphics& g, juce::Path const& path, juce::Image& cachedImage)
+{
+    juce::ignoreUnused(path, cachedImage);
+    auto& colourScheme = getCurrentColourScheme();
+    auto const bounds = box.getLocalBounds().reduced(getCallOutBoxBorderSize(box));
+    juce::DropShadow(juce::Colours::black.withAlpha(0.7f), 8, {0, 2}).drawForRectangle(g, bounds);
+    g.setColour(colourScheme.getUIColour(ColourScheme::UIColour::windowBackground));
+    g.fillRoundedRectangle(bounds.toFloat(), getCallOutBoxCornerSize(box));
+    g.setColour(colourScheme.getUIColour(ColourScheme::UIColour::outline));
+    g.drawRoundedRectangle(bounds.toFloat(), getCallOutBoxCornerSize(box), 1.0f);
+}
+
 ANALYSE_FILE_END

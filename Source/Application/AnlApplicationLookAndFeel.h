@@ -96,6 +96,11 @@ namespace Application
         void drawButtonBackground(juce::Graphics& g, juce::Button& button, juce::Colour const& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
         void drawToggleButton(juce::Graphics& g, juce::ToggleButton& button, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
         void drawTickBox(juce::Graphics& g, juce::Component& button, float x, float y, float w, float h, bool ticked, bool isEnabled, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
+
+        // juce::CallOutBox::LookAndFeelMethods
+        void drawCallOutBoxBackground(juce::CallOutBox& box, juce::Graphics& g, juce::Path const& path, juce::Image& cachedImage) override;
+        int getCallOutBoxBorderSize(juce::CallOutBox const& box) override;
+        float getCallOutBoxCornerSize(juce::CallOutBox const& box) override;
     };
 } // namespace Application
 
