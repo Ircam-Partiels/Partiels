@@ -99,6 +99,9 @@ namespace Track
         size_t getNumBins(std::vector<Results::Columns> const& results);
         Zoom::Range getValueRange(std::vector<Results::Columns> const& results);
         Zoom::Range getValueRange(std::vector<Results::Points> const& results);
+
+        void showValueRangeEditor(Accessor& acsr);
+        void showBinRangeEditor(Accessor& acsr);
     } // namespace Tools
 } // namespace Track
 

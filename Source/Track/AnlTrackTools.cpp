@@ -581,4 +581,180 @@ Zoom::Range Track::Tools::getValueRange(std::vector<Results::Points> const& resu
                            });
 }
 
+void Track::Tools::showValueRangeEditor(Accessor& acsr)
+{
+    class RangeEditor
+    : public juce::Component
+    {
+    public:
+        RangeEditor(Zoom::Accessor& accessor, juce::String const name, juce::String const unit)
+        : mAccessor(accessor)
+        , mName("Name", name)
+        , mPropertyStart("Low Value", "The low value of the visible range", unit, {0.0f, 1.0f}, 0.0f, [&](float value)
+                         {
+                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(static_cast<double>(value));
+                             mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                         })
+        , mPropertyEnd("High Value", "The high value of the visible range", unit, {0.0f, 1.0f}, 0.0f, [&](float value)
+                       {
+                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(static_cast<double>(value));
+                           mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                       })
+        {
+            setWantsKeyboardFocus(true);
+            addAndMakeVisible(mName);
+            addAndMakeVisible(mPropertyStart);
+            addAndMakeVisible(mPropertyEnd);
+            mListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+            {
+                switch(attribute)
+                {
+                    case Zoom::AttrType::globalRange:
+                    {
+                        auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
+                        mPropertyStart.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                        mPropertyEnd.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                    }
+                    break;
+                    case Zoom::AttrType::visibleRange:
+                    {
+                        auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
+                        mPropertyStart.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
+                        mPropertyEnd.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
+                    }
+                    break;
+                    case Zoom::AttrType::minimumLength:
+                    case Zoom::AttrType::anchor:
+                        break;
+                }
+            };
+
+            mAccessor.addListener(mListener, NotificationType::synchronous);
+            setSize(180, 74);
+        }
+
+        ~RangeEditor() override
+        {
+            mAccessor.removeListener(mListener);
+        }
+
+        // juce::Component
+        void resized() override
+        {
+            auto bounds = getLocalBounds();
+            mName.setBounds(bounds.removeFromTop(24));
+            mPropertyEnd.setBounds(bounds.removeFromTop(mPropertyEnd.getHeight()));
+            mPropertyStart.setBounds(bounds.removeFromTop(mPropertyStart.getHeight()));
+            setSize(getWidth(), bounds.getY() + 2);
+        }
+
+    private:
+        Zoom::Accessor& mAccessor;
+        Zoom::Accessor::Listener mListener{typeid(*this).name()};
+        juce::Label mName;
+        PropertyNumber mPropertyStart;
+        PropertyNumber mPropertyEnd;
+    };
+
+    auto const point = juce::Desktop::getMousePosition();
+    auto& zoomAcsr = acsr.getAcsr<AcsrType::valueZoom>();
+    auto const name = acsr.getAttr<AttrType::name>();
+    auto const unit = acsr.getAttr<AttrType::description>().output.unit;
+    auto& box = juce::CallOutBox::launchAsynchronously(std::make_unique<RangeEditor>(zoomAcsr, name, unit), {point.getX(), point.getY(), 180, 74}, nullptr);
+    box.setArrowSize(0.0f);
+    box.resized();
+}
+
+void Track::Tools::showBinRangeEditor(Accessor& acsr)
+{
+    class RangeEditor
+    : public juce::Component
+    {
+    public:
+        RangeEditor(Zoom::Accessor& accessor, juce::String const name, std::vector<std::string> const names)
+        : mAccessor(accessor)
+        , mName("Name", name)
+        , mNames(names)
+        , mPropertyStart("Low Bin", "The low bin of the visible range", "", {0.0f, 1.0f}, 0.01f, [&](float value)
+                         {
+                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(static_cast<double>(value));
+                             mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                         })
+        , mPropertyEnd("High Bin", "The high bin of the visible range", "", {0.0f, 1.0f}, 0.01f, [&](float value)
+                       {
+                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(static_cast<double>(value));
+                           mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                       })
+        {
+            setWantsKeyboardFocus(true);
+            addAndMakeVisible(mName);
+            addAndMakeVisible(mPropertyStart);
+            addAndMakeVisible(mPropertyEnd);
+            mListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+            {
+                switch(attribute)
+                {
+                    case Zoom::AttrType::globalRange:
+                    {
+                        auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
+                        mPropertyStart.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                        mPropertyEnd.entry.setRange(range, 0.0, juce::NotificationType::dontSendNotification);
+                    }
+                    break;
+                    case Zoom::AttrType::visibleRange:
+                    {
+                        auto const setValue = [this](NumberField& field, double value)
+                        {
+                            field.setValue(value, juce::NotificationType::dontSendNotification);
+                            auto const index = static_cast<size_t>(std::floor(value));
+                            field.setTextValueSuffix(index < mNames.size() ? " - " + mNames[index] : std::string());
+                        };
+                        auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
+                        setValue(mPropertyStart.entry, range.getStart());
+                        setValue(mPropertyEnd.entry, range.getEnd());
+                    }
+                    break;
+                    case Zoom::AttrType::minimumLength:
+                    case Zoom::AttrType::anchor:
+                        break;
+                }
+            };
+
+            mAccessor.addListener(mListener, NotificationType::synchronous);
+            setSize(180, 74);
+        }
+
+        ~RangeEditor() override
+        {
+            mAccessor.removeListener(mListener);
+        }
+
+        // juce::Component
+        void resized() override
+        {
+            auto bounds = getLocalBounds();
+            mName.setBounds(bounds.removeFromTop(24));
+            mPropertyEnd.setBounds(bounds.removeFromTop(mPropertyEnd.getHeight()));
+            mPropertyStart.setBounds(bounds.removeFromTop(mPropertyStart.getHeight()));
+            setSize(getWidth(), bounds.getY() + 2);
+        }
+
+    private:
+        Zoom::Accessor& mAccessor;
+        Zoom::Accessor::Listener mListener{typeid(*this).name()};
+        juce::Label mName;
+        std::vector<std::string> const mNames;
+        PropertyNumber mPropertyStart;
+        PropertyNumber mPropertyEnd;
+    };
+
+    auto const point = juce::Desktop::getMousePosition();
+    auto& zoomAcsr = acsr.getAcsr<AcsrType::binZoom>();
+    auto const name = acsr.getAttr<AttrType::name>();
+    auto const unit = acsr.getAttr<AttrType::description>().output.binNames;
+    auto& box = juce::CallOutBox::launchAsynchronously(std::make_unique<RangeEditor>(zoomAcsr, name, unit), {point.getX(), point.getY(), 180, 74}, nullptr);
+    box.setArrowSize(0.0f);
+    box.resized();
+}
+
 ANALYSE_FILE_END
