@@ -50,6 +50,22 @@ Track::Ruler::Ruler(Accessor& accessor)
                     anlWeakAssert(ruler != nullptr);
                     if(ruler != nullptr)
                     {
+                        ruler->onMouseDown = [&]()
+                        {
+                            if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
+                            {
+                                if(mDisplayType == Tools::DisplayType::points)
+                                {
+                                    Tools::showValueRangeEditor(mAccessor);
+                                }
+                                else
+                                {
+                                    Tools::showBinRangeEditor(mAccessor);
+                                }
+                                return false;
+                            }
+                            return true;
+                        };
                         ruler->onDoubleClick = [&]()
                         {
                             auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
