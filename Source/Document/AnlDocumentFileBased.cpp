@@ -220,7 +220,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
     }
 
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
-    
+
     Accessor tempAcsr;
     tempAcsr.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     tempAcsr.setAttr<AttrType::reader>(mAccessor.getAttr<AttrType::reader>(), NotificationType::synchronous);
@@ -233,7 +233,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
             acsr.get().setAttr<Track::AttrType::results>(Track::Results::withFile(result, {}), NotificationType::synchronous);
         }
     }
-    
+
     mAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     auto var = std::make_unique<juce::DynamicObject>();
