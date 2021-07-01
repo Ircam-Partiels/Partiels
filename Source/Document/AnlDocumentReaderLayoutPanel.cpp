@@ -274,15 +274,26 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
 
     mAddButton.onClick = [this]()
     {
-        juce::FileChooser fc("Load audio files...", {}, mAudioFormatManager.getWildcardForAllFormats());
+        auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
+        juce::FileChooser fc("Load audio files...", {}, wildcard);
         if(!fc.browseForMultipleFilesToOpen())
         {
             return;
         }
         auto readerLayout = mLayout;
-        for(auto const& result : fc.getResults())
+        for(auto const& file : fc.getResults())
         {
-            readerLayout.push_back({result});
+            if(wildcard.contains(file.getFileExtension()))
+            {
+                auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
+                if(reader != nullptr)
+                {
+                    for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
+                    {
+                        readerLayout.push_back({file, static_cast<int>(channel)});
+                    }
+                }
+            }
         }
         setLayout(readerLayout);
     };
@@ -445,7 +456,14 @@ void Document::ReaderLayoutPanel::filesDropped(juce::StringArray const& files, i
         juce::File const file(result);
         if(wildcard.contains(file.getFileExtension()))
         {
-            readerLayout.push_back({result});
+            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
+            if(reader != nullptr)
+            {
+                for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
+                {
+                    readerLayout.push_back({file, static_cast<int>(channel)});
+                }
+            }
         }
     }
     setLayout(readerLayout);

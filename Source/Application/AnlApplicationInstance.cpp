@@ -239,12 +239,19 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     if(!audioFiles.empty())
     {
         mDocumentAccessor.copyFrom(mDocumentFileBased.getDefaultAccessor(), NotificationType::synchronous);
-        std::vector<Document::ReaderChannel> reader;
+        std::vector<Document::ReaderChannel> readerLayout;
         for(auto const& file : files)
         {
-            reader.emplace_back(file);
+            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
+            if(reader != nullptr)
+            {
+                for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
+                {
+                    readerLayout.push_back({file, static_cast<int>(channel)});
+                }
+            }
         }
-        mDocumentAccessor.setAttr<Document::AttrType::reader>(reader, NotificationType::synchronous);
+        mDocumentAccessor.setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
         mDocumentFileBased.setFile({});
     }
     else if(array.isEmpty())
