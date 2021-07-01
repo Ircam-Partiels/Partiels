@@ -21,7 +21,20 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                            auto const file = mAccessor.getAttr<AttrType::results>().getFile();
                            if(file.existsAsFile())
                            {
-                               file.revealToUser();
+                               if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
+                               {
+                                   mDirector.startAction();
+                                   if(!canModifyProcessor())
+                                   {
+                                       mDirector.endAction(ActionState::abort);
+                                       return;
+                                   }
+                                   mDirector.endAction(ActionState::newTransaction, juce::translate("Detach the track's results file"));
+                               }
+                               else
+                               {
+                                   file.revealToUser();
+                               }
                            }
                            else
                            {
