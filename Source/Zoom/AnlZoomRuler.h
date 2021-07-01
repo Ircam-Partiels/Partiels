@@ -30,9 +30,8 @@ namespace Zoom
 
         ~Ruler() override;
 
-        std::function<void()> onDoubleClick = nullptr;
-        std::function<void(int)> onMouseDown = nullptr;
-        std::function<void(void)> onRightClick = nullptr;
+        std::function<void(void)> onDoubleClick = nullptr;
+        std::function<bool(void)> onMouseDown = nullptr;
 
         // Juce::Component
         void mouseDown(juce::MouseEvent const& event) override;

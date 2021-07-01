@@ -43,22 +43,13 @@ Zoom::Ruler::~Ruler()
 
 void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
 {
-    if(event.mods.isRightButtonDown())
+    if(onMouseDown != nullptr && !onMouseDown())
     {
-        if(onRightClick != nullptr)
-        {
-            onRightClick();
-        }
-
         return;
     }
 
     auto const visibleRange = mAccessor.getAttr<AttrType::visibleRange>();
     mInitialValueRange = visibleRange;
-    if(mInitialValueRange.isEmpty())
-    {
-        return;
-    }
 
     auto getAnchorPoint = [&]()
     {
@@ -98,10 +89,6 @@ void Zoom::Ruler::mouseDown(juce::MouseEvent const& event)
         {
             mAccessor.setAttr<AttrType::anchor>(std::make_tuple(true, getAnchorPoint()), NotificationType::synchronous);
             event.source.enableUnboundedMouseMovement(true, false);
-            if(onMouseDown != nullptr)
-            {
-                onMouseDown(event.x);
-            }
         }
         break;
         case NavigationMode::select:
