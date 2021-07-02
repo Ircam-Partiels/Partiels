@@ -23,10 +23,19 @@ Document::Section::Section(Director& director)
                       updateLayout();
                   })
 {
-    mTimeRuler.onDoubleClick = [&]()
+    mTimeRuler.onDoubleClick = [this]()
     {
         auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+    };
+    mTimeRuler.onMouseDown = [this]()
+    {
+        if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
+        {
+            Tools::showTimeRangeEditor(mAccessor);
+            return false;
+        }
+        return true;
     };
 
     mDraggableTable.onComponentDropped = [&](juce::String const& identifier, size_t index, bool copy)
