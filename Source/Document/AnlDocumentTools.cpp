@@ -249,6 +249,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                                                          }
                                                                                          break;
                                                                                          case Track::AttrType::name:
+                                                                                         case Track::AttrType::file:
                                                                                          case Track::AttrType::results:
                                                                                          case Track::AttrType::key:
                                                                                          case Track::AttrType::description:

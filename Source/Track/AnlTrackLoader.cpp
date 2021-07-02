@@ -56,9 +56,9 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
                                      juce::Thread::setCurrentThreadPriority(10);
                                      if(file.hasFileExtension("json"))
                                      {
-                                         return loadFromJson(file, std::move(stream));
+                                         return loadFromJson(std::move(stream));
                                      }
-                                     return loadFromBinary(file, std::move(stream));
+                                     return loadFromBinary(std::move(stream));
                                  });
 
     return juce::Result::ok();
@@ -120,7 +120,7 @@ void Track::Loader::abortLoading()
     mLoadingState = ProcessState::available;
 }
 
-Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream stream)
+Track::Results Track::Loader::loadFromJson(std::ifstream stream)
 {
     auto expected = ProcessState::available;
     if(!mLoadingState.compare_exchange_weak(expected, ProcessState::running))
@@ -276,7 +276,7 @@ Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream
     Plugin::Output output;
     output.hasFixedBinCount = false;
     mAdvancement.store(0.9f);
-    auto results = Results::withFile(Tools::getResults(output, pluginResults), file);
+    auto results = Tools::getResults(output, pluginResults);
     mAdvancement.store(1.0f);
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
@@ -288,7 +288,7 @@ Track::Results Track::Loader::loadFromJson(juce::File const& file, std::ifstream
     return {};
 }
 
-Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstream stream)
+Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
 {
     auto expected = ProcessState::available;
     if(!mLoadingState.compare_exchange_weak(expected, ProcessState::running))
@@ -493,7 +493,7 @@ Track::Results Track::Loader::loadFromBinary(juce::File const& file, std::ifstre
     if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
         triggerAsyncUpdate();
-        return Results::withFile(res, file);
+        return res;
     }
 
     triggerAsyncUpdate();

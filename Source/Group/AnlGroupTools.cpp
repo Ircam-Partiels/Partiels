@@ -105,6 +105,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
                                                                                                  }
                                                                                                  break;
                                                                                                  case Track::AttrType::name:
+                                                                                                 case Track::AttrType::file:
                                                                                                  case Track::AttrType::results:
                                                                                                  case Track::AttrType::key:
                                                                                                  case Track::AttrType::description:

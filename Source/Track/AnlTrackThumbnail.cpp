@@ -55,6 +55,7 @@ Track::Thumbnail::Thumbnail(Director& director)
             break;
             case AttrType::processing:
             case AttrType::warnings:
+            case AttrType::file:
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:

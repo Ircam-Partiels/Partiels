@@ -31,6 +31,7 @@ Track::StateButton::StateButton(Accessor& accessor)
             case AttrType::key:
             case AttrType::description:
             case AttrType::state:
+            case AttrType::file:
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::identifier:

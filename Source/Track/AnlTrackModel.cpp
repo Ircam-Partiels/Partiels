@@ -37,43 +37,6 @@ auto XmlParser::fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Ide
     return value;
 }
 
-template <>
-void XmlParser::toXml<Track::Results>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Results const& value)
-{
-    auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "file", value.getFile().getFullPathName());
-        xml.addChildElement(child.release());
-    }
-}
-
-template <>
-auto XmlParser::fromXml<Track::Results>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::Results const& defaultValue)
-    -> Track::Results
-{
-    auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child == nullptr)
-    {
-        return defaultValue;
-    }
-    return Track::Results::withFile(defaultValue, fromXml(*child, "file", defaultValue.getFile()));
-}
-
-void Track::to_json(nlohmann::json& j, Results const& results)
-{
-    j["file"] = results.getFile();
-}
-
-void Track::from_json(nlohmann::json const& j, Results& results)
-{
-    juce::File f;
-    j.at("file").get_to(f);
-    results = Track::Results::withFile(results, f);
-}
-
 void Track::to_json(nlohmann::json& j, ColourSet const& colourSet)
 {
     j["map"] = colourSet.map;

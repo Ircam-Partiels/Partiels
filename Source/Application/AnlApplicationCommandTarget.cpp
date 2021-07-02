@@ -712,7 +712,7 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
     {
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::results>(Track::Results{file}, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::file>(file, NotificationType::synchronous);
 
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);

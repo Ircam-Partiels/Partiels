@@ -14,13 +14,14 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
         switch(attribute)
         {
             case AttrType::name:
+            case AttrType::file:
             case AttrType::processing:
             case AttrType::warnings:
             case AttrType::results:
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto const isLoading = acsr.getAttr<AttrType::results>().getFile() != juce::File{};
+                auto const isLoading = acsr.getAttr<AttrType::file>() != juce::File{};
                 if(std::get<0>(state))
                 {
                     mMessage = isLoading ? "Loading... " : "Analysing... ";

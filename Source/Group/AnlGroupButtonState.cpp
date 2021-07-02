@@ -25,6 +25,7 @@ Group::StateButton::StateButton(Accessor& accessor)
             break;
             case Track::AttrType::name:
             case Track::AttrType::key:
+            case Track::AttrType::file:
             case Track::AttrType::description:
             case Track::AttrType::state:
             case Track::AttrType::results:

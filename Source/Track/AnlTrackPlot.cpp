@@ -127,6 +127,7 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
         switch(attribute)
         {
             case AttrType::identifier:
+            case AttrType::file:
             case AttrType::name:
             case AttrType::key:
             case AttrType::description:
@@ -742,6 +743,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
         switch(attribute)
         {
             case AttrType::identifier:
+            case AttrType::file:
             case AttrType::name:
             case AttrType::key:
             case AttrType::state:

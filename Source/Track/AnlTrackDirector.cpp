@@ -47,7 +47,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                         mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
                     }
                 }
-                else if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
+                else if(mAccessor.getAttr<AttrType::file>() == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -55,7 +55,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::state:
             {
-                if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
+                if(mAccessor.getAttr<AttrType::file>() == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -66,16 +66,28 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 sanitizeZooms(notification);
             }
             break;
-            case AttrType::results:
+            case AttrType::file:
             {
-                auto results = mAccessor.getAttr<AttrType::results>();
-                if(results.getFile() != juce::File{} && results.isEmpty())
+                auto const results = mAccessor.getAttr<AttrType::results>();
+                if(!results.isEmpty())
+                {
+                    break;
+                }
+                if(mAccessor.getAttr<AttrType::file>() != juce::File{})
                 {
                     clearFilesToWatch();
                     runLoading(notification);
-                    return;
                 }
+                else
+                {
+                    runAnalysis(notification);
+                }
+            }
+            break;
+            case AttrType::results:
+            {
                 sanitizeZooms(notification);
+                auto const results = mAccessor.getAttr<AttrType::results>();
                 auto getNumChannels = [&]() -> std::optional<size_t>
                 {
                     if(auto markers = results.getMarkers())
@@ -320,7 +332,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         timerCallback();
     };
 
-    if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
+    if(mAccessor.getAttr<AttrType::file>() == juce::File{})
     {
         runAnalysis(NotificationType::synchronous);
     }
@@ -432,27 +444,9 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 
     std::swap(mAudioFormatReaderManager, audioFormatReader);
-    if(mAccessor.getAttr<AttrType::results>().getFile() == juce::File{})
+    if(mAccessor.getAttr<AttrType::file>() == juce::File{})
     {
         runAnalysis(notification);
-    }
-}
-
-void Track::Director::setResultsFile(juce::File const& file, NotificationType const notification)
-{
-    auto const results = mAccessor.getAttr<AttrType::results>();
-    if(results.getFile() != file)
-    {
-        clearFilesToWatch();
-        mAccessor.setAttr<AttrType::results>(Results::withFile(results, file), notification);
-        if(file == juce::File{})
-        {
-            runAnalysis(notification);
-        }
-        else
-        {
-            runLoading(notification);
-        }
     }
 }
 
@@ -543,15 +537,15 @@ void Track::Director::runAnalysis(NotificationType const notification)
 void Track::Director::runLoading(NotificationType const notification)
 {
     mGraphics.stopRendering();
-    auto results = mAccessor.getAttr<AttrType::results>();
-    if(results.getFile() != juce::File{})
+    auto const file = mAccessor.getAttr<AttrType::file>();
+    if(file != juce::File{})
     {
-        auto const result = mLoader.loadAnalysis(mAccessor, results.getFile());
+        auto const result = mLoader.loadAnalysis(mAccessor, file);
         if(result.wasOk())
         {
             startTimer(50);
             timerCallback();
-            addFileToWatch(results.getFile());
+            addFileToWatch(file);
             mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
             return;
         }
@@ -561,16 +555,16 @@ void Track::Director::runLoading(NotificationType const notification)
         {
             case AlertWindow::Answer::yes:
             {
-                juce::FileChooser fc(juce::translate("Load analysis results"), results.getFile(), "*.json;*.dat");
+                juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.json;*.dat");
                 if(fc.browseForFileToOpen())
                 {
-                    setResultsFile(fc.getResult(), notification);
+                    mAccessor.setAttr<AttrType::file>(fc.getResult(), notification);
                 }
             }
             break;
             case AlertWindow::Answer::no:
             {
-                setResultsFile(juce::File{}, notification);
+                mAccessor.setAttr<AttrType::file>(juce::File{}, notification);
             }
             break;
             case AlertWindow::Answer::cancel:
@@ -645,7 +639,7 @@ bool Track::Director::fileHasBeenRemoved(juce::File const& file)
         juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.json;*.dat");
         if(fc.browseForFileToOpen())
         {
-            setResultsFile(fc.getResult(), NotificationType::asynchronous);
+            mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
             return false;
         }
     }
@@ -694,7 +688,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
         return result;
     }
 
-    auto const currentFile = mAccessor.getAttr<AttrType::results>().getFile();
+    auto const currentFile = mAccessor.getAttr<AttrType::file>();
     auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
     if(currentFile == expectedFile)
     {
@@ -716,7 +710,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
             return juce::Result::fail(juce::translate("Cannot copy to SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", currentFile.getFullPathName()).replace("DSTFLNAME", expectedFile.getFullPathName()));
         }
     }
-    setResultsFile(expectedFile, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::file>(expectedFile, NotificationType::synchronous);
     return juce::Result::ok();
 }
 

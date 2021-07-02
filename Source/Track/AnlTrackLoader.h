@@ -22,8 +22,8 @@ namespace Track
         float getAdvancement() const;
 
     private:
-        Results loadFromJson(juce::File const& file, std::ifstream stream);
-        Results loadFromBinary(juce::File const& file, std::ifstream stream);
+        Results loadFromJson(std::ifstream stream);
+        Results loadFromBinary(std::ifstream stream);
         void abortLoading();
 
         // juce::AsyncUpdater

@@ -18,7 +18,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 , mPropertyResultsFile("Results File", "The path of the results file", [this]()
                        {
-                           auto const file = mAccessor.getAttr<AttrType::results>().getFile();
+                           auto const file = mAccessor.getAttr<AttrType::file>();
                            if(file.existsAsFile())
                            {
                                if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
@@ -46,13 +46,13 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                        juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.json;*.dat");
                                        if(fc.browseForFileToOpen())
                                        {
-                                           mDirector.setResultsFile(file, NotificationType::synchronous);
+                                           mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
                                        }
                                    }
                                    break;
                                    case AlertWindow::Answer::no:
                                    {
-                                       mDirector.setResultsFile(juce::File{}, NotificationType::synchronous);
+                                       mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
                                    }
                                    break;
                                    case AlertWindow::Answer::cancel:
@@ -418,6 +418,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
             case AttrType::key:
             case AttrType::description:
+            case AttrType::file:
             case AttrType::results:
             {
                 auto createProperty = [&](Plugin::Parameter const& parameter) -> std::unique_ptr<juce::Component>
@@ -451,7 +452,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 std::vector<ConcertinaTable::ComponentRef> components;
 
                 // Processor Part
-                auto const resultsFile = results.getFile();
+                auto const resultsFile = mAccessor.getAttr<AttrType::file>();
                 mPropertyResultsFile.entry.setButtonText(resultsFile.getFileName());
                 mPropertyResultsFile.entry.setTooltip(resultsFile.getFullPathName());
                 if(resultsFile != juce::File{})
@@ -813,14 +814,14 @@ void Track::PropertyPanel::lookAndFeelChanged()
 
 bool Track::PropertyPanel::canModifyProcessor()
 {
-    auto results = mAccessor.getAttr<AttrType::results>();
-    if(results.getFile() != juce::File{})
+    auto const file = mAccessor.getAttr<AttrType::file>();
+    if(file != juce::File{})
     {
         if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Locked Plugin", "Analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
         {
             return false;
         }
-        mDirector.setResultsFile(juce::File{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
     }
     return true;
 }

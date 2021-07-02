@@ -227,10 +227,10 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
     tempAcsr.setAttr<AttrType::path>(mAccessor.getAttr<AttrType::path>(), NotificationType::synchronous);
     for(auto const acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
     {
-        auto const result = acsr.get().getAttr<Track::AttrType::results>();
-        if(result.getFile().hasFileExtension("dat"))
+        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
+        if(resultFile.hasFileExtension("dat"))
         {
-            acsr.get().setAttr<Track::AttrType::results>(Track::Results::withFile(result, {}), NotificationType::synchronous);
+            acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
         }
     }
 

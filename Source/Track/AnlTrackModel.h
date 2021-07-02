@@ -28,11 +28,6 @@ namespace Track
         Results(Results const& rhs) = default;
         ~Results() = default;
 
-        explicit Results(juce::File const& f)
-        : mFile(f)
-        {
-        }
-
         explicit Results(SharedMarkers ptr)
         : mResults(ptr)
         , mNumBins(0_z)
@@ -52,13 +47,6 @@ namespace Track
         , mNumBins(numBins)
         , mValueRange(valueRange)
         {
-        }
-
-        static Results withFile(Results const& result, juce::File const& f)
-        {
-            Results copy = result;
-            copy.mFile = f;
-            return copy;
         }
 
         inline SharedMarkers getMarkers() const noexcept
@@ -86,11 +74,6 @@ namespace Track
                 return *columnsPtr;
             }
             return nullptr;
-        }
-
-        inline juce::File const& getFile() const
-        {
-            return mFile;
         }
 
         inline size_t const& getNumBins() const
@@ -136,8 +119,7 @@ namespace Track
         {
             return getMarkers() == rhd.getMarkers() &&
                    getPoints() == rhd.getPoints() &&
-                   getColumns() == rhd.getColumns() &&
-                   mFile == rhd.mFile;
+                   getColumns() == rhd.getColumns();
         }
 
         inline bool operator!=(Results const& rhd) const noexcept
@@ -147,7 +129,6 @@ namespace Track
 
     private:
         std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
-        juce::File mFile{};
         size_t mNumBins{0_z};
         Zoom::Range mValueRange{};
     };
@@ -205,6 +186,7 @@ namespace Track
     {
           identifier
         , name
+        , file
         , results
         , key
         , description
@@ -237,7 +219,8 @@ namespace Track
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
-    , Model::Attr<AttrType::results, Results, Model::Flag::basic>
+    , Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
@@ -272,6 +255,7 @@ namespace Track
         Accessor()
         : Accessor(AttrContainer(  {""}
                                  , {""}
+                                 , {}
                                  , {}
                                  , {}
                                  , {}
@@ -317,6 +301,21 @@ namespace Track
                 Model::Accessor<Accessor, AttrContainer, AcsrContainer>::setAttr<type, value_v>(value, notification);
             }
         }
+
+        std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override
+        {
+            auto copy = std::make_unique<juce::XmlElement>(xml);
+            if(copy != nullptr && version <= 0x8)
+            {
+                auto* child = copy->getChildByName("results");
+                if(child != nullptr)
+                {
+                    auto const file = XmlParser::fromXml(*child, "file", juce::File{});
+                    XmlParser::toXml(*copy.get(), "file", file);
+                }
+            }
+            return copy;
+        }
     };
 } // namespace Track
 
@@ -328,13 +327,6 @@ namespace XmlParser
     template <>
     auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
         -> Track::ColourSet;
-
-    template <>
-    void toXml<Track::Results>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Results const& value);
-
-    template <>
-    auto fromXml<Track::Results>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::Results const& defaultValue)
-        -> Track::Results;
 } // namespace XmlParser
 
 ANALYSE_FILE_END

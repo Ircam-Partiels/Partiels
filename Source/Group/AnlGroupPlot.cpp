@@ -23,6 +23,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
         {
             case Track::AttrType::identifier:
             case Track::AttrType::name:
+            case Track::AttrType::file:
             case Track::AttrType::key:
             case Track::AttrType::description:
             case Track::AttrType::state:

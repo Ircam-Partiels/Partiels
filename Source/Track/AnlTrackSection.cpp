@@ -16,6 +16,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
         {
             case AttrType::identifier:
             case AttrType::name:
+            case AttrType::file:
             case AttrType::key:
             case AttrType::description:
             case AttrType::results:

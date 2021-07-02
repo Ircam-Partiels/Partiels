@@ -24,7 +24,6 @@ namespace Track
 
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
-        void setResultsFile(juce::File const& file, NotificationType const notification);
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
