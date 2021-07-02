@@ -140,4 +140,9 @@ void Transport::Display::parentHierarchyChanged()
     lookAndFeelChanged();
 }
 
+void Transport::Display::setMaxTime(double timeInSeconds)
+{
+    mPosition.setMaxTime(timeInSeconds, juce::NotificationType::dontSendNotification);
+}
+
 ANALYSE_FILE_END

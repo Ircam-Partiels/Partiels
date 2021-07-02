@@ -18,6 +18,8 @@ namespace Transport
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
 
+        void setMaxTime(double timeInSeconds);
+
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
