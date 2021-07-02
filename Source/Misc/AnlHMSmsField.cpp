@@ -51,6 +51,7 @@ HMSmsField::HMSmsField()
     mFields[1].suffix.setText("m", juce::NotificationType::dontSendNotification);
     mFields[2].suffix.setText("s", juce::NotificationType::dontSendNotification);
     mFields[3].suffix.setText("ms", juce::NotificationType::dontSendNotification);
+    setMaxTime(0.0, juce::NotificationType::dontSendNotification);
 
     for(size_t i = 0; i < mFields.size(); ++i)
     {
@@ -191,8 +192,35 @@ void HMSmsField::setJustificationType(juce::Justification newJustification)
     }
 }
 
-void HMSmsField::setTime(double const timeInSeconds, juce::NotificationType const notification)
+void HMSmsField::setMaxTime(double const timeInSeconds, juce::NotificationType const notification)
 {
+    mMaxTime = timeInSeconds;
+
+    auto const hours = static_cast<int>(std::min(std::floor(timeInSeconds / 3600.0), 99.0));
+    auto const minutes = static_cast<int>(std::min(std::floor(timeInSeconds / 60.0), 99.0));
+    auto const seconds = static_cast<int>(std::min(std::floor(timeInSeconds), 99.0));
+    auto const milliseconds = static_cast<int>(std::min(std::round(timeInSeconds * 1000.0), 999.0));
+
+    auto const currentTime = getTime();
+    mFields[0].maxValue = mMaxTime > 0.0 ? hours : 99;
+    mFields[0].entry.setEnabled(mFields[0].maxValue > 0);
+    mFields[0].suffix.setEnabled(mFields[0].maxValue > 0);
+    mFields[1].maxValue = mMaxTime > 0.0 ? minutes : 99;
+    mFields[1].entry.setEnabled(mFields[1].maxValue > 0);
+    mFields[1].suffix.setEnabled(mFields[1].maxValue > 0);
+    mFields[2].maxValue = mMaxTime > 0.0 ? seconds : 99;
+    mFields[2].entry.setEnabled(mFields[2].maxValue > 0);
+    mFields[2].suffix.setEnabled(mFields[2].maxValue > 0);
+    mFields[3].maxValue = mMaxTime > 0.0 ? milliseconds : 999;
+    mFields[3].entry.setEnabled(mFields[3].maxValue > 0);
+    mFields[3].suffix.setEnabled(mFields[3].maxValue > 0);
+
+    setTime(currentTime, notification);
+}
+
+void HMSmsField::setTime(double timeInSeconds, juce::NotificationType const notification)
+{
+    timeInSeconds = mMaxTime > 0.0 ? std::min(timeInSeconds, mMaxTime) : timeInSeconds;
     auto const hours = static_cast<int>(std::floor(timeInSeconds / 3600.0));
     auto const minutes = static_cast<int>(std::floor((timeInSeconds - (hours * 3600.0)) / 60.0));
     auto const seconds = static_cast<int>(std::floor(timeInSeconds - (hours * 3600.0) - (minutes * 60.0)));

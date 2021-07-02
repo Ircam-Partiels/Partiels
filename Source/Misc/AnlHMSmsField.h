@@ -13,7 +13,9 @@ public:
     HMSmsField();
     ~HMSmsField() override = default;
 
-    void setTime(double const timeInSeconds, juce::NotificationType const notification);
+    void setMaxTime(double const timeInSeconds, juce::NotificationType const notification);
+
+    void setTime(double timeInSeconds, juce::NotificationType const notification);
     double getTime() const;
 
     void setFont(juce::Font const& newFont);
@@ -41,10 +43,13 @@ private:
         void setValue(int value);
         int getValue() const;
         juce::String filterNewText(juce::TextEditor& editor, juce::String const& newInput) override;
+
+        int maxValue = 0;
     };
 
     static juce::String toText(int value);
 
+    double mMaxTime = 0.0;
     std::array<Field, 4> mFields;
     std::array<int, 4> mSavedValues;
     std::array<int, 4> mNewValues;
