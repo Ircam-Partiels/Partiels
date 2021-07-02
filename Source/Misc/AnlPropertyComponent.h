@@ -2,6 +2,7 @@
 
 #include "AnlBasics.h"
 #include "AnlColourSelector.h"
+#include "AnlHMSmsField.h"
 #include "AnlNumberField.h"
 
 ANALYSE_FILE_BEGIN
@@ -130,6 +131,17 @@ class PropertyColourButton
 public:
     PropertyColourButton(juce::String const& name, juce::String const& tooltip, juce::String const& header, std::function<void(juce::Colour)> fn, std::function<void()> onEditorShow, std::function<void()> onEditorHide);
     ~PropertyColourButton() override = default;
+
+    // juce::Component
+    void resized() override;
+};
+
+class PropertyHMSmsField
+: public PropertyComponent<HMSmsField>
+{
+public:
+    PropertyHMSmsField(juce::String const& name, juce::String const& tooltip, std::function<void(double)> fn);
+    ~PropertyHMSmsField() override = default;
 
     // juce::Component
     void resized() override;

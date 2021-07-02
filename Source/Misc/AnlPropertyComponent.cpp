@@ -209,4 +209,24 @@ void PropertyColourButton::resized()
     entry.setBounds(getLocalBounds().removeFromRight(getHeight()).reduced(4));
 }
 
+PropertyHMSmsField::PropertyHMSmsField(juce::String const& name, juce::String const& tooltip, std::function<void(double)> fn)
+: PropertyComponent<HMSmsField>(juce::translate(name), juce::translate(tooltip))
+{
+    entry.setTooltip(juce::translate(tooltip));
+    entry.setJustificationType(juce::Justification::centredRight);
+    entry.onTimeChanged = [=](double value)
+    {
+        if(fn != nullptr)
+        {
+            fn(value);
+        }
+    };
+}
+
+void PropertyHMSmsField::resized()
+{
+    PropertyComponent<HMSmsField>::resized();
+    entry.setBounds(getLocalBounds().removeFromRight(120));
+}
+
 ANALYSE_FILE_END
