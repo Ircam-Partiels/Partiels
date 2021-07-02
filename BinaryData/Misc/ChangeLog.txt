@@ -1,11 +1,13 @@
 v0.0.8 (alpha)
 
+- Fix: Time field can be edited beyond the time limit  (#104)
 - Fix: When loading/modifying the result file of a track the document is not marked as dirty (#102)
 - Fix: Inserting audio files doesn't add a channel for all the audio file channels (#101)
 - Fix: Results file are not dissociated when using a template (#100)
 - Fix: Audio files fail to load when using a template (#99)
 - Imp: Allow to dissociate a track from its result file using control key when clicking on the file button of the property window (#98)
 - Fix: Application crashes when undo after creating a track at the 1st position of a group (#97)
+- Imp: Allow to edit zoom values precisely using textual edition (#91)
 
 v0.0.7 (alpha)
 
