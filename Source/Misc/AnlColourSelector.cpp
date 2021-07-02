@@ -23,9 +23,8 @@ void ColourSelector::changeListenerCallback(juce::ChangeBroadcaster* source)
     }
 }
 
-ColourButton::ColourButton(juce::String const& title)
+ColourButton::ColourButton()
 : juce::Button("ColourButton")
-, mTitle(title)
 {
     setClickingTogglesState(false);
 }
@@ -33,11 +32,6 @@ ColourButton::ColourButton(juce::String const& title)
 juce::Colour ColourButton::getCurrentColour() const
 {
     return mColour;
-}
-
-void ColourButton::setTitle(juce::String const& title)
-{
-    mTitle = title;
 }
 
 void ColourButton::setCurrentColour(juce::Colour const& newColour, juce::NotificationType notificationType)
@@ -111,30 +105,31 @@ void ColourButton::mouseUp(juce::MouseEvent const& event)
 
 void ColourButton::clicked()
 {
-    mIsColourSelectorVisible = true;
-    ColourSelector colourSelector;
-    colourSelector.setSize(400, 300);
-    colourSelector.setCurrentColour(mColour, juce::NotificationType::dontSendNotification);
-    colourSelector.onColourChanged = [&](juce::Colour const& colour)
+    anlWeakAssert(mIsColourSelectorVisible == false);
+    if(mIsColourSelectorVisible == true)
+    {
+        return;
+    }
+    auto colourSelector = std::make_unique<ColourSelector>();
+    if(colourSelector == nullptr)
+    {
+        return;
+    }
+    colourSelector->setSize(400, 300);
+    colourSelector->setCurrentColour(mColour, juce::NotificationType::dontSendNotification);
+    colourSelector->onColourChanged = [&](juce::Colour const& colour)
     {
         setCurrentColour(colour, juce::NotificationType::sendNotificationSync);
     };
-    juce::DialogWindow::LaunchOptions options;
-    options.dialogTitle = mTitle;
-    options.content.setNonOwned(&colourSelector);
-    options.componentToCentreAround = this;
-    options.escapeKeyTriggersCloseButton = true;
-    options.useNativeTitleBar = true;
-    options.resizable = false;
+
+    mIsColourSelectorVisible = true;
+    auto& box = juce::CallOutBox::launchAsynchronously(std::move(colourSelector), getScreenBounds(), nullptr);
+    box.setArrowSize(0.0f);
+    box.resized();
+    box.addComponentListener(this);
     if(onColourSelectorShow != nullptr)
     {
         onColourSelectorShow();
-    }
-    options.runModal();
-    mIsColourSelectorVisible = false;
-    if(onColourSelectorHide != nullptr)
-    {
-        onColourSelectorHide();
     }
 }
 
@@ -220,6 +215,21 @@ void ColourButton::itemDropped(juce::DragAndDropTarget::SourceDetails const& dra
 
     setCurrentColour(mDraggedColour->mColour, juce::NotificationType::sendNotificationSync);
     itemDragExit(dragSourceDetails);
+}
+
+void ColourButton::componentBeingDeleted(juce::Component& component)
+{
+    juce::ignoreUnused(component);
+    anlWeakAssert(mIsColourSelectorVisible == true);
+    if(mIsColourSelectorVisible == false)
+    {
+        return;
+    }
+    mIsColourSelectorVisible = false;
+    if(onColourSelectorHide != nullptr)
+    {
+        onColourSelectorHide();
+    }
 }
 
 ANALYSE_FILE_END

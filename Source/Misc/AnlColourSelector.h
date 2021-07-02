@@ -22,6 +22,7 @@ private:
 class ColourButton
 : public juce::Button
 , public juce::DragAndDropTarget
+, private juce::ComponentListener
 {
 public:
     // clang-format off
@@ -32,10 +33,9 @@ public:
     };
     // clang-format on
 
-    ColourButton(juce::String const& title = "");
+    ColourButton();
     ~ColourButton() override = default;
 
-    void setTitle(juce::String const& title);
     juce::Colour getCurrentColour() const;
     void setCurrentColour(juce::Colour const& newColour, juce::NotificationType notificationType);
     bool isColourSelectorVisible() const;
@@ -60,8 +60,10 @@ private:
     void itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
+    
+    // juce::ComponentListener
+    void componentBeingDeleted(juce::Component& component) override;
 
-    juce::String mTitle;
     juce::Colour mColour;
     juce::Component::SafePointer<ColourButton> mDraggedColour;
     bool mIsColourSelectorVisible{false};
