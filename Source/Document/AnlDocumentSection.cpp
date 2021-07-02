@@ -217,6 +217,11 @@ Document::Section::Section(Director& director)
             {
                 auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
                 mReaderAlertMessage = std::get<1>(result).joinIntoString("");
+                if(std::get<0>(result) && std::get<0>(result)->sampleRate > 0.0)
+                {
+                    auto const maxTime = static_cast<double>(std::get<0>(result)->lengthInSamples) / std::get<0>(result)->sampleRate;
+                    mTransportDisplay.setMaxTime(maxTime);
+                }
                 lookAndFeelChanged();
             }
             break;
