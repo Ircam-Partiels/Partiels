@@ -141,6 +141,88 @@ std::optional<juce::String> Document::Tools::getFocusedGroup(Accessor const& acc
     return groupIt->get().getAttr<Group::AttrType::identifier>();
 }
 
+void Document::Tools::showTimeRangeEditor(Accessor& acsr)
+{
+    class RangeEditor
+    : public juce::Component
+    {
+    public:
+        RangeEditor(Zoom::Accessor& accessor)
+        : mAccessor(accessor)
+        , mName("Name", "Time")
+        , mPropertyStart("Start", "The start time of the visible range", [&](double time)
+                         {
+                             auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withStart(time);
+                             mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                         })
+        , mPropertyEnd("End", "The end time of the visible range", [&](double time)
+                       {
+                           auto const range = mAccessor.getAttr<Zoom::AttrType::visibleRange>().withEnd(time);
+                           mAccessor.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+                       })
+        {
+            setWantsKeyboardFocus(true);
+            addAndMakeVisible(mName);
+            addAndMakeVisible(mPropertyStart);
+            addAndMakeVisible(mPropertyEnd);
+            mListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+            {
+                switch(attribute)
+                {
+                    case Zoom::AttrType::globalRange:
+                    {
+                        auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
+                        mPropertyStart.entry.setMaxTime(range.getEnd(), juce::NotificationType::dontSendNotification);
+                        mPropertyEnd.entry.setMaxTime(range.getEnd(), juce::NotificationType::dontSendNotification);
+                    }
+                    break;
+                    case Zoom::AttrType::visibleRange:
+                    {
+                        auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
+                        mPropertyStart.entry.setTime(range.getStart(), juce::NotificationType::dontSendNotification);
+                        mPropertyEnd.entry.setTime(range.getEnd(), juce::NotificationType::dontSendNotification);
+                    }
+                    break;
+                    case Zoom::AttrType::minimumLength:
+                    case Zoom::AttrType::anchor:
+                        break;
+                }
+            };
+
+            mAccessor.addListener(mListener, NotificationType::synchronous);
+            setSize(180, 74);
+        }
+
+        ~RangeEditor() override
+        {
+            mAccessor.removeListener(mListener);
+        }
+
+        // juce::Component
+        void resized() override
+        {
+            auto bounds = getLocalBounds();
+            mName.setBounds(bounds.removeFromTop(24));
+            mPropertyStart.setBounds(bounds.removeFromTop(mPropertyStart.getHeight()));
+            mPropertyEnd.setBounds(bounds.removeFromTop(mPropertyEnd.getHeight()));
+            setSize(getWidth(), bounds.getY() + 2);
+        }
+
+    private:
+        Zoom::Accessor& mAccessor;
+        Zoom::Accessor::Listener mListener{typeid(*this).name()};
+        juce::Label mName;
+        PropertyHMSmsField mPropertyStart;
+        PropertyHMSmsField mPropertyEnd;
+    };
+
+    auto const point = juce::Desktop::getMousePosition();
+    auto& zoomAcsr = acsr.getAcsr<AcsrType::timeZoom>();
+    auto& box = juce::CallOutBox::launchAsynchronously(std::make_unique<RangeEditor>(zoomAcsr), {point.getX() + 2, point.getY() + 2, 180, 74}, nullptr);
+    box.setArrowSize(0.0f);
+    box.resized();
+}
+
 Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn)
 : mAccessor(accessor)
 , onLayoutUpdated(fn)
