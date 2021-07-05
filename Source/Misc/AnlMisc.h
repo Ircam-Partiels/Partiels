@@ -3,6 +3,7 @@
 #include "AnlAlertWindow.h"
 #include "AnlAtomicManager.h"
 #include "AnlAudioFileInfoPanel.h"
+#include "AnlAudioFileLayout.h"
 #include "AnlBasics.h"
 #include "AnlBoundsListener.h"
 #include "AnlBroadcaster.h"

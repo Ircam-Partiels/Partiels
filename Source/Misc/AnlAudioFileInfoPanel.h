@@ -15,7 +15,7 @@ public:
 
     void setAudioFormatReader(juce::File const& file, juce::AudioFormatReader const* reader);
     juce::File getFile() const;
-    
+
     // juce::Component
     void resized() override;
 
