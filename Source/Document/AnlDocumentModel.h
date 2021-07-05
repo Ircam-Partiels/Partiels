@@ -35,31 +35,8 @@ namespace Document
           viewport
     };
     
-    struct ReaderChannel
-    {
-        ReaderChannel(juce::File const& f  = juce::File{}, int c = 0)
-        : file(f)
-        , channel(c)
-        {
-        }
-        
-        juce::File file;
-        int channel = 0; // Mono is -1
-        
-        inline bool operator==(ReaderChannel const& rhd) const noexcept
-        {
-            return file == rhd.file &&
-            channel == rhd.channel;
-        }
-        
-        inline bool operator!=(ReaderChannel const& rhd) const noexcept
-        {
-            return !(*this == rhd);
-        }
-    };
-    
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::reader, std::vector<ReaderChannel>, Model::Flag::basic>
+    < Model::Attr<AttrType::reader, std::vector<AudioFileLayout>, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
     , Model::Attr<AttrType::path, juce::File, Model::Flag::saveable| Model::Flag::notifying>
@@ -125,21 +102,11 @@ namespace Document
             if(copy != nullptr && version <= 0x7)
             {
                 auto const file = XmlParser::fromXml(*copy.get(), "file", juce::File{});
-                XmlParser::toXml(*copy.get(), "reader", std::vector<ReaderChannel>{{file}});
+                XmlParser::toXml(*copy.get(), "reader", std::vector<AudioFileLayout>{{file}});
             }
             return copy;
         }
     };
 } // namespace Document
-
-namespace XmlParser
-{
-    template <>
-    void toXml<Document::ReaderChannel>(juce::XmlElement& xml, juce::Identifier const& attributeName, Document::ReaderChannel const& value);
-
-    template <>
-    auto fromXml<Document::ReaderChannel>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Document::ReaderChannel const& defaultValue)
-        -> Document::ReaderChannel;
-} // namespace XmlParser
 
 ANALYSE_FILE_END

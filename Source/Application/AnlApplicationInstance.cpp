@@ -239,7 +239,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     if(!audioFiles.empty())
     {
         mDocumentAccessor.copyFrom(mDocumentFileBased.getDefaultAccessor(), NotificationType::synchronous);
-        std::vector<Document::ReaderChannel> readerLayout;
+        std::vector<AudioFileLayout> readerLayout;
         for(auto const& file : files)
         {
             auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
