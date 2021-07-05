@@ -60,7 +60,7 @@ private:
     void itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
-    
+
     // juce::ComponentListener
     void componentBeingDeleted(juce::Component& component) override;
 
