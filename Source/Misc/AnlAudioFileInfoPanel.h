@@ -6,19 +6,21 @@
 
 ANALYSE_FILE_BEGIN
 
-class FileInfoPanel
+class AudioFileInfoPanel
 : public juce::Component
 {
 public:
-    FileInfoPanel();
-    ~FileInfoPanel() override = default;
+    AudioFileInfoPanel();
+    ~AudioFileInfoPanel() override = default;
 
     void setAudioFormatReader(juce::File const& file, juce::AudioFormatReader const* reader);
-
+    juce::File getFile() const;
+    
     // juce::Component
     void resized() override;
 
 private:
+    juce::File mFile;
     PropertyTextButton mFilePath;
     PropertyLabel mFileFormat{juce::translate("Format"), juce::translate("The format of the audio file")};
     PropertyLabel mSampleRate{juce::translate("Sample Rate"), juce::translate("The sample rate of the audio file")};

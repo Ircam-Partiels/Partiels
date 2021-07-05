@@ -2,6 +2,7 @@
 
 #include "AnlAlertWindow.h"
 #include "AnlAtomicManager.h"
+#include "AnlAudioFileInfoPanel.h"
 #include "AnlBasics.h"
 #include "AnlBoundsListener.h"
 #include "AnlBroadcaster.h"
@@ -12,7 +13,6 @@
 #include "AnlConcertinaTable.h"
 #include "AnlDecorator.h"
 #include "AnlDraggableTable.h"
-#include "AnlFileInfoPanel.h"
 #include "AnlFileWatcher.h"
 #include "AnlFloatingWindow.h"
 #include "AnlHMSmsField.h"

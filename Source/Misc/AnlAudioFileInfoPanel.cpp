@@ -1,8 +1,8 @@
-#include "AnlFileInfoPanel.h"
+#include "AnlAudioFileInfoPanel.h"
 
 ANALYSE_FILE_BEGIN
 
-FileInfoPanel::FileInfoPanel()
+AudioFileInfoPanel::AudioFileInfoPanel()
 : mFilePath("File", "Path", [this]()
             {
                 if(juce::File::isAbsolutePath(mFilePath.entry.getTooltip()))
@@ -18,8 +18,14 @@ FileInfoPanel::FileInfoPanel()
     setWantsKeyboardFocus(false);
 }
 
-void FileInfoPanel::setAudioFormatReader(juce::File const& file, juce::AudioFormatReader const* reader)
+juce::File AudioFileInfoPanel::getFile() const
 {
+    return mFile;
+}
+
+void AudioFileInfoPanel::setAudioFormatReader(juce::File const& file, juce::AudioFormatReader const* reader)
+{
+    mFile = file;
     mConcertinaTable.setComponents({});
     mFilePath.entry.setEnabled(file != juce::File{});
     mFilePath.entry.setButtonText(file.getFileName());
@@ -65,7 +71,7 @@ void FileInfoPanel::setAudioFormatReader(juce::File const& file, juce::AudioForm
     resized();
 }
 
-void FileInfoPanel::resized()
+void AudioFileInfoPanel::resized()
 {
     auto const scrollbarThickness = mViewport.getScrollBarThickness();
     mConcertinaTable.setBounds(getLocalBounds().withHeight(mConcertinaTable.getHeight()).withTrimmedRight(scrollbarThickness));
