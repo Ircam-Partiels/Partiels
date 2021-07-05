@@ -13,8 +13,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             case AttrType::reader:
             {
                 auto const layout = acsr.getAttr<AttrType::reader>();
-                mAudioFileLayoutTable.setLayout(layout, juce::NotificationType::dontSendNotification);
-                mAudioFileLayoutTable.onAudioFileLayoutSelected(layout.empty() ? AudioFileLayout{} : layout.back());
+                mAudioFileLayoutTable.setLayout(layout, juce::NotificationType::sendNotificationSync);
             }
             break;
             case AttrType::layout:
@@ -51,7 +50,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
 
     mResetButton.onClick = [this]()
     {
-        mAudioFileLayoutTable.setLayout(mAccessor.getAttr<AttrType::reader>(), juce::NotificationType::dontSendNotification);
+        mAudioFileLayoutTable.setLayout(mAccessor.getAttr<AttrType::reader>(), juce::NotificationType::sendNotificationSync);
     };
 
     mFloatingWindow.onCloseButtonPressed = [this]()

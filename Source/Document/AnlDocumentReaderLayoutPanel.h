@@ -22,7 +22,7 @@ namespace Document
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
 
-        AudioFileLayoutTable mAudioFileLayoutTable{mDirector.getAudioFormatManager(), AudioFileLayoutTable::SupportMode::supportLayoutMono};
+        AudioFileLayoutTable mAudioFileLayoutTable{mDirector.getAudioFormatManager(), AudioFileLayoutTable::SupportMode::supportLayoutMono, AudioFileLayout::ChannelLayout::split};
         ColouredPanel mSeparator;
         juce::TextButton mApplyButton{juce::translate("Apply"), juce::translate("Apply the new audio reader layout to the document")};
         juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current audio reader layout of the document")};
