@@ -12,6 +12,7 @@
 #include "AnlConcertinaTable.h"
 #include "AnlDecorator.h"
 #include "AnlDraggableTable.h"
+#include "AnlFileInfoPanel.h"
 #include "AnlFileWatcher.h"
 #include "AnlFloatingWindow.h"
 #include "AnlHMSmsField.h"
