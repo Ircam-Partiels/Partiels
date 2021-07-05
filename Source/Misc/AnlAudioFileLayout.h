@@ -10,10 +10,11 @@ ANALYSE_FILE_BEGIN
 struct AudioFileLayout
 {
     // clang-format off
-    enum ChannelLayout
+    enum ChannelLayout : int
     {
           all = -2
         , mono = -1
+        , split = 0
     };
     // clang-format on
 
@@ -63,7 +64,7 @@ public:
     };
     // clang-format on
 
-    AudioFileLayoutTable(juce::AudioFormatManager& audioFormatManager, SupportMode mode);
+    AudioFileLayoutTable(juce::AudioFormatManager& audioFormatManager, SupportMode mode, AudioFileLayout::ChannelLayout preferredChannelLayout);
     ~AudioFileLayoutTable() override;
 
     void setLayout(std::vector<AudioFileLayout> const& layout, juce::NotificationType notification);
@@ -134,6 +135,7 @@ private:
 
     juce::AudioFormatManager& mAudioFormatManager;
     SupportMode const mSupportMode;
+    AudioFileLayout::ChannelLayout const mPreferredChannelLayout;
     std::vector<std::unique_ptr<Channel>> mChannels;
     DraggableTable mDraggableTable{"Channel"};
     BoundsListener mBoundsListener;
@@ -145,5 +147,8 @@ private:
     std::vector<AudioFileLayout> mLayout;
     bool mIsDragging{false};
 };
+
+std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audioFormatManager, juce::Array<juce::File> const& files, AudioFileLayout::ChannelLayout preferredChannelLayout);
+std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audioFormatManager, juce::StringArray const& files, AudioFileLayout::ChannelLayout preferredChannelLayout);
 
 ANALYSE_FILE_END

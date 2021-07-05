@@ -52,7 +52,7 @@ AudioFileLayoutTable::Channel::Entry::Entry(int i, juce::String const& fileName)
 void AudioFileLayoutTable::Channel::Entry::resized()
 {
     auto bounds = getLocalBounds();
-    thumbLabel.setBounds(bounds.removeFromLeft(26));
+    thumbLabel.setBounds(bounds.removeFromLeft(32));
     channelMenu.setBounds(bounds.removeFromRight(54));
     fileNameLabel.setBounds(bounds);
 }
@@ -60,7 +60,7 @@ void AudioFileLayoutTable::Channel::Entry::resized()
 void AudioFileLayoutTable::Channel::Entry::paint(juce::Graphics& g)
 {
     g.setColour(findColour(Decorator::ColourIds::normalBorderColourId));
-    g.fillRect(getLocalBounds().removeFromLeft(26));
+    g.fillRect(getLocalBounds().removeFromLeft(thumbLabel.getWidth()));
 }
 
 AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, int index, AudioFileLayout audioFileLayout, SupportMode mode)
@@ -216,9 +216,10 @@ void AudioFileLayoutTable::Channel::resized()
     mDecorator.setBounds(getLocalBounds());
 }
 
-AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormatManager, SupportMode mode)
+AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormatManager, SupportMode mode, AudioFileLayout::ChannelLayout preferredChannelLayout)
 : mAudioFormatManager(audioFormatManager)
 , mSupportMode(mode)
+, mPreferredChannelLayout(preferredChannelLayout)
 {
     mBoundsListener.onComponentResized = [this](juce::Component&)
     {
@@ -247,24 +248,15 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
     {
         auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
         juce::FileChooser fc("Load audio files...", {}, wildcard);
-        if(!fc.browseForMultipleFilesToOpen())
+        if(!fc.browseForMultipleFilesOrDirectories())
         {
             return;
         }
         auto readerLayout = mLayout;
-        for(auto const& file : fc.getResults())
+        auto const newLayouts = getAudioFileLayouts(mAudioFormatManager, fc.getResults(), mPreferredChannelLayout);
+        for(auto const& newLayout : newLayouts)
         {
-            if(wildcard.contains(file.getFileExtension()))
-            {
-                auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
-                if(reader != nullptr)
-                {
-                    for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
-                    {
-                        readerLayout.push_back({file, static_cast<int>(channel)});
-                    }
-                }
-            }
+            readerLayout.push_back(newLayout);
         }
         setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
     };
@@ -364,20 +356,10 @@ void AudioFileLayoutTable::filesDropped(juce::StringArray const& files, int x, i
     juce::ignoreUnused(x, y);
     auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
     auto readerLayout = mLayout;
-    for(auto const& result : files)
+    auto const newLayouts = getAudioFileLayouts(mAudioFormatManager, files, mPreferredChannelLayout);
+    for(auto const& newLayout : newLayouts)
     {
-        juce::File const file(result);
-        if(wildcard.contains(file.getFileExtension()))
-        {
-            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
-            if(reader != nullptr)
-            {
-                for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
-                {
-                    readerLayout.push_back({file, static_cast<int>(channel)});
-                }
-            }
-        }
+        readerLayout.push_back(newLayout);
     }
     setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
     mIsDragging = false;
@@ -460,6 +442,69 @@ void AudioFileLayoutTable::handleAsyncUpdate()
     {
         onLayoutChanged();
     }
+}
+
+std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audioFormatManager, juce::Array<juce::File> const& files, AudioFileLayout::ChannelLayout preferredChannelLayout)
+{
+    std::vector<AudioFileLayout> audioFiles;
+    auto addToAudioFiles = [&](juce::File const& file)
+    {
+        auto reader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
+        if(reader != nullptr)
+        {
+            auto const mode = reader->numChannels > 1 ? preferredChannelLayout : AudioFileLayout::ChannelLayout::split;
+            switch(mode)
+            {
+                case AudioFileLayout::ChannelLayout::all:
+                {
+                    audioFiles.emplace_back(file, AudioFileLayout::ChannelLayout::all);
+                }
+                    break;
+                case AudioFileLayout::ChannelLayout::mono:
+                {
+                    audioFiles.emplace_back(file, AudioFileLayout::ChannelLayout::mono);
+                }
+                    break;
+                case AudioFileLayout::ChannelLayout::split:
+                {
+                    for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
+                    {
+                        audioFiles.emplace_back(file, static_cast<int>(channel));
+                    }
+                }
+                    break;
+            }
+
+        }
+    };
+    auto const wildcardForAllFormats = audioFormatManager.getWildcardForAllFormats();
+    for(auto const& file : files)
+    {
+        if(file.isDirectory())
+        {
+            auto const childs = file.findChildFiles(juce::File::TypesOfFileToFind::findFiles, true, wildcardForAllFormats);
+            for(auto const& child : childs)
+            {
+                addToAudioFiles(child);
+            }
+        }
+        else if(file.existsAsFile() && wildcardForAllFormats.contains(file.getFileExtension()))
+        {
+            addToAudioFiles(file);
+        }
+    }
+    return audioFiles;
+}
+
+std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audioFormatManager, juce::StringArray const& files, AudioFileLayout::ChannelLayout preferredChannelLayout)
+{
+    juce::Array<juce::File> rfiles;
+    rfiles.ensureStorageAllocated(files.size());
+    for(auto const& file : files)
+    {
+        rfiles.add({file});
+    }
+    return getAudioFileLayouts(audioFormatManager, rfiles, preferredChannelLayout);
 }
 
 ANALYSE_FILE_END
