@@ -6,7 +6,382 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, std::function<std::pair<int, int>(juce::String const& identifier)> getSizeFor)
+bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
+{
+    return format == rhd.format &&
+           useGroupOverview == rhd.useGroupOverview &&
+           useAutoSize == rhd.useAutoSize &&
+           imageWidth == rhd.imageWidth &&
+           imageHeight == rhd.imageHeight &&
+           includeHeaderRaw == rhd.includeHeaderRaw &&
+           ignoreGridResults == rhd.ignoreGridResults &&
+           columnSeparator == rhd.columnSeparator;
+}
+
+bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
+{
+    return !(*this == rhd);
+}
+
+bool Document::Exporter::Options::useImageFormat() const noexcept
+{
+    return format == Format::jpeg || format == Format::png;
+}
+
+bool Document::Exporter::Options::useTextFormat() const noexcept
+{
+    return !useImageFormat();
+}
+
+juce::String Document::Exporter::Options::getFormatName() const
+{
+    return juce::String(std::string(magic_enum::enum_name(format)));
+}
+
+juce::String Document::Exporter::Options::getFormatExtension() const
+{
+    return getFormatName().toLowerCase();
+}
+
+juce::String Document::Exporter::Options::getFormatWilcard() const
+{
+    if(format == Format::jpeg)
+    {
+        return "*.jpeg;*.jpg";
+    }
+    return "*." + getFormatExtension();
+}
+
+char Document::Exporter::Options::getSeparatorChar() const
+{
+    switch(columnSeparator)
+    {
+        case ColumnSeparator::comma:
+        {
+            return ';';
+        }
+        case ColumnSeparator::space:
+        {
+            return ' ';
+        }
+        case ColumnSeparator::tab:
+        {
+            return '\t';
+        }
+        case ColumnSeparator::pipe:
+        {
+            return '|';
+        }
+        case ColumnSeparator::slash:
+        {
+            return '/';
+        }
+        case ColumnSeparator::colon:
+        {
+            return ':';
+        }
+        default:
+        {
+            return ';';
+        }
+    }
+}
+
+Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
+: mAccessor(accessor)
+, mGetSizeForFn(getSizeFor)
+, mPropertyItem("Item", "The item to export", "", std::vector<std::string>{""}, [this](size_t index)
+                {
+                    juce::ignoreUnused(index);
+                    sanitizeProperties(true);
+                })
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON"}, [this](size_t index)
+                  {
+                      auto options = mOptions;
+                      options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
+                      setOptions(options, juce::NotificationType::sendNotificationSync);
+                  })
+, mPropertyGroupMode("Preserve group overlay", "Preserve group overlay of tracks when exporting", [this](bool state)
+                     {
+                         auto options = mOptions;
+                         options.useGroupOverview = state;
+                         setOptions(options, juce::NotificationType::sendNotificationSync);
+                     })
+, mPropertyAutoSizeMode("Preserve item size", "Preserve the size of the track or the group", [this](bool state)
+                        {
+                            auto options = mOptions;
+                            options.useAutoSize = state;
+                            setOptions(options, juce::NotificationType::sendNotificationSync);
+                        })
+, mPropertyWidth("Image Width", "Set the width of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+                 {
+                     auto options = mOptions;
+                     options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
+                     setOptions(options, juce::NotificationType::sendNotificationSync);
+                 })
+, mPropertyHeight("Image Height", "Set the height of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+                  {
+                      auto options = mOptions;
+                      options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
+                      setOptions(options, juce::NotificationType::sendNotificationSync);
+                  })
+, mPropertyRawHeader("Header Row", "Include header row before the data rows", [this](bool state)
+                     {
+                         auto options = mOptions;
+                         options.includeHeaderRaw = state;
+                         setOptions(options, juce::NotificationType::sendNotificationSync);
+                     })
+, mPropertyRawSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [this](size_t index)
+                        {
+                            auto options = mOptions;
+                            options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
+                            setOptions(options, juce::NotificationType::sendNotificationSync);
+                        })
+, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [this](bool state)
+                       {
+                           auto options = mOptions;
+                           options.ignoreGridResults = state;
+                           setOptions(options, juce::NotificationType::sendNotificationSync);
+                       })
+, mDocumentLayoutNotifier(typeid(*this).name(), mAccessor, [this]()
+                          {
+                              updateItems();
+                          })
+{
+    addAndMakeVisible(mPropertyItem);
+    addAndMakeVisible(mPropertyFormat);
+    addAndMakeVisible(mPropertyGroupMode);
+    if(mGetSizeForFn != nullptr)
+    {
+        addAndMakeVisible(mPropertyAutoSizeMode);
+        addAndMakeVisible(mPropertyWidth);
+        addAndMakeVisible(mPropertyHeight);
+    }
+    addChildComponent(mPropertyRawHeader);
+    addChildComponent(mPropertyRawSeparator);
+    addChildComponent(mPropertyIgnoreGrids);
+
+    setSize(300, 200);
+}
+
+void Document::Exporter::Panel::resized()
+{
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+    auto setBounds = [&](juce::Component& component)
+    {
+        if(component.isVisible())
+        {
+            component.setBounds(bounds.removeFromTop(component.getHeight()));
+        }
+    };
+    setBounds(mPropertyItem);
+    setBounds(mPropertyFormat);
+    setBounds(mPropertyGroupMode);
+    setBounds(mPropertyAutoSizeMode);
+    setBounds(mPropertyWidth);
+    setBounds(mPropertyHeight);
+    setBounds(mPropertyRawHeader);
+    setBounds(mPropertyRawSeparator);
+    setBounds(mPropertyIgnoreGrids);
+    setSize(bounds.getWidth(), bounds.getY() + 2);
+}
+
+juce::String Document::Exporter::Panel::getSelectedIdentifier() const
+{
+    auto const itemId = mPropertyItem.entry.getSelectedId();
+    if(itemId % documentItemFactor == 0)
+    {
+        return {};
+    }
+
+    auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<AttrType::layout>(), [&](auto const& groupId)
+                                                    {
+                                                        return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
+                                                    });
+    auto const groupIndex = static_cast<size_t>((itemId % documentItemFactor) / groupItemFactor - 1);
+    anlWeakAssert(groupIndex < documentLayout.size());
+    if(groupIndex >= documentLayout.size())
+    {
+        return {};
+    }
+    auto const groupId = documentLayout[groupIndex];
+    if(itemId % groupItemFactor == 0)
+    {
+        return groupId;
+    }
+    anlWeakAssert(Document::Tools::hasGroupAcsr(mAccessor, groupId));
+    if(!Document::Tools::hasGroupAcsr(mAccessor, groupId))
+    {
+        return {};
+    }
+
+    auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+    auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                 {
+                                                     return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                 });
+    auto const trackIndex = static_cast<size_t>((itemId % groupItemFactor) - 1);
+    anlWeakAssert(trackIndex < groupLayout.size());
+    if(trackIndex >= groupLayout.size())
+    {
+        return {};
+    }
+    return groupLayout[trackIndex];
+}
+
+void Document::Exporter::Panel::updateItems()
+{
+    auto const selectedId = getSelectedIdentifier();
+
+    auto& entryBox = mPropertyItem.entry;
+    entryBox.clear(juce::NotificationType::dontSendNotification);
+    entryBox.addItem(juce::translate("All (Document)"), documentItemFactor);
+    auto const documentLayout = copy_with_erased_if(mAccessor.getAttr<Document::AttrType::layout>(), [&](auto const& groupId)
+                                                    {
+                                                        return !Document::Tools::hasGroupAcsr(mAccessor, groupId);
+                                                    });
+
+    for(size_t documentLayoutIndex = 0; documentLayoutIndex < documentLayout.size(); ++documentLayoutIndex)
+    {
+        auto const& groupId = documentLayout[documentLayoutIndex];
+        auto const groupItemId = groupItemFactor * static_cast<int>(documentLayoutIndex + 1_z) + documentItemFactor;
+        anlWeakAssert(Document::Tools::hasGroupAcsr(mAccessor, groupId));
+        if(Document::Tools::hasGroupAcsr(mAccessor, groupId))
+        {
+            auto const& groupAcsr = Document::Tools::getGroupAcsr(mAccessor, groupId);
+            auto const& groupName = groupAcsr.getAttr<Group::AttrType::name>();
+            entryBox.addItem(juce::translate("GROUPNAME (Group)").replace("GROUPNAME", groupName), groupItemId);
+            if(groupId == selectedId)
+            {
+                entryBox.setSelectedId(groupItemId);
+            }
+
+            auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
+                                                         {
+                                                             return !Document::Tools::hasTrackAcsr(mAccessor, trackId);
+                                                         });
+
+            for(size_t groupLayoutIndex = 0; groupLayoutIndex < groupLayout.size(); ++groupLayoutIndex)
+            {
+                auto const& trackId = groupLayout[groupLayoutIndex];
+                auto const trackItemId = groupItemId + static_cast<int>(groupLayoutIndex + 1_z);
+                anlWeakAssert(Document::Tools::hasTrackAcsr(mAccessor, trackId));
+                if(Document::Tools::hasTrackAcsr(mAccessor, trackId))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(mAccessor, trackId);
+                    auto const& trackName = trackAcsr.getAttr<Track::AttrType::name>();
+                    entryBox.addItem(juce::translate("GROUPNAME: TRACKNAME (Track)").replace("GROUPNAME", groupName).replace("TRACKNAME", trackName), trackItemId);
+                    if(trackId == selectedId)
+                    {
+                        entryBox.setSelectedId(trackItemId);
+                    }
+                }
+            }
+        }
+    }
+
+    if(mPropertyItem.entry.getSelectedId() == 0)
+    {
+        mPropertyItem.entry.setSelectedId(documentItemFactor);
+    }
+}
+
+void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
+{
+    auto const identifier = getSelectedIdentifier();
+    auto const itemIsDocument = identifier.isEmpty();
+    auto const itemIsGroup = Document::Tools::hasGroupAcsr(mAccessor, identifier);
+    auto const itemIsTrack = Document::Tools::hasTrackAcsr(mAccessor, identifier);
+    mPropertyGroupMode.setEnabled(itemIsGroup || itemIsDocument);
+
+    if(itemIsDocument)
+    {
+        mPropertyWidth.setEnabled(true);
+        mPropertyHeight.setEnabled(true);
+    }
+
+    if(itemIsTrack)
+    {
+        mPropertyGroupMode.setEnabled(false);
+        if(updateModel)
+        {
+            auto options = mOptions;
+            options.useGroupOverview = false;
+            setOptions(options, juce::NotificationType::sendNotificationSync);
+        }
+    }
+
+    auto const autoSize = mOptions.useAutoSize;
+    mPropertyWidth.setEnabled(!autoSize);
+    mPropertyHeight.setEnabled(!autoSize);
+    if(mGetSizeForFn != nullptr && updateModel && autoSize && !itemIsDocument)
+    {
+        auto const size = mGetSizeForFn(identifier);
+        auto options = mOptions;
+        options.imageWidth = std::get<0>(size);
+        options.imageHeight = std::get<1>(size);
+        setOptions(options, juce::NotificationType::sendNotificationSync);
+    }
+
+    auto const itemId = mPropertyItem.entry.getSelectedId();
+    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0);
+}
+
+Document::Exporter::Options const& Document::Exporter::Panel::getOptions() const
+{
+    return mOptions;
+}
+
+void Document::Exporter::Panel::setOptions(Options const& options, juce::NotificationType notification)
+{
+    if(mOptions == options)
+    {
+        return;
+    }
+    mOptions = options;
+    auto constexpr silent = juce::NotificationType::dontSendNotification;
+    mPropertyFormat.entry.setSelectedItemIndex(static_cast<int>(options.format), silent);
+    mPropertyGroupMode.entry.setToggleState(options.useGroupOverview, silent);
+    mPropertyAutoSizeMode.entry.setToggleState(options.useAutoSize, silent);
+    mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), silent);
+    mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), silent);
+    mPropertyRawHeader.entry.setToggleState(options.includeHeaderRaw, silent);
+    mPropertyRawSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
+    mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
+
+    mPropertyGroupMode.setVisible(options.useImageFormat());
+    mPropertyAutoSizeMode.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
+    mPropertyWidth.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
+    mPropertyHeight.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
+    mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyRawSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+    sanitizeProperties(false);
+    resized();
+
+    if(notification == juce::NotificationType::dontSendNotification)
+    {
+        return;
+    }
+    else if(notification == juce::NotificationType::sendNotificationAsync)
+    {
+        triggerAsyncUpdate();
+    }
+    else
+    {
+        handleAsyncUpdate();
+    }
+}
+
+void Document::Exporter::Panel::handleAsyncUpdate()
+{
+    if(onOptionsChanged != nullptr)
+    {
+        onOptionsChanged();
+    }
+}
+
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
 {
     if(file == juce::File())
     {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnlDocumentModel.h"
+#include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,6 +9,8 @@ namespace Document
 {
     namespace Exporter
     {
+        using GetSizeFn = std::function<std::pair<int, int>(juce::String const& identifier)>;
+
         struct Options
         {
             // clang-format off
@@ -39,89 +42,64 @@ namespace Document
             bool ignoreGridResults{true};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
 
-            inline bool operator==(Options const& rhd) const noexcept
-            {
-                return format == rhd.format &&
-                       useGroupOverview == rhd.useGroupOverview &&
-                       useAutoSize == rhd.useAutoSize &&
-                       imageWidth == rhd.imageWidth &&
-                       imageHeight == rhd.imageHeight &&
-                       includeHeaderRaw == rhd.includeHeaderRaw &&
-                       ignoreGridResults == rhd.ignoreGridResults &&
-                       columnSeparator == rhd.columnSeparator;
-            }
+            bool operator==(Options const& rhd) const noexcept;
+            bool operator!=(Options const& rhd) const noexcept;
 
-            inline bool operator!=(Options const& rhd) const noexcept
-            {
-                return !(*this == rhd);
-            }
+            bool useImageFormat() const noexcept;
+            bool useTextFormat() const noexcept;
 
-            inline bool useImageFormat() const noexcept
-            {
-                return format == Format::jpeg || format == Format::png;
-            }
+            juce::String getFormatName() const;
+            juce::String getFormatExtension() const;
+            juce::String getFormatWilcard() const;
 
-            inline bool useTextFormat() const noexcept
-            {
-                return !useImageFormat();
-            }
-
-            juce::String getFormatName() const
-            {
-                return juce::String(std::string(magic_enum::enum_name(format)));
-            }
-
-            juce::String getFormatExtension() const
-            {
-                return getFormatName().toLowerCase();
-            }
-
-            juce::String getFormatWilcard() const
-            {
-                if(format == Format::jpeg)
-                {
-                    return "*.jpeg;*.jpg";
-                }
-                return "*." + getFormatExtension();
-            }
-
-            char getSeparatorChar() const
-            {
-                switch(columnSeparator)
-                {
-                    case ColumnSeparator::comma:
-                    {
-                        return ';';
-                    }
-                    case ColumnSeparator::space:
-                    {
-                        return ' ';
-                    }
-                    case ColumnSeparator::tab:
-                    {
-                        return '\t';
-                    }
-                    case ColumnSeparator::pipe:
-                    {
-                        return '|';
-                    }
-                    case ColumnSeparator::slash:
-                    {
-                        return '/';
-                    }
-                    case ColumnSeparator::colon:
-                    {
-                        return ':';
-                    }
-                    default:
-                    {
-                        return ';';
-                    }
-                }
-            }
+            char getSeparatorChar() const;
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, std::function<std::pair<int, int>(juce::String const& identifier)> getSizeFor = nullptr);
+        class Panel
+        : public juce::Component
+        , private juce::AsyncUpdater
+        {
+        public:
+            Panel(Accessor& accessor, GetSizeFn getSizeFor);
+            ~Panel() override = default;
+
+            // juce::Component
+            void resized() override;
+
+            void setOptions(Options const& options, juce::NotificationType notification);
+            Options const& getOptions() const;
+            juce::String getSelectedIdentifier() const;
+
+            std::function<void(void)> onOptionsChanged = nullptr;
+
+        private:
+            void updateItems();
+            void sanitizeProperties(bool updateModel);
+
+            // juce::AsyncUpdater
+            void handleAsyncUpdate() override;
+
+            Accessor& mAccessor;
+            GetSizeFn mGetSizeForFn = nullptr;
+            Options mOptions;
+
+            PropertyList mPropertyItem;
+            PropertyList mPropertyFormat;
+            PropertyToggle mPropertyGroupMode;
+            PropertyToggle mPropertyAutoSizeMode;
+            PropertyNumber mPropertyWidth;
+            PropertyNumber mPropertyHeight;
+            PropertyToggle mPropertyRawHeader;
+            PropertyList mPropertyRawSeparator;
+            PropertyToggle mPropertyIgnoreGrids;
+
+            LayoutNotifier mDocumentLayoutNotifier;
+
+            auto static constexpr documentItemFactor = 1000000;
+            auto static constexpr groupItemFactor = documentItemFactor / 1000;
+        };
+
+        juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor = nullptr);
     } // namespace Exporter
 } // namespace Document
 
