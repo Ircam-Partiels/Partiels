@@ -121,6 +121,11 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
+    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
+    {
+        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
+    }
+
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     auto const original = XmlParser::fromXml(*xml.get(), "path", file);
     auto const oldParent = original.getParentDirectory().getFullPathName();
@@ -218,6 +223,10 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
+    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
+    {
+        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
+    }
 
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
 
@@ -255,6 +264,11 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
     }
+    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
+    {
+        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
+    }
+
     if(xml->hasAttribute("origin"))
     {
         setFile(juce::File(xml->getStringAttribute("origin")));
