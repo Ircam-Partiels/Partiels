@@ -72,8 +72,8 @@ AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, int index, A
     setMouseClickGrabsKeyboardFocus(true);
 
     auto reader = std::unique_ptr<juce::AudioFormatReader>(mOwner.mAudioFormatManager.createReaderFor(mAudioFileLayout.file));
-    setEnabled(reader != nullptr);
     auto& channelMenu = mEntry.channelMenu;
+    channelMenu.setEnabled(reader != nullptr);
     channelMenu.setTextWhenNoChoicesAvailable(juce::String(mAudioFileLayout.channel));
     if(reader != nullptr)
     {
@@ -112,6 +112,7 @@ AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, int index, A
     };
 
     mEntry.thumbLabel.addMouseListener(this, true);
+    mEntry.fileNameLabel.setEnabled(reader != nullptr);
     mEntry.fileNameLabel.addMouseListener(this, true);
 
     addAndMakeVisible(mDecorator);
