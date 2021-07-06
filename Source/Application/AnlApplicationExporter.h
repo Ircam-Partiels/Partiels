@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Document/AnlDocumentTools.h"
+#include "../Document/AnlDocumentExporter.h"
 #include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -25,31 +25,20 @@ namespace Application
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
 
-        juce::String getSelectedIdentifier() const;
-        void updateItems();
-        void sanitizeProperties(bool updateModel);
         void exportToFile();
 
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
         Accessor::Listener mListener{typeid(*this).name()};
-        PropertyList mPropertyItem;
-        PropertyList mPropertyFormat;
-        PropertyToggle mPropertyGroupMode;
-        PropertyToggle mPropertyAutoSizeMode;
-        PropertyNumber mPropertyWidth;
-        PropertyNumber mPropertyHeight;
-        PropertyToggle mPropertyRawHeader;
-        PropertyList mPropertyRawSeparator;
-        PropertyToggle mPropertyIgnoreGrids;
+        Document::Exporter::Panel mExporterPanel;
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
-        std::atomic<bool> mShoulAbort{false};
-        std::future<std::tuple<AlertWindow::MessageType, juce::String, juce::String>> mProcess;
-        Document::LayoutNotifier mDocumentLayoutNotifier;
+        BoundsListener mBoundsListener;
 
-        auto static constexpr documentItemFactor = 1000000;
-        auto static constexpr groupItemFactor = documentItemFactor / 1000;
+        using ProcessResult = std::tuple<AlertWindow::MessageType, juce::String, juce::String>;
+
+        std::atomic<bool> mShoulAbort{false};
+        std::future<ProcessResult> mProcess;
     };
 } // namespace Application
 
