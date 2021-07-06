@@ -459,12 +459,12 @@ std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audio
                 {
                     audioFiles.emplace_back(file, AudioFileLayout::ChannelLayout::all);
                 }
-                    break;
+                break;
                 case AudioFileLayout::ChannelLayout::mono:
                 {
                     audioFiles.emplace_back(file, AudioFileLayout::ChannelLayout::mono);
                 }
-                    break;
+                break;
                 case AudioFileLayout::ChannelLayout::split:
                 {
                     for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
@@ -472,9 +472,8 @@ std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audio
                         audioFiles.emplace_back(file, static_cast<int>(channel));
                     }
                 }
-                    break;
+                break;
             }
-
         }
     };
     auto const wildcardForAllFormats = audioFormatManager.getWildcardForAllFormats();
