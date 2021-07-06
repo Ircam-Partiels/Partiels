@@ -139,6 +139,10 @@ void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
 void AudioFileLayoutTable::Channel::mouseDrag(juce::MouseEvent const& event)
 {
     mouseMove(event);
+    if(event.originalComponent != &mEntry.thumbLabel)
+    {
+        return;
+    }
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(100))
     {
         return;
