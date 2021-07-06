@@ -24,6 +24,7 @@ namespace Application
             , DocumentConsolidate
             , DocumentExport
             , DocumentImport
+            , DocumentBatch
             
             , EditUndo
             , EditRedo

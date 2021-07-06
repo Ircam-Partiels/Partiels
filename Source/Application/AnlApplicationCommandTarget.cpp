@@ -59,6 +59,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::DocumentConsolidate
         , CommandIDs::DocumentExport
         , CommandIDs::DocumentImport
+        , CommandIDs::DocumentBatch
         
         , CommandIDs::EditUndo
         , CommandIDs::EditRedo
@@ -136,6 +137,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Import..."), juce::translate("Import to the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+        }
+        break;
+        case CommandIDs::DocumentBatch:
+        {
+            result.setInfo(juce::translate("Batch..."), juce::translate("Batch processed a set of audio files "), "Application", 0);
+            result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
         }
         break;
 
@@ -368,6 +376,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(fc.browseForFileToOpen())
             {
                 addFileTrack(fc.getResult(), std::get<0>(position), std::get<1>(position));
+            }
+            return true;
+        }
+        case CommandIDs::DocumentBatch:
+        {
+            if(auto* batcher = Instance::get().getBatcher())
+            {
+                batcher->show();
             }
             return true;
         }
