@@ -382,8 +382,38 @@ void AudioFileLayoutTable::setLayout(std::vector<AudioFileLayout> const& layout,
     {
         return;
     }
+    clearFilesToWatch();
     mLayout = layout;
+    for(auto const& channel : mLayout)
+    {
+        addFileToWatch(channel.file);
+    }
+    updateLayout();
 
+    if(notification == juce::NotificationType::dontSendNotification)
+    {
+        return;
+    }
+    else if(notification == juce::NotificationType::sendNotificationAsync)
+    {
+        triggerAsyncUpdate();
+    }
+    else
+    {
+        handleAsyncUpdate();
+    }
+}
+
+void AudioFileLayoutTable::handleAsyncUpdate()
+{
+    if(onLayoutChanged != nullptr)
+    {
+        onLayoutChanged();
+    }
+}
+
+void AudioFileLayoutTable::updateLayout()
+{
     using ComponentRef = DraggableTable::ComponentRef;
     std::vector<ComponentRef> contents;
     mChannels.clear();
@@ -426,27 +456,27 @@ void AudioFileLayoutTable::setLayout(std::vector<AudioFileLayout> const& layout,
     mAlertButton.setTooltip(mAlertLabel.getText());
     mAlertButton.setVisible(mAlertLabel.isVisible());
     resized();
-
-    if(notification == juce::NotificationType::dontSendNotification)
-    {
-        return;
-    }
-    else if(notification == juce::NotificationType::sendNotificationAsync)
-    {
-        triggerAsyncUpdate();
-    }
-    else
-    {
-        handleAsyncUpdate();
-    }
 }
 
-void AudioFileLayoutTable::handleAsyncUpdate()
+bool AudioFileLayoutTable::fileHasBeenRemoved(juce::File const& file)
 {
-    if(onLayoutChanged != nullptr)
-    {
-        onLayoutChanged();
-    }
+    juce::ignoreUnused(file);
+    updateLayout();
+    return true;
+}
+
+bool AudioFileLayoutTable::fileHasBeenRestored(juce::File const& file)
+{
+    juce::ignoreUnused(file);
+    updateLayout();
+    return true;
+}
+
+bool AudioFileLayoutTable::fileHasBeenModified(juce::File const& file)
+{
+    juce::ignoreUnused(file);
+    updateLayout();
+    return true;
 }
 
 std::vector<AudioFileLayout> getAudioFileLayouts(juce::AudioFormatManager& audioFormatManager, juce::Array<juce::File> const& files, AudioFileLayout::ChannelLayout preferredChannelLayout)

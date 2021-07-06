@@ -3,6 +3,7 @@
 #include "AnlBoundsListener.h"
 #include "AnlDecorator.h"
 #include "AnlDraggableTable.h"
+#include "AnlFileWatcher.h"
 #include "AnlXmlParser.h"
 
 ANALYSE_FILE_BEGIN
@@ -52,6 +53,7 @@ class AudioFileLayoutTable
 : public juce::Component
 , public juce::FileDragAndDropTarget
 , private juce::AsyncUpdater
+, private FileWatcher
 {
 public:
     // clang-format off
@@ -88,6 +90,13 @@ public:
 private:
     // juce::AsyncUpdater
     void handleAsyncUpdate() override;
+
+    // FileWatcher
+    bool fileHasBeenRemoved(juce::File const& file) override;
+    bool fileHasBeenRestored(juce::File const& file) override;
+    bool fileHasBeenModified(juce::File const& file) override;
+
+    void updateLayout();
 
     class Channel
     : public juce::Component
