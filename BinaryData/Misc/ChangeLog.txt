@@ -1,5 +1,6 @@
 v0.0.8 (alpha)
 
+- Fix: Prevent to open document created with a newer version of the application (#107)
 - Fix: Time field can be edited beyond the time limit  (#104)
 - Fix: When loading/modifying the result file of a track the document is not marked as dirty (#102)
 - Fix: Inserting audio files doesn't add a channel for all the audio file channels (#101)
