@@ -101,8 +101,11 @@ namespace Document
             auto copy = std::make_unique<juce::XmlElement>(xml);
             if(copy != nullptr && version <= 0x7)
             {
-                auto const file = XmlParser::fromXml(*copy.get(), "file", juce::File{});
-                XmlParser::toXml(*copy.get(), "reader", std::vector<AudioFileLayout>{{file}});
+                if(copy->hasAttribute("file"))
+                {
+                    auto const file = XmlParser::fromXml(*copy.get(), "file", juce::File{});
+                    XmlParser::toXml(*copy.get(), "reader", std::vector<AudioFileLayout>{{file}});
+                }
             }
             return copy;
         }
