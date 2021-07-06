@@ -3,6 +3,7 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioReader.h"
 #include "AnlApplicationAudioSettings.h"
+#include "AnlApplicationBatcher.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationLookAndFeel.h"
@@ -46,6 +47,7 @@ namespace Application
         About* getAbout();
         Window* getWindow();
         Exporter* getExporter();
+        Batcher* getBatcher();
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
@@ -86,6 +88,7 @@ namespace Application
         std::unique_ptr<About> mAbout;
         std::unique_ptr<AudioSettings> mAudioSettings;
         std::unique_ptr<Exporter> mExporter;
+        std::unique_ptr<Batcher> mBatcher;
     };
 } // namespace Application
 

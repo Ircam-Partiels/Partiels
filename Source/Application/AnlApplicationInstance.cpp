@@ -59,6 +59,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
         return;
     }
 
+    mBatcher = std::make_unique<Batcher>();
+    if(mBatcher == nullptr)
+    {
+        anlDebug("Application", "Failed.");
+        return;
+    }
+
     mApplicationListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -189,6 +196,7 @@ void Application::Instance::shutdown()
     mApplicationAccessor.removeListener(mApplicationListener);
     mDocumentFileBased.removeChangeListener(this);
     getBackupFile().deleteFile();
+    mBatcher.reset();
     mExporter.reset();
     mAbout.reset();
     mAudioSettings.reset();
@@ -288,6 +296,11 @@ Application::Window* Application::Instance::getWindow()
 Application::Exporter* Application::Instance::getExporter()
 {
     return mExporter.get();
+}
+
+Application::Batcher* Application::Instance::getBatcher()
+{
+    return mBatcher.get();
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()
