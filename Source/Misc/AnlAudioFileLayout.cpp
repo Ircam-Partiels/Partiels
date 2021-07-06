@@ -1,4 +1,5 @@
 #include "AnlAudioFileLayout.h"
+#include "AnlAlertWindow.h"
 #include "AnlDecorator.h"
 #include "AnlDraggableTable.h"
 #include "AnlIconManager.h"
@@ -129,8 +130,29 @@ void AudioFileLayoutTable::Channel::mouseMove(juce::MouseEvent const& event)
 
 void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
 {
-    if(event.originalComponent != &mEntry.thumbLabel)
+    if(event.originalComponent == &mEntry.fileNameLabel)
     {
+        if(!mAudioFileLayout.file.existsAsFile())
+        {
+            if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", mAudioFileLayout.file.getFullPathName()}}))
+            {
+                auto const audioFormatWildcard = mOwner.mAudioFormatManager.getWildcardForAllFormats();
+                juce::FileChooser fc(juce::translate("Restore the audio file..."), mAudioFileLayout.file, audioFormatWildcard);
+                if(fc.browseForFileToOpen())
+                {
+                    auto const newFile = fc.getResult();
+                    auto layout = mOwner.mLayout;
+                    for(auto& copyChannelLayout : layout)
+                    {
+                        if(copyChannelLayout.file == mAudioFileLayout.file)
+                        {
+                            copyChannelLayout.file = newFile;
+                        }
+                    }
+                    mOwner.setLayout(layout, juce::NotificationType::sendNotificationSync);
+                }
+            }
+        }
         return;
     }
     mouseMove(event);
