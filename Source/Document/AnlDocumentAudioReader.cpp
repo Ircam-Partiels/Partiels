@@ -104,16 +104,22 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
     {
         auto const errorPrepend = juce::translate("Channel CHINDEX:").replace("CHINDEX", juce::String(i + 1));
         auto const& file = audioReaderLayout[i].file;
-        auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
         if(!file.existsAsFile())
         {
             errors.add(errorPrepend + " " + juce::translate("The file FILENAME doesn't exist.").replace("FILENAME", file.getFullPathName()));
         }
-        else if(audioFormatReader == nullptr)
+        else
         {
-            errors.add(errorPrepend + " " + juce::translate("The input stream cannot be created for the file FILENAME.").replace("FILENAME", file.getFullPathName()));
+            auto audioFormatReader = std::unique_ptr<juce::AudioFormatReader>(audioFormatManager.createReaderFor(file));
+            if(audioFormatReader == nullptr)
+            {
+                errors.add(errorPrepend + " " + juce::translate("The input stream cannot be created for the file FILENAME.").replace("FILENAME", file.getFullPathName()));
+            }
+            else
+            {
+                readers.emplace_back(std::move(audioFormatReader), audioReaderLayout[i].channel);
+            }
         }
-        readers.emplace_back(std::move(audioFormatReader), audioReaderLayout[i].channel);
     }
 
     auto reader = std::make_unique<AudioFormatReader>(std::move(readers));
