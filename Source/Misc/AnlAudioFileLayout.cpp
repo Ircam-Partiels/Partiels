@@ -147,9 +147,9 @@ void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
         {
             selection.insert(*selection.cbegin() - 1_z);
         }
-        while(*selection.crend() < mEntry.index)
+        while(*selection.crbegin() < mEntry.index)
         {
-            selection.insert(*selection.crend() + 1_z);
+            selection.insert(*selection.crbegin() + 1_z);
         }
         mOwner.setSelection(selection, juce::NotificationType::sendNotificationSync);
     }
