@@ -1,4 +1,5 @@
 #include "AnlPluginListTable.h"
+#include <vamp-hostsdk/PluginHostAdapter.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -8,6 +9,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 , mScanner(scanner)
 , mClearButton(juce::translate("Clear"))
 , mScanButton(juce::translate("Scan"))
+, mPathsButton(juce::translate("Paths"))
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -85,6 +87,36 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                                      "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
         }
     };
+    
+    addAndMakeVisible(mPathsButton);
+    mPathsButton.setClickingTogglesState(false);
+    mPathsButton.onClick = [this]()
+    {
+        auto const paths = Vamp::PluginHostAdapter::getPluginPath();
+        std::vector<juce::File> files;
+        for(auto const& path : paths)
+        {
+            juce::File const file{juce::String(path)};
+            if(file.exists())
+            {
+                files.push_back(file);
+            }
+        }
+        juce::PopupMenu menu;
+        for(auto const& file : files)
+        {
+            auto const fileName = file.getFileName();
+            auto const duplicate = std::any_of(files.cbegin(), files.cend(), [&](auto const& f)
+            {
+                return f != file && f.getFileName() == fileName;
+            });
+            menu.addItem(fileName + (duplicate ? " (" + file.getFullPathName() + ")" : ""), [=]()
+            {
+                file.revealToUser();
+            });
+        }
+        menu.showAt(&mPathsButton);
+    };
 
     addAndMakeVisible(mSearchField);
     mSearchField.setMultiLine(false);
@@ -122,11 +154,13 @@ void PluginList::Table::resized()
     auto bounds = getLocalBounds();
     auto bottom = bounds.removeFromBottom(31);
     mSeparator.setBounds(bottom.removeFromTop(1));
-    bottom.removeFromLeft(4);
+    bottom.reduce(4, 0);
     mClearButton.setBounds(bottom.removeFromLeft(100).withSizeKeepingCentre(100, 21));
     bottom.removeFromLeft(4);
     mScanButton.setBounds(bottom.removeFromLeft(100).withSizeKeepingCentre(100, 21));
     bottom.removeFromLeft(4);
+    mPathsButton.setBounds(bottom.removeFromRight(100).withSizeKeepingCentre(100, 21));
+    bottom.removeFromRight(4);
     mSearchField.setBounds(bottom.removeFromLeft(200).withSizeKeepingCentre(200, 21));
     mPluginTable.setBounds(bounds);
 }

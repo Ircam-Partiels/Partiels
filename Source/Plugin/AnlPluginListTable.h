@@ -48,6 +48,7 @@ namespace PluginList
         juce::TextButton mClearButton;
         juce::TextButton mScanButton;
         juce::TextEditor mSearchField;
+        juce::TextButton mPathsButton;
         juce::String mLookingWord;
         bool mIsBeingUpdated = false;
         std::set<Plugin::Key> mBlacklist;
