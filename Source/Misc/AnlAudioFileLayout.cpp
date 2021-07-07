@@ -83,7 +83,7 @@ AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, size_t index
             {
                 channelMenu.addItem(juce::translate("All"), -2);
             }
-            else if(mode & SupportMode::supportLayoutMono)
+            if(mode & SupportMode::supportLayoutMono)
             {
                 channelMenu.addItem(juce::translate("Mono"), -1);
             }
