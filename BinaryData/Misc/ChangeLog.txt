@@ -1,5 +1,6 @@
 v0.0.8 (alpha)
 
+- Add: Batch processing (#110)
 - Imp: Add more commands and undo/redo mechanism to audio channel panels (#109)
 - Fix: Prevent to open document created with a newer version of the application (#107)
 - Fix: Time field can be edited beyond the time limit  (#104)
