@@ -602,7 +602,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         {
             return juce::Result::ok();
         }
-        auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) :  trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
+        auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
         lock.exit();
 
         switch(options.format)

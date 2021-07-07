@@ -181,7 +181,7 @@ void Application::Batcher::process()
                               }
                               auto const trackAcsrs = mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>();
                               lock.exit();
-        
+
                               for(auto const& layout : layouts)
                               {
                                   while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
