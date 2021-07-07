@@ -49,11 +49,13 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         mDirector.startAction();
         mAccessor.setAttr<AttrType::reader>(mAudioFileLayoutTable.getLayout(), NotificationType::synchronous);
         mDirector.endAction(ActionState::newTransaction, juce::translate("Change Audio Reader Layout"));
+        mAudioFileLayoutTable.onLayoutChanged();
     };
 
     mResetButton.onClick = [this]()
     {
         mAudioFileLayoutTable.setLayout(mAccessor.getAttr<AttrType::reader>(), juce::NotificationType::sendNotificationSync);
+        mAudioFileLayoutTable.onLayoutChanged();
     };
 
     mFloatingWindow.onCloseButtonPressed = [this]()
