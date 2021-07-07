@@ -35,12 +35,12 @@ auto XmlParser::fromXml<AudioFileLayout>(juce::XmlElement const& xml, juce::Iden
     return value;
 }
 
-AudioFileLayoutTable::Channel::Entry::Entry(int i, juce::String const& fileName)
+AudioFileLayoutTable::Channel::Entry::Entry(size_t i, juce::String const& fileName)
 : index(i)
 {
     addAndMakeVisible(thumbLabel);
     thumbLabel.setEditable(false);
-    thumbLabel.setText("#" + juce::String(index + 1), juce::NotificationType::dontSendNotification);
+    thumbLabel.setText("#" + juce::String(index + 1_z), juce::NotificationType::dontSendNotification);
 
     addAndMakeVisible(fileNameLabel);
     fileNameLabel.setEditable(false);
@@ -48,6 +48,7 @@ AudioFileLayoutTable::Channel::Entry::Entry(int i, juce::String const& fileName)
 
     addAndMakeVisible(channelMenu);
     channelMenu.setJustificationType(juce::Justification::right);
+    channelMenu.setWantsKeyboardFocus(false);
 }
 
 void AudioFileLayoutTable::Channel::Entry::resized()
@@ -64,14 +65,11 @@ void AudioFileLayoutTable::Channel::Entry::paint(juce::Graphics& g)
     g.fillRect(getLocalBounds().removeFromLeft(thumbLabel.getWidth()));
 }
 
-AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, int index, AudioFileLayout audioFileLayout, SupportMode mode)
+AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, size_t index, AudioFileLayout audioFileLayout, SupportMode mode)
 : mOwner(owner)
 , mAudioFileLayout(audioFileLayout)
 , mEntry(index, mAudioFileLayout.file.getFileName())
 {
-    setWantsKeyboardFocus(true);
-    setMouseClickGrabsKeyboardFocus(true);
-
     auto reader = std::unique_ptr<juce::AudioFormatReader>(mOwner.mAudioFormatManager.createReaderFor(mAudioFileLayout.file));
     auto& channelMenu = mEntry.channelMenu;
     channelMenu.setEnabled(reader != nullptr);
@@ -100,16 +98,16 @@ AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, int index, A
     channelMenu.onChange = [this]()
     {
         auto readerLayout = mOwner.getLayout();
-        anlWeakAssert(static_cast<size_t>(mEntry.index) < readerLayout.size());
-        if(static_cast<size_t>(mEntry.index) >= readerLayout.size())
+        anlWeakAssert(mEntry.index < readerLayout.size());
+        if(mEntry.index >= readerLayout.size())
         {
             return;
         }
         auto const selectedId = mEntry.channelMenu.getSelectedId();
         auto const newChannel = selectedId < 0 ? selectedId : selectedId - 1;
-        readerLayout[static_cast<size_t>(mEntry.index)].channel = newChannel;
+        readerLayout[mEntry.index].channel = newChannel;
         mAudioFileLayout.channel = newChannel;
-        mOwner.setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
+        mOwner.setLayout(readerLayout);
     };
 
     mEntry.thumbLabel.addMouseListener(this, true);
@@ -130,6 +128,36 @@ void AudioFileLayoutTable::Channel::mouseMove(juce::MouseEvent const& event)
 
 void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
 {
+    auto selection = mOwner.getSelection();
+    if(event.mods.isCommandDown())
+    {
+        if(selection.count(mEntry.index) > 0_z)
+        {
+            selection.erase(mEntry.index);
+        }
+        else
+        {
+            selection.insert(mEntry.index);
+        }
+        mOwner.setSelection(selection, juce::NotificationType::sendNotificationSync);
+    }
+    else if(!selection.empty() && event.mods.isShiftDown())
+    {
+        while(*selection.cbegin() > mEntry.index)
+        {
+            selection.insert(*selection.cbegin() - 1_z);
+        }
+        while(*selection.crend() < mEntry.index)
+        {
+            selection.insert(*selection.crend() + 1_z);
+        }
+        mOwner.setSelection(selection, juce::NotificationType::sendNotificationSync);
+    }
+    else
+    {
+        mOwner.setSelection({mEntry.index}, juce::NotificationType::sendNotificationSync);
+    }
+
     if(event.originalComponent == &mEntry.fileNameLabel)
     {
         if(!mAudioFileLayout.file.existsAsFile())
@@ -149,7 +177,7 @@ void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
                             copyChannelLayout.file = newFile;
                         }
                     }
-                    mOwner.setLayout(layout, juce::NotificationType::sendNotificationSync);
+                    mOwner.setLayout(layout);
                 }
             }
         }
@@ -194,53 +222,14 @@ void AudioFileLayoutTable::Channel::mouseUp(juce::MouseEvent const& event)
     mouseMove(event);
 }
 
-bool AudioFileLayoutTable::Channel::keyPressed(juce::KeyPress const& key)
-{
-    if(key.isKeyCurrentlyDown(juce::KeyPress::deleteKey) || key.isKeyCurrentlyDown(juce::KeyPress::backspaceKey))
-    {
-        auto readerLayout = mOwner.getLayout();
-        anlWeakAssert(static_cast<size_t>(mEntry.index) < readerLayout.size());
-        if(static_cast<size_t>(mEntry.index) >= readerLayout.size())
-        {
-            return false;
-        }
-        readerLayout.erase(readerLayout.begin() + static_cast<long>(mEntry.index));
-        mOwner.setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
-        return true;
-    }
-    return false;
-}
-
-void AudioFileLayoutTable::Channel::focusGained(juce::Component::FocusChangeType cause)
-{
-    juce::ignoreUnused(cause);
-    if(hasKeyboardFocus(true))
-    {
-        mDecorator.setHighlighted(true);
-        if(mOwner.onAudioFileLayoutSelected != nullptr)
-        {
-            mOwner.onAudioFileLayoutSelected(mAudioFileLayout);
-        }
-    }
-    else
-    {
-        mDecorator.setHighlighted(false);
-    }
-}
-
-void AudioFileLayoutTable::Channel::focusLost(juce::Component::FocusChangeType cause)
-{
-    focusGained(cause);
-}
-
-void AudioFileLayoutTable::Channel::focusOfChildComponentChanged(juce::Component::FocusChangeType cause)
-{
-    focusGained(cause);
-}
-
 void AudioFileLayoutTable::Channel::resized()
 {
     mDecorator.setBounds(getLocalBounds());
+}
+
+void AudioFileLayoutTable::Channel::setSelected(bool state)
+{
+    mDecorator.setHighlighted(state);
 }
 
 AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormatManager, SupportMode mode, AudioFileLayout::ChannelLayout preferredChannelLayout)
@@ -268,7 +257,7 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
             readerLayout.erase(readerLayout.begin() + static_cast<long>(previousIndex));
         }
         readerLayout.insert(readerLayout.begin() + static_cast<long>(index), previouslayout);
-        setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
+        setLayout(readerLayout);
     };
 
     mAddButton.onClick = [this]()
@@ -285,7 +274,7 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
         {
             readerLayout.push_back(newLayout);
         }
-        setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
+        setLayout(readerLayout);
     };
 
     mAddLabel.setInterceptsMouseClicks(false, false);
@@ -301,6 +290,7 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
     addAndMakeVisible(mAddLabel);
     addChildComponent(mAlertLabel);
     addChildComponent(mAlertButton);
+    setWantsKeyboardFocus(true);
     setSize(300, 400);
 }
 
@@ -343,6 +333,47 @@ void AudioFileLayoutTable::lookAndFeelChanged()
         laf->setButtonIcon(mAddButton, IconManager::IconType::plus);
         laf->setButtonIcon(mAlertButton, IconManager::IconType::alert);
     }
+}
+
+bool AudioFileLayoutTable::keyPressed(juce::KeyPress const& key)
+{
+    if(key.isKeyCode(juce::KeyPress::deleteKey) || key.isKeyCode(juce::KeyPress::backspaceKey))
+    {
+        return deleteSelection();
+    }
+    if(key == juce::KeyPress('c', juce::ModifierKeys::commandModifier, 0) || key == juce::KeyPress(juce::KeyPress::insertKey, juce::ModifierKeys::ctrlModifier, 0))
+    {
+        return copySelection();
+    }
+    if(key == juce::KeyPress('x', juce::ModifierKeys::commandModifier, 0) || key == juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::shiftModifier, 0))
+    {
+        return cutSelection();
+    }
+    if(key == juce::KeyPress('v', juce::ModifierKeys::commandModifier, 0) || key == juce::KeyPress(juce::KeyPress::insertKey, juce::ModifierKeys::shiftModifier, 0))
+    {
+        return pasteSelection();
+    }
+    if(key == juce::KeyPress('y', juce::ModifierKeys::commandModifier, 0) || key == juce::KeyPress('z', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier, 0))
+    {
+        return mUndoManager.redo();
+    }
+    if(key == juce::KeyPress('z', juce::ModifierKeys::commandModifier, 0))
+    {
+        return mUndoManager.undo();
+    }
+    if(key == juce::KeyPress('a', juce::ModifierKeys::commandModifier, 0))
+    {
+        return selectionAll();
+    }
+    if(key.isKeyCode(juce::KeyPress::upKey))
+    {
+        return moveSelectionUp(key.getModifiers().isShiftDown());
+    }
+    if(key.isKeyCode(juce::KeyPress::downKey))
+    {
+        return moveSelectionDown(key.getModifiers().isShiftDown());
+    }
+    return false;
 }
 
 void AudioFileLayoutTable::parentHierarchyChanged()
@@ -388,14 +419,118 @@ void AudioFileLayoutTable::filesDropped(juce::StringArray const& files, int x, i
     {
         readerLayout.push_back(newLayout);
     }
-    setLayout(readerLayout, juce::NotificationType::sendNotificationSync);
+    setLayout(readerLayout);
     mIsDragging = false;
     repaint();
+}
+
+void AudioFileLayoutTable::setSelection(std::set<size_t> indices, juce::NotificationType notification)
+{
+    auto it = indices.begin();
+    while(it != indices.end())
+    {
+        if(*it > mChannels.size())
+        {
+            it = indices.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    for(auto index = 0_z; index < mChannels.size(); ++index)
+    {
+        if(mChannels[index] != nullptr)
+        {
+            mChannels[index]->setSelected(indices.count(index) > 0_z);
+        }
+    }
+
+    if(mSelection != indices)
+    {
+        mSelection = indices;
+        if(notification == juce::NotificationType::dontSendNotification)
+        {
+            return;
+        }
+        else if(notification == juce::NotificationType::sendNotificationAsync)
+        {
+            postCommandMessage(1);
+        }
+        else
+        {
+            handleCommandMessage(1);
+        }
+    }
+}
+
+std::set<size_t> AudioFileLayoutTable::getSelection() const
+{
+    return mSelection;
 }
 
 std::vector<AudioFileLayout> AudioFileLayoutTable::getLayout() const
 {
     return mLayout;
+}
+
+void AudioFileLayoutTable::setLayout(std::vector<AudioFileLayout> const& layout)
+{
+    if(mLayout == layout)
+    {
+        return;
+    }
+
+    class Action
+    : public juce::UndoableAction
+    {
+    public:
+        Action(AudioFileLayoutTable& owner, std::vector<AudioFileLayout> const& l)
+        : mOwner(owner)
+        , mPreviousLayout(mOwner.mLayout)
+        , mNewLayout(l)
+        , mPreviousSelection(mOwner.mSelection)
+        {
+        }
+
+        ~Action() override = default;
+
+        // juce::UndoableAction
+        bool perform() override
+        {
+            setLayout(mNewLayout);
+            return true;
+        }
+
+        bool undo() override
+        {
+            setLayout(mPreviousLayout);
+            mOwner.setSelection(mPreviousSelection, juce::NotificationType::sendNotificationSync);
+            return true;
+        }
+
+        void setLayout(std::vector<AudioFileLayout> const& l)
+        {
+            mOwner.clearFilesToWatch();
+            mOwner.mLayout = l;
+            for(auto const& channel : mOwner.mLayout)
+            {
+                mOwner.addFileToWatch(channel.file);
+            }
+            mOwner.updateLayout();
+            mOwner.handleCommandMessage(0);
+        }
+
+    private:
+        AudioFileLayoutTable& mOwner;
+        std::vector<AudioFileLayout> mPreviousLayout;
+        std::vector<AudioFileLayout> mNewLayout;
+        std::set<size_t> mPreviousSelection;
+    };
+
+    mUndoManager.beginNewTransaction();
+    mUndoManager.perform(std::make_unique<Action>(*this, layout).release());
 }
 
 void AudioFileLayoutTable::setLayout(std::vector<AudioFileLayout> const& layout, juce::NotificationType notification)
@@ -404,6 +539,7 @@ void AudioFileLayoutTable::setLayout(std::vector<AudioFileLayout> const& layout,
     {
         return;
     }
+    mUndoManager.clearUndoHistory();
     clearFilesToWatch();
     mLayout = layout;
     for(auto const& channel : mLayout)
@@ -418,24 +554,29 @@ void AudioFileLayoutTable::setLayout(std::vector<AudioFileLayout> const& layout,
     }
     else if(notification == juce::NotificationType::sendNotificationAsync)
     {
-        triggerAsyncUpdate();
+        postCommandMessage(0);
     }
     else
     {
-        handleAsyncUpdate();
+        handleCommandMessage(0);
     }
 }
 
-void AudioFileLayoutTable::handleAsyncUpdate()
+void AudioFileLayoutTable::handleCommandMessage(int commandId)
 {
-    if(onLayoutChanged != nullptr)
+    if(commandId == 0 && onLayoutChanged != nullptr)
     {
         onLayoutChanged();
+    }
+    else if(onSelectionChanged != nullptr)
+    {
+        onSelectionChanged();
     }
 }
 
 void AudioFileLayoutTable::updateLayout()
 {
+    auto const selection = mSelection;
     using ComponentRef = DraggableTable::ComponentRef;
     std::vector<ComponentRef> contents;
     mChannels.clear();
@@ -478,6 +619,8 @@ void AudioFileLayoutTable::updateLayout()
     mAlertButton.setTooltip(mAlertLabel.getText());
     mAlertButton.setVisible(mAlertLabel.isVisible());
     resized();
+
+    setSelection(selection, juce::NotificationType::sendNotificationSync);
 }
 
 bool AudioFileLayoutTable::fileHasBeenRemoved(juce::File const& file)
@@ -498,6 +641,134 @@ bool AudioFileLayoutTable::fileHasBeenModified(juce::File const& file)
 {
     juce::ignoreUnused(file);
     updateLayout();
+    return true;
+}
+
+bool AudioFileLayoutTable::selectionAll()
+{
+    if(mLayout.empty())
+    {
+        return false;
+    }
+    std::set<size_t> selection;
+    for(auto index = 0_z; index < mLayout.size(); ++index)
+    {
+        selection.insert(index);
+    }
+    setSelection(selection, juce::NotificationType::sendNotificationSync);
+    return true;
+}
+
+bool AudioFileLayoutTable::moveSelectionUp(bool preserve)
+{
+    if(mLayout.empty())
+    {
+        return false;
+    }
+    if(mSelection.empty())
+    {
+        setSelection({mLayout.size() - 1_z}, juce::NotificationType::sendNotificationSync);
+        return true;
+    }
+    if(preserve)
+    {
+        auto selection = mSelection;
+        selection.insert(*selection.cbegin() - 1_z);
+        setSelection(selection, juce::NotificationType::sendNotificationSync);
+    }
+    else
+    {
+        setSelection({*mSelection.cbegin() - 1_z}, juce::NotificationType::sendNotificationSync);
+    }
+    return true;
+}
+
+bool AudioFileLayoutTable::moveSelectionDown(bool preserve)
+{
+    if(mLayout.empty())
+    {
+        return false;
+    }
+    if(mSelection.empty())
+    {
+        setSelection({0_z}, juce::NotificationType::sendNotificationSync);
+        return true;
+    }
+    if(preserve)
+    {
+        auto selection = mSelection;
+        selection.insert(*selection.crbegin() + 1_z);
+        setSelection(selection, juce::NotificationType::sendNotificationSync);
+    }
+    else
+    {
+        setSelection({*mSelection.crbegin() + 1_z}, juce::NotificationType::sendNotificationSync);
+    }
+    return true;
+}
+
+bool AudioFileLayoutTable::deleteSelection()
+{
+    if(mSelection.empty())
+    {
+        return false;
+    }
+    auto layout = getLayout();
+    for(auto it = mSelection.crbegin(); it != mSelection.crend(); ++it)
+    {
+        anlWeakAssert(*it < layout.size());
+        if(*it < layout.size())
+        {
+            layout.erase(layout.begin() + static_cast<long>(*it));
+        }
+    }
+    setLayout(layout);
+    auto const index = *mSelection.cbegin() > 0_z && !layout.empty() ? std::min(*mSelection.cbegin() - 1_z, layout.size() - 1_z) : 0_z;
+    setSelection(layout.empty() ? std::set<size_t>{} : std::set<size_t>{index}, juce::NotificationType::sendNotificationSync);
+    return true;
+}
+
+bool AudioFileLayoutTable::copySelection()
+{
+    if(mSelection.empty())
+    {
+        return false;
+    }
+    mClipBoard.clear();
+    for(auto it = mSelection.crbegin(); it != mSelection.crend(); ++it)
+    {
+        anlWeakAssert(*it < mLayout.size());
+        if(*it < mLayout.size())
+        {
+            mClipBoard.push_back(mLayout[*it]);
+        }
+    }
+    return true;
+}
+
+bool AudioFileLayoutTable::cutSelection()
+{
+    return copySelection() ? deleteSelection() : false;
+}
+
+bool AudioFileLayoutTable::pasteSelection()
+{
+    if(mClipBoard.empty())
+    {
+        return false;
+    }
+    auto layout = getLayout();
+    auto selection = mSelection;
+    auto position = selection.empty() || *selection.cbegin() > layout.size() ? layout.size() : *selection.cbegin() + 1_z;
+    selection.clear();
+    for(auto const& channel : mClipBoard)
+    {
+        layout.insert(layout.begin() + static_cast<long>(position), channel);
+        selection.insert(position);
+        ++position;
+    }
+    setLayout(layout);
+    setSelection(selection, juce::NotificationType::sendNotificationSync);
     return true;
 }
 

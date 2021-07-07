@@ -27,17 +27,20 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
     mAudioFileLayoutTable.onLayoutChanged = [this]()
     {
         auto const layout = mAudioFileLayoutTable.getLayout();
-        mAudioFileLayoutTable.onAudioFileLayoutSelected(layout.empty() ? AudioFileLayout{} : layout.back());
+        mAudioFileLayoutTable.onSelectionChanged();
         mApplyButton.setEnabled(layout != mAccessor.getAttr<AttrType::reader>());
         mResetButton.setEnabled(mApplyButton.isEnabled());
     };
 
-    mAudioFileLayoutTable.onAudioFileLayoutSelected = [this](AudioFileLayout layout)
+    mAudioFileLayoutTable.onSelectionChanged = [this]()
     {
-        if(layout.file != mFileInfoPanel.getFile())
+        auto const selection = mAudioFileLayoutTable.getSelection();
+        auto const layout = mAudioFileLayoutTable.getLayout();
+        auto const fileLayout = layout.empty() ? AudioFileLayout{} : ((selection.empty() || *selection.cbegin() >= layout.size()) ? layout.back() : layout[*selection.cbegin()]);
+        if(fileLayout.file != mFileInfoPanel.getFile())
         {
-            auto reader = std::unique_ptr<juce::AudioFormatReader>(mDirector.getAudioFormatManager().createReaderFor(layout.file));
-            mFileInfoPanel.setAudioFormatReader(layout.file, reader.get());
+            auto reader = std::unique_ptr<juce::AudioFormatReader>(mDirector.getAudioFormatManager().createReaderFor(fileLayout.file));
+            mFileInfoPanel.setAudioFormatReader(fileLayout.file, reader.get());
         }
     };
 

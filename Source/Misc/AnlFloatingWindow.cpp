@@ -78,7 +78,7 @@ void FloatingWindow::resized()
 #ifndef JUCE_MAC
 void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
 {
-    setAlwaysOnTop(focusedComponent != nullptr);
+    setAlwaysOnTop(focusedComponent != nullptr || juce::Process::isForegroundProcess());
 }
 #endif
 
