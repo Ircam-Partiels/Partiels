@@ -89,7 +89,7 @@ namespace Application
             juce::TextButton mLoadTemplateButton{juce::translate("Load Template")};
             juce::Label mLoadTemplateInfo{""};
 
-            juce::Label mSelectRecentDocument{"", juce::translate("Select Recent Document")};
+            juce::Label mSelectRecentDocument;
             ColouredPanel mSeparatorVertical;
             ColouredPanel mSeparatorHorizontal;
             FileTable mFileTable;

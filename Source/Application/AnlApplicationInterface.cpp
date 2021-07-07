@@ -122,7 +122,7 @@ Application::Interface::Loader::Loader()
     mAddTrackInfo.setText(juce::translate("Insert an analysis plugin as a new track"), juce::NotificationType::dontSendNotification);
     mAddTrackInfo.setJustificationType(juce::Justification::centredTop);
 
-    mLoadTemplateInfo.setText(juce::translate("Use an existing document as template"), juce::NotificationType::dontSendNotification);
+    mLoadTemplateInfo.setText(juce::translate("Use an existing document as a template"), juce::NotificationType::dontSendNotification);
     mLoadTemplateInfo.setJustificationType(juce::Justification::centredTop);
 
     addAndMakeVisible(mSeparatorVertical);
@@ -210,6 +210,7 @@ void Application::Interface::Loader::updateState()
         addAndMakeVisible(mLoadFileButton);
         addAndMakeVisible(mLoadFileInfo);
         addAndMakeVisible(mLoadFileWildcard);
+        mSelectRecentDocument.setText(juce::translate("Load a recent document"), juce::NotificationType::dontSendNotification);
     }
     else if(!documentHasTrackOrGroup)
     {
@@ -217,6 +218,7 @@ void Application::Interface::Loader::updateState()
         addAndMakeVisible(mAddTrackInfo);
         addAndMakeVisible(mLoadTemplateButton);
         addAndMakeVisible(mLoadTemplateInfo);
+        mSelectRecentDocument.setText(juce::translate("Use a document as a template"), juce::NotificationType::dontSendNotification);
     }
 }
 
