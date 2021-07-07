@@ -16,7 +16,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
         {
             int maxChannels = 0;
             hasMultipleSampleRate = false;
-            numChannels = static_cast<unsigned int>(mChannels.size());
+            numChannels = 0u;
             usesFloatingPointData = true;
             for(auto const& channel : mChannels)
             {
@@ -28,6 +28,11 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                     bitsPerSample = std::max(reader->bitsPerSample, bitsPerSample);
                     lengthInSamples = std::max(reader->lengthInSamples, lengthInSamples);
                     maxChannels = std::max(static_cast<int>(reader->numChannels), maxChannels);
+                    numChannels += std::get<1>(channel) == -2 ? reader->numChannels : 1u;
+                }
+                else
+                {
+                    numChannels += 1u;
                 }
             }
             anlWeakAssert(mChannels.empty() || maxChannels > 0);
@@ -40,17 +45,20 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
         {
             auto constexpr scaleFactor = 1.0f / static_cast<float>(0x7fffffff);
 
-            for(int channelIndex = 0; channelIndex < numDestChannels; ++channelIndex)
+            int channelIndex = 0;
+            while(channelIndex < numDestChannels)
             {
                 auto& channelInfo = mChannels[static_cast<size_t>(channelIndex)];
                 auto& reader = std::get<0>(channelInfo);
                 auto const layout = std::get<1>(channelInfo);
+
                 if(destChannels[channelIndex] != nullptr && reader != nullptr)
                 {
-                    auto* outputBuffer = reinterpret_cast<float*>(destChannels[channelIndex] + startOffsetInDestBuffer);
                     auto const numChannels = layout < 0 ? static_cast<int>(reader->numChannels) : layout + 1;
                     auto startSample = startSampleInFile;
                     auto remaininSamples = numSamples;
+                    auto outputOffset = startOffsetInDestBuffer;
+
                     while(remaininSamples > 0)
                     {
                         mBuffer.clear();
@@ -61,30 +69,60 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         {
                             return false;
                         }
-                        auto channelToCopy = numChannels - 1;
-                        if(!reader->usesFloatingPointData)
+                        if(layout >= 0) // one channel
                         {
-                            auto* internalBufferChannel = internalBuffer[static_cast<size_t>(channelToCopy)];
-                            juce::FloatVectorOperations::convertFixedToFloat(internalBufferChannel, reinterpret_cast<int*>(internalBufferChannel), scaleFactor, bufferSize);
+                            if(!reader->usesFloatingPointData)
+                            {
+                                juce::FloatVectorOperations::convertFixedToFloat(internalBuffer[static_cast<size_t>(layout)], reinterpret_cast<int*>(internalBuffer[static_cast<size_t>(layout)]), scaleFactor, bufferSize);
+                            }
+                            auto* outputBuffer = reinterpret_cast<float*>(destChannels[channelIndex] + outputOffset);
+                            juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[static_cast<size_t>(layout)], bufferSize);
                         }
-                        juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[static_cast<size_t>(channelToCopy)], bufferSize);
-                        if(layout < 0)
+                        else if(layout == -1) // mono
                         {
-                            while(--channelToCopy >= 0)
+                            if(!reader->usesFloatingPointData)
+                            {
+                                juce::FloatVectorOperations::convertFixedToFloat(internalBuffer[0_z], reinterpret_cast<int*>(internalBuffer[0_z]), scaleFactor, bufferSize);
+                            }
+                            auto* outputBuffer = reinterpret_cast<float*>(destChannels[channelIndex] + outputOffset);
+                            juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[0_z], bufferSize);
+                            for(size_t channelToCopy = 1_z; channelToCopy < static_cast<size_t>(numChannels); ++channelToCopy)
                             {
                                 if(!reader->usesFloatingPointData)
                                 {
-                                    auto* internalBufferChannel = internalBuffer[static_cast<size_t>(channelToCopy)];
-                                    juce::FloatVectorOperations::convertFixedToFloat(internalBufferChannel, reinterpret_cast<int*>(internalBufferChannel), scaleFactor, bufferSize);
+                                    juce::FloatVectorOperations::convertFixedToFloat(internalBuffer[channelToCopy], reinterpret_cast<int*>(internalBuffer[channelToCopy]), scaleFactor, bufferSize);
                                 }
-                                juce::FloatVectorOperations::add(outputBuffer, internalBuffer[static_cast<size_t>(channelToCopy)], bufferSize);
+                                juce::FloatVectorOperations::add(outputBuffer, internalBuffer[channelToCopy], bufferSize);
                             }
                             juce::FloatVectorOperations::multiply(outputBuffer, 1.0f / static_cast<float>(numChannels), bufferSize);
                         }
+                        else if(layout == -2) // all
+                        {
+                            for(size_t channelToCopy = 0_z; channelToCopy < static_cast<size_t>(numChannels); ++channelToCopy)
+                            {
+                                if(!reader->usesFloatingPointData)
+                                {
+                                    juce::FloatVectorOperations::convertFixedToFloat(internalBuffer[channelToCopy], reinterpret_cast<int*>(internalBuffer[channelToCopy]), scaleFactor, bufferSize);
+                                }
+                                auto* outputBuffer = reinterpret_cast<float*>(destChannels[static_cast<size_t>(channelIndex) + channelToCopy] + outputOffset);
+                                juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[channelToCopy], bufferSize);
+                            }
+                        }
+                        else
+                        {
+                            anlWeakAssert(false && "unsupported layout");
+                            return false;
+                        }
+
                         startSample += static_cast<juce::int64>(bufferSize);
-                        outputBuffer += static_cast<size_t>(bufferSize);
+                        outputOffset += bufferSize;
                         remaininSamples -= bufferSize;
                     }
+                    channelIndex += layout == -2 ? numChannels : 1;
+                }
+                else
+                {
+                    ++channelIndex;
                 }
             }
             return true;
