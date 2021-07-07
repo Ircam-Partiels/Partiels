@@ -7,7 +7,7 @@ Application::Batcher::Batcher()
 : FloatingWindowContainer("Batch Processing", *this)
 , mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::all, AudioFileLayout::ChannelLayout::all)
-, mExporterPanel(mDocumentAccessor, nullptr)
+, mExporterPanel(Instance::get().getDocumentAccessor(), nullptr)
 , mPropertyExport("Process", "Process the files", [this]()
                   {
                       if(mProcess.valid())
@@ -159,14 +159,46 @@ void Application::Batcher::process()
 
     mShoulAbort.store(false);
     mDocumentAccessor.copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
+    mDocumentAccessor.setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
+    for(auto const acsr : mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>())
+    {
+        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
+        if(resultFile.hasFileExtension("dat"))
+        {
+            acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
+        }
+    }
 
     mProcess = std::async([=, this]() -> ProcessResult
                           {
                               juce::Thread::setCurrentThreadName("Batch");
                               juce::MessageManager::Lock lock;
 
+                              if(!lock.tryEnter())
+                              {
+                                  triggerAsyncUpdate();
+                                  return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Batch processing failed!"), "Message manager could be unlocked!");
+                              }
+                              auto const trackAcsrs = mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>();
+                              lock.exit();
+        
                               for(auto const& layout : layouts)
                               {
+                                  while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                                                    {
+                                                        if(!lock.tryEnter())
+                                                        {
+                                                            return false;
+                                                        }
+                                                        auto const processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
+                                                        lock.exit();
+                                                        return std::get<0>(processing) || std::get<2>(processing);
+                                                    }))
+                                  {
+                                      using namespace std::chrono_literals;
+                                      std::this_thread::sleep_for(20ms);
+                                  }
+
                                   if(!lock.tryEnter())
                                   {
                                       triggerAsyncUpdate();
@@ -174,7 +206,12 @@ void Application::Batcher::process()
                                   }
                                   mDocumentAccessor.setAttr<Document::AttrType::reader>({layout}, NotificationType::synchronous);
                                   mDocumentAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
-                                  auto const trackAcsrs = mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>();
+                                  for(auto trackAcsr : trackAcsrs)
+                                  {
+                                      auto trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
+                                      std::fill(trackChannelsLayout.begin(), trackChannelsLayout.end(), true);
+                                      trackAcsr.get().setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
+                                  }
                                   lock.exit();
 
                                   while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
