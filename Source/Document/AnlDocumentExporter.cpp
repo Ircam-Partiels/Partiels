@@ -381,7 +381,7 @@ void Document::Exporter::Panel::handleAsyncUpdate()
     }
 }
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
 {
     if(file == juce::File())
     {
@@ -395,7 +395,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
             {
-                return juce::Result::fail("Invalid threaded threadsafe access");
+                return juce::Result::fail("Invalid threaded access");
             }
             auto const documentHasTrack = Tools::hasTrackAcsr(accessor, trackIdentifier);
             anlStrongAssert(documentHasTrack);
@@ -412,9 +412,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const size = options.useAutoSize ? getSizeFor(trackIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
             auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
             auto& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
+            auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
-            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, trackFile, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
@@ -422,7 +423,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
             {
-                return juce::Result::fail("Invalid threaded threadsafe access");
+                return juce::Result::fail("Invalid threaded access");
             }
             auto const documentHasGroup = Tools::hasGroupAcsr(accessor, groupIdentifier);
             anlStrongAssert(documentHasGroup);
@@ -438,9 +439,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             auto const size = options.useAutoSize ? getSizeFor(groupIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
             auto& groupAcsr = Tools::getGroupAcsr(accessor, groupIdentifier);
             auto& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
+            auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
-            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, groupFile, std::get<0>(size), std::get<1>(size), shouldAbort);
+            return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
         auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
@@ -448,7 +450,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
             {
-                return juce::Result::fail("Invalid threaded threadsafe access");
+                return juce::Result::fail("Invalid threaded access");
             }
             auto const documentHasGroup = Tools::hasGroupAcsr(accessor, groupIdentifier);
             anlStrongAssert(documentHasGroup);
@@ -469,7 +471,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             {
                 if(!lock.tryEnter())
                 {
-                    return juce::Result::fail("Invalid threaded threadsafe access");
+                    return juce::Result::fail("Invalid threaded access");
                 }
                 auto const documentHasTrack = Tools::hasTrackAcsr(accessor, trackIdentifier);
                 anlStrongAssert(documentHasTrack);
@@ -496,7 +498,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
             {
-                return juce::Result::fail("Invalid threaded threadsafe access");
+                return juce::Result::fail("Invalid threaded access");
             }
             auto const documentLayout = copy_with_erased_if(accessor.getAttr<AttrType::layout>(), [&](auto const& groupId)
                                                             {
@@ -508,7 +510,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             {
                 if(!lock.tryEnter())
                 {
-                    return juce::Result::fail("Invalid threaded threadsafe access");
+                    return juce::Result::fail("Invalid threaded access");
                 }
                 auto const documentHasGroup = Tools::hasGroupAcsr(accessor, groupIdentifier);
                 anlStrongAssert(documentHasGroup);
@@ -522,7 +524,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 lock.exit();
 
                 auto const groupFile = documentFolder.getNonexistentChildFile(groupName, "." + options.getFormatExtension());
-                auto const result = exportGroup(groupIdentifier, groupFile);
+                auto const result = exportGroup(groupIdentifier, documentFolder);
                 if(result.failed())
                 {
                     return result;
@@ -534,7 +536,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         juce::MessageManager::Lock lock;
         if(!lock.tryEnter())
         {
-            return juce::Result::fail("Invalid threaded threadsafe access");
+            return juce::Result::fail("Invalid threaded access");
         }
 
         if(identifier.isEmpty())
@@ -600,6 +602,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         {
             return juce::Result::ok();
         }
+        auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) :  trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
         lock.exit();
 
         switch(options.format)
@@ -609,9 +612,9 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, trackFile, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, trackFile, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, fileUsed, shouldAbort);
         }
         return juce::Result::fail("Unsupported format");
     };
@@ -621,7 +624,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         juce::MessageManager::Lock lock;
         if(!lock.tryEnter())
         {
-            return juce::Result::fail("Invalid threaded threadsafe access");
+            return juce::Result::fail("Invalid threaded access");
         }
         auto const documentHasGroup = Tools::hasGroupAcsr(accessor, groupIdentifier);
         anlStrongAssert(documentHasGroup);
@@ -641,7 +644,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         {
             if(!lock.tryEnter())
             {
-                return juce::Result::fail("Invalid threaded threadsafe access");
+                return juce::Result::fail("Invalid threaded access");
             }
             auto const documentHasTrack = Tools::hasTrackAcsr(accessor, trackIdentifier);
             anlStrongAssert(documentHasTrack);
@@ -666,7 +669,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
     {
-        return juce::Result::fail("Invalid threaded threadsafe access");
+        return juce::Result::fail("Invalid threaded access");
     }
 
     if(identifier.isEmpty())

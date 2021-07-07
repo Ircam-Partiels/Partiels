@@ -99,7 +99,7 @@ namespace Document
             auto static constexpr groupItemFactor = documentItemFactor / 1000;
         };
 
-        juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor = nullptr);
+        juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor);
     } // namespace Exporter
 } // namespace Document
 

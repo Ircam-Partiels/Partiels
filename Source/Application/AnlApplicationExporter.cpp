@@ -137,7 +137,7 @@ void Application::Exporter::exportToFile()
     mProcess = std::async([=, this, file = fc.getResult()]() -> ProcessResult
                           {
                               juce::Thread::setCurrentThreadName("Exporter");
-                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, identifier, options, mShoulAbort, getSizeFor);
+                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, "", identifier, options, mShoulAbort, getSizeFor);
                               triggerAsyncUpdate();
                               if(result.failed())
                               {

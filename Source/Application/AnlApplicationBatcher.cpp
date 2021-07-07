@@ -229,7 +229,7 @@ void Application::Batcher::process()
                                       std::this_thread::sleep_for(20ms);
                                   }
 
-                                  auto const result = Document::Exporter::toFile(mDocumentAccessor, file, identifier, options, mShoulAbort, nullptr);
+                                  auto const result = Document::Exporter::toFile(mDocumentAccessor, file, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort, nullptr);
                                   if(result.failed())
                                   {
                                       triggerAsyncUpdate();
@@ -237,7 +237,7 @@ void Application::Batcher::process()
                                   }
                               }
                               triggerAsyncUpdate();
-                              return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Batch processing succeeded!"), "");
+                              return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Batch processing succeeded!"), juce::translate("The files have been successfully exported to DIRNAME.").replace("DIRNAME", file.getFullPathName()));
                           });
 }
 
