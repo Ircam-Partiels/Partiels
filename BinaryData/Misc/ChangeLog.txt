@@ -1,5 +1,6 @@
 v0.0.8 (alpha)
 
+- Imp: Text related to loading documents from the start panel (#111)
 - Add: Batch processing (#110)
 - Imp: Add more commands and undo/redo mechanism to audio channel panels (#109)
 - Fix: Prevent to open document created with a newer version of the application (#107)
