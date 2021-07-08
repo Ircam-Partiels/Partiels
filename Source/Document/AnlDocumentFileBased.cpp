@@ -7,10 +7,10 @@ Document::Accessor const& Document::FileBased::getDefaultAccessor()
     return mDefaultDdocument;
 }
 
-Document::FileBased::FileBased(Accessor& accessor, Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
+Document::FileBased::FileBased(Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle)
 : juce::FileBasedDocument(fileExtension, fileWildCard, juce::translate(openFileDialogTitle), juce::translate(saveFileDialogTitle))
-, mAccessor(accessor)
 , mDirector(director)
+, mAccessor(mDirector.getAccessor())
 , mFileExtension(fileExtension)
 {
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);

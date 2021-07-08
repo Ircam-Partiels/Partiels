@@ -485,7 +485,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             Document::Accessor copyAcsr;
             juce::UndoManager copyUndoManager;
             Document::Director copyDirector{copyAcsr, Instance::get().getAudioFormatManager(), copyUndoManager};
-            Document::FileBased copyFileBased{copyAcsr, copyDirector, Instance::getFileExtension(), Instance::getFileWildCard(), "Open a document", "Save the document"};
+            Document::FileBased copyFileBased{copyDirector, Instance::getFileExtension(), Instance::getFileWildCard(), "Open a document", "Save the document"};
             if(copyFileBased.loadFromUserSpecifiedFile(true).failed())
             {
                 return true;

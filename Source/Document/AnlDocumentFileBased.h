@@ -12,7 +12,7 @@ namespace Document
     , private juce::AsyncUpdater
     {
     public:
-        FileBased(Accessor& accessor, Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
+        FileBased(Director& director, juce::String const& fileExtension, juce::String const& fileWildCard, juce::String const& openFileDialogTitle, juce::String const& saveFileDialogTitle);
         ~FileBased() override;
 
         Accessor const& getDefaultAccessor();
@@ -36,8 +36,8 @@ namespace Document
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
 
-        Accessor& mAccessor;
         Director& mDirector;
+        Accessor& mAccessor;
         juce::String const mFileExtension;
         Accessor::Listener mListener{typeid(*this).name()};
         Track::Accessor::Listener mTrackListener{typeid(*this).name()};
