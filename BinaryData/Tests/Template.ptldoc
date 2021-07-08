@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<document AnlModelVersion="8" viewport_x="0" viewport_y="0" path="/Users/guillot/Ircam/Partiels/BinaryData/Tests/Template.ptldoc"
+          grid="2">
+  <reader>
+    <value file="/Users/guillot/Nextcloud/Sounds/Sound1.wav" channel="0"/>
+  </reader>
+  <reader>
+    <value file="/Users/guillot/Nextcloud/Sounds/Sound1.wav" channel="1"/>
+  </reader>
+  <layout value="047bfa990a394356a895e1f8793128b0"/>
+  <layout value="1d05662c03f64e9a9df0ff4aa9feb187"/>
+  <timeZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="3.672154195011338"
+            minimumLength="0.01160997732426304" visibleRange_start="0.0"
+            visibleRange_end="3.672154195011338">
+    <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="0"
+          tickPowerBase="2.0" tickDivisionFactor="10.0"/>
+  </timeZoom>
+  <transport AnlModelVersion="8" startPlayhead="0.3790347837248106" looping="0"
+             loopRange_start="0.0" loopRange_end="0.0" gain="3.981071705534973"/>
+  <groups AnlModelVersion="8" identifier="047bfa990a394356a895e1f8793128b0"
+          name="Waveform - Energy" height="493" colour="0" expanded="0">
+    <layout value="fa190e006b4043f59863beb6e7e91a51"/>
+    <layout value="edd3dcbb3e844ea0a03e228c1ae1f078"/>
+    <zoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <groups AnlModelVersion="8" identifier="1d05662c03f64e9a9df0ff4aa9feb187"
+          name="Spectrum - Centroid - F0" height="493" colour="ff000000"
+          expanded="0">
+    <layout value="d07bc420c30e4b76a693c186c47add46"/>
+    <layout value="677964215ad74584a1214c09ffdf9b68"/>
+    <layout value="49f8d8a3f5954d939b4cbbf0517daa30"/>
+    <zoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+          minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </zoom>
+  </groups>
+  <tracks AnlModelVersion="8" identifier="fa190e006b4043f59863beb6e7e91a51"
+          name="Energy" file="" height="140" zoomLink="1">
+    <key identifier="bbc-vamp-plugins:bbc-energy" feature="rmsenergy"/>
+    <state blockSize="1024" stepSize="1024" windowType="3">
+      <parameters key="avgpercentile" value="3.0"/>
+      <parameters key="avgwindow" value="1.0"/>
+      <parameters key="dipthresh" value="3.0"/>
+      <parameters key="root" value="1.0"/>
+      <parameters key="threshold" value="1.0"/>
+    </state>
+    <colours map="7" background="ffffff" foreground="ffd19200" text="ffd19200"
+             shadow="ff000000"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom AnlModelVersion="8" globalRange_start="-1.0" globalRange_end="1.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-1.0"
+               visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="0"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks AnlModelVersion="8" identifier="49f8d8a3f5954d939b4cbbf0517daa30"
+          name="Reassigned Spectrum" file="" height="140" zoomLink="1">
+    <key identifier="supervp:supervpspectrogramreaspectrum" feature="spectrogram"/>
+    <state blockSize="1024" stepSize="256" windowType="3">
+      <parameters key="fftoversampling" value="0.0"/>
+      <parameters key="windowtype" value="0.0"/>
+    </state>
+    <colours map="7" background="ff000000" foreground="ffffffff" text="ffffffff"
+             shadow="ff000000"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom AnlModelVersion="8" globalRange_start="-120.0" globalRange_end="0.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-120.0"
+               visibleRange_end="0.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="513.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="513.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks AnlModelVersion="8" identifier="677964215ad74584a1214c09ffdf9b68"
+          name="Feature Scoring" file="" height="140" zoomLink="1">
+    <key identifier="supervp:supervpf0featurescoring" feature="fundamental"/>
+    <state blockSize="1024" stepSize="256" windowType="3">
+      <parameters key="envelopeweight" value="0.1400000005960464"/>
+      <parameters key="fftoversampling" value="0.0"/>
+      <parameters key="maxpitch" value="1000.0"/>
+      <parameters key="maxspectrumfreq" value="3000.0"/>
+      <parameters key="minpitch" value="50.0"/>
+      <parameters key="relnoisethreshold" value="50.0"/>
+      <parameters key="scoretheshold" value="50.0"/>
+      <parameters key="smoothorder" value="1.0"/>
+      <parameters key="spectralmatchweight" value="0.2599999904632568"/>
+      <parameters key="windowtype" value="0.0"/>
+    </state>
+    <colours map="7" background="ffffff" foreground="ff009a1c" text="ff009a1c"
+             shadow="ff000000"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="22050.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
+               visibleRange_end="22050.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="2"
+            tickPowerBase="10.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks AnlModelVersion="8" identifier="d07bc420c30e4b76a693c186c47add46"
+          name="Spectral Centroid" file="" height="140" zoomLink="1">
+    <key identifier="vamp-example-plugins:spectralcentroid" feature="linearcentroid"/>
+    <state blockSize="1024" stepSize="1024" windowType="3"/>
+    <colours map="7" background="0" foreground="ffd6d900" text="ffd6d900"
+             shadow="ff000000"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="22050.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
+               visibleRange_end="22050.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="0"
+            tickPowerBase="10.0" tickDivisionFactor="4.0"/>
+    </valueZoom>
+    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+  <tracks AnlModelVersion="8" identifier="edd3dcbb3e844ea0a03e228c1ae1f078"
+          name="Waveform" file="" height="140" zoomLink="1">
+    <key identifier="supervp:superwaveform" feature="peaks"/>
+    <state blockSize="64" stepSize="32" windowType="3"/>
+    <colours map="7" background="0" foreground="ff0038a6" text="0" shadow="ff000000"/>
+    <channelsLayout value="1"/>
+    <channelsLayout value="1"/>
+    <valueZoom AnlModelVersion="8" globalRange_start="-1.0" globalRange_end="1.0"
+               minimumLength="1.192092895507812e-7" visibleRange_start="-1.0"
+               visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </valueZoom>
+    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+             minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
+      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+            tickPowerBase="2.0" tickDivisionFactor="5.0"/>
+    </binZoom>
+  </tracks>
+</document>
