@@ -60,7 +60,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                }
                            }
                        })
-, mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "BlackmanHarris"}, [&](size_t index)
+, mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "Blackman-Harris"}, [&](size_t index)
                       {
                           mDirector.startAction();
                           if(!canModifyProcessor())
@@ -75,40 +75,15 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                           mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window type"));
                       })
-, mPropertyWindowSize("Window Size", "The window size of the FFT.", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"}, [&](size_t index)
-                      {
-                          mDirector.startAction();
-                          if(!canModifyProcessor())
-                          {
-                              mListener.onAttrChanged(mAccessor, AttrType::results);
-                              mDirector.endAction(ActionState::abort);
-                              return;
-                          }
-
-                          auto state = mAccessor.getAttr<AttrType::state>();
-                          auto const overlapping = state.blockSize / state.stepSize;
-                          state.blockSize = static_cast<size_t>(std::pow(2.0, static_cast<int>(index) + 3));
-                          state.stepSize = state.blockSize / overlapping;
-                          mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window size"));
-                      })
-, mPropertyWindowOverlapping("Window Overlapping", "The window overlapping of the FFT.", "x", std::vector<std::string>{}, [&](size_t index)
-                             {
-                                 mDirector.startAction();
-                                 if(!canModifyProcessor())
-                                 {
-                                     mListener.onAttrChanged(mAccessor, AttrType::results);
-                                     mDirector.endAction(ActionState::abort);
-                                     return;
-                                 }
-
-                                 auto state = mAccessor.getAttr<AttrType::state>();
-                                 state.stepSize = state.blockSize / std::max(static_cast<size_t>(std::pow(2.0, static_cast<int>(index))), 1_z);
-                                 mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                                 mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window overlapping"));
-                             })
-, mPropertyBlockSize("Block Size", "The block size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
+, mPropertyBlockSize("Block Size", "The block size used by the track.", "samples", std::vector<std::string>{"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"}, [&](size_t index)
                      {
+                         juce::ignoreUnused(index);
+                         auto const blockSize = static_cast<size_t>(mPropertyBlockSize.entry.getText().getIntValue());
+                         auto state = mAccessor.getAttr<AttrType::state>();
+                         if(state.blockSize == blockSize)
+                         {
+                             return;
+                         }
                          mDirector.startAction();
                          if(!canModifyProcessor())
                          {
@@ -116,14 +91,22 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                              mDirector.endAction(ActionState::abort);
                              return;
                          }
-
-                         auto state = mAccessor.getAttr<AttrType::state>();
-                         state.blockSize = static_cast<size_t>(value);
+                         auto const overlapping = static_cast<double>(state.blockSize) / static_cast<double>(state.stepSize);
+                         state.blockSize = blockSize;
+                         state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) / overlapping));
                          mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track block size"));
                      })
-, mPropertyStepSize("Step Size", "The step size used by the track. [1:65536]", "samples", {1.0f, 65536.0f}, 1.0f, [&](float value)
+, mPropertyStepSize("Step Size", "The step size (overlapping) used by the track.", "x", std::vector<std::string>{}, [&](size_t index)
                     {
+                        juce::ignoreUnused(index);
+                        auto state = mAccessor.getAttr<AttrType::state>();
+                        auto const stepSize = static_cast<size_t>(mPropertyStepSize.entry.getText().getIntValue());
+                        if(state.stepSize == stepSize)
+                        {
+                            return;
+                        }
+
                         mDirector.startAction();
                         if(!canModifyProcessor())
                         {
@@ -132,10 +115,9 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                             return;
                         }
 
-                        auto state = mAccessor.getAttr<AttrType::state>();
-                        state.stepSize = static_cast<size_t>(value);
+                        state.stepSize = stepSize;
                         mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track step size"));
+                        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track window overlapping"));
                     })
 , mPropertyPreset("Preset", "The preset of the track", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
                   {
@@ -403,6 +385,11 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                              showChannelLayout();
                          })
 {
+    mPropertyBlockSize.entry.getProperties().set("isNumber", true);
+    NumberField::Label::storeProperties(mPropertyBlockSize.entry.getProperties(), {1.0, 65536.0}, 1.0, 0, "samples");
+    mPropertyStepSize.entry.getProperties().set("isNumber", true);
+    NumberField::Label::storeProperties(mPropertyStepSize.entry.getProperties(), {1.0, 65536.0}, 1.0, 0, "samples");
+
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -465,14 +452,10 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
                     {
                         components.push_back(mPropertyWindowType);
-                        components.push_back(mPropertyWindowSize);
-                        components.push_back(mPropertyWindowOverlapping);
                     }
-                    else
-                    {
-                        components.push_back(mPropertyBlockSize);
-                        components.push_back(mPropertyStepSize);
-                    }
+
+                    components.push_back(mPropertyBlockSize);
+                    components.push_back(mPropertyStepSize);
 
                     mParameterProperties.clear();
                     for(auto const& parameter : description.parameters)
@@ -589,23 +572,17 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             {
                 auto const description = mAccessor.getAttr<AttrType::description>();
                 auto const state = mAccessor.getAttr<AttrType::state>();
-                if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
+                mPropertyWindowType.entry.setSelectedId(static_cast<int>(state.windowType) + 1, silent);
+                mPropertyBlockSize.entry.setEditableText(description.inputDomain == Plugin::InputDomain::TimeDomain);
+                mPropertyBlockSize.entry.setText(juce::String(state.blockSize) + "samples", silent);
+                mPropertyStepSize.entry.setEditableText(description.inputDomain == Plugin::InputDomain::TimeDomain);
+                mPropertyStepSize.entry.clear(silent);
+                for(int i = 1; static_cast<size_t>(i) <= state.blockSize; i *= 2)
                 {
-                    mPropertyWindowType.entry.setSelectedId(static_cast<int>(state.windowType) + 1, silent);
-                    auto const windowSizeIndex = static_cast<int>(std::log(state.blockSize) / std::log(2)) - 2;
-                    mPropertyWindowSize.entry.setSelectedId(windowSizeIndex, silent);
-                    mPropertyWindowOverlapping.entry.clear(silent);
-                    for(int i = 1; static_cast<size_t>(i) <= state.blockSize; i *= 2)
-                    {
-                        mPropertyWindowOverlapping.entry.addItem(juce::String(i) + "x", static_cast<int>(state.blockSize) / i);
-                    }
-                    mPropertyWindowOverlapping.entry.setSelectedId(static_cast<int>(state.stepSize), silent);
+                    mPropertyStepSize.entry.addItem(juce::String(i) + "samples", i);
                 }
-                else
-                {
-                    mPropertyBlockSize.entry.setValue(static_cast<double>(state.blockSize), silent);
-                    mPropertyStepSize.entry.setValue(static_cast<double>(state.stepSize), silent);
-                }
+                mPropertyStepSize.entry.setText(juce::String(state.stepSize) + "samples", silent);
+
                 for(auto const& parameter : state.parameters)
                 {
                     auto it = mParameterProperties.find(parameter.first);

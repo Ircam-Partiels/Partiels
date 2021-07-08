@@ -39,10 +39,8 @@ namespace Track
         PropertyTextButton mPropertyResultsFile;
         juce::TextEditor mPropertyResultsFileInfo;
         PropertyList mPropertyWindowType;
-        PropertyList mPropertyWindowSize;
-        PropertyList mPropertyWindowOverlapping;
-        PropertyNumber mPropertyBlockSize;
-        PropertyNumber mPropertyStepSize;
+        PropertyList mPropertyBlockSize;
+        PropertyList mPropertyStepSize;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mAccessor, ProgressBar::Mode::analysis};
