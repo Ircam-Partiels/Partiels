@@ -87,7 +87,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                                      "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
         }
     };
-    
+
     addAndMakeVisible(mPathsButton);
     mPathsButton.setClickingTogglesState(false);
     mPathsButton.onClick = [this]()
@@ -107,13 +107,13 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         {
             auto const fileName = file.getFileName();
             auto const duplicate = std::any_of(files.cbegin(), files.cend(), [&](auto const& f)
-            {
-                return f != file && f.getFileName() == fileName;
-            });
+                                               {
+                                                   return f != file && f.getFileName() == fileName;
+                                               });
             menu.addItem(fileName + (duplicate ? " (" + file.getFullPathName() + ")" : ""), [=]()
-            {
-                file.revealToUser();
-            });
+                         {
+                             file.revealToUser();
+                         });
         }
         menu.showAt(&mPathsButton);
     };
