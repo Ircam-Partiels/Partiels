@@ -66,4 +66,56 @@ juce::Result Application::CommandLine::analyzeAndExport(juce::File const& audioF
     return Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
 }
 
+int Application::CommandLine::run(int argc, char* argv[])
+{
+    juce::ConsoleApplication app;
+    app.addHelpCommand("--help|-h", "Usage:", true);
+    app.addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
+    app.addDefaultCommand(
+        {"",
+         "audio-file template-file output-directory options-file",
+         "Analyzes an audio file and exports the results",
+         "Analyzes an audio file with a given template and exports the results with given options in a directory.",
+         [](juce::ArgumentList const& args)
+         {
+             if(args.size() < 4)
+             {
+                 juce::ConsoleApplication::fail("Missing arguments");
+             }
+             if(args.size() > 4)
+             {
+                 juce::ConsoleApplication::fail("Extra arguments");
+             }
+             auto const audioFile = args[0].resolveAsExistingFile();
+             auto const templateFile = args[1].resolveAsExistingFile();
+             auto const outputDir = args[2].resolveAsFile();
+             if(!outputDir.exists())
+             {
+                 auto const result = outputDir.createDirectory();
+                 if(result.failed())
+                 {
+                     juce::ConsoleApplication::fail(result.getErrorMessage());
+                 }
+             }
+             if(!outputDir.isDirectory())
+             {
+                 juce::ConsoleApplication::fail("Could not find folder: " + outputDir.getFullPathName());
+             }
+             auto const optionsFile = args[3].resolveAsExistingFile();
+             juce::MessageManager::getInstance();
+             LookAndFeel lookAndFeel;
+             juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
+             auto const result = analyzeAndExport(audioFile, templateFile, outputDir, optionsFile, "");
+             juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+             juce::MessageManager::deleteInstance();
+             juce::DeletedAtShutdown::deleteAll();
+             if(result.failed())
+             {
+                 juce::ConsoleApplication::fail(result.getErrorMessage());
+             }
+         }});
+
+    return app.findAndRunCommand(argc, argv);
+}
+
 ANALYSE_FILE_END
