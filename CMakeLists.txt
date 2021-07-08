@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
+set(CMAKE_XCODE_GENERATE_SCHEME true)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "" FORCE)
 set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
@@ -195,3 +196,4 @@ endif()
 
 enable_testing()
 add_test(NAME AllTest COMMAND PartielsTest)
+set_target_properties(PartielsCLI PROPERTIES XCODE_SCHEME_ARGUMENTS "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests/Sound.wav ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests/Template.ptldoc ${CMAKE_CURRENT_SOURCE_DIR}/build/CLIOut ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests/exportOptions.xml")
