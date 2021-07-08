@@ -27,14 +27,20 @@ juce_add_gui_app(Partiels
     PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string></dict></plist>"
     )
 
-juce_add_console_app(PartielsTest
+juce_add_console_app(PartielsCLI
     PRODUCT_NAME                        "PartielsTest"
-    VERSION                             "0.0.!")
+    VERSION                             "0.0.8")
+
+juce_add_console_app(PartielsTest
+    PRODUCT_NAME                        "partiels"
+    VERSION                             "0.0.8")
 
 juce_generate_juce_header(Partiels)
+juce_generate_juce_header(PartielsCLI)
 juce_generate_juce_header(PartielsTest)
 
 set_target_properties(Partiels PROPERTIES CXX_STANDARD 20)
+set_target_properties(PartielsCLI PROPERTIES CXX_STANDARD 20)
 set_target_properties(PartielsTest PROPERTIES CXX_STANDARD 20)
 
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
@@ -72,6 +78,7 @@ file(GLOB TranslationsSources ${BINARYDATA_DIRECTORY}/Translations/*.txt)
 source_group("Source/Translations" FILES ${TranslationsSources})
 
 target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
+target_sources(PartielsCLI PRIVATE ${PartielsSources} ${SOURCES_DIRECTORY}/CLI.cpp)
 target_sources(PartielsTest PRIVATE ${PartielsSources} ${SOURCES_DIRECTORY}/Test.cpp)
 
 set(PartielsDefinitions
@@ -92,13 +99,16 @@ set(PartielsDefinitions
     )
 
 target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
+target_compile_definitions(PartielsCLI PRIVATE ${PartielsDefinitions})
 target_compile_definitions(PartielsTest PRIVATE ${PartielsDefinitions})
 
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
+target_include_directories(PartielsCLI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
 target_include_directories(PartielsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
 
 if(WIN32)
 target_include_directories(Partiels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
+target_include_directories(PartielsCLI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
 target_include_directories(PartielsTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
 endif()
 
@@ -131,6 +141,20 @@ target_link_libraries(Partiels PRIVATE
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
+target_link_libraries(PartielsCLI PRIVATE
+    vamp
+    IconsData
+    CursorsData
+    FontsData
+    TranslationsData
+    MiscData
+    juce::juce_gui_extra
+    juce::juce_audio_formats
+    juce::juce_audio_devices
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags)
+
 target_link_libraries(PartielsTest PRIVATE
     vamp
     IconsData
@@ -143,9 +167,6 @@ target_link_libraries(PartielsTest PRIVATE
     juce::juce_audio_devices
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags
-    juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
@@ -155,15 +176,20 @@ if(CMAKE_GENERATOR STREQUAL Xcode)
 endif()
 
 target_enable_xcode_full_warnings(Partiels)
+target_enable_xcode_full_warnings(PartielsCLI)
+target_enable_xcode_full_warnings(PartielsTest)
 
 if(WIN32)
 target_compile_options(Partiels PRIVATE /wd4244)
+target_compile_options(PartielsCLI PRIVATE /wd4244)
 target_compile_options(PartielsTest PRIVATE /wd4244)
 elseif(APPLE)
 target_compile_options(Partiels PRIVATE -fno-aligned-allocation)
+target_compile_options(PartielsCLI PRIVATE -fno-aligned-allocation)
 target_compile_options(PartielsTest PRIVATE -fno-aligned-allocation)
 else()
 target_link_libraries(Partiels PRIVATE atomic)
+target_link_libraries(PartielsCLI PRIVATE atomic)
 target_link_libraries(PartielsTest PRIVATE atomic)
 endif()
 
