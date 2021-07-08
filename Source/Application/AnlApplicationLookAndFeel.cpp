@@ -319,6 +319,21 @@ void Application::LookAndFeel::positionComboBoxText(juce::ComboBox& box, juce::L
     label.setFont(getComboBoxFont(box));
 }
 
+juce::Label* Application::LookAndFeel::createComboBoxTextBox(juce::ComboBox& box)
+{
+    auto const& properties = box.getProperties();
+    if(properties.getWithDefault("isNumber", false))
+    {
+        auto label = std::make_unique<NumberField::Label>();
+        if(label != nullptr)
+        {
+            label->loadProperties(properties, juce::NotificationType::dontSendNotification);
+        }
+        return label.release();
+    }
+    return juce::LookAndFeel_V4::createComboBoxTextBox(box);
+}
+
 void Application::LookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, juce::Rectangle<int> const& textArea, juce::TextLayout& textLayout)
 {
     auto constexpr cornerSize = 4.0f;
