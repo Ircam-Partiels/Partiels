@@ -9,7 +9,6 @@ ANALYSE_FILE_BEGIN
 class NumberField
 : public juce::Component
 , public juce::SettableTooltipClient
-, private juce::TextEditor::InputFilter
 {
 public:
     //! @brief The constructor.
@@ -19,7 +18,7 @@ public:
     void setValue(double value, juce::NotificationType const notification);
     double getValue() const;
 
-    void setRange(juce::Range<double> const& range, double newInterval, juce::NotificationType const notification);
+    void setRange(juce::Range<double> const& range, double interval, juce::NotificationType const notification);
     juce::Range<double> getRange() const;
     double getInterval() const;
 
@@ -48,17 +47,40 @@ public:
     // juce::SettableTooltipClient
     void setTooltip(juce::String const& newTooltip) override;
 
-private:
-    // juce::TextEditor::InputFilter
-    juce::String filterNewText(juce::TextEditor& editor, juce::String const& newInput) override;
+    class Label
+    : public juce::Label
+    , private juce::TextEditor::InputFilter
+    {
+    public:
+        Label();
+        ~Label() override = default;
 
-    juce::Label mLabel;
-    juce::String mSuffix;
-    juce::Range<double> mRange = {std::numeric_limits<double>::min(), std::numeric_limits<double>::max()};
-    double mInterval = 0.0;
-    int mNumDisplayedDecimals = -1;
-    int mNumEditedDecimals = 0;
-    double mValue = 0.0;
+        // juce::Label
+        juce::TextEditor* createEditorComponent() override;
+        void textWasChanged() override;
+        void editorShown(juce::TextEditor* editor) override;
+
+        void setRange(juce::Range<double> const& range, double interval, juce::NotificationType const notification);
+        juce::Range<double> getRange() const;
+        double getInterval() const;
+        void setNumDecimalsDisplayed(int numDecimals);
+        int getNumDecimalsDisplayed() const;
+        void setTextValueSuffix(juce::String const& suffix);
+        juce::String getTextValueSuffix() const;
+
+    private:
+        // juce::TextEditor::InputFilter
+        juce::String filterNewText(juce::TextEditor& editor, juce::String const& newInput) override;
+
+        juce::Range<double> mRange{0.0, 0.0};
+        double mInterval = 0.0;
+        int mNumEditedDecimals = 0;
+        int mNumDisplayedDecimals = -1;
+        juce::String mSuffix;
+    };
+
+private:
+    Label mLabel;
 };
 
 ANALYSE_FILE_END

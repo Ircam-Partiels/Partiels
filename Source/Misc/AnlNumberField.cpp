@@ -3,88 +3,43 @@
 
 ANALYSE_FILE_BEGIN
 
-NumberField::NumberField()
+NumberField::Label::Label()
 {
-    mLabel.setRepaintsOnMouseActivity(true);
-    mLabel.setEditable(true);
-    mLabel.setMinimumHorizontalScale(1.0f);
-    mLabel.setBorderSize({});
-    mLabel.onEditorShow = [&]()
-    {
-        if(auto* editor = mLabel.getCurrentTextEditor())
-        {
-            editor->setText("", false);
-            auto const font = mLabel.getFont();
-            editor->setFont(font);
-            editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
-            editor->setJustification(mLabel.getJustificationType());
-            editor->setBorder(mLabel.getBorderSize());
-            editor->setInputFilter(this, false);
-            editor->setMultiLine(false);
-            editor->setText(juce::String(mValue, mNumEditedDecimals), false);
-            editor->moveCaretToTop(false);
-            editor->moveCaretToEnd(true);
-        }
-        if(onEditorShow != nullptr)
-        {
-            onEditorShow();
-        }
-    };
-    mLabel.onEditorHide = [&]()
-    {
-        if(onEditorHide != nullptr)
-        {
-            onEditorHide();
-        }
-    };
-    mLabel.onTextChange = [&]()
-    {
-        setValue(mLabel.getText().getDoubleValue(), juce::NotificationType::sendNotificationSync);
-    };
-
-    addAndMakeVisible(mLabel);
+    setRepaintsOnMouseActivity(true);
+    setEditable(true);
+    setMinimumHorizontalScale(1.0f);
+    setBorderSize({});
+    setRange({std::numeric_limits<double>::min(), std::numeric_limits<double>::max()}, 0.0, juce::NotificationType::dontSendNotification);
+    setKeyboardType(juce::TextInputTarget::VirtualKeyboardType::decimalKeyboard);
 }
 
-void NumberField::setValue(double value, juce::NotificationType const notification)
+juce::TextEditor* NumberField::Label::createEditorComponent()
 {
-    anlWeakAssert(!std::isnan(value) && std::isfinite(value));
-    if(mInterval > 0.0)
+    auto* editor = juce::Label::createEditorComponent();
+    if(editor != nullptr)
     {
-        value = std::round((value - mRange.getStart()) / mInterval) * mInterval + mRange.getStart();
+        auto const font = getFont();
+        editor->setFont(font);
+        editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
+        editor->setJustification(getJustificationType());
+        editor->setBorder(getBorderSize());
+        editor->setInputFilter(this, false);
+        editor->setMultiLine(false);
     }
-    value = mRange.clipValue(value);
-    auto const numDecimals = mNumDisplayedDecimals >= 0 ? mNumDisplayedDecimals : (mNumEditedDecimals > 0 ? 2 : 0);
-    mLabel.setText(juce::String(value, numDecimals) + mSuffix, juce::NotificationType::dontSendNotification);
-    if(std::abs(value - mValue) > std::numeric_limits<double>::epsilon())
+    return editor;
+}
+
+void NumberField::Label::editorShown(juce::TextEditor* editor)
+{
+    if(editor != nullptr)
     {
-        mValue = value;
-        if(notification == juce::NotificationType::sendNotification || notification == juce::NotificationType::sendNotificationSync)
-        {
-            if(onValueChanged != nullptr)
-            {
-                onValueChanged(getValue());
-            }
-        }
-        else if(notification == juce::NotificationType::sendNotificationAsync)
-        {
-            juce::WeakReference<juce::Component> target(this);
-            juce::MessageManager::callAsync([=, this]
-                                            {
-                                                if(target.get() != nullptr && onValueChanged != nullptr)
-                                                {
-                                                    onValueChanged(getValue());
-                                                }
-                                            });
-        }
+        editor->setText(juce::String(getText().getDoubleValue(), mNumEditedDecimals), false);
+        editor->moveCaretToTop(false);
+        editor->moveCaretToEnd(true);
     }
 }
 
-double NumberField::getValue() const
-{
-    return mValue;
-}
-
-void NumberField::setRange(juce::Range<double> const& range, double interval, juce::NotificationType const notification)
+void NumberField::Label::setRange(juce::Range<double> const& range, double interval, juce::NotificationType const notification)
 {
     anlWeakAssert(interval >= 0.0);
     interval = std::max(0.0, interval);
@@ -92,8 +47,6 @@ void NumberField::setRange(juce::Range<double> const& range, double interval, ju
     {
         mRange = range;
         mInterval = interval;
-        setValue(mValue, notification);
-
         auto getNumDecimals = [&]()
         {
             if(interval <= 0.0)
@@ -110,68 +63,71 @@ void NumberField::setRange(juce::Range<double> const& range, double interval, ju
             }
             return numDecimals;
         };
-        auto const numDecimals = getNumDecimals();
-        if(mNumEditedDecimals != numDecimals)
+        mNumEditedDecimals = getNumDecimals();
+        if(auto* editor = getCurrentTextEditor())
         {
-            mNumEditedDecimals = numDecimals;
-            if(auto* editor = mLabel.getCurrentTextEditor())
-            {
-                editor->setText(juce::String(mValue, mNumEditedDecimals), false);
-            }
+            editor->setText(juce::String(getText().getDoubleValue(), mNumEditedDecimals), notification == juce::NotificationType::dontSendNotification ? false : true);
+        }
+        else
+        {
+            setText(getText(), notification);
         }
     }
 }
 
-juce::Range<double> NumberField::getRange() const
+juce::Range<double> NumberField::Label::getRange() const
 {
     return mRange;
 }
 
-double NumberField::getInterval() const
+double NumberField::Label::getInterval() const
 {
     return mInterval;
 }
 
-void NumberField::setTextValueSuffix(juce::String const& suffix)
-{
-    if(mSuffix != suffix)
-    {
-        mSuffix = suffix;
-        setValue(mValue, juce::NotificationType::dontSendNotification);
-    }
-}
-
-juce::String NumberField::getTextValueSuffix() const
-{
-    return mSuffix;
-}
-
-void NumberField::setNumDecimalsDisplayed(int numDecimals)
+void NumberField::Label::setNumDecimalsDisplayed(int numDecimals)
 {
     numDecimals = std::max(numDecimals, -1);
     if(mNumDisplayedDecimals != numDecimals)
     {
         mNumDisplayedDecimals = numDecimals;
-        setValue(mValue, juce::NotificationType::dontSendNotification);
+        setText(getText(), juce::NotificationType::dontSendNotification);
     }
 }
 
-int NumberField::getNumDecimalsDisplayed() const
+int NumberField::Label::getNumDecimalsDisplayed() const
 {
     return mNumDisplayedDecimals;
 }
 
-void NumberField::setJustificationType(juce::Justification newJustification)
+void NumberField::Label::setTextValueSuffix(juce::String const& suffix)
 {
-    mLabel.setJustificationType(newJustification);
+    if(mSuffix != suffix)
+    {
+        mSuffix = suffix;
+        setText(getText(), juce::NotificationType::dontSendNotification);
+    }
 }
 
-juce::Justification NumberField::getJustificationType() const
+juce::String NumberField::Label::getTextValueSuffix() const
 {
-    return mLabel.getJustificationType();
+    return mSuffix;
 }
 
-juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String const& newInput)
+void NumberField::Label::textWasChanged()
+{
+    auto value = getText().getDoubleValue();
+    anlWeakAssert(!std::isnan(value) && std::isfinite(value));
+    if(mInterval > 0.0)
+    {
+        value = std::round((value - mRange.getStart()) / mInterval) * mInterval + mRange.getStart();
+    }
+    value = mRange.clipValue(value);
+    auto const numDecimals = mNumDisplayedDecimals >= 0 ? mNumDisplayedDecimals : (mNumEditedDecimals > 0 ? 2 : 0);
+    setText(juce::String(value, numDecimals) + mSuffix, juce::NotificationType::dontSendNotification);
+}
+
+juce::String NumberField::Label::filterNewText(juce::TextEditor& editor, juce::String const& newInput)
 {
     juce::ignoreUnused(editor);
     if(mNumEditedDecimals <= 0)
@@ -187,6 +143,88 @@ juce::String NumberField::filterNewText(juce::TextEditor& editor, juce::String c
         getLookAndFeel().playAlertSound();
     }
     return newInput.retainCharacters("-0123456789.");
+}
+
+NumberField::NumberField()
+{
+    mLabel.onEditorShow = [this]()
+    {
+        if(onEditorShow != nullptr)
+        {
+            onEditorShow();
+        }
+    };
+    mLabel.onEditorHide = [this]()
+    {
+        if(onEditorHide != nullptr)
+        {
+            onEditorHide();
+        }
+    };
+    mLabel.onTextChange = [this]()
+    {
+        if(onValueChanged != nullptr)
+        {
+            onValueChanged(getValue());
+        }
+    };
+
+    addAndMakeVisible(mLabel);
+}
+
+void NumberField::setValue(double value, juce::NotificationType const notification)
+{
+    mLabel.setText(juce::String(value), notification);
+}
+
+double NumberField::getValue() const
+{
+    return mLabel.getText().getDoubleValue();
+}
+
+void NumberField::setRange(juce::Range<double> const& range, double interval, juce::NotificationType const notification)
+{
+    mLabel.setRange(range, interval, notification);
+}
+
+juce::Range<double> NumberField::getRange() const
+{
+    return mLabel.getRange();
+}
+
+double NumberField::getInterval() const
+{
+    return mLabel.getInterval();
+}
+
+void NumberField::setTextValueSuffix(juce::String const& suffix)
+{
+    mLabel.setTextValueSuffix(suffix);
+}
+
+juce::String NumberField::getTextValueSuffix() const
+{
+    return mLabel.getTextValueSuffix();
+}
+
+void NumberField::setNumDecimalsDisplayed(int numDecimals)
+{
+    mLabel.setNumDecimalsDisplayed(numDecimals);
+}
+
+int NumberField::getNumDecimalsDisplayed() const
+{
+    return mLabel.getNumDecimalsDisplayed();
+}
+
+void NumberField::setJustificationType(juce::Justification newJustification)
+{
+    mLabel.setJustificationType(newJustification);
+}
+
+juce::Justification NumberField::getJustificationType() const
+{
+    return mLabel.getJustificationType();
 }
 
 bool NumberField::isBeingEdited() const
