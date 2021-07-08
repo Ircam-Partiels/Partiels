@@ -145,6 +145,39 @@ juce::String NumberField::Label::filterNewText(juce::TextEditor& editor, juce::S
     return newInput.retainCharacters("-0123456789.");
 }
 
+void NumberField::Label::loadProperties(juce::NamedValueSet const& properties, juce::NotificationType const notification)
+{
+    auto const& suffix = properties.getWithDefault("suffix", mSuffix);
+    anlWeakAssert(suffix.isString());
+    if(suffix.isString())
+    {
+        setTextValueSuffix(suffix.toString());
+    }
+    auto const& numDisplayDecimals = properties.getWithDefault("numDisplayDecimals", mNumDisplayedDecimals);
+    anlWeakAssert(numDisplayDecimals.isInt());
+    if(numDisplayDecimals.isInt())
+    {
+        setNumDecimalsDisplayed(static_cast<int>(numDisplayDecimals));
+    }
+    auto const& rangeMin = properties.getWithDefault("rangeMin", mRange.getStart());
+    auto const& rangeMax = properties.getWithDefault("rangeMax", mRange.getEnd());
+    auto const& interval = properties.getWithDefault("interval", mInterval);
+    anlWeakAssert(rangeMin.isDouble() && rangeMax.isDouble() && interval.isDouble());
+    if(rangeMin.isDouble() && rangeMax.isDouble() && interval.isDouble())
+    {
+        setRange({static_cast<double>(rangeMin), static_cast<double>(rangeMax)}, static_cast<double>(interval), notification);
+    }
+}
+
+void NumberField::Label::storeProperties(juce::NamedValueSet& properties, juce::Range<double> const& range, double interval, int numDecimals, juce::String const& suffix)
+{
+    properties.set("rangeMin", range.getStart());
+    properties.set("rangeMax", range.getEnd());
+    properties.set("interval", interval);
+    properties.set("numDisplayDecimals", numDecimals);
+    properties.set("suffix", suffix);
+}
+
 NumberField::NumberField()
 {
     mLabel.onEditorShow = [this]()

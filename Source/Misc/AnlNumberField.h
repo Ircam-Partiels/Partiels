@@ -68,6 +68,9 @@ public:
         void setTextValueSuffix(juce::String const& suffix);
         juce::String getTextValueSuffix() const;
 
+        void loadProperties(juce::NamedValueSet const& properties, juce::NotificationType const notification);
+        static void storeProperties(juce::NamedValueSet& properties, juce::Range<double> const& range, double interval, int numDecimals, juce::String const& suffix);
+
     private:
         // juce::TextEditor::InputFilter
         juce::String filterNewText(juce::TextEditor& editor, juce::String const& newInput) override;
