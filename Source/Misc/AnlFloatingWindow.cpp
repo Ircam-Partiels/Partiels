@@ -2,14 +2,21 @@
 
 ANALYSE_FILE_BEGIN
 
-FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton, bool addToDesktop)
+FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton, bool addToDesktop, bool alwayOnTop)
 : juce::DialogWindow(name, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(ColourIds::backgroundColourId), escapeKeyTriggersCloseButton, addToDesktop)
 {
+    if(alwayOnTop)
+    {
+        setAlwaysOnTop(true);
+    }
+    else
+    {
 #ifdef JUCE_MAC
-    setFloatingProperty(*this, true);
+        setFloatingProperty(*this, true);
 #else
-    juce::Desktop::getInstance().addFocusChangeListener(this);
+        juce::Desktop::getInstance().addFocusChangeListener(this);
 #endif
+    }
     lookAndFeelChanged();
     if(auto* commandManager = App::getApplicationCommandManager())
     {
@@ -82,9 +89,9 @@ void FloatingWindow::globalFocusChanged(juce::Component* focusedComponent)
 }
 #endif
 
-FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce::Component& content)
+FloatingWindowContainer::FloatingWindowContainer(juce::String const& title, juce::Component& content, bool alwayOnTop)
 : mContent(content)
-, mFloatingWindow(title)
+, mFloatingWindow(title, true, true, alwayOnTop)
 {
     auto constexpr max = std::numeric_limits<int>::max();
     mBoundsConstrainer.setMinimumOnscreenAmounts(max, 40, 40, 40);

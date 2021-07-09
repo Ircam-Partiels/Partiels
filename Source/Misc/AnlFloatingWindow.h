@@ -19,7 +19,7 @@ public:
     };
     // clang-format on
 
-    FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton = true, bool addToDesktop = true);
+    FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton = true, bool addToDesktop = true, bool alwayOnTop = false);
     ~FloatingWindow() override;
 
     std::function<void(void)> onChanged = nullptr;
@@ -47,7 +47,7 @@ class FloatingWindowContainer
 : public juce::Component
 {
 public:
-    FloatingWindowContainer(juce::String const& title, juce::Component& content);
+    FloatingWindowContainer(juce::String const& title, juce::Component& content, bool alwayOnTop = false);
     ~FloatingWindowContainer() override = default;
 
     virtual void show();
