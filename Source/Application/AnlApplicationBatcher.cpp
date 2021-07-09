@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::Batcher::Batcher()
-: FloatingWindowContainer("Batch Processing", *this)
+: FloatingWindowContainer("Batch Processing", *this, true)
 , mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::all, AudioFileLayout::ChannelLayout::all)
 , mExporterPanel(Instance::get().getDocumentAccessor(), nullptr)
