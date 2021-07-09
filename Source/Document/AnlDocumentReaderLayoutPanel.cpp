@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
-: FloatingWindowContainer("Audio Reader Layout", *this)
+: FloatingWindowContainer("Audio Reader Layout", *this, true)
 , mDirector(director)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
