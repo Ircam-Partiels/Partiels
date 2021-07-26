@@ -30,16 +30,15 @@ Application::LookAndFeel::ColourChart::ColourChart(Mode mode)
                 // clang-format off
                 return
                 {{
-                      juce::Colour(0xffF8F8F7)
-                    , juce::Colour(0xffAEB5B4)
-                    , juce::Colour(0xff7E7A7D)
-                    , juce::Colour(0xff27232B)
+                      juce::Colour(0xfff8f8f7)
+                    , juce::Colour(0xffaeb5b4)
+                    , juce::Colour(0xff7e7a7d)
+                    , juce::Colour(0xff27232b)
                     , juce::Colour(0xff000000)
                 }};
                 // clang-format on
             }
             break;
-
             case Mode::grass:
             {
                 // clang-format off
@@ -49,7 +48,8 @@ Application::LookAndFeel::ColourChart::ColourChart(Mode mode)
                     , juce::Colour(0xff84a98c)
                     , juce::Colour(0xff52796f)
                     , juce::Colour(0xff354f52)
-                    , juce::Colour(0xff2f3e46)}};
+                    , juce::Colour(0xff2f3e46)
+                }};
                 // clang-format on
             }
             break;
