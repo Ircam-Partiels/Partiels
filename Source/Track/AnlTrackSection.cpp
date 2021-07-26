@@ -102,27 +102,33 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
         Component::mouseWheelMove(event, wheel);
         return;
     }
-
-    switch(Tools::getDisplayType(mAccessor))
+    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal)
     {
-        case Tools::DisplayType::markers:
+        mouseMagnify(event, 1.0f + wheel.deltaX);
+    }
+    else
+    {
+        switch(Tools::getDisplayType(mAccessor))
+        {
+            case Tools::DisplayType::markers:
+                break;
+            case Tools::DisplayType::points:
+            {
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+            }
             break;
-        case Tools::DisplayType::points:
-        {
-            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-            auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+            case Tools::DisplayType::columns:
+            {
+                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
+                auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+            }
+            break;
         }
-        break;
-        case Tools::DisplayType::columns:
-        {
-            auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-            auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-            auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
-        }
-        break;
     }
 }
 

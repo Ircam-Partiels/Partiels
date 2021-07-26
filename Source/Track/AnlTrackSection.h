@@ -55,6 +55,7 @@ namespace Track
         ScrollBar mScrollBar{mAccessor};
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
+        ScrollHelper mScrollHelper;
     };
 } // namespace Track
 
