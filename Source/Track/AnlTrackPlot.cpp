@@ -831,7 +831,7 @@ void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
 {
     updateMode(event);
-    if(event.mods.isCtrlDown())
+    if(event.mods.isAltDown())
     {
         takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colours>().background);
     }
@@ -849,13 +849,13 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
 
 void Track::Plot::Overlay::updateMode(juce::MouseEvent const& event)
 {
-    if(event.mods.isCtrlDown() && !mSnapshotMode)
+    if(event.mods.isAltDown() && !mSnapshotMode)
     {
         mSnapshotMode = true;
         showCameraCursor(true);
         removeMouseListener(&mTransportPlayheadBar);
     }
-    else if(!event.mods.isCtrlDown() && mSnapshotMode)
+    else if(!event.mods.isAltDown() && mSnapshotMode)
     {
         mSnapshotMode = false;
         showCameraCursor(false);
