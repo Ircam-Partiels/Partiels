@@ -371,14 +371,17 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
     {
         return;
     }
-    auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-    auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const offset = static_cast<double>(wheel.deltaX) * visibleRange.getLength();
-    timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
-
-    auto viewportPosition = mViewport.getViewPosition();
-    viewportPosition.y += static_cast<int>(std::round(wheel.deltaY * 14.0f * 16.0f));
-    mViewport.setViewPosition(viewportPosition);
+    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::vertical)
+    {
+        mouseMagnify(event, 1.0f + wheel.deltaY);
+    }
+    else
+    {
+        auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+        auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        auto const offset = static_cast<double>(wheel.deltaX) * visibleRange.getLength();
+        timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+    }
 }
 
 void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
