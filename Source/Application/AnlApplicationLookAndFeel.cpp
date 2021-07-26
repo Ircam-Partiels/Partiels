@@ -538,8 +538,22 @@ void Application::LookAndFeel::drawTooltip(juce::Graphics& g, juce::String const
     attributedString.append(text, juce::Font(13.0f, juce::Font::bold), findColour(juce::TooltipWindow::ColourIds::textColourId));
 
     juce::TextLayout tl;
-    tl.createLayoutWithBalancedLineLengths(attributedString, 400.0f);
+    tl.createLayoutWithBalancedLineLengths(attributedString, 500.0f);
     tl.draw(g, bounds.reduced(4.0f, 4.0f));
+}
+
+juce::Rectangle<int> Application::LookAndFeel::getTooltipBounds(juce::String const& tipText, juce::Point<int> screenPos, juce::Rectangle<int> parentArea)
+{
+    juce::AttributedString s;
+    s.setJustification(juce::Justification::centred);
+    s.append(tipText, juce::Font(13.0f, juce::Font::bold), juce::Colours::black);
+
+    juce::TextLayout tl;
+    tl.createLayoutWithBalancedLineLengths(s, 500.f);
+    auto const w = static_cast<int>(tl.getWidth()) + 14;
+    auto const h = static_cast<int>(tl.getHeight()) + 6;
+
+    return juce::Rectangle<int>(screenPos.x > parentArea.getCentreX() ? screenPos.x - (w + 12) : screenPos.x + 24, screenPos.y > parentArea.getCentreY() ? screenPos.y - (h + 6) : screenPos.y + 6, w, h).constrainedWithin(parentArea);
 }
 
 void Application::LookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& button, juce::Colour const& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
