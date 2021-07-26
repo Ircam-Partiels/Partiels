@@ -220,7 +220,7 @@ void Group::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 void Group::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
 {
     updateMode(event);
-    if(event.mods.isCtrlDown())
+    if(event.mods.isAltDown())
     {
         takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), juce::Colours::transparentBlack);
     }
@@ -238,13 +238,13 @@ void Group::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
 
 void Group::Plot::Overlay::updateMode(juce::MouseEvent const& event)
 {
-    if(event.mods.isCtrlDown() && !mSnapshotMode)
+    if(event.mods.isAltDown() && !mSnapshotMode)
     {
         mSnapshotMode = true;
         showCameraCursor(true);
         removeMouseListener(&mTransportPlayheadBar);
     }
-    else if(!event.mods.isCtrlDown() && mSnapshotMode)
+    else if(!event.mods.isAltDown() && mSnapshotMode)
     {
         mSnapshotMode = false;
         showCameraCursor(false);
