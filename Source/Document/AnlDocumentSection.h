@@ -57,6 +57,7 @@ namespace Document
             using juce::Viewport::Viewport;
             ~Viewport() override = default;
 
+            void mouseWheelMove(juce::MouseEvent const& e, juce::MouseWheelDetails const& wheel) override;
             void visibleAreaChanged(juce::Rectangle<int> const& newVisibleArea) override;
             std::function<void(juce::Rectangle<int> const&)> onVisibleAreaChanged = nullptr;
         };
