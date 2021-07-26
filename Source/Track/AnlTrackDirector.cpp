@@ -364,14 +364,16 @@ Track::Accessor& Track::Director::getAccessor()
 
 void Track::Director::startAction()
 {
-    anlStrongAssert(mIsPerformingAction == false);
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
-    mIsPerformingAction = true;
+    anlWeakAssert(mIsPerformingAction == false);
+    if(!std::exchange(mIsPerformingAction, true))
+    {
+        mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    }
 }
 
 void Track::Director::endAction(ActionState state, juce::String const& name)
 {
-    anlStrongAssert(mIsPerformingAction == true);
+    anlWeakAssert(mIsPerformingAction == true);
     if(mAccessor.isEquivalentTo(mSavedState))
     {
         mIsPerformingAction = false;
@@ -432,6 +434,7 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
             break;
         }
     }
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
     mIsPerformingAction = false;
 }
 
