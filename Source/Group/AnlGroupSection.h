@@ -70,7 +70,7 @@ namespace Group
 
         ResizerBar mResizerBar{ResizerBar::Orientation::horizontal, true, {23, 2000}};
         bool mIsItemDragged{false};
-
+        ScrollHelper mScrollHelper;
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group

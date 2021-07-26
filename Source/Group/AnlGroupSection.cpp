@@ -188,11 +188,17 @@ void Group::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
         Component::mouseWheelMove(event, wheel);
         return;
     }
-
-    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
-    auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
-    zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal)
+    {
+        mouseMagnify(event, 1.0f + wheel.deltaX);
+    }
+    else
+    {
+        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
+        auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+        auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
+    }
 }
 
 void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
