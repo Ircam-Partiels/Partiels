@@ -26,6 +26,7 @@
 #include "AnlNumberField.h"
 #include "AnlPropertyComponent.h"
 #include "AnlResizerBar.h"
+#include "AnlScrollHelper.h"
 #include "AnlTimerClock.h"
 #include "AnlTooltip.h"
 #include "AnlXmlParser.h"
