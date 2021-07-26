@@ -16,8 +16,8 @@ Application::LookAndFeel::ColourChart::ColourChart(Mode mode)
                 // clang-format off
                 return
                 {{
-                      juce::Colour(0xff0d1b2a)
-                    , juce::Colour(0xff1b263b)
+                      juce::Colour(0xff070f17)
+                    , juce::Colour(0xff263553)
                     , juce::Colour(0xff415a77)
                     , juce::Colour(0xff778da9)
                     , juce::Colour(0xffe0e1dd)
