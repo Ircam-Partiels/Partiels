@@ -5,18 +5,105 @@
 ANALYSE_FILE_BEGIN
 
 class ColourSelector
-: public juce::ColourSelector
-, private juce::ChangeListener
+: public juce::Component
 {
 public:
     ColourSelector();
-    ~ColourSelector() override;
+    ~ColourSelector() override = default;
 
     std::function<void(juce::Colour const& colour)> onColourChanged = nullptr;
 
+    juce::Colour getCurrentColour() const;
+    void setCurrentColour(juce::Colour newColour, juce::NotificationType notificationType);
+
+    // juce::Component
+    void resized() override;
+
 private:
-    // juce::ChangeListener
-    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+    std::array<float, 4> getHSBA() const;
+    void setHSBA(std::array<float, 4> const& hsba, juce::NotificationType notificationType);
+
+    class Header
+    : public juce::Component
+    {
+    public:
+        Header(ColourSelector& owner);
+        ~Header() override = default;
+
+        // juce::Component
+        void paint(juce::Graphics& g) override;
+        void resized() override;
+
+        void update();
+
+    private:
+        ColourSelector& mOwner;
+        juce::Label mLabel;
+    };
+
+    class HueSelector
+    : public juce::Component
+    {
+    public:
+        HueSelector(ColourSelector& owner);
+        ~HueSelector() override = default;
+
+        // juce::Component
+        void paint(juce::Graphics& g) override;
+        void mouseDown(juce::MouseEvent const& event) override;
+        void mouseDrag(juce::MouseEvent const& event) override;
+
+    private:
+        ColourSelector& mOwner;
+    };
+
+    class SatBrightSelector
+    : public juce::Component
+    {
+    public:
+        SatBrightSelector(ColourSelector& owner);
+        ~SatBrightSelector() override = default;
+
+        // juce::Component
+        void paint(juce::Graphics& g) override;
+        void resized() override;
+        void mouseDown(juce::MouseEvent const& event) override;
+        void mouseDrag(juce::MouseEvent const& event) override;
+
+    private:
+        ColourSelector& mOwner;
+        float mHue;
+        juce::Image mImage;
+    };
+
+    class ComponentSlider
+    : public juce::Component
+    {
+    public:
+        ComponentSlider(ColourSelector& owner, juce::String label, size_t index);
+        ~ComponentSlider() override = default;
+
+        // juce::Component
+        void resized() override;
+
+        void update();
+
+    private:
+        ColourSelector& mOwner;
+        size_t const mIndex;
+        juce::Label mLabel;
+        juce::Label mValue;
+        juce::Slider mSlider;
+    };
+
+    std::array<float, 4> mHSBA;
+    Header mHeader{*this};
+    HueSelector mHueSelector{*this};
+    SatBrightSelector mSatBrightSelector{*this};
+    ComponentSlider mRedSlider{*this, "Red", 0_z};
+    ComponentSlider mGreenSlider{*this, "Green", 1_z};
+    ComponentSlider mBlueSlider{*this, "Blue", 2_z};
+    ComponentSlider mAlphaSlider{*this, "Alpha", 3_z};
 };
 
 class ColourButton
