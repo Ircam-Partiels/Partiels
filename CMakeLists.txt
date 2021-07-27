@@ -196,6 +196,6 @@ endif()
 
 enable_testing()
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
-set_target_properties(PartielsCLI PROPERTIES XCODE_SCHEME_ARGUMENTS "${TESTS_DIRECTORY}/Sound.wav ${TESTS_DIRECTORY}/Template.ptldoc ${CMAKE_CURRENT_SOURCE_DIR}/build/CLIOut ${TESTS_DIRECTORY}/exportOptions.xml")
+set_target_properties(PartielsCLI PROPERTIES XCODE_SCHEME_ARGUMENTS "-i \"${TESTS_DIRECTORY}/Sound.wav\" -t \"${TESTS_DIRECTORY}/Template.ptldoc\" -o \"${CMAKE_CURRENT_SOURCE_DIR}/build/CLIOut\" --options=\"${TESTS_DIRECTORY}/exportOptions.xml\"")
 #add_test(NAME CLITests COMMAND PartielsCLI ${TESTS_DIRECTORY}/Sound.wav ${TESTS_DIRECTORY}/Template.ptldoc ${CMAKE_CURRENT_SOURCE_DIR}/build/CLIOut ${TESTS_DIRECTORY}/exportOptions.xml)
 add_test(NAME UnitTests COMMAND PartielsTest)

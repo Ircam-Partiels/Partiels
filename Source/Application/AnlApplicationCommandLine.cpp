@@ -3,20 +3,17 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Result Application::CommandLine::analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, juce::File const& optionsFile, juce::String const& identifier)
+static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, Document::Exporter::Options const& options, juce::String const& identifier)
 {
     auto* messageManager = juce::MessageManager::getInstanceWithoutCreating();
     if(messageManager == nullptr)
     {
         return juce::Result::fail("Message manager doesn't exist!");
     }
-    auto xml = juce::XmlDocument::parse(optionsFile);
-    if(xml == nullptr)
-    {
-        return juce::Result::fail(juce::translate("The options file FLNM cannot be parsed!").replace("FLNM", optionsFile.getFileName()));
-    }
-    Document::Exporter::Options options;
-    options = XmlParser::fromXml(*xml, "exportOptions", options);
+
+    Application::LookAndFeel lookAndFeel;
+    juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
+
     if(options.useAutoSize)
     {
         return juce::Result::fail(juce::translate("The auto-size option is not supported by the command-line interface!"));
@@ -59,7 +56,7 @@ juce::Result Application::CommandLine::analyzeAndExport(juce::File const& audioF
                           return std::get<0>(processing) || std::get<2>(processing);
                       }))
     {
-        messageManager->runDispatchLoopUntil(20);
+        messageManager->runDispatchLoopUntil(2);
     }
 
     std::atomic<bool> shouldAbort{false};
@@ -69,26 +66,31 @@ juce::Result Application::CommandLine::analyzeAndExport(juce::File const& audioF
 int Application::CommandLine::run(int argc, char* argv[])
 {
     juce::ConsoleApplication app;
-    app.addHelpCommand("--help|-h", "Usage:", true);
+    app.addHelpCommand("--help|-h", "Usage:", false);
     app.addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
     app.addDefaultCommand(
         {"",
-         "audio-file template-file output-directory options-file",
-         "Analyzes an audio file and exports the results",
-         "Analyzes an audio file with a given template and exports the results with given options in a directory.",
+         "[options]",
+         "Analyzes an audio file and exports the results.\n\t"
+         "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
+         "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
+         "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
+         "--format|-f <formatname> Defines the export format (jpeg, png, csv or json) (required).\n\t"
+         "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
+         "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
+         "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
+         "--nogrids Ignores the export of the grid tracks (optional with the csv and json formats).\n\t"
+         "--header Includes header row before the data rows (optional with the csv format).\n\t"
+         "--separator <character> Defines the seperatror character between colummns (optional with the csv format, default is ',').\n\t"
+         "",
+         "",
          [](juce::ArgumentList const& args)
          {
-             if(args.size() < 4)
-             {
-                 juce::ConsoleApplication::fail("Missing arguments");
-             }
-             if(args.size() > 4)
-             {
-                 juce::ConsoleApplication::fail("Extra arguments");
-             }
-             auto const audioFile = args[0].resolveAsExistingFile();
-             auto const templateFile = args[1].resolveAsExistingFile();
-             auto const outputDir = args[2].resolveAsFile();
+             using Options = Document::Exporter::Options;
+
+             auto const audioFile = args.getExistingFileForOption("-i|--input");
+             auto const templateFile = args.getFileForOption("-t|--template");
+             auto const outputDir = args.getFileForOption("-o|--output");
              if(!outputDir.exists())
              {
                  auto const result = outputDir.createDirectory();
@@ -101,12 +103,65 @@ int Application::CommandLine::run(int argc, char* argv[])
              {
                  juce::ConsoleApplication::fail("Could not find folder: " + outputDir.getFullPathName());
              }
-             auto const optionsFile = args[3].resolveAsExistingFile();
-             juce::MessageManager::getInstance();
-             LookAndFeel lookAndFeel;
-             juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
-             auto const result = analyzeAndExport(audioFile, templateFile, outputDir, optionsFile, "");
-             juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+
+             Options options;
+             auto const format = args.getValueForOption("-f|--format");
+             if(args.containsOption("--options"))
+             {
+                 auto const optionsFile = args.getExistingFileForOption("--options");
+                 auto xml = juce::XmlDocument::parse(optionsFile);
+                 if(xml == nullptr)
+                 {
+                     auto const result = juce::Result::fail(juce::translate("The options file FLNM cannot be parsed!").replace("FLNM", optionsFile.getFileName()));
+                     juce::ConsoleApplication::fail(result.getErrorMessage());
+                 }
+
+                 options = XmlParser::fromXml(*xml, "exportOptions", options);
+             }
+             else if(!args.containsOption("-f|--format"))
+             {
+                 juce::ConsoleApplication::fail("Format not specified! Available formats are jpeg, png, csv or json.");
+             }
+             else if(format == "jpeg" || format == "png")
+             {
+                 if(!args.containsOption("-w|--width"))
+                 {
+                     juce::ConsoleApplication::fail("Width not specified! Specifiy the width of the image in pixels.");
+                 }
+                 if(!args.containsOption("-h|--height"))
+                 {
+                     juce::ConsoleApplication::fail("Height not specified! Specifiy the height of the image in pixels.");
+                 }
+
+                 options.format = format == "jpeg" ? Options::Format::jpeg : Options::Format::png;
+                 options.imageWidth = args.getValueForOption("-w|--width").getIntValue();
+                 options.imageHeight = args.getValueForOption("-h|--height").getIntValue();
+                 options.useGroupOverview = args.containsOption("--groups");
+             }
+             else if(format == "csv" || format == "json")
+             {
+                 options.format = format == "csv" ? Options::Format::csv : Options::Format::json;
+                 options.ignoreGridResults = args.containsOption("--nogrids");
+                 options.includeHeaderRaw = args.containsOption("--header");
+                 auto const separator = magic_enum::enum_cast<Document::Exporter::Options::ColumnSeparator>(args.getValueForOption("--separator").toStdString());
+                 if(separator.has_value())
+                 {
+                     options.columnSeparator = *separator;
+                 }
+             }
+             else
+             {
+                 juce::ConsoleApplication::fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv or json.");
+             }
+
+             auto* messageManager = juce::MessageManager::getInstance();
+             if(messageManager == nullptr)
+             {
+                 juce::ConsoleApplication::fail("Message manager doesn't exist!");
+             }
+
+             auto const result = analyzeAndExport(audioFile, templateFile, outputDir, options, "");
+
              juce::MessageManager::deleteInstance();
              juce::DeletedAtShutdown::deleteAll();
              if(result.failed())
