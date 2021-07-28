@@ -69,7 +69,7 @@ Application::CommandLine::CommandLine()
     addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
     addCommand(
         {"--export|-e",
-         "[options]",
+         "--export|-e [options]",
          "Analyzes an audio file and exports the results.\n\t"
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
