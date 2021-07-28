@@ -15,27 +15,27 @@ NumberField::Label::Label()
 
 juce::TextEditor* NumberField::Label::createEditorComponent()
 {
-    auto* editor = juce::Label::createEditorComponent();
-    if(editor != nullptr)
+    auto* ed = juce::Label::createEditorComponent();
+    if(ed != nullptr)
     {
-        auto const font = getFont();
-        editor->setFont(font);
-        editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())));
-        editor->setJustification(getJustificationType());
-        editor->setBorder(getBorderSize());
-        editor->setInputFilter(this, false);
-        editor->setMultiLine(false);
+        auto const ft = getFont();
+        ed->setFont(ft);
+        ed->setIndents(0, static_cast<int>(std::floor(ft.getDescent())));
+        ed->setJustification(getJustificationType());
+        ed->setBorder(getBorderSize());
+        ed->setInputFilter(this, false);
+        ed->setMultiLine(false);
     }
-    return editor;
+    return ed;
 }
 
-void NumberField::Label::editorShown(juce::TextEditor* editor)
+void NumberField::Label::editorShown(juce::TextEditor* ed)
 {
-    if(editor != nullptr)
+    if(ed != nullptr)
     {
-        editor->setText(juce::String(getText().getDoubleValue(), mNumEditedDecimals), false);
-        editor->moveCaretToTop(false);
-        editor->moveCaretToEnd(true);
+        ed->setText(juce::String(getText().getDoubleValue(), mNumEditedDecimals), false);
+        ed->moveCaretToTop(false);
+        ed->moveCaretToEnd(true);
     }
 }
 
@@ -64,9 +64,9 @@ void NumberField::Label::setRange(juce::Range<double> const& range, double inter
             return numDecimals;
         };
         mNumEditedDecimals = getNumDecimals();
-        if(auto* editor = getCurrentTextEditor())
+        if(auto* ed = getCurrentTextEditor())
         {
-            editor->setText(juce::String(getText().getDoubleValue(), mNumEditedDecimals), notification == juce::NotificationType::dontSendNotification ? false : true);
+            ed->setText(juce::String(getText().getDoubleValue(), mNumEditedDecimals), notification == juce::NotificationType::dontSendNotification ? false : true);
         }
         else
         {
@@ -127,9 +127,9 @@ void NumberField::Label::textWasChanged()
     setText(juce::String(value, numDecimals) + mSuffix, juce::NotificationType::dontSendNotification);
 }
 
-juce::String NumberField::Label::filterNewText(juce::TextEditor& editor, juce::String const& newInput)
+juce::String NumberField::Label::filterNewText(juce::TextEditor& ed, juce::String const& newInput)
 {
-    juce::ignoreUnused(editor);
+    juce::ignoreUnused(ed);
     if(mNumEditedDecimals <= 0)
     {
         if(!newInput.containsOnly("-0123456789"))
