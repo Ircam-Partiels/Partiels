@@ -12,7 +12,7 @@ namespace Application
     public:
         CommandLine();
         ~CommandLine() = default;
-        
+
         static std::optional<int> tryToRun(juce::String const& commandLine);
     };
 } // namespace Application

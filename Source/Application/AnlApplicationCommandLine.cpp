@@ -177,14 +177,14 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
         anlDebug("Application", "Command line is empty or contains '-NSDocumentRevisionsDebugMode'");
         return {};
     }
-    
+
     juce::ArgumentList const args("Partiels", commandLine);
     if(!args[0].isLongOption() && !args[0].isShortOption())
     {
         anlDebug("Application", "Command line doesn't contains any option");
         return {};
     }
-    
+
     anlDebug("Application", "Running as CLI");
 #ifdef JUCE_MAC
     juce::Process::setDockIconVisible(false);
