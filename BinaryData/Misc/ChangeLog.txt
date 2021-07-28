@@ -19,6 +19,7 @@ v0.0.8 (alpha)
 - Imp: Allow to dissociate a track from its result file using control key when clicking on the file button of the property window (#98)
 - Fix: Application crashes when undo after creating a track at the 1st position of a group (#97)
 - Imp: Allow to edit zoom values precisely using textual edition (#91)
+- Imp: Refactored color picker (#23)
 
 v0.0.7 (alpha)
 
