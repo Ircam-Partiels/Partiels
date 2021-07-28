@@ -1,4 +1,5 @@
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationCommandLine.h"
 #include <TranslationsData.h>
 
 ANALYSE_FILE_BEGIN
@@ -21,6 +22,17 @@ bool Application::Instance::moreThanOneInstanceAllowed()
 void Application::Instance::initialise(juce::String const& commandLine)
 {
     anlDebug("Application", "Begin...");
+    anlDebug("Application", "Command line '" + commandLine + "'");
+    
+    auto const cmdResult = CommandLine::tryToRun(commandLine);
+    if(cmdResult.has_value())
+    {
+        setApplicationReturnValue(*cmdResult);
+        quit();
+        return;
+    }
+    
+    anlDebug("Application", "Running with GUI");
     TranslationManager::loadFromBinaries();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();

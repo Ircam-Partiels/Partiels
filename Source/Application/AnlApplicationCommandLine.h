@@ -6,10 +6,15 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    namespace CommandLine
+    class CommandLine
+    : public juce::ConsoleApplication
     {
-        int run(int argc, char* argv[]);
-    } // namespace CommandLine
+    public:
+        CommandLine();
+        ~CommandLine() = default;
+        
+        static std::optional<int> tryToRun(juce::String const& commandLine);
+    };
 } // namespace Application
 
 ANALYSE_FILE_END

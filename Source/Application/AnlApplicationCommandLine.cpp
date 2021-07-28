@@ -63,13 +63,12 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
     return Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
 }
 
-int Application::CommandLine::run(int argc, char* argv[])
+Application::CommandLine::CommandLine()
 {
-    juce::ConsoleApplication app;
-    app.addHelpCommand("--help|-h", "Usage:", false);
-    app.addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
-    app.addDefaultCommand(
-        {"",
+    addHelpCommand("--help|-h", "Usage:", false);
+    addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
+    addDefaultCommand(
+        {"--export|-e",
          "[options]",
          "Analyzes an audio file and exports the results.\n\t"
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
@@ -169,8 +168,29 @@ int Application::CommandLine::run(int argc, char* argv[])
                  juce::ConsoleApplication::fail(result.getErrorMessage());
              }
          }});
+}
 
-    return app.findAndRunCommand(argc, argv);
+std::optional<int> Application::CommandLine::tryToRun(juce::String const& commandLine)
+{
+    if(commandLine.isEmpty() || commandLine.startsWith("-NSDocumentRevisionsDebugMode"))
+    {
+        anlDebug("Application", "Command line is empty or contains '-NSDocumentRevisionsDebugMode'");
+        return {};
+    }
+    
+    juce::ArgumentList const args("Partiels", commandLine);
+    if(!args[0].isLongOption() && !args[0].isShortOption())
+    {
+        anlDebug("Application", "Command line doesn't contains any option");
+        return {};
+    }
+    
+    anlDebug("Application", "Running as CLI");
+#ifdef JUCE_MAC
+    juce::Process::setDockIconVisible(false);
+#endif
+    CommandLine cmd;
+    return cmd.findAndRunCommand(args);
 }
 
 ANALYSE_FILE_END
