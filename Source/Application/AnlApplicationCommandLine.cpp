@@ -67,7 +67,7 @@ Application::CommandLine::CommandLine()
 {
     addHelpCommand("--help|-h", "Usage:", false);
     addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
-    addDefaultCommand(
+    addCommand(
         {"--export|-e",
          "[options]",
          "Analyzes an audio file and exports the results.\n\t"
