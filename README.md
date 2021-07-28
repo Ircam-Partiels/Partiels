@@ -8,7 +8,7 @@ The compilation system is based on [CMake](https://cmake.org/).
 
 ```
 git clone --recursive git@forge-2.ircam.fr:pierreguillot-group/partiels.git
-cd analyse && mkdir build && cd build
+cd partiels && mkdir build && cd build
 cmake ..
 ```
 
