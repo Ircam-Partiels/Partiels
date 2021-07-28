@@ -103,7 +103,7 @@ void ColourSelector::SatBrightSelector::paint(juce::Graphics& g)
         auto const height = getHeight() / 2;
         mImage = juce::Image(juce::Image::RGB, width, height, false);
         juce::Image::BitmapData pixels(mImage, juce::Image::BitmapData::writeOnly);
-        auto const hue = mOwner.getCurrentColour().getHue();
+        auto const hue = hsba[0];
         for(int y = 0; y < height; ++y)
         {
             auto const brightness = 1.0f - static_cast<float>(y) / static_cast<float>(height);
@@ -181,7 +181,7 @@ ColourSelector::ComponentSlider::ComponentSlider(ColourSelector& owner, juce::St
         auto const newColour = juce::Colour::fromRGBA(rgba[0], rgba[1], rgba[2], rgba[3]);
         auto const preserveHue = newColour == juce::Colours::white || newColour == juce::Colours::black;
         auto hsba = mOwner.getHSBA();
-        hsba[0] = preserveHue ? hsba[0] : newColour.getSaturation();
+        hsba[0] = preserveHue ? hsba[0] : newColour.getHue();
         hsba[1] = newColour.getSaturation();
         hsba[2] = newColour.getBrightness();
         hsba[3] = newColour.getFloatAlpha();
