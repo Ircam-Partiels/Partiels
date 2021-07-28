@@ -4,6 +4,15 @@
 
 ANALYSE_FILE_BEGIN
 
+#define AppQuitIfInvalidPointer(ptr)                    \
+    if(ptr == nullptr)                                  \
+    {                                                   \
+        anlDebug("Application", "Allocation Failed!."); \
+        setApplicationReturnValue(-1);                  \
+        quit();                                         \
+        return;                                         \
+    }
+
 juce::String const Application::Instance::getApplicationName()
 {
     return ProjectInfo::projectName;
@@ -23,7 +32,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 {
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
-    
+
     auto const cmdResult = CommandLine::tryToRun(commandLine);
     if(cmdResult.has_value())
     {
@@ -31,52 +40,56 @@ void Application::Instance::initialise(juce::String const& commandLine)
         quit();
         return;
     }
-    
+
     anlDebug("Application", "Running with GUI");
     TranslationManager::loadFromBinaries();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
-    juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
 
     mAudioFormatManager.registerBasicFormats();
+
+    mPluginListAccessor = std::make_unique<PluginList::Accessor>();
+    AppQuitIfInvalidPointer(mPluginListAccessor);
+
+    mPluginListScanner = std::make_unique<PluginList::Scanner>();
+    AppQuitIfInvalidPointer(mPluginListScanner);
+
+    mDocumentAccessor = std::make_unique<Document::Accessor>();
+    AppQuitIfInvalidPointer(mDocumentAccessor);
+
+    mDocumentDirector = std::make_unique<Document::Director>(*mDocumentAccessor.get(), mAudioFormatManager, mUndoManager);
+    AppQuitIfInvalidPointer(mDocumentDirector);
+
+    mProperties = std::make_unique<Properties>();
+    AppQuitIfInvalidPointer(mProperties);
+
+    mAudioReader = std::make_unique<AudioReader>();
+    AppQuitIfInvalidPointer(mAudioReader);
+
+    mLookAndFeel = std::make_unique<LookAndFeel>();
+    AppQuitIfInvalidPointer(mLookAndFeel);
+    juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
+
+    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getFileExtension(), getFileWildCard(), "Open a document", "Save the document");
+    AppQuitIfInvalidPointer(mDocumentFileBased);
+
     mWindow = std::make_unique<Window>();
-    if(mWindow == nullptr)
-    {
-        anlDebug("Application", "Failed.");
-        return;
-    }
+    AppQuitIfInvalidPointer(mWindow);
+
     mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
-    if(mMainMenuModel == nullptr)
-    {
-        anlDebug("Application", "Failed.");
-        return;
-    }
+    AppQuitIfInvalidPointer(mMainMenuModel);
+
     mAudioSettings = std::make_unique<AudioSettings>();
-    if(mAudioSettings == nullptr)
-    {
-        anlDebug("Application", "Failed.");
-        return;
-    }
+    AppQuitIfInvalidPointer(mAudioSettings);
+
     mAbout = std::make_unique<About>();
-    if(mAbout == nullptr)
-    {
-        anlDebug("Application", "Failed.");
-        return;
-    }
+    AppQuitIfInvalidPointer(mAbout);
 
     mExporter = std::make_unique<Exporter>();
-    if(mExporter == nullptr)
-    {
-        anlDebug("Application", "Failed.");
-        return;
-    }
+    AppQuitIfInvalidPointer(mExporter);
 
     mBatcher = std::make_unique<Batcher>();
-    if(mBatcher == nullptr)
-    {
-        anlDebug("Application", "Failed.");
-        return;
-    }
+    AppQuitIfInvalidPointer(mBatcher);
 
     mApplicationListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -90,8 +103,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 break;
             case AttrType::colourMode:
             {
-                mLookAndFeel.setColourChart({acsr.getAttr<AttrType::colourMode>()});
-                juce::LookAndFeel::setDefaultLookAndFeel(&mLookAndFeel);
+                mLookAndFeel->setColourChart({acsr.getAttr<AttrType::colourMode>()});
+                juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
                 if(mMainMenuModel != nullptr)
                 {
                     mMainMenuModel->menuItemsChanged();
@@ -102,7 +115,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                     {
                         if(auto* resizableWindow = dynamic_cast<juce::ResizableWindow*>(modalComponentManager->getModalComponent(i)))
                         {
-                            resizableWindow->setBackgroundColour(mLookAndFeel.findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+                            resizableWindow->setBackgroundColour(mLookAndFeel->findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
                         }
                     }
                 }
@@ -137,18 +150,18 @@ void Application::Instance::initialise(juce::String const& commandLine)
         if(AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Do you want to restore your document?", "The application unexpectedly quit. Do you want to restore the last saved state of the document before this?"))
         {
             anlDebug("Application", "Restoring saved document...");
-            auto const result = mDocumentFileBased.loadBackup(backupFile);
+            auto const result = mDocumentFileBased->loadBackup(backupFile);
             anlWeakAssert(!result.failed());
             if(!result.failed())
             {
                 mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
             }
-            mDocumentFileBased.addChangeListener(this);
+            mDocumentFileBased->addChangeListener(this);
             return;
         }
     }
 
-    mDocumentFileBased.addChangeListener(this);
+    mDocumentFileBased->addChangeListener(this);
     anlDebug("Application", "Reopening last document...");
     openFiles({mApplicationAccessor.getAttr<AttrType::currentDocumentFile>()});
 }
@@ -179,7 +192,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 void Application::Instance::systemRequestedQuit()
 {
     anlDebug("Application", "Begin...");
-    mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(mDocumentFileBased.getFile(), NotificationType::synchronous);
+    mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(mDocumentFileBased->getFile(), NotificationType::synchronous);
 
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
@@ -194,7 +207,7 @@ void Application::Instance::systemRequestedQuit()
         }
     }
 
-    if(mDocumentFileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
+    if(mDocumentFileBased->saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
     {
         return;
     }
@@ -205,16 +218,31 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
+    anlDebug("Application", "Begin...");
+
     mApplicationAccessor.removeListener(mApplicationListener);
-    mDocumentFileBased.removeChangeListener(this);
+    if(mDocumentFileBased != nullptr)
+    {
+        mDocumentFileBased->removeChangeListener(this);
+    }
     getBackupFile().deleteFile();
+
     mBatcher.reset();
     mExporter.reset();
     mAbout.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
     mWindow.reset();
+    mDocumentFileBased.reset();
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    mLookAndFeel.reset();
+    mAudioReader.reset();
+    mProperties.reset();
+    mDocumentDirector.reset();
+    mDocumentAccessor.reset();
+    mPluginListScanner.reset();
+    mPluginListAccessor.reset();
+
     anlDebug("Application", "Done");
 }
 
@@ -241,7 +269,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     {
         if(file.hasFileExtension(getFileExtension()))
         {
-            mDocumentFileBased.loadFrom(file, true);
+            mDocumentFileBased->loadFrom(file, true);
             return;
         }
         if(file == juce::File{})
@@ -258,7 +286,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     }
     if(!audioFiles.empty())
     {
-        mDocumentAccessor.copyFrom(mDocumentFileBased.getDefaultAccessor(), NotificationType::synchronous);
+        mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
         std::vector<AudioFileLayout> readerLayout;
         for(auto const& file : files)
         {
@@ -271,13 +299,13 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
                 }
             }
         }
-        mDocumentAccessor.setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
-        mDocumentFileBased.setFile({});
+        mDocumentAccessor->setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
+        mDocumentFileBased->setFile({});
     }
     else if(array.isEmpty())
     {
-        mDocumentAccessor.copyFrom(mDocumentFileBased.getDefaultAccessor(), NotificationType::synchronous);
-        mDocumentFileBased.setFile({});
+        mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
+        mDocumentFileBased->setFile({});
     }
     else
     {
@@ -317,27 +345,27 @@ Application::Batcher* Application::Instance::getBatcher()
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()
 {
-    return mPluginListAccessor;
+    return *mPluginListAccessor.get();
 }
 
 PluginList::Scanner& Application::Instance::getPluginListScanner()
 {
-    return mPluginListScanner;
+    return *mPluginListScanner.get();
 }
 
 Document::Accessor& Application::Instance::getDocumentAccessor()
 {
-    return mDocumentAccessor;
+    return *mDocumentAccessor.get();
 }
 
 Document::Director& Application::Instance::getDocumentDirector()
 {
-    return mDocumentDirector;
+    return *mDocumentDirector.get();
 }
 
 Document::FileBased& Application::Instance::getDocumentFileBased()
 {
-    return mDocumentFileBased;
+    return *mDocumentFileBased.get();
 }
 
 juce::ApplicationCommandManager& Application::Instance::getApplicationCommandManager()
@@ -362,12 +390,12 @@ juce::UndoManager& Application::Instance::getUndoManager()
 
 void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    anlStrongAssert(source == &mDocumentFileBased);
-    if(source != &mDocumentFileBased)
+    anlStrongAssert(source == mDocumentFileBased.get());
+    if(source != mDocumentFileBased.get())
     {
         return;
     }
-    auto const result = mDocumentFileBased.saveBackup(getBackupFile());
+    auto const result = mDocumentFileBased->saveBackup(getBackupFile());
     anlWeakAssert(!result.failed());
 }
 

@@ -73,15 +73,16 @@ namespace Application
 
         Accessor mApplicationAccessor;
         Accessor::Listener mApplicationListener{typeid(*this).name()};
-        PluginList::Accessor mPluginListAccessor;
-        PluginList::Scanner mPluginListScanner;
-        Document::Accessor mDocumentAccessor;
-        Document::Director mDocumentDirector{mDocumentAccessor, mAudioFormatManager, mUndoManager};
 
-        Properties mProperties;
-        AudioReader mAudioReader;
-        LookAndFeel mLookAndFeel;
-        Document::FileBased mDocumentFileBased{mDocumentDirector, getFileExtension(), getFileWildCard(), "Open a document", "Save the document"};
+        std::unique_ptr<PluginList::Accessor> mPluginListAccessor;
+        std::unique_ptr<PluginList::Scanner> mPluginListScanner;
+        std::unique_ptr<Document::Accessor> mDocumentAccessor;
+        std::unique_ptr<Document::Director> mDocumentDirector;
+
+        std::unique_ptr<Properties> mProperties;
+        std::unique_ptr<AudioReader> mAudioReader;
+        std::unique_ptr<LookAndFeel> mLookAndFeel;
+        std::unique_ptr<Document::FileBased> mDocumentFileBased;
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
