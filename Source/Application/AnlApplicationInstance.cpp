@@ -45,26 +45,26 @@ void Application::Instance::initialise(juce::String const& commandLine)
     TranslationManager::loadFromBinaries();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
-    
+
     mApplicationCommandManager = std::make_unique<juce::ApplicationCommandManager>();
     AppQuitIfInvalidPointer(mApplicationCommandManager);
-    
+
     mAudioFormatManager = std::make_unique<juce::AudioFormatManager>();
     AppQuitIfInvalidPointer(mAudioFormatManager);
     mAudioFormatManager->registerBasicFormats();
-    
+
     mAudioDeviceManager = std::make_unique<juce::AudioDeviceManager>();
     AppQuitIfInvalidPointer(mAudioDeviceManager);
-    
+
     mUndoManager = std::make_unique<juce::UndoManager>();
     AppQuitIfInvalidPointer(mUndoManager);
 
     mApplicationAccessor = std::make_unique<Accessor>();
     AppQuitIfInvalidPointer(mApplicationAccessor);
-    
+
     mApplicationListener = std::make_unique<Accessor::Listener>(typeid(*this).name());
     AppQuitIfInvalidPointer(mApplicationListener);
-    
+
     mPluginListAccessor = std::make_unique<PluginList::Accessor>();
     AppQuitIfInvalidPointer(mPluginListAccessor);
 
