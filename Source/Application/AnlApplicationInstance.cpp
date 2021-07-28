@@ -45,9 +45,26 @@ void Application::Instance::initialise(juce::String const& commandLine)
     TranslationManager::loadFromBinaries();
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
+    
+    mApplicationCommandManager = std::make_unique<juce::ApplicationCommandManager>();
+    AppQuitIfInvalidPointer(mApplicationCommandManager);
+    
+    mAudioFormatManager = std::make_unique<juce::AudioFormatManager>();
+    AppQuitIfInvalidPointer(mAudioFormatManager);
+    mAudioFormatManager->registerBasicFormats();
+    
+    mAudioDeviceManager = std::make_unique<juce::AudioDeviceManager>();
+    AppQuitIfInvalidPointer(mAudioDeviceManager);
+    
+    mUndoManager = std::make_unique<juce::UndoManager>();
+    AppQuitIfInvalidPointer(mUndoManager);
 
-    mAudioFormatManager.registerBasicFormats();
-
+    mApplicationAccessor = std::make_unique<Accessor>();
+    AppQuitIfInvalidPointer(mApplicationAccessor);
+    
+    mApplicationListener = std::make_unique<Accessor::Listener>(typeid(*this).name());
+    AppQuitIfInvalidPointer(mApplicationListener);
+    
     mPluginListAccessor = std::make_unique<PluginList::Accessor>();
     AppQuitIfInvalidPointer(mPluginListAccessor);
 
@@ -57,7 +74,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mDocumentAccessor = std::make_unique<Document::Accessor>();
     AppQuitIfInvalidPointer(mDocumentAccessor);
 
-    mDocumentDirector = std::make_unique<Document::Director>(*mDocumentAccessor.get(), mAudioFormatManager, mUndoManager);
+    mDocumentDirector = std::make_unique<Document::Director>(*mDocumentAccessor.get(), *mAudioFormatManager.get(), *mUndoManager.get());
     AppQuitIfInvalidPointer(mDocumentDirector);
 
     mProperties = std::make_unique<Properties>();
@@ -91,7 +108,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mBatcher = std::make_unique<Batcher>();
     AppQuitIfInvalidPointer(mBatcher);
 
-    mApplicationListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {
@@ -126,7 +143,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 break;
         }
     };
-    mApplicationAccessor.addListener(mApplicationListener, NotificationType::synchronous);
+    mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
 
     anlDebug("Application", "Ready!");
     auto const paths = juce::StringArray::fromTokens(commandLine, " ", "\"");
@@ -154,7 +171,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             anlWeakAssert(!result.failed());
             if(!result.failed())
             {
-                mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
+                mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
             }
             mDocumentFileBased->addChangeListener(this);
             return;
@@ -163,7 +180,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentFileBased->addChangeListener(this);
     anlDebug("Application", "Reopening last document...");
-    openFiles({mApplicationAccessor.getAttr<AttrType::currentDocumentFile>()});
+    openFiles({mApplicationAccessor->getAttr<AttrType::currentDocumentFile>()});
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -192,7 +209,7 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 void Application::Instance::systemRequestedQuit()
 {
     anlDebug("Application", "Begin...");
-    mApplicationAccessor.setAttr<AttrType::currentDocumentFile>(mDocumentFileBased->getFile(), NotificationType::synchronous);
+    mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(mDocumentFileBased->getFile(), NotificationType::synchronous);
 
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
@@ -220,7 +237,10 @@ void Application::Instance::shutdown()
 {
     anlDebug("Application", "Begin...");
 
-    mApplicationAccessor.removeListener(mApplicationListener);
+    if(mApplicationAccessor != nullptr)
+    {
+        mApplicationAccessor->removeListener(*mApplicationListener.get());
+    }
     if(mDocumentFileBased != nullptr)
     {
         mDocumentFileBased->removeChangeListener(this);
@@ -242,6 +262,12 @@ void Application::Instance::shutdown()
     mDocumentAccessor.reset();
     mPluginListScanner.reset();
     mPluginListAccessor.reset();
+    mApplicationListener.reset();
+    mApplicationAccessor.reset();
+    mUndoManager.reset();
+    mAudioDeviceManager.reset();
+    mAudioFormatManager.reset();
+    mApplicationCommandManager.reset();
 
     anlDebug("Application", "Done");
 }
@@ -275,7 +301,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
         if(file == juce::File{})
         {
         }
-        else if(!file.getFileExtension().isEmpty() && mAudioFormatManager.getWildcardForAllFormats().contains(file.getFileExtension()))
+        else if(!file.getFileExtension().isEmpty() && mAudioFormatManager->getWildcardForAllFormats().contains(file.getFileExtension()))
         {
             audioFiles.push_back(file);
         }
@@ -290,7 +316,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
         std::vector<AudioFileLayout> readerLayout;
         for(auto const& file : files)
         {
-            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager.createReaderFor(file));
+            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager->createReaderFor(file));
             if(reader != nullptr)
             {
                 for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
@@ -315,7 +341,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
 
 Application::Accessor& Application::Instance::getApplicationAccessor()
 {
-    return mApplicationAccessor;
+    return *mApplicationAccessor.get();
 }
 
 Application::AudioSettings* Application::Instance::getAudioSettings()
@@ -370,22 +396,22 @@ Document::FileBased& Application::Instance::getDocumentFileBased()
 
 juce::ApplicationCommandManager& Application::Instance::getApplicationCommandManager()
 {
-    return mApplicationCommandManager;
+    return *mApplicationCommandManager.get();
 }
 
 juce::AudioFormatManager& Application::Instance::getAudioFormatManager()
 {
-    return mAudioFormatManager;
+    return *mAudioFormatManager.get();
 }
 
 juce::AudioDeviceManager& Application::Instance::getAudioDeviceManager()
 {
-    return mAudioDeviceManager;
+    return *mAudioDeviceManager.get();
 }
 
 juce::UndoManager& Application::Instance::getUndoManager()
 {
-    return mUndoManager;
+    return *mUndoManager.get();
 }
 
 void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* source)

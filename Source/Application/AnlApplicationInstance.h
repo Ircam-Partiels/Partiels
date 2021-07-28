@@ -66,13 +66,13 @@ namespace Application
 
         juce::File getBackupFile() const;
 
-        juce::ApplicationCommandManager mApplicationCommandManager;
-        juce::AudioFormatManager mAudioFormatManager;
-        juce::AudioDeviceManager mAudioDeviceManager;
-        juce::UndoManager mUndoManager;
+        std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
+        std::unique_ptr<juce::AudioFormatManager> mAudioFormatManager;
+        std::unique_ptr<juce::AudioDeviceManager> mAudioDeviceManager;
+        std::unique_ptr<juce::UndoManager> mUndoManager;
 
-        Accessor mApplicationAccessor;
-        Accessor::Listener mApplicationListener{typeid(*this).name()};
+        std::unique_ptr<Accessor> mApplicationAccessor;
+        std::unique_ptr<Accessor::Listener> mApplicationListener;
 
         std::unique_ptr<PluginList::Accessor> mPluginListAccessor;
         std::unique_ptr<PluginList::Scanner> mPluginListScanner;
