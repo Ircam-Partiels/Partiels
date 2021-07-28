@@ -153,16 +153,7 @@ Application::CommandLine::CommandLine()
                  juce::ConsoleApplication::fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv or json.");
              }
 
-             auto* messageManager = juce::MessageManager::getInstance();
-             if(messageManager == nullptr)
-             {
-                 juce::ConsoleApplication::fail("Message manager doesn't exist!");
-             }
-
              auto const result = analyzeAndExport(audioFile, templateFile, outputDir, options, "");
-
-             juce::MessageManager::deleteInstance();
-             juce::DeletedAtShutdown::deleteAll();
              if(result.failed())
              {
                  juce::ConsoleApplication::fail(result.getErrorMessage());
