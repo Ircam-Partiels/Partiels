@@ -184,6 +184,23 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
         anlDebug("Application", "Command line doesn't contains any option");
         return {};
     }
+    
+    if(args[0].isLongOption("unit-tests"))
+    {
+        std::unique_ptr<juce::MessageManager> mm(juce::MessageManager::getInstance());
+        juce::UnitTestRunner unitTestRunner;
+        unitTestRunner.runAllTests();
+        
+        int failures = 0;
+        for(int i = 0; i < unitTestRunner.getNumResults(); ++i)
+        {
+            if(auto* result = unitTestRunner.getResult(i))
+            {
+                failures += result->failures;
+            }
+        }
+        return failures;
+    }
 
     anlDebug("Application", "Running as CLI");
 #ifdef JUCE_MAC
