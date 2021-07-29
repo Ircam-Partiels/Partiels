@@ -190,8 +190,10 @@ namespace Model
         auto& getAcsr() noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+#ifdef JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             anlWeakAssert(element_type::size_flags == 1);
+#endif
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[0].get();
         }
 
@@ -200,8 +202,10 @@ namespace Model
         auto const& getAcsr() const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+#ifdef JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             anlWeakAssert(element_type::size_flags == 1);
+#endif
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[0].get();
         }
 
@@ -210,8 +214,10 @@ namespace Model
         auto& getAcsr(size_t index) noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+#ifdef JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             anlWeakAssert(element_type::size_flags == 0);
+#endif
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
         }
 
@@ -220,8 +226,10 @@ namespace Model
         auto const& getAcsr(size_t index) const noexcept
         {
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
+#ifdef JUCE_DEBUG
             using element_type = typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type;
             anlWeakAssert(element_type::size_flags == 0);
+#endif
             return *std::get<static_cast<size_t>(type)>(mAccessors).accessors[index].get();
         }
 
@@ -242,7 +250,7 @@ namespace Model
             anlWeakAssert(juce::MessageManager::existsAndIsLockedByCurrentThread());
             auto& lock = getLock();
             auto const canAccess = lock.exchange(false);
-            anlStrongAssert(canAccess == true);
+            anlWeakAssert(canAccess == true);
             if(!canAccess)
             {
                 return;
@@ -489,8 +497,10 @@ namespace Model
                                  if constexpr((element_type::flags & Flag::saveable) != 0)
                                  {
                                      auto constexpr acsr_type = element_type::type;
+#ifdef JUCE_DEBUG
                                      auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
                                      anlWeakAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
+#endif
                                      if constexpr(element_type::size_flags == 0)
                                      {
                                          for(auto index = 0_z; index < d.accessors.size(); ++index)
