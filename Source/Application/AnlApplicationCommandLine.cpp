@@ -39,7 +39,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
 
     anlDebug("CommandLine", "Loading audio file...");
     documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
-    
+
     anlDebug("CommandLine", "Loading template file...");
     auto const result = documentFileBased.loadTemplate(templateFile);
     if(result.failed())
@@ -76,7 +76,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
 
     anlDebug("CommandLine", "Exporting results...");
     std::atomic<bool> shouldAbort{false};
-    auto const results =  Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
+    auto const results = Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     return results;
 }
