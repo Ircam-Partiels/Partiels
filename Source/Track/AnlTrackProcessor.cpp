@@ -65,6 +65,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     mChrono.start();
     mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> Results
                                   {
+                                      anlDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
                                       juce::Thread::setCurrentThreadPriority(10);
 
@@ -83,14 +84,19 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                           triggerAsyncUpdate();
                                           return {};
                                       }
+                                      anlDebug("Track", "Processor prepared");
 
                                       while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(pluginResults))
                                       {
                                           mAdvancement.store(processor->getAdvancement());
                                       }
 
+                                      anlDebug("Track", "Processor performed");
+
                                       auto const results = Tools::getResults(processor->getOutput(), pluginResults);
                                       mAdvancement.store(1.0f);
+
+                                      anlDebug("Track", "Results performed");
 
                                       if(mAnalysisState.compare_exchange_weak(expected, ProcessState::ended))
                                       {
