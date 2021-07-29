@@ -17,8 +17,9 @@ Test::Windows:
     - cd build
     - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Debug
-    - set $env:VAMP_PATH="$CI_PROJECT_DIR\build\Debug"
-    - ctest -C Debug
+    - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Debug"
+    - echo $env:VAMP_PATH
+    - ctest -C Debug -V
 
 Test::Ubuntu:
   stage: test
@@ -31,7 +32,8 @@ Test::Ubuntu:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build .
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - ctest -C Debug
+    - echo $VAMP_PATH
+    - ctest -C Debug -V
 
 Test::Debian:
   stage: test
@@ -44,7 +46,8 @@ Test::Debian:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-11 -DCMAKE_CXX_COMPILER=clang++-11
     - cmake --build .
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - ctest -C Debug
+    - echo $VAMP_PATH
+    - ctest -C Debug -V
 
 Build::Windows:
   stage: build
@@ -57,8 +60,9 @@ Build::Windows:
     - cd build
     - cmake .. -G "Visual Studio 16 2019" -A x64
     - cmake --build . --config Release
-    - set $env:VAMP_PATH="$CI_PROJECT_DIR\build\Release"
-    - ctest -C Release
+    - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Release"
+    - echo $env:VAMP_PATH
+    - ctest -C Release -V
     - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR\Scripts\windows-package.iss"'
   artifacts:
     paths:
@@ -77,7 +81,7 @@ Build::Ubuntu:
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build .
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - ctest -C Release
+    - ctest -C Release -V
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
   artifacts:
     paths:
@@ -96,7 +100,7 @@ Build::Debian:
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-11 -DCMAKE_CXX_COMPILER=clang++-11
     - cmake --build .
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - ctest -C Release
+    - ctest -C Release -V
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
   artifacts:
     paths:
