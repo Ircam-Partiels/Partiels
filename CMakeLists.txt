@@ -138,9 +138,6 @@ else()
 target_link_libraries(Partiels PRIVATE atomic)
 endif()
 
-if(UNIX)
-set(ENV{VAMP_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/build/:$ENV{VAMP_PATH})
-endif()
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
 
 enable_testing()
