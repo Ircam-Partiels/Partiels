@@ -5,6 +5,7 @@ ANALYSE_FILE_BEGIN
 
 static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, Document::Exporter::Options const& options, juce::String const& identifier)
 {
+    anlDebug("CommandLine", "Begin analysis...");
     auto* messageManager = juce::MessageManager::getInstanceWithoutCreating();
     if(messageManager == nullptr)
     {
@@ -19,6 +20,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
         return juce::Result::fail(juce::translate("The auto-size option is not supported by the command-line interface!"));
     }
 
+    anlDebug("CommandLine", "Register audio formats...");
     juce::AudioFormatManager audioFormatManager;
     audioFormatManager.registerBasicFormats();
     if(std::none_of(audioFormatManager.begin(), audioFormatManager.end(), [&](auto* audioFormat)
@@ -29,20 +31,32 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
         return juce::Result::fail(juce::translate("The audio file FLNM is not supported!").replace("FLNM", audioFile.getFileName()));
     }
 
+    anlDebug("CommandLine", "Preparing document...");
     juce::UndoManager undoManager;
     Document::Accessor documentAccessor;
     Document::Director documentDirector(documentAccessor, audioFormatManager, undoManager);
     Document::FileBased documentFileBased(documentDirector, Application::Instance::getFileExtension(), Application::Instance::getFileWildCard(), "", "");
 
+    anlDebug("CommandLine", "Loading audio file...");
     documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
-    documentAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
+    
+    anlDebug("CommandLine", "Loading template file...");
     auto const result = documentFileBased.loadTemplate(templateFile);
     if(result.failed())
     {
         return result;
     }
+    documentAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
 
     auto const trackAcsrs = documentAccessor.getAcsrs<Document::AcsrType::tracks>();
+    if(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                   {
+                       return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
+                   }))
+    {
+        return juce::Result::fail(juce::translate("Error"));
+    }
+
     for(auto trackAcsr : trackAcsrs)
     {
         auto trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
@@ -50,6 +64,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
         trackAcsr.get().setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
     }
 
+    anlDebug("CommandLine", "Analysing file...");
     while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
                       {
                           auto const& processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
@@ -59,6 +74,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
         messageManager->runDispatchLoopUntil(2);
     }
 
+    anlDebug("CommandLine", "Exporting results...");
     std::atomic<bool> shouldAbort{false};
     return Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
 }
