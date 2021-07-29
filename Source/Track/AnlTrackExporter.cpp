@@ -113,7 +113,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     }
     else
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the image connott be created.").replace("ANLNAME", name));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the image cannot be created.").replace("ANLNAME", name));
     }
 
     if(shouldAbort)
