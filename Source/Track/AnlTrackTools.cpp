@@ -527,10 +527,9 @@ size_t Track::Tools::getNumBins(std::vector<Results::Columns> const& results)
 
 Zoom::Range Track::Tools::getValueRange(std::vector<Results::Columns> const& results)
 {
-    bool initialized = false;
-    return std::accumulate(results.cbegin(), results.cend(), Zoom::Range(0.0, 0.0), [&](auto const& range, auto const& channel)
+    auto const resultRange = std::accumulate(results.cbegin(), results.cend(), std::optional<Zoom::Range>{}, [&](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
                            {
-                               auto const newRange = std::accumulate(std::next(channel.cbegin()), channel.cend(), range, [&](auto const& crange, auto const& column)
+                               auto const newRange = std::accumulate(channel.cbegin(), channel.cend(), range, [&](auto const& crange, auto const& column) -> std::optional<Zoom::Range>
                                                                      {
                                                                          auto const& values = std::get<2>(column);
                                                                          auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
@@ -544,10 +543,15 @@ Zoom::Range Track::Tools::getValueRange(std::vector<Results::Columns> const& res
                                                                              return crange;
                                                                          }
                                                                          Zoom::Range const newCrange{*min, *max};
-                                                                         return std::exchange(initialized, true) ? crange.getUnionWith(newCrange) : crange;
+                                                                         return crange.has_value() ? newCrange.getUnionWith(*crange) : crange;
                                                                      });
-                               return std::exchange(initialized, true) ? range.getUnionWith(newRange) : newRange;
+        return range.has_value() ? (newRange.has_value() ? newRange->getUnionWith(*range) : range) : newRange;
                            });
+    if(resultRange.has_value())
+    {
+        *resultRange;
+    }
+    return {};
 }
 
 Zoom::Range Track::Tools::getValueRange(std::vector<Results::Points> const& results)
