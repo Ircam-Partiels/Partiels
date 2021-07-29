@@ -76,7 +76,9 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
 
     anlDebug("CommandLine", "Exporting results...");
     std::atomic<bool> shouldAbort{false};
-    return Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
+    auto const results =  Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    return results;
 }
 
 Application::CommandLine::CommandLine()
