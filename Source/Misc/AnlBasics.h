@@ -125,13 +125,8 @@ enum class ActionState
 
 ANALYSE_FILE_END
 
-#ifdef JUCE_DEBUG
 #define anlDebug(domain, message) Anl::Logger::writeToLog("Debug", domain, __FUNCTION__, __LINE__, message)
 #define anlError(domain, message) Anl::Logger::writeToLog("Error", domain, __FUNCTION__, __LINE__, message)
-#else
-#define anlDebug(domain, message) juce::ignoreUnused(domain, message);
-#define anlError(domain, message) juce::ignoreUnused(domain, message);
-#endif
 
 // This method can be used to test if a class/struct is a specialization of template class
 // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
