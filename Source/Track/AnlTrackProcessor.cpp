@@ -21,9 +21,10 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     auto const& state = accessor.getAttr<AttrType::state>();
 
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
-    anlStrongAssert(lock.owns_lock());
+    anlWeakAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
+        anlError("Track", "Concurrent thread access!");
         return {};
     }
     abortAnalysis();
