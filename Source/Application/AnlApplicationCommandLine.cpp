@@ -101,6 +101,7 @@ Application::CommandLine::CommandLine()
          "",
          [](juce::ArgumentList const& args)
          {
+             anlDebug("CommandLine", "Parsing arguments...");
              using Options = Document::Exporter::Options;
 
              auto const audioFile = args.getExistingFileForOption("-i|--input");
