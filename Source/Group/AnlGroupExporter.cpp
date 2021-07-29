@@ -68,7 +68,7 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        return juce::Result::fail(juce::translate("The group ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The group ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", accessor.getAttr<AttrType::name>()).replace("FLNAME", file.getFullPathName()));
     }
     return juce::Result::ok();
 }
