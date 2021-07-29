@@ -19,7 +19,7 @@ Test::Windows:
     - cmake --build . --config Debug
     - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Debug"
     - echo $env:VAMP_PATH
-    - ctest -C Debug -V
+    - ctest -C Debug -VV
 
 Test::Ubuntu:
   stage: test
@@ -62,7 +62,7 @@ Build::Windows:
     - cmake --build . --config Release
     - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Release"
     - echo $env:VAMP_PATH
-    - ctest -C Release -V
+    - ctest -C Release -VV
     - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR\Scripts\windows-package.iss"'
   artifacts:
     paths:
