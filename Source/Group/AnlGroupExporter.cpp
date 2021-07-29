@@ -31,12 +31,6 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
         return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    juce::FileOutputStream stream(temp.getFile());
-    if(!stream.openedOk())
-    {
-        return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-    }
-
     auto getImage = [&]()
     {
         if(!lock.tryEnter())
@@ -51,14 +45,22 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
 
     auto const image = getImage();
 
-    if(shouldAbort)
+    if(image.isValid())
     {
-        return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-    }
+        juce::FileOutputStream stream(temp.getFile());
+        if(!stream.openedOk())
+        {
+            return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        }
 
-    if(!imageFormat->writeImageToStream(image, stream))
+        if(!imageFormat->writeImageToStream(image, stream))
+        {
+            return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        }
+    }
+    else
     {
-        return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", accessor.getAttr<AttrType::name>().replace("FLNAME", file.getFullPathName())));
+        return juce::Result::fail(juce::translate("The group ANLNAME can not be exported as image because the image cannot be created.").replace("ANLNAME", name));
     }
 
     if(shouldAbort)
