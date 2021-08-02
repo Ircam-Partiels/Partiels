@@ -528,25 +528,25 @@ size_t Track::Tools::getNumBins(std::vector<Results::Columns> const& results)
 Zoom::Range Track::Tools::getValueRange(std::vector<Results::Columns> const& results)
 {
     auto const resultRange = std::accumulate(results.cbegin(), results.cend(), std::optional<Zoom::Range>{}, [&](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
-                           {
-                               auto const newRange = std::accumulate(channel.cbegin(), channel.cend(), range, [&](auto const& crange, auto const& column) -> std::optional<Zoom::Range>
-                                                                     {
-                                                                         auto const& values = std::get<2>(column);
-                                                                         auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
-                                                                         if(min == values.cend() || max == values.cend())
-                                                                         {
-                                                                             return crange;
-                                                                         }
-                                                                         anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
-                                                                         if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
-                                                                         {
-                                                                             return crange;
-                                                                         }
-                                                                         Zoom::Range const newCrange{*min, *max};
-                                                                         return crange.has_value() ? newCrange.getUnionWith(*crange) : crange;
-                                                                     });
-        return range.has_value() ? (newRange.has_value() ? newRange->getUnionWith(*range) : range) : newRange;
-                           });
+                                             {
+                                                 auto const newRange = std::accumulate(channel.cbegin(), channel.cend(), range, [&](auto const& crange, auto const& column) -> std::optional<Zoom::Range>
+                                                                                       {
+                                                                                           auto const& values = std::get<2>(column);
+                                                                                           auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
+                                                                                           if(min == values.cend() || max == values.cend())
+                                                                                           {
+                                                                                               return crange;
+                                                                                           }
+                                                                                           anlWeakAssert(std::isfinite(*min) && std::isfinite(*max) && !std::isnan(*min) && !std::isnan(*max));
+                                                                                           if(!std::isfinite(*min) || !std::isfinite(*max) || std::isnan(*min) || std::isnan(*max))
+                                                                                           {
+                                                                                               return crange;
+                                                                                           }
+                                                                                           Zoom::Range const newCrange{*min, *max};
+                                                                                           return crange.has_value() ? newCrange.getUnionWith(*crange) : crange;
+                                                                                       });
+                                                 return range.has_value() ? (newRange.has_value() ? newRange->getUnionWith(*range) : range) : newRange;
+                                             });
     if(resultRange.has_value())
     {
         *resultRange;
