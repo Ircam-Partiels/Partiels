@@ -19,7 +19,7 @@ namespace Document
 
         juce::Result consolidate();
 
-        juce::Result loadTemplate(juce::File const& file);
+        juce::Result loadTemplate(juce::File const& file, bool adaptOnSampleRate);
         juce::Result loadBackup(juce::File const& file);
         juce::Result saveBackup(juce::File const& file);
 

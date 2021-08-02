@@ -149,7 +149,8 @@ Application::Interface::Loader::Loader()
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
-            auto const results = Instance::get().getDocumentFileBased().loadTemplate(file);
+            auto const adaptation = Instance::get().getApplicationAccessor().getAttr<AttrType::adaptationToSampleRate>();
+            auto const results = Instance::get().getDocumentFileBased().loadTemplate(file, adaptation);
             if(results.failed())
             {
                 AlertWindow::showMessage(AlertWindow::MessageType::warning, "Failed to load template!", results.getErrorMessage());

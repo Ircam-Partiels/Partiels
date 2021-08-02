@@ -226,7 +226,7 @@ juce::Result Document::FileBased::consolidate()
     return juce::Result::ok();
 }
 
-juce::Result Document::FileBased::loadTemplate(juce::File const& file)
+juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adaptOnSampleRate)
 {
     auto xml = juce::XmlDocument::parse(file);
     if(xml == nullptr || !xml->hasTagName("document"))
@@ -244,12 +244,22 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
     tempAcsr.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     tempAcsr.setAttr<AttrType::reader>(mAccessor.getAttr<AttrType::reader>(), NotificationType::synchronous);
     tempAcsr.setAttr<AttrType::path>(mAccessor.getAttr<AttrType::path>(), NotificationType::synchronous);
+    auto const tempSampleRate = tempAcsr.getAttr<AttrType::samplerate>();
+    auto const currentSampleRate = mAccessor.getAttr<AttrType::samplerate>();
+    auto const ratio = tempSampleRate > 0.0 ? currentSampleRate / tempSampleRate : 1.0;
     for(auto const acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
     {
         auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
         if(resultFile.hasFileExtension("dat"))
         {
             acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
+        }
+        if(adaptOnSampleRate)
+        {
+            auto state = acsr.get().getAttr<Track::AttrType::state>();
+            state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
+            state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
+            acsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
         }
     }
 
@@ -258,6 +268,7 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file)
     mAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
+
     for(auto const& message : catcher.getMessages())
     {
         auto const type = std::get<0>(message.first);
