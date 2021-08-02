@@ -453,6 +453,11 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 }
 
+void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
+{
+    mAlertCatcher = catcher;
+}
+
 void Track::Director::runAnalysis(NotificationType const notification)
 {
     mGraphics.stopRendering();
@@ -463,17 +468,17 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
     auto showWarningWindow = [&](juce::String const& reason)
     {
-        // clang-format off
-        AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                            "Plugin cannot be loaded",
-                            "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.",
-                            {
-                                {"KEYID", mAccessor.getAttr<AttrType::key>().identifier},
-                                {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature},
-                                {"TRACKNAME", mAccessor.getAttr<AttrType::name>()},
-                                {"REASON", reason}
-                            });
-        // clang-format on
+        auto constexpr type = AlertWindow::MessageType::warning;
+        auto constexpr title = "Plugin cannot be loaded";
+        auto const message = juce::String("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.").replace("KEYID", mAccessor.getAttr<AttrType::key>().identifier).replace("KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature).replace("TRACKNAME", mAccessor.getAttr<AttrType::name>()).replace("REASON", reason);
+        if(mAlertCatcher != nullptr)
+        {
+            mAlertCatcher->postMessage(type, title, message);
+        }
+        else
+        {
+            AlertWindow::showMessage(type, title, message);
+        }
     };
 
     auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReaderManager.get());

@@ -25,6 +25,7 @@ namespace Track
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
+        void setAlertCatcher(AlertWindow::Catcher* catcher);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
 
@@ -64,6 +65,7 @@ namespace Track
         Zoom::Accessor::Listener mSharedZoomListener{typeid(*this).name()};
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
+        AlertWindow::Catcher* mAlertCatcher;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
