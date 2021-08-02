@@ -1,5 +1,6 @@
 v0.0.8 (alpha)
 
+- Imp: Avoid multiple warning windows displayed when several plugins are missing (#114)
 - Imp: Always adapt the step size automatically when changing the block size (#113)
 - Imp: Use editable combo box for block size and step size of analyses (#112)
 - Imp: Text related to loading documents from the start panel (#111)
