@@ -55,13 +55,5 @@ fi
 APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
 $ThisPath/macos-package.sh
 
-echo '\033[0;34m' "Compressing apple image disk..."
-echo '\033[0m'
-zip -r "$APP_NAME-v$APP_VERSION-MacOS-x86_64.zip" "$APP_NAME-v$APP_VERSION.dmg"
-
-echo '\033[0;34m' "Installing zip file..."
-echo '\033[0m'
-cp "$APP_NAME-v$APP_VERSION-MacOS-x86_64.zip" /Users/guillot/Nextcloud/Partiels/Temp
-
 echo '\033[0;34m' "done"
 echo '\033[0m'
