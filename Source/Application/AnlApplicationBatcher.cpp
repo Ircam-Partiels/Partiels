@@ -172,9 +172,11 @@ void Application::Batcher::process()
     mPropertyExport.entry.setTooltip(juce::translate("Abort the batch processing."));
 
     mShoulAbort.store(false);
-    mDocumentAccessor.copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
-    mDocumentAccessor.setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
-    for(auto const acsr : mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>())
+
+    Document::Accessor tempAcsr;
+    tempAcsr.copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
+    tempAcsr.setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
+    for(auto const acsr : tempAcsr.getAcsrs<Document::AcsrType::tracks>())
     {
         auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
         if(resultFile.hasFileExtension("dat"))
@@ -182,6 +184,8 @@ void Application::Batcher::process()
             acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
         }
     }
+
+    mDocumentAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
 
     mProcess = std::async([=, this]() -> ProcessResult
                           {
