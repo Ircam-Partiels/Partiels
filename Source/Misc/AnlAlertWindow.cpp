@@ -95,4 +95,19 @@ AlertWindow::Answer AlertWindow::showYesNoCancel(MessageType const type, juce::S
     }
 }
 
+void AlertWindow::Catcher::postMessage(MessageType const type, juce::String const title, juce::String const& message)
+{
+    mMessages[std::make_tuple(type, title)].add(message);
+}
+
+std::map<AlertWindow::Catcher::entry_t, juce::StringArray> AlertWindow::Catcher::getMessages() const
+{
+    return mMessages;
+}
+
+void AlertWindow::Catcher::clearMessages()
+{
+    mMessages.clear();
+}
+
 ANALYSE_FILE_END

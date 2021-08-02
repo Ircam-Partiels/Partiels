@@ -31,6 +31,21 @@ public:
     // clang-format on
 
     static Answer showYesNoCancel(MessageType const type, juce::String const& title, juce::String const& message, std::initializer_list<std::tuple<juce::String, juce::String>> replacements = {});
+
+    class Catcher
+    {
+    public:
+        using entry_t = std::tuple<MessageType, juce::String>;
+        Catcher() = default;
+        ~Catcher() = default;
+
+        void postMessage(MessageType const type, juce::String const title, juce::String const& message);
+        std::map<entry_t, juce::StringArray> getMessages() const;
+        void clearMessages();
+
+    private:
+        std::map<entry_t, juce::StringArray> mMessages;
+    };
 };
 
 ANALYSE_FILE_END
