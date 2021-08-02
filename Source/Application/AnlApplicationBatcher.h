@@ -29,6 +29,7 @@ namespace Application
 
         void process();
 
+        AlertWindow::Catcher mAlertCatcher;
         juce::UndoManager mUndoManager;
         Document::Accessor mDocumentAccessor;
         Document::Director mDocumentDirector;

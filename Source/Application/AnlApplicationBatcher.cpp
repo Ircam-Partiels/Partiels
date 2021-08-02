@@ -127,8 +127,22 @@ void Application::Batcher::handleAsyncUpdate()
     {
         return;
     }
+    mDocumentDirector.setAlertCatcher(nullptr);
     auto const result = mProcess.get();
-    AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), std::get<2>(result));
+    auto message = std::get<2>(result);
+    auto const alertMessages = mAlertCatcher.getMessages();
+    if(!alertMessages.empty())
+    {
+        message += "\n\n" + juce::translate("Alert messages have been generated during the batch processing:");
+    }
+    for(auto const& alertMessage : alertMessages)
+    {
+        message += "\n";
+        message += juce::String(std::string(magic_enum::enum_name(std::get<0>(alertMessage.first)).substr())).toUpperCase() + " - ";
+        message += std::get<1>(alertMessage.first) + (alertMessage.second.size() > 1 ? "(" + juce::String(alertMessage.second.size()) + ")" : ": ");
+        message += alertMessage.second.joinIntoString(" - ");
+    }
+    AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), message);
 }
 
 void Application::Batcher::process()
@@ -185,6 +199,8 @@ void Application::Batcher::process()
         }
     }
 
+    mAlertCatcher.clearMessages();
+    mDocumentDirector.setAlertCatcher(&mAlertCatcher);
     mDocumentAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
 
     mProcess = std::async([=, this]() -> ProcessResult
