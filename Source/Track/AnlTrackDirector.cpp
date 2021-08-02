@@ -507,7 +507,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
         {
             auto currentState = mAccessor.getAttr<AttrType::state>();
             auto const& defaultState = mAccessor.getAttr<AttrType::description>().defaultState;
-            if(currentState.blockSize == defaultState.blockSize && currentState.stepSize == defaultState.stepSize)
+            if(mAlertCatcher != nullptr || (currentState.blockSize == defaultState.blockSize && currentState.stepSize == defaultState.stepSize))
             {
                 showWarningWindow(message);
             }

@@ -65,7 +65,7 @@ namespace Track
         Zoom::Accessor::Listener mSharedZoomListener{typeid(*this).name()};
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
-        AlertWindow::Catcher* mAlertCatcher;
+        AlertWindow::Catcher* mAlertCatcher = nullptr;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
