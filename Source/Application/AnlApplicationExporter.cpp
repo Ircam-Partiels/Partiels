@@ -16,6 +16,7 @@ Application::Exporter::Exporter()
                       {
                           mShoulAbort.store(true);
                           mPropertyExport.entry.setButtonText(juce::translate("Aborting..."));
+                          mPropertyExport.entry.setTooltip(juce::translate("Aborting the export..."));
                           mPropertyExport.setEnabled(false);
                       }
                       else
@@ -133,6 +134,7 @@ void Application::Exporter::exportToFile()
 
     mExporterPanel.setEnabled(false);
     mPropertyExport.entry.setButtonText(juce::translate("Abort"));
+    mPropertyExport.entry.setTooltip(juce::translate("Abort the export"));
 
     mShoulAbort.store(false);
     mProcess = std::async([=, this, file = fc.getResult()]() -> ProcessResult
@@ -155,6 +157,8 @@ void Application::Exporter::handleAsyncUpdate()
 
     mShoulAbort.store(false);
     mPropertyExport.entry.setButtonText(juce::translate("Export"));
+    mPropertyExport.entry.setTooltip(juce::translate("Export the results"));
+
     mFloatingWindow.onCloseButtonPressed = nullptr;
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
