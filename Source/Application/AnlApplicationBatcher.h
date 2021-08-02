@@ -37,6 +37,7 @@ namespace Application
         AudioFileLayoutTable mAudioFileLayoutTable;
         ColouredPanel mSeparator;
         Document::Exporter::Panel mExporterPanel;
+        PropertyToggle mPropertyAdaptationToSampleRate;
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
         BoundsListener mBoundsListener;

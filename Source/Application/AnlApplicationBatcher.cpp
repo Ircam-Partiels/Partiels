@@ -8,6 +8,7 @@ Application::Batcher::Batcher()
 , mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::all, AudioFileLayout::ChannelLayout::all)
 , mExporterPanel(Instance::get().getDocumentAccessor(), nullptr)
+, mPropertyAdaptationToSampleRate("Adaptation to Sample Rate", "Adapt the block size and the step size of the analyzes to the sample rate", nullptr)
 , mPropertyExport("Process", "Process the files", [this]()
                   {
                       if(mProcess.valid())
@@ -54,6 +55,11 @@ Application::Batcher::Batcher()
                 mExporterPanel.setOptions(acsr.getAttr<AttrType::exportOptions>(), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::adaptationToSampleRate:
+            {
+                mPropertyAdaptationToSampleRate.entry.setToggleState(acsr.getAttr<AttrType::adaptationToSampleRate>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
         }
     };
 
@@ -70,6 +76,7 @@ Application::Batcher::Batcher()
     addAndMakeVisible(mSeparator);
     addAndMakeVisible(mExporterPanel);
     addAndMakeVisible(mPropertyExport);
+    addAndMakeVisible(mPropertyAdaptationToSampleRate);
     addAndMakeVisible(mLoadingCircle);
     setSize(300, 200);
 }
@@ -88,6 +95,7 @@ void Application::Batcher::resized()
     mAudioFileLayoutTable.setBounds(bounds.removeFromTop(200));
     mSeparator.setBounds(bounds.removeFromTop(1));
     mExporterPanel.setBounds(bounds.removeFromTop(mExporterPanel.getHeight()));
+    mPropertyAdaptationToSampleRate.setBounds(bounds.removeFromTop(mPropertyAdaptationToSampleRate.getHeight()));
     mPropertyExport.setBounds(bounds.removeFromTop(mPropertyExport.getHeight()));
     mLoadingCircle.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
     setSize(bounds.getWidth(), bounds.getY() + 2);
