@@ -29,6 +29,7 @@ namespace Track
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
+
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);

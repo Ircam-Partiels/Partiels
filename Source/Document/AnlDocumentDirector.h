@@ -56,7 +56,7 @@ namespace Document
         std::vector<std::unique_ptr<Track::Director>> mTracks;
         double mSampleRate = 44100.0;
         double mDuration = 0.0;
-        AlertWindow::Catcher* mAlertCatcher;
+        AlertWindow::Catcher* mAlertCatcher = nullptr;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };
