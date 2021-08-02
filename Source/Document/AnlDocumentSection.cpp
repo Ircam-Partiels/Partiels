@@ -245,6 +245,7 @@ Document::Section::Section(Director& director)
             break;
             case AttrType::layout:
             case AttrType::viewport:
+            case AttrType::samplerate:
                 break;
         }
     };

@@ -54,7 +54,7 @@ namespace Document
 
         std::vector<std::unique_ptr<Group::Director>> mGroups;
         std::vector<std::unique_ptr<Track::Director>> mTracks;
-        double mSampleRate = 44100.0;
+        std::optional<double> mSampleRate;
         double mDuration = 0.0;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
 

@@ -338,6 +338,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::grid:
+            case AttrType::samplerate:
                 break;
             case AttrType::layout:
             {

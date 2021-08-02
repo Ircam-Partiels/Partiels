@@ -57,6 +57,14 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
             }
             break;
+            case AttrType::samplerate:
+            {
+                if(mSampleRate.has_value())
+                {
+                    mAccessor.setAttr<AttrType::samplerate>(*mSampleRate, notification);
+                }
+            }
+            break;
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::path:
@@ -213,7 +221,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             break;
             case Zoom::AttrType::minimumLength:
             {
-                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / mSampleRate, notification);
+                auto const sampleRate = mAccessor.getAttr<AttrType::samplerate>();
+                zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(sampleRate > 0.0 ? 512.0 / sampleRate : mDuration, notification);
             }
             break;
             case Zoom::AttrType::visibleRange:
@@ -779,6 +788,8 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     if(channels.empty())
     {
+        mSampleRate.reset();
+        mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range{}, notification);
@@ -791,8 +802,9 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     if(reader == nullptr)
     {
         AlertWindow::showMessage(AlertWindow::MessageType::warning, "Audio format reader cannot be loaded!", errors.joinIntoString("\n"));
+        mSampleRate.reset();
+        mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         mDuration = 0.0;
-        mSampleRate = 44100.0;
         zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
         zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(Zoom::epsilon(), notification);
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
@@ -803,8 +815,10 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
         AlertWindow::showMessage(AlertWindow::MessageType::warning, "Invalid audio format reader!", errors.joinIntoString("\n"));
     }
 
-    mSampleRate = reader->sampleRate > 0.0 ? reader->sampleRate : 44100.0;
-    mDuration = static_cast<double>(reader->lengthInSamples) / mSampleRate;
+    mSampleRate = reader->sampleRate;
+    mAccessor.setAttr<AttrType::samplerate>(reader->sampleRate, notification);
+
+    mDuration = reader->sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / reader->sampleRate : 0.0;
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
     zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(512.0 / reader->sampleRate, notification);

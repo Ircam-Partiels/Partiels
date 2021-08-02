@@ -200,6 +200,7 @@ Document::AudioReader::AudioReader(Accessor& accessor, juce::AudioFormatManager&
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::grid:
+            case AttrType::samplerate:
                 break;
         }
     };

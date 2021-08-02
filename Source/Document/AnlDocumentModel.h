@@ -20,6 +20,7 @@ namespace Document
         , viewport
         , path
         , grid
+        , samplerate
     };
     
     enum class AcsrType : size_t
@@ -41,6 +42,7 @@ namespace Document
     , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
     , Model::Attr<AttrType::path, juce::File, Model::Flag::saveable| Model::Flag::notifying>
     , Model::Attr<AttrType::grid, GridMode, Model::Flag::saveable| Model::Flag::notifying>
+    , Model::Attr<AttrType::samplerate, double, Model::Flag::saveable| Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -59,7 +61,7 @@ namespace Document
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({}, {}, {}, {}, {GridMode::partial}))
+        : Accessor(AttrContainer({}, {}, {}, {}, {GridMode::partial}, {0.0}))
         {
         }
 

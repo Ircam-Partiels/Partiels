@@ -20,6 +20,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::grid:
+            case AttrType::samplerate:
                 break;
         }
     };
