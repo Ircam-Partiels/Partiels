@@ -37,6 +37,8 @@ namespace Document
         bool moveTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
         bool copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
 
+        void setAlertCatcher(AlertWindow::Catcher* catcher);
+
     private:
         // FileWatcher
         bool fileHasBeenRemoved(juce::File const& file) override;
@@ -54,6 +56,7 @@ namespace Document
         std::vector<std::unique_ptr<Track::Director>> mTracks;
         double mSampleRate = 44100.0;
         double mDuration = 0.0;
+        AlertWindow::Catcher* mAlertCatcher;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

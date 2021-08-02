@@ -83,6 +83,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 anlStrongAssert(director != nullptr);
                 if(director != nullptr)
                 {
+                    director->setAlertCatcher(mAlertCatcher);
                     director->onIdentifierUpdated = [this](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
@@ -272,6 +273,21 @@ Track::Director& Document::Director::getTrackDirector(juce::String const& identi
                            });
     anlStrongAssert(it != mTracks.end());
     return *it->get();
+}
+
+void Document::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
+{
+    if(mAlertCatcher != catcher)
+    {
+        mAlertCatcher = catcher;
+        for(auto& track : mTracks)
+        {
+            if(track != nullptr)
+            {
+                track->setAlertCatcher(catcher);
+            }
+        }
+    }
 }
 
 void Document::Director::startAction()
