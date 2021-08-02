@@ -9,7 +9,7 @@ ANALYSE_FILE_BEGIN
 Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
 , mUndoManager(undoManager)
-, mAudioFormatReaderManager(std::move(audioFormatReader))
+, mAudioFormatReader(std::move(audioFormatReader))
 {
     accessor.onAttrUpdated = [this](AttrType attr, NotificationType notification)
     {
@@ -31,7 +31,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     {
                         try
                         {
-                            auto const sampleRate = mAudioFormatReaderManager != nullptr ? mAudioFormatReaderManager->sampleRate : 48000.0;
+                            auto const sampleRate = mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 48000.0;
                             return PluginList::Scanner::loadDescription(mAccessor.getAttr<AttrType::key>(), sampleRate);
                         }
                         catch(...)
@@ -440,13 +440,13 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
 
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
-    anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReaderManager);
-    if(audioFormatReader == mAudioFormatReaderManager)
+    anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReader);
+    if(audioFormatReader == mAudioFormatReader)
     {
         return;
     }
 
-    std::swap(mAudioFormatReaderManager, audioFormatReader);
+    std::swap(mAudioFormatReader, audioFormatReader);
     if(mAccessor.getAttr<AttrType::file>() == juce::File{})
     {
         runAnalysis(notification);
@@ -461,7 +461,7 @@ void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
 void Track::Director::runAnalysis(NotificationType const notification)
 {
     mGraphics.stopRendering();
-    if(mAudioFormatReaderManager == nullptr)
+    if(mAudioFormatReader == nullptr)
     {
         mProcessor.stopAnalysis();
         return;
@@ -481,7 +481,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
         }
     };
 
-    auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReaderManager.get());
+    auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get());
     if(!result.has_value())
     {
         return;
@@ -495,7 +495,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
         {
             anlDebug("Track", "analysis launched");
             auto const key = mAccessor.getAttr<AttrType::key>();
-            auto const sampleRate = mAudioFormatReaderManager->sampleRate;
+            auto const sampleRate = mAudioFormatReader->sampleRate;
             auto description = PluginList::Scanner::loadDescription(key, sampleRate);
             description.output = std::get<2>(*result);
             mAccessor.setAttr<AttrType::description>(description, notification);
