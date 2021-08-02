@@ -112,6 +112,7 @@ void Application::Batcher::handleAsyncUpdate()
 {
     mAudioFileLayoutTable.setEnabled(true);
     mExporterPanel.setEnabled(true);
+    mPropertyAdaptationToSampleRate.setEnabled(true);
     mPropertyExport.setEnabled(true);
 
     mShoulAbort.store(false);
@@ -166,6 +167,7 @@ void Application::Batcher::process()
 
     mAudioFileLayoutTable.setEnabled(false);
     mExporterPanel.setEnabled(false);
+    mPropertyAdaptationToSampleRate.setEnabled(false);
     mPropertyExport.entry.setButtonText(juce::translate("Abort"));
     mPropertyExport.entry.setTooltip(juce::translate("Abort the batch processing."));
 
