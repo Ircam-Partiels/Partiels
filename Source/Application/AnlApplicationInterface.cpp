@@ -113,6 +113,11 @@ Application::Interface::Loader::Loader()
     {
         commandManager.invokeDirectly(CommandIDs::EditLoadTemplate, true);
     };
+    mAdaptationButton.onClick = [this]()
+    {
+        Instance::get().getApplicationAccessor().setAttr<AttrType::adaptationToSampleRate>(mAdaptationButton.getToggleState(), NotificationType::synchronous);
+    };
+
     mLoadFileInfo.setText(juce::translate("or\nDrag & Drop\n(Document/Audio)"), juce::NotificationType::dontSendNotification);
     mLoadFileInfo.setJustificationType(juce::Justification::centredTop);
 
@@ -125,8 +130,10 @@ Application::Interface::Loader::Loader()
     mLoadTemplateInfo.setText(juce::translate("Use an existing document as a template"), juce::NotificationType::dontSendNotification);
     mLoadTemplateInfo.setJustificationType(juce::Justification::centredTop);
 
+    mAdaptationInfo.setText(juce::translate("Adapt the block size and the step size of the analyzes to the sample rate"), juce::NotificationType::dontSendNotification);
+
     addAndMakeVisible(mSeparatorVertical);
-    addAndMakeVisible(mSeparatorHorizontal);
+    addAndMakeVisible(mSeparatorTop);
     addAndMakeVisible(mSelectRecentDocument);
     addAndMakeVisible(mFileTable);
 
@@ -180,6 +187,27 @@ Application::Interface::Loader::Loader()
         updateState();
     };
 
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::windowState:
+            case AttrType::recentlyOpenedFilesList:
+            case AttrType::currentDocumentFile:
+            case AttrType::colourMode:
+            case AttrType::showInfoBubble:
+            case AttrType::exportOptions:
+                break;
+            case AttrType::adaptationToSampleRate:
+            {
+                mAdaptationButton.setToggleState(acsr.getAttr<AttrType::adaptationToSampleRate>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+        }
+    };
+
+    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
+
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     documentAccessor.addListener(mDocumentListener, NotificationType::synchronous);
     commandManager.addListener(this);
@@ -190,6 +218,8 @@ Application::Interface::Loader::~Loader()
     Instance::get().getApplicationCommandManager().removeListener(this);
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     documentAccessor.removeListener(mDocumentListener);
+
+    Instance::get().getApplicationAccessor().removeListener(mListener);
 }
 
 void Application::Interface::Loader::updateState()
@@ -205,6 +235,9 @@ void Application::Interface::Loader::updateState()
     removeChildComponent(&mAddTrackInfo);
     removeChildComponent(&mLoadTemplateButton);
     removeChildComponent(&mLoadTemplateInfo);
+    removeChildComponent(&mSeparatorBottom);
+    removeChildComponent(&mAdaptationButton);
+    removeChildComponent(&mAdaptationInfo);
     setVisible(!documentHasTrackOrGroup);
     if(!documentHasFiles)
     {
@@ -219,8 +252,12 @@ void Application::Interface::Loader::updateState()
         addAndMakeVisible(mAddTrackInfo);
         addAndMakeVisible(mLoadTemplateButton);
         addAndMakeVisible(mLoadTemplateInfo);
+        addAndMakeVisible(mSeparatorBottom);
+        addAndMakeVisible(mAdaptationButton);
+        addAndMakeVisible(mAdaptationInfo);
         mSelectRecentDocument.setText(juce::translate("Use a document as a template"), juce::NotificationType::dontSendNotification);
     }
+    resized();
 }
 
 void Application::Interface::Loader::resized()
@@ -229,7 +266,14 @@ void Application::Interface::Loader::resized()
     {
         auto rightBounds = bounds.removeFromRight(220);
         mSelectRecentDocument.setBounds(rightBounds.removeFromTop(32));
-        mSeparatorHorizontal.setBounds(rightBounds.removeFromTop(1));
+        mSeparatorTop.setBounds(rightBounds.removeFromTop(1));
+        if(mAdaptationButton.isVisible())
+        {
+            auto bottomBounds = rightBounds.removeFromBottom(64);
+            mAdaptationButton.setBounds(bottomBounds.removeFromLeft(24).withSizeKeepingCentre(18, 18));
+            mAdaptationInfo.setBounds(bottomBounds);
+            mSeparatorBottom.setBounds(rightBounds.removeFromBottom(1));
+        }
         mFileTable.setBounds(rightBounds);
         mSeparatorVertical.setBounds(bounds.removeFromRight(1));
     }

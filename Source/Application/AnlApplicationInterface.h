@@ -91,8 +91,13 @@ namespace Application
 
             juce::Label mSelectRecentDocument;
             ColouredPanel mSeparatorVertical;
-            ColouredPanel mSeparatorHorizontal;
+            ColouredPanel mSeparatorTop;
+            ColouredPanel mSeparatorBottom;
             FileTable mFileTable;
+            juce::ToggleButton mAdaptationButton;
+            juce::Label mAdaptationInfo;
+
+            Accessor::Listener mListener{typeid(*this).name()};
             bool mIsDragging{false};
         };
 
