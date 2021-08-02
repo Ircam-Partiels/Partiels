@@ -12,18 +12,18 @@ Application::Interface::Loader::FileTable::FileTable()
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
-            case AttrType::windowState:
-                break;
             case AttrType::recentlyOpenedFilesList:
             {
                 mListBox.updateContent();
                 mListBox.repaint();
             }
             break;
+            case AttrType::windowState:
             case AttrType::currentDocumentFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
+            case AttrType::adaptationToSampleRate:
                 break;
         }
     };
@@ -169,6 +169,7 @@ Application::Interface::Loader::Loader()
             case Document::AttrType::viewport:
             case Document::AttrType::path:
             case Document::AttrType::grid:
+            case Document::AttrType::samplerate:
                 break;
         }
     };
@@ -364,6 +365,7 @@ Application::Interface::Interface()
             case AttrType::currentDocumentFile:
             case AttrType::colourMode:
             case AttrType::exportOptions:
+            case AttrType::adaptationToSampleRate:
                 break;
             case AttrType::showInfoBubble:
             {

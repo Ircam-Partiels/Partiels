@@ -18,6 +18,7 @@ namespace Application
         , colourMode
         , showInfoBubble
         , exportOptions
+        , adaptationToSampleRate
     };
 
     using AttrContainer = Model::Container
@@ -27,6 +28,7 @@ namespace Application
     , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
     , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Flag::basic>
+    , Model::Attr<AttrType::adaptationToSampleRate, bool, Flag::basic>
     >;
     // clang-format on
 
@@ -45,6 +47,7 @@ namespace Application
             , {LookAndFeel::ColourChart::Mode::night}
             , {true}
             , {}
+            , {false}
         }))
         {
         }

@@ -23,6 +23,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
+            case AttrType::adaptationToSampleRate:
                 break;
         }
     };

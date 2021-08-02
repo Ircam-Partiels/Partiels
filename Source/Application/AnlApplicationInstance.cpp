@@ -113,10 +113,11 @@ void Application::Instance::initialise(juce::String const& commandLine)
         switch(attribute)
         {
             case AttrType::recentlyOpenedFilesList:
-                break;
             case AttrType::currentDocumentFile:
-                break;
             case AttrType::windowState:
+            case AttrType::showInfoBubble:
+            case AttrType::exportOptions:
+            case AttrType::adaptationToSampleRate:
                 break;
             case AttrType::colourMode:
             {
@@ -138,9 +139,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 }
             }
             break;
-            case AttrType::showInfoBubble:
-            case AttrType::exportOptions:
-                break;
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
