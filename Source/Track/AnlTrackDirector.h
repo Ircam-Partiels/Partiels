@@ -29,8 +29,6 @@ namespace Track
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
-        void setPreviousSampleRate(std::optional<double> sampleRate);
-
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
@@ -68,7 +66,6 @@ namespace Track
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
-        std::optional<double> mPreviousSampleRate;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
     };

@@ -458,11 +458,6 @@ void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
     mAlertCatcher = catcher;
 }
 
-void Track::Director::setPreviousSampleRate(std::optional<double> sampleRate)
-{
-    mPreviousSampleRate = sampleRate;
-}
-
 void Track::Director::runAnalysis(NotificationType const notification)
 {
     mGraphics.stopRendering();
