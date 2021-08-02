@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, Document::Exporter::Options const& options, juce::String const& identifier)
+static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, Document::Exporter::Options const& options, bool adaptationToSampleRate, juce::String const& identifier)
 {
     anlDebug("CommandLine", "Begin analysis...");
     auto* messageManager = juce::MessageManager::getInstanceWithoutCreating();
@@ -41,7 +41,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
     documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
 
     anlDebug("CommandLine", "Loading template file...");
-    auto const result = documentFileBased.loadTemplate(templateFile);
+    auto const result = documentFileBased.loadTemplate(templateFile, adaptationToSampleRate);
     if(result.failed())
     {
         return result;
@@ -95,6 +95,7 @@ Application::CommandLine::CommandLine()
          "--format|-f <formatname> Defines the export format (jpeg, png, csv or json) (required).\n\t"
          "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
+         "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv and json formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
@@ -121,6 +122,8 @@ Application::CommandLine::CommandLine()
              {
                  juce::ConsoleApplication::fail("Could not find folder: " + outputDir.getFullPathName());
              }
+
+             auto const adaptationToSampleRate = args.containsOption("-adapt");
 
              Options options;
              auto const format = args.getValueForOption("-f|--format");
@@ -172,7 +175,7 @@ Application::CommandLine::CommandLine()
                  juce::ConsoleApplication::fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv or json.");
              }
 
-             auto const result = analyzeAndExport(audioFile, templateFile, outputDir, options, "");
+             auto const result = analyzeAndExport(audioFile, templateFile, outputDir, options, adaptationToSampleRate, "");
              if(result.failed())
              {
                  juce::ConsoleApplication::fail(result.getErrorMessage());
