@@ -294,7 +294,7 @@ void Application::Interface::Loader::resized()
         {
             auto centerRightBounds = centerBounds.withTrimmedLeft(2);
             mLoadTemplateButton.setBounds(centerRightBounds.removeFromTop(32));
-            mLoadTemplateInfo.setBounds(centerRightBounds.removeFromTop(32));
+            mLoadTemplateInfo.setBounds(centerRightBounds);
         }
     }
 }
