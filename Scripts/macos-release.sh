@@ -15,7 +15,7 @@ cmake .. -G Xcode
 
 echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'
-xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "ALL_BUILD" -archivePath "$APP_NAME.xcarchive"
+xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "Partiels" -archivePath "$APP_NAME.xcarchive"
 
 echo '\033[0;34m' "Exporting archive..."
 echo '\033[0m'
