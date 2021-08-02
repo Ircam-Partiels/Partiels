@@ -15,6 +15,7 @@ Application::Batcher::Batcher()
                       {
                           mShoulAbort.store(true);
                           mPropertyExport.entry.setButtonText(juce::translate("Aborting..."));
+                          mPropertyExport.entry.setTooltip(juce::translate("Batch processing aborting..."));
                           mPropertyExport.setEnabled(false);
                       }
                       else
@@ -114,7 +115,9 @@ void Application::Batcher::handleAsyncUpdate()
     mPropertyExport.setEnabled(true);
 
     mShoulAbort.store(false);
-    mPropertyExport.entry.setButtonText(juce::translate("Export"));
+    mPropertyExport.entry.setButtonText(juce::translate("Process"));
+    mPropertyExport.entry.setTooltip(juce::translate("Launch the batch processing."));
+
     mFloatingWindow.onCloseButtonPressed = nullptr;
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
@@ -164,6 +167,7 @@ void Application::Batcher::process()
     mAudioFileLayoutTable.setEnabled(false);
     mExporterPanel.setEnabled(false);
     mPropertyExport.entry.setButtonText(juce::translate("Abort"));
+    mPropertyExport.entry.setTooltip(juce::translate("Abort the batch processing."));
 
     mShoulAbort.store(false);
     mDocumentAccessor.copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
