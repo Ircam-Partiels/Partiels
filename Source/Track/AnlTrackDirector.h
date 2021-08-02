@@ -25,10 +25,10 @@ namespace Track
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
-        void setAlertCatcher(AlertWindow::Catcher* catcher);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
 
+        void setAlertCatcher(AlertWindow::Catcher* catcher);
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
