@@ -180,142 +180,106 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     auto const columns = results.getColumns();
     if(markers != nullptr)
     {
-        if(includeHeader)
+        auto addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
-            addColumn("ROW");
-            for(size_t i = 0; i < markers->size(); ++i)
+            if(includeHeader)
             {
-                addColumn("TIME_" + juce::String(i));
-                addColumn("DURATION_" + juce::String(i));
-                addColumn("LABEL_" + juce::String(i));
+                addColumn("TIME");
+                addColumn("DURATION");
+                addColumn("LABEL");
+                addLine();
             }
-            addLine();
-        }
+            for(auto const& marker : channelMarkers)
+            {
+                addColumn(juce::String(std::get<0>(marker)));
+                addColumn(juce::String(std::get<1>(marker)));
+                addColumn(std::get<2>(marker));
+                addLine();
+            }
+        };
 
-        auto const maxChannel = std::max_element(markers->cbegin(), markers->cend(), [](auto const& lhs, auto const& rhs)
-                                                 {
-                                                     return lhs.size() < rhs.size();
-                                                 });
-        auto const numValues = maxChannel != markers->cend() ? maxChannel->size() : 0_z;
-        for(size_t i = 0; i < numValues; ++i)
+        for(size_t i = 0; i < markers->size(); ++i)
         {
             if(shouldAbort)
             {
                 return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
             }
 
-            addColumn(juce::String(i));
-            for(auto const& channelResults : *markers)
-            {
-                if(channelResults.size() > i)
-                {
-                    addColumn(juce::String(std::get<0>(channelResults[i])));
-                    addColumn(juce::String(std::get<1>(channelResults[i])));
-                    addColumn(std::get<2>(channelResults[i]));
-                }
-                else
-                {
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                }
-            }
+            addChannel(markers->at(i));
             addLine();
         }
     }
     else if(points != nullptr)
     {
-        if(includeHeader)
+        auto addChannel = [&](std::vector<Results::Point> const& channelPoints)
         {
-            addColumn("ROW");
-            for(size_t i = 0; i < points->size(); ++i)
+            if(includeHeader)
             {
-                addColumn("TIME_" + juce::String(i));
-                addColumn("DURATION_" + juce::String(i));
-                addColumn("VALUE_" + juce::String(i));
+                addColumn("TIME");
+                addColumn("DURATION");
+                addColumn("VALUE");
+                addLine();
             }
-            addLine();
-        }
+            for(auto const& point : channelPoints)
+            {
+                addColumn(juce::String(std::get<0>(point)));
+                addColumn(juce::String(std::get<1>(point)));
+                addColumn(!std::get<2>(point).has_value() ? "\"\"" : juce::String(*std::get<2>(point)));
+                addLine();
+            }
+        };
 
-        auto const maxChannel = std::max_element(points->cbegin(), points->cend(), [](auto const& lhs, auto const& rhs)
-                                                 {
-                                                     return lhs.size() < rhs.size();
-                                                 });
-        auto const numValues = maxChannel != points->cend() ? maxChannel->size() : 0_z;
-        for(size_t i = 0; i < numValues; ++i)
+        for(size_t i = 0; i < points->size(); ++i)
         {
             if(shouldAbort)
             {
                 return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
             }
 
-            addColumn(juce::String(i));
-            for(auto const& channelResults : *points)
-            {
-                if(channelResults.size() > i)
-                {
-                    addColumn(juce::String(std::get<0>(channelResults[i])));
-                    addColumn(juce::String(std::get<1>(channelResults[i])));
-                    addColumn(!std::get<2>(channelResults[i]).has_value() ? "\"\"" : juce::String(*std::get<2>(channelResults[i])));
-                }
-                else
-                {
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                }
-            }
+            addChannel(points->at(i));
             addLine();
         }
     }
     else if(columns != nullptr)
     {
-        if(includeHeader)
+        auto addChannel = [&](std::vector<Results::Column> const& channelColumns)
         {
-            addColumn("ROW");
-            for(size_t i = 0; i < columns->size(); ++i)
-            {
-                addColumn("TIME_" + juce::String(i));
-                addColumn("DURATION_" + juce::String(i));
-                auto const& channelResults = columns->at(i);
-                for(size_t j = 0; j < std::get<2>(channelResults.front()).size(); ++j)
-                {
-                    addColumn("BIN_" + juce::String(i) + "_" + juce::String(j));
-                }
-            }
-            addLine();
-        }
-
-        auto const maxChannel = std::max_element(columns->cbegin(), columns->cend(), [](auto const& lhs, auto const& rhs)
+            auto const numBins = std::accumulate(channelColumns.cbegin(), channelColumns.cend(), 0_z, [](auto const s, auto const& channelColumn)
                                                  {
-                                                     return lhs.size() < rhs.size();
+                                                     return std::max(s, std::get<2>(channelColumn).size());
                                                  });
-        auto const numValues = maxChannel != columns->cend() ? maxChannel->size() : 0_z;
-        for(size_t i = 0; i < numValues; ++i)
-        {
-            addColumn(juce::String(i));
-            for(auto const& channelResults : *columns)
-            {
-                if(shouldAbort)
-                {
-                    return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-                }
 
-                if(channelResults.size() > i)
+            if(includeHeader)
+            {
+                addColumn("TIME");
+                addColumn("DURATION");
+                for(size_t j = 0; j < numBins; ++j)
                 {
-                    addColumn(juce::String(std::get<0>(channelResults[i])));
-                    addColumn(juce::String(std::get<1>(channelResults[i])));
-                    for(auto const& value : std::get<2>(channelResults[i]))
-                    {
-                        addColumn(juce::String(value));
-                    }
+                    addColumn("BIN" + juce::String(j));
                 }
-                else
-                {
-                    addColumn("\"\"");
-                    addColumn("\"\"");
-                }
+                addLine();
             }
+
+            for(auto const& column : channelColumns)
+            {
+                addColumn(juce::String(std::get<0>(column)));
+                addColumn(juce::String(std::get<1>(column)));
+                for(auto const& value : std::get<2>(column))
+                {
+                    addColumn(juce::String(value));
+                }
+                addLine();
+            }
+        };
+
+        for(size_t i = 0; i < columns->size(); ++i)
+        {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+
+            addChannel(columns->at(i));
             addLine();
         }
     }
