@@ -354,7 +354,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                     return {};
                 }
                 std::get<2>(marker).resize(length);
-                if(!stream.read(reinterpret_cast<char*>(std::get<2>(marker).data()), static_cast<long>(sizeof(length) * sizeof(char))))
+                if(!stream.read(reinterpret_cast<char*>(std::get<2>(marker).data()), static_cast<long>(length * sizeof(char))))
                 {
                     mLoadingState.store(ProcessState::aborted);
                     triggerAsyncUpdate();
