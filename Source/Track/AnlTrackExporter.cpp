@@ -472,13 +472,13 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
                 return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
             }
 
-            auto const numChannels = channelResults.size();
+            auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
             for(auto const& result : channelResults)
             {
                 stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
                 stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
-                auto const length = std::get<2>(result).size();
+                auto const length = static_cast<uint64_t>(std::get<2>(result).size());
                 stream.write(reinterpret_cast<char const*>(&length), sizeof(length));
                 stream.write(std::get<2>(result).c_str(), static_cast<long>(sizeof(char) * std::get<2>(result).size()));
             }
@@ -494,7 +494,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
                 return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
             }
 
-            auto const numChannels = channelResults.size();
+            auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
             for(auto const& result : channelResults)
             {
@@ -515,7 +515,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
         stream.write("PTLCLS", 6 * sizeof(char));
         for(auto const& channelResults : *columns)
         {
-            auto const numChannels = channelResults.size();
+            auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
             for(auto const& result : channelResults)
             {
@@ -526,7 +526,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
 
                 stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
                 stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
-                auto const numBins = std::get<2>(result).size();
+                auto const numBins = static_cast<uint64_t>(std::get<2>(result).size());
                 stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
                 stream.write(reinterpret_cast<char const*>(std::get<2>(result).data()), static_cast<long>(sizeof(*std::get<2>(result).data()) * numBins));
             }

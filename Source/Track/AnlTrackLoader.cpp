@@ -314,7 +314,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
         while(!stream.eof())
         {
             Results::Markers markers;
-            size_t numChannels;
+            uint64_t numChannels;
             if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
             {
                 if(stream.eof())
@@ -325,7 +325,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                 triggerAsyncUpdate();
                 return {};
             }
-            markers.resize(numChannels);
+            markers.resize(static_cast<size_t>(numChannels));
             for(auto& marker : markers)
             {
                 if(mLoadingState.load() == ProcessState::aborted)
@@ -346,7 +346,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                     triggerAsyncUpdate();
                     return {};
                 }
-                size_t length;
+                uint64_t length;
                 if(!stream.read(reinterpret_cast<char*>(&length), sizeof(length)))
                 {
                     mLoadingState.store(ProcessState::aborted);
@@ -372,7 +372,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
         while(!stream.eof())
         {
             Results::Points points;
-            size_t numChannels;
+            uint64_t numChannels;
             if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
             {
                 if(stream.eof())
@@ -383,7 +383,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                 triggerAsyncUpdate();
                 return {};
             }
-            points.resize(numChannels);
+            points.resize(static_cast<size_t>(numChannels));
             for(auto& point : points)
             {
                 if(mLoadingState.load() == ProcessState::aborted)
@@ -435,7 +435,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
         while(!stream.eof())
         {
             Results::Columns columns;
-            size_t numChannels;
+            uint64_t numChannels;
             if(!stream.read(reinterpret_cast<char*>(&numChannels), sizeof(numChannels)))
             {
                 if(stream.eof())
@@ -446,7 +446,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                 triggerAsyncUpdate();
                 return {};
             }
-            columns.resize(numChannels);
+            columns.resize(static_cast<size_t>(numChannels));
             for(auto& column : columns)
             {
                 if(mLoadingState.load() == ProcessState::aborted)
@@ -467,7 +467,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                     triggerAsyncUpdate();
                     return {};
                 }
-                size_t numBins;
+                uint64_t numBins;
                 if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
                 {
                     mLoadingState.store(ProcessState::aborted);
