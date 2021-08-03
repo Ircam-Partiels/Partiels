@@ -46,6 +46,9 @@ namespace Track
         Chrono mChrono{"Track", "loading file ended"};
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Loader)
+
+    public:
+        class UnitTest;
     };
 } // namespace Track
 

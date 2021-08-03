@@ -1,5 +1,6 @@
 #include "AnlTrackLoader.h"
 #include "AnlTrackTools.h"
+#include <TestResultsData.h>
 
 #if JUCE_GCC
 #define ANL_ATTR_UNUSED __attribute__((unused))
@@ -481,5 +482,149 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
     }
     return {};
 }
+
+class Track::Loader::UnitTest
+: public juce::UnitTest
+{
+public:
+    UnitTest()
+    : juce::UnitTest("Track", "Loader")
+    {
+    }
+
+    ~UnitTest() override = default;
+
+    void runTest() override
+    {
+        auto checkMakers = [this](Results results)
+        {
+            auto const markers = results.getMarkers();
+            expect(markers != nullptr);
+            if(markers == nullptr)
+            {
+                return;
+            }
+            expectEquals(markers->size(), 2_z);
+            if(markers->size() != 2_z)
+            {
+                return;
+            }
+
+            using namespace std::string_literals;
+            auto expectMarker = [this](Results::Marker const& marker, double time, std::string const& label)
+            {
+                expectWithinAbsoluteError(std::get<0>(marker), time, 1e-9);
+                expectWithinAbsoluteError(std::get<1>(marker), 0.0, 1e-9);
+                expectEquals(std::get<2>(marker), label);
+            };
+
+            auto expectChannel = [&](Results::Markers const& channelMarkers, std::vector<std::tuple<double, std::string>> const& expectedResults)
+            {
+                expectEquals(channelMarkers.size(), expectedResults.size());
+                if(channelMarkers.size() != expectedResults.size())
+                {
+                    return;
+                }
+
+                for(auto index = 0_z; index < expectedResults.size(); ++index)
+                {
+                    expectMarker(channelMarkers[index], std::get<0>(expectedResults[index]), std::get<1>(expectedResults[index]));
+                }
+            };
+
+            expectChannel(markers->at(0_z), {{0.023219955, "N"s}, {0.023582767, "B7/D#"s}, {0.026122449, "A"s}});
+            expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {0.023582767, "A"s}});
+        };
+
+        auto checkPoints = [this](Results results)
+        {
+            auto const points = results.getPoints();
+            expect(points != nullptr);
+            if(points == nullptr)
+            {
+                return;
+            }
+            expectEquals(points->size(), 2_z);
+            if(points->size() != 2_z)
+            {
+                return;
+            }
+
+            using namespace std::string_literals;
+            auto expectPoint = [this](Results::Point const& point, double time, float value)
+            {
+                expectWithinAbsoluteError(std::get<0>(point), time, 1e-9);
+                expectWithinAbsoluteError(std::get<1>(point), 0.0, 1e-9);
+                expect(std::get<2>(point).has_value());
+                if(std::get<2>(point).has_value())
+                {
+                    expectWithinAbsoluteError(*std::get<2>(point), value, 1e-9f);
+                }
+            };
+
+            auto expectChannel = [&](Results::Points const& channelPoints, std::vector<std::tuple<double, float>> const& expectedResults)
+            {
+                expectEquals(channelPoints.size(), expectedResults.size());
+                if(channelPoints.size() != expectedResults.size())
+                {
+                    return;
+                }
+
+                for(auto index = 0_z; index < expectedResults.size(); ++index)
+                {
+                    expectPoint(channelPoints[index], std::get<0>(expectedResults[index]), std::get<1>(expectedResults[index]));
+                }
+            };
+            expectChannel(points->at(0_z), {{0.0, 2361.65478515625f}, {0.023219955, 3899.171630859375f}, {0.046439909, 3270.79541015625f}, {0.069659864, 2604.403564453125f}});
+            expectChannel(points->at(1_z), {{0.0, 2503.146484375f}, {0.023219955, 3616.829833984375f}, {0.046439909, 3045.656005859375f}});
+        };
+
+        beginTest("JSON Markers");
+        {
+            auto const result = std::string(TestResultsData::Markers_json);
+            std::istringstream stream(result);
+            std::atomic<ProcessState> loadingState;
+            loadingState.store(ProcessState::available);
+            std::atomic<float> advancement;
+            advancement.store(0.0f);
+            checkMakers(loadFromJson(stream, loadingState, advancement));
+        }
+
+        beginTest("JSON Points");
+        {
+            auto const result = std::string(TestResultsData::Points_json);
+            std::istringstream stream(result);
+            std::atomic<ProcessState> loadingState;
+            loadingState.store(ProcessState::available);
+            std::atomic<float> advancement;
+            advancement.store(0.0f);
+            checkPoints(loadFromJson(stream, loadingState, advancement));
+        }
+
+        beginTest("Binary Markers");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::Markers_dat, TestResultsData::Markers_datSize);
+            std::atomic<ProcessState> loadingState;
+            loadingState.store(ProcessState::available);
+            std::atomic<float> advancement;
+            advancement.store(0.0f);
+            checkMakers(loadFromBinary(stream, loadingState, advancement));
+        }
+
+        beginTest("Binary Points");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::Points_dat, TestResultsData::Points_datSize);
+            std::atomic<ProcessState> loadingState;
+            loadingState.store(ProcessState::available);
+            std::atomic<float> advancement;
+            advancement.store(0.0f);
+            checkPoints(loadFromBinary(stream, loadingState, advancement));
+        }
+    }
+};
+
+static Track::Loader::UnitTest trackLoaderUnitTest;
 
 ANALYSE_FILE_END
