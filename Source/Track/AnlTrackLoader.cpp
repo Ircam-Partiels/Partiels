@@ -56,7 +56,9 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
                                      juce::Thread::setCurrentThreadPriority(10);
                                      if(file.hasFileExtension("json"))
                                      {
-                                         return loadFromJson(std::move(stream));
+                                         auto result = loadFromJson(stream, mLoadingState, mAdvancement);
+                                         triggerAsyncUpdate();
+                                         return result;
                                      }
                                      return loadFromBinary(std::move(stream));
                                  });
@@ -120,13 +122,11 @@ void Track::Loader::abortLoading()
     mLoadingState = ProcessState::available;
 }
 
-Track::Results Track::Loader::loadFromJson(std::ifstream stream)
+Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement)
 {
     auto expected = ProcessState::available;
-    if(!mLoadingState.compare_exchange_weak(expected, ProcessState::running))
+    if(!loadingState.compare_exchange_weak(expected, ProcessState::running))
     {
-        triggerAsyncUpdate();
-        stream.close();
         return {};
     }
 
@@ -196,21 +196,19 @@ Track::Results Track::Loader::loadFromJson(std::ifstream stream)
     };
 
     expected = ProcessState::running;
-    ThreadedStreamIterator const itStart(stream, mLoadingState);
-    ThreadedStreamIterator const itEnd(mLoadingState);
+    ThreadedStreamIterator const itStart(stream, loadingState);
+    ThreadedStreamIterator const itEnd(loadingState);
     auto const json = nlohmann::json::parse(itStart, itEnd, nullptr, false);
-    stream.close();
-    mAdvancement.store(0.2f);
+
+    advancement.store(0.2f);
     if(json.is_discarded())
     {
-        mLoadingState.store(ProcessState::aborted);
-        triggerAsyncUpdate();
+        loadingState.store(ProcessState::aborted);
         return {};
     }
 
-    if(mLoadingState.load() == ProcessState::aborted)
+    if(loadingState.load() == ProcessState::aborted)
     {
-        triggerAsyncUpdate();
         return {};
     }
     std::vector<std::vector<Plugin::Result>> pluginResults;
@@ -221,13 +219,12 @@ Track::Results Track::Loader::loadFromJson(std::ifstream stream)
         auto& channelResults = pluginResults[channelIndex];
         channelResults.resize(channelData.size());
         auto const advRatio = 0.7f * static_cast<float>(channelIndex) / static_cast<float>(json.size());
-        mAdvancement.store(0.2f + advRatio);
+        advancement.store(0.2f + advRatio);
         for(size_t frameIndex = 0_z; frameIndex < channelData.size(); ++frameIndex)
         {
-            mAdvancement.store(0.2f + advRatio + 0.1f * static_cast<float>(frameIndex) / static_cast<float>(channelData.size()));
-            if(mLoadingState.load() == ProcessState::aborted)
+            advancement.store(0.2f + advRatio + 0.1f * static_cast<float>(frameIndex) / static_cast<float>(channelData.size()));
+            if(loadingState.load() == ProcessState::aborted)
             {
-                triggerAsyncUpdate();
                 return {};
             }
 
@@ -267,24 +264,21 @@ Track::Results Track::Loader::loadFromJson(std::ifstream stream)
         }
     }
 
-    if(mLoadingState.load() == ProcessState::aborted)
+    if(loadingState.load() == ProcessState::aborted)
     {
-        triggerAsyncUpdate();
         return {};
     }
 
     Plugin::Output output;
     output.hasFixedBinCount = false;
-    mAdvancement.store(0.9f);
+    advancement.store(0.9f);
     auto results = Tools::getResults(output, pluginResults);
-    mAdvancement.store(1.0f);
-    if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
+    advancement.store(1.0f);
+    if(loadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
-        triggerAsyncUpdate();
         return results;
     }
 
-    triggerAsyncUpdate();
     return {};
 }
 

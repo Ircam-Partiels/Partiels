@@ -22,13 +22,6 @@ namespace Track
         float getAdvancement() const;
 
     private:
-        Results loadFromJson(std::ifstream stream);
-        Results loadFromBinary(std::ifstream stream);
-        void abortLoading();
-
-        // juce::AsyncUpdater
-        void handleAsyncUpdate() override;
-
         // clang-format off
         enum class ProcessState
         {
@@ -38,6 +31,13 @@ namespace Track
             , ended
         };
         // clang-format on
+
+        static Results loadFromJson(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement);
+        Results loadFromBinary(std::ifstream stream);
+        void abortLoading();
+
+        // juce::AsyncUpdater
+        void handleAsyncUpdate() override;
 
         std::atomic<ProcessState> mLoadingState{ProcessState::available};
         std::future<Results> mLoadingProcess;
