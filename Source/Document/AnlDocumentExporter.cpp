@@ -58,7 +58,7 @@ char Document::Exporter::Options::getSeparatorChar() const
     {
         case ColumnSeparator::comma:
         {
-            return ';';
+            return ',';
         }
         case ColumnSeparator::space:
         {
@@ -82,7 +82,7 @@ char Document::Exporter::Options::getSeparatorChar() const
         }
         default:
         {
-            return ';';
+            return ',';
         }
     }
 }
