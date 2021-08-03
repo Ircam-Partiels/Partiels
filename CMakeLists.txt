@@ -108,6 +108,9 @@ juce_add_binary_data(FontsData HEADER_NAME "FontsData.h" NAMESPACE FontsData SOU
 file(GLOB MiscDataSources ${BINARYDATA_DIRECTORY}/Misc/About.txt)
 juce_add_binary_data(MiscData HEADER_NAME "MiscData.h" NAMESPACE MiscData SOURCES ${MiscDataSources})
 
+file(GLOB TestResultsDataSources ${BINARYDATA_DIRECTORY}/Tests/*.json ${BINARYDATA_DIRECTORY}/Tests/*.dat)
+juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
+
 target_link_libraries(Partiels PRIVATE
     vamp
     IconsData
@@ -115,6 +118,7 @@ target_link_libraries(Partiels PRIVATE
     FontsData
     TranslationsData
     MiscData
+    TestResultsData
     juce::juce_gui_extra
     juce::juce_audio_formats
     juce::juce_audio_devices
