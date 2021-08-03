@@ -71,6 +71,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 auto const results = mAccessor.getAttr<AttrType::results>();
                 if(!results.isEmpty())
                 {
+                    if(mAccessor.getAttr<AttrType::file>() == juce::File{})
+                    {
+                        clearFilesToWatch();
+                    }
                     break;
                 }
                 clearFilesToWatch();
