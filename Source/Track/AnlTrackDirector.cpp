@@ -73,9 +73,9 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 {
                     break;
                 }
+                clearFilesToWatch();
                 if(mAccessor.getAttr<AttrType::file>() != juce::File{})
                 {
-                    clearFilesToWatch();
                     runLoading(notification);
                 }
                 else
