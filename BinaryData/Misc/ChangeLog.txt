@@ -1,6 +1,6 @@
 v0.0.8 (alpha)
 
-- Fix:  Detaching a results binary file and consolidating the document shows an unwanted warning window (#119)
+- Fix: Detaching a results binary file and consolidating the document shows an unwanted warning window (#119)
 - Fix: Restarting an analysis after consolidating the results does not trigger a new analysis (#118)
 - Fix: Loading of marker binary files (#117)
 - Fix: Portability of binary format for different OSes (#116)
