@@ -1,5 +1,6 @@
 v0.0.8 (alpha)
 
+- Fix: Tracks and groups list of the exporter is not well updated (#120)
 - Fix: Detaching a results binary file and consolidating the document shows an unwanted warning window (#119)
 - Fix: Restarting an analysis after consolidating the results does not trigger a new analysis (#118)
 - Fix: Loading of marker binary files (#117)
