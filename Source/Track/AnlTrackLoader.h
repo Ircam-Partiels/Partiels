@@ -33,7 +33,7 @@ namespace Track
         // clang-format on
 
         static Results loadFromJson(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement);
-        Results loadFromBinary(std::ifstream stream);
+        static Results loadFromBinary(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement);
         void abortLoading();
 
         // juce::AsyncUpdater

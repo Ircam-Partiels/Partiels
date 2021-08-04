@@ -54,13 +54,17 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
                                  {
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
                                      juce::Thread::setCurrentThreadPriority(10);
-                                     if(file.hasFileExtension("json"))
+                                     Track::Results results;
+                                     try
                                      {
-                                         auto result = loadFromJson(stream, mLoadingState, mAdvancement);
-                                         triggerAsyncUpdate();
-                                         return result;
+                                         results = file.hasFileExtension("json") ? loadFromJson(stream, mLoadingState, mAdvancement) : loadFromBinary(stream, mLoadingState, mAdvancement);
                                      }
-                                     return loadFromBinary(std::move(stream));
+                                     catch(...)
+                                     {
+                                         mLoadingState.store(ProcessState::aborted);
+                                     }
+                                     triggerAsyncUpdate();
+                                     return results;
                                  });
 
     return juce::Result::ok();
@@ -282,23 +286,26 @@ Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<Pro
     return {};
 }
 
-Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
+Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement)
 {
     auto expected = ProcessState::available;
-    if(!mLoadingState.compare_exchange_weak(expected, ProcessState::running))
+    if(!loadingState.compare_exchange_weak(expected, ProcessState::running))
     {
-        triggerAsyncUpdate();
-        stream.close();
         return {};
     }
     expected = ProcessState::running;
-
+    
     Results res;
     char type[7] = {'\0'};
     if(!stream.read(type, sizeof(char) * 6))
     {
-        mLoadingState.store(ProcessState::aborted);
-        triggerAsyncUpdate();
+        loadingState.store(ProcessState::aborted);
+        return {};
+    }
+
+    if(stream.eof())
+    {
+        loadingState.store(ProcessState::aborted);
         return {};
     }
 
@@ -315,43 +322,38 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                 {
                     break;
                 }
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
+                loadingState.store(ProcessState::aborted);
                 return {};
             }
             markers.resize(static_cast<size_t>(numChannels));
+
             for(auto& marker : markers)
             {
-                if(mLoadingState.load() == ProcessState::aborted)
+                if(loadingState.load() == ProcessState::aborted)
                 {
-                    triggerAsyncUpdate();
                     return {};
                 }
 
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(marker)), sizeof(std::get<0>(marker))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 if(!stream.read(reinterpret_cast<char*>(&std::get<1>(marker)), sizeof(std::get<1>(marker))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 uint64_t length;
                 if(!stream.read(reinterpret_cast<char*>(&length), sizeof(length)))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 std::get<2>(marker).resize(length);
                 if(!stream.read(reinterpret_cast<char*>(std::get<2>(marker).data()), static_cast<long>(length * sizeof(char))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
             }
@@ -373,36 +375,31 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                 {
                     break;
                 }
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
+                loadingState.store(ProcessState::aborted);
                 return {};
             }
             points.resize(static_cast<size_t>(numChannels));
             for(auto& point : points)
             {
-                if(mLoadingState.load() == ProcessState::aborted)
+                if(loadingState.load() == ProcessState::aborted)
                 {
-                    triggerAsyncUpdate();
                     return {};
                 }
 
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(point)), sizeof(std::get<0>(point))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 if(!stream.read(reinterpret_cast<char*>(&std::get<1>(point)), sizeof(std::get<1>(point))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 bool hasValue;
                 if(!stream.read(reinterpret_cast<char*>(&hasValue), sizeof(hasValue)))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 if(hasValue)
@@ -410,8 +407,7 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                     float value;
                     if(!stream.read(reinterpret_cast<char*>(&value), sizeof(value)))
                     {
-                        mLoadingState.store(ProcessState::aborted);
-                        triggerAsyncUpdate();
+                        loadingState.store(ProcessState::aborted);
                         return {};
                     }
                     std::get<2>(point) = value;
@@ -436,43 +432,37 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
                 {
                     break;
                 }
-                mLoadingState.store(ProcessState::aborted);
-                triggerAsyncUpdate();
+                loadingState.store(ProcessState::aborted);
                 return {};
             }
             columns.resize(static_cast<size_t>(numChannels));
             for(auto& column : columns)
             {
-                if(mLoadingState.load() == ProcessState::aborted)
+                if(loadingState.load() == ProcessState::aborted)
                 {
-                    triggerAsyncUpdate();
                     return {};
                 }
 
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 if(!stream.read(reinterpret_cast<char*>(&std::get<1>(column)), sizeof(std::get<1>(column))))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 uint64_t numBins;
                 if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
                 std::get<2>(column).resize(numBins);
                 if(!stream.read(reinterpret_cast<char*>(std::get<2>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
                 {
-                    mLoadingState.store(ProcessState::aborted);
-                    triggerAsyncUpdate();
+                    loadingState.store(ProcessState::aborted);
                     return {};
                 }
             }
@@ -484,13 +474,11 @@ Track::Results Track::Loader::loadFromBinary(std::ifstream stream)
         res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)), numBins, valueRange);
     }
 
-    if(mLoadingState.compare_exchange_weak(expected, ProcessState::ended))
+    advancement.store(1.0f);
+    if(loadingState.compare_exchange_weak(expected, ProcessState::ended))
     {
-        triggerAsyncUpdate();
         return res;
     }
-
-    triggerAsyncUpdate();
     return {};
 }
 
