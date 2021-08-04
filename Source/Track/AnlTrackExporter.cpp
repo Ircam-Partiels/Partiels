@@ -180,6 +180,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     auto const columns = results.getColumns();
     if(markers != nullptr)
     {
+        auto escapeString = [](juce::String const& s)
+        {
+            return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted();
+        };
+
         auto addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
             if(includeHeader)
@@ -193,7 +198,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
             {
                 addColumn(juce::String(std::get<0>(marker)));
                 addColumn(juce::String(std::get<1>(marker)));
-                addColumn(std::get<2>(marker));
+                addColumn(escapeString(std::get<2>(marker)));
                 addLine();
             }
         };
