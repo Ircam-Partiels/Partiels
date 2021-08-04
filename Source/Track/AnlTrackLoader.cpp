@@ -669,7 +669,29 @@ public:
             expectChannel(points->at(1_z), {{0.0, 2503.146484375f}, {0.023219955, 3616.829833984375f}, {0.046439909, 3045.656005859375f}});
         };
 
-        beginTest("JSON Markers");
+        beginTest("load cvs markers");
+        {
+            auto const result = std::string(TestResultsData::Markers_csv);
+            std::istringstream stream(result);
+            std::atomic<ProcessState> loadingState;
+            loadingState.store(ProcessState::available);
+            std::atomic<float> advancement;
+            advancement.store(0.0f);
+            checkMakers(loadFromCsv(stream, loadingState, advancement));
+        }
+
+        beginTest("load cvs points");
+        {
+            auto const result = std::string(TestResultsData::Points_csv);
+            std::istringstream stream(result);
+            std::atomic<ProcessState> loadingState;
+            loadingState.store(ProcessState::available);
+            std::atomic<float> advancement;
+            advancement.store(0.0f);
+            checkPoints(loadFromCsv(stream, loadingState, advancement));
+        }
+
+        beginTest("load json markers");
         {
             auto const result = std::string(TestResultsData::Markers_json);
             std::istringstream stream(result);
@@ -680,7 +702,7 @@ public:
             checkMakers(loadFromJson(stream, loadingState, advancement));
         }
 
-        beginTest("JSON Points");
+        beginTest("load json points");
         {
             auto const result = std::string(TestResultsData::Points_json);
             std::istringstream stream(result);
@@ -691,7 +713,7 @@ public:
             checkPoints(loadFromJson(stream, loadingState, advancement));
         }
 
-        beginTest("Binary Markers");
+        beginTest("load binary Markers");
         {
             std::stringstream stream;
             stream.write(TestResultsData::Markers_dat, TestResultsData::Markers_datSize);
@@ -702,7 +724,7 @@ public:
             checkMakers(loadFromBinary(stream, loadingState, advancement));
         }
 
-        beginTest("Binary Points");
+        beginTest("load binary Points");
         {
             std::stringstream stream;
             stream.write(TestResultsData::Points_dat, TestResultsData::Points_datSize);
