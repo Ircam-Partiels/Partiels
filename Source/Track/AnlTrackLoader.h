@@ -34,6 +34,7 @@ namespace Track
 
         static Results loadFromJson(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement);
         static Results loadFromBinary(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement);
+        static Results loadFromCsv(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement);
         void abortLoading();
 
         // juce::AsyncUpdater

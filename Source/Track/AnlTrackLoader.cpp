@@ -483,6 +483,96 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
     return {};
 }
 
+Track::Results Track::Loader::loadFromCsv(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement)
+{
+    auto expected = ProcessState::available;
+    if(!loadingState.compare_exchange_weak(expected, ProcessState::running))
+    {
+        return {};
+    }
+    expected = ProcessState::running;
+
+    std::vector<std::vector<Plugin::Result>> pluginResults;
+
+    auto trimString = [](std::string const& s)
+    {
+        auto ltrim = [](std::string const& sr)
+        {
+            auto const start = sr.find_first_not_of(" \n\r\t\f\v");
+            return (start == std::string::npos) ? "" : sr.substr(start);
+        };
+
+        auto rtrim = [](std::string const& sr)
+        {
+            auto const end = sr.find_last_not_of(" \n\r\t\f\v");
+            return (end == std::string::npos) ? "" : sr.substr(0, end + 1);
+        };
+
+        return rtrim(ltrim(s));
+    };
+
+    auto unescapeString = [](juce::String const& s)
+    {
+        return s.replace("\\\"", "\"").replace("\\\'", "\'").replace("\\t", "\t").replace("\\r", "\r").replace("\\n", "\n").unquoted();
+    };
+
+    auto addNewChannel = true;
+    std::string line;
+    while(getline(stream, line, '\n'))
+    {
+        line = trimString(line);
+        if(line.empty() || line == "\n")
+        {
+            addNewChannel = true;
+        }
+        else
+        {
+            if(std::exchange(addNewChannel, false))
+            {
+                pluginResults.push_back({});
+            }
+            std::string time, duration, value;
+            std::istringstream linestream(line);
+            getline(linestream, time, ',');
+            getline(linestream, duration, ',');
+            getline(linestream, value, ',');
+            if(!time.empty() && !duration.empty() && std::isdigit(static_cast<int>(time[0])) && std::isdigit(static_cast<int>(duration[0])))
+            {
+                auto& channelResults = pluginResults.back();
+                Plugin::Result result;
+                result.hasTimestamp = true;
+                result.timestamp = Vamp::RealTime::fromSeconds(std::stod(time));
+                result.hasDuration = true;
+                result.duration = Vamp::RealTime::fromSeconds(std::stod(duration));
+                if(!value.empty() && !std::isdigit(static_cast<int>(value[0])))
+                {
+                    result.label = unescapeString(value).toStdString();
+                }
+                else if(!value.empty())
+                {
+                    result.values.push_back(std::stof(value));
+                    while(getline(linestream, value, ','))
+                    {
+                        result.values.push_back(std::stof(value));
+                    }
+                }
+                channelResults.push_back(std::move(result));
+            }
+        }
+    }
+
+    Plugin::Output output;
+    output.hasFixedBinCount = false;
+    advancement.store(0.9f);
+    auto results = Tools::getResults(output, pluginResults);
+    advancement.store(1.0f);
+    if(loadingState.compare_exchange_weak(expected, ProcessState::ended))
+    {
+        return results;
+    }
+    return {};
+}
+
 class Track::Loader::UnitTest
 : public juce::UnitTest
 {
