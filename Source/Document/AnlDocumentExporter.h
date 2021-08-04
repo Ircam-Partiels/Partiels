@@ -61,7 +61,7 @@ namespace Document
         {
         public:
             Panel(Accessor& accessor, GetSizeFn getSizeFor);
-            ~Panel() override = default;
+            ~Panel() override;
 
             // juce::Component
             void resized() override;
@@ -93,6 +93,9 @@ namespace Document
             PropertyList mPropertyRawSeparator;
             PropertyToggle mPropertyIgnoreGrids;
 
+            Accessor::Listener mListener{typeid(*this).name()};
+            std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
+            std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
             LayoutNotifier mDocumentLayoutNotifier;
 
             auto static constexpr documentItemFactor = 1000000;

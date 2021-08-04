@@ -161,7 +161,78 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
     addChildComponent(mPropertyRawSeparator);
     addChildComponent(mPropertyIgnoreGrids);
 
+    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::tracks:
+            {
+                auto listener = std::make_unique<Track::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
+                                                                                 {
+                                                                                     juce::ignoreUnused(trackAcsr);
+                                                                                     if(trackAttribute == Track::AttrType::name)
+                                                                                     {
+                                                                                         updateItems();
+                                                                                     }
+                                                                                 });
+                mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
+                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
+            }
+            break;
+            case AcsrType::groups:
+            {
+                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                                                                                 {
+                                                                                     juce::ignoreUnused(groupAcsr);
+                                                                                     if(groupAttribute == Group::AttrType::name || groupAttribute == Group::AttrType::layout)
+                                                                                     {
+                                                                                         updateItems();
+                                                                                     }
+                                                                                 });
+                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
+                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+            }
+            break;
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+                break;
+        }
+    };
+
+    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::tracks:
+            {
+                mTrackListeners.erase(mTrackListeners.begin() + static_cast<long>(index));
+                anlWeakAssert(mTrackListeners.size() == acsr.getNumAcsrs<AcsrType::tracks>());
+                updateItems();
+            }
+            break;
+            case AcsrType::groups:
+            {
+                mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
+                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+                updateItems();
+            }
+            break;
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+                break;
+        }
+    };
+
+    mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(300, 200);
+}
+
+Document::Exporter::Panel::~Panel()
+{
+    mTrackListeners.clear();
+    mAccessor.removeListener(mListener);
 }
 
 void Document::Exporter::Panel::resized()
