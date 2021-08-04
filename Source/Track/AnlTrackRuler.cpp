@@ -93,6 +93,11 @@ Track::Ruler::~Ruler()
 
 void Track::Ruler::resized()
 {
+    if(mDisplayType == Tools::DisplayType::markers)
+    {
+        return;
+    }
+    
     for(auto& ruler : mRulers)
     {
         anlWeakAssert(ruler != nullptr);
