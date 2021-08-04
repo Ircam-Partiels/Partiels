@@ -33,6 +33,10 @@ namespace Track
             {
                 return results.cend();
             }
+            if(results.empty())
+            {
+                return results.cend();
+            }
 
             auto const timeRatioPosition = std::max(std::min((time - globalRange.getStart()) / globalRange.getLength(), 1.0), 0.0);
             auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
