@@ -295,7 +295,7 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
         return {};
     }
     expected = ProcessState::running;
-    
+
     Results res;
     char type[7] = {'\0'};
     if(!stream.read(type, sizeof(char) * 6))
