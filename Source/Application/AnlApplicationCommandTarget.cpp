@@ -373,7 +373,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::DocumentImport:
         {
             auto const position = getNewTrackPosition();
-            juce::FileChooser fc(juce::translate("Load file"), {}, "*.json");
+            juce::FileChooser fc(juce::translate("Load file"), {}, "*.json,*.csv");
             if(fc.browseForFileToOpen())
             {
                 addFileTrack(fc.getResult(), std::get<0>(position), std::get<1>(position));
@@ -689,9 +689,9 @@ void Application::CommandTarget::addPluginTrack(Plugin::Key const& key, Plugin::
 
 void Application::CommandTarget::addFileTrack(juce::File const& file, juce::String groupIdentifier, size_t position)
 {
-    if(!file.hasFileExtension("json"))
+    if(!file.hasFileExtension("json") && !file.hasFileExtension("csv"))
     {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File forrmat not supported!", "The....");
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File format not supported!", "The application only supports JSON and CSV formats.");
         return;
     }
 

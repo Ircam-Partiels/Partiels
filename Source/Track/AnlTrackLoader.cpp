@@ -35,7 +35,7 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
         {
             return std::ifstream(path, std::ios::in | std::ios::binary);
         }
-        else if(file.hasFileExtension("json"))
+        else if(file.hasFileExtension("json") || file.hasFileExtension("csv"))
         {
             return std::ifstream(path);
         }
@@ -58,7 +58,7 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
                                      Track::Results results;
                                      try
                                      {
-                                         results = file.hasFileExtension("json") ? loadFromJson(stream, mLoadingState, mAdvancement) : loadFromBinary(stream, mLoadingState, mAdvancement);
+                                         results = file.hasFileExtension("json") ? loadFromJson(stream, mLoadingState, mAdvancement) : (file.hasFileExtension("csv") ? loadFromCsv(stream, mLoadingState, mAdvancement) : loadFromBinary(stream, mLoadingState, mAdvancement));
                                      }
                                      catch(...)
                                      {
