@@ -152,7 +152,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    stream << std::setprecision(9) << "\n";
+    stream << std::setprecision(10);
 
     if(shouldAbort)
     {
