@@ -697,6 +697,15 @@ public:
             expectChannel(points->at(1_z), {{0.0, 2503.146484375f}, {0.023219955, 3616.829833984375f}, {0.046439909, 3045.656005859375f}});
         };
 
+        beginTest("load cvs error");
+        {
+            auto const result = std::string(TestResultsData::Error_csv);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            expectEquals(loadFromCsv(stream, shouldAbort, advancement).index(), 1_z);
+        }
+
         beginTest("load cvs markers");
         {
             auto const result = std::string(TestResultsData::Markers_csv);
@@ -715,6 +724,15 @@ public:
             checkPoints(loadFromCsv(stream, shouldAbort, advancement));
         }
 
+        beginTest("load json error");
+        {
+            auto const result = std::string(TestResultsData::Error_json);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            expectEquals(loadFromJson(stream, shouldAbort, advancement).index(), 1_z);
+        }
+
         beginTest("load json markers");
         {
             auto const result = std::string(TestResultsData::Markers_json);
@@ -731,6 +749,15 @@ public:
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
             checkPoints(loadFromJson(stream, shouldAbort, advancement));
+        }
+
+        beginTest("load binary error");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::Error_dat, TestResultsData::Error_datSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            expectEquals(loadFromBinary(stream, shouldAbort, advancement).index(), 1_z);
         }
 
         beginTest("load binary Markers");
