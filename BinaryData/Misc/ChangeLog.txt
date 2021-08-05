@@ -1,5 +1,8 @@
 v0.0.8 (alpha)
 
+- Fix: First analyzed frame should be shifted by the block size over 2 (#123)
+- Fix: Time and value floating-point precision of CSV format should be increased (#122)
+- Fix: Labels of CSV files are not escaped using extra " characters (#121)
 - Fix: Tracks and groups list of the exporter is not well updated (#120)
 - Fix: Detaching a results binary file and consolidating the document shows an unwanted warning window (#119)
 - Fix: Restarting an analysis after consolidating the results does not trigger a new analysis (#118)
