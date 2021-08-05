@@ -697,7 +697,7 @@ public:
             expectChannel(points->at(1_z), {{0.0, 2503.146484375f}, {0.023219955, 3616.829833984375f}, {0.046439909, 3045.656005859375f}});
         };
 
-        beginTest("load cvs error");
+        beginTest("load csv error");
         {
             auto const result = std::string(TestResultsData::Error_csv);
             std::istringstream stream(result);
@@ -706,7 +706,7 @@ public:
             expectEquals(loadFromCsv(stream, shouldAbort, advancement).index(), 1_z);
         }
 
-        beginTest("load cvs markers");
+        beginTest("load csv markers");
         {
             auto const result = std::string(TestResultsData::Markers_csv);
             std::istringstream stream(result);
@@ -715,7 +715,7 @@ public:
             checkMakers(loadFromCsv(stream, shouldAbort, advancement));
         }
 
-        beginTest("load cvs points");
+        beginTest("load csv points");
         {
             auto const result = std::string(TestResultsData::Points_csv);
             std::istringstream stream(result);
