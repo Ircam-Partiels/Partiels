@@ -1,13 +1,5 @@
-- Add Unit Tests
-  - Group Model
-  - Document Model
-  - Analysis (compare with files)
-- replace model resizable by dynamic and fixed
-- output all key shortcuts
-- Multichannel
-  - Fix value/bin rulers
-- Right click on ruler to edit zoom values
-- Rename zoom grid -> ruler
-- Improve loading of Vamp plugins (background thread)
+- Add Unit Tests Analysis (compare with files)
+- Replace model resizable by dynamic and fixed
+- Output all key shortcuts
 - Use button names on alert window
 - Windows signature
