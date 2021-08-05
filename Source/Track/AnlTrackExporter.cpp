@@ -152,6 +152,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
+    stream << std::setprecision(9) << "\n";
+
     if(shouldAbort)
     {
         return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
@@ -164,7 +166,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
         stream << '\n';
     };
 
-    auto addColumn = [&](juce::String const& text)
+    auto addColumn = [&](auto const& text)
     {
         if(state)
         {
@@ -196,8 +198,8 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
             }
             for(auto const& marker : channelMarkers)
             {
-                addColumn(juce::String(std::get<0>(marker)));
-                addColumn(juce::String(std::get<1>(marker)));
+                addColumn(std::get<0>(marker));
+                addColumn(std::get<1>(marker));
                 addColumn(escapeString(std::get<2>(marker)));
                 addLine();
             }
@@ -227,9 +229,12 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
             }
             for(auto const& point : channelPoints)
             {
-                addColumn(juce::String(std::get<0>(point)));
-                addColumn(juce::String(std::get<1>(point)));
-                addColumn(!std::get<2>(point).has_value() ? "\"\"" : juce::String(*std::get<2>(point)));
+                addColumn(std::get<0>(point));
+                addColumn(std::get<1>(point));
+                if(std::get<2>(point).has_value())
+                {
+                    addColumn(*std::get<2>(point));
+                }
                 addLine();
             }
         };
@@ -267,11 +272,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
 
             for(auto const& column : channelColumns)
             {
-                addColumn(juce::String(std::get<0>(column)));
-                addColumn(juce::String(std::get<1>(column)));
+                addColumn(std::get<0>(column));
+                addColumn(std::get<1>(column));
                 for(auto const& value : std::get<2>(column))
                 {
-                    addColumn(juce::String(value));
+                    addColumn(value);
                 }
                 addLine();
             }

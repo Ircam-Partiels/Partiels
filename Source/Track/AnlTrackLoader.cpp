@@ -550,7 +550,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
             getline(linestream, time, ',');
             getline(linestream, duration, ',');
             getline(linestream, value, ',');
-            if(time.empty() || duration.empty() || value.empty())
+            if(time.empty() || duration.empty())
             {
                 return {juce::translate("Parsing error")};
             }
@@ -562,11 +562,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 result.timestamp = Vamp::RealTime::fromSeconds(std::stod(time));
                 result.hasDuration = true;
                 result.duration = Vamp::RealTime::fromSeconds(std::stod(duration));
-                if(!std::isdigit(static_cast<int>(value[0])))
+                if(!value.empty() && !std::isdigit(static_cast<int>(value[0])))
                 {
                     result.label = unescapeString(value).toStdString();
                 }
-                else
+                else if(!value.empty())
                 {
                     result.values.push_back(std::stof(value));
                     while(getline(linestream, value, ','))
