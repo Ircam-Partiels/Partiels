@@ -97,7 +97,7 @@ void Track::Ruler::resized()
     {
         return;
     }
-    
+
     for(auto& ruler : mRulers)
     {
         anlWeakAssert(ruler != nullptr);
