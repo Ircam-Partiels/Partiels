@@ -16,7 +16,7 @@ Track::Loader::~Loader()
     abortLoading();
 }
 
-juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File const& file)
+void Track::Loader::loadAnalysis(Accessor const& accessor, juce::File const& file)
 {
     auto const name = accessor.getAttr<AttrType::name>();
 
@@ -24,51 +24,30 @@ juce::Result Track::Loader::loadAnalysis(Accessor const& accessor, juce::File co
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME cannot import analysis results from file FLNAME due to concurrency access.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        if(onLoadingFailed != nullptr)
+        {
+            onLoadingFailed("Invalid threaded access.");
+        }
+        return;
     }
     abortLoading();
 
-    auto openStream = [&]() -> std::ifstream
-    {
-        auto const path = file.getFullPathName().toStdString();
-        if(file.hasFileExtension("dat"))
-        {
-            return std::ifstream(path, std::ios::in | std::ios::binary);
-        }
-        else if(file.hasFileExtension("json") || file.hasFileExtension("csv"))
-        {
-            return std::ifstream(path);
-        }
-        return std::ifstream();
-    };
-
-    auto stream = openStream();
-    if(!stream || !stream.is_open() || !stream.good())
-    {
-        return juce::Result::fail(juce::translate("The track ANLNAME cannot import analysis results from the file FLNAME because the input stream cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-    }
-
-    mAdvancement.store(0.0f);
     mChrono.start();
 
-    mLoadingProcess = std::async([this, file = file, stream = std::move(stream)]() mutable -> Results
+    mShouldAbort = false;
+    mAdvancement.store(0.0f);
+    mLoadingProcess = std::async([this, file = file]() mutable -> std::variant<Results, juce::String>
                                  {
+                                     if(mShouldAbort)
+                                     {
+                                         return {};
+                                     }
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
                                      juce::Thread::setCurrentThreadPriority(10);
-                                     Track::Results results;
-                                     try
-                                     {
-                                         results = file.hasFileExtension("json") ? loadFromJson(stream, mLoadingState, mAdvancement) : (file.hasFileExtension("csv") ? loadFromCsv(stream, mLoadingState, mAdvancement) : loadFromBinary(stream, mLoadingState, mAdvancement));
-                                     }
-                                     catch(...)
-                                     {
-                                         mLoadingState.store(ProcessState::aborted);
-                                     }
+                                     auto results = loadFromFile(file, mShouldAbort, mAdvancement);
                                      triggerAsyncUpdate();
                                      return results;
                                  });
-
-    return juce::Result::ok();
 }
 
 void Track::Loader::handleAsyncUpdate()
@@ -76,27 +55,42 @@ void Track::Loader::handleAsyncUpdate()
     std::unique_lock<std::mutex> lock(mLoadingMutex);
     if(mLoadingProcess.valid())
     {
-        anlWeakAssert(mLoadingState != ProcessState::available);
-        anlWeakAssert(mLoadingState != ProcessState::running);
-
-        auto const results = mLoadingProcess.get();
-        auto expected = ProcessState::ended;
-        if(mLoadingState.compare_exchange_weak(expected, ProcessState::available))
+        if(mShouldAbort.exchange(false))
         {
+#ifdef DEBUG
+            auto const vResults = mLoadingProcess.get();
+            auto* results = std::get_if<Results>(&vResults);
+            anlWeakAssert(results != nullptr && results->isEmpty());
+#endif
             mChrono.stop();
-            if(onLoadingEnded != nullptr)
-            {
-                onLoadingEnded(results);
-            }
-        }
-        else if(expected == ProcessState::aborted)
-        {
             if(onLoadingAborted != nullptr)
             {
                 onLoadingAborted();
             }
         }
-        abortLoading();
+        else
+        {
+            auto const vResults = mLoadingProcess.get();
+            mChrono.stop();
+            if(auto* results = std::get_if<Results>(&vResults))
+            {
+                if(onLoadingSucceeded != nullptr)
+                {
+                    onLoadingSucceeded(*results);
+                }
+            }
+            else if(auto* message = std::get_if<juce::String>(&vResults))
+            {
+                if(onLoadingFailed != nullptr)
+                {
+                    onLoadingFailed(*message);
+                }
+            }
+            else
+            {
+                anlWeakAssert(false && "invalid state");
+            }
+        }
     }
 }
 
@@ -114,7 +108,8 @@ void Track::Loader::abortLoading()
 {
     if(mLoadingProcess.valid())
     {
-        mLoadingState = ProcessState::aborted;
+        anlWeakAssert(mShouldAbort.load() == false);
+        mShouldAbort.store(true);
         mLoadingProcess.get();
         cancelPendingUpdate();
 
@@ -124,17 +119,55 @@ void Track::Loader::abortLoading()
         }
     }
     mAdvancement.store(0.0f);
-    mLoadingState = ProcessState::available;
+    mShouldAbort.store(false);
 }
 
-Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(juce::File const& file, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto expected = ProcessState::available;
-    if(!loadingState.compare_exchange_weak(expected, ProcessState::running))
+    auto const path = file.getFullPathName().toStdString();
+    try
     {
-        return {};
+        if(file.hasFileExtension("dat"))
+        {
+            auto stream = std::ifstream(path, std::ios::in | std::ios::binary);
+            if(!stream || !stream.is_open() || !stream.good())
+            {
+                return {juce::translate("The input stream of cannot be opened")};
+            }
+            return loadFromBinary(stream, shouldAbort, advancement);
+        }
+        if(file.hasFileExtension("json"))
+        {
+            auto stream = std::ifstream(path);
+            if(!stream || !stream.is_open() || !stream.good())
+            {
+                return {juce::translate("The input stream of cannot be opened")};
+            }
+            return loadFromJson(stream, shouldAbort, advancement);
+        }
+        else if(file.hasFileExtension("csv"))
+        {
+            auto stream = std::ifstream(path);
+            if(!stream || !stream.is_open() || !stream.good())
+            {
+                return {juce::translate("The input stream of cannot be opened")};
+            }
+            return loadFromCsv(stream, shouldAbort, advancement);
+        }
     }
+    catch(std::exception& e)
+    {
+        return juce::String(e.what());
+    }
+    catch(...)
+    {
+        return juce::String("Parsing error");
+    }
+    return {juce::translate("The file format is not supported")};
+}
 
+std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
     class ThreadedStreamIterator
     {
     public:
@@ -144,20 +177,20 @@ Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<Pro
         typedef const char& reference ANL_ATTR_UNUSED;
         typedef std::input_iterator_tag iterator_category ANL_ATTR_UNUSED;
 
-        ThreadedStreamIterator(std::atomic<ProcessState>& s)
-        : state(s)
+        ThreadedStreamIterator(std::atomic<bool> const& s)
+        : shouldAbort(s)
         {
         }
 
-        ThreadedStreamIterator(std::istream& i, std::atomic<ProcessState>& s)
+        ThreadedStreamIterator(std::istream& i, std::atomic<bool> const& s)
         : iterator(i)
-        , state(s)
+        , shouldAbort(s)
         {
         }
 
         ThreadedStreamIterator(ThreadedStreamIterator const& x)
         : iterator(x.iterator)
-        , state(x.state)
+        , shouldAbort(x.shouldAbort)
         {
         }
 
@@ -187,35 +220,42 @@ Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<Pro
 
         inline bool operator==(ThreadedStreamIterator const& rhs) const
         {
-            return state.load() == ProcessState::aborted ? true : iterator == rhs.iterator;
+            return shouldAbort ? true : iterator == rhs.iterator;
         }
 
         inline bool operator!=(ThreadedStreamIterator const& rhs) const
         {
-            return state.load() == ProcessState::aborted ? false : iterator != rhs.iterator;
+            return shouldAbort ? false : iterator != rhs.iterator;
         }
 
     private:
         std::istream_iterator<char, char, std::char_traits<char>, ptrdiff_t> iterator;
-        std::atomic<ProcessState> const& state;
+        std::atomic<bool> const& shouldAbort;
     };
 
-    expected = ProcessState::running;
-    ThreadedStreamIterator const itStart(stream, loadingState);
-    ThreadedStreamIterator const itEnd(loadingState);
-    auto const json = nlohmann::json::parse(itStart, itEnd, nullptr, false);
+    ThreadedStreamIterator const itStart(stream, shouldAbort);
+    ThreadedStreamIterator const itEnd(shouldAbort);
+    nlohmann::basic_json json;
+    try
+    {
+        json = nlohmann::json::parse(itStart, itEnd, nullptr);
+    }
+    catch(nlohmann::json::parse_error& e)
+    {
+        return {juce::translate(e.what())};
+    }
 
     advancement.store(0.2f);
     if(json.is_discarded())
     {
-        loadingState.store(ProcessState::aborted);
-        return {};
+        return {juce::translate("Parsing error")};
     }
 
-    if(loadingState.load() == ProcessState::aborted)
+    if(shouldAbort)
     {
         return {};
     }
+
     std::vector<std::vector<Plugin::Result>> pluginResults;
     pluginResults.resize(json.size());
     for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
@@ -228,7 +268,7 @@ Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<Pro
         for(size_t frameIndex = 0_z; frameIndex < channelData.size(); ++frameIndex)
         {
             advancement.store(0.2f + advRatio + 0.1f * static_cast<float>(frameIndex) / static_cast<float>(channelData.size()));
-            if(loadingState.load() == ProcessState::aborted)
+            if(shouldAbort)
             {
                 return {};
             }
@@ -269,7 +309,7 @@ Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<Pro
         }
     }
 
-    if(loadingState.load() == ProcessState::aborted)
+    if(shouldAbort)
     {
         return {};
     }
@@ -279,35 +319,26 @@ Track::Results Track::Loader::loadFromJson(std::istream& stream, std::atomic<Pro
     advancement.store(0.9f);
     auto results = Tools::getResults(output, pluginResults);
     advancement.store(1.0f);
-    if(loadingState.compare_exchange_weak(expected, ProcessState::ended))
-    {
-        return results;
-    }
-
-    return {};
+    return {std::move(results)};
 }
 
-Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto expected = ProcessState::available;
-    if(!loadingState.compare_exchange_weak(expected, ProcessState::running))
+    if(shouldAbort)
     {
         return {};
     }
-    expected = ProcessState::running;
 
     Results res;
     char type[7] = {'\0'};
     if(!stream.read(type, sizeof(char) * 6))
     {
-        loadingState.store(ProcessState::aborted);
-        return {};
+        return {juce::translate("Parsing error")};
     }
 
     if(stream.eof())
     {
-        loadingState.store(ProcessState::aborted);
-        return {};
+        return {juce::translate("Parsing error")};
     }
 
     if(std::string(type) == "PTLMKS")
@@ -323,39 +354,34 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
                 {
                     break;
                 }
-                loadingState.store(ProcessState::aborted);
-                return {};
+                return {juce::translate("Parsing error")};
             }
             markers.resize(static_cast<size_t>(numChannels));
 
             for(auto& marker : markers)
             {
-                if(loadingState.load() == ProcessState::aborted)
+                if(shouldAbort)
                 {
                     return {};
                 }
 
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(marker)), sizeof(std::get<0>(marker))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 if(!stream.read(reinterpret_cast<char*>(&std::get<1>(marker)), sizeof(std::get<1>(marker))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 uint64_t length;
                 if(!stream.read(reinterpret_cast<char*>(&length), sizeof(length)))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 std::get<2>(marker).resize(length);
                 if(!stream.read(reinterpret_cast<char*>(std::get<2>(marker).data()), static_cast<long>(length * sizeof(char))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
             }
             results.push_back(std::move(markers));
@@ -376,40 +402,35 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
                 {
                     break;
                 }
-                loadingState.store(ProcessState::aborted);
-                return {};
+                return {juce::translate("Parsing error")};
             }
             points.resize(static_cast<size_t>(numChannels));
             for(auto& point : points)
             {
-                if(loadingState.load() == ProcessState::aborted)
+                if(shouldAbort)
                 {
                     return {};
                 }
 
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(point)), sizeof(std::get<0>(point))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 if(!stream.read(reinterpret_cast<char*>(&std::get<1>(point)), sizeof(std::get<1>(point))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 bool hasValue;
                 if(!stream.read(reinterpret_cast<char*>(&hasValue), sizeof(hasValue)))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 if(hasValue)
                 {
                     float value;
                     if(!stream.read(reinterpret_cast<char*>(&value), sizeof(value)))
                     {
-                        loadingState.store(ProcessState::aborted);
-                        return {};
+                        return {juce::translate("Parsing error")};
                     }
                     std::get<2>(point) = value;
                 }
@@ -433,38 +454,33 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
                 {
                     break;
                 }
-                loadingState.store(ProcessState::aborted);
-                return {};
+                return {juce::translate("Parsing error")};
             }
             columns.resize(static_cast<size_t>(numChannels));
             for(auto& column : columns)
             {
-                if(loadingState.load() == ProcessState::aborted)
+                if(shouldAbort)
                 {
                     return {};
                 }
 
                 if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 if(!stream.read(reinterpret_cast<char*>(&std::get<1>(column)), sizeof(std::get<1>(column))))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 uint64_t numBins;
                 if(!stream.read(reinterpret_cast<char*>(&numBins), sizeof(numBins)))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
                 std::get<2>(column).resize(numBins);
                 if(!stream.read(reinterpret_cast<char*>(std::get<2>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
                 {
-                    loadingState.store(ProcessState::aborted);
-                    return {};
+                    return {juce::translate("Parsing error")};
                 }
             }
             results.push_back(std::move(columns));
@@ -474,24 +490,17 @@ Track::Results Track::Loader::loadFromBinary(std::istream& stream, std::atomic<P
         auto const valueRange = Tools::getValueRange(results);
         res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)), numBins, valueRange);
     }
+    else
+    {
+        return {juce::translate("Parsing error")};
+    }
 
     advancement.store(1.0f);
-    if(loadingState.compare_exchange_weak(expected, ProcessState::ended))
-    {
-        return res;
-    }
-    return {};
+    return {std::move(res)};
 }
 
-Track::Results Track::Loader::loadFromCsv(std::istream& stream, std::atomic<ProcessState>& loadingState, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto expected = ProcessState::available;
-    if(!loadingState.compare_exchange_weak(expected, ProcessState::running))
-    {
-        return {};
-    }
-    expected = ProcessState::running;
-
     std::vector<std::vector<Plugin::Result>> pluginResults;
 
     auto trimString = [](std::string const& s)
@@ -520,6 +529,11 @@ Track::Results Track::Loader::loadFromCsv(std::istream& stream, std::atomic<Proc
     std::string line;
     while(getline(stream, line, '\n'))
     {
+        if(shouldAbort)
+        {
+            return {};
+        }
+
         line = trimString(line);
         if(line.empty() || line == "\n")
         {
@@ -536,7 +550,11 @@ Track::Results Track::Loader::loadFromCsv(std::istream& stream, std::atomic<Proc
             getline(linestream, time, ',');
             getline(linestream, duration, ',');
             getline(linestream, value, ',');
-            if(!time.empty() && !duration.empty() && std::isdigit(static_cast<int>(time[0])) && std::isdigit(static_cast<int>(duration[0])))
+            if(time.empty() || duration.empty() || value.empty())
+            {
+                return {juce::translate("Parsing error")};
+            }
+            else if(std::isdigit(static_cast<int>(time[0])) && std::isdigit(static_cast<int>(duration[0])))
             {
                 auto& channelResults = pluginResults.back();
                 Plugin::Result result;
@@ -544,11 +562,11 @@ Track::Results Track::Loader::loadFromCsv(std::istream& stream, std::atomic<Proc
                 result.timestamp = Vamp::RealTime::fromSeconds(std::stod(time));
                 result.hasDuration = true;
                 result.duration = Vamp::RealTime::fromSeconds(std::stod(duration));
-                if(!value.empty() && !std::isdigit(static_cast<int>(value[0])))
+                if(!std::isdigit(static_cast<int>(value[0])))
                 {
                     result.label = unescapeString(value).toStdString();
                 }
-                else if(!value.empty())
+                else
                 {
                     result.values.push_back(std::stof(value));
                     while(getline(linestream, value, ','))
@@ -566,11 +584,7 @@ Track::Results Track::Loader::loadFromCsv(std::istream& stream, std::atomic<Proc
     advancement.store(0.9f);
     auto results = Tools::getResults(output, pluginResults);
     advancement.store(1.0f);
-    if(loadingState.compare_exchange_weak(expected, ProcessState::ended))
-    {
-        return results;
-    }
-    return {};
+    return {std::move(results)};
 }
 
 class Track::Loader::UnitTest
@@ -586,8 +600,15 @@ public:
 
     void runTest() override
     {
-        auto checkMakers = [this](Results results)
+        auto checkMakers = [this](std::variant<Results, juce::String> vResult)
         {
+            expectEquals(vResult.index(), 0_z);
+            if(vResult.index() == 1_z)
+            {
+                expectNotEquals(vResult.index(), 1_z, *std::get_if<juce::String>(&vResult));
+                return;
+            }
+            auto results = *std::get_if<Results>(&vResult);
             auto const markers = results.getMarkers();
             expect(markers != nullptr);
             if(markers == nullptr)
@@ -626,8 +647,15 @@ public:
             expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {0.023582767, "A"s}});
         };
 
-        auto checkPoints = [this](Results results)
+        auto checkPoints = [this](std::variant<Results, juce::String> vResult)
         {
+            expectEquals(vResult.index(), 0_z);
+            if(vResult.index() == 1_z)
+            {
+                expectNotEquals(vResult.index(), 1_z, *std::get_if<juce::String>(&vResult));
+                return;
+            }
+            auto results = *std::get_if<Results>(&vResult);
             auto const points = results.getPoints();
             expect(points != nullptr);
             if(points == nullptr)
@@ -673,66 +701,54 @@ public:
         {
             auto const result = std::string(TestResultsData::Markers_csv);
             std::istringstream stream(result);
-            std::atomic<ProcessState> loadingState;
-            loadingState.store(ProcessState::available);
-            std::atomic<float> advancement;
-            advancement.store(0.0f);
-            checkMakers(loadFromCsv(stream, loadingState, advancement));
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromCsv(stream, shouldAbort, advancement));
         }
 
         beginTest("load cvs points");
         {
             auto const result = std::string(TestResultsData::Points_csv);
             std::istringstream stream(result);
-            std::atomic<ProcessState> loadingState;
-            loadingState.store(ProcessState::available);
-            std::atomic<float> advancement;
-            advancement.store(0.0f);
-            checkPoints(loadFromCsv(stream, loadingState, advancement));
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromCsv(stream, shouldAbort, advancement));
         }
 
         beginTest("load json markers");
         {
             auto const result = std::string(TestResultsData::Markers_json);
             std::istringstream stream(result);
-            std::atomic<ProcessState> loadingState;
-            loadingState.store(ProcessState::available);
-            std::atomic<float> advancement;
-            advancement.store(0.0f);
-            checkMakers(loadFromJson(stream, loadingState, advancement));
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromJson(stream, shouldAbort, advancement));
         }
 
         beginTest("load json points");
         {
             auto const result = std::string(TestResultsData::Points_json);
             std::istringstream stream(result);
-            std::atomic<ProcessState> loadingState;
-            loadingState.store(ProcessState::available);
-            std::atomic<float> advancement;
-            advancement.store(0.0f);
-            checkPoints(loadFromJson(stream, loadingState, advancement));
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromJson(stream, shouldAbort, advancement));
         }
 
         beginTest("load binary Markers");
         {
             std::stringstream stream;
             stream.write(TestResultsData::Markers_dat, TestResultsData::Markers_datSize);
-            std::atomic<ProcessState> loadingState;
-            loadingState.store(ProcessState::available);
-            std::atomic<float> advancement;
-            advancement.store(0.0f);
-            checkMakers(loadFromBinary(stream, loadingState, advancement));
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromBinary(stream, shouldAbort, advancement));
         }
 
         beginTest("load binary Points");
         {
             std::stringstream stream;
             stream.write(TestResultsData::Points_dat, TestResultsData::Points_datSize);
-            std::atomic<ProcessState> loadingState;
-            loadingState.store(ProcessState::available);
-            std::atomic<float> advancement;
-            advancement.store(0.0f);
-            checkPoints(loadFromBinary(stream, loadingState, advancement));
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromBinary(stream, shouldAbort, advancement));
         }
     }
 };

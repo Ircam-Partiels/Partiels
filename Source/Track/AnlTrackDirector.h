@@ -33,7 +33,7 @@ namespace Track
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
-        void runLoading(NotificationType const notification);
+        void runLoading();
         void runRendering();
 
         // FileWatcher

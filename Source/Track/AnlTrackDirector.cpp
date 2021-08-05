@@ -80,7 +80,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 clearFilesToWatch();
                 if(mAccessor.getAttr<AttrType::file>() != juce::File{})
                 {
-                    runLoading(notification);
+                    runLoading();
                 }
                 else
                 {
@@ -306,10 +306,43 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
 
-    mLoader.onLoadingEnded = [&](Results const& results)
+    mLoader.onLoadingSucceeded = [&](Results const& results)
     {
+        addFileToWatch(mAccessor.getAttr<AttrType::file>());
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
+    };
+
+    mLoader.onLoadingFailed = [&](juce::String const& message)
+    {
+        if(mAlertCatcher != nullptr)
+        {
+            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, "Loading results failed!", message);
+            return;
+        }
+
+        auto const file = mAccessor.getAttr<AttrType::file>();
+        mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
+        auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Loading results failed!", "The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file? If no, the application will try to run the analysis if possible.", {{"FILENAME", file.getFullPathName()}, {"ERRORMESSAGE", message}});
+        switch(answer)
+        {
+            case AlertWindow::Answer::yes:
+            {
+                juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.csv;*.json;*.dat");
+                if(fc.browseForFileToOpen())
+                {
+                    mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+                }
+            }
+            break;
+            case AlertWindow::Answer::no:
+            {
+                mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
+            }
+            break;
+            case AlertWindow::Answer::cancel:
+                break;
+        }
     };
 
     mLoader.onLoadingAborted = [&]()
@@ -546,42 +579,16 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
 }
 
-void Track::Director::runLoading(NotificationType const notification)
+void Track::Director::runLoading()
 {
     mGraphics.stopRendering();
     auto const file = mAccessor.getAttr<AttrType::file>();
     if(file != juce::File{})
     {
-        auto const result = mLoader.loadAnalysis(mAccessor, file);
-        if(result.wasOk())
-        {
-            startTimer(50);
-            timerCallback();
-            addFileToWatch(file);
-            mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-            return;
-        }
-        mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-        auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results cannot be restored!", "ERRORMESSAGE. Would you like to select another file? If no, the application will try to run the analysis if possible.", {{"ERRORMESSAGE", result.getErrorMessage()}});
-        switch(answer)
-        {
-            case AlertWindow::Answer::yes:
-            {
-                juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.json;*.dat");
-                if(fc.browseForFileToOpen())
-                {
-                    mAccessor.setAttr<AttrType::file>(fc.getResult(), notification);
-                }
-            }
-            break;
-            case AlertWindow::Answer::no:
-            {
-                mAccessor.setAttr<AttrType::file>(juce::File{}, notification);
-            }
-            break;
-            case AlertWindow::Answer::cancel:
-                break;
-        }
+        mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+        startTimer(50);
+        timerCallback();
+        mLoader.loadAnalysis(mAccessor, file);
     }
 }
 
@@ -648,7 +655,7 @@ bool Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.json;*.dat");
+        juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.csv;*.json;*.dat");
         if(fc.browseForFileToOpen())
         {
             mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
@@ -663,7 +670,7 @@ bool Track::Director::fileHasBeenRestored(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been restored!", "The analysis file FILENAME has been restored. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        runLoading(NotificationType::asynchronous);
+        runLoading();
         return false;
     }
     return true;
@@ -673,7 +680,7 @@ bool Track::Director::fileHasBeenModified(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been modified!", "The analysis file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        runLoading(NotificationType::asynchronous);
+        runLoading();
         return false;
     }
     return true;
