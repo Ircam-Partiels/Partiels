@@ -22,11 +22,12 @@ namespace Track
         bool isRunning() const;
         float getAdvancement() const;
 
-    private:
         static std::variant<Results, juce::String> loadFromFile(juce::File const& file, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromBinary(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+
+    private:
         void abortLoading();
 
         // juce::AsyncUpdater

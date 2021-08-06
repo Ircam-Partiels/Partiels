@@ -183,6 +183,97 @@ Application::CommandLine::CommandLine()
          }});
 }
 
+static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::File const& generatedFile)
+{
+    std::atomic<bool> const shouldAbort{false};
+    std::atomic<float> advancement{0.0f};
+    auto const expectedResults = Track::Loader::loadFromFile(expectedFile, shouldAbort, advancement);
+    auto const generatedResults = Track::Loader::loadFromFile(generatedFile, shouldAbort, advancement);
+    if(expectedResults.index() == 1_z)
+    {
+        return juce::Result::fail(*std::get_if<juce::String>(&expectedResults));
+    }
+    if(generatedResults.index() == 1_z)
+    {
+        return juce::Result::fail(*std::get_if<juce::String>(&generatedResults));
+    }
+    auto const expectedTrackResults = *std::get_if<Track::Results>(&expectedResults);
+    auto const generatedTrackResults = *std::get_if<Track::Results>(&generatedResults);
+    if(expectedTrackResults.isEmpty())
+    {
+        if(!generatedTrackResults.isEmpty())
+        {
+            return juce::Result::fail("Different types!");
+        }
+        return juce::Result::ok();
+    }
+
+    auto timeAndDurationAreEquivalent = [](auto const& lhs, auto const& rhs)
+    {
+        return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < 0.00001 && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < 0.00001;
+    };
+
+    auto resultsAreEquivalent = [](auto const& expectedResultsPtr, auto const& generatedResultsPtr, auto lambda)
+    {
+        if(expectedResultsPtr == nullptr && generatedResultsPtr == nullptr)
+        {
+            return true;
+        }
+        if(expectedResultsPtr == nullptr || generatedResultsPtr == nullptr)
+        {
+            return false;
+        }
+        if(expectedResultsPtr->size() != generatedResultsPtr->size())
+        {
+            return false;
+        }
+        return std::equal(expectedResultsPtr->cbegin(), expectedResultsPtr->cend(), generatedResultsPtr->cbegin(), [=](auto const& expectedChannel, auto const& generatedChannel)
+                          {
+                              if(expectedChannel.size() != generatedChannel.size())
+                              {
+                                  return false;
+                              }
+                              return std::equal(expectedChannel.cbegin(), expectedChannel.cend(), generatedChannel.cbegin(), lambda);
+                          });
+    };
+
+    if(!resultsAreEquivalent(expectedTrackResults.getMarkers(), generatedTrackResults.getMarkers(), [&](Track::Results::Marker const& lhs, Track::Results::Marker const& rhs)
+                             {
+                                 return timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs) == std::get<2>(rhs);
+                             }))
+    {
+        return juce::Result::fail("Different results!");
+    }
+
+    if(!resultsAreEquivalent(expectedTrackResults.getPoints(), generatedTrackResults.getPoints(), [&](Track::Results::Point const& lhs, Track::Results::Point const& rhs)
+                             {
+                                 if(timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs).has_value() == std::get<2>(rhs).has_value())
+                                 {
+                                     return !std::get<2>(lhs).has_value() || std::abs(*std::get<2>(lhs) - *std::get<2>(rhs)) < 0.01;
+                                 }
+                                 return false;
+                             }))
+    {
+        return juce::Result::fail("Different results!");
+    }
+
+    if(!resultsAreEquivalent(expectedTrackResults.getColumns(), generatedTrackResults.getColumns(), [&](Track::Results::Column const& lhs, Track::Results::Column const& rhs)
+                             {
+                                 if(timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs).size() == std::get<2>(rhs).size())
+                                 {
+                                     return std::equal(std::get<2>(lhs).cbegin(), std::get<2>(lhs).cend(), std::get<2>(rhs).cbegin(), [](auto const& lhsv, auto const& rhsv)
+                                                       {
+                                                           return std::abs(lhsv - rhsv) < 0.01;
+                                                       });
+                                 }
+                                 return false;
+                             }))
+    {
+        return juce::Result::fail("Different results!");
+    }
+    return juce::Result::ok();
+}
+
 std::optional<int> Application::CommandLine::tryToRun(juce::String const& commandLine)
 {
     if(commandLine.isEmpty() || commandLine.startsWith("-NSDocumentRevisionsDebugMode"))
@@ -197,6 +288,10 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
         anlDebug("Application", "Command line doesn't contains any option");
         return {};
     }
+
+#ifdef JUCE_MAC
+    juce::Process::setDockIconVisible(false);
+#endif
 
     if(args[0].isLongOption("unit-tests"))
     {
@@ -215,10 +310,23 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
         return failures;
     }
 
+    if(args[0].isLongOption("compare-files"))
+    {
+        if(args.size() != 3)
+        {
+            std::cerr << "Missing arguments! Expected two results file paths!" << std::endl;
+            return 1;
+        }
+        auto const results = compareResultsFiles(args[1].resolveAsFile(), args[2].resolveAsFile());
+        if(results.failed())
+        {
+            std::cerr << results.getErrorMessage() << std::endl;
+            return 1;
+        }
+        return 0;
+    }
+
     anlDebug("Application", "Running as CLI");
-#ifdef JUCE_MAC
-    juce::Process::setDockIconVisible(false);
-#endif
     CommandLine cmd;
     return cmd.findAndRunCommand(args);
 }
