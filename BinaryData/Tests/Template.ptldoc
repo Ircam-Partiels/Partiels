@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<document AnlModelVersion="8" viewport_x="0" viewport_y="0" path="/Users/guillot/Ircam/Partiels/BinaryData/Tests/Template(2).ptldoc"
-          grid="2">
+<document AnlModelVersion="8" viewport_x="0" viewport_y="0" path="/Users/guillot/Ircam/Partiels/BinaryData/Tests/Template.ptldoc"
+          grid="2" samplerate="44100.0">
   <reader>
     <value file="/Users/guillot/Nextcloud/Sounds/Sound1.wav" channel="0"/>
   </reader>
