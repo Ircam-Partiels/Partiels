@@ -27,6 +27,7 @@
 #include "AnlPropertyComponent.h"
 #include "AnlResizerBar.h"
 #include "AnlScrollHelper.h"
+#include "AnlSdifConverter.h"
 #include "AnlTimerClock.h"
 #include "AnlTooltip.h"
 #include "AnlXmlParser.h"
