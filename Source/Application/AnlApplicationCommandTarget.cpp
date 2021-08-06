@@ -279,13 +279,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::HelpOpenManual:
         {
-            result.setInfo(juce::translate("Open Manual"), juce::translate("Opens the manual in a web browser"), "Help", 0);
+            result.setInfo(juce::translate("Open Manual"), juce::translate("Open the manual in a web browser"), "Help", 0);
             result.setActive(true);
         }
         break;
         case CommandIDs::HelpOpenForum:
         {
-            result.setInfo(juce::translate("Proceed to Forum"), juce::translate("Opens the forum page in a web browser"), "Help", 0);
+            result.setInfo(juce::translate("Proceed to Forum"), juce::translate("Open the forum page in a web browser"), "Help", 0);
             result.setActive(true);
         }
         break;
