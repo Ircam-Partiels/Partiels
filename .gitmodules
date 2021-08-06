@@ -4,3 +4,6 @@
 [submodule "vamp-plugin-sdk"]
 	path = vamp-plugin-sdk
 	url = git@forge-2.ircam.fr:pierreguillot-group/vamp-plugin-sdk.git
+[submodule "Dependencies/sdif"]
+	path = Dependencies/sdif
+	url = git@forge-2.ircam.fr:pierreguillot-group/sdif.git
