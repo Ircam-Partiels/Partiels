@@ -3,6 +3,42 @@
 
 ANALYSE_FILE_BEGIN
 
+static int sdifOpenFileQueryCallback(SdifFileT* file, void* userdata)
+{
+    juce::ignoreUnused(file, userdata);
+    return 2;
+}
+
+std::map<uint32_t, std::set<uint32_t>> SdifConverter::getSignatures(juce::File const& inputFile)
+{
+    if(!inputFile.existsAsFile())
+    {
+        return {};
+    }
+    SdifGenInit(nullptr);
+    auto* sigs = SdifCreateQueryTree(1024);
+    SdifQuery(inputFile.getFullPathName().toRawUTF8(), sdifOpenFileQueryCallback, sigs);
+    std::map<uint32_t, std::set<uint32_t>> signatures;
+    for(int i = 0; i < sigs->num; i++)
+    {
+        if(sigs->elems[i].parent == -1)
+        {
+            auto& frameRef = signatures[sigs->elems[i].sig];
+            for(int m = 0; m < sigs->num; m++)
+            {
+                if(sigs->elems[m].parent == i)
+                {
+                    frameRef.insert(sigs->elems[m].sig);
+                }
+            }
+        }
+    }
+
+    SdifFreeQueryTree(sigs);
+    SdifGenKill();
+    return signatures;
+}
+
 juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId)
 {
     class ScopedFile
