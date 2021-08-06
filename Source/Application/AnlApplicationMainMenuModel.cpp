@@ -122,6 +122,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
 #endif
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::HelpSDIFConverter);
     }
     else
     {

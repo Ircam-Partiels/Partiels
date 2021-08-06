@@ -45,6 +45,7 @@ namespace Application
             , HelpOpenAbout
             , HelpOpenManual
             , HelpOpenForum
+            , HelpSDIFConverter
         };
         // clang-format on
 
@@ -67,6 +68,7 @@ namespace Application
 
         Accessor::Listener mListener{typeid(*this).name()};
         PluginList::Table mPluginListTable;
+        SdifConverter::Panel mSdifConverter;
     };
 } // namespace Application
 

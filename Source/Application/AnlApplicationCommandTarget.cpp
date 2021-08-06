@@ -81,6 +81,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::HelpOpenAbout
         , CommandIDs::HelpOpenManual
         , CommandIDs::HelpOpenForum
+        , CommandIDs::HelpSDIFConverter
     });
     // clang-format on
 }
@@ -286,6 +287,12 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::HelpOpenForum:
         {
             result.setInfo(juce::translate("Proceed to Forum"), juce::translate("Open the forum page in a web browser"), "Help", 0);
+            result.setActive(true);
+        }
+        break;
+        case CommandIDs::HelpSDIFConverter:
+        {
+            result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Show the SDIF converter panel"), "Help", 0);
             result.setActive(true);
         }
         break;
@@ -584,6 +591,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 url.launchInDefaultBrowser();
             }
+            return true;
+        }
+        case CommandIDs::HelpSDIFConverter:
+        {
+            mSdifConverter.show();
             return true;
         }
     }
