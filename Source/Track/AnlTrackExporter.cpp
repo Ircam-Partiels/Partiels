@@ -426,7 +426,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     stream.close();
     if(!stream.good())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as binary because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as JSON because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
     if(shouldAbort)
