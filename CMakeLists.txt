@@ -8,6 +8,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 project(Partiels VERSION 0.0.8 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
+add_subdirectory(Dependencies/sdif)
 include(vamp.cmake)
 include(xcode-warnings.cmake)
 
@@ -113,6 +114,7 @@ juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE T
 
 target_link_libraries(Partiels PRIVATE
     vamp
+    sdif
     IconsData
     CursorsData
     FontsData
