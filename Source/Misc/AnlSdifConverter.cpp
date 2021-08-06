@@ -1,4 +1,5 @@
 #include "AnlSdifConverter.h"
+#include "AnlAlertWindow.h"
 #include <sdif.h>
 
 ANALYSE_FILE_BEGIN
@@ -180,6 +181,200 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
     }
 
     return juce::Result::ok();
+}
+
+SdifConverter::Panel::Panel()
+: FloatingWindowContainer("SDIF to JSON", *this)
+, mPropertyOpen("Open", "Select an SDIF file to convert", [&]()
+                {
+                    juce::FileChooser fc("Load a SDIF file", {}, "*.sdif");
+                    if(fc.browseForFileToOpen())
+                    {
+                        setFile(fc.getResult());
+                    }
+                })
+, mPropertyName("SDIF File", "The SDIF file to convert", nullptr)
+, mPropertyFrameId("Frame ID", "Select an frame identifier to convert", "", {}, [&](size_t index)
+                   {
+                       juce::ignoreUnused(index);
+                       selectedFrameUpdated();
+                   })
+, mPropertyMatrixId("Matrix ID", "Select an matrix identifier to convert", "", {}, nullptr)
+, mPropertyExport("Convert", "Convert the SDIF file to a JSON file", [&]()
+                  {
+                      exportFile();
+                  })
+{
+    mPropertyName.entry.setEnabled(false);
+    addAndMakeVisible(mPropertyName);
+    addAndMakeVisible(mPropertyOpen);
+    addAndMakeVisible(mPropertyFrameId);
+    addAndMakeVisible(mPropertyMatrixId);
+    addAndMakeVisible(mPropertyExport);
+    mPropertyFrameId.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
+    mPropertyMatrixId.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
+    setFile({});
+    setSize(300, 200);
+}
+
+void SdifConverter::Panel::resized()
+{
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+    auto setBounds = [&](juce::Component& component)
+    {
+        if(component.isVisible())
+        {
+            component.setBounds(bounds.removeFromTop(component.getHeight()));
+        }
+    };
+    setBounds(mPropertyOpen);
+    setBounds(mPropertyName);
+    setBounds(mPropertyFrameId);
+    setBounds(mPropertyMatrixId);
+    setBounds(mPropertyExport);
+    setSize(300, std::max(bounds.getY(), 120) + 2);
+}
+
+void SdifConverter::Panel::paintOverChildren(juce::Graphics& g)
+{
+    if(mFileIsDragging)
+    {
+        g.fillAll(findColour(juce::TextButton::ColourIds::buttonColourId).withAlpha(0.5f));
+    }
+}
+
+bool SdifConverter::Panel::isInterestedInFileDrag(juce::StringArray const& files)
+{
+    return std::any_of(files.begin(), files.end(), [](auto const& path)
+                       {
+                           return juce::File(path).hasFileExtension("sdif");
+                       });
+}
+
+void SdifConverter::Panel::fileDragEnter(juce::StringArray const& files, int x, int y)
+{
+    juce::ignoreUnused(files, x, y);
+    mFileIsDragging = true;
+    repaint();
+}
+
+void SdifConverter::Panel::fileDragExit(juce::StringArray const& files)
+{
+    juce::ignoreUnused(files);
+    mFileIsDragging = false;
+    repaint();
+}
+
+void SdifConverter::Panel::filesDropped(juce::StringArray const& files, int x, int y)
+{
+    juce::ignoreUnused(files, x, y);
+    mFileIsDragging = false;
+    repaint();
+    for(auto const& path : files)
+    {
+        juce::File const file(path);
+        if(file.hasFileExtension("sdif"))
+        {
+            setFile(file);
+            return;
+        }
+    }
+}
+
+void SdifConverter::Panel::setFile(juce::File const& file)
+{
+    mFile = file;
+    if(mFile == juce::File{})
+    {
+        mPropertyName.entry.setText("No SDIF file selected", juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        mPropertyName.entry.setText(file.getFileNameWithoutExtension(), juce::NotificationType::dontSendNotification);
+    }
+    mSignatures = getSignatures(file);
+
+    mPropertyFrameId.entry.clear(juce::NotificationType::dontSendNotification);
+    mFrameSigLinks.clear();
+    for(auto const& signature : mSignatures)
+    {
+        mFrameSigLinks.push_back(signature.first);
+        mPropertyFrameId.entry.addItem(SdifSignatureToString(signature.first), static_cast<int>(mFrameSigLinks.size()));
+    }
+    mPropertyFrameId.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    mPropertyFrameId.entry.setEnabled(mPropertyFrameId.entry.getNumItems() > 0);
+    selectedFrameUpdated();
+}
+
+void SdifConverter::Panel::selectedFrameUpdated()
+{
+    mPropertyMatrixId.entry.clear(juce::NotificationType::dontSendNotification);
+    mMatrixSigLinks.clear();
+    auto const selectedFrameIndex = mPropertyFrameId.entry.getSelectedItemIndex();
+    if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size())
+    {
+        mPropertyMatrixId.entry.setEnabled(false);
+        mPropertyExport.entry.setEnabled(false);
+        return;
+    }
+    auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
+    if(mSignatures.count(frameIdentifier) == 0_z)
+    {
+        mPropertyMatrixId.entry.setEnabled(false);
+        mPropertyExport.entry.setEnabled(false);
+        return;
+    }
+    auto const& matrixSignatures = mSignatures.at(frameIdentifier);
+    for(auto const& signature : matrixSignatures)
+    {
+        mMatrixSigLinks.push_back(signature);
+        mPropertyMatrixId.entry.addItem(SdifSignatureToString(signature), static_cast<int>(mMatrixSigLinks.size()));
+    }
+    mPropertyMatrixId.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    mPropertyMatrixId.entry.setEnabled(mPropertyMatrixId.entry.getNumItems() > 0);
+    mPropertyExport.entry.setEnabled(mPropertyMatrixId.entry.getNumItems() > 0);
+}
+
+void SdifConverter::Panel::exportFile()
+{
+    auto const selectedFrameIndex = mPropertyFrameId.entry.getSelectedItemIndex();
+    if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size())
+    {
+        anlWeakAssert(false);
+        return;
+    }
+    auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
+    if(mSignatures.count(frameIdentifier) == 0_z)
+    {
+        anlWeakAssert(false);
+        return;
+    }
+
+    auto const selectedMatrixIndex = mPropertyMatrixId.entry.getSelectedItemIndex();
+    if(selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
+    {
+        anlWeakAssert(false);
+        return;
+    }
+    auto const matrixIdentifier = mMatrixSigLinks[static_cast<size_t>(selectedMatrixIndex)];
+
+    juce::FileChooser fc("Select a JSON file", {}, "*.json");
+    if(!fc.browseForFileToSave(true))
+    {
+        return;
+    }
+    auto const jsonFile = fc.getResult();
+    enterModalState();
+    auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier);
+    exitModalState(0);
+    if(result.wasOk())
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+    }
+    else
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("There was an error while trying to convert the SDIF file 'SDIFFLNM' to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+    }
 }
 
 ANALYSE_FILE_END
