@@ -159,9 +159,14 @@ add_test(NAME ExportJpeg COMMAND Partiels --export --input=${TESTS_DIRECTORY}/So
 add_test(NAME ExportPng COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/PNG/ --format=png --width=1200 --height=900 --groups)
 add_test(NAME ExportCsv COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/ --format=json)
+
 set(EXPECTED_CSV_FILE_SV "${TESTS_DIRECTORY}/SpectralCentroid-SV.csv")
 set(EXPECTED_CSV_FILE_FAILURE "${TESTS_DIRECTORY}/SpectralCentroid-failure.csv")
 set(GENERATED_CSV_FILE "${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/Sound Group 1_Spectral Centroid.csv")
 add_test(NAME CompareFilesSV COMMAND Partiels --compare-files ${EXPECTED_CSV_FILE_SV} ${GENERATED_CSV_FILE})
 add_test(NAME CompareFilesFailure COMMAND Partiels --compare-files ${EXPECTED_CSV_FILE_FAILURE} ${GENERATED_CSV_FILE})
 set_tests_properties(CompareFilesFailure PROPERTIES WILL_FAIL TRUE)
+
+add_test(NAME ConversionToSdif COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Points.json --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Points.sdif --frame=1GAI --matrix=1GAI)
+add_test(NAME ConversionFromSdif COMMAND Partiels --sdif2json --input=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Points.sdif --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Points.json --frame=1GAI --matrix=1GAI --row=0)
+add_test(NAME ConversionCompare COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Points.json ${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Points.json)
