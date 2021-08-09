@@ -4,6 +4,15 @@
 
 ANALYSE_FILE_BEGIN
 
+uint32_t SdifConverter::getSignature(juce::String const& name)
+{
+    if(name.length() != 4)
+    {
+        return 0;
+    }
+    return SdifSignatureConst(name[0], name[1], name[2], name[3]);
+}
+
 static int sdifOpenFileQueryCallback(SdifFileT* file, void* userdata)
 {
     juce::ignoreUnused(file, userdata);
