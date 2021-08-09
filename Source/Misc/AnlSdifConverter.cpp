@@ -70,8 +70,8 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
         return juce::Result::fail("Can't open input file");
     }
 
-    auto constainer = nlohmann::json::object();
-    auto& json = constainer["results"];
+    auto container = nlohmann::json::object();
+    auto& json = container["results"];
 
     int endOfFile = 0;
     size_t bytesRead = 0;
@@ -109,7 +109,7 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
 
         if(SdifFCurrFrameSignature(file) != frameId)
         {
-            return juce::Result::fail("Can't fint frame signature");
+            return juce::Result::fail("Can't find frame signature");
         }
 
         if(!endOfFile)
@@ -169,7 +169,7 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
     {
         return juce::Result::fail(juce::translate("Can't open the output stream"));
     }
-    stream << json << std::endl;
+    stream << container << std::endl;
     stream.close();
     if(!stream.good())
     {
