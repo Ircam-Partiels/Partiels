@@ -255,61 +255,63 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
         return juce::Result::fail(juce::translate("Parsing error"));
     }
 
-    SdifFileT* file;
     juce::TemporaryFile temp(outputFile);
-    if(temp.getFile().create().failed())
     {
-        return juce::Result::fail("Can't create temporary input file");
-    }
-    ScopedFile scopedFile(&file, temp.getFile().getFullPathName().toRawUTF8());
-    if(file == nullptr)
-    {
-        return juce::Result::fail("Can't open input file");
-    }
-
-    SdifFWriteGeneralHeader(file);
-    SdifFWriteAllASCIIChunks(file);
-
-    auto const& json = container.count("results") ? container.at("results") : container;
-    for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
-    {
-        auto const& channelData = json[channelIndex];
-        for(size_t frameIndex = 0_z; frameIndex < channelData.size(); ++frameIndex)
+        SdifFileT* file;
+        if(temp.getFile().create().failed())
         {
-            auto const& frameData = channelData[frameIndex];
+            return juce::Result::fail("Can't create temporary input file");
+        }
+        ScopedFile scopedFile(&file, temp.getFile().getFullPathName().toRawUTF8());
+        if(file == nullptr)
+        {
+            return juce::Result::fail("Can't open input file");
+        }
 
-            auto const timeIt = frameData.find("time");
-            auto const time = timeIt != frameData.cend() ? static_cast<double>(timeIt.value()) : 0.0;
+        SdifFWriteGeneralHeader(file);
+        SdifFWriteAllASCIIChunks(file);
 
-            auto const labelIt = frameData.find("label");
-            if(labelIt != frameData.cend())
+        auto const& json = container.count("results") ? container.at("results") : container;
+        for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
+        {
+            auto const& channelData = json[channelIndex];
+            for(size_t frameIndex = 0_z; frameIndex < channelData.size(); ++frameIndex)
             {
-                std::string label = labelIt.value();
-                std::vector<SdifChar> data;
-                data.resize(label.length());
-                strncpy(data.data(), label.c_str(), data.size());
-                SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eChar, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(data.size()), reinterpret_cast<void*>(data.data()));
-            }
-            else
-            {
-                auto const valueIt = frameData.find("value");
-                if(valueIt != frameData.cend())
+                auto const& frameData = channelData[frameIndex];
+
+                auto const timeIt = frameData.find("time");
+                auto const time = timeIt != frameData.cend() ? static_cast<double>(timeIt.value()) : 0.0;
+
+                auto const labelIt = frameData.find("label");
+                if(labelIt != frameData.cend())
                 {
-                    SdifFloat8 value = valueIt.value();
-                    SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(1), reinterpret_cast<void*>(&value));
+                    std::string label = labelIt.value();
+                    std::vector<SdifChar> data;
+                    data.resize(label.length());
+                    strncpy(data.data(), label.c_str(), data.size());
+                    SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eChar, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(data.size()), reinterpret_cast<void*>(data.data()));
                 }
                 else
                 {
-                    auto const valuesIt = frameData.find("values");
-                    if(valuesIt != frameData.cend())
+                    auto const valueIt = frameData.find("value");
+                    if(valueIt != frameData.cend())
                     {
-                        std::vector<SdifFloat8> values;
-                        values.resize(valuesIt->size());
-                        for(size_t binIndex = 0_z; binIndex < valuesIt->size(); ++binIndex)
+                        SdifFloat8 value = valueIt.value();
+                        SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(1), reinterpret_cast<void*>(&value));
+                    }
+                    else
+                    {
+                        auto const valuesIt = frameData.find("values");
+                        if(valuesIt != frameData.cend())
                         {
-                            values[binIndex] = valuesIt->at(binIndex);
+                            std::vector<SdifFloat8> values;
+                            values.resize(valuesIt->size());
+                            for(size_t binIndex = 0_z; binIndex < valuesIt->size(); ++binIndex)
+                            {
+                                values[binIndex] = valuesIt->at(binIndex);
+                            }
+                            SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(values.size()), reinterpret_cast<void*>(values.data()));
                         }
-                        SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(values.size()), reinterpret_cast<void*>(values.data()));
                     }
                 }
             }
