@@ -751,7 +751,7 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         {
             window->moveKeyboardFocusTo(*identifier);
         }
-        AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track have been imported friom the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
+        AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track have been imported from the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
     }
     else
     {
