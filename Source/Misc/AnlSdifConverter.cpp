@@ -67,135 +67,126 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
             }
             SdifGenKill();
         }
-        
-        void clear()
-        {
-            if(file != nullptr)
-            {
-                SdifFClose(file);
-                file = nullptr;
-            }
-        }
 
     private:
         SdifFileT* file = nullptr;
     };
 
-    SdifFileT* file;
-    ScopedFile scopedFile(&file, inputFile.getFullPathName().toRawUTF8());
-    if(file == nullptr)
-    {
-        return juce::Result::fail("Can't open input file");
-    }
-
     auto container = nlohmann::json::object();
     auto& json = container["results"];
 
-    int endOfFile = 0;
-    size_t bytesRead = 0;
-
     {
-        auto const numBytes = SdifFReadGeneralHeader(file);
-        if(numBytes == 0_z)
+        SdifFileT* file;
+        ScopedFile scopedFile(&file, inputFile.getFullPathName().toRawUTF8());
+        if(file == nullptr)
         {
-            return juce::Result::fail("Can't read header info of input file");
+            return juce::Result::fail("Can't open input file");
         }
-        bytesRead += numBytes;
-    }
-    {
-        auto const numBytes = SdifFReadAllASCIIChunks(file);
-        if(numBytes == 0)
-        {
-            return juce::Result::fail("Can't read ASCII header info of input file");
-        }
-        bytesRead += numBytes;
-    }
 
-    while(!endOfFile && SdifFLastError(file) == nullptr)
-    {
-        bytesRead += SdifFReadFrameHeader(file);
-        while(!SdifFCurrFrameIsSelected(file) || SdifFCurrSignature(file) != frameId)
+        int endOfFile = 0;
+        size_t bytesRead = 0;
+
         {
-            SdifFSkipFrameData(file);
-            endOfFile = SdifFGetSignature(file, &bytesRead);
-            if(endOfFile == eEof)
+            auto const numBytes = SdifFReadGeneralHeader(file);
+            if(numBytes == 0_z)
             {
-                break;
+                return juce::Result::fail("Can't read header info of input file");
             }
-            bytesRead += SdifFReadFrameHeader(file);
+            bytesRead += numBytes;
         }
-
-        if(SdifFCurrFrameSignature(file) != frameId)
         {
-            return juce::Result::fail("Can't find frame signature");
-        }
-
-        if(!endOfFile)
-        {
-            auto const time = SdifFCurrTime(file);
-            auto const channelIndex = SdifFCurrID(file);
-            auto const numMatrix = SdifFCurrNbMatrix(file);
-            for(SdifUInt4 m = 0; m < numMatrix; m++)
+            auto const numBytes = SdifFReadAllASCIIChunks(file);
+            if(numBytes == 0)
             {
-                bytesRead += SdifFReadMatrixHeader(file);
-                if(SdifFCurrMatrixIsSelected(file) && SdifFCurrMatrixSignature(file) == matrixId)
+                return juce::Result::fail("Can't read ASCII header info of input file");
+            }
+            bytesRead += numBytes;
+        }
+
+        while(!endOfFile && SdifFLastError(file) == nullptr)
+        {
+            bytesRead += SdifFReadFrameHeader(file);
+            while(!SdifFCurrFrameIsSelected(file) || SdifFCurrSignature(file) != frameId)
+            {
+                SdifFSkipFrameData(file);
+                endOfFile = SdifFGetSignature(file, &bytesRead);
+                if(endOfFile == eEof)
                 {
-                    auto const numRows = SdifFCurrNbRow(file);
-                    auto const numColumns = SdifFCurrNbCol(file);
-                    if(row < numRows)
+                    break;
+                }
+                bytesRead += SdifFReadFrameHeader(file);
+            }
+
+            if(SdifFCurrFrameSignature(file) != frameId)
+            {
+                return juce::Result::fail("Can't find frame signature");
+            }
+
+            if(!endOfFile)
+            {
+                auto const time = SdifFCurrTime(file);
+                auto const channelIndex = SdifFCurrID(file);
+                auto const numMatrix = SdifFCurrNbMatrix(file);
+                for(SdifUInt4 m = 0; m < numMatrix; m++)
+                {
+                    bytesRead += SdifFReadMatrixHeader(file);
+                    if(SdifFCurrMatrixIsSelected(file) && SdifFCurrMatrixSignature(file) == matrixId)
                     {
-                        auto rowIndex = 0_z;
-                        while(rowIndex < row)
+                        auto const numRows = SdifFCurrNbRow(file);
+                        auto const numColumns = SdifFCurrNbCol(file);
+                        if(row < numRows)
                         {
+                            auto rowIndex = 0_z;
+                            while(rowIndex < row)
+                            {
+                                bytesRead += SdifFReadOneRow(file);
+                            }
+                            auto& cjson = json[channelIndex];
+                            nlohmann::json vjson;
+                            vjson["time"] = time;
                             bytesRead += SdifFReadOneRow(file);
-                        }
-                        auto& cjson = json[channelIndex];
-                        nlohmann::json vjson;
-                        vjson["time"] = time;
-                        bytesRead += SdifFReadOneRow(file);
-                        if(numColumns == 1)
-                        {
-                            vjson["value"] = SdifFCurrOneRowCol(file, 1);
+                            if(numColumns == 1)
+                            {
+                                vjson["value"] = SdifFCurrOneRowCol(file, 1);
+                            }
+                            else
+                            {
+                                for(SdifUInt4 col = 1; col <= numColumns; col++)
+                                {
+                                    auto const value = SdifFCurrOneRowCol(file, col);
+                                    vjson["values"].push_back(value);
+                                }
+                            }
+
+                            cjson.push_back(std::move(vjson));
                         }
                         else
                         {
-                            for(SdifUInt4 col = 1; col <= numColumns; col++)
+                            auto rowIndex = 0_z;
+                            while(rowIndex < numRows)
                             {
-                                auto const value = SdifFCurrOneRowCol(file, col);
-                                vjson["values"].push_back(value);
+                                bytesRead += SdifFReadOneRow(file);
                             }
                         }
-
-                        cjson.push_back(std::move(vjson));
                     }
                     else
                     {
-                        auto rowIndex = 0_z;
-                        while(rowIndex < numRows)
-                        {
-                            bytesRead += SdifFReadOneRow(file);
-                        }
+                        bytesRead += SdifFSkipMatrixData(file);
                     }
-                }
-                else
-                {
-                    bytesRead += SdifFSkipMatrixData(file);
+
+                    bytesRead += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesRead));
                 }
 
-                bytesRead += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesRead));
+                endOfFile = SdifFGetSignature(file, &bytesRead) == eEof;
             }
+        }
 
-            endOfFile = SdifFGetSignature(file, &bytesRead) == eEof;
+        auto* error = SdifFLastError(file);
+        if(error != nullptr)
+        {
+            return juce::Result::fail(error->UserMess != nullptr ? error->UserMess : "");
         }
     }
-
-    auto* error = SdifFLastError(file);
-    if(error != nullptr)
-    {
-        return juce::Result::fail(error->UserMess != nullptr ? error->UserMess : "");
-    }
-    
-    scopedFile.clear();
 
     juce::TemporaryFile temp(outputFile);
     std::ofstream stream(temp.getFile().getFullPathName().toStdString());
