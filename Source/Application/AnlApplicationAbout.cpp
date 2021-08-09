@@ -16,7 +16,7 @@ void Application::About::paint(juce::Graphics& g)
 {
     if(mImage != nullptr)
     {
-        mImage->drawWithin(g, {150.0f, 140.0f, 240.0f, 280.0f}, juce::RectanglePlacement::onlyReduceInSize | juce::RectanglePlacement::centred, 1.0f);
+        mImage->drawWithin(g, {240.0f, 240.0f, 160.0f, 160.0f}, juce::RectanglePlacement::onlyReduceInSize | juce::RectanglePlacement::centred, 1.0f);
     }
 
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
