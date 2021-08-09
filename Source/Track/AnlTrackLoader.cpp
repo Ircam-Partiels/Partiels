@@ -235,10 +235,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
 
     ThreadedStreamIterator const itStart(stream, shouldAbort);
     ThreadedStreamIterator const itEnd(shouldAbort);
-    nlohmann::basic_json json;
+    nlohmann::basic_json container;
     try
     {
-        json = nlohmann::json::parse(itStart, itEnd, nullptr);
+        container = nlohmann::json::parse(itStart, itEnd, nullptr);
     }
     catch(nlohmann::json::parse_error& e)
     {
@@ -246,11 +246,12 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     }
 
     advancement.store(0.2f);
-    if(json.is_discarded())
+    if(container.is_discarded())
     {
         return {juce::translate("Parsing error")};
     }
 
+    auto const& json = container.count("results") ? container.at("results") : container;
     if(shouldAbort)
     {
         return {};

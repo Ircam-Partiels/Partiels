@@ -70,7 +70,8 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
         return juce::Result::fail("Can't open input file");
     }
 
-    nlohmann::json json;
+    auto constainer = nlohmann::json::object();
+    auto& json = constainer["results"];
 
     int endOfFile = 0;
     size_t bytesRead = 0;
