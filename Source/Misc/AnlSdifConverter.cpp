@@ -207,6 +207,121 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
     return juce::Result::ok();
 }
 
+juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId)
+{
+    class ScopedFile
+    {
+    public:
+        ScopedFile(SdifFileT** f, const char* path)
+        {
+            SdifGenInit(nullptr);
+            file = *f = SdifFOpen(path, eWriteFile);
+        }
+        ~ScopedFile()
+        {
+            if(file != nullptr)
+            {
+                SdifFClose(file);
+            }
+            SdifGenKill();
+        }
+
+    private:
+        SdifFileT* file = nullptr;
+    };
+
+    std::ifstream inputStream(inputFile.getFullPathName().toStdString());
+    if(!inputStream || !inputStream.is_open() || !inputStream.good())
+    {
+        return juce::Result::fail(juce::translate("The input stream of cannot be opened"));
+    }
+
+    nlohmann::basic_json container;
+    try
+    {
+        container = nlohmann::json::parse(inputStream);
+    }
+    catch(nlohmann::json::parse_error& e)
+    {
+        inputStream.close();
+        return juce::Result::fail(juce::translate(e.what()));
+    }
+    inputStream.close();
+
+    if(container.is_discarded())
+    {
+        return juce::Result::fail(juce::translate("Parsing error"));
+    }
+
+    SdifFileT* file;
+    juce::TemporaryFile temp(outputFile);
+    if(temp.getFile().create().failed())
+    {
+        return juce::Result::fail("Can't create temporary input file");
+    }
+    ScopedFile scopedFile(&file, temp.getFile().getFullPathName().toRawUTF8());
+    if(file == nullptr)
+    {
+        return juce::Result::fail("Can't open input file");
+    }
+
+    SdifFWriteGeneralHeader(file);
+    SdifFWriteAllASCIIChunks(file);
+
+    auto const& json = container.count("results") ? container.at("results") : container;
+    for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
+    {
+        auto const& channelData = json[channelIndex];
+        for(size_t frameIndex = 0_z; frameIndex < channelData.size(); ++frameIndex)
+        {
+            auto const& frameData = channelData[frameIndex];
+
+            auto const timeIt = frameData.find("time");
+            auto const time = timeIt != frameData.cend() ? static_cast<double>(timeIt.value()) : 0.0;
+
+            auto const labelIt = frameData.find("label");
+            if(labelIt != frameData.cend())
+            {
+                std::string label = labelIt.value();
+                std::vector<SdifChar> data;
+                data.resize(label.length());
+                strncpy(data.data(), label.c_str(), data.size());
+                SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eChar, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(data.size()), reinterpret_cast<void*>(data.data()));
+            }
+            else
+            {
+                auto const valueIt = frameData.find("value");
+                if(valueIt != frameData.cend())
+                {
+                    SdifFloat8 value = valueIt.value();
+                    SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(1), reinterpret_cast<void*>(&value));
+                }
+                else
+                {
+                    auto const valuesIt = frameData.find("values");
+                    if(valuesIt != frameData.cend())
+                    {
+                        std::vector<SdifFloat8> values;
+                        values.resize(valuesIt->size());
+                        for(size_t binIndex = 0_z; binIndex < valuesIt->size(); ++binIndex)
+                        {
+                            values[binIndex] = valuesIt->at(binIndex);
+                        }
+                        SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(values.size()), reinterpret_cast<void*>(values.data()));
+                    }
+                }
+            }
+        }
+    }
+
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return juce::Result::fail(juce::translate("Can't write to the output file"));
+    }
+
+    return juce::Result::ok();
+}
+
 SdifConverter::Panel::Panel()
 : FloatingWindowContainer("SDIF to JSON", *this)
 , mPropertyOpen("Open", "Select an SDIF file to convert", [&]()

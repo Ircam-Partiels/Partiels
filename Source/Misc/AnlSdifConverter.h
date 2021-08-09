@@ -11,6 +11,7 @@ namespace SdifConverter
     std::map<uint32_t, std::set<uint32_t>> getSignatures(juce::File const& inputFile);
 
     juce::Result toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row);
+    juce::Result fromJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId);
 
     class Panel
     : public FloatingWindowContainer
