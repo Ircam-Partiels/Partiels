@@ -181,6 +181,75 @@ Application::CommandLine::CommandLine()
                  juce::ConsoleApplication::fail(result.getErrorMessage());
              }
          }});
+    addCommand(
+        {"--sdif2json",
+         "--sdif2json [options]",
+         "Converts a SDIF file to a JSON file.\n\t"
+         "--input|-i <sdiffile> Defines the path to the input SDIF file to convert (required).\n\t"
+         "--output|-o <jsonfile> Defines the path of the output JSON file (required).\n\t"
+         "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
+         "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t"
+         "--row|-r <rowindex> The index of the row (required).\n\t",
+         "",
+         [](juce::ArgumentList const& args)
+         {
+             args.failIfOptionIsMissing("-i|--input");
+             args.failIfOptionIsMissing("-o|--output");
+             args.failIfOptionIsMissing("-f|--frame");
+             args.failIfOptionIsMissing("-m|--matrix");
+             args.failIfOptionIsMissing("-r|--row");
+             auto const inputFile = args.getExistingFileForOption("-i|--input");
+             auto const outputFile = args.getFileForOption("-o|--output");
+             auto const frame = args.getValueForOption("-f|--frame");
+             auto const matrix = args.getValueForOption("-m|--matrix");
+             auto const row = args.getValueForOption("-r|--row").getIntValue();
+             if(row < 0)
+             {
+                 fail("Row index must be positive!");
+             }
+             if(frame.length() != 4 || matrix.length() != 4)
+             {
+                 fail("Signature must contain 4 characters!");
+             }
+             auto const frameSig = SdifConverter::getSignature(frame);
+             auto const matrixSig = SdifConverter::getSignature(matrix);
+             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, static_cast<size_t>(row));
+             if(result.failed())
+             {
+                 juce::ConsoleApplication::fail(result.getErrorMessage());
+             }
+         }});
+    addCommand(
+        {"--json2sdif",
+         "--json2sdif [options]",
+         "Converts a JSON file to a SDIF file.\n\t"
+         "--input|-i <jsonfile> Defines the path to the input JSON file to convert (required).\n\t"
+         "--output|-o <sdiffile> Defines the path of the output SDIF file (required).\n\t"
+         "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
+         "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t",
+         "",
+         [](juce::ArgumentList const& args)
+         {
+             args.failIfOptionIsMissing("-i|--input");
+             args.failIfOptionIsMissing("-o|--output");
+             args.failIfOptionIsMissing("-f|--frame");
+             args.failIfOptionIsMissing("-m|--matrix");
+             auto const inputFile = args.getExistingFileForOption("-i|--input");
+             auto const outputFile = args.getFileForOption("-o|--output");
+             auto const frame = args.getValueForOption("-f|--frame");
+             auto const matrix = args.getValueForOption("-m|--matrix");
+             if(frame.length() != 4 || matrix.length() != 4)
+             {
+                 fail("Signature must contain 4 characters!");
+             }
+             auto const frameSig = SdifConverter::getSignature(frame);
+             auto const matrixSig = SdifConverter::getSignature(matrix);
+             auto const result = SdifConverter::fromJson(inputFile, outputFile, frameSig, matrixSig);
+             if(result.failed())
+             {
+                 juce::ConsoleApplication::fail(result.getErrorMessage());
+             }
+         }});
 }
 
 static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::File const& generatedFile)
