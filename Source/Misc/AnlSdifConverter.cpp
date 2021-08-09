@@ -49,7 +49,7 @@ std::map<uint32_t, std::set<uint32_t>> SdifConverter::getSignatures(juce::File c
     return signatures;
 }
 
-juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId)
+juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row)
 {
     class ScopedFile
     {
@@ -124,6 +124,7 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
         if(!endOfFile)
         {
             auto const time = SdifFCurrTime(file);
+            auto const channelIndex = SdifFCurrID(file);
             auto const numMatrix = SdifFCurrNbMatrix(file);
             for(SdifUInt4 m = 0; m < numMatrix; m++)
             {
@@ -132,9 +133,14 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                 {
                     auto const numRows = SdifFCurrNbRow(file);
                     auto const numColumns = SdifFCurrNbCol(file);
-                    for(SdifUInt4 row = 0; row < numRows; row++)
+                    if(row < numRows)
                     {
-                        auto& cjson = json[row];
+                        auto rowIndex = 0_z;
+                        while(rowIndex < row)
+                        {
+                            bytesRead += SdifFReadOneRow(file);
+                        }
+                        auto& cjson = json[channelIndex];
                         nlohmann::json vjson;
                         vjson["time"] = time;
                         bytesRead += SdifFReadOneRow(file);
@@ -152,6 +158,14 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                         }
 
                         cjson.push_back(std::move(vjson));
+                    }
+                    else
+                    {
+                        auto rowIndex = 0_z;
+                        while(rowIndex < numRows)
+                        {
+                            bytesRead += SdifFReadOneRow(file);
+                        }
                     }
                 }
                 else
@@ -375,7 +389,7 @@ void SdifConverter::Panel::exportFile()
     }
     auto const jsonFile = fc.getResult();
     enterModalState();
-    auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier);
+    auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, 0_z);
     exitModalState(0);
     if(result.wasOk())
     {
