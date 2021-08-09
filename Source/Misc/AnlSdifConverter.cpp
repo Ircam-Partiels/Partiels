@@ -67,6 +67,15 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
             }
             SdifGenKill();
         }
+        
+        void clear()
+        {
+            if(file != nullptr)
+            {
+                SdifFClose(file);
+                file = nullptr;
+            }
+        }
 
     private:
         SdifFileT* file = nullptr;
@@ -185,6 +194,8 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
     {
         return juce::Result::fail(error->UserMess != nullptr ? error->UserMess : "");
     }
+    
+    scopedFile.clear();
 
     juce::TemporaryFile temp(outputFile);
     std::ofstream stream(temp.getFile().getFullPathName().toStdString());
