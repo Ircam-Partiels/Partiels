@@ -332,8 +332,8 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
         return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    auto constainer = nlohmann::json::object();
-    auto& json = constainer["results"];
+    auto container = nlohmann::json::object();
+    auto& json = container["results"];
 
     auto const markers = results.getMarkers();
     auto const points = results.getPoints();
@@ -423,7 +423,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as JSON because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
-    stream << constainer << std::endl;
+    stream << container << std::endl;
     stream.close();
     if(!stream.good())
     {
