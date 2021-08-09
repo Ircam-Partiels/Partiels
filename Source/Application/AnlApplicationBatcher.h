@@ -22,6 +22,7 @@ namespace Application
 
         // FloatingWindowContainer
         void showAt(juce::Point<int> const& pt) override;
+        void hide() override;
 
     private:
         // juce::AsyncUpdater

@@ -23,6 +23,7 @@ namespace PluginList
 
         // FloatingWindowContainer
         void showAt(juce::Point<int> const& pt) override;
+        void hide() override;
 
         std::function<void(Plugin::Key const& key, Plugin::Description const& description)> onPluginSelected = nullptr;
 

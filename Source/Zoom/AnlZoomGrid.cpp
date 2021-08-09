@@ -106,6 +106,7 @@ void Zoom::Grid::PropertyPanel::setGrid(Accessor const& accessor)
 
 void Zoom::Grid::PropertyPanel::hide()
 {
+    mFloatingWindow.exitModalState(0);
     FloatingWindowContainer::hide();
     if(onHide != nullptr)
     {
@@ -120,7 +121,7 @@ void Zoom::Grid::PropertyPanel::showAt(juce::Point<int> const& pt)
     {
         onShow();
     }
-    mFloatingWindow.runModalLoop();
+    mFloatingWindow.enterModalState();
 }
 
 Zoom::Grid::TickDrawingInfo Zoom::Grid::getTickDrawingInfo(Accessor const& accessor, juce::Range<double> const& visibleRange, int size, double maxStringSize)

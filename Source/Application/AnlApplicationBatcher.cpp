@@ -109,7 +109,13 @@ void Application::Batcher::resized()
 void Application::Batcher::showAt(juce::Point<int> const& pt)
 {
     FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.runModalLoop();
+    mFloatingWindow.enterModalState(true);
+}
+
+void Application::Batcher::hide()
+{
+    mFloatingWindow.exitModalState(0);
+    FloatingWindowContainer::hide();
 }
 
 void Application::Batcher::handleAsyncUpdate()

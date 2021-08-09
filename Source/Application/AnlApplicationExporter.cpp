@@ -88,7 +88,13 @@ void Application::Exporter::resized()
 void Application::Exporter::showAt(juce::Point<int> const& pt)
 {
     FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.runModalLoop();
+    mFloatingWindow.enterModalState();
+}
+
+void Application::Exporter::hide()
+{
+    mFloatingWindow.exitModalState(0);
+    FloatingWindowContainer::hide();
 }
 
 std::pair<int, int> Application::Exporter::getSizeFor(juce::String const& identifier)

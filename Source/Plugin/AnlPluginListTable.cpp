@@ -186,7 +186,13 @@ void PluginList::Table::visibilityChanged()
 void PluginList::Table::showAt(juce::Point<int> const& pt)
 {
     FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.runModalLoop();
+    mFloatingWindow.enterModalState();
+}
+
+void PluginList::Table::hide()
+{
+    mFloatingWindow.exitModalState(0);
+    FloatingWindowContainer::hide();
 }
 
 void PluginList::Table::updateContent()
