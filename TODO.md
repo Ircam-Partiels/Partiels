@@ -1,4 +1,3 @@
-- Add Unit Tests Analysis (compare with files)
 - Replace model resizable by dynamic and fixed
 - Output all key shortcuts
 - Use button names on alert window
