@@ -71,14 +71,18 @@ std::map<uint32_t, std::map<uint32_t, std::pair<size_t, size_t>>> SdifConverter:
     return entries;
 }
 
-juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row)
+juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row, std::optional<size_t> column)
 {
     class ScopedFile
     {
     public:
         ScopedFile(SdifFileT** f, const char* path)
         {
+            sdifWarning.clear();
             SdifGenInit(nullptr);
+            SdifSetExitFunc(sdifDummyExit);
+            SdifSetWarningFunc(sdifPrintWarning);
+            SdifSetErrorFunc(sdifPrintWarning);
             file = *f = SdifFOpen(path, eReadFile);
         }
         ~ScopedFile()
@@ -167,9 +171,13 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                             nlohmann::json vjson;
                             vjson["time"] = time;
                             bytesRead += SdifFReadOneRow(file);
-                            if(numColumns == 1)
+                            if(numColumns == 1 || column.has_value())
                             {
-                                vjson["value"] = SdifFCurrOneRowCol(file, 1);
+                                auto const columnIndex = column.has_value() ? static_cast<SdifUInt4>(*column) + static_cast<SdifUInt4>(1) : static_cast<SdifUInt4>(1);
+                                if(columnIndex <= numColumns)
+                                {
+                                    vjson["value"] = SdifFCurrOneRowCol(file, 1);
+                                }
                             }
                             else
                             {
@@ -207,6 +215,11 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
         if(error != nullptr)
         {
             return juce::Result::fail(error->UserMess != nullptr ? error->UserMess : "");
+        }
+
+        if(sdifWarning.isNotEmpty())
+        {
+            return juce::Result::fail(sdifWarning);
         }
     }
 
