@@ -371,34 +371,59 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
 
 SdifConverter::Panel::Panel()
 : FloatingWindowContainer("SDIF to JSON", *this)
-, mPropertyOpen("Open", "Select an SDIF file to convert", [&]()
+, mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
                 {
-                    juce::FileChooser fc("Load a SDIF file", {}, "*.sdif");
+                    juce::FileChooser fc("Load a SDIF or a JSON file", {}, "*.sdif,*.json");
                     if(fc.browseForFileToOpen())
                     {
                         setFile(fc.getResult());
                     }
                 })
-, mPropertyName("SDIF File", "The SDIF file to convert", nullptr)
-, mPropertyFrameId("Frame ID", "Select an frame identifier to convert", "", {}, [&](size_t index)
-                   {
-                       juce::ignoreUnused(index);
-                       selectedFrameUpdated();
-                   })
-, mPropertyMatrixId("Matrix ID", "Select an matrix identifier to convert", "", {}, nullptr)
-, mPropertyExport("Convert", "Convert the SDIF file to a JSON file", [&]()
-                  {
-                      exportFile();
-                  })
+, mPropertyName("File", "The SDIF file to convert", nullptr)
+
+, mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", nullptr)
+, mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", nullptr)
+, mPropertyToSdifExport("Convert to SDIF", "Convert the JSON file to a SDIF file", [&]()
+                        {
+                            exportToSdif();
+                        })
+
+, mPropertyToJsonFrame("Frame", "Select the frame signature to decode from the SDIF file", "", {}, [&](size_t index)
+                       {
+                           juce::ignoreUnused(index);
+                           selectedFrameUpdated();
+                       })
+, mPropertyToJsonMatrix("Matrix", "Select the matrix signature to decode from the SDIF file", "", {}, [&](size_t index)
+                        {
+                            juce::ignoreUnused(index);
+                            selectedMatrixUpdated();
+                        })
+, mPropertyToJsonRow("Row", "Select the row to decode from the SDIF file", "", {}, nullptr)
+, mPropertyToJsonColumn("Column", "Select the colum, to decode from the SDIF file", "", {}, nullptr)
+, mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
+                        {
+                            exportToJson();
+                        })
 {
     mPropertyName.entry.setEnabled(false);
-    addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mPropertyOpen);
-    addAndMakeVisible(mPropertyFrameId);
-    addAndMakeVisible(mPropertyMatrixId);
-    addAndMakeVisible(mPropertyExport);
-    mPropertyFrameId.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
-    mPropertyMatrixId.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
+    addAndMakeVisible(mPropertyName);
+
+    addChildComponent(mPropertyToSdifFrame);
+    addChildComponent(mPropertyToSdifMatrix);
+    addChildComponent(mPropertyToSdifExport);
+
+    addChildComponent(mPropertyToJsonFrame);
+    addChildComponent(mPropertyToJsonMatrix);
+    addChildComponent(mPropertyToJsonRow);
+    addChildComponent(mPropertyToJsonColumn);
+    addChildComponent(mPropertyToJsonExport);
+
+    mInfos.setSize(300, 72);
+    mInfos.setText(juce::translate("Select or drag and drop a SDIF file to convert to a JSON file or a JSON file to convert to a SDIF file."));
+    mInfos.setMultiLine(true);
+    addAndMakeVisible(mInfos);
+
     setFile({});
     setSize(300, 200);
 }
@@ -415,9 +440,53 @@ void SdifConverter::Panel::resized()
     };
     setBounds(mPropertyOpen);
     setBounds(mPropertyName);
-    setBounds(mPropertyFrameId);
-    setBounds(mPropertyMatrixId);
-    setBounds(mPropertyExport);
+
+    setBounds(mPropertyToSdifFrame);
+    mPropertyToSdifFrame.entry.onEditorShow = [this]()
+    {
+        if(auto* textEditor = mPropertyToSdifFrame.entry.getCurrentTextEditor())
+        {
+            textEditor->setInputRestrictions(4);
+            textEditor->setJustification(juce::Justification::right);
+            textEditor->setTextToShowWhenEmpty("????", juce::Colours::grey);
+        }
+    };
+    mPropertyToSdifFrame.entry.onTextChange = [this]()
+    {
+        auto const text = mPropertyToSdifFrame.entry.getText().toUpperCase();
+        mPropertyToSdifFrame.entry.setText(text, juce::NotificationType::dontSendNotification);
+        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifMatrix.entry.getText().isNotEmpty());
+    };
+    setBounds(mPropertyToSdifMatrix);
+    mPropertyToSdifMatrix.entry.onEditorShow = [this]()
+    {
+        if(auto* textEditor = mPropertyToSdifMatrix.entry.getCurrentTextEditor())
+        {
+            textEditor->setInputRestrictions(4);
+            textEditor->setJustification(juce::Justification::right);
+            textEditor->setTextToShowWhenEmpty("????", juce::Colours::grey);
+        }
+    };
+    mPropertyToSdifMatrix.entry.onTextChange = [this]()
+    {
+        auto const text = mPropertyToSdifMatrix.entry.getText().toUpperCase();
+        mPropertyToSdifMatrix.entry.setText(text, juce::NotificationType::dontSendNotification);
+        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifFrame.entry.getText().isNotEmpty());
+    };
+    setBounds(mPropertyToSdifExport);
+
+    setBounds(mPropertyToJsonFrame);
+    setBounds(mPropertyToJsonMatrix);
+    setBounds(mPropertyToJsonRow);
+    setBounds(mPropertyToJsonColumn);
+    setBounds(mPropertyToJsonExport);
+    mPropertyToJsonFrame.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
+    mPropertyToJsonMatrix.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
+    mPropertyToJsonRow.entry.setTextWhenNoChoicesAvailable(juce::translate("No row available"));
+    mPropertyToJsonColumn.entry.setTextWhenNoChoicesAvailable(juce::translate("No column available"));
+
+    setBounds(mInfos);
+
     setSize(300, std::max(bounds.getY(), 120) + 2);
 }
 
@@ -429,11 +498,19 @@ void SdifConverter::Panel::paintOverChildren(juce::Graphics& g)
     }
 }
 
+void SdifConverter::Panel::lookAndFeelChanged()
+{
+    auto const text = mInfos.getText();
+    mInfos.clear();
+    mInfos.setText(text);
+}
+
 bool SdifConverter::Panel::isInterestedInFileDrag(juce::StringArray const& files)
 {
     return std::any_of(files.begin(), files.end(), [](auto const& path)
                        {
-                           return juce::File(path).hasFileExtension("sdif");
+                           juce::File const file(path);
+                           return file.hasFileExtension("sdif") || file.hasFileExtension("json");
                        });
 }
 
@@ -459,7 +536,7 @@ void SdifConverter::Panel::filesDropped(juce::StringArray const& files, int x, i
     for(auto const& path : files)
     {
         juce::File const file(path);
-        if(file.hasFileExtension("sdif"))
+        if(file.hasFileExtension("sdif") || file.hasFileExtension("json"))
         {
             setFile(file);
             return;
@@ -470,88 +547,223 @@ void SdifConverter::Panel::filesDropped(juce::StringArray const& files, int x, i
 void SdifConverter::Panel::setFile(juce::File const& file)
 {
     mFile = file;
-    if(mFile == juce::File{})
+    if(file.hasFileExtension("json"))
     {
-        mPropertyName.entry.setText("No SDIF file selected", juce::NotificationType::dontSendNotification);
+        mInfos.setVisible(false);
+        mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
+
+        mPropertyToSdifFrame.setVisible(true);
+        mPropertyToSdifMatrix.setVisible(true);
+        mPropertyToSdifExport.setVisible(true);
+
+        mPropertyToJsonFrame.setVisible(false);
+        mPropertyToJsonMatrix.setVisible(false);
+        mPropertyToJsonRow.setVisible(false);
+        mPropertyToJsonColumn.setVisible(false);
+        mPropertyToJsonExport.setVisible(false);
+    }
+    else if(file.hasFileExtension("sdif"))
+    {
+        mInfos.setVisible(false);
+        mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
+
+        mPropertyToSdifFrame.setVisible(false);
+        mPropertyToSdifMatrix.setVisible(false);
+        mPropertyToSdifExport.setVisible(false);
+
+        mPropertyToJsonFrame.setVisible(true);
+        mPropertyToJsonMatrix.setVisible(true);
+        mPropertyToJsonRow.setVisible(true);
+        mPropertyToJsonColumn.setVisible(true);
+        mPropertyToJsonExport.setVisible(true);
+
+        mEntries = getEntries(file);
+
+        // Update of the frames
+        mPropertyToJsonFrame.entry.clear(juce::NotificationType::dontSendNotification);
+        mFrameSigLinks.clear();
+
+        for(auto const& frame : mEntries)
+        {
+            auto const frameSignature = frame.first;
+            mFrameSigLinks.push_back(frameSignature);
+            mPropertyToJsonFrame.entry.addItem(SdifSignatureToString(frameSignature), static_cast<int>(mFrameSigLinks.size()));
+        }
+        mPropertyToJsonFrame.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+        mPropertyToJsonFrame.entry.setEnabled(mPropertyToJsonFrame.entry.getNumItems() > 0);
+
+        selectedFrameUpdated();
     }
     else
     {
-        mPropertyName.entry.setText(file.getFileNameWithoutExtension(), juce::NotificationType::dontSendNotification);
-    }
-    mSignatures = getSignatures(file);
+        mInfos.setVisible(true);
+        mPropertyName.entry.setText(file == juce::File{} ? juce::translate("No file selected") : juce::translate("FLNAME: File extension not supported").replace("FLNAME", file.getFileName()), juce::NotificationType::dontSendNotification);
 
-    mPropertyFrameId.entry.clear(juce::NotificationType::dontSendNotification);
-    mFrameSigLinks.clear();
-    for(auto const& signature : mSignatures)
-    {
-        mFrameSigLinks.push_back(signature.first);
-        mPropertyFrameId.entry.addItem(SdifSignatureToString(signature.first), static_cast<int>(mFrameSigLinks.size()));
+        mPropertyToSdifFrame.setVisible(false);
+        mPropertyToSdifMatrix.setVisible(false);
+        mPropertyToSdifExport.setVisible(false);
+
+        mPropertyToJsonFrame.setVisible(false);
+        mPropertyToJsonMatrix.setVisible(false);
+        mPropertyToJsonRow.setVisible(false);
+        mPropertyToJsonColumn.setVisible(false);
+        mPropertyToJsonExport.setVisible(false);
     }
-    mPropertyFrameId.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
-    mPropertyFrameId.entry.setEnabled(mPropertyFrameId.entry.getNumItems() > 0);
-    selectedFrameUpdated();
+    resized();
 }
 
 void SdifConverter::Panel::selectedFrameUpdated()
 {
-    mPropertyMatrixId.entry.clear(juce::NotificationType::dontSendNotification);
+    mPropertyToJsonMatrix.entry.clear(juce::NotificationType::dontSendNotification);
     mMatrixSigLinks.clear();
-    auto const selectedFrameIndex = mPropertyFrameId.entry.getSelectedItemIndex();
+    auto const selectedFrameIndex = mPropertyToJsonFrame.entry.getSelectedItemIndex();
     if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size())
     {
-        mPropertyMatrixId.entry.setEnabled(false);
-        mPropertyExport.entry.setEnabled(false);
+        mPropertyToJsonMatrix.entry.setEnabled(false);
+        mPropertyToJsonRow.entry.setEnabled(false);
+        selectedMatrixUpdated();
         return;
     }
     auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
-    if(mSignatures.count(frameIdentifier) == 0_z)
+    if(mEntries.count(frameIdentifier) == 0_z)
     {
-        mPropertyMatrixId.entry.setEnabled(false);
-        mPropertyExport.entry.setEnabled(false);
+        mPropertyToJsonMatrix.entry.setEnabled(false);
+        mPropertyToJsonRow.entry.setEnabled(false);
+        selectedMatrixUpdated();
         return;
     }
-    auto const& matrixSignatures = mSignatures.at(frameIdentifier);
-    for(auto const& signature : matrixSignatures)
+
+    auto const& matrixEntries = mEntries.at(frameIdentifier);
+    for(auto const& matrix : matrixEntries)
     {
-        mMatrixSigLinks.push_back(signature);
-        mPropertyMatrixId.entry.addItem(SdifSignatureToString(signature), static_cast<int>(mMatrixSigLinks.size()));
+        auto const matrixSignature = matrix.first;
+        mMatrixSigLinks.push_back(matrixSignature);
+        mPropertyToJsonMatrix.entry.addItem(SdifSignatureToString(matrixSignature), static_cast<int>(mMatrixSigLinks.size()));
     }
-    mPropertyMatrixId.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
-    mPropertyMatrixId.entry.setEnabled(mPropertyMatrixId.entry.getNumItems() > 0);
-    mPropertyExport.entry.setEnabled(mPropertyMatrixId.entry.getNumItems() > 0);
+    mPropertyToJsonMatrix.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    mPropertyToJsonMatrix.entry.setEnabled(mPropertyToJsonMatrix.entry.getNumItems() > 0);
+
+    selectedMatrixUpdated();
 }
 
-void SdifConverter::Panel::exportFile()
+void SdifConverter::Panel::selectedMatrixUpdated()
 {
-    auto const selectedFrameIndex = mPropertyFrameId.entry.getSelectedItemIndex();
-    if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size())
+    mPropertyToJsonRow.entry.clear(juce::NotificationType::dontSendNotification);
+    mPropertyToJsonColumn.entry.clear(juce::NotificationType::dontSendNotification);
+
+    auto const selectedFrameIndex = mPropertyToJsonFrame.entry.getSelectedItemIndex();
+    auto const selectedMatrixIndex = mPropertyToJsonMatrix.entry.getSelectedItemIndex();
+    if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size() || selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
     {
-        anlWeakAssert(false);
+        mPropertyToJsonRow.entry.setEnabled(false);
+        mPropertyToJsonColumn.entry.setEnabled(false);
+        mPropertyToJsonExport.entry.setEnabled(false);
         return;
     }
+
     auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
-    if(mSignatures.count(frameIdentifier) == 0_z)
-    {
-        anlWeakAssert(false);
-        return;
-    }
-
-    auto const selectedMatrixIndex = mPropertyMatrixId.entry.getSelectedItemIndex();
-    if(selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
-    {
-        anlWeakAssert(false);
-        return;
-    }
     auto const matrixIdentifier = mMatrixSigLinks[static_cast<size_t>(selectedMatrixIndex)];
+    if(mEntries.count(frameIdentifier) == 0_z || mEntries.at(frameIdentifier).count(matrixIdentifier) == 0_z)
+    {
+        mPropertyToJsonRow.entry.setEnabled(false);
+        mPropertyToJsonColumn.entry.setEnabled(false);
+        mPropertyToJsonExport.entry.setEnabled(false);
+        return;
+    }
 
-    juce::FileChooser fc("Select a JSON file", {}, "*.json");
+    auto const matrixSize = mEntries.at(frameIdentifier).at(matrixIdentifier);
+    for(auto row = 0_z; row < matrixSize.first; ++row)
+    {
+        mPropertyToJsonRow.entry.addItem(juce::String(row), static_cast<int>(row + 1));
+    }
+    mPropertyToJsonRow.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    mPropertyToJsonRow.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 0);
+
+    if(matrixSize.second > 1_z)
+    {
+        mPropertyToJsonColumn.entry.addItem("All", 1);
+    }
+    for(auto column = 0_z; column < matrixSize.second; ++column)
+    {
+        mPropertyToJsonColumn.entry.addItem(juce::String(column), static_cast<int>(column + 2));
+    }
+    mPropertyToJsonColumn.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+    mPropertyToJsonColumn.entry.setEnabled(mPropertyToJsonColumn.entry.getNumItems() > 0);
+
+    mPropertyToJsonExport.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 0 && mPropertyToJsonColumn.entry.getNumItems() > 0);
+}
+
+void SdifConverter::Panel::exportToSdif()
+{
+    auto const frameName = mPropertyToSdifFrame.entry.getText();
+    auto const matrixName = mPropertyToSdifMatrix.entry.getText();
+    if(frameName.isEmpty() || matrixName.isEmpty())
+    {
+        anlWeakAssert(false);
+        return;
+    }
+
+    if(frameName.length() != 4 || matrixName.length() != 4)
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("The frame and matrix signatures must contain 4 characters."));
+        return;
+    }
+
+    auto const frameIdentifier = getSignature(frameName);
+    auto const matrixIdentifier = getSignature(matrixName);
+    juce::FileChooser fc("Select a SDIF file", mFile.withFileExtension("sdif"), "*.sdif");
+    if(!fc.browseForFileToSave(true))
+    {
+        return;
+    }
+    auto const sdifFile = fc.getResult();
+    enterModalState();
+    auto const result = fromJson(mFile, sdifFile, frameIdentifier, matrixIdentifier);
+    exitModalState(0);
+    if(result.wasOk())
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The JSON file 'JSONFLNM' has been successfully converted to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+    }
+    else
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert JSON file..."), juce::translate("There was an error while trying to convert the SDIF file 'JSONFLNM' to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+    }
+}
+
+void SdifConverter::Panel::exportToJson()
+{
+    auto const selectedFrameIndex = mPropertyToJsonFrame.entry.getSelectedItemIndex();
+    auto const selectedMatrixIndex = mPropertyToJsonMatrix.entry.getSelectedItemIndex();
+    if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size() || selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
+    {
+        anlWeakAssert(false);
+        return;
+    }
+
+    auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
+    auto const matrixIdentifier = mMatrixSigLinks[static_cast<size_t>(selectedMatrixIndex)];
+    if(mEntries.count(frameIdentifier) == 0_z || mEntries.at(frameIdentifier).count(matrixIdentifier) == 0_z)
+    {
+        anlWeakAssert(false);
+        return;
+    }
+
+    auto const row = mPropertyToJsonRow.entry.getSelectedId() - 1;
+    auto const column = mPropertyToJsonColumn.entry.getSelectedId() - 1;
+    if(row < 0 || column < 0)
+    {
+        anlWeakAssert(false);
+        return;
+    }
+
+    juce::FileChooser fc("Select a JSON file", mFile.withFileExtension("json"), "*.json");
     if(!fc.browseForFileToSave(true))
     {
         return;
     }
     auto const jsonFile = fc.getResult();
     enterModalState();
-    auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, 0_z);
+    auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, static_cast<size_t>(row), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1));
     exitModalState(0);
     if(result.wasOk())
     {

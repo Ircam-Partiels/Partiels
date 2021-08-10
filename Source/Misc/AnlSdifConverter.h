@@ -26,7 +26,8 @@ namespace SdifConverter
         // juce::Component
         void resized() override;
         void paintOverChildren(juce::Graphics& g) override;
-
+        void lookAndFeelChanged() override;
+        
         // juce::FileDragAndDropTarget
         bool isInterestedInFileDrag(juce::StringArray const& files) override;
         void fileDragEnter(juce::StringArray const& files, int x, int y) override;
@@ -35,19 +36,32 @@ namespace SdifConverter
 
     private:
         void setFile(juce::File const& file);
+
         void selectedFrameUpdated();
-        void exportFile();
+        void selectedMatrixUpdated();
+
+        void exportToJson();
+        void exportToSdif();
 
         PropertyTextButton mPropertyOpen;
         PropertyText mPropertyName;
-        PropertyList mPropertyFrameId;
-        PropertyList mPropertyMatrixId;
-        PropertyTextButton mPropertyExport;
-        bool mFileIsDragging{false};
+
+        PropertyText mPropertyToSdifFrame;
+        PropertyText mPropertyToSdifMatrix;
+        PropertyTextButton mPropertyToSdifExport;
+
+        PropertyList mPropertyToJsonFrame;
+        PropertyList mPropertyToJsonMatrix;
+        PropertyList mPropertyToJsonRow;
+        PropertyList mPropertyToJsonColumn;
+        PropertyTextButton mPropertyToJsonExport;
+        juce::TextEditor mInfos;
+
         juce::File mFile;
-        std::map<uint32_t, std::set<uint32_t>> mSignatures;
+        std::map<uint32_t, std::map<uint32_t, matrix_size_t>> mEntries;
         std::vector<uint32_t> mFrameSigLinks;
         std::vector<uint32_t> mMatrixSigLinks;
+        bool mFileIsDragging{false};
     };
 } // namespace SdifConverter
 
