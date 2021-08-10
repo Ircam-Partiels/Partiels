@@ -19,26 +19,35 @@ static int sdifOpenFileQueryCallback(SdifFileT* file, void* userdata)
     return 2;
 }
 
-std::map<uint32_t, std::set<uint32_t>> SdifConverter::getSignatures(juce::File const& inputFile)
+
+std::map<uint32_t, std::map<uint32_t, std::pair<size_t, size_t>>> SdifConverter::getEntries(juce::File const& inputFile)
 {
     if(!inputFile.existsAsFile())
     {
         return {};
     }
     SdifGenInit(nullptr);
+    SdifSetExitFunc(sdifDummyExit);
     auto* sigs = SdifCreateQueryTree(1024);
     SdifQuery(inputFile.getFullPathName().toRawUTF8(), sdifOpenFileQueryCallback, sigs);
-    std::map<uint32_t, std::set<uint32_t>> signatures;
+    std::map<uint32_t, std::map<uint32_t, matrix_size_t>> entries;
     for(int i = 0; i < sigs->num; i++)
     {
         if(sigs->elems[i].parent == -1)
         {
-            auto& frameRef = signatures[sigs->elems[i].sig];
+            auto const frameSig = sigs->elems[i].sig;
+            auto& frameRef = entries[frameSig];
             for(int m = 0; m < sigs->num; m++)
             {
                 if(sigs->elems[m].parent == i)
                 {
-                    frameRef.insert(sigs->elems[m].sig);
+                    auto const matrixSig = sigs->elems[m].sig;
+                    auto const numRows = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).first : 0_z;
+                    auto const numCols = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).second : 0_z;
+                    auto const currNumRows = sigs->elems[m].nrow.max > 0.0 ? static_cast<size_t>(sigs->elems[m].nrow.max) : 0_z;
+                    auto const currNumCols = sigs->elems[m].ncol.max > 0.0 ? static_cast<size_t>(sigs->elems[m].ncol.max) : 0_z;
+                    frameRef[matrixSig].first = std::max(currNumRows, numRows);
+                    frameRef[matrixSig].second = std::max(currNumCols, numCols);
                 }
             }
         }
@@ -46,7 +55,7 @@ std::map<uint32_t, std::set<uint32_t>> SdifConverter::getSignatures(juce::File c
 
     SdifFreeQueryTree(sigs);
     SdifGenKill();
-    return signatures;
+    return entries;
 }
 
 juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row)
