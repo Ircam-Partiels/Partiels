@@ -307,6 +307,38 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
             return juce::Result::fail("Can't open input file");
         }
 
+        if(SdifGetMatrixType(gSdifPredefinedTypes->MatrixTypesTable, matrixId) == nullptr)
+        {
+            auto* newMatrixType = SdifCreateMatrixType(matrixId, nullptr);
+            if(newMatrixType == nullptr)
+            {
+                return juce::Result::fail(juce::translate("Can't create new matrix type"));
+            }
+            SdifPutMatrixType(file->MatrixTypesTable, newMatrixType);
+        }
+
+        if(SdifTestMatrixType(file, matrixId) == nullptr)
+        {
+            return juce::Result::fail("Matrix type undefined");
+        }
+
+        if(SdifGetFrameType(gSdifPredefinedTypes->FrameTypesTable, frameId) == nullptr)
+        {
+            auto* newFrameType = SdifCreateFrameType(frameId, nullptr);
+            if(newFrameType == nullptr)
+            {
+                return juce::Result::fail(juce::translate("Can't create new frame type"));
+            }
+            SdifPutFrameType(file->FrameTypesTable, newFrameType);
+            char name[] = "MAT0";
+            newFrameType = SdifFrameTypePutComponent(newFrameType, matrixId, name);
+        }
+
+        if(SdifTestFrameType(file, frameId) == nullptr)
+        {
+            return juce::Result::fail("Frame type undefined");
+        }
+
         SdifFWriteGeneralHeader(file);
         SdifFWriteAllASCIIChunks(file);
 
