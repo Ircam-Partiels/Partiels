@@ -251,7 +251,11 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
     public:
         ScopedFile(SdifFileT** f, const char* path)
         {
+            sdifWarning.clear();
             SdifGenInit(nullptr);
+            SdifSetExitFunc(sdifDummyExit);
+            SdifSetWarningFunc(sdifPrintWarning);
+            SdifSetErrorFunc(sdifPrintWarning);
             file = *f = SdifFOpen(path, eWriteFile);
         }
         ~ScopedFile()
@@ -350,6 +354,10 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
                     }
                 }
             }
+        }
+        if(sdifWarning.isNotEmpty())
+        {
+            return juce::Result::fail(sdifWarning);
         }
     }
 
