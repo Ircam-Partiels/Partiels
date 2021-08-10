@@ -784,9 +784,16 @@ void Track::PropertyPanel::resized()
 
 void Track::PropertyPanel::lookAndFeelChanged()
 {
-    auto const text = mPropertyPluginDetails.getText();
-    mPropertyPluginDetails.clear();
-    mPropertyPluginDetails.setText(text);
+    {
+        auto const text = mPropertyPluginDetails.getText();
+        mPropertyPluginDetails.clear();
+        mPropertyPluginDetails.setText(text);
+    }
+    {
+        auto const text = mPropertyResultsFileInfo.getText();
+        mPropertyResultsFileInfo.clear();
+        mPropertyResultsFileInfo.setText(text);
+    }
 }
 
 bool Track::PropertyPanel::canModifyProcessor()
