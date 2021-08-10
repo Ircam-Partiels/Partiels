@@ -1,5 +1,6 @@
 #include "AnlSdifConverter.h"
 #include "AnlAlertWindow.h"
+#include <magic_enum/magic_enum.hpp>
 #include <sdif.h>
 
 ANALYSE_FILE_BEGIN
@@ -19,6 +20,18 @@ static int sdifOpenFileQueryCallback(SdifFileT* file, void* userdata)
     return 2;
 }
 
+static void sdifDummyExit(void)
+{
+}
+
+static juce::String sdifWarning;
+static void sdifPrintWarning(SdifErrorTagET tag, SdifErrorLevelET level, char* message, SdifFileT*, SdifErrorT* error, char*, int)
+{
+    auto const tagName = juce::String(std::string(magic_enum::enum_name(tag).substr()));
+    auto const levelName = juce::String(std::string(magic_enum::enum_name(level).substr()));
+    auto const extra = (error != nullptr && error->UserMess != nullptr) ? (juce::String(" - ") + juce::String(error->UserMess)) : juce::String();
+    sdifWarning = tagName + juce::String(" (") + levelName + juce::String("): ") + juce::String(message) + extra;
+}
 
 std::map<uint32_t, std::map<uint32_t, std::pair<size_t, size_t>>> SdifConverter::getEntries(juce::File const& inputFile)
 {
