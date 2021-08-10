@@ -189,7 +189,8 @@ Application::CommandLine::CommandLine()
          "--output|-o <jsonfile> Defines the path of the output JSON file (required).\n\t"
          "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
          "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t"
-         "--row|-r <rowindex> The index of the row (required).\n\t",
+         "--row|-r <rowindex> The index of the row (required).\n\t"
+         "--column|-c <columindex> The index of the column (optional - all columns if not defined).\n\t",
          "",
          [](juce::ArgumentList const& args)
          {
@@ -203,6 +204,7 @@ Application::CommandLine::CommandLine()
              auto const frame = args.getValueForOption("-f|--frame");
              auto const matrix = args.getValueForOption("-m|--matrix");
              auto const row = args.getValueForOption("-r|--row").getIntValue();
+             auto const column = args.containsOption("-c|--column") ? args.getValueForOption("-c|--column").getIntValue() : -1;
              if(row < 0)
              {
                  fail("Row index must be positive!");
@@ -213,7 +215,7 @@ Application::CommandLine::CommandLine()
              }
              auto const frameSig = SdifConverter::getSignature(frame);
              auto const matrixSig = SdifConverter::getSignature(matrix);
-             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, static_cast<size_t>(row));
+             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column));
              if(result.failed())
              {
                  juce::ConsoleApplication::fail(result.getErrorMessage());
