@@ -27,6 +27,7 @@ namespace SdifConverter
         void resized() override;
         void paintOverChildren(juce::Graphics& g) override;
         void lookAndFeelChanged() override;
+        void parentHierarchyChanged() override;
 
         // juce::FileDragAndDropTarget
         bool isInterestedInFileDrag(juce::StringArray const& files) override;

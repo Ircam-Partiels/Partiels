@@ -370,7 +370,7 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
 }
 
 SdifConverter::Panel::Panel()
-: FloatingWindowContainer("SDIF to JSON", *this)
+: FloatingWindowContainer("SDIF Converter", *this)
 , mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
                 {
                     juce::FileChooser fc("Load a SDIF or a JSON file", {}, "*.sdif,*.json");
@@ -412,16 +412,51 @@ SdifConverter::Panel::Panel()
     addChildComponent(mPropertyToSdifFrame);
     addChildComponent(mPropertyToSdifMatrix);
     addChildComponent(mPropertyToSdifExport);
+    mPropertyToSdifFrame.entry.onEditorShow = [this]()
+    {
+        if(auto* textEditor = mPropertyToSdifFrame.entry.getCurrentTextEditor())
+        {
+            textEditor->setInputRestrictions(4);
+            textEditor->setJustification(juce::Justification::right);
+        }
+    };
+    mPropertyToSdifFrame.entry.onTextChange = [this]()
+    {
+        auto const text = mPropertyToSdifFrame.entry.getText().toUpperCase();
+        mPropertyToSdifFrame.entry.setText(text, juce::NotificationType::dontSendNotification);
+        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifMatrix.entry.getText().isNotEmpty());
+    };
+    mPropertyToSdifFrame.entry.setText("????", juce::NotificationType::dontSendNotification);
+    mPropertyToSdifMatrix.entry.onEditorShow = [this]()
+    {
+        if(auto* textEditor = mPropertyToSdifMatrix.entry.getCurrentTextEditor())
+        {
+            textEditor->setInputRestrictions(4);
+            textEditor->setJustification(juce::Justification::right);
+        }
+    };
+    mPropertyToSdifMatrix.entry.onTextChange = [this]()
+    {
+        auto const text = mPropertyToSdifMatrix.entry.getText().toUpperCase();
+        mPropertyToSdifMatrix.entry.setText(text, juce::NotificationType::dontSendNotification);
+        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifFrame.entry.getText().isNotEmpty());
+    };
+    mPropertyToSdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
 
     addChildComponent(mPropertyToJsonFrame);
     addChildComponent(mPropertyToJsonMatrix);
     addChildComponent(mPropertyToJsonRow);
     addChildComponent(mPropertyToJsonColumn);
     addChildComponent(mPropertyToJsonExport);
+    mPropertyToJsonFrame.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
+    mPropertyToJsonMatrix.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
+    mPropertyToJsonRow.entry.setTextWhenNoChoicesAvailable(juce::translate("No row available"));
+    mPropertyToJsonColumn.entry.setTextWhenNoChoicesAvailable(juce::translate("No column available"));
 
     mInfos.setSize(300, 72);
     mInfos.setText(juce::translate("Select or drag and drop a SDIF file to convert to a JSON file or a JSON file to convert to a SDIF file."));
     mInfos.setMultiLine(true);
+    mInfos.setReadOnly(true);
     addAndMakeVisible(mInfos);
 
     setFile({});
@@ -442,37 +477,7 @@ void SdifConverter::Panel::resized()
     setBounds(mPropertyName);
 
     setBounds(mPropertyToSdifFrame);
-    mPropertyToSdifFrame.entry.onEditorShow = [this]()
-    {
-        if(auto* textEditor = mPropertyToSdifFrame.entry.getCurrentTextEditor())
-        {
-            textEditor->setInputRestrictions(4);
-            textEditor->setJustification(juce::Justification::right);
-            textEditor->setTextToShowWhenEmpty("????", juce::Colours::grey);
-        }
-    };
-    mPropertyToSdifFrame.entry.onTextChange = [this]()
-    {
-        auto const text = mPropertyToSdifFrame.entry.getText().toUpperCase();
-        mPropertyToSdifFrame.entry.setText(text, juce::NotificationType::dontSendNotification);
-        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifMatrix.entry.getText().isNotEmpty());
-    };
     setBounds(mPropertyToSdifMatrix);
-    mPropertyToSdifMatrix.entry.onEditorShow = [this]()
-    {
-        if(auto* textEditor = mPropertyToSdifMatrix.entry.getCurrentTextEditor())
-        {
-            textEditor->setInputRestrictions(4);
-            textEditor->setJustification(juce::Justification::right);
-            textEditor->setTextToShowWhenEmpty("????", juce::Colours::grey);
-        }
-    };
-    mPropertyToSdifMatrix.entry.onTextChange = [this]()
-    {
-        auto const text = mPropertyToSdifMatrix.entry.getText().toUpperCase();
-        mPropertyToSdifMatrix.entry.setText(text, juce::NotificationType::dontSendNotification);
-        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifFrame.entry.getText().isNotEmpty());
-    };
     setBounds(mPropertyToSdifExport);
 
     setBounds(mPropertyToJsonFrame);
@@ -480,10 +485,6 @@ void SdifConverter::Panel::resized()
     setBounds(mPropertyToJsonRow);
     setBounds(mPropertyToJsonColumn);
     setBounds(mPropertyToJsonExport);
-    mPropertyToJsonFrame.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
-    mPropertyToJsonMatrix.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
-    mPropertyToJsonRow.entry.setTextWhenNoChoicesAvailable(juce::translate("No row available"));
-    mPropertyToJsonColumn.entry.setTextWhenNoChoicesAvailable(juce::translate("No column available"));
 
     setBounds(mInfos);
 
@@ -503,6 +504,11 @@ void SdifConverter::Panel::lookAndFeelChanged()
     auto const text = mInfos.getText();
     mInfos.clear();
     mInfos.setText(text);
+}
+
+void SdifConverter::Panel::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
 }
 
 bool SdifConverter::Panel::isInterestedInFileDrag(juce::StringArray const& files)
@@ -619,6 +625,7 @@ void SdifConverter::Panel::selectedFrameUpdated()
     auto const selectedFrameIndex = mPropertyToJsonFrame.entry.getSelectedItemIndex();
     if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size())
     {
+        mPropertyToSdifFrame.entry.setText("????", juce::NotificationType::dontSendNotification);
         mPropertyToJsonMatrix.entry.setEnabled(false);
         mPropertyToJsonRow.entry.setEnabled(false);
         selectedMatrixUpdated();
@@ -627,12 +634,14 @@ void SdifConverter::Panel::selectedFrameUpdated()
     auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
     if(mEntries.count(frameIdentifier) == 0_z)
     {
+        mPropertyToSdifFrame.entry.setText("????", juce::NotificationType::dontSendNotification);
         mPropertyToJsonMatrix.entry.setEnabled(false);
         mPropertyToJsonRow.entry.setEnabled(false);
         selectedMatrixUpdated();
         return;
     }
 
+    mPropertyToSdifFrame.entry.setText(SdifSignatureToString(frameIdentifier), juce::NotificationType::dontSendNotification);
     auto const& matrixEntries = mEntries.at(frameIdentifier);
     for(auto const& matrix : matrixEntries)
     {
@@ -655,6 +664,7 @@ void SdifConverter::Panel::selectedMatrixUpdated()
     auto const selectedMatrixIndex = mPropertyToJsonMatrix.entry.getSelectedItemIndex();
     if(selectedFrameIndex < 0 || static_cast<size_t>(selectedFrameIndex) > mFrameSigLinks.size() || selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
     {
+        mPropertyToSdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
         mPropertyToJsonRow.entry.setEnabled(false);
         mPropertyToJsonColumn.entry.setEnabled(false);
         mPropertyToJsonExport.entry.setEnabled(false);
@@ -665,12 +675,14 @@ void SdifConverter::Panel::selectedMatrixUpdated()
     auto const matrixIdentifier = mMatrixSigLinks[static_cast<size_t>(selectedMatrixIndex)];
     if(mEntries.count(frameIdentifier) == 0_z || mEntries.at(frameIdentifier).count(matrixIdentifier) == 0_z)
     {
+        mPropertyToSdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
         mPropertyToJsonRow.entry.setEnabled(false);
         mPropertyToJsonColumn.entry.setEnabled(false);
         mPropertyToJsonExport.entry.setEnabled(false);
         return;
     }
 
+    mPropertyToSdifMatrix.entry.setText(SdifSignatureToString(matrixIdentifier), juce::NotificationType::dontSendNotification);
     auto const matrixSize = mEntries.at(frameIdentifier).at(matrixIdentifier);
     for(auto row = 0_z; row < matrixSize.first; ++row)
     {
@@ -703,7 +715,7 @@ void SdifConverter::Panel::exportToSdif()
         return;
     }
 
-    if(frameName.length() != 4 || matrixName.length() != 4)
+    if(frameName.contains("?") || matrixName.contains("?") || frameName.length() != 4 || matrixName.length() != 4)
     {
         AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("The frame and matrix signatures must contain 4 characters."));
         return;
