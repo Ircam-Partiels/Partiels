@@ -154,9 +154,9 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
     if(mGetSizeForFn != nullptr)
     {
         addAndMakeVisible(mPropertyAutoSizeMode);
-        addAndMakeVisible(mPropertyWidth);
-        addAndMakeVisible(mPropertyHeight);
     }
+    addAndMakeVisible(mPropertyWidth);
+    addAndMakeVisible(mPropertyHeight);
     addChildComponent(mPropertyRawHeader);
     addChildComponent(mPropertyRawSeparator);
     addChildComponent(mPropertyIgnoreGrids);
@@ -383,8 +383,8 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
     }
 
     auto const autoSize = mOptions.useAutoSize;
-    mPropertyWidth.setEnabled(!autoSize);
-    mPropertyHeight.setEnabled(!autoSize);
+    mPropertyWidth.setEnabled(!autoSize || mGetSizeForFn == nullptr);
+    mPropertyHeight.setEnabled(!autoSize || mGetSizeForFn == nullptr);
     if(mGetSizeForFn != nullptr && updateModel && autoSize && !itemIsDocument)
     {
         auto const size = mGetSizeForFn(identifier);
@@ -422,8 +422,8 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
 
     mPropertyGroupMode.setVisible(options.useImageFormat());
     mPropertyAutoSizeMode.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
-    mPropertyWidth.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
-    mPropertyHeight.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
+    mPropertyWidth.setVisible(options.useImageFormat());
+    mPropertyHeight.setVisible(options.useImageFormat());
     mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyRawSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
