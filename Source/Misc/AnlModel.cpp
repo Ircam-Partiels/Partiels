@@ -8,9 +8,9 @@ struct DummyAttr
     bool operator!=(DummyAttr const&) const { return false; }
 };
 
-void to_json(nlohmann::json&, DummyAttr const&) {}
+static void to_json(nlohmann::json&, DummyAttr const&) {}
 
-void from_json(nlohmann::json const&, DummyAttr&) {}
+static void from_json(nlohmann::json const&, DummyAttr&) {}
 
 namespace XmlParser
 {
