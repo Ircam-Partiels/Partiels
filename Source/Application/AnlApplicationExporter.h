@@ -28,8 +28,6 @@ namespace Application
 
         void exportToFile();
 
-        static std::pair<int, int> getSizeFor(juce::String const& identifier);
-
         Accessor::Listener mListener{typeid(*this).name()};
         Document::Exporter::Panel mExporterPanel;
         PropertyTextButton mPropertyExport;

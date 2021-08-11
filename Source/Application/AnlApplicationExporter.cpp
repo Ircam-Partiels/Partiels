@@ -9,7 +9,7 @@ ANALYSE_FILE_BEGIN
 
 Application::Exporter::Exporter()
 : FloatingWindowContainer("Exporter", *this)
-, mExporterPanel(Instance::get().getDocumentAccessor(), getSizeFor)
+, mExporterPanel(Instance::get().getDocumentAccessor(), Instance::getSizeFor)
 , mPropertyExport("Export", "Export the results", [this]()
                   {
                       if(mProcess.valid())
@@ -97,18 +97,6 @@ void Application::Exporter::hide()
     FloatingWindowContainer::hide();
 }
 
-std::pair<int, int> Application::Exporter::getSizeFor(juce::String const& identifier)
-{
-    auto* window = Instance::get().getWindow();
-    if(!identifier.isEmpty() && window != nullptr)
-    {
-        auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(window->getPlotBounds(identifier));
-        anlWeakAssert(!bounds.isEmpty());
-        return {bounds.getWidth(), bounds.getHeight()};
-    }
-    return {0, 0};
-}
-
 void Application::Exporter::exportToFile()
 {
     auto const& acsr = Instance::get().getApplicationAccessor();
@@ -146,7 +134,7 @@ void Application::Exporter::exportToFile()
     mProcess = std::async([=, this, file = fc.getResult()]() -> ProcessResult
                           {
                               juce::Thread::setCurrentThreadName("Exporter");
-                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, "", identifier, options, mShoulAbort, getSizeFor);
+                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, "", identifier, options, mShoulAbort, Instance::getSizeFor);
                               triggerAsyncUpdate();
                               if(result.failed())
                               {

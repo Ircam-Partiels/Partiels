@@ -285,6 +285,18 @@ juce::String Application::Instance::getFileWildCard()
     return App::getFileWildCardFor("doc");
 }
 
+std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identifier)
+{
+    auto* window = get().getWindow();
+    if(!identifier.isEmpty() && window != nullptr)
+    {
+        auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(window->getPlotBounds(identifier));
+        anlWeakAssert(!bounds.isEmpty());
+        return {bounds.getWidth(), bounds.getHeight()};
+    }
+    return {0, 0};
+}
+
 void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
     std::vector<juce::File> audioFiles;

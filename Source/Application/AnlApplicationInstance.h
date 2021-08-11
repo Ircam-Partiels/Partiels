@@ -39,6 +39,7 @@ namespace Application
         static Instance& get();
         static juce::String getFileExtension();
         static juce::String getFileWildCard();
+        static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
         void openFiles(std::vector<juce::File> const& files);
 
