@@ -160,17 +160,19 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                     {
                         auto const numRows = SdifFCurrNbRow(file);
                         auto const numColumns = SdifFCurrNbCol(file);
+                        auto rowIndex = 0_z;
                         if(row < numRows)
                         {
-                            auto rowIndex = 0_z;
                             while(rowIndex < row)
                             {
                                 bytesRead += SdifFReadOneRow(file);
+                                ++rowIndex;
                             }
                             auto& cjson = json[channelIndex];
                             nlohmann::json vjson;
                             vjson["time"] = time;
                             bytesRead += SdifFReadOneRow(file);
+                            ++rowIndex;
                             if(numColumns == 1 || column.has_value())
                             {
                                 auto const columnIndex = column.has_value() ? static_cast<SdifUInt4>(*column) + static_cast<SdifUInt4>(1) : static_cast<SdifUInt4>(1);
@@ -190,13 +192,10 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
 
                             cjson.push_back(std::move(vjson));
                         }
-                        else
+                        while(rowIndex < numRows)
                         {
-                            auto rowIndex = 0_z;
-                            while(rowIndex < numRows)
-                            {
-                                bytesRead += SdifFReadOneRow(file);
-                            }
+                            bytesRead += SdifFReadOneRow(file);
+                            ++rowIndex;
                         }
                     }
                     else
