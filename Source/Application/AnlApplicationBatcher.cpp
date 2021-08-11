@@ -8,7 +8,7 @@ Application::Batcher::Batcher()
 , mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::all, AudioFileLayout::ChannelLayout::all)
 , mExporterPanel(Instance::get().getDocumentAccessor(), nullptr)
-, mPropertyAdaptationToSampleRate("Adaptation to Sample Rate", "Adapt the block size and the step size of the analyzes to the sample rate", [](bool state)
+, mPropertyAdaptationToSampleRate("Adapt to Sample Rate", "Adapt the block size and the step size of the analyzes to the sample rate", [](bool state)
                                   {
                                       auto& acsr = Instance::get().getApplicationAccessor();
                                       acsr.setAttr<AttrType::adaptationToSampleRate>(state, NotificationType::synchronous);
