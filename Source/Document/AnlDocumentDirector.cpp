@@ -17,6 +17,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         {
             case AttrType::reader:
             {
+                clearFilesToWatch();
                 auto reader = mAccessor.getAttr<AttrType::reader>();
                 for(auto const& channelLayout : reader)
                 {
