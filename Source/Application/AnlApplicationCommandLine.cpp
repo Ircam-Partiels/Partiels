@@ -99,7 +99,7 @@ Application::CommandLine::CommandLine()
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
          "--nogrids Ignores the export of the grid tracks (optional with the csv and json formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
-         "--separator <character> Defines the seperatror character between colummns (optional with the csv format, default is ',').\n\t"
+         "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
          "",
          "",
          [](juce::ArgumentList const& args)
