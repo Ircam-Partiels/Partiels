@@ -68,17 +68,18 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::file:
             {
+                clearFilesToWatch();
+                auto const file = mAccessor.getAttr<AttrType::file>();
+                if(file != juce::File{})
+                {
+                    addFileToWatch(file);
+                }
                 auto const results = mAccessor.getAttr<AttrType::results>();
                 if(!results.isEmpty())
                 {
-                    if(mAccessor.getAttr<AttrType::file>() == juce::File{})
-                    {
-                        clearFilesToWatch();
-                    }
                     break;
                 }
-                clearFilesToWatch();
-                if(mAccessor.getAttr<AttrType::file>() != juce::File{})
+                if(file != juce::File{})
                 {
                     runLoading();
                 }
@@ -308,7 +309,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
     mLoader.onLoadingSucceeded = [&](Results const& results)
     {
-        addFileToWatch(mAccessor.getAttr<AttrType::file>());
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
     };
