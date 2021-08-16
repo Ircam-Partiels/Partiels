@@ -1,5 +1,7 @@
 v0.0.8 (alpha)
 
+- Imp: Filtering the plugins should include description details (#125)
+- Fix: Analysis advancement can exceed 100% when detaching a track from its result file (#124)
 - Fix: First analyzed frame should be shifted by the block size over 2 (#123)
 - Fix: Time and value floating-point precision of CSV format should be increased (#122)
 - Fix: Labels of CSV files are not escaped using extra " characters (#121)
