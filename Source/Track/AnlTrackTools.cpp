@@ -543,13 +543,13 @@ Zoom::Range Track::Tools::getValueRange(std::vector<Results::Columns> const& res
                                                                                                return crange;
                                                                                            }
                                                                                            Zoom::Range const newCrange{*min, *max};
-                                                                                           return crange.has_value() ? newCrange.getUnionWith(*crange) : crange;
+                                                                                           return crange.has_value() ? newCrange.getUnionWith(*crange) : newCrange;
                                                                                        });
                                                  return range.has_value() ? (newRange.has_value() ? newRange->getUnionWith(*range) : range) : newRange;
                                              });
     if(resultRange.has_value())
     {
-        *resultRange;
+        return *resultRange;
     }
     return {};
 }
