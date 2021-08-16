@@ -211,7 +211,7 @@ void PluginList::Table::updateContent()
                 auto const description = mScanner.getDescription(key, 48000.0);
                 if(description.name.isNotEmpty())
                 {
-                    auto const filterName = (description.name + description.output.name + description.maker).removeCharacters(" ");
+                    auto const filterName = (description.name + description.output.name + description.maker + description.details).removeCharacters(" ");
                     if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
                     {
                         mFilteredList.push_back({key, description});
