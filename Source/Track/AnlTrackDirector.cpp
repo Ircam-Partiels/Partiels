@@ -689,7 +689,7 @@ bool Track::Director::fileHasBeenModified(juce::File const& file)
 void Track::Director::timerCallback()
 {
     auto const processorRunning = mProcessor.isRunning() || mLoader.isRunning();
-    auto const processorProgress = mProcessor.getAdvancement() + mLoader.getAdvancement();
+    auto const processorProgress = mProcessor.isRunning() ? mProcessor.getAdvancement() : (mLoader.isRunning() ? mLoader.getAdvancement() : 0.0);
     auto const graphicsRunning = mGraphics.isRunning();
     auto const graphicsProgress = mGraphics.getAdvancement();
     if(!processorRunning && !graphicsRunning)
