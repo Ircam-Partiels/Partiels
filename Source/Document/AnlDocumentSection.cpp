@@ -680,7 +680,7 @@ std::unique_ptr<juce::ComponentTraverser> Document::Section::createKeyboardFocus
             auto* child = dynamic_cast<Group::StrechableSection*>(component);
             if(child != nullptr)
             {
-                return child->createFocusTraverser();
+                return child->createKeyboardFocusTraverser();
             }
             return nullptr;
         }
