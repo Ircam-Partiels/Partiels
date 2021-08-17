@@ -21,7 +21,7 @@ namespace Group
 
         // juce::Component
         void resized() override;
-        std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
+        std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     private:
         void updateContent();

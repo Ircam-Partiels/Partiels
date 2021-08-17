@@ -131,7 +131,7 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     return {};
 }
 
-std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createFocusTraverser()
+std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createKeyboardFocusTraverser()
 {
     class FocusTraverser
     : public juce::KeyboardFocusTraverser
