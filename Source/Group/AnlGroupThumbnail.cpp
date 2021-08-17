@@ -15,8 +15,8 @@ Group::Thumbnail::Thumbnail(Director& director)
     addAndMakeVisible(mDropdownButton);
     mDropdownButton.setWantsKeyboardFocus(false);
 
-    mPropertiesButton.setTooltip(juce::translate("Group and tracks' properties"));
-    mExpandButton.setTooltip(juce::translate("Expand the group"));
+    mPropertiesButton.setTooltip(juce::translate("Show group or track properties"));
+    mExpandButton.setTooltip(juce::translate("Expand the tracks"));
     mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
     mExpandButton.onClick = [&]()
@@ -27,7 +27,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     auto getPropertiesMenu = [&]()
     {
         juce::PopupMenu menu;
-        menu.addItem("Group properties", [&]()
+        menu.addItem(juce::translate("Show 'GROUPNAME' group properties").replace("GROUPNAME", mAccessor.getAttr<AttrType::name>()), [&]()
                      {
                          if(auto var = std::make_unique<juce::DynamicObject>())
                          {
@@ -44,7 +44,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             if(trackAcsr.has_value())
             {
                 auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-                menu.addItem(juce::translate("Show TRACKNAME properties").replace("TRACKNAME", trackName), [=]
+                menu.addItem(juce::translate("Show 'TRACKNAME' track properties").replace("TRACKNAME", trackName), [=]
                              {
                                  if(auto var = std::make_unique<juce::DynamicObject>())
                                  {
