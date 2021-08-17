@@ -13,8 +13,8 @@ Track::Thumbnail::Thumbnail(Director& director)
     addAndMakeVisible(mDropdownButton);
     mDropdownButton.setWantsKeyboardFocus(false);
 
-    mPropertiesButton.setTooltip(juce::translate("Change the analysis properties"));
-    mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
+    mPropertiesButton.setTooltip(juce::translate("Show the track properties"));
+    mDropdownButton.setTooltip(juce::translate("Show track actions menu"));
 
     mPropertiesButton.onClick = [&]()
     {
