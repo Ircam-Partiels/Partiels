@@ -105,7 +105,7 @@ void Group::Section::paintOverChildren(juce::Graphics& g)
 {
     if(mIsItemDragged)
     {
-        g.fillAll(findColour(ColourIds::highlightedColourId));
+        g.fillAll(findColour(ColourIds::overflyColourId));
     }
 }
 
