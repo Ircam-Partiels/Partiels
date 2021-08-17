@@ -36,6 +36,8 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
             {
                 auto const focused = mAccessor.getAttr<AttrType::focused>();
                 mThumbnailDecoration.setHighlighted(focused);
+                mSnapshotDecoration.setHighlighted(focused);
+                mPlotDecoration.setHighlighted(focused);
             }
             break;
         }
