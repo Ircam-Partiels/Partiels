@@ -102,7 +102,7 @@ Track::Thumbnail::~Thumbnail()
 void Track::Thumbnail::resized()
 {
     bool useDropdown = false;
-    auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
+    auto bounds = getLocalBounds();
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
 
@@ -130,14 +130,17 @@ void Track::Thumbnail::paint(juce::Graphics& g)
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
 
-    auto const width = getWidth() / 2;
-    auto const height = getHeight();
-    auto const bottom = height - 2 * separator;
-    auto const size = height - 4 * separator;
-
     g.setColour(findColour(ColourIds::titleBackgroundColourId));
-    g.fillRoundedRectangle(getLocalBounds().removeFromLeft(width).toFloat(), 2.0f);
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
 
+    auto const width = getWidth();
+    auto const height = getHeight();
+    auto const bottom = height - 2 * width + separator;
+    auto const size = height - 2 * (width + separator);
+    if(size <= 0)
+    {
+        return;
+    }
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
