@@ -186,9 +186,8 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     auto const focused = mAccessor.getAttr<AttrType::focused>();
     g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
-    g.setColour(findColour(ColourIds::headerColourId).contrasting(focused ? 0.1f : 0.0f));
-    g.fillRoundedRectangle(getLocalBounds().removeFromLeft(width).toFloat(), 2.0f);
-
+    g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));
+    g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(bottom));
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);

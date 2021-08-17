@@ -17,7 +17,6 @@ namespace Group
         {
               textColourId = 0x2040100
             , backgroundColourId
-            , headerColourId
         };
         // clang-format on
 
