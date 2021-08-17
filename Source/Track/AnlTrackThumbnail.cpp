@@ -53,6 +53,11 @@ Track::Thumbnail::Thumbnail(Director& director)
                 repaint();
             }
             break;
+            case AttrType::focused:
+            {
+                repaint();
+            }
+            break;
             case AttrType::processing:
             case AttrType::warnings:
             case AttrType::file:
@@ -67,7 +72,6 @@ Track::Thumbnail::Thumbnail(Director& director)
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
-            case AttrType::focused:
             case AttrType::grid:
                 break;
         }
@@ -130,7 +134,8 @@ void Track::Thumbnail::paint(juce::Graphics& g)
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
 
-    g.setColour(findColour(ColourIds::titleBackgroundColourId));
+    auto const focused = mAccessor.getAttr<AttrType::focused>();
+    g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
 
     auto const width = getWidth();

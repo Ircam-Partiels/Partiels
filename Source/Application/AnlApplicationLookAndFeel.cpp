@@ -121,7 +121,7 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, colourChart.get(Type::inactive));
 
     setColour(Track::Thumbnail::ColourIds::textColourId, colourChart.get(Type::text));
-    setColour(Track::Thumbnail::ColourIds::titleBackgroundColourId, colourChart.get(Type::background));
+    setColour(Track::Thumbnail::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
     setColour(Track::Section::ColourIds::backgroundColourId, colourChart.get(Type::background));
 

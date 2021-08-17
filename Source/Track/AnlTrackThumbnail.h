@@ -16,7 +16,7 @@ namespace Track
         enum ColourIds : int
         {
               textColourId = 0x2030100
-            , titleBackgroundColourId
+            , backgroundColourId
         };
         // clang-format on
 
