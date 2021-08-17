@@ -1,3 +1,7 @@
+v0.0.9 (alpha)
+
+- Imp: Graphical difference between tracks and groups (#70)
+
 v0.0.8 (alpha)
 
 - Imp: Filtering the plugins should include description details (#125)
