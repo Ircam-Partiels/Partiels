@@ -204,12 +204,12 @@ void Group::Thumbnail::lookAndFeelChanged()
         if(mAccessor.getAttr<AttrType::expanded>())
         {
             laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);
-            mExpandButton.setTooltip(juce::translate("Shrink the analyses"));
+            mExpandButton.setTooltip(juce::translate("Shrink the tracks"));
         }
         else
         {
             laf->setButtonIcon(mExpandButton, IconManager::IconType::expand);
-            mExpandButton.setTooltip(juce::translate("Expand the analyses"));
+            mExpandButton.setTooltip(juce::translate("Expand the tracks"));
         }
     }
 }
