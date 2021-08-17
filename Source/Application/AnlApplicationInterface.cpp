@@ -392,11 +392,11 @@ Application::Interface::Interface()
 
     mDocumentSection.tooltipButton.setClickingTogglesState(true);
     mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::ViewInfoBubble));
-    mDocumentSection.tooltipButton.onClick = [&]()
+    mDocumentSection.tooltipButton.onClick = []()
     {
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::ViewInfoBubble, true);
     };
-    mDocumentSection.onSaveButtonClicked = [&]()
+    mDocumentSection.onSaveButtonClicked = []()
     {
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::DocumentSave, true);
     };
