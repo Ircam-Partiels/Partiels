@@ -93,7 +93,7 @@ Document::Section::Section(Director& director)
     mViewport.setScrollBarsShown(true, false, false, false);
 
     setWantsKeyboardFocus(true);
-    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
     addAndMakeVisible(mReaderLayoutButton);
     mReaderLayoutButton.setWantsKeyboardFocus(false);
@@ -610,7 +610,7 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
     }
 }
 
-std::unique_ptr<juce::ComponentTraverser> Document::Section::createFocusTraverser()
+std::unique_ptr<juce::ComponentTraverser> Document::Section::createKeyboardFocusTraverser()
 {
     class FocusTraverser
     : public juce::KeyboardFocusTraverser

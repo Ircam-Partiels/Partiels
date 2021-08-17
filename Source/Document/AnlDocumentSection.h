@@ -40,7 +40,7 @@ namespace Document
         void lookAndFeelChanged() override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
-        std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
+        std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     private:
         // juce::FocusChangeListener
