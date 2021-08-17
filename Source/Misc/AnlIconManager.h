@@ -21,7 +21,6 @@ public:
     {
           alert
         , cancel
-        , checked
         , chevron
         , conversation
         , edit
@@ -44,6 +43,7 @@ public:
         , question
         , rewind
         , shrink
+        , verified
     };
     // clang-format off
 

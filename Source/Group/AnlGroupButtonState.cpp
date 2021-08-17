@@ -63,7 +63,7 @@ Group::StateButton::StateButton(Accessor& accessor)
     };
 
     mProcessingButton.setActive(false);
-    mProcessingButton.setInactiveImage(IconManager::getIcon(IconManager::IconType::checked));
+    mProcessingButton.setInactiveImage(IconManager::getIcon(IconManager::IconType::verified));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -141,7 +141,7 @@ void Group::StateButton::updateTooltip()
     }
 
     mProcessingButton.setActive(processing || rendering);
-    mProcessingButton.setInactiveImage(IconManager::getIcon(valid ? IconManager::IconType::checked : IconManager::IconType::alert));
+    mProcessingButton.setInactiveImage(IconManager::getIcon(valid ? IconManager::IconType::verified : IconManager::IconType::alert));
 }
 
 ANALYSE_FILE_END

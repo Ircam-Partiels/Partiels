@@ -11,8 +11,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::alert_png, IconsData::alert_pngSize);
         case IconType::cancel:
             return juce::ImageCache::getFromMemory(IconsData::annuler_png, IconsData::annuler_pngSize);
-        case IconType::checked:
-            return juce::ImageCache::getFromMemory(IconsData::checked_png, IconsData::checked_pngSize);
         case IconType::chevron:
             return juce::ImageCache::getFromMemory(IconsData::chevron_png, IconsData::chevron_pngSize);
         case IconType::conversation:
@@ -57,6 +55,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::leftarrow_png, IconsData::leftarrow_pngSize);
         case IconType::shrink:
             return juce::ImageCache::getFromMemory(IconsData::shrink_png, IconsData::shrink_pngSize);
+        case IconType::verified:
+            return juce::ImageCache::getFromMemory(IconsData::verified_png, IconsData::verified_pngSize);
     }
     return juce::Image();
 }
