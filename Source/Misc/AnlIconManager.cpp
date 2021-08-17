@@ -55,8 +55,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::question_png, IconsData::question_pngSize);
         case IconType::rewind:
             return juce::ImageCache::getFromMemory(IconsData::leftarrow_png, IconsData::leftarrow_pngSize);
-        case IconType::search:
-            return juce::ImageCache::getFromMemory(IconsData::chercher_png, IconsData::chercher_pngSize);
         case IconType::share:
             return juce::ImageCache::getFromMemory(IconsData::share_png, IconsData::share_pngSize);
         case IconType::shrink:

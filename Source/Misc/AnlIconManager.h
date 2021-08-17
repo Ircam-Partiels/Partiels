@@ -43,7 +43,6 @@ public:
         , properties
         , question
         , rewind
-        , search
         , share
         , shrink
     };
