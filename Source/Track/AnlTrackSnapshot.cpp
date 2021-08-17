@@ -26,8 +26,8 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::zoomAcsr:
-            case AttrType::focused:
                 break;
+            case AttrType::focused:
             case AttrType::grid:
             case AttrType::results:
             case AttrType::graphics:
@@ -121,9 +121,11 @@ Track::Snapshot::~Snapshot()
 
 void Track::Snapshot::paint(juce::Graphics& g)
 {
+    auto const focused = mAccessor.getAttr<AttrType::focused>();
+    auto const colour = findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId);
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    paint(mAccessor, mTimeZoomAccessor, time, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId));
+    paint(mAccessor, mTimeZoomAccessor, time, g, getLocalBounds(), colour);
 }
 
 void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour)
