@@ -48,6 +48,7 @@ namespace Group
         void updateContent();
 
         Accessor& mAccessor;
+        Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor& mTransportAccessor;
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
