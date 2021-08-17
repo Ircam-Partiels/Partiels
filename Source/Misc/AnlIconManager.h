@@ -23,7 +23,6 @@ public:
         , cancel
         , chevron
         , conversation
-        , edit
         , expand
         , grid_off
         , grid_partial

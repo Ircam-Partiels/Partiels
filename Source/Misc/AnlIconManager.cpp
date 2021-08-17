@@ -15,8 +15,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::chevron_png, IconsData::chevron_pngSize);
         case IconType::conversation:
             return juce::ImageCache::getFromMemory(IconsData::conversation_png, IconsData::conversation_pngSize);
-        case IconType::edit:
-            return juce::ImageCache::getFromMemory(IconsData::editer_png, IconsData::editer_pngSize);
         case IconType::expand:
             return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
         case IconType::grid_off:
