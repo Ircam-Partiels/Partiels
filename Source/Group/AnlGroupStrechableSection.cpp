@@ -238,7 +238,7 @@ std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createKeyboa
             auto* parent = mStrechableSection.getParentComponent();
             if(parent != nullptr)
             {
-                return parent->createFocusTraverser();
+                return parent->createKeyboardFocusTraverser();
             }
             return nullptr;
         }
