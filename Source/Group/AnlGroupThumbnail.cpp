@@ -91,8 +91,12 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colour:
-            case AttrType::focused:
                 break;
+            case AttrType::focused:
+            {
+                repaint();
+            }
+            break;
             case AttrType::name:
             {
                 setTooltip(acsr.getAttr<AttrType::name>());
@@ -179,7 +183,10 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     auto const bottom = height - 2 * separator;
     auto const size = height - 4 * separator;
 
-    g.setColour(findColour(ColourIds::titleBackgroundColourId));
+    auto const focused = mAccessor.getAttr<AttrType::focused>();
+    g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
+    g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
+    g.setColour(findColour(ColourIds::headerColourId).contrasting(focused ? 0.1f : 0.0f));
     g.fillRoundedRectangle(getLocalBounds().removeFromLeft(width).toFloat(), 2.0f);
 
     g.setColour(findColour(ColourIds::textColourId));

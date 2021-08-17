@@ -126,7 +126,8 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(Track::Section::ColourIds::backgroundColourId, colourChart.get(Type::background));
 
     setColour(Group::Thumbnail::ColourIds::textColourId, colourChart.get(Type::text));
-    setColour(Group::Thumbnail::ColourIds::titleBackgroundColourId, colourChart.get(Type::border));
+    setColour(Group::Thumbnail::ColourIds::backgroundColourId, colourChart.get(Type::background));
+    setColour(Group::Thumbnail::ColourIds::headerColourId, colourChart.get(Type::border));
 
     setColour(Group::Section::ColourIds::backgroundColourId, colourChart.get(Type::background));
     setColour(Group::Section::ColourIds::highlightedColourId, colourChart.get(Type::inactive).withAlpha(0.4f));

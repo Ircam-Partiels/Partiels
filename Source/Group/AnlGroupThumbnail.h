@@ -16,7 +16,8 @@ namespace Group
         enum ColourIds : int
         {
               textColourId = 0x2040100
-            , titleBackgroundColourId
+            , backgroundColourId
+            , headerColourId
         };
         // clang-format on
 
