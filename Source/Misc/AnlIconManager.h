@@ -43,7 +43,6 @@ public:
         , properties
         , question
         , rewind
-        , share
         , shrink
     };
     // clang-format off
