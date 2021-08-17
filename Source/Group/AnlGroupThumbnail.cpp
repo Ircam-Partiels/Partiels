@@ -146,7 +146,7 @@ Group::Thumbnail::~Thumbnail()
 void Group::Thumbnail::resized()
 {
     bool useDropdown = false;
-    auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2);
+    auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2 + 1);
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
 
