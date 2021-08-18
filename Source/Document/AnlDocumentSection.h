@@ -82,7 +82,6 @@ namespace Document
         Transport::LoopBar mLoopBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Transport::PlayheadBar mPlayheadBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Decorator mLoopBarDecoration{mLoopBar};
-        ColouredPanel mTopSeparator;
 
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
         DraggableTable mDraggableTable{"Group"};
