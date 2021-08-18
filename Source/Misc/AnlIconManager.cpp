@@ -13,8 +13,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::annuler_png, IconsData::annuler_pngSize);
         case IconType::chevron:
             return juce::ImageCache::getFromMemory(IconsData::chevron_png, IconsData::chevron_pngSize);
-        case IconType::conversation:
-            return juce::ImageCache::getFromMemory(IconsData::conversation_png, IconsData::conversation_pngSize);
+        case IconType::comment:
+            return juce::ImageCache::getFromMemory(IconsData::comment_png, IconsData::comment_pngSize);
         case IconType::expand:
             return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
         case IconType::grid_off:

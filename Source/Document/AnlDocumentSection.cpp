@@ -349,7 +349,7 @@ void Document::Section::lookAndFeelChanged()
         }
         laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::layers);
         laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::perspective);
-        laf->setButtonIcon(tooltipButton, IconManager::IconType::conversation);
+        laf->setButtonIcon(tooltipButton, IconManager::IconType::comment);
         switch(mAccessor.getAttr<AttrType::grid>())
         {
             case GridMode::hidden:

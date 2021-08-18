@@ -22,7 +22,7 @@ public:
           alert
         , cancel
         , chevron
-        , conversation
+        , comment
         , expand
         , grid_off
         , grid_partial
