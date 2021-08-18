@@ -21,6 +21,7 @@ public:
     LoadingCircle(juce::Image const& inactiveImage = {});
     ~LoadingCircle() override = default;
 
+    bool isActive() const;
     void setActive(bool state);
     void setInactiveImage(juce::Image const& inactiveImage);
 

@@ -33,6 +33,11 @@ void LoadingCircle::timerCallback()
     repaint();
 }
 
+bool LoadingCircle::isActive() const
+{
+    return isTimerRunning();
+}
+
 void LoadingCircle::setActive(bool state)
 {
     if(state && !isTimerRunning())
