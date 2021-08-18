@@ -32,7 +32,6 @@ public:
         , loading
         , loop
         , music
-        , navigate
         , pause
         , perspective
         , photocamera

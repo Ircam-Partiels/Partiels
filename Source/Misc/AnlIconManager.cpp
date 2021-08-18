@@ -33,8 +33,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::repeat_png, IconsData::repeat_pngSize);
         case IconType::music:
             return juce::ImageCache::getFromMemory(IconsData::musicplayer_png, IconsData::musicplayer_pngSize);
-        case IconType::navigate:
-            return juce::ImageCache::getFromMemory(IconsData::naviguer_png, IconsData::naviguer_pngSize);
         case IconType::pause:
             return juce::ImageCache::getFromMemory(IconsData::pause_png, IconsData::pause_pngSize);
         case IconType::perspective:
