@@ -1,5 +1,6 @@
 v0.0.9 (alpha)
 
+- Imp: Adapt default track colours based on colour mode (#129)
 - Fix: Selection of tracks and groups using tab key (#128)
 - Imp: Representation of track and group selection (#126)
 - Imp: Graphical difference between tracks and groups (#70)
