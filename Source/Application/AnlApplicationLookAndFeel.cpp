@@ -178,7 +178,7 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
 
     // juce::ScrollBar
     setColour(juce::ScrollBar::ColourIds::backgroundColourId, colourChart.get(Type::background));
-    setColour(juce::ScrollBar::ColourIds::thumbColourId, colourChart.get(Type::active));
+    setColour(juce::ScrollBar::ColourIds::thumbColourId, colourChart.get(Type::inactive));
 
     // juce::ListBox
     setColour(juce::ListBox::ColourIds::backgroundColourId, colourChart.get(Type::background));
@@ -293,7 +293,7 @@ void Application::LookAndFeel::drawScrollbar(juce::Graphics& g, juce::ScrollBar&
 
     auto const colour = scrollbar.findColour(juce::ScrollBar::ColourIds::thumbColourId);
     g.setColour(isMouseOver ? colour.brighter(0.25f) : colour);
-    g.fillRoundedRectangle(thumbBounds.reduced(1).toFloat(), 4.0f);
+    g.fillRoundedRectangle(thumbBounds.reduced(1).toFloat(), 2.0f);
 }
 
 void Application::LookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, const bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box)
