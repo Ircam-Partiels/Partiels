@@ -17,6 +17,9 @@ namespace Group
         // juce::Component
         void resized() override;
 
+        bool isProcessingOrRendering() const;
+        bool hasWarning() const;
+
     private:
         void updateContent();
         void updateTooltip();
@@ -25,6 +28,7 @@ namespace Group
         Accessor::Listener mListener{typeid(*this).name()};
         Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         LoadingCircle mProcessingButton;
+        bool mHasWarning{false};
 
         TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         LayoutNotifier mLayoutNotifier;
