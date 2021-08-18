@@ -137,8 +137,8 @@ Track::Plot::Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::zoomAcsr:
             case AttrType::warnings:
             case AttrType::processing:
-                break;
             case AttrType::focused:
+                break;
             case AttrType::grid:
             case AttrType::results:
             case AttrType::graphics:
@@ -195,9 +195,7 @@ Track::Plot::~Plot()
 
 void Track::Plot::paint(juce::Graphics& g)
 {
-    auto const focused = mAccessor.getAttr<AttrType::focused>();
-    auto const colour = findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId);
-    paint(mAccessor, mTimeZoomAccessor, g, getLocalBounds(), colour);
+    paint(mAccessor, mTimeZoomAccessor, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId));
 }
 
 void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour)
