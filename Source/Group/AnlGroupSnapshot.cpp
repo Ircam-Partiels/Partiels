@@ -13,15 +13,6 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
                       updateContent();
                   })
 {
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        if(attribute == AttrType::focused)
-        {
-            repaint();
-        }
-    };
-
     mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -108,12 +99,10 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
     setSize(100, 80);
     mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
-    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::Snapshot::~Snapshot()
 {
-    mAccessor.removeListener(mListener);
     mTimeZoomAccessor.removeListener(mZoomListener);
     mTransportAccessor.removeListener(mTransportListener);
     for(auto& trackAcsr : mTrackAccessors.getContents())
@@ -132,15 +121,14 @@ void Group::Snapshot::paint(juce::Graphics& g)
     auto const bounds = getLocalBounds();
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    auto const focused = mAccessor.getAttr<AttrType::focused>();
-    auto const colour = findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId);
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value())
         {
-            Track::Snapshot::paint(*trackAcsr, mTimeZoomAccessor, time, g, bounds, it == std::prev(layout.crend()) ? colour : juce::Colours::transparentBlack);
+            auto const colour = it == std::prev(layout.crend()) ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            Track::Snapshot::paint(*trackAcsr, mTimeZoomAccessor, time, g, bounds, colour);
         }
     }
 }

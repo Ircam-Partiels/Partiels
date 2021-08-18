@@ -13,16 +13,8 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
                       updateContent();
                   })
 {
+    juce::ignoreUnused(mAccessor);
     juce::ignoreUnused(mTransportAccessor);
-
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        if(attribute == AttrType::focused)
-        {
-            repaint();
-        }
-    };
 
     mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
     {
@@ -81,12 +73,10 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
     setCachedComponentImage(new LowResCachedComponentImage(*this));
     setSize(100, 80);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
-    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::Plot::~Plot()
 {
-    mAccessor.removeListener(mListener);
     mTimeZoomAccessor.removeListener(mZoomListener);
     for(auto& trackAcsr : mTrackAccessors.getContents())
     {
@@ -102,14 +92,13 @@ void Group::Plot::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const focused = mAccessor.getAttr<AttrType::focused>();
-    auto const colour = findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId);
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value())
         {
-            Track::Plot::paint(*trackAcsr, mTimeZoomAccessor, g, bounds, it == std::prev(layout.crend()) ? colour : juce::Colours::transparentBlack);
+            auto const colour = it == std::prev(layout.crend()) ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            Track::Plot::paint(*trackAcsr, mTimeZoomAccessor, g, bounds, colour);
         }
     }
 }
