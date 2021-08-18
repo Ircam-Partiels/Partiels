@@ -10,11 +10,8 @@ Track::Thumbnail::Thumbnail(Director& director)
     mPropertiesButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
-    addAndMakeVisible(mDropdownButton);
-    mDropdownButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Show the track properties"));
-    mDropdownButton.setTooltip(juce::translate("Show track actions menu"));
 
     mPropertiesButton.onClick = [&]()
     {
@@ -26,20 +23,6 @@ Track::Thumbnail::Thumbnail(Director& director)
             var->setProperty("y", center.y - 40);
             mAccessor.sendSignal(SignalType::showProperties, var.release(), NotificationType::synchronous);
         }
-    };
-
-    mDropdownButton.onClick = [&]()
-    {
-        juce::PopupMenu menu;
-        auto addItem = [&](juce::Button& button)
-        {
-            if(!button.isVisible())
-            {
-                menu.addItem(button.getTooltip(), button.onClick);
-            }
-        };
-        addItem(mPropertiesButton);
-        menu.showAt(&mDropdownButton);
     };
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -60,6 +43,11 @@ Track::Thumbnail::Thumbnail(Director& director)
             break;
             case AttrType::processing:
             case AttrType::warnings:
+            {
+                resized();
+                repaint();
+            }
+            break;
             case AttrType::file:
             case AttrType::key:
             case AttrType::description:
@@ -105,28 +93,30 @@ Track::Thumbnail::~Thumbnail()
 
 void Track::Thumbnail::resized()
 {
-    bool useDropdown = false;
     auto bounds = getLocalBounds();
     auto constexpr separator = 2;
     auto const size = bounds.getWidth() - separator;
 
     auto layoutButton = [&](juce::Component& component)
     {
-        useDropdown = bounds.getHeight() < size * 2;
-        component.setVisible(!useDropdown);
-        if(!useDropdown)
+        component.setVisible(bounds.getHeight() >= size * 2);
+        if(component.isVisible())
         {
             component.setBounds(bounds.removeFromBottom(size).reduced(separator));
         }
     };
 
-    layoutButton(mStateButton);
-    layoutButton(mPropertiesButton);
-    mDropdownButton.setVisible(useDropdown);
-    if(useDropdown)
+    auto const state = mAccessor.getAttr<AttrType::processing>();
+    auto const warnings = mAccessor.getAttr<AttrType::warnings>();
+    if(std::get<0>(state) || std::get<2>(state) || warnings != WarningType::none)
     {
-        mDropdownButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+        layoutButton(mStateButton);
     }
+    else
+    {
+        mStateButton.setVisible(false);
+    }
+    layoutButton(mPropertiesButton);
 }
 
 void Track::Thumbnail::paint(juce::Graphics& g)
@@ -140,8 +130,9 @@ void Track::Thumbnail::paint(juce::Graphics& g)
 
     auto const width = getWidth();
     auto const height = getHeight();
-    auto const bottom = height - 2 * width + separator;
-    auto const size = height - 2 * (width + separator);
+    auto const numElements = mStateButton.isVisible() ? 2 : 1;
+    auto const bottom = height - numElements * width + separator;
+    auto const size = height - numElements * (width + separator);
     if(size <= 0)
     {
         return;
@@ -157,7 +148,6 @@ void Track::Thumbnail::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(mDropdownButton, IconManager::IconType::menu);
         laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
     }
 }
