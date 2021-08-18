@@ -11,8 +11,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::alert_png, IconsData::alert_pngSize);
         case IconType::cancel:
             return juce::ImageCache::getFromMemory(IconsData::annuler_png, IconsData::annuler_pngSize);
-        case IconType::chevron:
-            return juce::ImageCache::getFromMemory(IconsData::chevron_png, IconsData::chevron_pngSize);
         case IconType::comment:
             return juce::ImageCache::getFromMemory(IconsData::comment_png, IconsData::comment_pngSize);
         case IconType::expand:
@@ -31,6 +29,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::chargement_png, IconsData::chargement_pngSize);
         case IconType::loop:
             return juce::ImageCache::getFromMemory(IconsData::repeat_png, IconsData::repeat_pngSize);
+        case IconType::menu:
+            return juce::ImageCache::getFromMemory(IconsData::menu_png, IconsData::menu_pngSize);
         case IconType::music:
             return juce::ImageCache::getFromMemory(IconsData::musicplayer_png, IconsData::musicplayer_pngSize);
         case IconType::pause:

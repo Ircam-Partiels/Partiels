@@ -157,7 +157,7 @@ void Track::Thumbnail::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(mDropdownButton, IconManager::IconType::chevron);
+        laf->setButtonIcon(mDropdownButton, IconManager::IconType::menu);
         laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
     }
 }

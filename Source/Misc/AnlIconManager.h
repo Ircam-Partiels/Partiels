@@ -21,7 +21,6 @@ public:
     {
           alert
         , cancel
-        , chevron
         , comment
         , expand
         , grid_off
@@ -31,6 +30,7 @@ public:
         , layers
         , loading
         , loop
+        , menu
         , music
         , pause
         , perspective
