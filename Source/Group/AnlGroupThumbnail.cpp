@@ -12,19 +12,16 @@ Group::Thumbnail::Thumbnail(Director& director)
     mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
     mExpandButton.setWantsKeyboardFocus(false);
-    addAndMakeVisible(mDropdownButton);
-    mDropdownButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Show group or track properties"));
     mExpandButton.setTooltip(juce::translate("Expand the tracks"));
-    mDropdownButton.setTooltip(juce::translate("Show group actions menu"));
 
     mExpandButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
 
-    auto getPropertiesMenu = [&]()
+    mPropertiesButton.onClick = [this]()
     {
         juce::PopupMenu menu;
         menu.addItem(juce::translate("Show 'GROUPNAME' group properties").replace("GROUPNAME", mAccessor.getAttr<AttrType::name>()), [&]()
@@ -56,31 +53,8 @@ Group::Thumbnail::Thumbnail(Director& director)
                              });
             }
         }
-        return menu;
-    };
-
-    mPropertiesButton.onClick = [=, this]()
-    {
-        auto menu = getPropertiesMenu();
         menu.showAt(&mPropertiesButton);
-    };
-
-    mDropdownButton.onClick = [=, this]()
-    {
-        juce::PopupMenu menu;
-        if(!mPropertiesButton.isVisible())
-        {
-            menu = getPropertiesMenu();
-        }
-        auto addItem = [&](juce::Button& button)
-        {
-            if(!button.isVisible())
-            {
-                menu.addItem(button.getTooltip(), button.onClick);
-            }
-        };
-        addItem(mExpandButton);
-        menu.showAt(&mDropdownButton);
+        mPropertiesButton.setState(juce::Button::ButtonState::buttonNormal);
     };
 
     mListener.onAttrChanged = [&](Group::Accessor const& acsr, AttrType const attribute)
@@ -145,32 +119,33 @@ Group::Thumbnail::~Thumbnail()
 
 void Group::Thumbnail::resized()
 {
-    bool useDropdown = false;
-    auto bounds = getLocalBounds().withTrimmedLeft(getWidth() / 2 + 1);
     auto constexpr separator = 2;
-    auto const size = bounds.getWidth() - separator;
+    auto bounds = getLocalBounds();
 
-    auto const hasTrack = !mAccessor.getAttr<AttrType::layout>().empty();
-    auto layoutButton = [&](juce::Component& component)
+    auto leftBounds = bounds.removeFromLeft(getWidth() / 2 - separator / 2);
+    auto layoutButton = [&](juce::Rectangle<int>& lBounds, juce::Component& component)
     {
-        useDropdown = bounds.getHeight() < size * 2;
-        component.setVisible(!useDropdown);
-        if(!useDropdown)
+        component.setVisible(lBounds.getHeight() >= lBounds.getWidth());
+        if(component.isVisible())
         {
-            component.setBounds(bounds.removeFromBottom(size).reduced(separator));
+            component.setBounds(lBounds.removeFromBottom(lBounds.getWidth()).reduced(separator));
         }
     };
 
-    layoutButton(mExpandButton);
-    mExpandButton.setEnabled(hasTrack);
-    layoutButton(mStateButton);
-    mStateButton.setEnabled(hasTrack);
-    layoutButton(mPropertiesButton);
-    mDropdownButton.setVisible(hasTrack && useDropdown);
-    if(useDropdown)
+    if(mStateButton.hasWarning() || mStateButton.isProcessingOrRendering())
     {
-        mDropdownButton.setBounds(bounds.removeFromBottom(size).reduced(separator));
+        layoutButton(leftBounds, mStateButton);
     }
+    else
+    {
+        mStateButton.setVisible(false);
+    }
+    layoutButton(leftBounds, mPropertiesButton);
+
+    auto rightBounds = bounds.withTrimmedLeft(separator);
+    auto const hasTrack = !mAccessor.getAttr<AttrType::layout>().empty();
+    layoutButton(rightBounds, mExpandButton);
+    mExpandButton.setEnabled(hasTrack);
 }
 
 void Group::Thumbnail::paint(juce::Graphics& g)
@@ -180,17 +155,22 @@ void Group::Thumbnail::paint(juce::Graphics& g)
 
     auto const width = getWidth() / 2;
     auto const height = getHeight();
-    auto const bottom = height - 2 * separator;
-    auto const size = height - 4 * separator;
 
     auto const focused = mAccessor.getAttr<AttrType::focused>();
     g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
     g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));
-    g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(bottom));
+    g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(height - separator * 2));
+
+    auto const numElements = mStateButton.isVisible() ? 2 : 1;
+    auto const bottom = height - numElements * (width + separator);
+    if(bottom <= 0)
+    {
+        return;
+    }
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
-    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
+    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, bottom, width, juce::Justification::centredLeft, 1, 1.0f);
 }
 
 void Group::Thumbnail::lookAndFeelChanged()
@@ -199,7 +179,6 @@ void Group::Thumbnail::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(mDropdownButton, IconManager::IconType::menu);
         laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
         if(mAccessor.getAttr<AttrType::expanded>())
         {

@@ -40,7 +40,6 @@ namespace Group
         Accessor::Receiver mReceiver;
 
         PropertyPanel mPropertyPanel{mDirector};
-        juce::ImageButton mDropdownButton;
         juce::ImageButton mPropertiesButton;
         StateButton mStateButton{mAccessor};
         juce::ImageButton mExpandButton;
