@@ -30,7 +30,6 @@ public:
         , layers
         , loading
         , loop
-        , menu
         , music
         , pause
         , perspective

@@ -29,8 +29,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::chargement_png, IconsData::chargement_pngSize);
         case IconType::loop:
             return juce::ImageCache::getFromMemory(IconsData::repeat_png, IconsData::repeat_pngSize);
-        case IconType::menu:
-            return juce::ImageCache::getFromMemory(IconsData::menu_png, IconsData::menu_pngSize);
         case IconType::music:
             return juce::ImageCache::getFromMemory(IconsData::musicplayer_png, IconsData::musicplayer_pngSize);
         case IconType::pause:
