@@ -684,6 +684,13 @@ void Application::CommandTarget::addPluginTrack(Plugin::Key const& key, Plugin::
         trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
 
+        auto const& acsr = Instance::get().getApplicationAccessor();
+        LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
+        auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
+        colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+        colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
+        trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
@@ -742,6 +749,13 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::file>(file, NotificationType::synchronous);
+
+        auto const& acsr = Instance::get().getApplicationAccessor();
+        LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
+        auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
+        colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+        colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
+        trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
 
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
