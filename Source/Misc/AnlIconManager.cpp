@@ -15,6 +15,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::comment_png, IconsData::comment_pngSize);
         case IconType::expand:
             return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
+        case IconType::focus:
+            return juce::ImageCache::getFromMemory(IconsData::focus_png, IconsData::focus_pngSize);
         case IconType::grid_off:
             return juce::ImageCache::getFromMemory(IconsData::gridoff_png, IconsData::gridoff_pngSize);
         case IconType::grid_partial:
@@ -33,8 +35,6 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::musicplayer_png, IconsData::musicplayer_pngSize);
         case IconType::pause:
             return juce::ImageCache::getFromMemory(IconsData::pause_png, IconsData::pause_pngSize);
-        case IconType::perspective:
-            return juce::ImageCache::getFromMemory(IconsData::perspective_png, IconsData::perspective_pngSize);
         case IconType::photocamera:
             return juce::ImageCache::getFromMemory(IconsData::photocamera_png, IconsData::photocamera_pngSize);
         case IconType::play:

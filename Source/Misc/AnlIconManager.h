@@ -23,6 +23,7 @@ public:
         , cancel
         , comment
         , expand
+        , focus
         , grid_off
         , grid_partial
         , grid_full
@@ -32,7 +33,6 @@ public:
         , loop
         , music
         , pause
-        , perspective
         , photocamera
         , play
         , plus

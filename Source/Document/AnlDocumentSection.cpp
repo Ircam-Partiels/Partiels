@@ -348,7 +348,7 @@ void Document::Section::lookAndFeelChanged()
             laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
         }
         laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::layers);
-        laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::perspective);
+        laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::focus);
         laf->setButtonIcon(tooltipButton, IconManager::IconType::comment);
         switch(mAccessor.getAttr<AttrType::grid>())
         {
