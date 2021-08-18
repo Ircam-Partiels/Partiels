@@ -11,8 +11,8 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
     {
         auto clearPosition = [&](double position)
         {
-            auto const x = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, position)));
-            repaint(x, 0, 1, getHeight());
+            auto const x = static_cast<int>(std::floor(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, position)));
+            repaint(x - 1, 0, 3, getHeight());
         };
 
         switch(attribute)
@@ -69,12 +69,13 @@ Transport::PlayheadBar::~PlayheadBar()
 
 void Transport::PlayheadBar::paint(juce::Graphics& g)
 {
+    auto const start = Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead);
     g.setColour(findColour(ColourIds::startPlayheadColourId));
-    auto const start = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mStartPlayhead)));
-    g.fillRect(start, 0, 1, getHeight());
+    g.fillRect(static_cast<float>(start), 0.0f, 1.0f, static_cast<float>(getHeight()));
+
+    auto const running = Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead);
     g.setColour(findColour(ColourIds::runningPlayheadColourId));
-    auto const running = static_cast<int>(std::round(Zoom::Tools::getScaledXFromValue(mZoomAccessor, *this, mRunningPlayhead)));
-    g.fillRect(running, 0, 1, getHeight());
+    g.fillRect(static_cast<float>(running), 0.0f, 1.0f, static_cast<float>(getHeight()));
 }
 
 void Transport::PlayheadBar::mouseDown(juce::MouseEvent const& event)
