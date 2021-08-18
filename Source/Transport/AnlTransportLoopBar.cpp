@@ -13,7 +13,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
         {
             auto const x1 = static_cast<int>(std::floor(Zoom::Tools::getScaledXFromValue(zoomAcsr, *this, mLoopRange.getStart())));
             auto const x2 = static_cast<int>(std::ceil(Zoom::Tools::getScaledXFromValue(zoomAcsr, *this, mLoopRange.getEnd())));
-            repaint(x1, 0, x2 - x1, getHeight());
+            repaint(x1 - 1, 0, x2 - x1 + 2, getHeight());
         };
         switch(attribute)
         {
@@ -75,13 +75,14 @@ void Transport::LoopBar::paint(juce::Graphics& g)
         return;
     }
     g.setColour(findColour(ColourIds::thumbCoulourId));
+    juce::Rectangle<float> const rectangle(static_cast<float>(x1), 2.0f, static_cast<float>(x2 - x1), static_cast<float>(std::max(getHeight() - 4, 0)));
     if(mAccessor.getAttr<AttrType::looping>())
     {
-        g.fillRoundedRectangle(static_cast<float>(x1), 0.0f, static_cast<float>(x2 - x1), static_cast<float>(getHeight()), 2.0f);
+        g.fillRoundedRectangle(rectangle, 2.0f);
     }
     else
     {
-        g.drawRoundedRectangle(static_cast<float>(x1 + 1), 1.0f, static_cast<float>(std::max(x2 - x1 - 2.0, 0.0)), static_cast<float>(std::max(getHeight() - 2, 0)), 2.0f, 1.0f);
+        g.drawRoundedRectangle(rectangle, 2.0f, 1.0f);
     }
 }
 
