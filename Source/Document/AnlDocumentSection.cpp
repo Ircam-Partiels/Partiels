@@ -317,7 +317,7 @@ void Document::Section::resized()
         mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
     }
 
-    auto const timeScrollBarBounds = bounds.removeFromBottom(8).withX(mTimeRulerDecoration.getX()).withRight(mTimeRulerDecoration.getRight());
+    auto const timeScrollBarBounds = bounds.removeFromBottom(10).withX(mTimeRulerDecoration.getX()).withRight(mTimeRulerDecoration.getRight()).reduced(1);
     mTimeScrollBar.setBounds(timeScrollBarBounds);
     mBottomSeparator.setBounds(bounds.removeFromBottom(1));
     mViewport.setBounds(bounds);
