@@ -95,14 +95,13 @@ void Track::Thumbnail::resized()
 {
     auto bounds = getLocalBounds();
     auto constexpr separator = 2;
-    auto const size = bounds.getWidth() - separator;
 
     auto layoutButton = [&](juce::Component& component)
     {
-        component.setVisible(bounds.getHeight() >= size * 2);
+        component.setVisible(bounds.getHeight() >= bounds.getWidth());
         if(component.isVisible())
         {
-            component.setBounds(bounds.removeFromBottom(size).reduced(separator));
+            component.setBounds(bounds.removeFromBottom(bounds.getWidth()).reduced(separator));
         }
     };
 
@@ -131,15 +130,14 @@ void Track::Thumbnail::paint(juce::Graphics& g)
     auto const width = getWidth();
     auto const height = getHeight();
     auto const numElements = mStateButton.isVisible() ? 2 : 1;
-    auto const bottom = height - numElements * width + separator;
-    auto const size = height - numElements * (width + separator);
-    if(size <= 0)
+    auto const bottom = height - numElements * (width + separator);
+    if(bottom <= 0)
     {
         return;
     }
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
-    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, size, width, juce::Justification::centredLeft, 1, 1.0f);
+    g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, bottom, width, juce::Justification::centredLeft, 1, 1.0f);
 }
 
 void Track::Thumbnail::lookAndFeelChanged()
