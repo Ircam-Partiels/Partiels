@@ -117,8 +117,8 @@ void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
     setColour(Transport::LoopBar::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(Transport::LoopBar::ColourIds::thumbCoulourId, colourChart.get(Type::inactive));
 
-    setColour(Transport::PlayheadBar::ColourIds::startPlayheadColourId, colourChart.get(Type::active));
-    setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, colourChart.get(Type::inactive));
+    setColour(Transport::PlayheadBar::ColourIds::startPlayheadColourId, colourChart.get(Type::inactive));
+    setColour(Transport::PlayheadBar::ColourIds::runningPlayheadColourId, colourChart.get(Type::active));
 
     setColour(Track::Thumbnail::ColourIds::textColourId, colourChart.get(Type::text));
     setColour(Track::Thumbnail::ColourIds::backgroundColourId, colourChart.get(Type::background));
