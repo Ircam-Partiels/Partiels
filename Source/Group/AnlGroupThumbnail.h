@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnlGroupButtonState.h"
 #include "AnlGroupPropertyPanel.h"
+#include "AnlGroupStateButton.h"
 
 ANALYSE_FILE_BEGIN
 
