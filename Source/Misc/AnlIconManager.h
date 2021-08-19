@@ -23,7 +23,6 @@ public:
         , cancel
         , comment
         , expand
-        , focus
         , grid_off
         , grid_partial
         , grid_full
