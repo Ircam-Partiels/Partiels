@@ -199,8 +199,8 @@ Document::Section::Section(Director& director)
         }
     };
 
-    addAndMakeVisible(tooltipButton);
 
+    addAndMakeVisible(tooltipButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
     mLoopBar.addAndMakeVisible(mPlayheadBar);
