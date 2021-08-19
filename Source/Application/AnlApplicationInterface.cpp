@@ -400,6 +400,14 @@ Application::Interface::Interface()
     {
         Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::DocumentSave, true);
     };
+    mDocumentSection.onNewTrackButtonClicked = []()
+    {
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::EditNewTrack, true);
+    };
+    mDocumentSection.onNewGroupButtonClicked = []()
+    {
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::EditNewGroup, true);
+    };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
