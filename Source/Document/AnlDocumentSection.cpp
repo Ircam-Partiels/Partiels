@@ -199,6 +199,29 @@ Document::Section::Section(Director& director)
         }
     };
 
+    mAddButton.setButtonText("+");
+    mAddButton.setWantsKeyboardFocus(false);
+    mAddButton.setMouseClickGrabsKeyboardFocus(false);
+    mAddButton.onClick = [this]()
+    {
+        juce::PopupMenu menu;
+        juce::WeakReference<juce::Component> target(this);
+        menu.addItem(juce::translate("Add New Track"), [=, this]()
+                     {
+                         if(target.get() != nullptr && onNewTrackButtonClicked != nullptr)
+                         {
+                             onNewTrackButtonClicked();
+                         }
+                     });
+        menu.addItem(juce::translate("Add New Group"), [=, this]()
+                     {
+                         if(target.get() != nullptr && onNewGroupButtonClicked != nullptr)
+                         {
+                             onNewGroupButtonClicked();
+                         }
+                     });
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&mAddButton));
+    };
 
     addAndMakeVisible(tooltipButton);
     addAndMakeVisible(mTransportDisplay);
@@ -211,6 +234,7 @@ Document::Section::Section(Director& director)
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mTimeScrollBar);
+    addAndMakeVisible(mAddButton);
     setSize(480, 200);
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -319,9 +343,15 @@ void Document::Section::resized()
         mTopSeparator.setBounds(bounds.removeFromTop(1));
     }
 
-    auto const timeScrollBarBounds = bounds.removeFromBottom(10).withX(mTimeRulerDecoration.getX()).withRight(mTimeRulerDecoration.getRight()).reduced(1);
-    mTimeScrollBar.setBounds(timeScrollBarBounds);
-    mBottomSeparator.setBounds(bounds.removeFromBottom(1));
+    {
+        auto bottomPart = bounds.removeFromBottom(14).reduced(0, 1);
+        mAddButton.setBounds(bottomPart.removeFromLeft(48));
+        bottomPart.removeFromLeft(36);
+        auto const timeScrollBarBounds = bottomPart.withRight(mTimeRulerDecoration.getRight());
+        mTimeScrollBar.setBounds(timeScrollBarBounds);
+        mBottomSeparator.setBounds(bounds.removeFromBottom(1));
+    }
+
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
 }

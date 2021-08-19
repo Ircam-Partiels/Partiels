@@ -33,6 +33,8 @@ namespace Document
 
         juce::ImageButton tooltipButton;
         std::function<void(void)> onSaveButtonClicked = nullptr;
+        std::function<void(void)> onNewTrackButtonClicked = nullptr;
+        std::function<void(void)> onNewGroupButtonClicked = nullptr;
 
         // juce::Component
         void resized() override;
@@ -89,6 +91,7 @@ namespace Document
         Viewport mViewport;
         ColouredPanel mBottomSeparator;
         Zoom::ScrollBar mTimeScrollBar{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
+        juce::TextButton mAddButton;
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
         juce::Component* mFocusComponent{nullptr};
