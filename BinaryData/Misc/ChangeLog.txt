@@ -1,7 +1,10 @@
 v0.0.9 (alpha)
 
+- Fix: The time zoom happens even when scrolling the mouse on the thumbnails if all the groups and tracks are visible (#131)
+- Fix: New tracks are not well focused if the owner group is out of the visible area and not expanded (#130)
 - Imp: Adapt default track colours based on colour mode (#129)
 - Fix: Selection of tracks and groups using tab key (#128)
+- Add: Button on the main interface to add tracks and groups (#127)
 - Imp: Representation of track and group selection (#126)
 - Imp: Graphical difference between tracks and groups (#70)
 
