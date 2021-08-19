@@ -140,9 +140,14 @@ void Group::StateButton::updateTooltip()
         mProcessingButton.setTooltip(name + ":analyses and renderings finished with errors!");
     }
 
+    auto const changed = mHasWarning != !valid || (processing || rendering) != mProcessingButton.isActive();
     mHasWarning = !valid;
     mProcessingButton.setActive(processing || rendering);
     mProcessingButton.setInactiveImage(IconManager::getIcon(valid ? IconManager::IconType::verified : IconManager::IconType::alert));
+    if(changed && onStateChanged != nullptr)
+    {
+        onStateChanged();
+    }
 }
 
 bool Group::StateButton::isProcessingOrRendering() const

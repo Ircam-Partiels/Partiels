@@ -106,6 +106,11 @@ Group::Thumbnail::Thumbnail(Director& director)
         }
     };
 
+    mStateButton.onStateChanged = [this]()
+    {
+        resized();
+    };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
     setMouseCursor(juce::MouseCursor::DraggingHandCursor);

@@ -17,6 +17,8 @@ namespace Group
         // juce::Component
         void resized() override;
 
+        std::function<void(void)> onStateChanged = nullptr;
+
         bool isProcessingOrRendering() const;
         bool hasWarning() const;
 
