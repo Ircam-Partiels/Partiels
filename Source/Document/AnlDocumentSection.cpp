@@ -412,10 +412,8 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
     auto const viewportActiveBounds = mViewport.getBounds().withX(viewportOffset).withWidth(viewportWidth);
     if(!viewportActiveBounds.contains(event.getPosition()))
     {
-        if(mViewport.useMouseWheelMoveIfNeeded(event.getEventRelativeTo(&mViewport), wheel))
-        {
-            return;
-        }
+        mViewport.useMouseWheelMoveIfNeeded(event.getEventRelativeTo(&mViewport), wheel);
+        return;
     }
     if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::vertical)
     {
