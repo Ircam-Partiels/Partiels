@@ -207,6 +207,7 @@ Document::Section::Section(Director& director)
     mPlayheadBar.setInterceptsMouseClicks(false, false);
     mLoopBar.addMouseListener(&mPlayheadBar, false);
     addAndMakeVisible(mLoopBarDecoration);
+    addAndMakeVisible(mTopSeparator);
     addAndMakeVisible(mViewport);
     addAndMakeVisible(mBottomSeparator);
     addAndMakeVisible(mTimeScrollBar);
@@ -315,6 +316,7 @@ void Document::Section::resized()
         mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
         mLoopBarDecoration.setBounds(topPart);
         mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
+        mTopSeparator.setBounds(bounds.removeFromTop(1));
     }
 
     auto const timeScrollBarBounds = bounds.removeFromBottom(10).withX(mTimeRulerDecoration.getX()).withRight(mTimeRulerDecoration.getRight()).reduced(1);
