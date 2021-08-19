@@ -695,10 +695,14 @@ void Application::CommandTarget::addPluginTrack(Plugin::Key const& key, Plugin::
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
-        if(auto* window = Instance::get().getWindow())
-        {
-            window->moveKeyboardFocusTo(*identifier);
-        }
+        // If the group is not expanded, we have to wait a ms before the new track becomes fully visible
+        juce::Timer::callAfterDelay(500, [idtf = *identifier]()
+                                    {
+                                        if(auto* window = Instance::get().getWindow())
+                                        {
+                                            window->moveKeyboardFocusTo(idtf);
+                                        }
+                                    });
     }
     else
     {
@@ -761,10 +765,14 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
-        if(auto* window = Instance::get().getWindow())
-        {
-            window->moveKeyboardFocusTo(*identifier);
-        }
+        // If the group is not expanded, we have to wait a ms before the new track becomes fully visible
+        juce::Timer::callAfterDelay(500, [idtf = *identifier]()
+                                    {
+                                        if(auto* window = Instance::get().getWindow())
+                                        {
+                                            window->moveKeyboardFocusTo(idtf);
+                                        }
+                                    });
         AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track has been imported from the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
     }
     else
