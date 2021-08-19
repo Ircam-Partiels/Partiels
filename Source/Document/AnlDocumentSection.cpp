@@ -421,7 +421,7 @@ void Document::Section::lookAndFeelChanged()
             mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
             laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
         }
-        laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::focus);
+        laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::layers);
         laf->setButtonIcon(tooltipButton, IconManager::IconType::comment);
         switch(mAccessor.getAttr<AttrType::grid>())
         {
