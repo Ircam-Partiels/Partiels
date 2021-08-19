@@ -442,7 +442,7 @@ Application::Interface::~Interface()
 void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
-    auto bottom = bounds.removeFromBottom(24);
+    auto bottom = bounds.removeFromBottom(22);
     mToolTipDisplay.setBounds(bottom);
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     mDocumentSection.setBounds(bounds);
