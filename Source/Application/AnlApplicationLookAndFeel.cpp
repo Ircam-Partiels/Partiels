@@ -646,6 +646,12 @@ void Application::LookAndFeel::drawTickBox(juce::Graphics& g, juce::Component& b
     }
 }
 
+juce::Font Application::LookAndFeel::getTextButtonFont(juce::TextButton& textButtton, int buttonHeight)
+{
+    juce::ignoreUnused(textButtton);
+    return {std::min(16.0f, std::max(static_cast<float>(buttonHeight) * 0.6f, 12.0f))};
+}
+
 int Application::LookAndFeel::getCallOutBoxBorderSize(juce::CallOutBox const& box)
 {
     juce::ignoreUnused(box);
