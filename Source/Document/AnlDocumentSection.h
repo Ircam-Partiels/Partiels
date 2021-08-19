@@ -49,6 +49,7 @@ namespace Document
         void globalFocusChanged(juce::Component* focusedComponent) override;
 
         void updateLayout();
+        void updateExpandButton();
         void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
         void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
 
@@ -87,6 +88,7 @@ namespace Document
         ColouredPanel mTopSeparator;
 
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
+        std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
         DraggableTable mDraggableTable{"Group"};
         Viewport mViewport;
         ColouredPanel mBottomSeparator;

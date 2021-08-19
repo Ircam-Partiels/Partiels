@@ -117,7 +117,6 @@ Document::Section::Section(Director& director)
     };
 
     addAndMakeVisible(mExpandLayoutButton);
-    mExpandLayoutButton.setTooltip(juce::translate("Expand or shrink all the groups"));
     mExpandLayoutButton.onClick = [this]()
     {
         auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
@@ -274,6 +273,51 @@ Document::Section::Section(Director& director)
         }
     };
 
+    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::groups:
+            {
+                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                                                                                 {
+                                                                                     juce::ignoreUnused(groupAcsr);
+                                                                                     if(groupAttribute == Group::AttrType::expanded)
+                                                                                     {
+                                                                                         updateExpandButton();
+                                                                                     }
+                                                                                 });
+                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
+                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+            }
+            break;
+            case AcsrType::tracks:
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+                break;
+        }
+    };
+
+    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    {
+        juce::ignoreUnused(acsr);
+        switch(type)
+        {
+            case AcsrType::groups:
+            {
+                mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
+                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+                updateExpandButton();
+            }
+            break;
+            case AcsrType::tracks:
+            case AcsrType::timeZoom:
+            case AcsrType::transport:
+                break;
+        }
+    };
+
     mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
         juce::ignoreUnused(acsr);
@@ -377,7 +421,6 @@ void Document::Section::lookAndFeelChanged()
             mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
             laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
         }
-        laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::layers);
         laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::focus);
         laf->setButtonIcon(tooltipButton, IconManager::IconType::comment);
         switch(mAccessor.getAttr<AttrType::grid>())
@@ -398,6 +441,32 @@ void Document::Section::lookAndFeelChanged()
             }
             break;
         }
+        updateExpandButton();
+    }
+}
+
+void Document::Section::updateExpandButton()
+{
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf == nullptr)
+    {
+        return;
+    }
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    mExpandLayoutButton.setEnabled(!groupAcsrs.empty());
+    if(std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [](auto const groupAcsr)
+                   {
+                       return groupAcsr.get().template getAttr<Group::AttrType::expanded>();
+                   }))
+    {
+        laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::shrink);
+        mExpandLayoutButton.setTooltip(juce::translate("Shrink all the groups"));
+    }
+    else
+    {
+        laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::expand);
+        mExpandLayoutButton.setTooltip(juce::translate("Expand all the groups"));
     }
 }
 
