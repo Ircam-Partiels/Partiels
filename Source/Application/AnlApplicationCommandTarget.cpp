@@ -359,7 +359,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 auto const result = fileBased.consolidate();
                 if(result.wasOk())
                 {
-                    AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document have been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", fileBased.getFile().getFullPathName()}});
+                    AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document has been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", fileBased.getFile().getFullPathName()}});
                 }
                 else
                 {
@@ -765,7 +765,7 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         {
             window->moveKeyboardFocusTo(*identifier);
         }
-        AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track have been imported from the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
+        AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track has been imported from the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
     }
     else
     {
