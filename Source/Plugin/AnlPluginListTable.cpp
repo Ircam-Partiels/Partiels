@@ -52,10 +52,13 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         std::vector<juce::File> files;
         for(auto const& path : paths)
         {
-            juce::File const file{juce::String(path)};
-            if(file.exists())
+            if(juce::File::isAbsolutePath(path))
             {
-                files.push_back(file);
+                juce::File const file{juce::String(path)};
+                if(file.exists())
+                {
+                    files.push_back(file);
+                }
             }
         }
         juce::PopupMenu menu;
