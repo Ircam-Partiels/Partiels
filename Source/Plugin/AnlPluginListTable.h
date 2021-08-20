@@ -42,6 +42,7 @@ namespace PluginList
         Accessor& mAccessor;
         Scanner& mScanner;
         Accessor::Listener mListener{"PluginList::Table"};
+        std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         juce::TableListBox mPluginTable;
         ColouredPanel mSeparator;
@@ -49,7 +50,6 @@ namespace PluginList
         juce::TextButton mPathsButton;
         juce::String mLookingWord;
         bool mIsBeingUpdated = false;
-        std::set<Plugin::Key> mBlacklist;
 
         juce::TooltipWindow mTooltipWindow{this};
         JUCE_LEAK_DETECTOR(Table)

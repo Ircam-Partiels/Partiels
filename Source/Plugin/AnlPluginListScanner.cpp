@@ -43,7 +43,7 @@ Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float samp
     return pointer;
 }
 
-std::tuple<std::set<Plugin::Key>, juce::StringArray> PluginList::Scanner::getKeys(double sampleRate)
+std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> PluginList::Scanner::getPlugins(double sampleRate)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
     anlStrongAssert(pluginLoader != nullptr);
@@ -52,7 +52,7 @@ std::tuple<std::set<Plugin::Key>, juce::StringArray> PluginList::Scanner::getKey
         throw std::runtime_error("plugin loader is not available");
     }
 
-    std::set<Plugin::Key> keys;
+    std::map<Plugin::Key, Plugin::Description> list;
     juce::StringArray errors;
     auto const pluginKeys = pluginLoader->listPlugins();
     for(auto const& pluginKey : pluginKeys)
@@ -65,9 +65,14 @@ std::tuple<std::set<Plugin::Key>, juce::StringArray> PluginList::Scanner::getKey
                 auto const outputs = plugin->getOutputDescriptors();
                 for(size_t feature = 0; feature < outputs.size(); ++feature)
                 {
-                    if(!keys.insert({pluginKey, outputs[feature].identifier}).second)
+                    Plugin::Key const key{pluginKey, outputs[feature].identifier};
+                    anlWeakAssert(list.count(key) == 0_z);
+                    if(list.count(key) > 0_z)
                     {
-                        anlWeakAssert(false);
+                        errors.add(pluginKey + ": duplicate key");
+                    }
+                    else if(!list.insert({key, loadDescription(*plugin, key)}).second)
+                    {
                         errors.add(pluginKey + ": insertion failed");
                     }
                 }
@@ -82,7 +87,7 @@ std::tuple<std::set<Plugin::Key>, juce::StringArray> PluginList::Scanner::getKey
             errors.add(pluginKey + ": unknown error");
         }
     }
-    return {keys, errors};
+    return {list, errors};
 }
 
 Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, double sampleRate)

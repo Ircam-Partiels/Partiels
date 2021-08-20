@@ -100,6 +100,34 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(820, 600);
+
+    auto scanPlugins = [this]() -> decltype(mScanner.getPlugins(48000.0))
+    {
+        try
+        {
+            return mScanner.getPlugins(48000.0);
+        }
+        catch(std::exception& e)
+        {
+            AlertWindow::showMessage(AlertWindow::MessageType::warning,
+                                     "Plugins scan failed!", e.what());
+        }
+        catch(...)
+        {
+            AlertWindow::showMessage(AlertWindow::MessageType::warning,
+                                     "Plugins scan failed!", "");
+        }
+        return {};
+    };
+    auto const results = scanPlugins();
+    mList = std::get<0>(results);
+    if(!std::get<1>(results).isEmpty())
+    {
+        AlertWindow::showMessage(AlertWindow::MessageType::warning,
+                                 "Plugins scan has encountered errors!",
+                                 "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
+    }
+    updateContent();
 }
 
 PluginList::Table::~Table()
@@ -151,37 +179,18 @@ void PluginList::Table::hide()
 
 void PluginList::Table::updateContent()
 {
-    auto const& keys = mAccessor.getAttr<AttrType::keys>();
-
     mFilteredList.clear();
-    juce::StringArray errors;
     auto const searchPattern = mSearchField.getText().removeCharacters(" ");
-    for(auto const& key : keys)
+    for(auto const& plugin : mList)
     {
-        try
+        auto const& description = plugin.second;
+        if(description.name.isNotEmpty())
         {
-            if(mBlacklist.count(key) == 0)
+            auto const filterName = (description.name + description.output.name + description.maker + description.details).removeCharacters(" ");
+            if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
             {
-                auto const description = mScanner.getDescription(key, 48000.0);
-                if(description.name.isNotEmpty())
-                {
-                    auto const filterName = (description.name + description.output.name + description.maker + description.details).removeCharacters(" ");
-                    if(searchPattern.isEmpty() || filterName.containsIgnoreCase(searchPattern))
-                    {
-                        mFilteredList.push_back({key, description});
-                    }
-                }
+                mFilteredList.push_back(plugin);
             }
-        }
-        catch(std::exception& e)
-        {
-            mBlacklist.insert(key);
-            errors.add(key.identifier + " - " + key.feature + ": " + e.what());
-        }
-        catch(...)
-        {
-            mBlacklist.insert(key);
-            errors.add(key.identifier + " - " + key.feature + ": unknown error");
         }
     }
 
@@ -228,13 +237,6 @@ void PluginList::Table::updateContent()
     mPluginTable.getHeader().reSortTable();
     mPluginTable.updateContent();
     mPluginTable.repaint();
-
-    if(!errors.isEmpty())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                 "Plugins listing has encountered errors!",
-                                 "The following plugins failed to be scanned:\n" + errors.joinIntoString("\n"));
-    }
 }
 
 int PluginList::Table::getNumRows()
