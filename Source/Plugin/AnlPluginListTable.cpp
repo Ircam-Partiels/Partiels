@@ -7,7 +7,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : FloatingWindowContainer("Add Plugin...", *this)
 , mAccessor(accessor)
 , mScanner(scanner)
-, mClearButton(juce::translate("Clear"))
 , mScanButton(juce::translate("Scan"))
 , mPathsButton(juce::translate("Paths"))
 {
@@ -48,14 +47,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Version"), ColumnType::Version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
     addAndMakeVisible(mSeparator);
-
-    addAndMakeVisible(mClearButton);
-    mClearButton.setClickingTogglesState(false);
-    mClearButton.onClick = [this]()
-    {
-        mAccessor.setAttr<AttrType::keys>(decltype(mAccessor.getAttr<AttrType::keys>()){}, NotificationType::synchronous);
-    };
-
     addAndMakeVisible(mScanButton);
     mScanButton.setClickingTogglesState(false);
     mScanButton.onClick = [this]()
@@ -155,8 +146,6 @@ void PluginList::Table::resized()
     auto bottom = bounds.removeFromBottom(31);
     mSeparator.setBounds(bottom.removeFromTop(1));
     bottom.reduce(4, 0);
-    mClearButton.setBounds(bottom.removeFromLeft(100).withSizeKeepingCentre(100, 21));
-    bottom.removeFromLeft(4);
     mScanButton.setBounds(bottom.removeFromLeft(100).withSizeKeepingCentre(100, 21));
     bottom.removeFromLeft(4);
     mPathsButton.setBounds(bottom.removeFromRight(100).withSizeKeepingCentre(100, 21));
