@@ -188,7 +188,7 @@ ColourSelector::ComponentSlider::ComponentSlider(ColourSelector& owner, juce::St
         mOwner.setHSBA(hsba, juce::NotificationType::sendNotificationSync);
     };
 
-    mValue.onTextChange = [=]
+    mValue.onTextChange = [=, this]
     {
         updateValue(static_cast<juce::uint8>(std::min(std::max(mValue.getText().getIntValue(), 0), 255)));
     };
@@ -197,7 +197,7 @@ ColourSelector::ComponentSlider::ComponentSlider(ColourSelector& owner, juce::St
     mSlider.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
     mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, false, 0, 0);
     mSlider.setRange({0.0, 255.0}, 1.0);
-    mSlider.onValueChange = [=]()
+    mSlider.onValueChange = [=, this]()
     {
         updateValue(static_cast<juce::uint8>(std::min(std::max(mSlider.getValue(), 0.0), 255.0)));
     };
@@ -276,7 +276,7 @@ void ColourSelector::setHSBA(std::array<float, 4> const& hsba, juce::Notificatio
         if(notificationType == juce::NotificationType::sendNotificationAsync)
         {
             juce::WeakReference<juce::Component> target(this);
-            juce::MessageManager::callAsync([=]()
+            juce::MessageManager::callAsync([=, this]()
                                             {
                                                 if(target.get() != nullptr && onColourChanged != nullptr)
                                                 {
