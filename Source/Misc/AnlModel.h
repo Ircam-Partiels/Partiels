@@ -496,13 +496,16 @@ namespace Model
                                  using element_type = typename std::remove_reference<decltype(d)>::type;
                                  if constexpr((element_type::flags & Flag::saveable) != 0)
                                  {
-                                     auto constexpr acsr_type = element_type::type;
 #ifdef JUCE_DEBUG
+                                     auto constexpr acsr_type = element_type::type;
                                      auto& accessors = std::get<static_cast<size_t>(acsr_type)>(mAccessors).accessors;
                                      anlWeakAssert(element_type::size_flags == 0 || d.accessors.size() == accessors.size());
 #endif
                                      if constexpr(element_type::size_flags == 0)
                                      {
+#ifndef JUCE_DEBUG
+                                         auto constexpr acsr_type = element_type::type;
+#endif
                                          for(auto index = 0_z; index < d.accessors.size(); ++index)
                                          {
                                              auto const& acsrPtr = d.accessors[index].get();
