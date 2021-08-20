@@ -358,7 +358,7 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
                     std::string label = labelIt.value();
                     std::vector<SdifChar> data;
                     data.resize(label.length());
-                    strncpy(data.data(), label.c_str(), data.size());
+                    std::copy_n(label.c_str(), data.size(), data.data());
                     SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eChar, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(data.size()), reinterpret_cast<void*>(data.data()));
                 }
                 else
