@@ -65,6 +65,8 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colour:
+            case AttrType::layout:
+            case AttrType::tracks:
                 break;
             case AttrType::focused:
             {
@@ -80,12 +82,6 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::expanded:
             {
                 lookAndFeelChanged();
-            }
-            break;
-            case AttrType::layout:
-            case AttrType::tracks:
-            {
-                resized();
             }
             break;
         }
@@ -109,6 +105,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     mStateButton.onStateChanged = [this]()
     {
         resized();
+        repaint();
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
