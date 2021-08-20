@@ -7,7 +7,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : FloatingWindowContainer("Add Plugin...", *this)
 , mAccessor(accessor)
 , mScanner(scanner)
-, mScanButton(juce::translate("Scan"))
 , mPathsButton(juce::translate("Paths"))
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
@@ -47,38 +46,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Version"), ColumnType::Version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
     addAndMakeVisible(mSeparator);
-    addAndMakeVisible(mScanButton);
-    mScanButton.setClickingTogglesState(false);
-    mScanButton.onClick = [this]()
-    {
-        auto scanPlugins = [this]() -> decltype(mScanner.getKeys(48000.0))
-        {
-            try
-            {
-                return mScanner.getKeys(48000.0);
-            }
-            catch(std::exception& e)
-            {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                         "Plugins scan failed!", e.what());
-            }
-            catch(...)
-            {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                         "Plugins scan failed!", "");
-            }
-            return {};
-        };
-        auto const results = scanPlugins();
-        mAccessor.setAttr<AttrType::keys>(std::get<0>(results), NotificationType::synchronous);
-        if(!std::get<1>(results).isEmpty())
-        {
-            AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                     "Plugins scan has encountered errors!",
-                                     "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
-        }
-    };
-
     addAndMakeVisible(mPathsButton);
     mPathsButton.setClickingTogglesState(false);
     mPathsButton.onClick = [this]()
@@ -146,8 +113,6 @@ void PluginList::Table::resized()
     auto bottom = bounds.removeFromBottom(31);
     mSeparator.setBounds(bottom.removeFromTop(1));
     bottom.reduce(4, 0);
-    mScanButton.setBounds(bottom.removeFromLeft(100).withSizeKeepingCentre(100, 21));
-    bottom.removeFromLeft(4);
     mPathsButton.setBounds(bottom.removeFromRight(100).withSizeKeepingCentre(100, 21));
     bottom.removeFromRight(4);
     mSearchField.setBounds(bottom.removeFromLeft(200).withSizeKeepingCentre(200, 21));

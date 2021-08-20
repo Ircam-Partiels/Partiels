@@ -45,7 +45,6 @@ namespace PluginList
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         juce::TableListBox mPluginTable;
         ColouredPanel mSeparator;
-        juce::TextButton mScanButton;
         juce::TextEditor mSearchField;
         juce::TextButton mPathsButton;
         juce::String mLookingWord;
