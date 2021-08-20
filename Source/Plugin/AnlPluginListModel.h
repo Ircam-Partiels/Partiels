@@ -9,8 +9,7 @@ namespace PluginList
     // clang-format off
     enum class AttrType : size_t
     {
-          keys
-        , sortColumn
+          sortColumn
         , sortIsFowards
     };
     
@@ -25,8 +24,7 @@ namespace PluginList
     };
     
     using Container = Model::Container
-    < Model::Attr<AttrType::keys, std::set<Plugin::Key>, Model::Flag::basic>
-    , Model::Attr<AttrType::sortColumn, ColumnType, Model::Flag::basic>
+    < Model::Attr<AttrType::sortColumn, ColumnType, Model::Flag::basic>
     , Model::Attr<AttrType::sortIsFowards, bool, Model::Flag::basic>
     >;
     // clang-format on
