@@ -334,27 +334,6 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     g.drawText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, false);
 }
 
-void PluginList::Table::deleteKeyPressed(int lastRowSelected)
-{
-    juce::ignoreUnused(lastRowSelected);
-    auto const selectedRows = mPluginTable.getSelectedRows();
-    mPluginTable.deselectAllRows();
-
-    auto keys = mAccessor.getAttr<AttrType::keys>();
-    for(int i = 0; i < selectedRows.size(); ++i)
-    {
-        auto const index = selectedRows[i];
-        anlWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
-        if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
-        {
-            auto const key = mFilteredList[static_cast<size_t>(index)].first;
-            keys.erase(key);
-        }
-    }
-
-    mAccessor.setAttr<AttrType::keys>(keys, NotificationType::synchronous);
-}
-
 void PluginList::Table::returnKeyPressed(int lastRowSelected)
 {
     if(lastRowSelected < 0 || lastRowSelected >= static_cast<int>(mFilteredList.size()))
