@@ -1,7 +1,5 @@
 #include "AnlAudioFileLayout.h"
 #include "AnlAlertWindow.h"
-#include "AnlDecorator.h"
-#include "AnlDraggableTable.h"
 #include "AnlIconManager.h"
 
 ANALYSE_FILE_BEGIN
