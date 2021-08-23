@@ -384,11 +384,22 @@ void Application::Interface::Loader::filesDropped(juce::StringArray const& files
 Application::Interface::Interface()
 : mDocumentSection(Instance::get().getDocumentDirector())
 {
+    mComponentListener.onComponentVisibilityChanged = [this](juce::Component& component)
+    {
+        anlStrongAssert(&component == &mLoader);
+        if(&component != &mLoader)
+        {
+            return;
+        }
+        mLoaderDecorator.setVisible(mLoader.isVisible());
+        mDocumentSection.setEnabled(!mLoader.isVisible());
+    };
+
     addAndMakeVisible(mDocumentSection);
     addAndMakeVisible(mLoaderDecorator);
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
-    mLoader.addComponentListener(this);
+    mComponentListener.attachTo(mLoader);
 
     mDocumentSection.tooltipButton.setClickingTogglesState(true);
     mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::ViewInfoBubble));
@@ -436,7 +447,7 @@ Application::Interface::~Interface()
 {
     auto& accessor = Instance::get().getApplicationAccessor();
     accessor.removeListener(mListener);
-    mLoader.removeComponentListener(this);
+    mComponentListener.detachFrom(mLoader);
 }
 
 void Application::Interface::resized()
@@ -458,17 +469,6 @@ void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)
 juce::Rectangle<int> Application::Interface::getPlotBounds(juce::String const& identifier) const
 {
     return mDocumentSection.getPlotBounds(identifier);
-}
-
-void Application::Interface::componentVisibilityChanged(juce::Component& component)
-{
-    anlStrongAssert(&component == &mLoader);
-    if(&component != &mLoader)
-    {
-        return;
-    }
-    mLoaderDecorator.setVisible(mLoader.isVisible());
-    mDocumentSection.setEnabled(!mLoader.isVisible());
 }
 
 ANALYSE_FILE_END

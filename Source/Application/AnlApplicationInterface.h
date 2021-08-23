@@ -12,7 +12,6 @@ namespace Application
     class Interface
     : public juce::Component
     , public CommandTarget
-    , private juce::ComponentListener
     {
     public:
         Interface();
@@ -25,9 +24,6 @@ namespace Application
         void resized() override;
 
     private:
-        // juce::ComponentListener
-        void componentVisibilityChanged(juce::Component& component) override;
-
         class Loader
         : public juce::Component
         , public juce::FileDragAndDropTarget
@@ -103,6 +99,7 @@ namespace Application
 
         Accessor::Listener mListener{typeid(*this).name()};
         Document::Section mDocumentSection;
+        ComponentListener mComponentListener;
         Loader mLoader;
         Decorator mLoaderDecorator{mLoader};
         ColouredPanel mToolTipSeparator;
