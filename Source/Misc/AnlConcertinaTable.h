@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlBasics.h"
+#include "AnlComponentListener.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,7 +8,6 @@ ANALYSE_FILE_BEGIN
 class ConcertinaTable
 : public juce::Component
 , public juce::SettableTooltipClient
-, private juce::ComponentListener
 , private juce::Timer
 {
 public:
@@ -25,7 +24,7 @@ public:
     using ComponentRef = std::reference_wrapper<juce::Component>;
 
     ConcertinaTable(juce::String const& title, bool resizeOnClick, juce::String const& tooltip = "");
-    ~ConcertinaTable() override = default;
+    ~ConcertinaTable() override;
 
     juce::String getTitle() const;
     void setComponents(std::vector<ComponentRef> const& component);
@@ -48,9 +47,6 @@ public:
     };
 
 private:
-    // juce::ComponentListener
-    void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
-
     // juce::Timer
     void timerCallback() override;
 
@@ -70,6 +66,7 @@ private:
 
     Header mHeader;
     juce::String const mTitle;
+    ComponentListener mComponentListener;
     std::vector<juce::Component::SafePointer<juce::Component>> mContents;
     float mSizeRatio = 1.0f;
     bool mOpened = true;

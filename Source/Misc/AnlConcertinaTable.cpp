@@ -40,8 +40,34 @@ ConcertinaTable::ConcertinaTable(juce::String const& title, bool resizeOnClick, 
     mHeader.setRepaintsOnMouseActivity(resizeOnClick);
     mHeader.setInterceptsMouseClicks(resizeOnClick, resizeOnClick);
     addChildComponent(mHeader);
+
+    mComponentListener.onComponentResized = [this](juce::Component& component)
+    {
+        juce::ignoreUnused(component);
+        auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
+        anlWeakAssert(laf != nullptr);
+        auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
+                                              {
+                                                  anlWeakAssert(content != nullptr);
+                                                  if(content != nullptr)
+                                                  {
+                                                      return value + content->getHeight();
+                                                  }
+                                                  return value;
+                                              });
+
+        auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(fullSize) * mSizeRatio));
+        auto const headerHeight = laf != nullptr ? laf->getHeaderHeight(*this) : 20;
+        setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
+    };
+
     setTooltip(tooltip);
     setOpen(true, false);
+}
+
+ConcertinaTable::~ConcertinaTable()
+{
+    setComponents({});
 }
 
 void ConcertinaTable::resized()
@@ -77,7 +103,7 @@ void ConcertinaTable::setComponents(std::vector<ComponentRef> const& components)
     {
         if(content != nullptr)
         {
-            content->removeComponentListener(this);
+            mComponentListener.detachFrom(*content.getComponent());
             removeChildComponent(content);
         }
     }
@@ -86,11 +112,11 @@ void ConcertinaTable::setComponents(std::vector<ComponentRef> const& components)
     mContents.reserve(components.size());
     for(auto content : components)
     {
-        content.get().addComponentListener(this);
+        mComponentListener.attachTo(content.get());
         addAndMakeVisible(content.get());
         mContents.emplace_back(&content.get());
     }
-    componentMovedOrResized(*this, false, true);
+    mComponentListener.onComponentResized(*this);
     resized();
 }
 
@@ -118,37 +144,13 @@ void ConcertinaTable::setOpen(bool isOpen, bool shouldAnimate)
             mHeader.repaint();
         }
         mSizeRatio = newRatio;
-        componentMovedOrResized(*this, false, true);
+        mComponentListener.onComponentResized(*this);
     }
 }
 
 bool ConcertinaTable::isOpen() const
 {
     return mOpened;
-}
-
-void ConcertinaTable::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
-{
-    juce::ignoreUnused(component, wasMoved);
-    if(wasResized)
-    {
-        auto const* laf = dynamic_cast<LookAndFeelMethods*>(&getLookAndFeel());
-        anlWeakAssert(laf != nullptr);
-
-        auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-                                              {
-                                                  anlWeakAssert(content != nullptr);
-                                                  if(content != nullptr)
-                                                  {
-                                                      return value + content->getHeight();
-                                                  }
-                                                  return value;
-                                              });
-
-        auto const contentSize = static_cast<int>(std::ceil(static_cast<double>(fullSize) * mSizeRatio));
-        auto const headerHeight = laf != nullptr ? laf->getHeaderHeight(*this) : 20;
-        setSize(getWidth(), contentSize + (mHeader.isVisible() ? headerHeight : 0));
-    }
 }
 
 void ConcertinaTable::timerCallback()
@@ -160,7 +162,7 @@ void ConcertinaTable::timerCallback()
         stopTimer();
     }
     mHeader.repaint();
-    componentMovedOrResized(*this, false, true);
+    mComponentListener.onComponentResized(*this);
 }
 
 ANALYSE_FILE_END
