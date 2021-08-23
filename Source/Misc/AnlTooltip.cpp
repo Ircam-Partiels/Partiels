@@ -37,7 +37,7 @@ Tooltip::Display::Display()
     addAndMakeVisible(mLabel);
     mServer.onChanged = [&](juce::String const& tip)
     {
-        mLabel.setText(tip, juce::NotificationType::dontSendNotification);
+        mLabel.setText(tip.upToFirstOccurrenceOf("\n", false, false), juce::NotificationType::dontSendNotification);
     };
     if(juce::Desktop::getInstance().getMainMouseSource().canHover())
     {
