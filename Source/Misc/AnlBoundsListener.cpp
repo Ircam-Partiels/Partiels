@@ -42,4 +42,60 @@ void BoundsListener::componentMovedOrResized(juce::Component& component, bool wa
     }
 }
 
+void BoundsListener::componentBroughtToFront(juce::Component& component)
+{
+    if(onComponentBroughtToFront != nullptr)
+    {
+        onComponentBroughtToFront(component);
+    }
+}
+
+void BoundsListener::componentVisibilityChanged(juce::Component& component)
+{
+    if(onComponentVisibilityChanged != nullptr)
+    {
+        onComponentVisibilityChanged(component);
+    }
+}
+
+void BoundsListener::componentChildrenChanged(juce::Component& component)
+{
+    if(onComponentChildrenChanged != nullptr)
+    {
+        onComponentChildrenChanged(component);
+    }
+}
+
+void BoundsListener::componentParentHierarchyChanged(juce::Component& component)
+{
+    if(onComponentParentHierarchyChanged != nullptr)
+    {
+        onComponentParentHierarchyChanged(component);
+    }
+}
+
+void BoundsListener::componentNameChanged(juce::Component& component)
+{
+    if(onComponentNameChanged != nullptr)
+    {
+        onComponentNameChanged(component);
+    }
+}
+
+void BoundsListener::componentBeingDeleted(juce::Component& component)
+{
+    if(onComponentBeingDeleted != nullptr)
+    {
+        onComponentBeingDeleted(component);
+    }
+}
+
+void BoundsListener::componentEnablementChanged(juce::Component& component)
+{
+    if(onComponentEnablementChanged != nullptr)
+    {
+        onComponentEnablementChanged(component);
+    }
+}
+
 ANALYSE_FILE_END
