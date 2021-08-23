@@ -20,7 +20,7 @@ Application::Batcher::Batcher()
                           mShoulAbort.store(true);
                           mPropertyExport.entry.setButtonText(juce::translate("Aborting..."));
                           mPropertyExport.entry.setTooltip(juce::translate("Batch processing aborting..."));
-                          mPropertyExport.setEnabled(false);
+                          mAudioFileLayoutTable.onLayoutChanged();
                       }
                       else
                       {
@@ -28,11 +28,11 @@ Application::Batcher::Batcher()
                       }
                   })
 {
-    // Add clear button
     mAudioFileLayoutTable.onLayoutChanged = [this]()
     {
         mPropertyExport.setEnabled(!mAudioFileLayoutTable.getLayout().empty());
     };
+    mAudioFileLayoutTable.onLayoutChanged();
 
     mExporterPanel.onOptionsChanged = [this]()
     {
@@ -123,7 +123,7 @@ void Application::Batcher::handleAsyncUpdate()
     mAudioFileLayoutTable.setEnabled(true);
     mExporterPanel.setEnabled(true);
     mPropertyAdaptationToSampleRate.setEnabled(true);
-    mPropertyExport.setEnabled(true);
+    mAudioFileLayoutTable.onLayoutChanged();
 
     mShoulAbort.store(false);
     mPropertyExport.entry.setButtonText(juce::translate("Process"));
