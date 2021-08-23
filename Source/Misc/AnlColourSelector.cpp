@@ -235,6 +235,7 @@ ColourSelector::ColourSelector()
     addAndMakeVisible(mGreenSlider);
     addAndMakeVisible(mBlueSlider);
     addAndMakeVisible(mAlphaSlider);
+    setWantsKeyboardFocus(true);
     setSize(364, 242);
 }
 
