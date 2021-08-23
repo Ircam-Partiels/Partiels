@@ -32,7 +32,7 @@ namespace Application
         Document::Exporter::Panel mExporterPanel;
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
-        BoundsListener mBoundsListener;
+        ComponentListener mComponentListener;
 
         using ProcessResult = std::tuple<AlertWindow::MessageType, juce::String, juce::String>;
 

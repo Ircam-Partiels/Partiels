@@ -36,7 +36,7 @@ namespace Group
         TrackMap<std::unique_ptr<Track::Section>> mTrackSections;
         DraggableTable mDraggableTable{"Track"};
         ConcertinaTable mConcertinaTable{"", false};
-        BoundsListener mBoundsListener;
+        ComponentListener mComponentListener;
 
         LayoutNotifier mLayoutNotifier;
     };

@@ -28,11 +28,11 @@ Application::Exporter::Exporter()
     addAndMakeVisible(mExporterPanel);
     addAndMakeVisible(mPropertyExport);
     addAndMakeVisible(mLoadingCircle);
-    mBoundsListener.onComponentResized = [this](juce::Component const&)
+    mComponentListener.onComponentResized = [this](juce::Component const&)
     {
         resized();
     };
-    mBoundsListener.attachTo(mExporterPanel);
+    mComponentListener.attachTo(mExporterPanel);
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -69,7 +69,7 @@ Application::Exporter::~Exporter()
 {
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.removeListener(mListener);
-    mBoundsListener.detachFrom(mExporterPanel);
+    mComponentListener.detachFrom(mExporterPanel);
     if(mProcess.valid())
     {
         mProcess.get();

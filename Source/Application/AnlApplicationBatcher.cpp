@@ -68,11 +68,11 @@ Application::Batcher::Batcher()
         }
     };
 
-    mBoundsListener.onComponentResized = [this](juce::Component const&)
+    mComponentListener.onComponentResized = [this](juce::Component const&)
     {
         resized();
     };
-    mBoundsListener.attachTo(mExporterPanel);
+    mComponentListener.attachTo(mExporterPanel);
 
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.addListener(mListener, NotificationType::synchronous);
@@ -91,7 +91,7 @@ Application::Batcher::~Batcher()
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.removeListener(mListener);
 
-    mBoundsListener.detachFrom(mExporterPanel);
+    mComponentListener.detachFrom(mExporterPanel);
 }
 
 void Application::Batcher::resized()

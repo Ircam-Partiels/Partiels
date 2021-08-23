@@ -4,12 +4,12 @@
 
 ANALYSE_FILE_BEGIN
 
-class BoundsListener
+class ComponentListener
 : private juce::ComponentListener
 {
 public:
-    BoundsListener() = default;
-    ~BoundsListener() override;
+    ComponentListener() = default;
+    ~ComponentListener() override;
 
     void attachTo(juce::Component& component);
     void detachFrom(juce::Component& component);
@@ -37,7 +37,7 @@ private:
 
     std::set<juce::Component::SafePointer<juce::Component>> mContents;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BoundsListener)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ComponentListener)
 };
 
 ANALYSE_FILE_END

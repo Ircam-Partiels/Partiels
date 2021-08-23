@@ -59,7 +59,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
         }
     };
 
-    mBoundsListener.onComponentResized = [&](juce::Component& component)
+    mComponentListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
         auto const height = mSection.getHeight() + mConcertinaTable.getHeight();
@@ -68,8 +68,8 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
-    mBoundsListener.attachTo(mSection);
-    mBoundsListener.attachTo(mConcertinaTable);
+    mComponentListener.attachTo(mSection);
+    mComponentListener.attachTo(mConcertinaTable);
     mConcertinaTable.setComponents({mDraggableTable});
     mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
 
@@ -80,8 +80,8 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
 
 Group::StrechableSection::~StrechableSection()
 {
-    mBoundsListener.detachFrom(mConcertinaTable);
-    mBoundsListener.detachFrom(mSection);
+    mComponentListener.detachFrom(mConcertinaTable);
+    mComponentListener.detachFrom(mSection);
     mAccessor.removeListener(mListener);
 }
 

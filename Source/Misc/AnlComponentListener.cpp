@@ -1,8 +1,8 @@
-#include "AnlBoundsListener.h"
+#include "AnlComponentListener.h"
 
 ANALYSE_FILE_BEGIN
 
-BoundsListener::~BoundsListener()
+ComponentListener::~ComponentListener()
 {
     for(auto& content : mContents)
     {
@@ -14,7 +14,7 @@ BoundsListener::~BoundsListener()
     }
 }
 
-void BoundsListener::attachTo(juce::Component& component)
+void ComponentListener::attachTo(juce::Component& component)
 {
     if(mContents.insert(juce::Component::SafePointer<juce::Component>(&component)).second)
     {
@@ -22,7 +22,7 @@ void BoundsListener::attachTo(juce::Component& component)
     }
 }
 
-void BoundsListener::detachFrom(juce::Component& component)
+void ComponentListener::detachFrom(juce::Component& component)
 {
     if(mContents.erase(&component) > 0)
     {
@@ -30,7 +30,7 @@ void BoundsListener::detachFrom(juce::Component& component)
     }
 }
 
-void BoundsListener::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
+void ComponentListener::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
 {
     if(wasMoved && onComponentMoved != nullptr)
     {
@@ -42,7 +42,7 @@ void BoundsListener::componentMovedOrResized(juce::Component& component, bool wa
     }
 }
 
-void BoundsListener::componentBroughtToFront(juce::Component& component)
+void ComponentListener::componentBroughtToFront(juce::Component& component)
 {
     if(onComponentBroughtToFront != nullptr)
     {
@@ -50,7 +50,7 @@ void BoundsListener::componentBroughtToFront(juce::Component& component)
     }
 }
 
-void BoundsListener::componentVisibilityChanged(juce::Component& component)
+void ComponentListener::componentVisibilityChanged(juce::Component& component)
 {
     if(onComponentVisibilityChanged != nullptr)
     {
@@ -58,7 +58,7 @@ void BoundsListener::componentVisibilityChanged(juce::Component& component)
     }
 }
 
-void BoundsListener::componentChildrenChanged(juce::Component& component)
+void ComponentListener::componentChildrenChanged(juce::Component& component)
 {
     if(onComponentChildrenChanged != nullptr)
     {
@@ -66,7 +66,7 @@ void BoundsListener::componentChildrenChanged(juce::Component& component)
     }
 }
 
-void BoundsListener::componentParentHierarchyChanged(juce::Component& component)
+void ComponentListener::componentParentHierarchyChanged(juce::Component& component)
 {
     if(onComponentParentHierarchyChanged != nullptr)
     {
@@ -74,7 +74,7 @@ void BoundsListener::componentParentHierarchyChanged(juce::Component& component)
     }
 }
 
-void BoundsListener::componentNameChanged(juce::Component& component)
+void ComponentListener::componentNameChanged(juce::Component& component)
 {
     if(onComponentNameChanged != nullptr)
     {
@@ -82,7 +82,7 @@ void BoundsListener::componentNameChanged(juce::Component& component)
     }
 }
 
-void BoundsListener::componentBeingDeleted(juce::Component& component)
+void ComponentListener::componentBeingDeleted(juce::Component& component)
 {
     if(onComponentBeingDeleted != nullptr)
     {
@@ -90,7 +90,7 @@ void BoundsListener::componentBeingDeleted(juce::Component& component)
     }
 }
 
-void BoundsListener::componentEnablementChanged(juce::Component& component)
+void ComponentListener::componentEnablementChanged(juce::Component& component)
 {
     if(onComponentEnablementChanged != nullptr)
     {

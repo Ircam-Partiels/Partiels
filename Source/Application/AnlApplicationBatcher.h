@@ -42,7 +42,7 @@ namespace Application
         PropertyToggle mPropertyAdaptationToSampleRate;
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
-        BoundsListener mBoundsListener;
+        ComponentListener mComponentListener;
 
         using ProcessResult = std::tuple<AlertWindow::MessageType, juce::String, juce::String>;
         std::atomic<bool> mShoulAbort{false};

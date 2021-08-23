@@ -237,7 +237,7 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
 , mSupportMode(mode)
 , mPreferredChannelLayout(preferredChannelLayout)
 {
-    mBoundsListener.onComponentResized = [this](juce::Component&)
+    mComponentListener.onComponentResized = [this](juce::Component&)
     {
         resized();
     };
@@ -282,7 +282,7 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
     mAddLabel.setTooltip(juce::translate("Insert audio files..."));
     mAddButton.setTooltip(juce::translate("Insert audio files..."));
 
-    mBoundsListener.attachTo(mDraggableTable);
+    mComponentListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
     addAndMakeVisible(mViewport);
@@ -296,7 +296,7 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
 
 AudioFileLayoutTable::~AudioFileLayoutTable()
 {
-    mBoundsListener.detachFrom(mDraggableTable);
+    mComponentListener.detachFrom(mDraggableTable);
 }
 
 void AudioFileLayoutTable::resized()

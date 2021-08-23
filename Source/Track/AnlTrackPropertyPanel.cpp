@@ -694,14 +694,14 @@ Track::PropertyPanel::PropertyPanel(Director& director)
         }
     };
 
-    mBoundsListener.onComponentResized = [&](juce::Component& component)
+    mComponentListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
         resized();
     };
-    mBoundsListener.attachTo(mProcessorSection);
-    mBoundsListener.attachTo(mGraphicalSection);
-    mBoundsListener.attachTo(mPluginSection);
+    mComponentListener.attachTo(mProcessorSection);
+    mComponentListener.attachTo(mGraphicalSection);
+    mComponentListener.attachTo(mPluginSection);
 
     mZoomGridPropertyPanel.onShow = [this]()
     {
@@ -761,9 +761,9 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 Track::PropertyPanel::~PropertyPanel()
 {
-    mBoundsListener.detachFrom(mProcessorSection);
-    mBoundsListener.detachFrom(mGraphicalSection);
-    mBoundsListener.detachFrom(mPluginSection);
+    mComponentListener.detachFrom(mProcessorSection);
+    mComponentListener.detachFrom(mGraphicalSection);
+    mComponentListener.detachFrom(mPluginSection);
     mAccessor.removeListener(mListener);
     mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mBinZoomListener);
     mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mValueZoomListener);

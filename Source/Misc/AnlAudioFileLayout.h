@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlBoundsListener.h"
+#include "AnlComponentListener.h"
 #include "AnlDecorator.h"
 #include "AnlDraggableTable.h"
 #include "AnlFileWatcher.h"
@@ -154,7 +154,7 @@ private:
     AudioFileLayout::ChannelLayout const mPreferredChannelLayout;
     std::vector<std::unique_ptr<Channel>> mChannels;
     DraggableTable mDraggableTable{"Channel"};
-    BoundsListener mBoundsListener;
+    ComponentListener mComponentListener;
     juce::Viewport mViewport;
     juce::ImageButton mAddButton;
     juce::Label mAddLabel;

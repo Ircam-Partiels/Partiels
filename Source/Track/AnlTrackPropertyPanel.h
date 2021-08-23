@@ -32,7 +32,7 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
         Zoom::Accessor::Listener mValueZoomListener{typeid(*this).name()};
         Zoom::Accessor::Listener mBinZoomListener{typeid(*this).name()};
-        BoundsListener mBoundsListener;
+        ComponentListener mComponentListener;
 
         PropertyText mPropertyName;
 
