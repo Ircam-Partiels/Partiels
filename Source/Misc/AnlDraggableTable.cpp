@@ -22,6 +22,23 @@ DraggableTable::DraggableTable(juce::String const type, juce::String const& tool
 : mType(type)
 {
     setTooltip(tooltip);
+    mComponentListener.onComponentResized = [this](juce::Component& component)
+    {
+        juce::ignoreUnused(component);
+        if(!mIsDragging)
+        {
+            auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
+                                                  {
+                                                      return (content != nullptr) ? value + content->getHeight() : value;
+                                                  });
+            setSize(getWidth(), fullSize);
+        }
+    };
+}
+
+DraggableTable::~DraggableTable()
+{
+    setComponents({});
 }
 
 void DraggableTable::resized()
@@ -50,7 +67,7 @@ void DraggableTable::setComponents(std::vector<ComponentRef> const& components)
                                                   return std::addressof(component.get()) == content.getComponent();
                                               }))
         {
-            content->removeComponentListener(this);
+            mComponentListener.detachFrom(*content.getComponent());
             removeChildComponent(content);
         }
     }
@@ -59,30 +76,17 @@ void DraggableTable::setComponents(std::vector<ComponentRef> const& components)
     mContents.reserve(components.size());
     for(auto& content : components)
     {
-        content.get().addComponentListener(this);
+        mComponentListener.attachTo(content.get());
         addAndMakeVisible(content.get());
         mContents.emplace_back(&content.get());
     }
-    componentMovedOrResized(*this, false, true);
+    mComponentListener.onComponentResized(*this);
     resized();
 }
 
 std::vector<juce::Component::SafePointer<juce::Component>> DraggableTable::getComponents()
 {
     return mContents;
-}
-
-void DraggableTable::componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized)
-{
-    juce::ignoreUnused(component, wasMoved);
-    if(wasResized && !mIsDragging)
-    {
-        auto const fullSize = std::accumulate(mContents.cbegin(), mContents.cend(), 0, [](int value, auto const& content)
-                                              {
-                                                  return (content != nullptr) ? value + content->getHeight() : value;
-                                              });
-        setSize(getWidth(), fullSize);
-    }
 }
 
 bool DraggableTable::isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails)

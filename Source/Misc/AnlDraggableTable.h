@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlBasics.h"
+#include "AnlComponentListener.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -8,13 +8,12 @@ class DraggableTable
 : public juce::Component
 , public juce::SettableTooltipClient
 , public juce::DragAndDropTarget
-, private juce::ComponentListener
 {
 public:
     using ComponentRef = std::reference_wrapper<juce::Component>;
 
     DraggableTable(juce::String const type, juce::String const& tooltip = {});
-    ~DraggableTable() override = default;
+    ~DraggableTable() override;
 
     void setComponents(std::vector<ComponentRef> const& component);
     std::vector<juce::Component::SafePointer<juce::Component>> getComponents();
@@ -34,9 +33,6 @@ private:
         std::function<void(void)> onExit = nullptr;
     };
 
-    // juce::ComponentListener
-    void componentMovedOrResized(juce::Component& component, bool wasMoved, bool wasResized) override;
-
     // juce::DragAndDropTarget
     bool isInterestedInDragSource(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     void itemDragEnter(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
@@ -48,6 +44,7 @@ private:
 
     juce::String const mType;
     bool mIsDragging{false};
+    ComponentListener mComponentListener;
 };
 
 ANALYSE_FILE_END
