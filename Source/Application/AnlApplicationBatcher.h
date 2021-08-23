@@ -43,6 +43,7 @@ namespace Application
         PropertyTextButton mPropertyExport;
         LoadingCircle mLoadingCircle;
         ComponentListener mComponentListener;
+        std::unique_ptr<juce::FileChooser> mFileChooser;
 
         using ProcessResult = std::tuple<AlertWindow::MessageType, juce::String, juce::String>;
         std::atomic<bool> mShoulAbort{false};

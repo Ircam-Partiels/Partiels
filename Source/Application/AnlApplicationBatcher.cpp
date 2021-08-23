@@ -174,122 +174,131 @@ void Application::Batcher::process()
     options.useAutoSize = false;
     auto const identifier = mExporterPanel.getSelectedIdentifier();
 
-    juce::FileChooser fc(juce::translate("Process files to..."), {}, "");
-    if(!fc.browseForDirectory())
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Process files to..."));
+    if(mFileChooser == nullptr)
     {
         return;
     }
-    auto copyAcsr = std::make_unique<Document::Accessor>();
-    if(copyAcsr == nullptr)
-    {
-        return;
-    }
-    auto const file = fc.getResult();
-
-    mLoadingCircle.setActive(true);
-    juce::MouseCursor::showWaitCursor();
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        getLookAndFeel().playAlertSound();
-        return false;
-    };
-
-    mAudioFileLayoutTable.setEnabled(false);
-    mExporterPanel.setEnabled(false);
-    mPropertyAdaptationToSampleRate.setEnabled(false);
-    mPropertyExport.entry.setButtonText(juce::translate("Abort"));
-    mPropertyExport.entry.setTooltip(juce::translate("Abort the batch processing."));
-
-    mShoulAbort.store(false);
-
-    auto const adaptationToSampleRate = Instance::get().getApplicationAccessor().getAttr<AttrType::adaptationToSampleRate>();
-    auto const originalSampleRate = Instance::get().getDocumentAccessor().getAttr<Document::AttrType::samplerate>();
-
-    copyAcsr->copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
-    copyAcsr->setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
-    for(auto const acsr : copyAcsr->getAcsrs<Document::AcsrType::tracks>())
-    {
-        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
-        if(resultFile.hasFileExtension("dat"))
-        {
-            acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
-        }
-    }
-    mAlertCatcher.clearMessages();
-    mDocumentDirector.setAlertCatcher(&mAlertCatcher);
-
-    mProcess = std::async([=, copyAcsr = std::move(copyAcsr), this]() -> ProcessResult
-                          {
-                              juce::Thread::setCurrentThreadName("Batch");
-                              juce::MessageManager::Lock lock;
-
-                              for(auto const& layout : layouts)
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [=, this](juce::FileChooser const& fileChooser)
                               {
-                                  if(!lock.tryEnter())
+                                  auto copyAcsr = std::make_unique<Document::Accessor>();
+                                  if(copyAcsr == nullptr)
                                   {
-                                      triggerAsyncUpdate();
-                                      return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Batch processing failed!"), "Message manager could be unlocked!");
+                                      return;
                                   }
-
-                                  mDocumentAccessor.copyFrom({}, NotificationType::synchronous);
-                                  mDocumentAccessor.setAttr<Document::AttrType::reader>({layout}, NotificationType::synchronous);
-                                  auto const currentSampleRate = mDocumentAccessor.getAttr<Document::AttrType::samplerate>();
-
+                                  auto const files = fileChooser.getResults();
+                                  if(files.isEmpty())
                                   {
-                                      Document::Accessor tempAcsr;
-                                      tempAcsr.copyFrom(*copyAcsr.get(), NotificationType::synchronous);
-                                      tempAcsr.setAttr<Document::AttrType::reader>({layout}, NotificationType::synchronous);
-                                      for(auto trackAcsr : tempAcsr.getAcsrs<Document::AcsrType::tracks>())
-                                      {
-                                          auto trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
-                                          std::fill(trackChannelsLayout.begin(), trackChannelsLayout.end(), true);
-                                          trackAcsr.get().setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
-                                      }
-                                      if(adaptationToSampleRate && originalSampleRate > 0.0)
-                                      {
-                                          auto const ratio = currentSampleRate / originalSampleRate;
-                                          for(auto trackAcsr : tempAcsr.getAcsrs<Document::AcsrType::tracks>())
-                                          {
-                                              auto state = trackAcsr.get().getAttr<Track::AttrType::state>();
-                                              state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
-                                              state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
-                                              trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
-                                          }
-                                      }
-
-                                      mDocumentAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
+                                      return;
                                   }
+                                  auto const file = files.getFirst();
 
-                                  mDocumentAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
+                                  mLoadingCircle.setActive(true);
+                                  juce::MouseCursor::showWaitCursor();
+                                  mFloatingWindow.onCloseButtonPressed = [this]()
+                                  {
+                                      getLookAndFeel().playAlertSound();
+                                      return false;
+                                  };
 
-                                  auto const trackAcsrs = mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>();
-                                  lock.exit();
+                                  mAudioFileLayoutTable.setEnabled(false);
+                                  mExporterPanel.setEnabled(false);
+                                  mPropertyAdaptationToSampleRate.setEnabled(false);
+                                  mPropertyExport.entry.setButtonText(juce::translate("Abort"));
+                                  mPropertyExport.entry.setTooltip(juce::translate("Abort the batch processing."));
 
-                                  while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-                                                    {
-                                                        if(!lock.tryEnter())
+                                  mShoulAbort.store(false);
+
+                                  auto const adaptationToSampleRate = Instance::get().getApplicationAccessor().getAttr<AttrType::adaptationToSampleRate>();
+                                  auto const originalSampleRate = Instance::get().getDocumentAccessor().getAttr<Document::AttrType::samplerate>();
+
+                                  copyAcsr->copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
+                                  copyAcsr->setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
+                                  for(auto const acsr : copyAcsr->getAcsrs<Document::AcsrType::tracks>())
+                                  {
+                                      auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
+                                      if(resultFile.hasFileExtension("dat"))
+                                      {
+                                          acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
+                                      }
+                                  }
+                                  mAlertCatcher.clearMessages();
+                                  mDocumentDirector.setAlertCatcher(&mAlertCatcher);
+
+                                  mProcess = std::async([=, copyAcsr = std::move(copyAcsr), this]() -> ProcessResult
                                                         {
-                                                            return false;
-                                                        }
-                                                        auto const processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
-                                                        lock.exit();
-                                                        return std::get<0>(processing) || std::get<2>(processing);
-                                                    }))
-                                  {
-                                      using namespace std::chrono_literals;
-                                      std::this_thread::sleep_for(20ms);
-                                  }
+                                                            juce::Thread::setCurrentThreadName("Batch");
+                                                            juce::MessageManager::Lock lock;
 
-                                  auto const result = Document::Exporter::toFile(mDocumentAccessor, file, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort, nullptr);
-                                  if(result.failed())
-                                  {
-                                      triggerAsyncUpdate();
-                                      return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Batch processing failed!"), result.getErrorMessage());
-                                  }
-                              }
-                              triggerAsyncUpdate();
-                              return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Batch processing succeeded!"), juce::translate("The files have been successfully exported to DIRNAME.").replace("DIRNAME", file.getFullPathName()));
-                          });
+                                                            for(auto const& layout : layouts)
+                                                            {
+                                                                if(!lock.tryEnter())
+                                                                {
+                                                                    triggerAsyncUpdate();
+                                                                    return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Batch processing failed!"), "Message manager could be unlocked!");
+                                                                }
+
+                                                                mDocumentAccessor.copyFrom({}, NotificationType::synchronous);
+                                                                mDocumentAccessor.setAttr<Document::AttrType::reader>({layout}, NotificationType::synchronous);
+                                                                auto const currentSampleRate = mDocumentAccessor.getAttr<Document::AttrType::samplerate>();
+
+                                                                {
+                                                                    Document::Accessor tempAcsr;
+                                                                    tempAcsr.copyFrom(*copyAcsr.get(), NotificationType::synchronous);
+                                                                    tempAcsr.setAttr<Document::AttrType::reader>({layout}, NotificationType::synchronous);
+                                                                    for(auto trackAcsr : tempAcsr.getAcsrs<Document::AcsrType::tracks>())
+                                                                    {
+                                                                        auto trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
+                                                                        std::fill(trackChannelsLayout.begin(), trackChannelsLayout.end(), true);
+                                                                        trackAcsr.get().setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
+                                                                    }
+                                                                    if(adaptationToSampleRate && originalSampleRate > 0.0)
+                                                                    {
+                                                                        auto const ratio = currentSampleRate / originalSampleRate;
+                                                                        for(auto trackAcsr : tempAcsr.getAcsrs<Document::AcsrType::tracks>())
+                                                                        {
+                                                                            auto state = trackAcsr.get().getAttr<Track::AttrType::state>();
+                                                                            state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
+                                                                            state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
+                                                                            trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+                                                                        }
+                                                                    }
+
+                                                                    mDocumentAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
+                                                                }
+
+                                                                mDocumentAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
+
+                                                                auto const trackAcsrs = mDocumentAccessor.getAcsrs<Document::AcsrType::tracks>();
+                                                                lock.exit();
+
+                                                                while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                                                                                  {
+                                                                                      if(!lock.tryEnter())
+                                                                                      {
+                                                                                          return false;
+                                                                                      }
+                                                                                      auto const processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
+                                                                                      lock.exit();
+                                                                                      return std::get<0>(processing) || std::get<2>(processing);
+                                                                                  }))
+                                                                {
+                                                                    using namespace std::chrono_literals;
+                                                                    std::this_thread::sleep_for(20ms);
+                                                                }
+
+                                                                auto const result = Document::Exporter::toFile(mDocumentAccessor, file, layout.file.getFileNameWithoutExtension() + " ", identifier, options, mShoulAbort, nullptr);
+                                                                if(result.failed())
+                                                                {
+                                                                    triggerAsyncUpdate();
+                                                                    return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Batch processing failed!"), result.getErrorMessage());
+                                                                }
+                                                            }
+                                                            triggerAsyncUpdate();
+                                                            return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Batch processing succeeded!"), juce::translate("The files have been successfully exported to DIRNAME.").replace("DIRNAME", file.getFullPathName()));
+                                                        });
+                              });
 }
 
 ANALYSE_FILE_END
