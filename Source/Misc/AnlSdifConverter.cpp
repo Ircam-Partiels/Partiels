@@ -404,11 +404,21 @@ SdifConverter::Panel::Panel()
 : FloatingWindowContainer("SDIF Converter", *this)
 , mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
                 {
-                    juce::FileChooser fc("Load a SDIF or a JSON file", {}, "*.sdif,*.json");
-                    if(fc.browseForFileToOpen())
+                    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load a SDIF or a JSON file"), juce::File{}, "*.sdif;*.json");
+                    if(mFileChooser == nullptr)
                     {
-                        setFile(fc.getResult());
+                        return;
                     }
+                    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
+                                              {
+                                                  auto const results = fileChooser.getResults();
+                                                  if(results.isEmpty())
+                                                  {
+                                                      return;
+                                                  }
+                                                  setFile(results.getFirst());
+                                              });
                 })
 , mPropertyName("File", "The SDIF file to convert", nullptr)
 
@@ -754,23 +764,33 @@ void SdifConverter::Panel::exportToSdif()
 
     auto const frameIdentifier = getSignature(frameName);
     auto const matrixIdentifier = getSignature(matrixName);
-    juce::FileChooser fc("Select a SDIF file", mFile.withFileExtension("sdif"), "*.sdif");
-    if(!fc.browseForFileToSave(true))
+
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a SDIF file"), mFile.withFileExtension("sdif"), "*.sdif");
+    if(mFileChooser == nullptr)
     {
         return;
     }
-    auto const sdifFile = fc.getResult();
-    enterModalState();
-    auto const result = fromJson(mFile, sdifFile, frameIdentifier, matrixIdentifier);
-    exitModalState(0);
-    if(result.wasOk())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The JSON file 'JSONFLNM' has been successfully converted to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
-    }
-    else
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert JSON file..."), juce::translate("There was an error while trying to convert the SDIF file 'JSONFLNM' to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
-    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  auto const sdifFile = results.getFirst();
+                                  enterModalState();
+                                  auto const result = fromJson(mFile, sdifFile, frameIdentifier, matrixIdentifier);
+                                  exitModalState(0);
+                                  if(result.wasOk())
+                                  {
+                                      AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The JSON file 'JSONFLNM' has been successfully converted to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                  }
+                                  else
+                                  {
+                                      AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert JSON file..."), juce::translate("There was an error while trying to convert the SDIF file 'JSONFLNM' to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                  }
+                              });
 }
 
 void SdifConverter::Panel::exportToJson()
@@ -799,23 +819,32 @@ void SdifConverter::Panel::exportToJson()
         return;
     }
 
-    juce::FileChooser fc("Select a JSON file", mFile.withFileExtension("json"), "*.json");
-    if(!fc.browseForFileToSave(true))
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a JSON file"), mFile.withFileExtension("json"), "*.json");
+    if(mFileChooser == nullptr)
     {
         return;
     }
-    auto const jsonFile = fc.getResult();
-    enterModalState();
-    auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, static_cast<size_t>(row), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1));
-    exitModalState(0);
-    if(result.wasOk())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
-    }
-    else
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("There was an error while trying to convert the SDIF file 'SDIFFLNM' to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
-    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  auto const jsonFile = results.getFirst();
+                                  enterModalState();
+                                  auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, static_cast<size_t>(row), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1));
+                                  exitModalState(0);
+                                  if(result.wasOk())
+                                  {
+                                      AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                  }
+                                  else
+                                  {
+                                      AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("There was an error while trying to convert the SDIF file 'SDIFFLNM' to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                  }
+                              });
 }
 
 ANALYSE_FILE_END

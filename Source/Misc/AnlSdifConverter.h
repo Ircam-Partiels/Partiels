@@ -63,6 +63,7 @@ namespace SdifConverter
         std::vector<uint32_t> mFrameSigLinks;
         std::vector<uint32_t> mMatrixSigLinks;
         bool mFileIsDragging{false};
+        std::unique_ptr<juce::FileChooser> mFileChooser;
     };
 } // namespace SdifConverter
 
