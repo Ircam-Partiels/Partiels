@@ -163,6 +163,7 @@ private:
     std::set<size_t> mSelection;
     std::vector<AudioFileLayout> mClipBoard;
     bool mIsDragging{false};
+    std::unique_ptr<juce::FileChooser> mFileChooser;
     juce::UndoManager mUndoManager;
 };
 

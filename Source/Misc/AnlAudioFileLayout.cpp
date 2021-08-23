@@ -162,21 +162,31 @@ void AudioFileLayoutTable::Channel::mouseDown(juce::MouseEvent const& event)
         {
             if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", mAudioFileLayout.file.getFullPathName()}}))
             {
-                auto const audioFormatWildcard = mOwner.mAudioFormatManager.getWildcardForAllFormats();
-                juce::FileChooser fc(juce::translate("Restore the audio file..."), mAudioFileLayout.file, audioFormatWildcard);
-                if(fc.browseForFileToOpen())
+                auto const wildcard = mOwner.mAudioFormatManager.getWildcardForAllFormats();
+                mOwner.mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), mAudioFileLayout.file, wildcard);
+                if(mOwner.mFileChooser == nullptr)
                 {
-                    auto const newFile = fc.getResult();
-                    auto layout = mOwner.mLayout;
-                    for(auto& copyChannelLayout : layout)
-                    {
-                        if(copyChannelLayout.file == mAudioFileLayout.file)
-                        {
-                            copyChannelLayout.file = newFile;
-                        }
-                    }
-                    mOwner.setLayout(layout);
+                    return;
                 }
+                using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                mOwner.mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
+                                                 {
+                                                     auto const results = fileChooser.getResults();
+                                                     if(results.isEmpty())
+                                                     {
+                                                         return;
+                                                     }
+                                                     auto const newFile = results.getFirst();
+                                                     auto layout = mOwner.mLayout;
+                                                     for(auto& copyChannelLayout : layout)
+                                                     {
+                                                         if(copyChannelLayout.file == mAudioFileLayout.file)
+                                                         {
+                                                             copyChannelLayout.file = newFile;
+                                                         }
+                                                     }
+                                                     mOwner.setLayout(layout);
+                                                 });
             }
         }
         return;
@@ -261,18 +271,27 @@ AudioFileLayoutTable::AudioFileLayoutTable(juce::AudioFormatManager& audioFormat
     mAddButton.onClick = [this]()
     {
         auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
-        juce::FileChooser fc("Load audio files...", {}, wildcard);
-        if(!fc.browseForMultipleFilesOrDirectories())
+        mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load audio files..."), juce::File{}, wildcard);
+        if(mFileChooser == nullptr)
         {
             return;
         }
-        auto readerLayout = mLayout;
-        auto const newLayouts = getAudioFileLayouts(mAudioFormatManager, fc.getResults(), mPreferredChannelLayout);
-        for(auto const& newLayout : newLayouts)
-        {
-            readerLayout.push_back(newLayout);
-        }
-        setLayout(readerLayout);
+        using Flags = juce::FileBrowserComponent::FileChooserFlags;
+        mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectDirectories | Flags::canSelectMultipleItems, [this](juce::FileChooser const& fileChooser)
+                                  {
+                                      auto const results = fileChooser.getResults();
+                                      if(results.isEmpty())
+                                      {
+                                          return;
+                                      }
+                                      auto readerLayout = mLayout;
+                                      auto const newLayouts = getAudioFileLayouts(mAudioFormatManager, results, mPreferredChannelLayout);
+                                      for(auto const& newLayout : newLayouts)
+                                      {
+                                          readerLayout.push_back(newLayout);
+                                      }
+                                      setLayout(readerLayout);
+                                  });
     };
 
     mAddLabel.setInterceptsMouseClicks(false, false);
