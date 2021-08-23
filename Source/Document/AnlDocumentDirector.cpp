@@ -18,7 +18,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::reader:
             {
                 clearFilesToWatch();
-                auto reader = mAccessor.getAttr<AttrType::reader>();
+                auto const reader = mAccessor.getAttr<AttrType::reader>();
                 for(auto const& channelLayout : reader)
                 {
                     auto const file = channelLayout.file;
@@ -26,21 +26,32 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     {
                         if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
                         {
-                            auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
-                            juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
-                            if(fc.browseForFileToOpen())
+                            auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
+                            mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
+                            if(mFileChooser == nullptr)
                             {
-                                auto const newFile = fc.getResult();
-                                for(auto& copyChannelLayout : reader)
-                                {
-                                    if(copyChannelLayout.file == file)
-                                    {
-                                        copyChannelLayout.file = newFile;
-                                    }
-                                }
-                                mAccessor.setAttr<AttrType::reader>(reader, notification);
                                 return;
                             }
+                            using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                                                      {
+                                                          auto const results = fileChooser.getResults();
+                                                          if(results.isEmpty())
+                                                          {
+                                                              return;
+                                                          }
+                                                          auto const newFile = results.getFirst();
+                                                          auto copyReader = mAccessor.getAttr<AttrType::reader>();
+                                                          for(auto& copyChannelLayout : copyReader)
+                                                          {
+                                                              if(copyChannelLayout.file == file)
+                                                              {
+                                                                  copyChannelLayout.file = newFile;
+                                                              }
+                                                          }
+                                                          mAccessor.setAttr<AttrType::reader>(copyReader, notification);
+                                                      });
+                            return;
                         }
                     }
                     addFileToWatch(file);
@@ -744,22 +755,31 @@ bool Document::Director::fileHasBeenRemoved(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        auto const audioFormatWildcard = mAudioFormatManager.getWildcardForAllFormats();
-        juce::FileChooser fc(juce::translate("Restore the audio file..."), file, audioFormatWildcard);
-        if(!fc.browseForFileToOpen())
+        auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
+        mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
+        if(mFileChooser == nullptr)
         {
             return true;
         }
-        auto const newFile = fc.getResult();
-        auto reader = mAccessor.getAttr<AttrType::reader>();
-        for(auto& channelLayout : reader)
-        {
-            if(channelLayout.file == file)
-            {
-                channelLayout.file = newFile;
-            }
-        }
-        mAccessor.setAttr<AttrType::reader>(reader, NotificationType::asynchronous);
+        using Flags = juce::FileBrowserComponent::FileChooserFlags;
+        mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [file = file, this](juce::FileChooser const& fileChooser)
+                                  {
+                                      auto const results = fileChooser.getResults();
+                                      if(results.isEmpty())
+                                      {
+                                          return;
+                                      }
+                                      auto const newFile = results.getFirst();
+                                      auto copyReader = mAccessor.getAttr<AttrType::reader>();
+                                      for(auto& copyChannelLayout : copyReader)
+                                      {
+                                          if(copyChannelLayout.file == file)
+                                          {
+                                              copyChannelLayout.file = newFile;
+                                          }
+                                      }
+                                      mAccessor.setAttr<AttrType::reader>(copyReader, NotificationType::asynchronous);
+                                  });
         return false;
     }
     return true;
