@@ -328,18 +328,27 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 return true;
             }
-            auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
-            juce::FileChooser fc(getCommandDescription(), fileBased.getFile(), audioFormatWildcard);
-            if(!fc.browseForMultipleFilesToOpen())
+            auto const wildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
+            mFileChooser = std::make_unique<juce::FileChooser>(getCommandDescription(), fileBased.getFile(), wildcard);
+            if(mFileChooser == nullptr)
             {
                 return true;
             }
-            std::vector<juce::File> files;
-            for(auto const& result : fc.getResults())
-            {
-                files.push_back(result);
-            }
-            Instance::get().openFiles(files);
+            using Flags = juce::FileBrowserComponent::FileChooserFlags;
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems, [](juce::FileChooser const& fileChooser)
+                                      {
+                                          auto const results = fileChooser.getResults();
+                                          if(results.isEmpty())
+                                          {
+                                              return;
+                                          }
+                                          std::vector<juce::File> files;
+                                          for(auto const& result : results)
+                                          {
+                                              files.push_back(result);
+                                          }
+                                          Instance::get().openFiles(files);
+                                      });
             return true;
         }
         case CommandIDs::DocumentSave:
@@ -380,11 +389,21 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::DocumentImport:
         {
             auto const position = getNewTrackPosition();
-            juce::FileChooser fc(juce::translate("Load file"), {}, "*.json,*.csv");
-            if(fc.browseForFileToOpen())
+            mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, "*.json;*.csv");
+            if(mFileChooser == nullptr)
             {
-                addFileTrack(fc.getResult(), std::get<0>(position), std::get<1>(position));
+                return true;
             }
+            using Flags = juce::FileBrowserComponent::FileChooserFlags;
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                                      {
+                                          auto const results = fileChooser.getResults();
+                                          if(results.isEmpty())
+                                          {
+                                              return;
+                                          }
+                                          addFileTrack(results.getFirst(), std::get<0>(position), std::get<1>(position));
+                                      });
             return true;
         }
         case CommandIDs::DocumentBatch:
