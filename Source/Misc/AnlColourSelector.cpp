@@ -413,8 +413,6 @@ void ColourButton::clicked()
 
     mIsColourSelectorVisible = true;
     auto& box = juce::CallOutBox::launchAsynchronously(std::move(colourSelector), getScreenBounds(), nullptr);
-    box.setArrowSize(0.0f);
-    box.resized();
     box.addComponentListener(this);
     if(onColourSelectorShow != nullptr)
     {
