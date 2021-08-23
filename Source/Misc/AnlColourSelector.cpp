@@ -317,6 +317,20 @@ ColourButton::ColourButton()
 : juce::Button("ColourButton")
 {
     setClickingTogglesState(false);
+    mComponentListener.onComponentBeingDeleted = [this](juce::Component& component)
+    {
+        mComponentListener.detachFrom(component);
+        anlWeakAssert(mIsColourSelectorVisible == true);
+        if(mIsColourSelectorVisible == false)
+        {
+            return;
+        }
+        mIsColourSelectorVisible = false;
+        if(onColourSelectorHide != nullptr)
+        {
+            onColourSelectorHide();
+        }
+    };
 }
 
 juce::Colour ColourButton::getCurrentColour() const
@@ -413,7 +427,7 @@ void ColourButton::clicked()
 
     mIsColourSelectorVisible = true;
     auto& box = juce::CallOutBox::launchAsynchronously(std::move(colourSelector), getScreenBounds(), nullptr);
-    box.addComponentListener(this);
+    mComponentListener.attachTo(box);
     if(onColourSelectorShow != nullptr)
     {
         onColourSelectorShow();
@@ -502,21 +516,6 @@ void ColourButton::itemDropped(juce::DragAndDropTarget::SourceDetails const& dra
 
     setCurrentColour(mDraggedColour->mColour, juce::NotificationType::sendNotificationSync);
     itemDragExit(dragSourceDetails);
-}
-
-void ColourButton::componentBeingDeleted(juce::Component& component)
-{
-    juce::ignoreUnused(component);
-    anlWeakAssert(mIsColourSelectorVisible == true);
-    if(mIsColourSelectorVisible == false)
-    {
-        return;
-    }
-    mIsColourSelectorVisible = false;
-    if(onColourSelectorHide != nullptr)
-    {
-        onColourSelectorHide();
-    }
 }
 
 ANALYSE_FILE_END

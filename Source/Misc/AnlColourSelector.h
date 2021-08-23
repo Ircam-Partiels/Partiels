@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlBasics.h"
+#include "AnlComponentListener.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -109,7 +109,6 @@ private:
 class ColourButton
 : public juce::Button
 , public juce::DragAndDropTarget
-, private juce::ComponentListener
 {
 public:
     // clang-format off
@@ -148,12 +147,10 @@ private:
     void itemDragExit(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
     void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
 
-    // juce::ComponentListener
-    void componentBeingDeleted(juce::Component& component) override;
-
     juce::Colour mColour;
     juce::Component::SafePointer<ColourButton> mDraggedColour;
     bool mIsColourSelectorVisible{false};
+    ComponentListener mComponentListener;
 };
 
 ANALYSE_FILE_END
