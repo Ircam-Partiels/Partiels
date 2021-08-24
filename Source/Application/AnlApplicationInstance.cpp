@@ -207,7 +207,10 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 void Application::Instance::systemRequestedQuit()
 {
     anlDebug("Application", "Begin...");
-    mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(mDocumentFileBased->getFile(), NotificationType::synchronous);
+    if(mApplicationAccessor != nullptr)
+    {
+        mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(mDocumentFileBased->getFile(), NotificationType::synchronous);
+    }
 
     if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
     {
