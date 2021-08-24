@@ -70,6 +70,8 @@ namespace Application
         PluginList::Table mPluginListTable;
         SdifConverter::Panel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;
+
+        JUCE_DECLARE_WEAK_REFERENCEABLE(CommandTarget)
     };
 } // namespace Application
 

@@ -315,66 +315,87 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     {
         case CommandIDs::DocumentNew:
         {
-            if(fileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
-            {
-                return true;
-            }
-            Instance::get().openFiles({});
+            fileBased.saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult saveResult)
+                                                     {
+                                                         if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
+                                                         {
+                                                             return;
+                                                         }
+                                                         Instance::get().openFiles({});
+                                                     });
             return true;
         }
         case CommandIDs::DocumentOpen:
         {
-            if(fileBased.saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
-            {
-                return true;
-            }
-            auto const wildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
-            mFileChooser = std::make_unique<juce::FileChooser>(getCommandDescription(), fileBased.getFile(), wildcard);
-            if(mFileChooser == nullptr)
-            {
-                return true;
-            }
-            using Flags = juce::FileBrowserComponent::FileChooserFlags;
-            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems, [](juce::FileChooser const& fileChooser)
-                                      {
-                                          auto const results = fileChooser.getResults();
-                                          if(results.isEmpty())
-                                          {
-                                              return;
-                                          }
-                                          std::vector<juce::File> files;
-                                          for(auto const& result : results)
-                                          {
-                                              files.push_back(result);
-                                          }
-                                          Instance::get().openFiles(files);
-                                      });
+            juce::WeakReference<Application::CommandTarget> safePointer(this);
+            fileBased.saveIfNeededAndUserAgreesAsync([=, this, description = getCommandDescription()](juce::FileBasedDocument::SaveResult saveResult)
+                                                     {
+                                                         if(safePointer.get() == nullptr)
+                                                         {
+                                                             return;
+                                                         }
+                                                         if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
+                                                         {
+                                                             return;
+                                                         }
+                                                         auto const wildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
+                                                         mFileChooser = std::make_unique<juce::FileChooser>(description, Instance::get().getDocumentFileBased().getFile(), wildcard);
+                                                         if(mFileChooser == nullptr)
+                                                         {
+                                                             return;
+                                                         }
+                                                         using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                                                         mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems, [](juce::FileChooser const& fileChooser)
+                                                                                   {
+                                                                                       auto const results = fileChooser.getResults();
+                                                                                       if(results.isEmpty())
+                                                                                       {
+                                                                                           return;
+                                                                                       }
+                                                                                       std::vector<juce::File> files;
+                                                                                       for(auto const& result : results)
+                                                                                       {
+                                                                                           files.push_back(result);
+                                                                                       }
+                                                                                       Instance::get().openFiles(files);
+                                                                                   });
+                                                     });
             return true;
         }
         case CommandIDs::DocumentSave:
         {
-            fileBased.save(true, true);
+            fileBased.saveAsync(true, true, [](juce::FileBasedDocument::SaveResult saveResult)
+                                {
+                                    juce::ignoreUnused(saveResult);
+                                });
             return true;
         }
         case CommandIDs::DocumentDuplicate:
         {
-            fileBased.saveAsInteractive(true);
+            fileBased.saveAsInteractiveAsync(true, [](juce::FileBasedDocument::SaveResult saveResult)
+                                             {
+                                                 juce::ignoreUnused(saveResult);
+                                             });
             return true;
         }
         case CommandIDs::DocumentConsolidate:
         {
-            if(fileBased.save(true, true) == juce::FileBasedDocument::SaveResult::savedOk)
-            {
-                auto const result = fileBased.consolidate();
-                if(result.wasOk())
-                {
-                    AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document has been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", fileBased.getFile().getFullPathName()}});
-                }
-                else
-                {
-                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Document consolidation failed!", "The document cannot be consolidated with the audio files and the analyses to FLNAME. ERROR", {{"FLNAME", fileBased.getFile().getFullPathName()}, {"ERROR", result.getErrorMessage()}});
-                }
-            }
+            fileBased.saveAsync(true, true, [](juce::FileBasedDocument::SaveResult saveResult)
+                                {
+                                    if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
+                                    {
+                                        return;
+                                    }
+                                    auto const result = Instance::get().getDocumentFileBased().consolidate();
+                                    if(result.wasOk())
+                                    {
+                                        AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document has been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", Instance::get().getDocumentFileBased().getFile().getFullPathName()}});
+                                    }
+                                    else
+                                    {
+                                        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Document consolidation failed!", "The document cannot be consolidated with the audio files and the analyses to FLNAME. ERROR", {{"FLNAME", Instance::get().getDocumentFileBased().getFile().getFullPathName()}, {"ERROR", result.getErrorMessage()}});
+                                    }
+                                });
             return true;
         }
 
@@ -509,21 +530,38 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::EditLoadTemplate:
         {
-            Document::Accessor copyAcsr;
-            juce::UndoManager copyUndoManager;
-            Document::Director copyDirector{copyAcsr, Instance::get().getAudioFormatManager(), copyUndoManager};
-            Document::FileBased copyFileBased{copyDirector, Instance::getFileExtension(), Instance::getFileWildCard(), "Open a document", "Save the document"};
-            if(copyFileBased.loadFromUserSpecifiedFile(true).failed())
+            struct DocumentCtn
+            {
+                DocumentCtn() = default;
+                ~DocumentCtn() = default;
+
+                Document::Accessor accessor;
+                juce::UndoManager undoManager;
+                Document::Director director{accessor, Instance::get().getAudioFormatManager(), undoManager};
+                Document::FileBased fileBased{director, Instance::getFileExtension(), Instance::getFileWildCard(), juce::translate("Open a document"), juce::translate("Save the document")};
+            };
+
+            auto tempDocument = std::make_shared<DocumentCtn>();
+            if(tempDocument == nullptr)
             {
                 return true;
             }
 
-            copyAcsr.setAttr<Document::AttrType::reader>(documentAcsr.getAttr<Document::AttrType::reader>(), NotificationType::synchronous);
+            auto& copyFileBased = tempDocument->fileBased;
+            copyFileBased.loadFromUserSpecifiedFileAsync(true, [tempDocument](juce::Result loadResult)
+                                                         {
+                                                             anlWeakAssert(tempDocument != nullptr);
+                                                             if(tempDocument == nullptr || loadResult.failed())
+                                                             {
+                                                                 return;
+                                                             }
+                                                             tempDocument->accessor.setAttr<Document::AttrType::reader>(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>(), NotificationType::synchronous);
 
-            auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.startAction();
-            documentAcsr.copyFrom(copyAcsr, NotificationType::synchronous);
-            documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
+                                                             auto& documentDir = Instance::get().getDocumentDirector();
+                                                             documentDir.startAction();
+                                                             Instance::get().getDocumentAccessor().copyFrom(tempDocument->accessor, NotificationType::synchronous);
+                                                             documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
+                                                         });
             return true;
         }
 
