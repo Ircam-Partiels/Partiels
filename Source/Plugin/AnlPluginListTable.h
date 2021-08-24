@@ -47,11 +47,9 @@ namespace PluginList
         juce::TableListBox mPluginTable;
         ColouredPanel mSeparator;
         juce::TextEditor mSearchField;
-        juce::TextButton mPathsButton;
         juce::String mLookingWord;
-        bool mIsBeingUpdated = false;
-
         juce::TooltipWindow mTooltipWindow{this};
+
         JUCE_LEAK_DETECTOR(Table)
     };
 } // namespace PluginList

@@ -7,12 +7,9 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : FloatingWindowContainer("Add Plugin...", *this)
 , mAccessor(accessor)
 , mScanner(scanner)
-, mPathsButton(juce::translate("Paths"))
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        mIsBeingUpdated = true;
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::useEnvVariable:
@@ -28,7 +25,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
             break;
         }
         updateContent();
-        mIsBeingUpdated = false;
     };
 
     addAndMakeVisible(mPluginTable);
@@ -47,38 +43,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
     addAndMakeVisible(mSeparator);
-    addAndMakeVisible(mPathsButton);
-    mPathsButton.setClickingTogglesState(false);
-    mPathsButton.onClick = [this]()
-    {
-        auto const paths = Vamp::PluginHostAdapter::getPluginPath();
-        std::vector<juce::File> files;
-        for(auto const& path : paths)
-        {
-            if(juce::File::isAbsolutePath(path))
-            {
-                juce::File const file{juce::String(path)};
-                if(file.exists())
-                {
-                    files.push_back(file);
-                }
-            }
-        }
-        juce::PopupMenu menu;
-        for(auto const& file : files)
-        {
-            auto const fileName = file.getFileName();
-            auto const duplicate = std::any_of(files.cbegin(), files.cend(), [&](auto const& f)
-                                               {
-                                                   return f != file && f.getFileName() == fileName;
-                                               });
-            menu.addItem(fileName + (duplicate ? " (" + file.getFullPathName() + ")" : ""), [=]()
-                         {
-                             file.revealToUser();
-                         });
-        }
-        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPathsButton));
-    };
 
     addAndMakeVisible(mSearchField);
     mSearchField.setMultiLine(false);
@@ -145,8 +109,6 @@ void PluginList::Table::resized()
     auto bottom = bounds.removeFromBottom(31);
     mSeparator.setBounds(bottom.removeFromTop(1));
     bottom.reduce(4, 0);
-    mPathsButton.setBounds(bottom.removeFromRight(100).withSizeKeepingCentre(100, 21));
-    bottom.removeFromRight(4);
     mSearchField.setBounds(bottom.removeFromLeft(200).withSizeKeepingCentre(200, 21));
     mPluginTable.setBounds(bounds);
 }
@@ -314,11 +276,8 @@ void PluginList::Table::cellDoubleClicked(int rowNumber, int columnId, juce::Mou
 
 void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
 {
-    if(!mIsBeingUpdated)
-    {
-        mAccessor.setAttr<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
-        mAccessor.setAttr<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
-    }
+    mAccessor.setAttr<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
 }
 
 juce::String PluginList::Table::getCellTooltip(int rowNumber, int columnId)
