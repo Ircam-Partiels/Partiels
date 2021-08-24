@@ -328,11 +328,21 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         {
             case AlertWindow::Answer::yes:
             {
-                juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.csv;*.json;*.dat");
-                if(fc.browseForFileToOpen())
+                mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load analysis results..."), file, "*.csv;*.json;*.dat");
+                if(mFileChooser == nullptr)
                 {
-                    mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+                    return;
                 }
+                using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
+                                          {
+                                              auto const results = fileChooser.getResults();
+                                              if(results.isEmpty())
+                                              {
+                                                  return;
+                                              }
+                                              mAccessor.setAttr<AttrType::file>(results.getFirst(), NotificationType::synchronous);
+                                          });
             }
             break;
             case AlertWindow::Answer::no:
@@ -655,12 +665,22 @@ bool Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
     if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        juce::FileChooser fc(juce::translate("Restore the analysis file..."), file, "*.csv;*.json;*.dat");
-        if(fc.browseForFileToOpen())
+        mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore analysis results..."), file, "*.csv;*.json;*.dat");
+        if(mFileChooser == nullptr)
         {
-            mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
-            return false;
+            mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
+            return true;
         }
+        using Flags = juce::FileBrowserComponent::FileChooserFlags;
+        mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
+                                  {
+                                      auto const results = fileChooser.getResults();
+                                      if(results.isEmpty())
+                                      {
+                                          return;
+                                      }
+                                      mAccessor.setAttr<AttrType::file>(results.getFirst(), NotificationType::synchronous);
+                                  });
     }
     mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
     return true;
