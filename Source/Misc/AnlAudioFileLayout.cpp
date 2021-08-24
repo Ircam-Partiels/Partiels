@@ -111,6 +111,7 @@ AudioFileLayoutTable::Channel::Channel(AudioFileLayoutTable& owner, size_t index
     mEntry.thumbLabel.addMouseListener(this, true);
     mEntry.fileNameLabel.setEnabled(reader != nullptr);
     mEntry.fileNameLabel.addMouseListener(this, true);
+    mEntry.fileNameLabel.setTooltip(mAudioFileLayout.file.getFullPathName());
 
     addAndMakeVisible(mDecorator);
     setSize(300, 24);
