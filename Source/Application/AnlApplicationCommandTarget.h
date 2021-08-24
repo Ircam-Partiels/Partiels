@@ -2,6 +2,7 @@
 
 #include "../Document/AnlDocumentFileBased.h"
 #include "../Plugin/AnlPluginListScanner.h"
+#include "../Plugin/AnlPluginListSearchPath.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "AnlApplicationModel.h"
 
@@ -42,6 +43,7 @@ namespace Application
             , ViewInfoBubble
             
             , HelpOpenAudioSettings
+            , HelpOpenPluginPath
             , HelpOpenAbout
             , HelpOpenManual
             , HelpOpenForum
@@ -68,6 +70,7 @@ namespace Application
 
         Accessor::Listener mListener{typeid(*this).name()};
         PluginList::Table mPluginListTable;
+        PluginList::SearchPath mPluginListSearchPath;
         SdifConverter::Panel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;
 

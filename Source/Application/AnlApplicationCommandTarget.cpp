@@ -7,6 +7,7 @@ ANALYSE_FILE_BEGIN
 
 Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
+, mPluginListSearchPath(Instance::get().getPluginListAccessor())
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -78,6 +79,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::ViewInfoBubble
         
         , CommandIDs::HelpOpenAudioSettings
+        , CommandIDs::HelpOpenPluginPath
         , CommandIDs::HelpOpenAbout
         , CommandIDs::HelpOpenManual
         , CommandIDs::HelpOpenForum
@@ -267,6 +269,11 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Audio Settings..."), juce::translate("Show the audio settings panel"), "Help", 0);
             result.defaultKeypresses.add(juce::KeyPress('p', juce::ModifierKeys::commandModifier, 0));
 #endif
+        }
+        break;
+        case CommandIDs::HelpOpenPluginPath:
+        {
+            result.setInfo(juce::translate("Plugin Search Path..."), juce::translate("Show the plugin search path panel"), "Application", 0);
         }
         break;
         case CommandIDs::HelpOpenAbout:
@@ -622,6 +629,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             {
                 audioSettings->show();
             }
+            return true;
+        }
+        case CommandIDs::HelpOpenPluginPath:
+        {
+            mPluginListSearchPath.show();
             return true;
         }
         case CommandIDs::HelpOpenAbout:
