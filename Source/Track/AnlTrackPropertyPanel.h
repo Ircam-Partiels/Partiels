@@ -77,6 +77,7 @@ namespace Track
         Zoom::Grid::PropertyPanel mZoomGridPropertyPanel;
         juce::Viewport mViewport;
         bool mChannelLayoutActionStarted{false};
+        std::unique_ptr<juce::FileChooser> mFileChooser;
         static auto constexpr sInnerWidth = 300;
     };
 } // namespace Track

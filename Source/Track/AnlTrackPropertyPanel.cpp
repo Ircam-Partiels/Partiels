@@ -43,11 +43,21 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                {
                                    case AlertWindow::Answer::yes:
                                    {
-                                       juce::FileChooser fc(juce::translate("Load analysis results"), file, "*.json;*.dat");
-                                       if(fc.browseForFileToOpen())
+                                       mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load analysis results"), file, "*.json;*.dat");
+                                       if(mFileChooser == nullptr)
                                        {
-                                           mAccessor.setAttr<AttrType::file>(fc.getResult(), NotificationType::synchronous);
+                                           return;
                                        }
+                                       using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                                       mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
+                                                                 {
+                                                                     auto const results = fileChooser.getResults();
+                                                                     if(results.isEmpty())
+                                                                     {
+                                                                         return;
+                                                                     }
+                                                                     mAccessor.setAttr<AttrType::file>(results.getFirst(), NotificationType::synchronous);
+                                                                 });
                                    }
                                    break;
                                    case AlertWindow::Answer::no:
@@ -148,41 +158,65 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                               auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
                               if(static_cast<size_t>(index) == programs.size())
                               {
-                                  juce::FileChooser fc(juce::translate("Load from preset..."), {}, App::getFileWildCardFor("preset"));
-                                  if(fc.browseForFileToOpen())
+                                  mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load from preset..."), juce::File{}, App::getFileWildCardFor("preset"));
+                                  if(mFileChooser == nullptr)
                                   {
-                                      mDirector.startAction();
-                                      if(!canModifyProcessor())
-                                      {
-                                          mListener.onAttrChanged(mAccessor, AttrType::results);
-                                          mDirector.endAction(ActionState::abort);
-                                          return;
-                                      }
-
-                                      auto const result = Exporter::fromPreset(mAccessor, fc.getResult());
-                                      if(result.failed())
-                                      {
-                                          mDirector.endAction(ActionState::abort);
-                                          AlertWindow::showMessage(AlertWindow::MessageType::warning, "Load from preset failed!", result.getErrorMessage());
-                                      }
-                                      else
-                                      {
-                                          mDirector.endAction(ActionState::newTransaction, juce::translate("Load track properties from preset file"));
-                                      }
+                                      return;
                                   }
+                                  using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                                  mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
+                                                            {
+                                                                auto const results = fileChooser.getResults();
+                                                                if(results.isEmpty())
+                                                                {
+                                                                    return;
+                                                                }
+                                                                mDirector.startAction();
+                                                                if(!canModifyProcessor())
+                                                                {
+                                                                    mListener.onAttrChanged(mAccessor, AttrType::results);
+                                                                    mDirector.endAction(ActionState::abort);
+                                                                    return;
+                                                                }
+
+                                                                auto const file = results.getFirst();
+                                                                auto const result = Exporter::fromPreset(mAccessor, file);
+                                                                if(result.failed())
+                                                                {
+                                                                    mDirector.endAction(ActionState::abort);
+                                                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Load from preset failed!", result.getErrorMessage());
+                                                                }
+                                                                else
+                                                                {
+                                                                    mDirector.endAction(ActionState::newTransaction, juce::translate("Load track properties from preset file"));
+                                                                }
+
+                                                                mAccessor.setAttr<AttrType::file>(file, NotificationType::synchronous);
+                                                            });
                                   break;
                               }
                               else if(static_cast<size_t>(index) == programs.size() + 1)
                               {
-                                  juce::FileChooser fc(juce::translate("Save as preset..."), {}, App::getFileWildCardFor("preset"));
-                                  if(fc.browseForFileToSave(true))
+                                  mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Save as preset..."), juce::File{}, App::getFileWildCardFor("preset"));
+                                  if(mFileChooser == nullptr)
                                   {
-                                      auto const result = Exporter::toPreset(mAccessor, fc.getResult());
-                                      if(result.failed())
-                                      {
-                                          AlertWindow::showMessage(AlertWindow::MessageType::warning, "Save as preset failed!", result.getErrorMessage());
-                                      }
+                                      return;
                                   }
+                                  using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                                  mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [this](juce::FileChooser const& fileChooser)
+                                                            {
+                                                                auto const results = fileChooser.getResults();
+                                                                if(results.isEmpty())
+                                                                {
+                                                                    return;
+                                                                }
+
+                                                                auto const result = Exporter::toPreset(mAccessor, results.getFirst());
+                                                                if(result.failed())
+                                                                {
+                                                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Save as preset failed!", result.getErrorMessage());
+                                                                }
+                                                            });
                                   break;
                               }
                               anlWeakAssert(static_cast<size_t>(index) < programs.size());
