@@ -38,6 +38,7 @@ public:
         , properties
         , question
         , rewind
+        , search
         , shrink
         , verified
     };
