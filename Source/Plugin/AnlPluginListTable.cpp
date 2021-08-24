@@ -15,6 +15,9 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
+            case AttrType::useEnvVariable:
+            case AttrType::searchPath:
+                break;
             case AttrType::sortColumn:
             case AttrType::sortIsFowards:
             {
