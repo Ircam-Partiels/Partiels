@@ -38,6 +38,7 @@ namespace Application
 
         std::atomic<bool> mShoulAbort{false};
         std::future<ProcessResult> mProcess;
+        std::unique_ptr<juce::FileChooser> mFileChooser;
     };
 } // namespace Application
 

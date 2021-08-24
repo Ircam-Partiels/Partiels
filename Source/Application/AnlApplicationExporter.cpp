@@ -104,44 +104,52 @@ void Application::Exporter::exportToFile()
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = mExporterPanel.getSelectedIdentifier();
 
-    juce::FileChooser fc(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), {}, options.getFormatWilcard());
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, options.getFormatWilcard());
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
     auto const useDirectory = identifier.isEmpty() || (Document::Tools::hasGroupAcsr(documentAcsr, identifier) && (!options.useGroupOverview || options.useTextFormat()));
-    auto const fcresult = useDirectory ? fc.browseForDirectory() : fc.browseForFileToSave(true);
-    if(!fcresult)
-    {
-        return;
-    }
-
-    anlWeakAssert(!mProcess.valid());
-    if(mProcess.valid())
-    {
-        return;
-    }
-
-    mLoadingCircle.setActive(true);
-    juce::MouseCursor::showWaitCursor();
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        getLookAndFeel().playAlertSound();
-        return false;
-    };
-
-    mExporterPanel.setEnabled(false);
-    mPropertyExport.entry.setButtonText(juce::translate("Abort"));
-    mPropertyExport.entry.setTooltip(juce::translate("Abort the export"));
-
-    mShoulAbort.store(false);
-    mProcess = std::async([=, this, file = fc.getResult()]() -> ProcessResult
-                          {
-                              juce::Thread::setCurrentThreadName("Exporter");
-                              auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, "", identifier, options, mShoulAbort, Instance::getSizeFor);
-                              triggerAsyncUpdate();
-                              if(result.failed())
+    auto const fileType = useDirectory ? Flags::canSelectDirectories : Flags::canSelectFiles;
+    mFileChooser->launchAsync(Flags::openMode | fileType | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
                               {
-                                  return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", options.getFormatName()), result.getErrorMessage());
-                              }
-                              return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", options.getFormatName()), juce::translate("The analyses have been exported as FORMATNAME to FILENAME.").replace("FORMATNAME", options.getFormatName()).replace("FILENAME", file.getFullPathName()));
-                          });
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  anlWeakAssert(!mProcess.valid());
+                                  if(mProcess.valid())
+                                  {
+                                      return;
+                                  }
+
+                                  mLoadingCircle.setActive(true);
+                                  juce::MouseCursor::showWaitCursor();
+                                  mFloatingWindow.onCloseButtonPressed = [this]()
+                                  {
+                                      getLookAndFeel().playAlertSound();
+                                      return false;
+                                  };
+
+                                  mExporterPanel.setEnabled(false);
+                                  mPropertyExport.entry.setButtonText(juce::translate("Abort"));
+                                  mPropertyExport.entry.setTooltip(juce::translate("Abort the export"));
+
+                                  mShoulAbort.store(false);
+                                  mProcess = std::async([=, this, file = results.getFirst()]() -> ProcessResult
+                                                        {
+                                                            juce::Thread::setCurrentThreadName("Exporter");
+                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, "", identifier, options, mShoulAbort, Instance::getSizeFor);
+                                                            triggerAsyncUpdate();
+                                                            if(result.failed())
+                                                            {
+                                                                return std::make_tuple(AlertWindow::MessageType::warning, juce::translate("Export as FORMATNAME failed!").replace("FORMATNAME", options.getFormatName()), result.getErrorMessage());
+                                                            }
+                                                            return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Export as FORMATNAME succeeded!").replace("FORMATNAME", options.getFormatName()), juce::translate("The analyses have been exported as FORMATNAME to FILENAME.").replace("FORMATNAME", options.getFormatName()).replace("FILENAME", file.getFullPathName()));
+                                                        });
+                              });
 }
 
 void Application::Exporter::handleAsyncUpdate()
