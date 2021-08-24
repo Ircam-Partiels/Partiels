@@ -219,7 +219,7 @@ Document::Section::Section(Director& director)
                              onNewGroupButtonClicked();
                          }
                      });
-        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(&mAddButton));
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mAddButton));
     };
 
     addAndMakeVisible(tooltipButton);
