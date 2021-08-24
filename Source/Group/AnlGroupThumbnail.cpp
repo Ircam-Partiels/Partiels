@@ -24,8 +24,13 @@ Group::Thumbnail::Thumbnail(Director& director)
     mPropertiesButton.onClick = [this]()
     {
         juce::PopupMenu menu;
-        menu.addItem(juce::translate("Show 'GROUPNAME' group properties").replace("GROUPNAME", mAccessor.getAttr<AttrType::name>()), [&]()
+        juce::WeakReference<juce::Component> safePointer(this);
+        menu.addItem(juce::translate("Show 'GROUPNAME' group properties").replace("GROUPNAME", mAccessor.getAttr<AttrType::name>()), [=, this]()
                      {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
                          if(auto var = std::make_unique<juce::DynamicObject>())
                          {
                              auto const position = juce::Desktop::getInstance().getMousePosition();
@@ -41,19 +46,27 @@ Group::Thumbnail::Thumbnail(Director& director)
             if(trackAcsr.has_value())
             {
                 auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-                menu.addItem(juce::translate("Show 'TRACKNAME' track properties").replace("TRACKNAME", trackName), [=]
+                menu.addItem(juce::translate("Show 'TRACKNAME' track properties").replace("TRACKNAME", trackName), [=, this]
                              {
+                                 if(safePointer.get() == nullptr)
+                                 {
+                                     return;
+                                 }
                                  if(auto var = std::make_unique<juce::DynamicObject>())
                                  {
                                      auto const position = juce::Desktop::getInstance().getMousePosition();
                                      var->setProperty("x", position.x);
                                      var->setProperty("y", position.y - 40);
-                                     trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                                     auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
+                                     if(trackAcsrRef.has_value())
+                                     {
+                                         trackAcsr->get().sendSignal(Track::SignalType::showProperties, var.release(), NotificationType::synchronous);
+                                     }
                                  }
                              });
             }
         }
-        menu.showAt(&mPropertiesButton);
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertiesButton));
         mPropertiesButton.setState(juce::Button::ButtonState::buttonNormal);
     };
 
