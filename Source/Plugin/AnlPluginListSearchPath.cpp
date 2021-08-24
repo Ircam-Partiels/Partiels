@@ -9,10 +9,11 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
 {
     auto updateButtonsStates = [this]()
     {
+        auto const useEnvVariable = mEnvVariableButton.getToggleState();
         auto const fileSearchPath = mFileSearchPathTable.getFileSearchPath();
-        mApplyButton.setEnabled(fileSearchPath != mAccessor.getAttr<AttrType::searchPath>());
+        mApplyButton.setEnabled(useEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || fileSearchPath != mAccessor.getAttr<AttrType::searchPath>());
         mResetButton.setEnabled(mApplyButton.isEnabled());
-        mDefaultButton.setEnabled(fileSearchPath != getDefaultSearchPath());
+        mDefaultButton.setEnabled(useEnvVariable != true || fileSearchPath != getDefaultSearchPath());
     };
 
     auto warnForChanges = []
@@ -32,6 +33,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
 
     mApplyButton.onClick = [=, this]()
     {
+        mAccessor.setAttr<AttrType::useEnvVariable>(mEnvVariableButton.getToggleState(), NotificationType::synchronous);
         mAccessor.setAttr<AttrType::searchPath>(mFileSearchPathTable.getFileSearchPath(), NotificationType::synchronous);
         updateButtonsStates();
         warnForChanges();
@@ -39,19 +41,21 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
 
     mResetButton.onClick = [=, this]()
     {
+        mEnvVariableButton.setToggleState(mAccessor.getAttr<AttrType::useEnvVariable>(), juce::NotificationType::dontSendNotification);
         mFileSearchPathTable.setFileSearchPath(mAccessor.getAttr<AttrType::searchPath>(), juce::NotificationType::sendNotificationSync);
         updateButtonsStates();
     };
 
     mDefaultButton.onClick = [=, this]()
     {
+        mEnvVariableButton.setToggleState(true, juce::NotificationType::dontSendNotification);
         mFileSearchPathTable.setFileSearchPath(getDefaultSearchPath(), juce::NotificationType::sendNotificationSync);
         updateButtonsStates();
     };
 
     mFloatingWindow.onCloseButtonPressed = [this]()
     {
-        if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>())
+        if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mEnvVariableButton.getToggleState() != mAccessor.getAttr<AttrType::useEnvVariable>())
         {
             auto const options = juce::MessageBoxOptions()
                                      .withIconType(juce::AlertWindow::QuestionIcon)
@@ -83,12 +87,10 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     mEnvVariableInfo.setText(juce::translate("Env. variable"), juce::NotificationType::dontSendNotification);
     mEnvVariableInfo.setTooltip(juce::translate("Toggle the use of the VAMP_PATH environment variable"));
     mEnvVariableInfo.setEditable(false);
-
     mEnvVariableButton.setTooltip(juce::translate("Toggle the use of the VAMP_PATH environment variable"));
-    mEnvVariableButton.onClick = [=, this]()
+    mEnvVariableButton.onClick = [=]()
     {
-        mAccessor.setAttr<AttrType::useEnvVariable>(mEnvVariableButton.getToggleState(), NotificationType::synchronous);
-        warnForChanges();
+        updateButtonsStates();
     };
 
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
@@ -104,6 +106,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
             case AttrType::useEnvVariable:
             {
                 mEnvVariableButton.setToggleState(acsr.getAttr<AttrType::useEnvVariable>(), juce::NotificationType::dontSendNotification);
+                updateButtonsStates();
             }
             break;
             case AttrType::sortColumn:
