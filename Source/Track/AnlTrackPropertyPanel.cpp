@@ -914,11 +914,16 @@ void Track::PropertyPanel::showChannelLayout()
     auto const numChannels = channelsLayout.size();
     auto const numVisibleChannels = static_cast<size_t>(std::count(channelsLayout.cbegin(), channelsLayout.cend(), true));
     juce::PopupMenu menu;
+    juce::WeakReference<juce::Component> safePointer(this);
     if(numChannels > 2_z)
     {
         auto const allActive = numChannels != numVisibleChannels;
-        menu.addItem(juce::translate("All Channels"), allActive, !allActive, [this]()
+        menu.addItem(juce::translate("All Channels"), allActive, !allActive, [=, this]()
                      {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          std::fill(copy.begin(), copy.end(), true);
                          mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
@@ -926,8 +931,12 @@ void Track::PropertyPanel::showChannelLayout()
                      });
 
         auto const oneActive = !channelsLayout[0_z] || numVisibleChannels > 1_z;
-        menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [this]()
+        menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [=, this]()
                      {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          copy[0_z] = true;
                          std::fill(std::next(copy.begin()), copy.end(), false);
@@ -937,8 +946,12 @@ void Track::PropertyPanel::showChannelLayout()
     }
     for(size_t channel = 0_z; channel < channelsLayout.size(); ++channel)
     {
-        menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelsLayout[channel], [this, channel]()
+        menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelsLayout[channel], [=, this]()
                      {
+                         if(safePointer.get() == nullptr)
+                         {
+                             return;
+                         }
                          auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
                          copy[channel] = !copy[channel];
                          if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
@@ -963,11 +976,13 @@ void Track::PropertyPanel::showChannelLayout()
     {
         mDirector.startAction();
     }
-    auto const result = menu.showAt(&mPropertyChannelLayout.entry);
-    if(result == 0 && std::exchange(mChannelLayoutActionStarted, false))
-    {
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track channels layout"));
-    }
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyChannelLayout.entry), [=, this](int menuResult)
+                       {
+                           if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
+                           {
+                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change track channels layout"));
+                           }
+                       });
 }
 
 ANALYSE_FILE_END
