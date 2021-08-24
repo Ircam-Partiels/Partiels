@@ -139,7 +139,6 @@ private:
             juce::Label thumbLabel;
             juce::Label fileNameLabel;
             juce::ComboBox channelMenu;
-            juce::ImageButton warningButton;
         };
 
         AudioFileLayoutTable& mOwner;
