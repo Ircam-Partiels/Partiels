@@ -15,12 +15,13 @@ namespace PluginList
     
     enum ColumnType
     {
-          Name = 1
-        , Feature
-        , Maker
-        , Version
-        , Category
-        , Details
+          name = 1
+        , feature
+        , maker
+        , version
+        , category
+        , details
+    };
     };
     
     using Container = Model::Container

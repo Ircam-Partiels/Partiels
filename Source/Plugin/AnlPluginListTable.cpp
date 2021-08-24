@@ -36,12 +36,12 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 
     using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mPluginTable.getHeader();
-    header.addColumn(juce::translate("Name"), ColumnType::Name, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
-    header.addColumn(juce::translate("Feature"), ColumnType::Feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
-    header.addColumn(juce::translate("Description"), ColumnType::Details, 200, 100, 500, ColumnFlags::notSortable);
-    header.addColumn(juce::translate("Maker"), ColumnType::Maker, 120, 100, 300);
-    header.addColumn(juce::translate("Category"), ColumnType::Category, 60, 60, 200);
-    header.addColumn(juce::translate("Version"), ColumnType::Version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Name"), ColumnType::name, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
+    header.addColumn(juce::translate("Feature"), ColumnType::feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
+    header.addColumn(juce::translate("Description"), ColumnType::details, 200, 100, 500, ColumnFlags::notSortable);
+    header.addColumn(juce::translate("Maker"), ColumnType::maker, 120, 100, 300);
+    header.addColumn(juce::translate("Category"), ColumnType::category, 60, 60, 200);
+    header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
 
     addAndMakeVisible(mSeparator);
     addAndMakeVisible(mPathsButton);
@@ -198,7 +198,7 @@ void PluginList::Table::updateContent()
     auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
     switch(mAccessor.getAttr<AttrType::sortColumn>())
     {
-        case ColumnType::Name:
+        case ColumnType::name:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
                       {
@@ -206,7 +206,7 @@ void PluginList::Table::updateContent()
                       });
         }
         break;
-        case ColumnType::Feature:
+        case ColumnType::feature:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
                       {
@@ -214,7 +214,7 @@ void PluginList::Table::updateContent()
                       });
         }
         break;
-        case ColumnType::Maker:
+        case ColumnType::maker:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
                       {
@@ -222,7 +222,7 @@ void PluginList::Table::updateContent()
                       });
         }
         break;
-        case ColumnType::Category:
+        case ColumnType::category:
         {
             std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
                       {
@@ -230,8 +230,8 @@ void PluginList::Table::updateContent()
                       });
         }
         break;
-        case ColumnType::Version:
-        case ColumnType::Details:
+        case ColumnType::version:
+        case ColumnType::details:
             break;
     }
 
@@ -266,27 +266,27 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
     {
         switch(columnId)
         {
-            case ColumnType::Name:
+            case ColumnType::name:
                 return description.name;
-            case ColumnType::Feature:
+            case ColumnType::feature:
                 return description.output.name;
-            case ColumnType::Maker:
+            case ColumnType::maker:
                 return description.maker;
-            case ColumnType::Version:
+            case ColumnType::version:
                 return juce::String(description.version);
-            case ColumnType::Details:
+            case ColumnType::details:
             {
                 auto const position = description.details.indexOf("\n");
                 return description.details.substring(0, position > 0 ? position : description.details.length());
             }
-            case ColumnType::Category:
+            case ColumnType::category:
                 return description.category.isEmpty() ? "-" : description.category;
         }
         return "";
     };
 
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
-    g.setColour(columnId == ColumnType::Name || columnId == ColumnType::Feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
+    g.setColour(columnId == ColumnType::name || columnId == ColumnType::feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
     g.setFont(juce::Font(static_cast<float>(height) * 0.7f, juce::Font::bold));
     g.drawText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, false);
 }
