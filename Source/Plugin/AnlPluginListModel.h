@@ -65,6 +65,8 @@ namespace PluginList
             return copy;
         }
     };
+
+    void setSearchPath(Accessor const& accessor);
 } // namespace PluginList
 
 ANALYSE_FILE_END
