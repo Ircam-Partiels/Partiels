@@ -16,6 +16,7 @@ Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAbout);
     extraAppleMenuItems.addSeparator();
     extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenPluginPath);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
 #else
     mWindow.setMenuBar(this);
@@ -121,6 +122,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
 #ifndef JUCE_MAC
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenPluginPath);
 #endif
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::HelpSDIFConverter);
