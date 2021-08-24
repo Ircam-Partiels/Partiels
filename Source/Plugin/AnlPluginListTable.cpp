@@ -74,7 +74,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
                              file.revealToUser();
                          });
         }
-        menu.showAt(&mPathsButton);
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPathsButton));
     };
 
     addAndMakeVisible(mSearchField);
