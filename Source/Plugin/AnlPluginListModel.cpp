@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 std::vector<juce::File> PluginList::getDefaultSearchPath()
 {
-#ifdef JUCE_WINDOWS
+#if JUCE_WINDOWS
     return {juce::File::getSpecialLocation(juce::File::SpecialLocationType::globalApplicationsDirectory).getChildFile("Vamp Plugins")};
 #elif JUCE_MAC
     return {juce::File("~/Library/Audio/Plug-Ins/Vamp"), juce::File("/Library/Audio/Plug-Ins/Vamp")};
