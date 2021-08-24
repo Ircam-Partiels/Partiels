@@ -219,19 +219,22 @@ void Group::PropertyPanel::showChannelLayout()
             }
         }
     }
-    auto const result = menu.showAt(&mPropertyChannelLayout.entry);
-    if(result == 0 && std::exchange(mChannelLayoutActionStarted, false))
-    {
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Change tracks' channels layout"));
-        for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-        {
-            auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-            if(trackAcsr.has_value())
-            {
-                mDirector.getTrackDirector(trackIdentifer).endAction(ActionState::continueTransaction);
-            }
-        }
-    }
+    juce::WeakReference<juce::Component> safePointer(this);
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyChannelLayout.entry), [=, this](int menuResult)
+                       {
+                           if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
+                           {
+                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change tracks' channels layout"));
+                               for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
+                               {
+                                   auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
+                                   if(trackAcsr.has_value())
+                                   {
+                                       mDirector.getTrackDirector(trackIdentifer).endAction(ActionState::continueTransaction);
+                                   }
+                               }
+                           }
+                       });
 }
 
 ANALYSE_FILE_END
