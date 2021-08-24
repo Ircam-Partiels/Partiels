@@ -10,10 +10,10 @@ public:
     // clang-format off
     enum class MessageType
     {
-          unknown = juce::AlertWindow::AlertIconType::NoIcon
-        , question = juce::AlertWindow::AlertIconType::QuestionIcon
-        , warning = juce::AlertWindow::AlertIconType::WarningIcon
-        , info = juce::AlertWindow::AlertIconType::InfoIcon
+          unknown = static_cast<int>(juce::MessageBoxIconType::NoIcon)
+        , question = static_cast<int>(juce::MessageBoxIconType::QuestionIcon)
+        , warning = static_cast<int>(juce::MessageBoxIconType::WarningIcon)
+        , info = static_cast<int>(juce::MessageBoxIconType::InfoIcon)
     };
     // clang-format on
 
