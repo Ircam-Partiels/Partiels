@@ -780,7 +780,6 @@ bool Document::Director::fileHasBeenRemoved(juce::File const& file)
                                       }
                                       mAccessor.setAttr<AttrType::reader>(copyReader, NotificationType::asynchronous);
                                   });
-        return false;
     }
     return true;
 }
