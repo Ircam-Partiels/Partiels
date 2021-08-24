@@ -224,14 +224,21 @@ void Application::Instance::systemRequestedQuit()
             return;
         }
     }
-
-    if(mDocumentFileBased->saveIfNeededAndUserAgrees() != juce::FileBasedDocument::SaveResult::savedOk)
+    if(mDocumentFileBased != nullptr)
     {
-        return;
+        mDocumentFileBased->saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult result)
+                                                           {
+                                                               if(result == juce::FileBasedDocument::SaveResult::savedOk)
+                                                               {
+                                                                   anlDebug("Application", "Ready");
+                                                                   quit();
+                                                               }
+                                                           });
     }
-
-    anlDebug("Application", "Ready");
-    quit();
+    else
+    {
+        quit();
+    }
 }
 
 void Application::Instance::shutdown()
