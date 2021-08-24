@@ -74,10 +74,13 @@ private:
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
+            void lookAndFeelChanged() override;
+            void parentHierarchyChanged() override;
 
             size_t const index;
             juce::Label thumbLabel;
             juce::Label fileNameLabel;
+            juce::ImageButton revealButton;
         };
 
         FileSearchPathTable& mOwner;

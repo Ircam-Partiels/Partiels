@@ -14,11 +14,15 @@ FileSearchPathTable::Directory::Entry::Entry(size_t i, juce::String const& fileN
     fileNameLabel.setEditable(false);
     fileNameLabel.setText(fileName, juce::NotificationType::dontSendNotification);
     fileNameLabel.setTooltip(fileName);
+
+    addAndMakeVisible(revealButton);
+    revealButton.setWantsKeyboardFocus(false);
 }
 
 void FileSearchPathTable::Directory::Entry::resized()
 {
     auto bounds = getLocalBounds();
+    revealButton.setBounds(bounds.removeFromRight(getHeight()).reduced(2));
     thumbLabel.setBounds(bounds.removeFromLeft(32));
     fileNameLabel.setBounds(bounds);
 }
@@ -29,12 +33,31 @@ void FileSearchPathTable::Directory::Entry::paint(juce::Graphics& g)
     g.fillRect(getLocalBounds().removeFromLeft(thumbLabel.getWidth()));
 }
 
+void FileSearchPathTable::Directory::Entry::lookAndFeelChanged()
+{
+    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
+    anlWeakAssert(laf != nullptr);
+    if(laf != nullptr)
+    {
+        laf->setButtonIcon(revealButton, IconManager::IconType::search);
+    }
+}
+
+void FileSearchPathTable::Directory::Entry::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
+}
+
 FileSearchPathTable::Directory::Directory(FileSearchPathTable& owner, size_t index, juce::File const& file)
 : mOwner(owner)
 , mEntry(index, file.getFullPathName())
 {
     mEntry.thumbLabel.addMouseListener(this, true);
     mEntry.fileNameLabel.addMouseListener(this, true);
+    mEntry.revealButton.onClick = [=]()
+    {
+        file.revealToUser();
+    };
 
     addAndMakeVisible(mDecorator);
     setSize(300, 24);
