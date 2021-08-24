@@ -2,3 +2,4 @@
 - Output all key shortcuts
 - Use button names on alert window
 - Windows signature
+- Remove any modal approach
