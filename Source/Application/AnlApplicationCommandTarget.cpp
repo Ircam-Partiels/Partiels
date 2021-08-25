@@ -273,7 +273,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::HelpOpenPluginPath:
         {
-            result.setInfo(juce::translate("Plugin Search Path..."), juce::translate("Show the plugin search path panel"), "Application", 0);
+            result.setInfo(juce::translate("Plugin Search Paths..."), juce::translate("Show the plugin search paths panel"), "Application", 0);
         }
         break;
         case CommandIDs::HelpOpenAbout:
