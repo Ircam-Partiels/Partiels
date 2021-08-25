@@ -234,9 +234,9 @@ FileSearchPathTable::FileSearchPathTable(juce::File const& defaultPath)
     };
 
     mAddLabel.setInterceptsMouseClicks(false, false);
-    mAddLabel.setText(juce::translate("Insert audio files..."), juce::NotificationType::dontSendNotification);
-    mAddLabel.setTooltip(juce::translate("Insert audio files..."));
-    mAddButton.setTooltip(juce::translate("Insert audio files..."));
+    mAddLabel.setText(juce::translate("Add directories..."), juce::NotificationType::dontSendNotification);
+    mAddLabel.setTooltip(juce::translate("Add directories..."));
+    mAddButton.setTooltip(juce::translate("Add directories..."));
 
     mComponentListener.attachTo(mDraggableTable);
     mViewport.setViewedComponent(&mDraggableTable, false);
