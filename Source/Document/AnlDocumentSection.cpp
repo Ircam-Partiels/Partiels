@@ -427,17 +427,17 @@ void Document::Section::lookAndFeelChanged()
         {
             case GridMode::hidden:
             {
-                laf->setButtonIcon(mGridButton, IconManager::IconType::grid_off);
+                laf->setButtonIcon(mGridButton, IconManager::IconType::gridOff);
             }
             break;
             case GridMode::partial:
             {
-                laf->setButtonIcon(mGridButton, IconManager::IconType::grid_partial);
+                laf->setButtonIcon(mGridButton, IconManager::IconType::gridPartial);
             }
             break;
             case GridMode::full:
             {
-                laf->setButtonIcon(mGridButton, IconManager::IconType::grid_full);
+                laf->setButtonIcon(mGridButton, IconManager::IconType::gridFull);
             }
             break;
         }

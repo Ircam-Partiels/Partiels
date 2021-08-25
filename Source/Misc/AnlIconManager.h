@@ -23,9 +23,9 @@ public:
         , cancel
         , comment
         , expand
-        , grid_off
-        , grid_partial
-        , grid_full
+        , gridOff
+        , gridPartial
+        , gridFull
         , information
         , layers
         , loading
