@@ -162,20 +162,20 @@ FileSearchPathTable::FileSearchPathTable(juce::File const& defaultPath)
 
     mDraggableTable.onComponentDropped = [this](juce::String const& identifier, size_t index, bool copy)
     {
-        auto fielSearchPath = mFileSearchPath;
+        auto fileSearchPath = mFileSearchPath;
         auto const previousIndex = static_cast<size_t>(identifier.getIntValue());
-        anlWeakAssert(previousIndex < fielSearchPath.size());
-        if(previousIndex >= fielSearchPath.size())
+        anlWeakAssert(previousIndex < fileSearchPath.size());
+        if(previousIndex >= fileSearchPath.size())
         {
             return;
         }
-        auto const previouslayout = fielSearchPath[previousIndex];
+        auto const previouslayout = fileSearchPath[previousIndex];
         if(!copy)
         {
-            fielSearchPath.erase(fielSearchPath.begin() + static_cast<long>(previousIndex));
+            fileSearchPath.erase(fileSearchPath.begin() + static_cast<long>(previousIndex));
         }
-        fielSearchPath.insert(fielSearchPath.begin() + static_cast<long>(index), previouslayout);
-        setFileSearchPath(fielSearchPath);
+        fileSearchPath.insert(fileSearchPath.begin() + static_cast<long>(index), previouslayout);
+        setFileSearchPath(fileSearchPath);
     };
 
     mAddButton.onClick = [this]()
@@ -190,15 +190,15 @@ FileSearchPathTable::FileSearchPathTable(juce::File const& defaultPath)
         mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories | Flags::canSelectMultipleItems, [this](juce::FileChooser const& fileChooser)
                                   {
                                       auto const files = fileChooser.getResults();
-                                      auto fielSearchPath = mFileSearchPath;
+                                      auto fileSearchPath = mFileSearchPath;
                                       for(auto const& file : files)
                                       {
                                           if(file.isDirectory())
                                           {
-                                              fielSearchPath.push_back(file);
+                                              fileSearchPath.push_back(file);
                                           }
                                       }
-                                      setFileSearchPath(fielSearchPath);
+                                      setFileSearchPath(fileSearchPath);
                                   });
     };
 
