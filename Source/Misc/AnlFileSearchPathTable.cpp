@@ -39,7 +39,7 @@ void FileSearchPathTable::Directory::Entry::lookAndFeelChanged()
     anlWeakAssert(laf != nullptr);
     if(laf != nullptr)
     {
-        laf->setButtonIcon(revealButton, IconManager::IconType::search);
+        laf->setButtonIcon(revealButton, IconManager::IconType::folder);
     }
 }
 
