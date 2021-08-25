@@ -15,6 +15,10 @@ FileSearchPathTable::Directory::Entry::Entry(size_t i, juce::String const& fileN
     fileNameLabel.setText(fileName, juce::NotificationType::dontSendNotification);
     fileNameLabel.setTooltip(fileName);
 
+    addAndMakeVisible(replaceButton);
+    replaceButton.setButtonText(juce::translate("Change"));
+    replaceButton.setWantsKeyboardFocus(false);
+
     addAndMakeVisible(revealButton);
     revealButton.setWantsKeyboardFocus(false);
 }
@@ -23,6 +27,7 @@ void FileSearchPathTable::Directory::Entry::resized()
 {
     auto bounds = getLocalBounds();
     revealButton.setBounds(bounds.removeFromRight(getHeight()).reduced(2));
+    replaceButton.setBounds(bounds.removeFromRight(80).reduced(2));
     thumbLabel.setBounds(bounds.removeFromLeft(32));
     fileNameLabel.setBounds(bounds);
 }
@@ -57,6 +62,32 @@ FileSearchPathTable::Directory::Directory(FileSearchPathTable& owner, size_t ind
     mEntry.revealButton.onClick = [=]()
     {
         file.revealToUser();
+    };
+
+    mEntry.replaceButton.onClick = [=]()
+    {
+        mOwner.mFileChooser = std::make_unique<juce::FileChooser>(juce::translate(juce::translate("Replace the directory...")));
+        if(mOwner.mFileChooser == nullptr)
+        {
+            return;
+        }
+        using Flags = juce::FileBrowserComponent::FileChooserFlags;
+        mOwner.mFileChooser->launchAsync(Flags::openMode | Flags::canSelectDirectories, [=, this](juce::FileChooser const& fileChooser)
+                                         {
+                                             auto const files = fileChooser.getResults();
+                                             if(files.isEmpty())
+                                             {
+                                                 return;
+                                             }
+                                             auto fileSearchPath = mOwner.mFileSearchPath;
+                                             anlWeakAssert(mEntry.index < fileSearchPath.size());
+                                             if(mEntry.index >= fileSearchPath.size())
+                                             {
+                                                 return;
+                                             }
+                                             fileSearchPath[mEntry.index] = files.getFirst();
+                                             mOwner.setFileSearchPath(fileSearchPath);
+                                         });
     };
 
     addAndMakeVisible(mDecorator);

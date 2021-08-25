@@ -80,6 +80,7 @@ private:
             size_t const index;
             juce::Label thumbLabel;
             juce::Label fileNameLabel;
+            juce::TextButton replaceButton;
             juce::ImageButton revealButton;
         };
 
