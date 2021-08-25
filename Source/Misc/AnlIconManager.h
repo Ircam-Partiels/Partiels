@@ -23,6 +23,7 @@ public:
         , cancel
         , comment
         , expand
+        , folder
         , gridOff
         , gridPartial
         , gridFull

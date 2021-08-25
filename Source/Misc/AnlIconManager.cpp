@@ -15,6 +15,8 @@ juce::Image IconManager::getIcon(IconType const type)
             return juce::ImageCache::getFromMemory(IconsData::comment_png, IconsData::comment_pngSize);
         case IconType::expand:
             return juce::ImageCache::getFromMemory(IconsData::expand_png, IconsData::expand_pngSize);
+        case IconType::folder:
+            return juce::ImageCache::getFromMemory(IconsData::folder_png, IconsData::folder_pngSize);
         case IconType::gridOff:
             return juce::ImageCache::getFromMemory(IconsData::gridoff_png, IconsData::gridoff_pngSize);
         case IconType::gridPartial:
