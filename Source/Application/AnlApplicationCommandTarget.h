@@ -18,36 +18,36 @@ namespace Application
         // clang-format off
         enum CommandIDs : int
         {
-              DocumentNew = 0x2001
-            , DocumentOpen
-            , DocumentSave
-            , DocumentDuplicate
-            , DocumentConsolidate
-            , DocumentExport
-            , DocumentImport
-            , DocumentBatch
+              documentNew = 0x2001
+            , documentOpen
+            , documentSave
+            , documentDuplicate
+            , documentConsolidate
+            , documentExport
+            , documentImport
+            , documentBatch
             
-            , EditUndo
-            , EditRedo
-            , EditNewGroup
-            , EditNewTrack
-            , EditRemoveItem
-            , EditLoadTemplate
+            , editUndo
+            , editRedo
+            , editNewGroup
+            , editNewTrack
+            , editRemoveItem
+            , editLoadTemplate
             
-            , TransportTogglePlayback
-            , TransportToggleLooping
-            , TransportRewindPlayHead
+            , transportTogglePlayback
+            , transportToggleLooping
+            , transportRewindPlayHead
             
-            , ViewZoomIn
-            , ViewZoomOut
-            , ViewInfoBubble
+            , viewZoomIn
+            , viewZoomOut
+            , viewInfoBubble
             
-            , HelpOpenAudioSettings
-            , HelpOpenPluginPath
-            , HelpOpenAbout
-            , HelpOpenManual
-            , HelpOpenForum
-            , HelpSDIFConverter
+            , helpOpenAudioSettings
+            , helpOpenPluginPath
+            , helpOpenAbout
+            , helpOpenManual
+            , helpOpenForum
+            , helpSDIFConverter
         };
         // clang-format on
 

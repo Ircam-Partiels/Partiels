@@ -13,10 +13,10 @@ Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
     juce::ignoreUnused(mWindow);
     juce::PopupMenu extraAppleMenuItems;
     using CommandIDs = CommandTarget::CommandIDs;
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAbout);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
     extraAppleMenuItems.addSeparator();
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::HelpOpenPluginPath);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginPath);
     juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
 #else
     mWindow.setMenuBar(this);
@@ -46,8 +46,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     juce::PopupMenu menu;
     if(menuName == "File")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentNew);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentOpen);
+        menu.addCommandItem(&commandManager, CommandIDs::documentNew);
+        menu.addCommandItem(&commandManager, CommandIDs::documentOpen);
 
         juce::PopupMenu recentFilesMenu;
         auto const& recentFiles = Instance::get().getApplicationAccessor().getAttr<AttrType::recentlyOpenedFilesList>();
@@ -67,29 +67,29 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         }
 
         menu.addSubMenu("Open Recent", recentFilesMenu);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentSave);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentDuplicate);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentConsolidate);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentExport);
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentImport);
+        menu.addCommandItem(&commandManager, CommandIDs::documentSave);
+        menu.addCommandItem(&commandManager, CommandIDs::documentDuplicate);
+        menu.addCommandItem(&commandManager, CommandIDs::documentConsolidate);
+        menu.addCommandItem(&commandManager, CommandIDs::documentExport);
+        menu.addCommandItem(&commandManager, CommandIDs::documentImport);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::DocumentBatch);
+        menu.addCommandItem(&commandManager, CommandIDs::documentBatch);
     }
     else if(menuName == "Edit")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::EditUndo);
-        menu.addCommandItem(&commandManager, CommandIDs::EditRedo);
+        menu.addCommandItem(&commandManager, CommandIDs::editUndo);
+        menu.addCommandItem(&commandManager, CommandIDs::editRedo);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::EditRemoveItem);
-        menu.addCommandItem(&commandManager, CommandIDs::EditNewTrack);
-        menu.addCommandItem(&commandManager, CommandIDs::EditNewGroup);
+        menu.addCommandItem(&commandManager, CommandIDs::editRemoveItem);
+        menu.addCommandItem(&commandManager, CommandIDs::editNewTrack);
+        menu.addCommandItem(&commandManager, CommandIDs::editNewGroup);
     }
     else if(menuName == "Transport")
     {
-        menu.addCommandItem(&commandManager, CommandIDs::TransportTogglePlayback);
-        menu.addCommandItem(&commandManager, CommandIDs::TransportToggleLooping);
+        menu.addCommandItem(&commandManager, CommandIDs::transportTogglePlayback);
+        menu.addCommandItem(&commandManager, CommandIDs::transportToggleLooping);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::TransportRewindPlayHead);
+        menu.addCommandItem(&commandManager, CommandIDs::transportRewindPlayHead);
     }
     else if(menuName == "View")
     {
@@ -107,25 +107,25 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         }
         menu.addSubMenu("Theme", colourModeMenu);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::ViewZoomIn);
-        menu.addCommandItem(&commandManager, CommandIDs::ViewZoomOut);
+        menu.addCommandItem(&commandManager, CommandIDs::viewZoomIn);
+        menu.addCommandItem(&commandManager, CommandIDs::viewZoomOut);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::ViewInfoBubble);
+        menu.addCommandItem(&commandManager, CommandIDs::viewInfoBubble);
     }
     else if(menuName == "Help")
     {
 #ifndef JUCE_MAC
-        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenAbout);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
 #endif
-        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenManual);
-        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenForum);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenManual);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenForum);
 #ifndef JUCE_MAC
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenAudioSettings);
-        menu.addCommandItem(&commandManager, CommandIDs::HelpOpenPluginPath);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginPath);
 #endif
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::HelpSDIFConverter);
+        menu.addCommandItem(&commandManager, CommandIDs::helpSDIFConverter);
     }
     else
     {

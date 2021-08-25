@@ -3,4 +3,3 @@
 - Use button names on alert window
 - Windows signature
 - Remove any modal approach
-- Fix upper case of CommandID enum

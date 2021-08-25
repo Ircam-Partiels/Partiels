@@ -54,36 +54,36 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
     // clang-format off
     commands.addArray(
     {
-          CommandIDs::DocumentNew
-        , CommandIDs::DocumentOpen
-        , CommandIDs::DocumentSave
-        , CommandIDs::DocumentDuplicate
-        , CommandIDs::DocumentConsolidate
-        , CommandIDs::DocumentExport
-        , CommandIDs::DocumentImport
-        , CommandIDs::DocumentBatch
+          CommandIDs::documentNew
+        , CommandIDs::documentOpen
+        , CommandIDs::documentSave
+        , CommandIDs::documentDuplicate
+        , CommandIDs::documentConsolidate
+        , CommandIDs::documentExport
+        , CommandIDs::documentImport
+        , CommandIDs::documentBatch
         
-        , CommandIDs::EditUndo
-        , CommandIDs::EditRedo
-        , CommandIDs::EditNewGroup
-        , CommandIDs::EditNewTrack
-        , CommandIDs::EditRemoveItem
-        , CommandIDs::EditLoadTemplate
+        , CommandIDs::editUndo
+        , CommandIDs::editRedo
+        , CommandIDs::editNewGroup
+        , CommandIDs::editNewTrack
+        , CommandIDs::editRemoveItem
+        , CommandIDs::editLoadTemplate
         
-        , CommandIDs::TransportTogglePlayback
-        , CommandIDs::TransportToggleLooping
-        , CommandIDs::TransportRewindPlayHead
+        , CommandIDs::transportTogglePlayback
+        , CommandIDs::transportToggleLooping
+        , CommandIDs::transportRewindPlayHead
         
-        , CommandIDs::ViewZoomIn
-        , CommandIDs::ViewZoomOut
-        , CommandIDs::ViewInfoBubble
+        , CommandIDs::viewZoomIn
+        , CommandIDs::viewZoomOut
+        , CommandIDs::viewInfoBubble
         
-        , CommandIDs::HelpOpenAudioSettings
-        , CommandIDs::HelpOpenPluginPath
-        , CommandIDs::HelpOpenAbout
-        , CommandIDs::HelpOpenManual
-        , CommandIDs::HelpOpenForum
-        , CommandIDs::HelpSDIFConverter
+        , CommandIDs::helpOpenAudioSettings
+        , CommandIDs::helpOpenPluginPath
+        , CommandIDs::helpOpenAbout
+        , CommandIDs::helpOpenManual
+        , CommandIDs::helpOpenForum
+        , CommandIDs::helpSDIFConverter
     });
     // clang-format on
 }
@@ -94,56 +94,56 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
     auto const& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
     switch(commandID)
     {
-        case CommandIDs::DocumentNew:
+        case CommandIDs::documentNew:
         {
             result.setInfo(juce::translate("New..."), juce::translate("Create a new document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('n', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.isEquivalentTo(Instance::get().getDocumentFileBased().getDefaultAccessor()));
         }
         break;
-        case CommandIDs::DocumentOpen:
+        case CommandIDs::documentOpen:
         {
             result.setInfo(juce::translate("Open..."), juce::translate("Open a document or audio files"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('o', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
         }
         break;
-        case CommandIDs::DocumentSave:
+        case CommandIDs::documentSave:
         {
             result.setInfo(juce::translate("Save"), juce::translate("Save the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier, 0));
             result.setActive(true);
         }
         break;
-        case CommandIDs::DocumentDuplicate:
+        case CommandIDs::documentDuplicate:
         {
             result.setInfo(juce::translate("Duplicate..."), juce::translate("Save the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('s', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(true);
         }
         break;
-        case CommandIDs::DocumentConsolidate:
+        case CommandIDs::documentConsolidate:
         {
             result.setInfo(juce::translate("Consolidate..."), juce::translate("Consolidate the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
-        case CommandIDs::DocumentExport:
+        case CommandIDs::documentExport:
         {
             result.setInfo(juce::translate("Export..."), juce::translate("Export the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('e', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(documentAcsr.getNumAcsrs<Document::AcsrType::tracks>() > 0_z);
         }
         break;
-        case CommandIDs::DocumentImport:
+        case CommandIDs::documentImport:
         {
             result.setInfo(juce::translate("Import..."), juce::translate("Import to the document"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
-        case CommandIDs::DocumentBatch:
+        case CommandIDs::documentBatch:
         {
             result.setInfo(juce::translate("Batch..."), juce::translate("Batch processed a set of audio files "), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
@@ -151,7 +151,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
-        case CommandIDs::EditUndo:
+        case CommandIDs::editUndo:
         {
             auto& undoManager = Instance::get().getUndoManager();
             result.setInfo(juce::translate("Undo ") + undoManager.getUndoDescription(), juce::translate("Undo last action"), "Edit", 0);
@@ -159,7 +159,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(undoManager.canUndo());
         }
         break;
-        case CommandIDs::EditRedo:
+        case CommandIDs::editRedo:
         {
             auto& undoManager = Instance::get().getUndoManager();
             result.setInfo(juce::translate("Redo ") + undoManager.getRedoDescription(), juce::translate("Redo last action"), "Edit", 0);
@@ -168,21 +168,21 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
-        case CommandIDs::EditNewGroup:
+        case CommandIDs::editNewGroup:
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('g', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
-        case CommandIDs::EditNewTrack:
+        case CommandIDs::editNewTrack:
         {
             result.setInfo(juce::translate("Add New Track"), juce::translate("Adds a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
-        case CommandIDs::EditRemoveItem:
+        case CommandIDs::editRemoveItem:
         {
             auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
             auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
@@ -204,14 +204,14 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
         }
         break;
-        case CommandIDs::EditLoadTemplate:
+        case CommandIDs::editLoadTemplate:
         {
             result.setInfo(juce::translate("Load Template..."), juce::translate("Load a template"), "Edit", 0);
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
         break;
 
-        case CommandIDs::TransportTogglePlayback:
+        case CommandIDs::transportTogglePlayback:
         {
             result.setInfo(juce::translate("Toggle Playback"), juce::translate("Start or stop the audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::spaceKey, juce::ModifierKeys::noModifiers, 0));
@@ -219,7 +219,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::playback>());
         }
         break;
-        case CommandIDs::TransportToggleLooping:
+        case CommandIDs::transportToggleLooping:
         {
             result.setInfo(juce::translate("Toggle Loop"), juce::translate("Enable or disable the loop audio playback"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
@@ -227,7 +227,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
         }
         break;
-        case CommandIDs::TransportRewindPlayHead:
+        case CommandIDs::transportRewindPlayHead:
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Move the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
@@ -235,7 +235,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
-        case CommandIDs::ViewZoomIn:
+        case CommandIDs::viewZoomIn:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "View", 0);
@@ -243,7 +243,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
         }
         break;
-        case CommandIDs::ViewZoomOut:
+        case CommandIDs::viewZoomOut:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "View", 0);
@@ -251,7 +251,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
         }
         break;
-        case CommandIDs::ViewInfoBubble:
+        case CommandIDs::viewInfoBubble:
         {
             result.setInfo(juce::translate("Info Bubble"), juce::translate("Toggle the info bubble info"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::commandModifier, 0));
@@ -260,7 +260,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
-        case CommandIDs::HelpOpenAudioSettings:
+        case CommandIDs::helpOpenAudioSettings:
         {
 #ifdef JUCE_MAC
             result.setInfo(juce::translate("Audio Settings..."), juce::translate("Show the audio settings panel"), "Application", 0);
@@ -271,12 +271,12 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #endif
         }
         break;
-        case CommandIDs::HelpOpenPluginPath:
+        case CommandIDs::helpOpenPluginPath:
         {
             result.setInfo(juce::translate("Plugin Search Paths..."), juce::translate("Show the plugin search paths panel"), "Application", 0);
         }
         break;
-        case CommandIDs::HelpOpenAbout:
+        case CommandIDs::helpOpenAbout:
         {
 #ifdef JUCE_MAC
             result.setInfo(juce::translate("About Partiels"), juce::translate("Show the information about the application"), "Application", 0);
@@ -285,19 +285,19 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #endif
         }
         break;
-        case CommandIDs::HelpOpenManual:
+        case CommandIDs::helpOpenManual:
         {
             result.setInfo(juce::translate("Open Manual"), juce::translate("Open the manual in a web browser"), "Help", 0);
             result.setActive(true);
         }
         break;
-        case CommandIDs::HelpOpenForum:
+        case CommandIDs::helpOpenForum:
         {
             result.setInfo(juce::translate("Proceed to Forum"), juce::translate("Open the forum page in a web browser"), "Help", 0);
             result.setActive(true);
         }
         break;
-        case CommandIDs::HelpSDIFConverter:
+        case CommandIDs::helpSDIFConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Show the SDIF converter panel"), "Help", 0);
             result.setActive(true);
@@ -320,7 +320,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     auto& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
     switch(info.commandID)
     {
-        case CommandIDs::DocumentNew:
+        case CommandIDs::documentNew:
         {
             fileBased.saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult saveResult)
                                                      {
@@ -332,7 +332,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                      });
             return true;
         }
-        case CommandIDs::DocumentOpen:
+        case CommandIDs::documentOpen:
         {
             juce::WeakReference<Application::CommandTarget> safePointer(this);
             fileBased.saveIfNeededAndUserAgreesAsync([=, this, description = getCommandDescription()](juce::FileBasedDocument::SaveResult saveResult)
@@ -369,7 +369,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                      });
             return true;
         }
-        case CommandIDs::DocumentSave:
+        case CommandIDs::documentSave:
         {
             fileBased.saveAsync(true, true, [](juce::FileBasedDocument::SaveResult saveResult)
                                 {
@@ -377,7 +377,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                 });
             return true;
         }
-        case CommandIDs::DocumentDuplicate:
+        case CommandIDs::documentDuplicate:
         {
             fileBased.saveAsInteractiveAsync(true, [](juce::FileBasedDocument::SaveResult saveResult)
                                              {
@@ -385,7 +385,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                              });
             return true;
         }
-        case CommandIDs::DocumentConsolidate:
+        case CommandIDs::documentConsolidate:
         {
             fileBased.saveAsync(true, true, [](juce::FileBasedDocument::SaveResult saveResult)
                                 {
@@ -406,7 +406,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
 
-        case CommandIDs::DocumentExport:
+        case CommandIDs::documentExport:
         {
             if(auto* exporter = Instance::get().getExporter())
             {
@@ -414,7 +414,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::DocumentImport:
+        case CommandIDs::documentImport:
         {
             auto const position = getNewTrackPosition();
             mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, "*.json;*.csv");
@@ -434,7 +434,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                       });
             return true;
         }
-        case CommandIDs::DocumentBatch:
+        case CommandIDs::documentBatch:
         {
             if(auto* batcher = Instance::get().getBatcher())
             {
@@ -443,19 +443,19 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
 
-        case CommandIDs::EditUndo:
+        case CommandIDs::editUndo:
         {
             auto& undoManager = Instance::get().getUndoManager();
             undoManager.undo();
             return true;
         }
-        case CommandIDs::EditRedo:
+        case CommandIDs::editRedo:
         {
             auto& undoManager = Instance::get().getUndoManager();
             undoManager.redo();
             return true;
         }
-        case CommandIDs::EditNewGroup:
+        case CommandIDs::editNewGroup:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
@@ -479,7 +479,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::EditNewTrack:
+        case CommandIDs::editNewTrack:
         {
             mPluginListTable.onPluginSelected = [this, position = getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description)
             {
@@ -489,7 +489,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             mPluginListTable.show();
             return true;
         }
-        case CommandIDs::EditRemoveItem:
+        case CommandIDs::editRemoveItem:
         {
             auto& documentDir = Instance::get().getDocumentDirector();
 
@@ -535,7 +535,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::EditLoadTemplate:
+        case CommandIDs::editLoadTemplate:
         {
             struct DocumentCtn
             {
@@ -572,19 +572,19 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
 
-        case CommandIDs::TransportTogglePlayback:
+        case CommandIDs::transportTogglePlayback:
         {
             auto constexpr attr = Transport::AttrType::playback;
             transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::TransportToggleLooping:
+        case CommandIDs::transportToggleLooping:
         {
             auto constexpr attr = Transport::AttrType::looping;
             transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::TransportRewindPlayHead:
+        case CommandIDs::transportRewindPlayHead:
         {
             auto constexpr attr = Transport::AttrType::startPlayhead;
             auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
@@ -600,7 +600,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
 
-        case CommandIDs::ViewZoomIn:
+        case CommandIDs::viewZoomIn:
         {
             auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -608,7 +608,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / -100.0), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::ViewZoomOut:
+        case CommandIDs::viewZoomOut:
         {
             auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -616,14 +616,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / 100.0), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::ViewInfoBubble:
+        case CommandIDs::viewInfoBubble:
         {
             auto& accessor = Instance::get().getApplicationAccessor();
             accessor.setAttr<AttrType::showInfoBubble>(!accessor.getAttr<AttrType::showInfoBubble>(), NotificationType::synchronous);
             return true;
         }
 
-        case CommandIDs::HelpOpenAudioSettings:
+        case CommandIDs::helpOpenAudioSettings:
         {
             if(auto* audioSettings = Instance::get().getAudioSettings())
             {
@@ -631,12 +631,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::HelpOpenPluginPath:
+        case CommandIDs::helpOpenPluginPath:
         {
             mPluginListSearchPath.show();
             return true;
         }
-        case CommandIDs::HelpOpenAbout:
+        case CommandIDs::helpOpenAbout:
         {
             if(auto* about = Instance::get().getAbout())
             {
@@ -644,7 +644,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::HelpOpenManual:
+        case CommandIDs::helpOpenManual:
         {
             juce::URL const url("https://forum.ircam.fr/contact/documentations-logiciels/");
             if(url.isWellFormed())
@@ -653,7 +653,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::HelpOpenForum:
+        case CommandIDs::helpOpenForum:
         {
             juce::URL const url("https://forum.ircam.fr/projects/detail/partiels/");
             if(url.isWellFormed())
@@ -662,7 +662,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::HelpSDIFConverter:
+        case CommandIDs::helpSDIFConverter:
         {
             mSdifConverter.show();
             return true;

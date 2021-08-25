@@ -103,15 +103,15 @@ Application::Interface::Loader::Loader()
     auto& commandManager = Instance::get().getApplicationCommandManager();
     mLoadFileButton.onClick = [&]()
     {
-        commandManager.invokeDirectly(CommandIDs::DocumentOpen, true);
+        commandManager.invokeDirectly(CommandIDs::documentOpen, true);
     };
     mAddTrackButton.onClick = [&]()
     {
-        commandManager.invokeDirectly(CommandIDs::EditNewTrack, true);
+        commandManager.invokeDirectly(CommandIDs::editNewTrack, true);
     };
     mLoadTemplateButton.onClick = [&]()
     {
-        commandManager.invokeDirectly(CommandIDs::EditLoadTemplate, true);
+        commandManager.invokeDirectly(CommandIDs::editLoadTemplate, true);
     };
     mAdaptationButton.onClick = [this]()
     {
@@ -315,9 +315,9 @@ void Application::Interface::Loader::applicationCommandListChanged()
 {
     using CommandIDs = CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
-    mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::DocumentOpen));
-    mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::EditNewTrack));
-    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::EditLoadTemplate));
+    mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::documentOpen));
+    mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editNewTrack));
+    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editLoadTemplate));
 }
 
 bool Application::Interface::Loader::isInterestedInFileDrag(juce::StringArray const& files)
@@ -402,22 +402,22 @@ Application::Interface::Interface()
     mComponentListener.attachTo(mLoader);
 
     mDocumentSection.tooltipButton.setClickingTogglesState(true);
-    mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::ViewInfoBubble));
+    mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::viewInfoBubble));
     mDocumentSection.tooltipButton.onClick = []()
     {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::ViewInfoBubble, true);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::viewInfoBubble, true);
     };
     mDocumentSection.onSaveButtonClicked = []()
     {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::DocumentSave, true);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::documentSave, true);
     };
     mDocumentSection.onNewTrackButtonClicked = []()
     {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::EditNewTrack, true);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::editNewTrack, true);
     };
     mDocumentSection.onNewGroupButtonClicked = []()
     {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::EditNewGroup, true);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::editNewGroup, true);
     };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
