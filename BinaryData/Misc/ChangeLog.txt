@@ -1,5 +1,7 @@
 v0.0.9 (alpha)
 
+- Imp: Scan automatically the plugins at startup (#134)
+- Add: Editable plugin search paths (#133)
 - Fix: The time zoom happens even when scrolling the mouse on the thumbnails if all the groups and tracks are visible (#131)
 - Fix: New tracks are not well focused if the owner group is out of the visible area and not expanded (#130)
 - Imp: Adapt default track colours based on colour mode (#129)
