@@ -67,7 +67,6 @@ Group::Thumbnail::Thumbnail(Director& director)
             }
         }
         menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertiesButton));
-        mPropertiesButton.setState(juce::Button::ButtonState::buttonNormal);
     };
 
     mListener.onAttrChanged = [&](Group::Accessor const& acsr, AttrType const attribute)
