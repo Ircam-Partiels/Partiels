@@ -44,7 +44,7 @@ namespace Application
               {juce::String{}}
             , {std::vector<juce::File>{}}
             , {juce::File{}}
-            , {LookAndFeel::ColourChart::Mode::night}
+            , {LookAndFeel::ColourChart::Mode::day}
             , {true}
             , {}
             , {false}
