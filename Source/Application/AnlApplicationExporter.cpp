@@ -112,7 +112,7 @@ void Application::Exporter::exportToFile()
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
     auto const useDirectory = identifier.isEmpty() || (Document::Tools::hasGroupAcsr(documentAcsr, identifier) && (!options.useGroupOverview || options.useTextFormat()));
     auto const fileType = useDirectory ? Flags::canSelectDirectories : Flags::canSelectFiles;
-    mFileChooser->launchAsync(Flags::openMode | fileType | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
+    mFileChooser->launchAsync(Flags::saveMode | fileType | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
                               {
                                   auto const results = fileChooser.getResults();
                                   if(results.isEmpty())
