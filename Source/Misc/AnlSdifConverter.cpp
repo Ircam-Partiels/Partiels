@@ -443,8 +443,16 @@ SdifConverter::Panel::Panel()
                             juce::ignoreUnused(index);
                             selectedMatrixUpdated();
                         })
-, mPropertyToJsonRow("Row", "Select the row to decode from the SDIF file", "", {}, nullptr)
-, mPropertyToJsonColumn("Column", "Select the colum, to decode from the SDIF file", "", {}, nullptr)
+, mPropertyToJsonRow("Row", "Select the row(s) to decode from the SDIF file", "", {}, [&](size_t index)
+                     {
+                         juce::ignoreUnused(index);
+                         selectedRowColumnUpdated();
+                     })
+, mPropertyToJsonColumn("Column", "Select the colum(s) to decode from the SDIF file", "", {}, [&](size_t index)
+                        {
+                            juce::ignoreUnused(index);
+                            selectedRowColumnUpdated();
+                        })
 , mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
                         {
                             exportToJson();
@@ -729,9 +737,14 @@ void SdifConverter::Panel::selectedMatrixUpdated()
 
     mPropertyToSdifMatrix.entry.setText(SdifSignatureToString(matrixIdentifier), juce::NotificationType::dontSendNotification);
     auto const matrixSize = mEntries.at(frameIdentifier).at(matrixIdentifier);
+
+    if(matrixSize.first > 1_z)
+    {
+        mPropertyToJsonRow.entry.addItem("All", 1);
+    }
     for(auto row = 0_z; row < matrixSize.first; ++row)
     {
-        mPropertyToJsonRow.entry.addItem(juce::String(row), static_cast<int>(row + 1));
+        mPropertyToJsonRow.entry.addItem(juce::String(row), static_cast<int>(row + 2));
     }
     mPropertyToJsonRow.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
     mPropertyToJsonRow.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 0);
@@ -748,6 +761,23 @@ void SdifConverter::Panel::selectedMatrixUpdated()
     mPropertyToJsonColumn.entry.setEnabled(mPropertyToJsonColumn.entry.getNumItems() > 0);
 
     mPropertyToJsonExport.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 0 && mPropertyToJsonColumn.entry.getNumItems() > 0);
+    selectedRowColumnUpdated();
+}
+
+void SdifConverter::Panel::selectedRowColumnUpdated()
+{
+    auto const row = mPropertyToJsonRow.entry.getSelectedId() - 1;
+    auto const column = mPropertyToJsonColumn.entry.getSelectedId() - 1;
+    if(row < 0 || column < 0)
+    {
+        anlWeakAssert(false);
+        return;
+    }
+    mPropertyToJsonColumn.entry.setItemEnabled(1, row != 0);
+    if(row == 0 && column == 0)
+    {
+        mPropertyToJsonColumn.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
+    }
 }
 
 void SdifConverter::Panel::exportToSdif()
@@ -838,7 +868,7 @@ void SdifConverter::Panel::exportToJson()
                                   }
                                   auto const jsonFile = results.getFirst();
                                   enterModalState();
-                                  auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, static_cast<size_t>(row), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1));
+                                  auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, row == 0 ? std::optional<size_t>{} : static_cast<size_t>(row - 1), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1));
                                   exitModalState(0);
                                   if(result.wasOk())
                                   {

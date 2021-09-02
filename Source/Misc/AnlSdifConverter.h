@@ -40,6 +40,7 @@ namespace SdifConverter
 
         void selectedFrameUpdated();
         void selectedMatrixUpdated();
+        void selectedRowColumnUpdated();
 
         void exportToJson();
         void exportToSdif();
