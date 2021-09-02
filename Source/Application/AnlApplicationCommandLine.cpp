@@ -189,7 +189,7 @@ Application::CommandLine::CommandLine()
          "--output|-o <jsonfile> Defines the path of the output JSON file (required).\n\t"
          "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
          "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t"
-         "--row|-r <rowindex> The index of the row (required).\n\t"
+         "--row|-r <rowindex> The index of the row (optional - all rows if not defined).\n\t"
          "--column|-c <columindex> The index of the column (optional - all columns if not defined).\n\t",
          "",
          [](juce::ArgumentList const& args)
@@ -198,24 +198,19 @@ Application::CommandLine::CommandLine()
              args.failIfOptionIsMissing("-o|--output");
              args.failIfOptionIsMissing("-f|--frame");
              args.failIfOptionIsMissing("-m|--matrix");
-             args.failIfOptionIsMissing("-r|--row");
              auto const inputFile = args.getExistingFileForOption("-i|--input");
              auto const outputFile = args.getFileForOption("-o|--output");
              auto const frame = args.getValueForOption("-f|--frame");
              auto const matrix = args.getValueForOption("-m|--matrix");
-             auto const row = args.getValueForOption("-r|--row").getIntValue();
+             auto const row = args.containsOption("-r|--row") ? args.getValueForOption("-r|--row").getIntValue() : -1;
              auto const column = args.containsOption("-c|--column") ? args.getValueForOption("-c|--column").getIntValue() : -1;
-             if(row < 0)
-             {
-                 fail("Row index must be positive!");
-             }
              if(frame.length() != 4 || matrix.length() != 4)
              {
                  fail("Signature must contain 4 characters!");
              }
              auto const frameSig = SdifConverter::getSignature(frame);
              auto const matrixSig = SdifConverter::getSignature(matrix);
-             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column));
+             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, row < 0 ? std::optional<size_t>{} : static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column));
              if(result.failed())
              {
                  juce::ConsoleApplication::fail(result.getErrorMessage());
