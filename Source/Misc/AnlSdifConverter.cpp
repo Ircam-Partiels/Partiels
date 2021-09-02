@@ -14,26 +14,41 @@ uint32_t SdifConverter::getSignature(juce::String const& name)
     return SdifSignatureConst(name[0], name[1], name[2], name[3]);
 }
 
-static int sdifOpenFileQueryCallback(SdifFileT* file, void* userdata)
+class SdifScopedFile
 {
-    juce::ignoreUnused(file, userdata);
-    return 2;
-}
+public:
+    SdifScopedFile(juce::File const& f, bool readOnly)
+    {
+        SdifGenInit(nullptr);
+        SdifSetExitFunc([]()
+                        {
+                        });
+        auto print = [](SdifErrorTagET tag, SdifErrorLevelET level, char* message, SdifFileT*, SdifErrorT* error, char*, int)
+        {
+            auto const tagName = juce::String(std::string(magic_enum::enum_name(tag).substr()));
+            auto const levelName = juce::String(std::string(magic_enum::enum_name(level).substr()));
+            auto const extra = (error != nullptr && error->UserMess != nullptr) ? (juce::String(" - ") + juce::String(error->UserMess)) : juce::String();
+            warnings = tagName + juce::String(" (") + levelName + juce::String("): ") + juce::String(message) + extra;
+        };
+        SdifSetWarningFunc(print);
+        SdifSetErrorFunc(print);
+        file = SdifFOpen(f.getFullPathName().toRawUTF8(), readOnly ? eReadFile : eWriteFile);
+    }
 
-static void sdifDummyExit(void)
-{
-}
+    ~SdifScopedFile()
+    {
+        if(file != nullptr)
+        {
+            SdifFClose(file);
+        }
+        SdifGenKill();
+    }
 
-static juce::String sdifWarning;
-static void sdifPrintWarning(SdifErrorTagET tag, SdifErrorLevelET level, char* message, SdifFileT*, SdifErrorT* error, char*, int)
-{
-    auto const tagName = juce::String(std::string(magic_enum::enum_name(tag).substr()));
-    auto const levelName = juce::String(std::string(magic_enum::enum_name(level).substr()));
-    auto const extra = (error != nullptr && error->UserMess != nullptr) ? (juce::String(" - ") + juce::String(error->UserMess)) : juce::String();
-    sdifWarning = tagName + juce::String(" (") + levelName + juce::String("): ") + juce::String(message) + extra;
-}
+    SdifFileT* file = nullptr;
+    static juce::String warnings;
+};
 
-std::map<uint32_t, std::map<uint32_t, std::pair<size_t, size_t>>> SdifConverter::getEntries(juce::File const& inputFile)
+juce::String SdifScopedFile::warnings;
 {
     if(!inputFile.existsAsFile())
     {
@@ -73,41 +88,16 @@ std::map<uint32_t, std::map<uint32_t, std::pair<size_t, size_t>>> SdifConverter:
 
 juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row, std::optional<size_t> column)
 {
-    class ScopedFile
-    {
-    public:
-        ScopedFile(SdifFileT** f, const char* path)
-        {
-            sdifWarning.clear();
-            SdifGenInit(nullptr);
-            SdifSetExitFunc(sdifDummyExit);
-            SdifSetWarningFunc(sdifPrintWarning);
-            SdifSetErrorFunc(sdifPrintWarning);
-            file = *f = SdifFOpen(path, eReadFile);
-        }
-        ~ScopedFile()
-        {
-            if(file != nullptr)
-            {
-                SdifFClose(file);
-            }
-            SdifGenKill();
-        }
-
-    private:
-        SdifFileT* file = nullptr;
-    };
-
     auto container = nlohmann::json::object();
     auto& json = container["results"];
 
     {
-        SdifFileT* file;
-        ScopedFile scopedFile(&file, inputFile.getFullPathName().toRawUTF8());
-        if(file == nullptr)
+        SdifScopedFile scopedFile(inputFile, true);
+        if(scopedFile.file == nullptr)
         {
             return juce::Result::fail("Can't open input file");
         }
+        auto* file = scopedFile.file;
 
         int endOfFile = 0;
         size_t bytesRead = 0;
@@ -216,9 +206,9 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
             return juce::Result::fail(error->UserMess != nullptr ? error->UserMess : "");
         }
 
-        if(sdifWarning.isNotEmpty())
+        if(scopedFile.warnings.isNotEmpty())
         {
-            return juce::Result::fail(sdifWarning);
+            return juce::Result::fail(scopedFile.warnings);
         }
     }
 
@@ -245,31 +235,6 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
 
 juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId)
 {
-    class ScopedFile
-    {
-    public:
-        ScopedFile(SdifFileT** f, const char* path)
-        {
-            sdifWarning.clear();
-            SdifGenInit(nullptr);
-            SdifSetExitFunc(sdifDummyExit);
-            SdifSetWarningFunc(sdifPrintWarning);
-            SdifSetErrorFunc(sdifPrintWarning);
-            file = *f = SdifFOpen(path, eWriteFile);
-        }
-        ~ScopedFile()
-        {
-            if(file != nullptr)
-            {
-                SdifFClose(file);
-            }
-            SdifGenKill();
-        }
-
-    private:
-        SdifFileT* file = nullptr;
-    };
-
     std::ifstream inputStream(inputFile.getFullPathName().toStdString());
     if(!inputStream || !inputStream.is_open() || !inputStream.good())
     {
@@ -294,17 +259,18 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
     }
 
     juce::TemporaryFile temp(outputFile);
+    if(temp.getFile().create().failed())
     {
-        SdifFileT* file;
-        if(temp.getFile().create().failed())
-        {
-            return juce::Result::fail("Can't create temporary input file");
-        }
-        ScopedFile scopedFile(&file, temp.getFile().getFullPathName().toRawUTF8());
-        if(file == nullptr)
+        return juce::Result::fail("Can't create temporary input file");
+    }
+
+    {
+        SdifScopedFile scopedFile(temp.getFile(), false);
+        if(scopedFile.file == nullptr)
         {
             return juce::Result::fail("Can't open input file");
         }
+        auto* file = scopedFile.file;
 
         if(SdifGetMatrixType(gSdifPredefinedTypes->MatrixTypesTable, matrixId) == nullptr)
         {
@@ -386,9 +352,9 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
                 }
             }
         }
-        if(sdifWarning.isNotEmpty())
+        if(scopedFile.warnings.isNotEmpty())
         {
-            return juce::Result::fail(sdifWarning);
+            return juce::Result::fail(scopedFile.warnings);
         }
     }
 
