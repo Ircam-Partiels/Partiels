@@ -168,6 +168,8 @@ add_test(NAME CompareFilesSV COMMAND Partiels --compare-files ${EXPECTED_CSV_FIL
 add_test(NAME CompareFilesFailure COMMAND Partiels --compare-files ${EXPECTED_CSV_FILE_FAILURE} ${GENERATED_CSV_FILE})
 set_tests_properties(CompareFilesFailure PROPERTIES WILL_FAIL TRUE)
 
-add_test(NAME ConversionToSdif COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Points.json --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Points.sdif --frame=1GAI --matrix=1GAI)
-add_test(NAME ConversionFromSdif COMMAND Partiels --sdif2json --input=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Points.sdif --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Points.json --frame=1GAI --matrix=1GAI --row=0)
-add_test(NAME ConversionCompare COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Points.json ${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Points.json)
+add_test(NAME ConvToSdifPoints COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Points.json --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Points.sdif --frame=1GAI --matrix=1GAI)
+add_test(NAME ConvFromSdifPoints COMMAND Partiels --sdif2json --input=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Points.sdif --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Points.json --frame=1GAI --matrix=1GAI)
+set_tests_properties(ConvFromSdifPoints PROPERTIES DEPENDS "ConvToSdifPoints")
+add_test(NAME ConvComparePoints COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Points.json ${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Points.json)
+set_tests_properties(ConvComparePoints PROPERTIES DEPENDS "ConvFromSdifPoints")
