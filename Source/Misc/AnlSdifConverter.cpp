@@ -25,10 +25,14 @@ public:
                         });
         auto print = [](SdifErrorTagET tag, SdifErrorLevelET level, char* message, SdifFileT*, SdifErrorT* error, char*, int)
         {
-            auto const tagName = juce::String(std::string(magic_enum::enum_name(tag).substr()));
-            auto const levelName = juce::String(std::string(magic_enum::enum_name(level).substr()));
-            auto const extra = (error != nullptr && error->UserMess != nullptr) ? (juce::String(" - ") + juce::String(error->UserMess)) : juce::String();
-            warnings = tagName + juce::String(" (") + levelName + juce::String("): ") + juce::String(message) + extra;
+            std::cout << std::string(magic_enum::enum_name(tag).substr()) << " ";
+            std::cout << "(" << std::string(magic_enum::enum_name(level).substr()) << ")";
+            std::cout << ": " << message << " ";
+            if(error != nullptr && error->UserMess != nullptr)
+            {
+                std::cout << " - " << error->UserMess;
+            }
+            std::cout << "\n";
         };
         SdifSetWarningFunc(print);
         SdifSetErrorFunc(print);
@@ -45,10 +49,7 @@ public:
     }
 
     SdifFileT* file = nullptr;
-    static juce::String warnings;
 };
-
-juce::String SdifScopedFile::warnings;
 
 std::map<uint32_t, std::map<uint32_t, SdifConverter::matrix_size_t>> SdifConverter::getEntries(juce::File const& inputFile)
 {
@@ -225,11 +226,6 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
         {
             return juce::Result::fail(error->UserMess != nullptr ? error->UserMess : "");
         }
-
-        if(scopedFile.warnings.isNotEmpty())
-        {
-            return juce::Result::fail(scopedFile.warnings);
-        }
     }
 
     juce::TemporaryFile temp(outputFile);
@@ -371,10 +367,6 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
                     }
                 }
             }
-        }
-        if(scopedFile.warnings.isNotEmpty())
-        {
-            return juce::Result::fail(scopedFile.warnings);
         }
     }
 
