@@ -107,7 +107,7 @@ std::map<uint32_t, std::map<uint32_t, SdifConverter::matrix_size_t>> SdifConvert
     return entries;
 }
 
-juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row, std::optional<size_t> column)
+juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column)
 {
     auto container = nlohmann::json::object();
     auto& json = container["results"];
@@ -140,14 +140,24 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
             bytesRead += numBytes;
         }
 
+        if(SdifTestFrameType(file, frameId) == nullptr)
+        {
+            return juce::Result::fail("Frame type undefined");
+        }
+
+        if(SdifTestMatrixType(file, matrixId) == nullptr)
+        {
+            return juce::Result::fail("Matrix type undefined");
+        }
+
         while(!endOfFile && SdifFLastError(file) == nullptr)
         {
             bytesRead += SdifFReadFrameHeader(file);
             while(!SdifFCurrFrameIsSelected(file) || SdifFCurrSignature(file) != frameId)
             {
                 SdifFSkipFrameData(file);
-                endOfFile = SdifFGetSignature(file, &bytesRead);
-                if(endOfFile == eEof)
+                endOfFile = SdifFGetSignature(file, &bytesRead) == eEof;
+                if(endOfFile)
                 {
                     break;
                 }
@@ -171,42 +181,58 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                     {
                         auto const numRows = SdifFCurrNbRow(file);
                         auto const numColumns = SdifFCurrNbCol(file);
-                        auto rowIndex = 0_z;
-                        if(row < numRows)
+                        if(row.has_value() || numRows == static_cast<SdifUInt4>(1))
                         {
-                            while(rowIndex < row)
+                            auto const selRow = row.has_value() ? *row : static_cast<SdifUInt4>(0);
+                            for(auto rowIndex = 0_z; rowIndex < numRows; ++rowIndex)
                             {
                                 bytesRead += SdifFReadOneRow(file);
-                                ++rowIndex;
-                            }
-                            auto& cjson = json[channelIndex];
-                            nlohmann::json vjson;
-                            vjson["time"] = time;
-                            bytesRead += SdifFReadOneRow(file);
-                            ++rowIndex;
-                            if(numColumns == 1 || column.has_value())
-                            {
-                                auto const columnIndex = column.has_value() ? static_cast<SdifUInt4>(*column) + static_cast<SdifUInt4>(1) : static_cast<SdifUInt4>(1);
-                                if(columnIndex <= numColumns)
+                                if(rowIndex == selRow)
                                 {
-                                    vjson["value"] = SdifFCurrOneRowCol(file, 1);
+                                    auto& cjson = json[channelIndex];
+                                    nlohmann::json vjson;
+                                    vjson["time"] = time;
+
+                                    if(numColumns == 1 || column.has_value())
+                                    {
+                                        auto const columnIndex = column.has_value() ? static_cast<SdifUInt4>(*column) + static_cast<SdifUInt4>(1) : static_cast<SdifUInt4>(1);
+                                        if(columnIndex <= numColumns)
+                                        {
+                                            vjson["value"] = SdifFCurrOneRowCol(file, columnIndex);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for(SdifUInt4 col = 1; col <= numColumns; col++)
+                                        {
+                                            auto const value = SdifFCurrOneRowCol(file, col);
+                                            vjson["values"].push_back(value);
+                                        }
+                                    }
+                                    cjson.push_back(std::move(vjson));
                                 }
                             }
-                            else
+                        }
+                        else
+                        {
+                            if(numColumns != static_cast<SdifUInt4>(1) && !column.has_value())
                             {
-                                for(SdifUInt4 col = 1; col <= numColumns; col++)
+                                return juce::Result::fail("Can't convert all rows and all columns (either one row or one column must be selected)");
+                            }
+
+                            nlohmann::json vjson;
+                            vjson["time"] = time;
+                            for(auto rowIndex = 0_z; rowIndex < numRows; ++rowIndex)
+                            {
+                                bytesRead += SdifFReadOneRow(file);
+                                auto const columnIndex = column.has_value() ? static_cast<SdifUInt4>(*column + 1_z) : static_cast<SdifUInt4>(1);
+                                if(columnIndex <= numColumns)
                                 {
-                                    auto const value = SdifFCurrOneRowCol(file, col);
+                                    auto const value = SdifFCurrOneRowCol(file, columnIndex);
                                     vjson["values"].push_back(value);
                                 }
                             }
-
-                            cjson.push_back(std::move(vjson));
-                        }
-                        while(rowIndex < numRows)
-                        {
-                            bytesRead += SdifFReadOneRow(file);
-                            ++rowIndex;
+                            json[channelIndex].push_back(std::move(vjson));
                         }
                     }
                     else
