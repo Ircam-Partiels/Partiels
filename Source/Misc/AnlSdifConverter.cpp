@@ -49,15 +49,31 @@ public:
 };
 
 juce::String SdifScopedFile::warnings;
+
+std::map<uint32_t, std::map<uint32_t, SdifConverter::matrix_size_t>> SdifConverter::getEntries(juce::File const& inputFile)
 {
     if(!inputFile.existsAsFile())
     {
         return {};
     }
-    SdifGenInit(nullptr);
-    SdifSetExitFunc(sdifDummyExit);
+    SdifScopedFile scopedFile(inputFile, true);
+    if(scopedFile.file == nullptr)
+    {
+        return {};
+    }
+
     auto* sigs = SdifCreateQueryTree(1024);
-    SdifQuery(inputFile.getFullPathName().toRawUTF8(), sdifOpenFileQueryCallback, sigs);
+    if(sigs == nullptr)
+    {
+        return {};
+    }
+    SdifQuery(
+        inputFile.getFullPathName().toRawUTF8(), [](SdifFileT*, void*)
+        {
+            return 2;
+        },
+        sigs);
+
     std::map<uint32_t, std::map<uint32_t, matrix_size_t>> entries;
     for(int i = 0; i < sigs->num; i++)
     {
@@ -71,18 +87,22 @@ juce::String SdifScopedFile::warnings;
                 {
                     auto const matrixSig = sigs->elems[m].sig;
                     auto const numRows = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).first : 0_z;
-                    auto const numCols = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).second : 0_z;
-                    auto const currNumRows = sigs->elems[m].nrow.max > 0.0 ? static_cast<size_t>(sigs->elems[m].nrow.max) : 0_z;
-                    auto const currNumCols = sigs->elems[m].ncol.max > 0.0 ? static_cast<size_t>(sigs->elems[m].ncol.max) : 0_z;
+                    auto const numCols = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).second.size() : 0_z;
+                    auto const currNumRows = std::max(sigs->elems[m].nrow.max > 0.0 ? static_cast<size_t>(sigs->elems[m].nrow.max) : 0_z, numRows);
+                    auto const currNumCols = std::max(sigs->elems[m].ncol.max > 0.0 ? static_cast<size_t>(sigs->elems[m].ncol.max) : 0_z, numCols);
                     frameRef[matrixSig].first = std::max(currNumRows, numRows);
-                    frameRef[matrixSig].second = std::max(currNumCols, numCols);
+                    auto* matrixType = SdifTestMatrixType(scopedFile.file, matrixSig);
+                    for(size_t colIndex = frameRef[matrixSig].second.size(); colIndex < currNumCols; ++colIndex)
+                    {
+                        auto const* name = matrixType == nullptr ? nullptr : SdifMatrixTypeGetColumnName(matrixType, static_cast<int>(colIndex + 1));
+                        frameRef[matrixSig].second.push_back(name == nullptr ? std::to_string(colIndex + 1) : name);
+                    }
                 }
             }
         }
     }
 
     SdifFreeQueryTree(sigs);
-    SdifGenKill();
     return entries;
 }
 
@@ -698,13 +718,13 @@ void SdifConverter::Panel::selectedMatrixUpdated()
     mPropertyToJsonRow.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
     mPropertyToJsonRow.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 0);
 
-    if(matrixSize.second > 1_z)
+    if(matrixSize.second.size() > 1_z)
     {
         mPropertyToJsonColumn.entry.addItem("All", 1);
     }
-    for(auto column = 0_z; column < matrixSize.second; ++column)
+    for(auto column = 0_z; column < matrixSize.second.size(); ++column)
     {
-        mPropertyToJsonColumn.entry.addItem(juce::String(column), static_cast<int>(column + 2));
+        mPropertyToJsonColumn.entry.addItem(matrixSize.second[column], static_cast<int>(column + 2));
     }
     mPropertyToJsonColumn.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
     mPropertyToJsonColumn.entry.setEnabled(mPropertyToJsonColumn.entry.getNumItems() > 0);

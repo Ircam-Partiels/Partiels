@@ -9,7 +9,7 @@ namespace SdifConverter
 {
     uint32_t getSignature(juce::String const& name);
 
-    using matrix_size_t = std::pair<size_t, size_t>;
+    using matrix_size_t = std::pair<size_t, std::vector<std::string>>;
     std::map<uint32_t, std::map<uint32_t, matrix_size_t>> getEntries(juce::File const& inputFile);
 
     juce::Result toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, size_t row, std::optional<size_t> column);
