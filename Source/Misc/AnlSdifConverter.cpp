@@ -181,6 +181,11 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                     {
                         auto const numRows = SdifFCurrNbRow(file);
                         auto const numColumns = SdifFCurrNbCol(file);
+                        auto const dataType = SdifFCurrDataType(file);
+                        if(dataType == SdifDataTypeET::eChar && column.has_value())
+                        {
+                            return juce::Result::fail("Column index cannot be specified with text data type");
+                        }
                         if(row.has_value() || numRows == static_cast<SdifUInt4>(1))
                         {
                             auto const selRow = row.has_value() ? *row : static_cast<SdifUInt4>(0);
@@ -192,8 +197,17 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                                     auto& cjson = json[channelIndex];
                                     nlohmann::json vjson;
                                     vjson["time"] = time;
-
-                                    if(numColumns == 1 || column.has_value())
+                                    
+                                    if(dataType == SdifDataTypeET::eChar)
+                                    {
+                                        std::string label;
+                                        for(SdifUInt4 col = 0; col < numColumns; col++)
+                                        {
+                                            label += file->CurrOneRow->Data.Char[col];
+                                        }
+                                        vjson["label"] = label;
+                                    }
+                                    else if(numColumns == 1 || column.has_value())
                                     {
                                         auto const columnIndex = column.has_value() ? static_cast<SdifUInt4>(*column) + static_cast<SdifUInt4>(1) : static_cast<SdifUInt4>(1);
                                         if(columnIndex <= numColumns)
