@@ -57,53 +57,82 @@ std::map<uint32_t, std::map<uint32_t, SdifConverter::matrix_size_t>> SdifConvert
     {
         return {};
     }
+
     SdifScopedFile scopedFile(inputFile, true);
     if(scopedFile.file == nullptr)
     {
         return {};
     }
+    auto* file = scopedFile.file;
 
-    auto* sigs = SdifCreateQueryTree(1024);
-    if(sigs == nullptr)
+    int endOfFile = 0;
+    size_t bytesRead = 0;
+
     {
-        return {};
-    }
-    SdifQuery(
-        inputFile.getFullPathName().toRawUTF8(), [](SdifFileT*, void*)
+        auto const numBytes = SdifFReadGeneralHeader(file);
+        if(numBytes == 0_z)
         {
-            return 2;
-        },
-        sigs);
+            return {};
+        }
+        bytesRead += numBytes;
+    }
+    {
+        auto const numBytes = SdifFReadAllASCIIChunks(file);
+        if(numBytes == 0)
+        {
+            return {};
+        }
+        bytesRead += numBytes;
+    }
 
     std::map<uint32_t, std::map<uint32_t, matrix_size_t>> entries;
-    for(int i = 0; i < sigs->num; i++)
+    while(!endOfFile && SdifFLastError(file) == nullptr)
     {
-        if(sigs->elems[i].parent == -1)
+        bytesRead += SdifFReadFrameHeader(file);
+        while(!SdifFCurrFrameIsSelected(file))
         {
-            auto const frameSig = sigs->elems[i].sig;
-            auto& frameRef = entries[frameSig];
-            for(int m = 0; m < sigs->num; m++)
+            SdifFSkipFrameData(file);
+            endOfFile = SdifFGetSignature(file, &bytesRead) == eEof;
+            if(endOfFile)
             {
-                if(sigs->elems[m].parent == i)
+                break;
+            }
+            bytesRead += SdifFReadFrameHeader(file);
+        }
+
+        auto const frameSignature = SdifFCurrFrameSignature(file);
+        auto& frameEntry = entries[frameSignature];
+        if(!endOfFile)
+        {
+            auto const numMatrix = SdifFCurrNbMatrix(file);
+            for(SdifUInt4 m = 0; m < numMatrix; m++)
+            {
+                bytesRead += SdifFReadMatrixHeader(file);
+                if(SdifFCurrMatrixIsSelected(file))
                 {
-                    auto const matrixSig = sigs->elems[m].sig;
-                    auto const numRows = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).first : 0_z;
-                    auto const numCols = frameRef.count(matrixSig) > 0_z ? frameRef.at(matrixSig).second.size() : 0_z;
-                    auto const currNumRows = std::max(sigs->elems[m].nrow.max > 0.0 ? static_cast<size_t>(sigs->elems[m].nrow.max) : 0_z, numRows);
-                    auto const currNumCols = std::max(sigs->elems[m].ncol.max > 0.0 ? static_cast<size_t>(sigs->elems[m].ncol.max) : 0_z, numCols);
-                    frameRef[matrixSig].first = std::max(currNumRows, numRows);
-                    auto* matrixType = SdifTestMatrixType(scopedFile.file, matrixSig);
-                    for(size_t colIndex = frameRef[matrixSig].second.size(); colIndex < currNumCols; ++colIndex)
+                    auto const maxtrixSignature = SdifFCurrMatrixSignature(file);
+                    auto* matrixType = SdifTestMatrixType(scopedFile.file, maxtrixSignature);
+                    auto const newMatrix = frameEntry.count(maxtrixSignature);
+                    auto& matrixEntry = frameEntry[SdifFCurrMatrixSignature(file)];
+
+                    auto const numRows = static_cast<size_t>(SdifFCurrNbRow(file));
+                    matrixEntry.first = std::max(numRows, newMatrix ? 0_z : matrixEntry.first);
+
+                    auto const numColumns = SdifFCurrDataType(file) == SdifDataTypeE::eChar ? 1_z : static_cast<size_t>(SdifFCurrNbCol(file));
+
+                    for(size_t colIndex = matrixEntry.second.size(); colIndex < numColumns; ++colIndex)
                     {
                         auto const* name = matrixType == nullptr ? nullptr : SdifMatrixTypeGetColumnName(matrixType, static_cast<int>(colIndex + 1));
-                        frameRef[matrixSig].second.push_back(name == nullptr ? std::to_string(colIndex + 1) : name);
+                        matrixEntry.second.push_back(name == nullptr ? std::to_string(colIndex + 1) : name);
                     }
                 }
+                bytesRead += SdifFSkipMatrixData(file);
+                bytesRead += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesRead));
             }
+
+            endOfFile = SdifFGetSignature(file, &bytesRead) == eEof;
         }
     }
-
-    SdifFreeQueryTree(sigs);
     return entries;
 }
 
@@ -182,7 +211,7 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                         auto const numRows = SdifFCurrNbRow(file);
                         auto const numColumns = SdifFCurrNbCol(file);
                         auto const dataType = SdifFCurrDataType(file);
-                        if(dataType == SdifDataTypeET::eChar && column.has_value())
+                        if(dataType == SdifDataTypeET::eChar && column.has_value() && *column != 0_z)
                         {
                             return juce::Result::fail("Column index cannot be specified with text data type");
                         }
