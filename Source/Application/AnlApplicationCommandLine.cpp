@@ -224,6 +224,7 @@ Application::CommandLine::CommandLine()
          "--output|-o <sdiffile> Defines the path of the output SDIF file (required).\n\t"
          "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
          "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t",
+         "--colname <name> The name of the column (optional).\n\t"
          "",
          [](juce::ArgumentList const& args)
          {
@@ -241,7 +242,8 @@ Application::CommandLine::CommandLine()
              }
              auto const frameSig = SdifConverter::getSignature(frame);
              auto const matrixSig = SdifConverter::getSignature(matrix);
-             auto const result = SdifConverter::fromJson(inputFile, outputFile, frameSig, matrixSig);
+             auto const colname = args.containsOption("--colname") ? args.getValueForOption("--colname") : std::optional<juce::String>{};
+             auto const result = SdifConverter::fromJson(inputFile, outputFile, frameSig, matrixSig, colname);
              if(result.failed())
              {
                  juce::ConsoleApplication::fail(result.getErrorMessage());

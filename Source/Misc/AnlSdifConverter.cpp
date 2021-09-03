@@ -197,7 +197,7 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
                                     auto& cjson = json[channelIndex];
                                     nlohmann::json vjson;
                                     vjson["time"] = time;
-                                    
+
                                     if(dataType == SdifDataTypeET::eChar)
                                     {
                                         std::string label;
@@ -289,7 +289,7 @@ juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const
     return juce::Result::ok();
 }
 
-juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId)
+juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName)
 {
     std::ifstream inputStream(inputFile.getFullPathName().toStdString());
     if(!inputStream || !inputStream.is_open() || !inputStream.good())
@@ -320,6 +320,8 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
         return juce::Result::fail("Can't create temporary input file");
     }
 
+    auto const& json = container.count("results") ? container.at("results") : container;
+
     {
         SdifScopedFile scopedFile(temp.getFile(), false);
         if(scopedFile.file == nullptr)
@@ -334,6 +336,25 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
             if(newMatrixType == nullptr)
             {
                 return juce::Result::fail(juce::translate("Can't create new matrix type"));
+            }
+            if(columnName.has_value())
+            {
+                SdifMatrixTypeInsertTailColumnDef(newMatrixType, columnName->getCharPointer());
+            }
+            else if(!json.empty() && !json[0_z].empty())
+            {
+                if(json[0_z][0_z].count("label"))
+                {
+                    SdifMatrixTypeInsertTailColumnDef(newMatrixType, "label");
+                }
+                else if(json[0_z][0_z].count("value"))
+                {
+                    SdifMatrixTypeInsertTailColumnDef(newMatrixType, "value");
+                }
+                else
+                {
+                    SdifMatrixTypeInsertTailColumnDef(newMatrixType, "values");
+                }
             }
             SdifPutMatrixType(file->MatrixTypesTable, newMatrixType);
         }
@@ -363,7 +384,6 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
         SdifFWriteGeneralHeader(file);
         SdifFWriteAllASCIIChunks(file);
 
-        auto const& json = container.count("results") ? container.at("results") : container;
         for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
         {
             auto const& channelData = json[channelIndex];
@@ -442,6 +462,7 @@ SdifConverter::Panel::Panel()
 
 , mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", nullptr)
 , mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", nullptr)
+, mPropertyToSdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", nullptr)
 , mPropertyToSdifExport("Convert to SDIF", "Convert the JSON file to a SDIF file", [&]()
                         {
                             exportToSdif();
@@ -478,6 +499,7 @@ SdifConverter::Panel::Panel()
 
     addChildComponent(mPropertyToSdifFrame);
     addChildComponent(mPropertyToSdifMatrix);
+    addChildComponent(mPropertyToSdifColName);
     addChildComponent(mPropertyToSdifExport);
     mPropertyToSdifFrame.entry.onEditorShow = [this]()
     {
@@ -545,6 +567,7 @@ void SdifConverter::Panel::resized()
 
     setBounds(mPropertyToSdifFrame);
     setBounds(mPropertyToSdifMatrix);
+    setBounds(mPropertyToSdifColName);
     setBounds(mPropertyToSdifExport);
 
     setBounds(mPropertyToJsonFrame);
@@ -627,6 +650,7 @@ void SdifConverter::Panel::setFile(juce::File const& file)
 
         mPropertyToSdifFrame.setVisible(true);
         mPropertyToSdifMatrix.setVisible(true);
+        mPropertyToSdifColName.setVisible(true);
         mPropertyToSdifExport.setVisible(true);
 
         mPropertyToJsonFrame.setVisible(false);
@@ -642,6 +666,7 @@ void SdifConverter::Panel::setFile(juce::File const& file)
 
         mPropertyToSdifFrame.setVisible(false);
         mPropertyToSdifMatrix.setVisible(false);
+        mPropertyToSdifColName.setVisible(false);
         mPropertyToSdifExport.setVisible(false);
 
         mPropertyToJsonFrame.setVisible(true);
@@ -798,6 +823,7 @@ void SdifConverter::Panel::exportToSdif()
 {
     auto const frameName = mPropertyToSdifFrame.entry.getText();
     auto const matrixName = mPropertyToSdifMatrix.entry.getText();
+    auto const colName = mPropertyToSdifColName.entry.getText();
     if(frameName.isEmpty() || matrixName.isEmpty())
     {
         anlWeakAssert(false);
@@ -828,7 +854,7 @@ void SdifConverter::Panel::exportToSdif()
                                   }
                                   auto const sdifFile = results.getFirst();
                                   enterModalState();
-                                  auto const result = fromJson(mFile, sdifFile, frameIdentifier, matrixIdentifier);
+                                  auto const result = fromJson(mFile, sdifFile, frameIdentifier, matrixIdentifier, colName.isEmpty() ? std::optional<juce::String>() : colName);
                                   exitModalState(0);
                                   if(result.wasOk())
                                   {
