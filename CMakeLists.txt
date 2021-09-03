@@ -181,7 +181,7 @@ add_test(NAME ConvComparePoints COMMAND Partiels --compare-files ${TESTS_DIRECTO
 set_tests_properties(ConvComparePoints PROPERTIES DEPENDS "ConvFromSdifPoints")
 
 add_test(NAME ConvToSdifColumns COMMAND Partiels --json2sdif --input=${TESTS_DIRECTORY}/Columns.json --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Columns.sdif --frame=1COL --matrix=1COL)
-add_test(NAME ConvFromSdifColumns COMMAND Partiels --sdif2json --input=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Columns.sdif --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Columns.json --frame=1COL --matrix=1COL --row=0)
+add_test(NAME ConvFromSdifColumns COMMAND Partiels --sdif2json --input=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/SDIF/Columns.sdif --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Columns.json --frame=1COL --matrix=1COL)
 set_tests_properties(ConvFromSdifColumns PROPERTIES DEPENDS "ConvToSdifColumns")
 add_test(NAME ConvCompareColumns COMMAND Partiels --compare-files ${TESTS_DIRECTORY}/Columns.json ${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/Columns.json)
 set_tests_properties(ConvCompareColumns PROPERTIES DEPENDS "ConvFromSdifColumns")

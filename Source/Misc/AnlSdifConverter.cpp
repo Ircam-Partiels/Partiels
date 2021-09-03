@@ -402,7 +402,7 @@ juce::Result SdifConverter::fromJson(juce::File const& inputFile, juce::File con
                             {
                                 values[binIndex] = valuesIt->at(binIndex);
                             }
-                            SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(1), static_cast<SdifUInt4>(values.size()), reinterpret_cast<void*>(values.data()));
+                            SdifFWriteFrameAndOneMatrix(file, frameId, static_cast<SdifUInt4>(channelIndex), static_cast<SdifFloat8>(time), matrixId, SdifDataTypeET::eFloat8, static_cast<SdifUInt4>(values.size()), static_cast<SdifUInt4>(1), reinterpret_cast<void*>(values.data()));
                         }
                     }
                 }
