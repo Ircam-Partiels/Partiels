@@ -36,6 +36,128 @@ bool Plugin::Parameter::operator==(Parameter const& rhd) const noexcept
            valueNames == rhd.valueNames;
 }
 
+void Plugin::to_json(nlohmann::json& j, Key const& key)
+{
+    j["identifier"] = key.identifier;
+    j["feature"] = key.feature;
+}
+
+void Plugin::from_json(nlohmann::json const& j, Key& key)
+{
+    j.at("identifier").get_to(key.identifier);
+    j.at("feature").get_to(key.feature);
+}
+
+void Plugin::to_json(nlohmann::json& j, Output const& output)
+{
+    j["identifier"] = output.identifier;
+    j["name"] = output.name;
+    j["description"] = output.description;
+    j["unit"] = output.unit;
+    j["hasFixedBinCount"] = output.hasFixedBinCount;
+    j["binCount"] = output.binCount;
+    j["binNames"] = output.binNames;
+    j["hasKnownExtents"] = output.hasKnownExtents;
+    j["minValue"] = output.minValue;
+    j["maxValue"] = output.maxValue;
+    j["isQuantized"] = output.isQuantized;
+    j["quantizeStep"] = output.quantizeStep;
+    j["sampleType"] = output.sampleType;
+    j["sampleRate"] = output.sampleRate;
+    j["hasDuration"] = output.hasDuration;
+}
+
+void Plugin::from_json(nlohmann::json const& j, Output& output)
+{
+    j.at("identifier").get_to(output.identifier);
+    j.at("name").get_to(output.name);
+    j.at("description").get_to(output.description);
+    j.at("unit").get_to(output.unit);
+    j.at("hasFixedBinCount").get_to(output.hasFixedBinCount);
+    j.at("binCount").get_to(output.binCount);
+    j.at("binNames").get_to(output.binNames);
+    j.at("hasKnownExtents").get_to(output.hasKnownExtents);
+    j.at("minValue").get_to(output.minValue);
+    j.at("maxValue").get_to(output.maxValue);
+    j.at("isQuantized").get_to(output.isQuantized);
+    j.at("quantizeStep").get_to(output.quantizeStep);
+    j.at("sampleType").get_to(output.sampleType);
+    j.at("sampleRate").get_to(output.sampleRate);
+    j.at("hasDuration").get_to(output.hasDuration);
+}
+
+void Plugin::to_json(nlohmann::json& j, Parameter const& parameter)
+{
+    j["identifier"] = parameter.identifier;
+    j["name"] = parameter.name;
+    j["description"] = parameter.description;
+    j["unit"] = parameter.unit;
+    j["minValue"] = parameter.minValue;
+    j["maxValue"] = parameter.maxValue;
+    j["defaultValue"] = parameter.defaultValue;
+    j["isQuantized"] = parameter.isQuantized;
+    j["quantizeStep"] = parameter.quantizeStep;
+    j["valueNames"] = parameter.valueNames;
+}
+
+void Plugin::from_json(nlohmann::json const& j, Parameter& parameter)
+{
+    j.at("identifier").get_to(parameter.identifier);
+    j.at("name").get_to(parameter.name);
+    j.at("description").get_to(parameter.description);
+    j.at("unit").get_to(parameter.unit);
+    j.at("minValue").get_to(parameter.minValue);
+    j.at("maxValue").get_to(parameter.maxValue);
+    j.at("defaultValue").get_to(parameter.defaultValue);
+    j.at("isQuantized").get_to(parameter.isQuantized);
+    j.at("quantizeStep").get_to(parameter.quantizeStep);
+    j.at("valueNames").get_to(parameter.valueNames);
+}
+
+void Plugin::to_json(nlohmann::json& j, State const& state)
+{
+    j["blockSize"] = state.blockSize;
+    j["stepSize"] = state.stepSize;
+    j["windowType"] = state.windowType;
+    j["parameters"] = state.parameters;
+}
+
+void Plugin::from_json(nlohmann::json const& j, State& state)
+{
+    j.at("blockSize").get_to(state.blockSize);
+    j.at("stepSize").get_to(state.stepSize);
+    j.at("windowType").get_to(state.windowType);
+    j.at("parameters").get_to(state.parameters);
+}
+
+void Plugin::to_json(nlohmann::json& j, Description const& description)
+{
+    j["name"] = description.name;
+    j["inputDomain"] = description.inputDomain;
+    j["maker"] = description.maker;
+    j["version"] = description.version;
+    j["category"] = description.category;
+    j["details"] = description.details;
+    j["defaultState"] = description.defaultState;
+    j["parameters"] = description.parameters;
+    j["output"] = description.output;
+    j["programs"] = description.programs;
+}
+
+void Plugin::from_json(nlohmann::json const& j, Description& description)
+{
+    j.at("name").get_to(description.name);
+    j.at("inputDomain").get_to(description.inputDomain);
+    j.at("maker").get_to(description.maker);
+    j.at("version").get_to(description.version);
+    j.at("category").get_to(description.category);
+    j.at("details").get_to(description.details);
+    j.at("defaultState").get_to(description.defaultState);
+    j.at("parameters").get_to(description.parameters);
+    j.at("output").get_to(description.output);
+    j.at("programs").get_to(description.programs);
+}
+
 template <>
 void XmlParser::toXml<Plugin::Key>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Key const& value)
 {

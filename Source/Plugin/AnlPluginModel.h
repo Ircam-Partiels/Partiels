@@ -38,6 +38,9 @@ namespace Plugin
         }
     };
 
+    void to_json(nlohmann::json& j, Key const& key);
+    void from_json(nlohmann::json const& j, Key& key);
+
     //! @brief The description of the output of a plugin
     //! @details The structure describes the results returned by a plugin and how to interprete
     //! them but it doesn't contain any effective result returned by the plugin.
@@ -56,6 +59,9 @@ namespace Plugin
             return !(*this == rhd);
         }
     };
+
+    void to_json(nlohmann::json& j, Output const& output);
+    void from_json(nlohmann::json const& j, Output& output);
 
     //! @brief The description of a parameter of a plugin
     //! @details The structure describes the parameters accepted by a plugin and how to
@@ -76,6 +82,9 @@ namespace Plugin
             return !(*this == rhd);
         }
     };
+
+    void to_json(nlohmann::json& j, Parameter const& parameter);
+    void from_json(nlohmann::json const& j, Parameter& parameter);
 
     //! @brief The state of a plugin
     //! @details The type of data returned by a plugin.
@@ -99,6 +108,9 @@ namespace Plugin
             return !(*this == rhd);
         }
     };
+
+    void to_json(nlohmann::json& j, State const& state);
+    void from_json(nlohmann::json const& j, State& state);
 
     //! @brief The full description of a plugin
     //! @details The structure contains all the informations to represent and to describe how to control
@@ -136,6 +148,9 @@ namespace Plugin
             return !(*this == rhd);
         }
     };
+
+    void to_json(nlohmann::json& j, Description const& description);
+    void from_json(nlohmann::json const& j, Description& description);
 
     //! @brief The result a plugin
     //! @details The type of data returned by a plugin.
