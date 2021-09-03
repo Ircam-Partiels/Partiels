@@ -1,5 +1,10 @@
 v0.0.9 (alpha)
 
+- Fix: Parsing columns to SDIF should creates rows and not columns (#139)
+- Fix: Parsing text data from SDIF is not supported (#138)
+- Fix: Parsing a specific column of a SDIF file doesn't work except for the first one (#137)
+- Imp: Add support to convert all rows of a SDIF file (#136)
+- Imp: Add support for column names in SDIF converter (#135)
 - Imp: Scan automatically the plugins at startup (#134)
 - Add: Editable plugin search paths (#133)
 - Fix: The time zoom happens even when scrolling the mouse on the thumbnails if all the groups and tracks are visible (#131)
