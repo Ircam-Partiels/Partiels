@@ -136,9 +136,9 @@ std::map<uint32_t, std::map<uint32_t, SdifConverter::matrix_size_t>> SdifConvert
     return entries;
 }
 
-juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column)
+juce::Result SdifConverter::toJson(juce::File const& inputFile, juce::File const& outputFile, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column, std::optional<nlohmann::json> const& extraInfo)
 {
-    auto container = nlohmann::json::object();
+    auto container = extraInfo.has_value() ? *extraInfo : nlohmann::json::object();
     auto& json = container["results"];
 
     {
@@ -922,6 +922,7 @@ void SdifConverter::Panel::exportToJson()
         return;
     }
 
+    auto extra = std::optional<nlohmann::json>{};
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a JSON file"), mFile.withFileExtension("json"), "*.json");
     if(mFileChooser == nullptr)
     {
@@ -937,7 +938,7 @@ void SdifConverter::Panel::exportToJson()
                                   }
                                   auto const jsonFile = results.getFirst();
                                   enterModalState();
-                                  auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, row == 0 ? std::optional<size_t>{} : static_cast<size_t>(row - 1), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1));
+                                  auto const result = toJson(mFile, jsonFile, frameIdentifier, matrixIdentifier, row == 0 ? std::optional<size_t>{} : static_cast<size_t>(row - 1), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1), extra);
                                   exitModalState(0);
                                   if(result.wasOk())
                                   {

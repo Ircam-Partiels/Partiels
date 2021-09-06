@@ -212,7 +212,8 @@ Application::CommandLine::CommandLine()
              }
              auto const frameSig = SdifConverter::getSignature(frame);
              auto const matrixSig = SdifConverter::getSignature(matrix);
-             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, row < 0 ? std::optional<size_t>{} : static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column));
+             auto extra = std::optional<nlohmann::json>{};
+             auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, row < 0 ? std::optional<size_t>{} : static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column), extra);
              if(result.failed())
              {
                  juce::ConsoleApplication::fail(result.getErrorMessage());
