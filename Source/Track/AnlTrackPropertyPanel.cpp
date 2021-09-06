@@ -637,7 +637,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                         }
                         else
                         {
-                            anlStrongAssert(false && "property unsupported");
+                            anlWeakAssert(false && "property unsupported");
                         }
                     }
                 }
