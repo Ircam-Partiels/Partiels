@@ -341,7 +341,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
       {
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
       })
-, mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Plugin", "Results", "Manual"}, [&](size_t index)
+, mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
                           {
                               auto applyRange = [&](std::optional<Zoom::Range> const& globalRange)
                               {
