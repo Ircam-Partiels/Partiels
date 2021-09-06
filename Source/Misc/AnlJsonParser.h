@@ -28,7 +28,7 @@ namespace nlohmann
 
         static void from_json(json const& j, juce::Colour& colour)
         {
-            colour.fromString(juce::String(j.get<std::string>()));
+            colour = juce::Colour::fromString(juce::String(j.get<std::string>()));
         }
     };
 
