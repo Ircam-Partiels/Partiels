@@ -44,8 +44,8 @@ void Plugin::to_json(nlohmann::json& j, Key const& key)
 
 void Plugin::from_json(nlohmann::json const& j, Key& key)
 {
-    j.at("identifier").get_to(key.identifier);
-    j.at("feature").get_to(key.feature);
+    key.identifier = j.value("identifier", key.identifier);
+    key.feature = j.value("feature", key.feature);
 }
 
 void Plugin::to_json(nlohmann::json& j, Output const& output)
@@ -69,21 +69,21 @@ void Plugin::to_json(nlohmann::json& j, Output const& output)
 
 void Plugin::from_json(nlohmann::json const& j, Output& output)
 {
-    j.at("identifier").get_to(output.identifier);
-    j.at("name").get_to(output.name);
-    j.at("description").get_to(output.description);
-    j.at("unit").get_to(output.unit);
-    j.at("hasFixedBinCount").get_to(output.hasFixedBinCount);
-    j.at("binCount").get_to(output.binCount);
-    j.at("binNames").get_to(output.binNames);
-    j.at("hasKnownExtents").get_to(output.hasKnownExtents);
-    j.at("minValue").get_to(output.minValue);
-    j.at("maxValue").get_to(output.maxValue);
-    j.at("isQuantized").get_to(output.isQuantized);
-    j.at("quantizeStep").get_to(output.quantizeStep);
-    j.at("sampleType").get_to(output.sampleType);
-    j.at("sampleRate").get_to(output.sampleRate);
-    j.at("hasDuration").get_to(output.hasDuration);
+    output.identifier = j.value("identifier", output.identifier);
+    output.name = j.value("name", output.name);
+    output.description = j.value("description", output.description);
+    output.unit = j.value("unit", output.unit);
+    output.hasFixedBinCount = j.value("hasFixedBinCount", output.hasFixedBinCount);
+    output.binCount = j.value("binCount", output.binCount);
+    output.binNames = j.value("binNames", output.binNames);
+    output.hasKnownExtents = j.value("hasKnownExtents", output.hasKnownExtents);
+    output.minValue = j.value("minValue", output.minValue);
+    output.maxValue = j.value("maxValue", output.maxValue);
+    output.isQuantized = j.value("isQuantized", output.isQuantized);
+    output.quantizeStep = j.value("quantizeStep", output.quantizeStep);
+    output.sampleType = j.value("sampleType", output.sampleType);
+    output.sampleRate = j.value("sampleRate", output.sampleRate);
+    output.hasDuration = j.value("hasDuration", output.hasDuration);
 }
 
 void Plugin::to_json(nlohmann::json& j, Parameter const& parameter)
@@ -102,16 +102,16 @@ void Plugin::to_json(nlohmann::json& j, Parameter const& parameter)
 
 void Plugin::from_json(nlohmann::json const& j, Parameter& parameter)
 {
-    j.at("identifier").get_to(parameter.identifier);
-    j.at("name").get_to(parameter.name);
-    j.at("description").get_to(parameter.description);
-    j.at("unit").get_to(parameter.unit);
-    j.at("minValue").get_to(parameter.minValue);
-    j.at("maxValue").get_to(parameter.maxValue);
-    j.at("defaultValue").get_to(parameter.defaultValue);
-    j.at("isQuantized").get_to(parameter.isQuantized);
-    j.at("quantizeStep").get_to(parameter.quantizeStep);
-    j.at("valueNames").get_to(parameter.valueNames);
+    parameter.identifier = j.value("identifier", parameter.identifier);
+    parameter.name = j.value("name", parameter.name);
+    parameter.description = j.value("description", parameter.description);
+    parameter.unit = j.value("unit", parameter.unit);
+    parameter.minValue = j.value("minValue", parameter.minValue);
+    parameter.maxValue = j.value("maxValue", parameter.maxValue);
+    parameter.defaultValue = j.value("defaultValue", parameter.defaultValue);
+    parameter.isQuantized = j.value("isQuantized", parameter.isQuantized);
+    parameter.quantizeStep = j.value("quantizeStep", parameter.quantizeStep);
+    parameter.valueNames = j.value("valueNames", parameter.valueNames);
 }
 
 void Plugin::to_json(nlohmann::json& j, State const& state)
@@ -124,10 +124,10 @@ void Plugin::to_json(nlohmann::json& j, State const& state)
 
 void Plugin::from_json(nlohmann::json const& j, State& state)
 {
-    j.at("blockSize").get_to(state.blockSize);
-    j.at("stepSize").get_to(state.stepSize);
-    j.at("windowType").get_to(state.windowType);
-    j.at("parameters").get_to(state.parameters);
+    state.blockSize = j.value("blockSize", state.blockSize);
+    state.stepSize = j.value("stepSize", state.stepSize);
+    state.windowType = j.value("windowType", state.windowType);
+    state.parameters = j.value("parameters", state.parameters);
 }
 
 void Plugin::to_json(nlohmann::json& j, Description const& description)
@@ -146,16 +146,16 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
 
 void Plugin::from_json(nlohmann::json const& j, Description& description)
 {
-    j.at("name").get_to(description.name);
-    j.at("inputDomain").get_to(description.inputDomain);
-    j.at("maker").get_to(description.maker);
-    j.at("version").get_to(description.version);
-    j.at("category").get_to(description.category);
-    j.at("details").get_to(description.details);
-    j.at("defaultState").get_to(description.defaultState);
-    j.at("parameters").get_to(description.parameters);
-    j.at("output").get_to(description.output);
-    j.at("programs").get_to(description.programs);
+    description.name = j.value("name", description.name);
+    description.inputDomain = j.value("inputDomain", description.inputDomain);
+    description.maker = j.value("maker", description.maker);
+    description.version = j.value("version", description.version);
+    description.category = j.value("category", description.category);
+    description.details = j.value("details", description.details);
+    description.defaultState = j.value("defaultState", description.defaultState);
+    description.parameters = j.value("parameters", description.parameters);
+    description.output = j.value("output", description.output);
+    description.programs = j.value("programs", description.programs);
 }
 
 template <>
