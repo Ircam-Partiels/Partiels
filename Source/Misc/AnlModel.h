@@ -434,6 +434,7 @@ namespace Model
         void fromJson(nlohmann::json const& json, NotificationType const notification)
         {
             Accessor temporary;
+            temporary.copyFrom(*this, notification);
             fromJson(temporary, json);
             copyFrom(temporary, notification);
         }
@@ -444,6 +445,7 @@ namespace Model
         void fromXml(juce::XmlElement const& xml, juce::StringRef const& name, NotificationType const notification)
         {
             Accessor temporary;
+            temporary.copyFrom(*this, notification);
             auto copy = parseXml(xml, xml.getIntAttribute("AnlModelVersion", 0));
             if(copy != nullptr)
             {
