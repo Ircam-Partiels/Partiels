@@ -599,6 +599,29 @@ void Track::Director::runLoading()
         startTimer(50);
         timerCallback();
         mLoader.loadAnalysis(mAccessor, file);
+        if(!file.hasFileExtension("json"))
+        {
+            return;
+        }
+        
+        auto stream = std::ifstream(file.getFullPathName().toStdString());
+        if(!stream || !stream.is_open() || !stream.good())
+        {
+            return;
+        }
+        
+        nlohmann::json::parser_callback_t cb = [](int depth, nlohmann::json::parse_event_t event, nlohmann::json& parsed)
+        {
+            return depth != 1 or event != nlohmann::json::parse_event_t::key or parsed == nlohmann::json("track");
+        };
+        
+        auto json = nlohmann::json::parse(stream, cb, false);
+        if(json.count("track") > 0_z)
+        {
+            json["track"]["identifier"] = mAccessor.getAttr<AttrType::identifier>();
+            json["track"]["file"] = mAccessor.getAttr<AttrType::file>();
+            mAccessor.fromJson(json.at("track"), NotificationType::synchronous);
+        }
     }
 }
 
