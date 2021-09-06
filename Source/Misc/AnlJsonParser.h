@@ -57,10 +57,7 @@ namespace nlohmann
 
         static void from_json(json const& j, juce::Range<T>& range)
         {
-            T start, end;
-            j.at("start").get_to(start);
-            j.at("end").get_to(end);
-            range = {start, end};
+            range = {j.value("start", T(0)), j.value("end", T(0))};
         }
     };
 } // namespace nlohmann
