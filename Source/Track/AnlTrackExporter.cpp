@@ -311,7 +311,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -320,6 +320,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     }
     auto const results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
+    auto const description = includeDescription ? accessor.toJson() : nlohmann::json::object();
     lock.exit();
 
     if(results.isEmpty())
@@ -334,6 +335,10 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
 
     auto container = nlohmann::json::object();
     auto& json = container["results"];
+    if(includeDescription)
+    {
+        container["track"] = std::move(description);
+    }
 
     auto const markers = results.getMarkers();
     auto const points = results.getPoints();

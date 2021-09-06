@@ -15,7 +15,8 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            imageHeight == rhd.imageHeight &&
            includeHeaderRaw == rhd.includeHeaderRaw &&
            ignoreGridResults == rhd.ignoreGridResults &&
-           columnSeparator == rhd.columnSeparator;
+           columnSeparator == rhd.columnSeparator &&
+           includeDescription == rhd.includeDescription;
 }
 
 bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
@@ -685,7 +686,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::csv:
                 return Track::Exporter::toCsv(trackAcsr, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, fileUsed, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, fileUsed, options.includeDescription, shouldAbort);
         }
         return juce::Result::fail("Unsupported format");
     };

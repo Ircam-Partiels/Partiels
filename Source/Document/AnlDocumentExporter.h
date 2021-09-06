@@ -41,6 +41,7 @@ namespace Document
             bool includeHeaderRaw{true};
             bool ignoreGridResults{true};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
+            bool includeDescription{true};
 
             bool operator==(Options const& rhd) const noexcept;
             bool operator!=(Options const& rhd) const noexcept;
