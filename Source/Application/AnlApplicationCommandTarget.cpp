@@ -764,7 +764,7 @@ void Application::CommandTarget::addPluginTrack(Plugin::Key const& key, Plugin::
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
-        // If the group is not expanded, we have to wait a ms before the new track becomes fully visible
+        // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *identifier]()
                                     {
                                         if(auto* window = Instance::get().getWindow())
@@ -834,7 +834,7 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
-        // If the group is not expanded, we have to wait a ms before the new track becomes fully visible
+        // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *identifier]()
                                     {
                                         if(auto* window = Instance::get().getWindow())
