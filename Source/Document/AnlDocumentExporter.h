@@ -92,6 +92,7 @@ namespace Document
             PropertyNumber mPropertyHeight;
             PropertyToggle mPropertyRawHeader;
             PropertyList mPropertyRawSeparator;
+            PropertyToggle mPropertyIncludeDescription;
             PropertyToggle mPropertyIgnoreGrids;
 
             Accessor::Listener mListener{typeid(*this).name()};

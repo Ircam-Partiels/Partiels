@@ -138,6 +138,12 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                             options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                             setOptions(options, juce::NotificationType::sendNotificationSync);
                         })
+, mPropertyIncludeDescription("Include Extra Description", "Ignore the extra description of the track in the results", [this](bool state)
+                              {
+                                  auto options = mOptions;
+                                  options.includeDescription = state;
+                                  setOptions(options, juce::NotificationType::sendNotificationSync);
+                              })
 , mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [this](bool state)
                        {
                            auto options = mOptions;
@@ -160,6 +166,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
     addAndMakeVisible(mPropertyHeight);
     addChildComponent(mPropertyRawHeader);
     addChildComponent(mPropertyRawSeparator);
+    addChildComponent(mPropertyIncludeDescription);
     addChildComponent(mPropertyIgnoreGrids);
 
     mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
@@ -254,6 +261,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertyHeight);
     setBounds(mPropertyRawHeader);
     setBounds(mPropertyRawSeparator);
+    setBounds(mPropertyIncludeDescription);
     setBounds(mPropertyIgnoreGrids);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
@@ -420,6 +428,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyRawHeader.entry.setToggleState(options.includeHeaderRaw, silent);
     mPropertyRawSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
+    mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
 
     mPropertyGroupMode.setVisible(options.useImageFormat());
     mPropertyAutoSizeMode.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
@@ -427,6 +436,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyHeight.setVisible(options.useImageFormat());
     mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyRawSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyIncludeDescription.setVisible(options.format == Document::Exporter::Options::Format::json);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
     sanitizeProperties(false);
     resized();
@@ -791,6 +801,7 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "includeHeaderRaw", value.includeHeaderRaw);
         toXml(*child, "ignoreGridResults", value.ignoreGridResults);
         toXml(*child, "columnSeparator", value.columnSeparator);
+        toXml(*child, "includeDescription", value.includeDescription);
         xml.addChildElement(child.release());
     }
 }
@@ -814,6 +825,7 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.includeHeaderRaw = fromXml(*child, "includeHeaderRaw", defaultValue.includeHeaderRaw);
     value.ignoreGridResults = fromXml(*child, "ignoreGridResults", defaultValue.ignoreGridResults);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);
+    value.includeDescription = fromXml(*child, "includeDescription", defaultValue.includeDescription);
     return value;
 }
 
