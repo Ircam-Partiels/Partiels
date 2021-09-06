@@ -1,5 +1,7 @@
 v0.0.9 (alpha)
 
+- Add: Support for value range when parsing files from SDIF to JSON (#142)
+- Add: Support for unit when parsing files from SDIF to JSON (#141)
 - Add: Support for column name when parsing to SDIF files (#140)
 - Fix: Parsing columns to SDIF should creates rows and not columns (#139)
 - Fix: Parsing text data from SDIF is not supported (#138)
@@ -14,6 +16,7 @@ v0.0.9 (alpha)
 - Fix: Selection of tracks and groups using tab key (#128)
 - Add: Button on the main interface to add tracks and groups (#127)
 - Imp: Representation of track and group selection (#126)
+- Add: Option to restore the plugin state using the JSON files (#83)
 - Imp: Graphical difference between tracks and groups (#70)
 
 v0.0.8 (alpha)
