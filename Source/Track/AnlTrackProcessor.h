@@ -42,6 +42,7 @@ namespace Track
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReaderManager;
 
         std::atomic<ProcessState> mAnalysisState{ProcessState::available};
+        std::atomic<bool> mShouldAbort{false};
         std::future<Results> mAnalysisProcess;
         std::mutex mAnalysisMutex;
         std::atomic<float> mAdvancement{0.0f};

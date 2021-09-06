@@ -98,7 +98,7 @@ namespace Track
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);
 
-        Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults);
+        Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort);
 
         size_t getNumBins(std::vector<Results::Columns> const& results);
         Zoom::Range getValueRange(std::vector<Results::Columns> const& results);

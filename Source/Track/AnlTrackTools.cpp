@@ -413,7 +413,7 @@ void Track::Tools::paintClippedImage(juce::Graphics& g, juce::Image const& image
     g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
 }
 
-Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults)
+Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort)
 {
     auto rtToS = [](Vamp::RealTime const& rt)
     {
@@ -426,8 +426,12 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
         {
             return output.binCount;
         }
-        return std::accumulate(pluginResults.cbegin(), pluginResults.cend(), 0_z, [](auto val, auto const& channelResults)
+        return std::accumulate(pluginResults.cbegin(), pluginResults.cend(), 0_z, [&](auto val, auto const& channelResults)
                                {
+                                   if(shouldAbort)
+                                   {
+                                       return val;
+                                   }
                                    auto it = std::max_element(channelResults.cbegin(), channelResults.cend(), [](auto const& lhs, auto const& rhs)
                                                               {
                                                                   return lhs.values.size() < rhs.values.size();
@@ -440,6 +444,11 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
                                });
     };
 
+    if(shouldAbort)
+    {
+        return {};
+    }
+
     switch(getBinCount())
     {
         case 0_z:
@@ -448,6 +457,10 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
             results.reserve(pluginResults.size());
             for(auto const& channelResults : pluginResults)
             {
+                if(shouldAbort)
+                {
+                    return {};
+                }
                 std::vector<Results::Marker> markers;
                 markers.reserve(pluginResults.size());
                 for(auto const& result : channelResults)
@@ -469,6 +482,10 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
             results.reserve(pluginResults.size());
             for(auto const& channelResults : pluginResults)
             {
+                if(shouldAbort)
+                {
+                    return {};
+                }
                 std::vector<Results::Point> points;
                 points.reserve(pluginResults.size());
                 for(auto const& result : channelResults)
@@ -493,6 +510,10 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
             results.reserve(pluginResults.size());
             for(auto const& channelResults : pluginResults)
             {
+                if(shouldAbort)
+                {
+                    return {};
+                }
                 std::vector<Results::Column> columns;
                 columns.reserve(pluginResults.size());
                 for(auto& result : channelResults)

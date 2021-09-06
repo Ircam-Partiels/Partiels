@@ -93,7 +93,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
 
                                       anlDebug("Track", "Processor performed");
 
-                                      auto const results = Tools::getResults(processor->getOutput(), pluginResults);
+                                      auto const results = Tools::getResults(processor->getOutput(), pluginResults, mShouldAbort);
                                       mAdvancement.store(1.0f);
 
                                       anlDebug("Track", "Results performed");
@@ -156,6 +156,7 @@ void Track::Processor::abortAnalysis()
     if(mAnalysisProcess.valid())
     {
         mAnalysisState = ProcessState::aborted;
+        mShouldAbort = true;
         mAnalysisProcess.get();
         cancelPendingUpdate();
 
@@ -164,6 +165,7 @@ void Track::Processor::abortAnalysis()
             onAnalysisAborted();
         }
     }
+    mShouldAbort = false;
     mAnalysisState = ProcessState::available;
 }
 
