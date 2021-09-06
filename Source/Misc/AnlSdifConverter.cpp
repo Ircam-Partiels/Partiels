@@ -517,6 +517,21 @@ SdifConverter::Panel::Panel()
                             juce::ignoreUnused(index);
                             selectedRowColumnUpdated();
                         })
+, mPropertyToJsonUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
+                      {
+                          mPropertyToJsonMinValue.entry.setTextValueSuffix(text);
+                          mPropertyToJsonMaxValue.entry.setTextValueSuffix(text);
+                      })
+, mPropertyToJsonMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+                          {
+                              auto const max = std::max(static_cast<float>(mPropertyToJsonMaxValue.entry.getValue()), value);
+                              mPropertyToJsonMaxValue.entry.setValue(max, juce::NotificationType::dontSendNotification);
+                          })
+, mPropertyToJsonMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+                          {
+                              auto const min = std::min(static_cast<float>(mPropertyToJsonMinValue.entry.getValue()), value);
+                              mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
+                          })
 , mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
                         {
                             exportToJson();
@@ -565,6 +580,9 @@ SdifConverter::Panel::Panel()
     addChildComponent(mPropertyToJsonMatrix);
     addChildComponent(mPropertyToJsonRow);
     addChildComponent(mPropertyToJsonColumn);
+    addChildComponent(mPropertyToJsonUnit);
+    addChildComponent(mPropertyToJsonMinValue);
+    addChildComponent(mPropertyToJsonMaxValue);
     addChildComponent(mPropertyToJsonExport);
     mPropertyToJsonFrame.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
     mPropertyToJsonMatrix.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
@@ -603,6 +621,9 @@ void SdifConverter::Panel::resized()
     setBounds(mPropertyToJsonMatrix);
     setBounds(mPropertyToJsonRow);
     setBounds(mPropertyToJsonColumn);
+    setBounds(mPropertyToJsonUnit);
+    setBounds(mPropertyToJsonMinValue);
+    setBounds(mPropertyToJsonMaxValue);
     setBounds(mPropertyToJsonExport);
 
     setBounds(mInfos);
@@ -687,6 +708,9 @@ void SdifConverter::Panel::setFile(juce::File const& file)
         mPropertyToJsonRow.setVisible(false);
         mPropertyToJsonColumn.setVisible(false);
         mPropertyToJsonExport.setVisible(false);
+        mPropertyToJsonUnit.setVisible(false);
+        mPropertyToJsonMinValue.setVisible(false);
+        mPropertyToJsonMaxValue.setVisible(false);
     }
     else if(file.hasFileExtension("sdif"))
     {
@@ -702,6 +726,9 @@ void SdifConverter::Panel::setFile(juce::File const& file)
         mPropertyToJsonMatrix.setVisible(true);
         mPropertyToJsonRow.setVisible(true);
         mPropertyToJsonColumn.setVisible(true);
+        mPropertyToJsonUnit.setVisible(true);
+        mPropertyToJsonMinValue.setVisible(true);
+        mPropertyToJsonMaxValue.setVisible(true);
         mPropertyToJsonExport.setVisible(true);
 
         mEntries = getEntries(file);
@@ -728,6 +755,7 @@ void SdifConverter::Panel::setFile(juce::File const& file)
 
         mPropertyToSdifFrame.setVisible(false);
         mPropertyToSdifMatrix.setVisible(false);
+        mPropertyToSdifColName.setVisible(false);
         mPropertyToSdifExport.setVisible(false);
 
         mPropertyToJsonFrame.setVisible(false);
@@ -735,6 +763,9 @@ void SdifConverter::Panel::setFile(juce::File const& file)
         mPropertyToJsonRow.setVisible(false);
         mPropertyToJsonColumn.setVisible(false);
         mPropertyToJsonExport.setVisible(false);
+        mPropertyToJsonUnit.setVisible(false);
+        mPropertyToJsonMinValue.setVisible(false);
+        mPropertyToJsonMaxValue.setVisible(false);
     }
     resized();
 }
@@ -922,7 +953,26 @@ void SdifConverter::Panel::exportToJson()
         return;
     }
 
+    auto const unit = mPropertyToJsonUnit.entry.getText();
+    juce::Range<double> const range{mPropertyToJsonMinValue.entry.getValue(), mPropertyToJsonMaxValue.entry.getValue()};
     auto extra = std::optional<nlohmann::json>{};
+    if(!unit.isEmpty() || !range.isEmpty())
+    {
+        auto json = nlohmann::json::object();
+        auto& output = json["track"]["description"]["output"];
+        if(!unit.isEmpty())
+        {
+            output["unit"] = unit.toStdString();
+        }
+        if(!range.isEmpty())
+        {
+            output["minValue"] = range.getStart();
+            output["maxValue"] = range.getEnd();
+            output["hasKnownExtents"] = true;
+        }
+        extra = std::optional<nlohmann::json>(std::move(json));
+    }
+
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a JSON file"), mFile.withFileExtension("json"), "*.json");
     if(mFileChooser == nullptr)
     {
