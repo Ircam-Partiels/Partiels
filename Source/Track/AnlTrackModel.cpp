@@ -48,11 +48,11 @@ void Track::to_json(nlohmann::json& j, ColourSet const& colourSet)
 
 void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
 {
-    j.at("map").get_to(colourSet.map);
-    j.at("background").get_to(colourSet.background);
-    j.at("foreground").get_to(colourSet.foreground);
-    j.at("text").get_to(colourSet.text);
-    j.at("shadow").get_to(colourSet.shadow);
+    colourSet.map = j.value("map", colourSet.map);
+    colourSet.background = j.value("background", colourSet.background);
+    colourSet.foreground = j.value("foreground", colourSet.foreground);
+    colourSet.text = j.value("text", colourSet.text);
+    colourSet.shadow = j.value("shadow", colourSet.shadow);
 }
 
 ANALYSE_FILE_END
