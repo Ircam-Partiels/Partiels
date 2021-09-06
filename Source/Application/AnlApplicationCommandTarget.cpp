@@ -827,7 +827,7 @@ void Application::CommandTarget::addFileTrack(juce::File const& file, juce::Stri
         colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
         colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
         trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
-        
+
         trackAcsr.setAttr<Track::AttrType::file>(file, NotificationType::synchronous);
 
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
