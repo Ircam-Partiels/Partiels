@@ -91,7 +91,7 @@ void NumberField::Label::setNumDecimalsDisplayed(int numDecimals)
     if(mNumDisplayedDecimals != numDecimals)
     {
         mNumDisplayedDecimals = numDecimals;
-        setText(getText(), juce::NotificationType::dontSendNotification);
+        textWasChanged();
     }
 }
 
@@ -105,7 +105,7 @@ void NumberField::Label::setTextValueSuffix(juce::String const& suffix)
     if(mSuffix != suffix)
     {
         mSuffix = suffix;
-        setText(getText(), juce::NotificationType::dontSendNotification);
+        textWasChanged();
     }
 }
 
@@ -180,6 +180,7 @@ void NumberField::Label::storeProperties(juce::NamedValueSet& prop, juce::Range<
 
 NumberField::NumberField()
 {
+    setValue(0.0, juce::NotificationType::dontSendNotification);
     mLabel.onEditorShow = [this]()
     {
         if(onEditorShow != nullptr)
