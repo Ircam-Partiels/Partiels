@@ -620,7 +620,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 for(auto const& parameter : state.parameters)
                 {
                     auto it = mParameterProperties.find(parameter.first);
-                    anlWeakAssert(it != mParameterProperties.end());
                     if(it != mParameterProperties.end() && it->second != nullptr)
                     {
                         if(auto* propertyList = dynamic_cast<PropertyList*>(it->second.get()))
