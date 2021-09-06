@@ -100,6 +100,7 @@ Application::CommandLine::CommandLine()
          "--nogrids Ignores the export of the grid tracks (optional with the csv and json formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
          "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
+         "--description Includes the plugin description (optional with the json format).\n\t"
          "",
          "",
          [](juce::ArgumentList const& args)
@@ -164,6 +165,7 @@ Application::CommandLine::CommandLine()
                  options.format = format == "csv" ? Options::Format::csv : Options::Format::json;
                  options.ignoreGridResults = args.containsOption("--nogrids");
                  options.includeHeaderRaw = args.containsOption("--header");
+                 options.includeDescription = args.containsOption("--description");
                  auto const separator = magic_enum::enum_cast<Document::Exporter::Options::ColumnSeparator>(args.getValueForOption("--separator").toStdString());
                  if(separator.has_value())
                  {
