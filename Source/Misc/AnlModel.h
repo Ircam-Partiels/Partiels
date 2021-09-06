@@ -758,7 +758,13 @@ namespace Model
                                      anlWeakAssert(it != json.cend());
                                      if(it != json.cend())
                                      {
-                                         it->get_to(d.value);
+                                         try
+                                         {
+                                             it->get_to(d.value);
+                                         }
+                                         catch(...)
+                                         {
+                                         }
                                      }
                                  }
                              });
