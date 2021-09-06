@@ -222,7 +222,7 @@ namespace Track
     , Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
-    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::notifying>
+    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
