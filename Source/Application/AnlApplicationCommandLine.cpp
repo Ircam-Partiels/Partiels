@@ -192,7 +192,10 @@ Application::CommandLine::CommandLine()
          "--frame|-f <framesignature> The 4 characters frame signature (required).\n\t"
          "--matrix|-m <matrixsignature> The 4 characters matrix signature (required).\n\t"
          "--row|-r <rowindex> The index of the row (optional - all rows if not defined).\n\t"
-         "--column|-c <columindex> The index of the column (optional - all columns if not defined).\n\t",
+         "--column|-c <columindex> The index of the column (optional - all columns if not defined).\n\t"
+         "--unit <unit> The unit of the results (optional).\n\t"
+         "--min <value> The minimum possible value of the results (required if max defined).\n\t"
+         "--max <value> The maximum possible value of the results (required if max defined).\n\t",
          "",
          [](juce::ArgumentList const& args)
          {
@@ -200,6 +203,11 @@ Application::CommandLine::CommandLine()
              args.failIfOptionIsMissing("-o|--output");
              args.failIfOptionIsMissing("-f|--frame");
              args.failIfOptionIsMissing("-m|--matrix");
+             if(args.containsOption("--min") || args.containsOption("--max"))
+             {
+                 args.failIfOptionIsMissing("--min");
+                 args.failIfOptionIsMissing("--max");
+             }
              auto const inputFile = args.getExistingFileForOption("-i|--input");
              auto const outputFile = args.getFileForOption("-o|--output");
              auto const frame = args.getValueForOption("-f|--frame");
@@ -212,7 +220,27 @@ Application::CommandLine::CommandLine()
              }
              auto const frameSig = SdifConverter::getSignature(frame);
              auto const matrixSig = SdifConverter::getSignature(matrix);
+
+             auto const unit = args.getValueForOption("--unit");
+             juce::Range<double> const range{static_cast<double>(args.getValueForOption("--min").getFloatValue()), (args.getValueForOption("--max").getFloatValue())};
              auto extra = std::optional<nlohmann::json>{};
+             if(!unit.isEmpty() || !range.isEmpty())
+             {
+                 auto json = nlohmann::json::object();
+                 auto& output = json["track"]["description"]["output"];
+                 if(!unit.isEmpty())
+                 {
+                     output["unit"] = unit.toStdString();
+                 }
+                 if(!range.isEmpty())
+                 {
+                     output["minValue"] = range.getStart();
+                     output["maxValue"] = range.getEnd();
+                     output["hasKnownExtents"] = true;
+                 }
+                 extra = std::optional<nlohmann::json>(std::move(json));
+             }
+
              auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, row < 0 ? std::optional<size_t>{} : static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column), extra);
              if(result.failed())
              {
