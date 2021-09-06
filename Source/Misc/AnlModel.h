@@ -783,7 +783,7 @@ namespace Model
                                                  anlWeakAssert(accessors[index] != nullptr);
                                                  if(accessors[index] != nullptr)
                                                  {
-                                                     fromJson(*accessors[index].get(), it->at(index));
+                                                     accessors[index]->fromJson(it->at(index), NotificationType::synchronous);
                                                  }
                                              }
                                          }
@@ -795,7 +795,7 @@ namespace Model
                                              anlWeakAssert(accessors[index] != nullptr);
                                              if(accessors[index] != nullptr)
                                              {
-                                                 fromJson(*accessors[index].get(), it->at(index));
+                                                 accessors[index]->fromJson(it->at(index), NotificationType::synchronous);
                                              }
                                          }
                                      }
