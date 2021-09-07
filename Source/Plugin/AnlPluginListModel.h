@@ -67,6 +67,11 @@ namespace PluginList
     };
 
     void setSearchPath(Accessor const& accessor);
+
+#ifdef JUCE_MAC
+    std::vector<juce::File> findLibrariesInQuarantine(Accessor const& accessor);
+    bool removeLibrariesFromQuarantine(std::vector<juce::File> const& files);
+#endif
 } // namespace PluginList
 
 ANALYSE_FILE_END
