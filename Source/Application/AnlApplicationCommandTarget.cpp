@@ -262,7 +262,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 
         case CommandIDs::helpOpenAudioSettings:
         {
-#ifdef JUCE_MAC
+#if JUCE_MAC
             result.setInfo(juce::translate("Audio Settings..."), juce::translate("Show the audio settings panel"), "Application", 0);
             result.defaultKeypresses.add(juce::KeyPress(',', juce::ModifierKeys::commandModifier, 0));
 #else
@@ -278,7 +278,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::helpOpenAbout:
         {
-#ifdef JUCE_MAC
+#if JUCE_MAC
             result.setInfo(juce::translate("About Partiels"), juce::translate("Show the information about the application"), "Application", 0);
 #else
             result.setInfo(juce::translate("About Partiels"), juce::translate("Show the information about the application"), "help", 0);

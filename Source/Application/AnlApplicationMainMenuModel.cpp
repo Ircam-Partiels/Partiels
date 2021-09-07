@@ -9,7 +9,7 @@ Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
 {
     auto& commandManager = Instance::get().getApplicationCommandManager();
     setApplicationCommandManagerToWatch(&commandManager);
-#ifdef JUCE_MAC
+#if JUCE_MAC
     juce::ignoreUnused(mWindow);
     juce::PopupMenu extraAppleMenuItems;
     using CommandIDs = CommandTarget::CommandIDs;
@@ -25,7 +25,7 @@ Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
 
 Application::MainMenuModel::~MainMenuModel()
 {
-#ifdef JUCE_MAC
+#if JUCE_MAC
     juce::MenuBarModel::setMacMainMenu(nullptr, nullptr);
 #else
     mWindow.setMenuBar(nullptr);

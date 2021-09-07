@@ -388,7 +388,7 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
         return {};
     }
 
-#ifdef JUCE_MAC
+#if JUCE_MAC
     juce::Process::setDockIconVisible(false);
 #endif
 

@@ -123,7 +123,7 @@ void Application::Properties::loadFromFile(PropertyType type)
                 auto& acsr = Instance::get().getPluginListAccessor();
                 acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
                 PluginList::setEnvironment(acsr);
-#ifdef JUCE_MAC
+#if JUCE_MAC
                 if(acsr.getAttr<PluginList::AttrType::quarantineMode>() != PluginList::QuarantineMode::force)
                 {
                     break;

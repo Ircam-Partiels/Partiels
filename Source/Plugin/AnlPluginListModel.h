@@ -78,7 +78,7 @@ namespace PluginList
 
     void setEnvironment(Accessor const& accessor);
 
-#ifdef JUCE_MAC
+#if JUCE_MAC
     std::vector<juce::File> findLibrariesInQuarantine(Accessor const& accessor);
     bool removeLibrariesFromQuarantine(std::vector<juce::File> const& files);
 #endif

@@ -68,7 +68,7 @@ void PluginList::setEnvironment(Accessor const& accessor)
 #endif
 }
 
-#ifdef JUCE_MAC
+#if JUCE_MAC
 #include <sys/xattr.h>
 
 std::vector<juce::File> PluginList::findLibrariesInQuarantine(Accessor const& accessor)

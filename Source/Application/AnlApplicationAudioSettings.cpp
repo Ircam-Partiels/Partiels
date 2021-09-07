@@ -101,7 +101,7 @@ Application::AudioSettings::AudioSettings()
                             })
 , mPropertyDriverPanel("Audio Device Panel...", "Show audio device panel", []()
                        {
-#ifdef JUCE_MAC
+#if JUCE_MAC
                            juce::File("/System/Applications/Utilities/Audio MIDI Setup.app").startAsProcess();
 #else
           auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -121,7 +121,7 @@ Application::AudioSettings::AudioSettings()
     addAndMakeVisible(mPropertyDriver);
     addAndMakeVisible(mPropertyOutputDevice);
     addAndMakeVisible(mPropertySampleRate);
-#ifdef JUCE_MAC
+#if JUCE_MAC
     addAndMakeVisible(mPropertyBufferSize);
 #else
     addAndMakeVisible(mPropertyBufferSizeNumber);

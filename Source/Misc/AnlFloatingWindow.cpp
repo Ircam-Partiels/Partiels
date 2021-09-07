@@ -11,7 +11,7 @@ FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersC
     }
     else
     {
-#ifdef JUCE_MAC
+#if JUCE_MAC
         setFloatingProperty(*this, true);
 #else
         juce::Desktop::getInstance().addFocusChangeListener(this);
@@ -26,7 +26,7 @@ FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersC
 
 FloatingWindow::~FloatingWindow()
 {
-#ifndef JUCE_MAC
+#if !JUCE_MAC
     juce::Desktop::getInstance().removeFocusChangeListener(this);
 #endif
     if(auto* commandManager = App::getApplicationCommandManager())

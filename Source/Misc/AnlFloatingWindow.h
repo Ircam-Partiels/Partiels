@@ -35,7 +35,7 @@ private:
     void moved() override;
     void resized() override;
 
-#ifdef JUCE_MAC
+#if JUCE_MAC
     static void setFloatingProperty(juce::Component& component, bool state);
 #else
     // juce::FocusChangeListener
