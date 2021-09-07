@@ -79,7 +79,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::viewInfoBubble
         
         , CommandIDs::helpOpenAudioSettings
-        , CommandIDs::helpOpenPluginPath
+        , CommandIDs::helpOpenPluginSettings
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenManual
         , CommandIDs::helpOpenForum
@@ -271,9 +271,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #endif
         }
         break;
-        case CommandIDs::helpOpenPluginPath:
+        case CommandIDs::helpOpenPluginSettings:
         {
-            result.setInfo(juce::translate("Plugin Search Paths..."), juce::translate("Show the plugin search paths panel"), "Application", 0);
+            result.setInfo(juce::translate("Plugin Settings..."), juce::translate("Show the plugin settings panel"), "Application", 0);
         }
         break;
         case CommandIDs::helpOpenAbout:
@@ -631,7 +631,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::helpOpenPluginPath:
+        case CommandIDs::helpOpenPluginSettings:
         {
             mPluginListSearchPath.show();
             return true;

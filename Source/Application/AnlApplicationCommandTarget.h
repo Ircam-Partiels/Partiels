@@ -43,7 +43,7 @@ namespace Application
             , viewInfoBubble
             
             , helpOpenAudioSettings
-            , helpOpenPluginPath
+            , helpOpenPluginSettings
             , helpOpenAbout
             , helpOpenManual
             , helpOpenForum
