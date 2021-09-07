@@ -16,24 +16,39 @@ std::vector<juce::File> PluginList::getDefaultSearchPath()
 
 void PluginList::setSearchPath(Accessor const& accessor)
 {
-#if JUCE_MAC || JUCE_LINUX
-    auto constexpr separator = ":";
-#elif JUCE_WINDOWS
-    auto constexpr separator = ";";
-#endif
-
+    std::set<juce::File> files;
     std::string value;
+    auto addToValue = [&](std::string const& path)
+    {
+#if JUCE_MAC || JUCE_LINUX
+        auto constexpr separator = ":";
+#elif JUCE_WINDOWS
+        auto constexpr separator = ";";
+#endif
+        if(juce::File::isAbsolutePath(path))
+        {
+            auto const result = files.insert(juce::File(path));
+            if(result.second)
+            {
+                value += result.first->getFullPathName().toStdString() + separator;
+            }
+        }
+        else
+        {
+            value += path + separator;
+        }
+    };
     if(accessor.getAttr<AttrType::useEnvVariable>())
     {
         auto const paths = Vamp::PluginHostAdapter::getPluginPath();
         for(auto const& path : paths)
         {
-            value += path + separator;
+            addToValue(path);
         }
     }
     for(auto const& file : accessor.getAttr<AttrType::searchPath>())
     {
-        value += file.getFullPathName().toStdString() + separator;
+        addToValue(file.getFullPathName().toStdString());
     }
     if(value.empty())
     {
