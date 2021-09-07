@@ -1,5 +1,6 @@
 #include "AnlPluginListModel.h"
 #include <vamp-hostsdk/PluginHostAdapter.h>
+#include <vamp-hostsdk/PluginLoader.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -14,8 +15,13 @@ std::vector<juce::File> PluginList::getDefaultSearchPath()
 #endif
 }
 
-void PluginList::setSearchPath(Accessor const& accessor)
+void PluginList::setEnvironment(Accessor const& accessor)
 {
+#if JUCE_MAC
+    auto const quarantineMode = accessor.getAttr<AttrType::quarantineMode>();
+    Vamp::HostExt::PluginLoader::setIgnoreQuanrantineLibs(quarantineMode == QuarantineMode::force || quarantineMode == QuarantineMode::ignore);
+#endif
+
     std::set<juce::File> files;
     std::string value;
     auto addToValue = [&](std::string const& path)

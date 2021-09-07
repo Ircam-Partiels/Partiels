@@ -76,7 +76,7 @@ namespace PluginList
         }
     };
 
-    void setSearchPath(Accessor const& accessor);
+    void setEnvironment(Accessor const& accessor);
 
 #ifdef JUCE_MAC
     std::vector<juce::File> findLibrariesInQuarantine(Accessor const& accessor);

@@ -122,7 +122,7 @@ void Application::Properties::loadFromFile(PropertyType type)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
                 acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
-                PluginList::setSearchPath(acsr);
+                PluginList::setEnvironment(acsr);
             }
         }
         break;
