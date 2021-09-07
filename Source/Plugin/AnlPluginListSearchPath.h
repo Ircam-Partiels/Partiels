@@ -25,8 +25,14 @@ namespace PluginList
         juce::TextButton mApplyButton{juce::translate("Apply"), juce::translate("Apply the new plugin settings")};
         juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current plugin settings")};
         juce::TextButton mDefaultButton{juce::translate("Default"), juce::translate("Reset to the default plugin settings")};
+#if JUCE_MAC
+        juce::TextButton mOptionButton{juce::translate("Options"), juce::translate("Change the plugin options")};
+        bool mUseEnvVariable = true;
+        QuarantineMode mQuarantineMode = QuarantineMode::force;
+#else
         juce::Label mEnvVariableInfo;
         juce::ToggleButton mEnvVariableButton;
+#endif
         juce::TooltipWindow mTooltipWindow{this};
 
         JUCE_LEAK_DETECTOR(SearchPath)
