@@ -22,9 +22,9 @@ namespace PluginList
         Accessor::Listener mListener{typeid(*this).name()};
         FileSearchPathTable mFileSearchPathTable;
         ColouredPanel mSeparator;
-        juce::TextButton mApplyButton{juce::translate("Apply"), juce::translate("Apply the new search path")};
-        juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current search path")};
-        juce::TextButton mDefaultButton{juce::translate("Default"), juce::translate("Reset to the default search path")};
+        juce::TextButton mApplyButton{juce::translate("Apply"), juce::translate("Apply the new plugin settings")};
+        juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current plugin settings")};
+        juce::TextButton mDefaultButton{juce::translate("Default"), juce::translate("Reset to the default plugin settings")};
         juce::Label mEnvVariableInfo;
         juce::ToggleButton mEnvVariableButton;
         juce::TooltipWindow mTooltipWindow{this};

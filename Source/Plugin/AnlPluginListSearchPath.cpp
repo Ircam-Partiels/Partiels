@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::SearchPath::SearchPath(Accessor& accessor)
-: FloatingWindowContainer("Plugin Search Paths", *this, true)
+: FloatingWindowContainer("Plugin Settings", *this, true)
 , mAccessor(accessor)
 {
     auto updateButtonsStates = [this]()
@@ -59,8 +59,8 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
         {
             auto const options = juce::MessageBoxOptions()
                                      .withIconType(juce::AlertWindow::QuestionIcon)
-                                     .withTitle(juce::translate("Apply plugin search paths modification?"))
-                                     .withMessage(juce::translate("The pugin search paths have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                                     .withTitle(juce::translate("Apply plugin settings modification?"))
+                                     .withMessage(juce::translate("The pugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
                                      .withButton(juce::translate("Apply"))
                                      .withButton(juce::translate("Discard"));
 
