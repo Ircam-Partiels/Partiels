@@ -13,6 +13,7 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         switch(attribute)
         {
             case AttrType::useEnvVariable:
+            case AttrType::quarantineMode:
             case AttrType::searchPath:
                 break;
             case AttrType::sortColumn:

@@ -10,9 +10,17 @@ namespace PluginList
     enum class AttrType : size_t
     {
           useEnvVariable
+        , quarantineMode
         , searchPath
         , sortColumn
         , sortIsFowards
+    };
+    
+    enum class QuarantineMode
+    {
+          system
+        , force
+        , ignore
     };
     
     enum ColumnType
@@ -27,6 +35,7 @@ namespace PluginList
     
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::useEnvVariable, bool, Model::Flag::basic>
+    , Model::Attr<AttrType::quarantineMode, QuarantineMode, Model::Flag::basic>
     , Model::Attr<AttrType::searchPath, std::vector<juce::File>, Model::Flag::basic>
     , Model::Attr<AttrType::sortColumn, ColumnType, Model::Flag::basic>
     , Model::Attr<AttrType::sortIsFowards, bool, Model::Flag::basic>
@@ -46,6 +55,7 @@ namespace PluginList
         : Accessor(AttrContainer(
         {
               {true}
+            , {QuarantineMode::force}
             , {getDefaultSearchPath()}
             , {ColumnType::name}
             , {true}
