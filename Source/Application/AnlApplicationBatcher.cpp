@@ -52,6 +52,7 @@ Application::Batcher::Batcher()
             case AttrType::currentDocumentFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
+            case AttrType::autoLoadConvertedFile:
                 break;
             case AttrType::exportOptions:
             {

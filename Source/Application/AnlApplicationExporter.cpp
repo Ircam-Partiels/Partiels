@@ -45,6 +45,7 @@ Application::Exporter::Exporter()
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::adaptationToSampleRate:
+            case AttrType::autoLoadConvertedFile:
                 break;
             case AttrType::exportOptions:
             {

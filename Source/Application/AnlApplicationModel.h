@@ -19,6 +19,7 @@ namespace Application
         , showInfoBubble
         , exportOptions
         , adaptationToSampleRate
+        , autoLoadConvertedFile
     };
 
     using AttrContainer = Model::Container
@@ -29,6 +30,7 @@ namespace Application
     , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Flag::basic>
     , Model::Attr<AttrType::adaptationToSampleRate, bool, Flag::basic>
+    , Model::Attr<AttrType::autoLoadConvertedFile, bool, Flag::basic>
     >;
     // clang-format on
 
@@ -48,6 +50,7 @@ namespace Application
             , {true}
             , {}
             , {false}
+            , {true}
         }))
         {
         }

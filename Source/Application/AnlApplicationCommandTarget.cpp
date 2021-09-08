@@ -26,6 +26,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
+            case AttrType::autoLoadConvertedFile:
                 break;
         }
     };

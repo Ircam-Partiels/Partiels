@@ -118,6 +118,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
+            case AttrType::autoLoadConvertedFile:
                 break;
             case AttrType::colourMode:
             {
