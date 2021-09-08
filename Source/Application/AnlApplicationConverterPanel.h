@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
+#include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -12,7 +12,7 @@ namespace Application
     {
     public:
         ConverterPanel();
-        ~ConverterPanel() override = default;
+        ~ConverterPanel() override;
 
         // juce::Component
         void resized() override;
@@ -35,6 +35,9 @@ namespace Application
 
         void exportToJson();
         void exportToSdif();
+
+        Accessor::Listener mListener{typeid(*this).name()};
+        Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
 
         PropertyTextButton mPropertyOpen;
         PropertyText mPropertyName;

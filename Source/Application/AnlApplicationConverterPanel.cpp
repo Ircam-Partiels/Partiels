@@ -1,4 +1,5 @@
 #include "AnlApplicationConverterPanel.h"
+#include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -68,7 +69,10 @@ Application::ConverterPanel::ConverterPanel()
                               auto const min = std::min(static_cast<float>(mPropertyToJsonMinValue.entry.getValue()), value);
                               mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonLoadInDocument("Load in current document", "Load the JSON file directly in the current document", nullptr)
+, mPropertyToJsonLoadInDocument("Load in current document", "Load the JSON file directly in the current document", [](bool state)
+                                {
+                                    Instance::get().getApplicationAccessor().setAttr<AttrType::autoLoadConvertedFile>(state, NotificationType::synchronous);
+                                })
 , mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
                         {
                             exportToJson();
@@ -135,6 +139,63 @@ Application::ConverterPanel::ConverterPanel()
 
     setFile({});
     setSize(300, 200);
+
+    auto updateLoadInDocument = [this]()
+    {
+        auto const hasReader = !Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>().empty();
+        auto const automaticLoad = Instance::get().getApplicationAccessor().getAttr<AttrType::autoLoadConvertedFile>();
+        mPropertyToJsonLoadInDocument.setEnabled(hasReader);
+        mPropertyToJsonLoadInDocument.entry.setToggleState(hasReader && automaticLoad, juce::NotificationType::dontSendNotification);
+    };
+
+    mListener.onAttrChanged = [=](Accessor const& accessor, AttrType attr)
+    {
+        juce::ignoreUnused(accessor);
+        switch(attr)
+        {
+            case AttrType::windowState:
+            case AttrType::recentlyOpenedFilesList:
+            case AttrType::currentDocumentFile:
+            case AttrType::colourMode:
+            case AttrType::showInfoBubble:
+            case AttrType::exportOptions:
+            case AttrType::adaptationToSampleRate:
+                break;
+            case AttrType::autoLoadConvertedFile:
+            {
+                updateLoadInDocument();
+            }
+            break;
+        }
+    };
+
+    mDocumentListener.onAttrChanged = [=](Document::Accessor const& accessor, Document::AttrType attr)
+    {
+        juce::ignoreUnused(accessor);
+        switch(attr)
+        {
+            case Document::AttrType::reader:
+            {
+                updateLoadInDocument();
+            }
+            break;
+            case Document::AttrType::layout:
+            case Document::AttrType::viewport:
+            case Document::AttrType::path:
+            case Document::AttrType::grid:
+            case Document::AttrType::samplerate:
+                break;
+        }
+    };
+
+    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
+}
+
+Application::ConverterPanel::~ConverterPanel()
+{
+    Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
+    Instance::get().getApplicationAccessor().removeListener(mListener);
 }
 
 void Application::ConverterPanel::resized()
