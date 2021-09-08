@@ -144,6 +144,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
 
     anlDebug("Application", "Ready!");
+
     auto const paths = juce::StringArray::fromTokens(commandLine, " ", "\"");
     std::vector<juce::File> files;
     for(auto const& path : paths)
@@ -155,30 +156,50 @@ void Application::Instance::initialise(juce::String const& commandLine)
     }
     if(!files.empty())
     {
+        mDocumentFileBased->addChangeListener(this);
         anlDebug("Application", "Opening new file(s)...");
         openFiles(files);
+        return;
     }
 
     auto const backupFile = getBackupFile();
+    auto const currentFile = mApplicationAccessor->getAttr<AttrType::currentDocumentFile>();
     if(backupFile.existsAsFile())
     {
-        if(AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Do you want to restore your document?", "The application unexpectedly quit. Do you want to restore the last saved state of the document before this?"))
-        {
-            anlDebug("Application", "Restoring saved document...");
-            auto const result = mDocumentFileBased->loadBackup(backupFile);
-            anlWeakAssert(!result.failed());
-            if(!result.failed())
-            {
-                mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
-            }
-            mDocumentFileBased->addChangeListener(this);
-            return;
-        }
-    }
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::QuestionIcon)
+                                 .withTitle(juce::translate("Do you want to restore your document?"))
+                                 .withMessage(juce::translate("The application unexpectedly quit. Do you want to restore the last saved state of the document before this?"))
+                                 .withButton(juce::translate("Restore"))
+                                 .withButton(juce::translate("Ignore"));
 
-    mDocumentFileBased->addChangeListener(this);
-    anlDebug("Application", "Reopening last document...");
-    openFiles({mApplicationAccessor->getAttr<AttrType::currentDocumentFile>()});
+        juce::AlertWindow::showAsync(options, [=](int result)
+                                     {
+                                         if(result == 0)
+                                         {
+                                             mDocumentFileBased->addChangeListener(this);
+                                             anlDebug("Application", "Reopening last document...");
+                                             openFiles({currentFile});
+                                         }
+                                         else
+                                         {
+                                             anlDebug("Application", "Restoring backup document...");
+                                             auto const loadResult = mDocumentFileBased->loadBackup(backupFile);
+                                             anlWeakAssert(!loadResult.failed());
+                                             if(!loadResult.failed())
+                                             {
+                                                 mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(backupFile, NotificationType::synchronous);
+                                             }
+                                             mDocumentFileBased->addChangeListener(this);
+                                         }
+                                     });
+    }
+    else
+    {
+        mDocumentFileBased->addChangeListener(this);
+        anlDebug("Application", "Reopening last document...");
+        openFiles({currentFile});
+    }
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
