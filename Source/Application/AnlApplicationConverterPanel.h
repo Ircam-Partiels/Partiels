@@ -51,6 +51,7 @@ namespace Application
         PropertyText mPropertyToJsonUnit;
         PropertyNumber mPropertyToJsonMinValue;
         PropertyNumber mPropertyToJsonMaxValue;
+        PropertyToggle mPropertyToJsonLoadInDocument;
         PropertyTextButton mPropertyToJsonExport;
         juce::TextEditor mInfos;
 

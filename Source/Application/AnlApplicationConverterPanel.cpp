@@ -1,4 +1,5 @@
 #include "AnlApplicationConverterPanel.h"
+#include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -67,6 +68,7 @@ Application::ConverterPanel::ConverterPanel()
                               auto const min = std::min(static_cast<float>(mPropertyToJsonMinValue.entry.getValue()), value);
                               mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
                           })
+, mPropertyToJsonLoadInDocument("Load in current document", "Load the JSON file directly in the current document", nullptr)
 , mPropertyToJsonExport("Convert to JSON", "Convert the SDIF file to a JSON file", [&]()
                         {
                             exportToJson();
@@ -118,6 +120,7 @@ Application::ConverterPanel::ConverterPanel()
     addChildComponent(mPropertyToJsonUnit);
     addChildComponent(mPropertyToJsonMinValue);
     addChildComponent(mPropertyToJsonMaxValue);
+    addChildComponent(mPropertyToJsonLoadInDocument);
     addChildComponent(mPropertyToJsonExport);
     mPropertyToJsonFrame.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
     mPropertyToJsonMatrix.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
@@ -159,6 +162,7 @@ void Application::ConverterPanel::resized()
     setBounds(mPropertyToJsonUnit);
     setBounds(mPropertyToJsonMinValue);
     setBounds(mPropertyToJsonMaxValue);
+    setBounds(mPropertyToJsonLoadInDocument);
     setBounds(mPropertyToJsonExport);
 
     setBounds(mInfos);
@@ -246,6 +250,7 @@ void Application::ConverterPanel::setFile(juce::File const& file)
         mPropertyToJsonUnit.setVisible(false);
         mPropertyToJsonMinValue.setVisible(false);
         mPropertyToJsonMaxValue.setVisible(false);
+        mPropertyToJsonLoadInDocument.setVisible(false);
     }
     else if(file.hasFileExtension("sdif"))
     {
@@ -265,6 +270,7 @@ void Application::ConverterPanel::setFile(juce::File const& file)
         mPropertyToJsonMinValue.setVisible(true);
         mPropertyToJsonMaxValue.setVisible(true);
         mPropertyToJsonExport.setVisible(true);
+        mPropertyToJsonLoadInDocument.setVisible(true);
 
         mEntries = SdifConverter::getEntries(file);
 
@@ -301,6 +307,7 @@ void Application::ConverterPanel::setFile(juce::File const& file)
         mPropertyToJsonUnit.setVisible(false);
         mPropertyToJsonMinValue.setVisible(false);
         mPropertyToJsonMaxValue.setVisible(false);
+        mPropertyToJsonLoadInDocument.setVisible(false);
     }
     resized();
 }
@@ -508,6 +515,8 @@ void Application::ConverterPanel::exportToJson()
         extra = std::optional<nlohmann::json>(std::move(json));
     }
 
+    auto const loadInDocument = mPropertyToJsonLoadInDocument.entry.getToggleState();
+    auto const position = Tools::getNewTrackPosition();
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a JSON file"), mFile.withFileExtension("json"), "*.json");
     if(mFileChooser == nullptr)
     {
@@ -528,6 +537,10 @@ void Application::ConverterPanel::exportToJson()
                                   if(result.wasOk())
                                   {
                                       AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                      if(loadInDocument)
+                                      {
+                                          Tools::addFileTrack(position, jsonFile);
+                                      }
                                   }
                                   else
                                   {
