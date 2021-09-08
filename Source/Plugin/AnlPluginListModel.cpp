@@ -110,7 +110,8 @@ std::vector<juce::File> PluginList::findLibrariesInQuarantine(Accessor const& ac
 
 bool PluginList::removeLibrariesFromQuarantine(std::vector<juce::File> const& files)
 {
-    auto removeFromQuarantine = [](juce::File const& file)
+    std::vector<std::string> names;
+    for(auto const& file : files)
     {
         auto const path = file.getFullPathName();
         auto valLength = getxattr(path.getCharPointer(), "com.apple.quarantine", nullptr, 0_z, 0_z, 0);
@@ -123,12 +124,20 @@ bool PluginList::removeLibrariesFromQuarantine(std::vector<juce::File> const& fi
             {
                 value.replace(0_z, 4_z, "00c1");
                 value.resize(static_cast<size_t>(valLength));
-                return setxattr(path.getCharPointer(), "com.apple.quarantine", value.data(), static_cast<size_t>(valLength), 0_z, XATTR_REPLACE) == 0;
+                if(setxattr(path.getCharPointer(), "com.apple.quarantine", value.data(), static_cast<size_t>(valLength), 0_z, XATTR_REPLACE) == 0)
+                {
+                    names.push_back(file.getFileNameWithoutExtension().toStdString());
+                }
             }
         }
-        return true;
-    };
-    return std::all_of(files.cbegin(), files.cend(), removeFromQuarantine);
+    }
+    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
+    if(pluginLoader != nullptr)
+    {
+        pluginLoader->listPluginsIn(names);
+    }
+    return !names.empty();
 }
 
 #endif
