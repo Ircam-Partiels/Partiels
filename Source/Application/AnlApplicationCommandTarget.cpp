@@ -2,6 +2,7 @@
 #include "../Document/AnlDocumentTools.h"
 #include "../Track/AnlTrackExporter.h"
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -416,21 +417,21 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentImport:
         {
-            auto const position = getNewTrackPosition();
+            auto const position = Tools::getNewTrackPosition();
             mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, "*.json;*.csv");
             if(mFileChooser == nullptr)
             {
                 return true;
             }
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
-            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [position](juce::FileChooser const& fileChooser)
                                       {
                                           auto const results = fileChooser.getResults();
                                           if(results.isEmpty())
                                           {
                                               return;
                                           }
-                                          addFileTrack(results.getFirst(), std::get<0>(position), std::get<1>(position));
+                                          Tools::addFileTrack(position, results.getFirst());
                                       });
             return true;
         }
@@ -481,10 +482,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editNewTrack:
         {
-            mPluginListTable.onPluginSelected = [this, position = getNewTrackPosition()](Plugin::Key const& key, Plugin::Description const& description)
+            auto const position = Tools::getNewTrackPosition();
+            mPluginListTable.onPluginSelected = [this, position](Plugin::Key const& key, Plugin::Description const& description)
             {
                 mPluginListTable.hide();
-                addPluginTrack(key, description, std::get<0>(position), std::get<1>(position));
+                Tools::addPluginTrack(position, key, description);
             };
             mPluginListTable.show();
             return true;
@@ -693,161 +695,6 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
         auto list = acsr.getAttr<AttrType::recentlyOpenedFilesList>();
         list.insert(list.begin(), file);
         acsr.setAttr<AttrType::recentlyOpenedFilesList>(list, NotificationType::synchronous);
-    }
-}
-
-std::tuple<juce::String, size_t> Application::CommandTarget::getNewTrackPosition() const
-{
-    auto const& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
-    if(focusedTrack.has_value())
-    {
-        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *focusedTrack);
-        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-        auto const position = Document::Tools::getTrackPosition(documentAcsr, *focusedTrack);
-        return std::make_tuple(groupIdentifier, position + 1_z);
-    }
-    auto const focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
-    if(focusedGroup.has_value())
-    {
-        return std::make_tuple(*focusedGroup, 0_z);
-    }
-    return std::make_tuple(juce::String(""), 0_z);
-}
-
-void Application::CommandTarget::addPluginTrack(Plugin::Key const& key, Plugin::Description const& description, juce::String groupIdentifier, size_t position)
-{
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto& documentDir = Instance::get().getDocumentDirector();
-    documentDir.startAction();
-
-    // Creates a group if there is none
-    if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
-    {
-        anlStrongAssert(groupIdentifier.isEmpty());
-
-        auto const identifier = documentDir.addGroup(0, NotificationType::synchronous);
-        anlStrongAssert(identifier.has_value());
-        if(!identifier.has_value())
-        {
-            documentDir.endAction(ActionState::abort);
-            AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group necessary for the new track cannot be inserted into the document.");
-            return;
-        }
-        groupIdentifier = *identifier;
-        position = 0_z;
-    }
-
-    anlStrongAssert(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() > 0_z);
-    if(groupIdentifier.isEmpty())
-    {
-        auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
-        groupIdentifier = layout.front();
-        position = 0_z;
-    }
-
-    auto const identifier = documentDir.addTrack(groupIdentifier, position, NotificationType::synchronous);
-    if(identifier.has_value())
-    {
-        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-        trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
-
-        auto const& acsr = Instance::get().getApplicationAccessor();
-        LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
-        auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
-        colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
-        colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
-        trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
-
-        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
-
-        documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
-        // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
-        juce::Timer::callAfterDelay(500, [idtf = *identifier]()
-                                    {
-                                        if(auto* window = Instance::get().getWindow())
-                                        {
-                                            window->moveKeyboardFocusTo(idtf);
-                                        }
-                                    });
-    }
-    else
-    {
-        documentDir.endAction(ActionState::abort);
-    }
-}
-
-void Application::CommandTarget::addFileTrack(juce::File const& file, juce::String groupIdentifier, size_t position)
-{
-    if(!file.hasFileExtension("json") && !file.hasFileExtension("csv"))
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File format not supported!", "The application only supports JSON and CSV formats.");
-        return;
-    }
-
-    auto& documentAcsr = Instance::get().getDocumentAccessor();
-    auto& documentDir = Instance::get().getDocumentDirector();
-    documentDir.startAction();
-
-    // Creates a group if there is none
-    if(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() == 0_z)
-    {
-        anlStrongAssert(groupIdentifier.isEmpty());
-
-        auto const identifier = documentDir.addGroup(0, NotificationType::synchronous);
-        anlStrongAssert(identifier.has_value());
-        if(!identifier.has_value())
-        {
-            documentDir.endAction(ActionState::abort);
-            AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group necessary for the new track cannot be inserted into the document.");
-            return;
-        }
-        groupIdentifier = *identifier;
-        position = 0_z;
-    }
-
-    anlStrongAssert(documentAcsr.getNumAcsrs<Document::AcsrType::groups>() > 0_z);
-    if(groupIdentifier.isEmpty())
-    {
-        auto const& layout = documentAcsr.getAttr<Document::AttrType::layout>();
-        groupIdentifier = layout.front();
-        position = 0_z;
-    }
-
-    auto const identifier = documentDir.addTrack(groupIdentifier, position, NotificationType::synchronous);
-    if(identifier.has_value())
-    {
-        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-        trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
-        auto const& acsr = Instance::get().getApplicationAccessor();
-        LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
-        auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
-        colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
-        colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
-        trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
-
-        trackAcsr.setAttr<Track::AttrType::file>(file, NotificationType::synchronous);
-
-        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
-
-        documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
-        // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
-        juce::Timer::callAfterDelay(500, [idtf = *identifier]()
-                                    {
-                                        if(auto* window = Instance::get().getWindow())
-                                        {
-                                            window->moveKeyboardFocusTo(idtf);
-                                        }
-                                    });
-        AlertWindow::showMessage(AlertWindow::MessageType::info, "Track imported!", "The new track has been imported from the file FLNAME into the document.", {{"FLNAME", file.getFullPathName()}});
-    }
-    else
-    {
-        documentDir.endAction(ActionState::abort);
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Track cannot be created!", "The new track cannot be created into the document.");
     }
 }
 
