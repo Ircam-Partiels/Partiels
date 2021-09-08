@@ -14,6 +14,11 @@ uint32_t SdifConverter::getSignature(juce::String const& name)
     return SdifSignatureConst(name[0], name[1], name[2], name[3]);
 }
 
+juce::String SdifConverter::getString(uint32_t signature)
+{
+    return juce::String(SdifSignatureToString(signature));
+}
+
 class SdifScopedFile
 {
 public:

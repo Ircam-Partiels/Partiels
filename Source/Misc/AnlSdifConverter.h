@@ -8,6 +8,7 @@ ANALYSE_FILE_BEGIN
 namespace SdifConverter
 {
     uint32_t getSignature(juce::String const& name);
+    juce::String getString(uint32_t signature);
 
     using matrix_size_t = std::pair<size_t, std::vector<std::string>>;
     std::map<uint32_t, std::map<uint32_t, matrix_size_t>> getEntries(juce::File const& inputFile);
