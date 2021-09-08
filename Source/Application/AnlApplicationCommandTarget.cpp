@@ -83,7 +83,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenManual
         , CommandIDs::helpOpenForum
-        , CommandIDs::helpSDIFConverter
+        , CommandIDs::helpSdifConverter
     });
     // clang-format on
 }
@@ -297,7 +297,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(true);
         }
         break;
-        case CommandIDs::helpSDIFConverter:
+        case CommandIDs::helpSdifConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Show the SDIF converter panel"), "Help", 0);
             result.setActive(true);
@@ -662,7 +662,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::helpSDIFConverter:
+        case CommandIDs::helpSdifConverter:
         {
             mSdifConverter.show();
             return true;

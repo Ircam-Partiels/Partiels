@@ -125,7 +125,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
 #endif
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, CommandIDs::helpSDIFConverter);
+        menu.addCommandItem(&commandManager, CommandIDs::helpSdifConverter);
     }
     else
     {

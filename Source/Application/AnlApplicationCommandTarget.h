@@ -47,7 +47,7 @@ namespace Application
             , helpOpenAbout
             , helpOpenManual
             , helpOpenForum
-            , helpSDIFConverter
+            , helpSdifConverter
         };
         // clang-format on
 
