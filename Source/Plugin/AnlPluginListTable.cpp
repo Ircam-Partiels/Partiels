@@ -70,37 +70,61 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(820, 600);
 
-    auto scanPlugins = [this]() -> decltype(mScanner.getPlugins(48000.0))
+    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
-        try
+        juce::ignoreUnused(acsr, value);
+        switch(signal)
         {
-            return mScanner.getPlugins(48000.0);
+            case SignalType::rescan:
+            {
+                auto scanPlugins = [this]() -> decltype(mScanner.getPlugins(48000.0))
+                {
+                    auto showWarning = [](juce::String const& message)
+                    {
+                        auto const options = juce::MessageBoxOptions()
+                                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                                 .withTitle(juce::translate("Plugins scan failed!"))
+                                                 .withMessage(juce::translate("Partiels failed to scan the plugins due to: MESSAGE.").replace("MESSAGE", message))
+                                                 .withButton(juce::translate("Ok"));
+                        juce::AlertWindow::showAsync(options, nullptr);
+                    };
+                    try
+                    {
+                        return mScanner.getPlugins(48000.0);
+                    }
+                    catch(std::exception& e)
+                    {
+                        showWarning(juce::translate(e.what()));
+                    }
+                    catch(...)
+                    {
+                        showWarning(juce::translate("Unknwon reason"));
+                    }
+                    return {};
+                };
+                auto const results = scanPlugins();
+                mList = std::get<0>(results);
+                if(!std::get<1>(results).isEmpty())
+                {
+                    auto const options = juce::MessageBoxOptions()
+                                             .withIconType(juce::AlertWindow::WarningIcon)
+                                             .withTitle(juce::translate("Plugins scan has encountered errors!"))
+                                             .withMessage(juce::translate("The following plugins failed to be scanned:\n.") + std::get<1>(results).joinIntoString("\n"))
+                                             .withButton(juce::translate("Ok"));
+                    juce::AlertWindow::showAsync(options, nullptr);
+                }
+                updateContent();
+            }
+            break;
         }
-        catch(std::exception& e)
-        {
-            AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                     "Plugins scan failed!", e.what());
-        }
-        catch(...)
-        {
-            AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                     "Plugins scan failed!", "");
-        }
-        return {};
     };
-    auto const results = scanPlugins();
-    mList = std::get<0>(results);
-    if(!std::get<1>(results).isEmpty())
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning,
-                                 "Plugins scan has encountered errors!",
-                                 "The following plugins failed to be scanned:\n" + std::get<1>(results).joinIntoString("\n"));
-    }
-    updateContent();
+    mReceiver.onSignal(mAccessor, SignalType::rescan, {});
+    mAccessor.addReceiver(mReceiver);
 }
 
 PluginList::Table::~Table()
 {
+    mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
 }
 

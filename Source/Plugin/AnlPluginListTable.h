@@ -42,6 +42,7 @@ namespace PluginList
         Accessor& mAccessor;
         Scanner& mScanner;
         Accessor::Listener mListener{"PluginList::Table"};
+        Accessor::Receiver mReceiver;
         std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         juce::TableListBox mPluginTable;
