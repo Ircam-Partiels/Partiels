@@ -33,6 +33,11 @@ namespace PluginList
         , details
     };
     
+    enum class SignalType
+    {
+          rescan
+    };
+    
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::useEnvVariable, bool, Model::Flag::basic>
     , Model::Attr<AttrType::quarantineMode, QuarantineMode, Model::Flag::basic>
@@ -46,6 +51,7 @@ namespace PluginList
 
     class Accessor
     : public Model::Accessor<Accessor, AttrContainer>
+    , public Broadcaster<Accessor, SignalType>
     {
     public:
         using Model::Accessor<Accessor, AttrContainer>::Accessor;
