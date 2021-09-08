@@ -149,7 +149,10 @@ void Application::Properties::loadFromFile(PropertyType type)
                                                      {
                                                          return;
                                                      }
-                                                     PluginList::removeLibrariesFromQuarantine(files);
+                                                     if(PluginList::removeLibrariesFromQuarantine(files))
+                                                     {
+                                                         Instance::get().getPluginListAccessor().sendSignal(PluginList::SignalType::rescan, {}, NotificationType::synchronous);
+                                                     }
                                                  });
                 }
 #endif
