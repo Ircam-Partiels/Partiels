@@ -495,7 +495,11 @@ void Application::ConverterPanel::exportToSdif()
 
     if(frameName.contains("?") || matrixName.contains("?") || frameName.length() != 4 || matrixName.length() != 4)
     {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("The frame and matrix signatures must contain 4 characters."));
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Failed to convert JSON file..."))
+                                 .withMessage(juce::translate("The frame and matrix signatures must contain 4 characters."))
+                                 .withButton(juce::translate("Ok"));
         return;
     }
 
@@ -521,11 +525,21 @@ void Application::ConverterPanel::exportToSdif()
                                   exitModalState(0);
                                   if(result.wasOk())
                                   {
-                                      AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The JSON file 'JSONFLNM' has been successfully converted to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::InfoIcon)
+                                                               .withTitle(juce::translate("Conversion succeeded!"))
+                                                               .withMessage(juce::translate("The JSON file 'JSONFLNM' has been successfully converted to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()))
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
                                   }
                                   else
                                   {
-                                      AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert JSON file..."), juce::translate("There was an error while trying to convert the SDIF file 'JSONFLNM' to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::WarningIcon)
+                                                               .withTitle(juce::translate("Failed to convert JSON file..."))
+                                                               .withMessage(juce::translate("There was an error while trying to convert the SDIF file 'JSONFLNM' to the SDIF file 'SDIFFLNM'.").replace("JSONFLNM", mFile.getFullPathName()).replace("SDIFFLNM", sdifFile.getFullPathName()) + "\n\n" + result.getErrorMessage())
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
                                   }
                               });
 }
@@ -597,15 +611,28 @@ void Application::ConverterPanel::exportToJson()
                                   exitModalState(0);
                                   if(result.wasOk())
                                   {
-                                      AlertWindow::showMessage(AlertWindow::MessageType::info, juce::translate("Convert succeeded"), juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
                                       if(loadInDocument)
                                       {
                                           Tools::addFileTrack(position, jsonFile);
                                       }
+                                      else
+                                      {
+                                          auto const options = juce::MessageBoxOptions()
+                                                                   .withIconType(juce::AlertWindow::InfoIcon)
+                                                                   .withTitle(juce::translate("Conversion succeeded!"))
+                                                                   .withMessage(juce::translate("The SDIF file 'SDIFFLNM' has been successfully converted to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()))
+                                                                   .withButton(juce::translate("Ok"));
+                                          juce::AlertWindow::showAsync(options, nullptr);
+                                      }
                                   }
                                   else
                                   {
-                                      AlertWindow::showMessage(AlertWindow::MessageType::warning, juce::translate("Failed to convert SDIF file..."), juce::translate("There was an error while trying to convert the SDIF file 'SDIFFLNM' to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage());
+                                      auto const options = juce::MessageBoxOptions()
+                                                               .withIconType(juce::AlertWindow::WarningIcon)
+                                                               .withTitle(juce::translate("Failed to convert SDIF file..."))
+                                                               .withMessage(juce::translate("There was an error while trying to convert the SDIF file 'SDIFFLNM' to the JSON file 'JSONFLNM'.").replace("SDIFFLNM", mFile.getFullPathName()).replace("JSONFLNM", jsonFile.getFullPathName()) + "\n\n" + result.getErrorMessage())
+                                                               .withButton(juce::translate("Ok"));
+                                      juce::AlertWindow::showAsync(options, nullptr);
                                   }
                               });
 }
