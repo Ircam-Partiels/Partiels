@@ -66,6 +66,7 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         juce::File getBackupFile() const;
+        void checkPluginsQuarantine();
 
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
         std::unique_ptr<juce::AudioFormatManager> mAudioFormatManager;
@@ -91,6 +92,8 @@ namespace Application
         std::unique_ptr<AudioSettings> mAudioSettings;
         std::unique_ptr<Exporter> mExporter;
         std::unique_ptr<Batcher> mBatcher;
+
+        std::atomic<bool> mIsPluginListReady{true};
     };
 } // namespace Application
 

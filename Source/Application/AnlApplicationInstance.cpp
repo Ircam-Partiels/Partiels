@@ -79,6 +79,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mProperties = std::make_unique<Properties>();
     AppQuitIfInvalidPointer(mProperties);
+    checkPluginsQuarantine();
 
     mAudioReader = std::make_unique<AudioReader>();
     AppQuitIfInvalidPointer(mAudioReader);
@@ -475,6 +476,46 @@ juce::File Application::Instance::getBackupFile() const
 juce::ApplicationCommandManager* App::getApplicationCommandManager()
 {
     return &Application::Instance::get().getApplicationCommandManager();
+}
+
+void Application::Instance::checkPluginsQuarantine()
+{
+#if JUCE_MAC
+    auto& pluginListAcsr = getPluginListAccessor();
+    if(pluginListAcsr.getAttr<PluginList::AttrType::quarantineMode>() != PluginList::QuarantineMode::force)
+    {
+        return;
+    }
+    auto const files = PluginList::findLibrariesInQuarantine(pluginListAcsr);
+    if(!files.empty())
+    {
+        juce::String pluginNames;
+        for(auto const& file : files)
+        {
+            pluginNames += file.getFullPathName() + "\n";
+        }
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Some plugins may not be loaded due to macOS quarantine!"))
+                                 .withMessage(juce::translate("Partiels can attemp to remove the plugins from quarantine. Would you like to proceed or ignore the plugins in quarantine?\n PLUGINLLIST").replace("PLUGINLLIST", pluginNames))
+                                 .withButton(juce::translate("Proceed"))
+                                 .withButton(juce::translate("Ignore"));
+        mIsPluginListReady = false;
+        juce::AlertWindow::showAsync(options, [this, files](int result)
+                                     {
+                                         if(result == 0)
+                                         {
+                                             mIsPluginListReady = true;
+                                             return;
+                                         }
+                                         if(PluginList::removeLibrariesFromQuarantine(files))
+                                         {
+                                             Instance::get().getPluginListAccessor().sendSignal(PluginList::SignalType::rescan, {}, NotificationType::synchronous);
+                                         }
+                                         mIsPluginListReady = true;
+                                     });
+    }
+#endif
 }
 
 ANALYSE_FILE_END
