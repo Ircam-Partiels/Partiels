@@ -66,6 +66,7 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         juce::File getBackupFile() const;
+        void openStartupFiles(std::vector<juce::File> const commandFiles, juce::File const previousFile);
         void checkPluginsQuarantine();
 
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
