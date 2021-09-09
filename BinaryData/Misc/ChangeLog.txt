@@ -1,6 +1,7 @@
 v0.0.9 (alpha)
 
-- Add: System to attemp to remove plugin libraries from quarantine on macOS (#143)
+- Add: Option to directly import the JSON file into the current document after it has been converted from SDIF (#145)
+- Add: System to attempt to remove plugin libraries from quarantine on macOS (#143)
 - Add: Support for value range when parsing files from SDIF to JSON (#142)
 - Add: Support for value range when parsing files from SDIF to JSON (#142)
 - Add: Support for unit when parsing files from SDIF to JSON (#141)
