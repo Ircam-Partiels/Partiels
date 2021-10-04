@@ -1,3 +1,8 @@
+v1.0.0
+
+- Fix: Popup menus can't be displayed at the very bottom of the screen (#150)
+- Fix: Exporting the full document doesn't allow to select a directory (#149)
+
 v0.0.9 (alpha)
 
 - Add: Option to directly import the JSON file into the current document after it has been converted from SDIF (#145)
