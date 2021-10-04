@@ -104,16 +104,16 @@ void Application::Exporter::exportToFile()
     auto const& options = acsr.getAttr<AttrType::exportOptions>();
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = mExporterPanel.getSelectedIdentifier();
+    auto const useDirectory = identifier.isEmpty() || (Document::Tools::hasGroupAcsr(documentAcsr, identifier) && (!options.useGroupOverview || options.useTextFormat()));
 
-    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, options.getFormatWilcard());
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, useDirectory ? "" : options.getFormatWilcard());
     if(mFileChooser == nullptr)
     {
         return;
     }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
-    auto const useDirectory = identifier.isEmpty() || (Document::Tools::hasGroupAcsr(documentAcsr, identifier) && (!options.useGroupOverview || options.useTextFormat()));
-    auto const fileType = useDirectory ? Flags::canSelectDirectories : Flags::canSelectFiles;
-    mFileChooser->launchAsync(Flags::saveMode | fileType | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
+    auto const fcFlags = useDirectory ? (Flags::canSelectDirectories | Flags::openMode) : (Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting);
+    mFileChooser->launchAsync(fcFlags, [=, this](juce::FileChooser const& fileChooser)
                               {
                                   auto const results = fileChooser.getResults();
                                   if(results.isEmpty())
