@@ -7,7 +7,7 @@ set(SDIF_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDIF_TESTS OFF CACHE BOOL "" FORCE)
 set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
-project(Partiels VERSION 0.0.9 LANGUAGES C CXX)
+project(Partiels VERSION 1.0.0 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
@@ -16,7 +16,7 @@ include(xcode-warnings.cmake)
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
-    VERSION                             "0.0.9"
+    VERSION                             "1.0.0"
     BUNDLE_ID                           fr.ircam.dev.partiels
     COMPANY_COPYRIGHT                   "Copyright 2021 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
