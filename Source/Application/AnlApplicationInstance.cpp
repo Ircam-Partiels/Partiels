@@ -147,13 +147,14 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     anlDebug("Application", "Ready!");
 
-    auto const paths = juce::StringArray::fromTokens(commandLine, " ", "\"");
+    juce::ArgumentList const args("Partiels", commandLine);
     std::vector<juce::File> commandFiles;
-    for(auto const& path : paths)
+    for(int i = 0; i < args.size(); ++i)
     {
-        if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+        auto const file = args[i].resolveAsFile();
+        if(file.existsAsFile())
         {
-            commandFiles.push_back(juce::File(path));
+            commandFiles.push_back(file);
         }
     }
     openStartupFiles(commandFiles, mApplicationAccessor->getAttr<AttrType::currentDocumentFile>());
@@ -166,18 +167,20 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
         anlDebug("Application", "Failed: not initialized.");
         return;
     }
-    auto const paths = juce::StringArray::fromTokens(commandLine, " ", "\"");
+
+    juce::ArgumentList const args("Partiels", commandLine);
     std::vector<juce::File> files;
-    for(auto const& path : paths)
+    for(int i = 0; i < args.size(); ++i)
     {
-        if(juce::File::isAbsolutePath(path) && juce::File(path).existsAsFile())
+        auto const file = args[i].resolveAsFile();
+        if(file.existsAsFile())
         {
-            anlDebug("Application", "Opening new file(s)...");
-            files.push_back(juce::File(path));
+            files.push_back(file);
         }
     }
     if(!files.empty())
     {
+        anlDebug("Application", "Opening new file(s)...");
         openFiles(files);
     }
 }
