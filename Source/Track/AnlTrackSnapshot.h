@@ -20,6 +20,7 @@ namespace Track
         class Overlay
         : public juce::Component
         , public Tooltip::BubbleClient
+        , public juce::SettableTooltipClient
         {
         public:
             Overlay(Snapshot& snapshot);

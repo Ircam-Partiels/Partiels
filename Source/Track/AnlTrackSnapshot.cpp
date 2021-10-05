@@ -348,19 +348,16 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
         switch(attribute)
         {
             case AttrType::identifier:
-            case AttrType::file:
             case AttrType::key:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:
             case AttrType::graphics:
-            case AttrType::name:
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::warnings:
             case AttrType::processing:
-            case AttrType::description:
             case AttrType::results:
                 break;
             case AttrType::colours:
@@ -371,6 +368,13 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::channelsLayout:
             {
                 updateTooltip(getMouseXYRelative());
+            }
+            break;
+            case AttrType::file:
+            case AttrType::description:
+            case AttrType::name:
+            {
+                juce::SettableTooltipClient::setTooltip(Tools::getInfoTooltip(acsr));
             }
             break;
         }
@@ -438,25 +442,25 @@ void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    setTooltip("");
+    Tooltip::BubbleClient::setTooltip("");
 }
 
 void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
 {
     if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::markers)
     {
-        setTooltip("");
+        Tooltip::BubbleClient::setTooltip("");
         return;
     }
     if(!getLocalBounds().contains(pt))
     {
-        setTooltip("");
+        Tooltip::BubbleClient::setTooltip("");
         return;
     }
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const tip = Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time);
-    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
+    Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
 ANALYSE_FILE_END
