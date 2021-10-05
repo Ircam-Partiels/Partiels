@@ -30,9 +30,11 @@ Track::Thumbnail::Thumbnail(Director& director)
         juce::ignoreUnused(acsr);
         switch(attribute)
         {
+            case AttrType::file:
+            case AttrType::description:
             case AttrType::name:
             {
-                setTooltip(acsr.getAttr<AttrType::name>());
+                setTooltip(Tools::getInfoTooltip(acsr));
                 repaint();
             }
             break;
@@ -48,9 +50,7 @@ Track::Thumbnail::Thumbnail(Director& director)
                 repaint();
             }
             break;
-            case AttrType::file:
             case AttrType::key:
-            case AttrType::description:
             case AttrType::state:
             case AttrType::results:
             case AttrType::graphics:
