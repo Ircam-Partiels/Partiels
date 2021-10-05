@@ -743,8 +743,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
         switch(attribute)
         {
             case AttrType::identifier:
-            case AttrType::file:
-            case AttrType::name:
             case AttrType::key:
             case AttrType::state:
             case AttrType::height:
@@ -755,7 +753,6 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::processing:
-            case AttrType::description:
             case AttrType::results:
                 break;
             case AttrType::colours:
@@ -766,6 +763,13 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::channelsLayout:
             {
                 updateTooltip(getMouseXYRelative());
+            }
+            break;
+            case AttrType::file:
+            case AttrType::description:
+            case AttrType::name:
+            {
+                juce::SettableTooltipClient::setTooltip(Tools::getInfoTooltip(acsr));
             }
             break;
         }
@@ -825,7 +829,7 @@ void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 {
     juce::ignoreUnused(event);
-    setTooltip("");
+    Tooltip::BubbleClient::setTooltip("");
 }
 
 void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
@@ -867,13 +871,13 @@ void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
 {
     if(!getLocalBounds().contains(pt))
     {
-        setTooltip("");
+        Tooltip::BubbleClient::setTooltip("");
         return;
     }
 
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     auto const tip = Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time);
-    setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
+    Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
 ANALYSE_FILE_END
