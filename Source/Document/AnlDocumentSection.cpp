@@ -484,15 +484,16 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
         mViewport.useMouseWheelMoveIfNeeded(event.getEventRelativeTo(&mViewport), wheel);
         return;
     }
-    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::vertical)
+    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::vertical && !event.mods.isShiftDown())
     {
-        mouseMagnify(event, 1.0f + wheel.deltaY);
+        mouseMagnify(event, event.mods.isShiftDown() ? 1.0f + wheel.deltaY : 1.0f + wheel.deltaX);
     }
     else
     {
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        auto const offset = static_cast<double>(wheel.deltaX) * visibleRange.getLength();
+        auto const delta = event.mods.isShiftDown() ? static_cast<double>(wheel.deltaY) : static_cast<double>(wheel.deltaX);
+        auto const offset = delta * visibleRange.getLength();
         timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
     }
 }
