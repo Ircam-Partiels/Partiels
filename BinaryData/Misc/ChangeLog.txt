@@ -2,6 +2,7 @@ v1.0.0
 
 - Fix: Popup menus can't be displayed at the very bottom of the screen (#150)
 - Fix: Exporting the full document doesn't allow to select a directory (#149)
+- Imp: Add plugin name or file path to the tooltips of the tracks (#146)
 
 v0.0.9 (alpha)
 
