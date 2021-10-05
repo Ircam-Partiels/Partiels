@@ -182,6 +182,22 @@ std::optional<float> Track::Tools::getValue(Results::SharedColumns results, size
     return column[bin];
 }
 
+juce::String Track::Tools::getInfoTooltip(Accessor const& acsr)
+{
+    auto const& name = acsr.getAttr<AttrType::name>();
+    auto const& file = acsr.getAttr<AttrType::file>();
+    if(file != juce::File{})
+    {
+        return name + " (File): " + file.getFullPathName();
+    }
+    auto const& description = acsr.getAttr<AttrType::description>();
+    if(description.name.isNotEmpty())
+    {
+        return name + " (Plugin): " + description.name + " - " + description.output.name;
+    }
+    return name;
+}
+
 juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time)
 {
     auto const results = accessor.getAttr<AttrType::results>();
