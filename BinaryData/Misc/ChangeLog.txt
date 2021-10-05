@@ -1,5 +1,6 @@
 v1.0.0
 
+- Fix: Loading a document using the file directly from the OS file system doesn't work (#151)
 - Fix: Popup menus can't be displayed at the very bottom of the screen (#150)
 - Fix: Exporting the full document doesn't allow to select a directory (#149)
 - Imp: Use shift modifier and vertical scrolling to simulate the trackpad horizontal scrolling (#147)
