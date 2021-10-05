@@ -188,7 +188,7 @@ void Group::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
         Component::mouseWheelMove(event, wheel);
         return;
     }
-    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal)
+    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal || event.mods.isShiftDown())
     {
         mouseMagnify(event, 1.0f + wheel.deltaX);
     }
