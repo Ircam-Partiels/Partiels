@@ -40,8 +40,18 @@ namespace Tooltip
     };
 
     class BubbleClient
-    : public juce::SettableTooltipClient
     {
+    protected:
+        BubbleClient() = default;
+
+    public:
+        ~BubbleClient() = default;
+
+        void setTooltip(juce::String const& tooltip);
+        juce::String getTooltip() const;
+
+    private:
+        juce::String mTooltip;
     };
 
     class BubbleWindow

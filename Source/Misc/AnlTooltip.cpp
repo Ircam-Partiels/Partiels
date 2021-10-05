@@ -8,10 +8,6 @@ void Tooltip::Server::timerCallback()
     {
         if(component != nullptr && !component->isCurrentlyBlockedByAnotherModalComponent() && juce::Process::isForegroundProcess())
         {
-            if(dynamic_cast<BubbleClient*>(component) != nullptr)
-            {
-                return {};
-            }
             if(auto* client = dynamic_cast<Client*>(component))
             {
                 return client->getTooltip();
@@ -48,6 +44,16 @@ Tooltip::Display::Display()
 void Tooltip::Display::resized()
 {
     mLabel.setBounds(getLocalBounds());
+}
+
+void Tooltip::BubbleClient::setTooltip(juce::String const& tooltip)
+{
+    mTooltip = tooltip;
+}
+
+juce::String Tooltip::BubbleClient::getTooltip() const
+{
+    return mTooltip;
 }
 
 Tooltip::BubbleWindow::BubbleWindow()
