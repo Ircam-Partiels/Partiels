@@ -7,6 +7,20 @@ stages:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
+Test::MacOS:
+  stage: test
+  tags:
+    - osx
+  script:
+    - cd $CI_PROJECT_DIR
+    - mkdir build
+    - cd build
+    - cmake .. -G Xcode
+    - cmake --build . --config Debug
+    - export VAMP_PATH="$CI_PROJECT_DIR/build/Debug"
+    - echo $VAMP_PATH
+    - ctest -C Debug -VV
+
 Test::Windows:
   stage: test
   tags:
@@ -48,6 +62,21 @@ Test::Debian:
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
     - echo $VAMP_PATH
     - ctest -C Debug -V
+
+Build::MacOS:
+  stage: build
+  needs: ["Test::MacOS"]
+  tags:
+    - osx
+  script:
+    - cd $CI_PROJECT_DIR
+    - mkdir build
+    - cd build
+    - cmake .. -G Xcode
+    - cmake --build . --config Release
+    - export VAMP_PATH="$CI_PROJECT_DIR/build/Release"
+    - echo $VAMP_PATH
+    - ctest -C Release -VV
 
 Build::Windows:
   stage: build
