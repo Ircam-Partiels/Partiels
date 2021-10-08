@@ -245,7 +245,14 @@ void XmlParser::toXml<Plugin::Output>(juce::XmlElement& xml, juce::Identifier co
         toXml(*child, "unit", value.unit);
         toXml(*child, "hasFixedBinCount", value.hasFixedBinCount);
         toXml(*child, "binCount", value.binCount);
-        toXml(*child, "binNames", value.binNames);
+        // If the plugins has only empty names, this is ignored
+        if(std::any_of(value.binNames.cbegin(), value.binNames.cend(), [](auto const& name)
+                       {
+                           return !name.empty();
+                       }))
+        {
+            toXml(*child, "binNames", value.binNames);
+        }
         toXml(*child, "hasKnownExtents", value.hasKnownExtents);
         toXml(*child, "minValue", value.minValue);
         toXml(*child, "maxValue", value.maxValue);
