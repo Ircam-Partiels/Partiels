@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<document AnlModelVersion="8" viewport_x="0" viewport_y="0" path="/Users/guillot/Ircam/Partiels/BinaryData/Tests/Template.ptldoc"
+<document AnlModelVersion="65536" viewport_x="0" viewport_y="0" path="/Users/guillot/Ircam/Partiels/BinaryData/Tests/Template.ptldoc"
           grid="2" samplerate="44100.0">
   <reader>
     <value file="/Users/guillot/Nextcloud/Sounds/Sound1.wav" channel="0"/>
@@ -10,77 +10,101 @@
   </reader>
   <layout value="dc5e59b9f3654979946bb384fcf0e673"/>
   <layout value="d6e44a1123f84fa3bd19c28f558c2d5b"/>
-  <timeZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="3.672154195011338"
+  <timeZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="3.672154195011338"
             minimumLength="0.01160997732426304" visibleRange_start="0.0"
             visibleRange_end="3.672154195011338">
-    <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="0"
+    <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="0"
           tickPowerBase="2.0" tickDivisionFactor="10.0"/>
   </timeZoom>
-  <transport AnlModelVersion="8" startPlayhead="0.8518093526718864" looping="0"
+  <transport AnlModelVersion="65536" startPlayhead="1.130990886920806" looping="0"
              loopRange_start="0.0" loopRange_end="0.0" gain="3.981071705534973"/>
-  <groups AnlModelVersion="8" identifier="dc5e59b9f3654979946bb384fcf0e673"
+  <groups AnlModelVersion="65536" identifier="dc5e59b9f3654979946bb384fcf0e673"
           name="Group 1" height="448" colour="0" expanded="0">
     <layout value="487a5aeef8ab431899dd9eed5d65b4ef"/>
     <layout value="476914820dde48e7a01c1e77d230d3e6"/>
-    <zoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+    <zoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="1.0"
           minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <groups AnlModelVersion="8" identifier="d6e44a1123f84fa3bd19c28f558c2d5b"
+  <groups AnlModelVersion="65536" identifier="d6e44a1123f84fa3bd19c28f558c2d5b"
           name="Group 2" height="447" colour="0" expanded="0">
     <layout value="3b72fe5561b646b097855c0379bce3c8"/>
     <layout value="127a20c224c04622b020d1d26fc1cc18"/>
-    <zoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+    <zoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="1.0"
           minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </zoom>
   </groups>
-  <tracks AnlModelVersion="8" identifier="476914820dde48e7a01c1e77d230d3e6"
+  <tracks AnlModelVersion="65536" identifier="476914820dde48e7a01c1e77d230d3e6"
           name="Simple Power Spectrum" file="" height="120" zoomLink="1">
     <key identifier="vamp-example-plugins:powerspectrum" feature="powerspectrum"/>
+    <description name="Simple Power Spectrum" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="1" category="Visualisation" details="Return the power spectrum of a signal&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3"/>
+      <output identifier="powerspectrum" name="Power Spectrum" description="Power values of the frequency spectrum bins calculated from the input signal"
+              unit="" hasFixedBinCount="1" binCount="2049" hasKnownExtents="0"
+              minValue="0.0" maxValue="0.0" isQuantized="0" quantizeStep="0.0"
+              sampleType="0" sampleRate="0.0" hasDuration="0"/>
+    </description>
     <state blockSize="4096" stepSize="512" windowType="3"/>
     <colours map="7" background="0" foreground="ff000000" text="ff000000"
              shadow="ff000000"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+    <valueZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="1.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
                visibleRange_end="0.03383243083953857">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="2049.0"
+    <binZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="2049.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="2049.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks AnlModelVersion="8" identifier="487a5aeef8ab431899dd9eed5d65b4ef"
+  <tracks AnlModelVersion="65536" identifier="487a5aeef8ab431899dd9eed5d65b4ef"
           name="Spectral Centroid" file="" height="319" zoomLink="1">
     <key identifier="vamp-example-plugins:spectralcentroid" feature="linearcentroid"/>
+    <description name="Spectral Centroid" inputDomain="1" maker="Vamp SDK Example Plugins"
+                 version="2" category="Low Level Features" details="Calculate the centroid frequency of the spectrum of the input signal&#10;Freely redistributable (BSD license)">
+      <defaultState blockSize="1024" stepSize="512" windowType="3"/>
+      <output identifier="linearcentroid" name="Linear Frequency Centroid"
+              description="Centroid of the linear frequency spectrum" unit="Hz"
+              hasFixedBinCount="1" binCount="1" hasKnownExtents="0" minValue="0.0"
+              maxValue="0.0" isQuantized="0" quantizeStep="0.0" sampleType="0"
+              sampleRate="0.0" hasDuration="0"/>
+    </description>
     <state blockSize="8192" stepSize="256" windowType="3"/>
     <colours map="7" background="0" foreground="ffef0000" text="ffef0000"
              shadow="ffef0000"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="44100.0"
+    <valueZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="44100.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
                visibleRange_end="44100.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="0"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="0"
             tickPowerBase="10.0" tickDivisionFactor="4.0"/>
     </valueZoom>
-    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+    <binZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="1.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks AnlModelVersion="8" identifier="3b72fe5561b646b097855c0379bce3c8"
+  <tracks AnlModelVersion="65536" identifier="3b72fe5561b646b097855c0379bce3c8"
           name="Amplitude Follower" file="" height="120" zoomLink="1">
     <key identifier="vamp-example-plugins:amplitudefollower" feature="amplitude"/>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="512" stepSize="512" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+    </description>
     <state blockSize="512" stepSize="512" windowType="3">
       <parameters key="attack" value="0.009999999776482582"/>
       <parameters key="release" value="0.009999999776482582"/>
@@ -89,22 +113,29 @@
              shadow="ff4800ff"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+    <valueZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="1.0"
                minimumLength="1.192092895507812e-7" visibleRange_start="0.0"
                visibleRange_end="1.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="1.0"
+    <binZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="1.0"
              minimumLength="1.0" visibleRange_start="0.0" visibleRange_end="1.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
-  <tracks AnlModelVersion="8" identifier="127a20c224c04622b020d1d26fc1cc18"
+  <tracks AnlModelVersion="65536" identifier="127a20c224c04622b020d1d26fc1cc18"
           name="Simple Percussion Onset Detector" file="" height="120"
           zoomLink="1">
     <key identifier="vamp-example-plugins:percussiononsets" feature="onsets"/>
+    <description name="" inputDomain="0" maker="" version="0" category="" details="">
+      <defaultState blockSize="512" stepSize="512" windowType="3"/>
+      <output identifier="" name="" description="" unit="" hasFixedBinCount="0"
+              binCount="0" hasKnownExtents="0" minValue="0.0" maxValue="0.0"
+              isQuantized="0" quantizeStep="0.0" sampleType="0" sampleRate="0.0"
+              hasDuration="0"/>
+    </description>
     <state blockSize="1024" stepSize="512" windowType="3">
       <parameters key="sensitivity" value="40.0"/>
       <parameters key="threshold" value="3.0"/>
@@ -113,14 +144,14 @@
              shadow="ff00ff44"/>
     <channelsLayout value="1"/>
     <channelsLayout value="1"/>
-    <valueZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="0.0"
+    <valueZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="0.0"
                minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </valueZoom>
-    <binZoom AnlModelVersion="8" globalRange_start="0.0" globalRange_end="0.0"
+    <binZoom AnlModelVersion="65536" globalRange_start="0.0" globalRange_end="0.0"
              minimumLength="0.0" visibleRange_start="0.0" visibleRange_end="0.0">
-      <grid AnlModelVersion="8" tickReference="0.0" mainTickInterval="3"
+      <grid AnlModelVersion="65536" tickReference="0.0" mainTickInterval="3"
             tickPowerBase="2.0" tickDivisionFactor="5.0"/>
     </binZoom>
   </tracks>
