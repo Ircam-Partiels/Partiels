@@ -51,18 +51,19 @@ Track::Ruler::Ruler(Accessor& accessor)
                     anlWeakAssert(ruler != nullptr);
                     if(ruler != nullptr)
                     {
-                        ruler->onMouseDown = [&]()
+                        ruler->onMouseDown = [&, rulerPtr = ruler.get()]()
                         {
                             if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
                             {
-                                if(mDisplayType == Tools::DisplayType::points)
+                                auto rangeEditor = mDisplayType == Tools::DisplayType::points ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
+                                if(rangeEditor == nullptr)
                                 {
-                                    Tools::showValueRangeEditor(mAccessor);
+                                    return false;
                                 }
-                                else
-                                {
-                                    Tools::showBinRangeEditor(mAccessor);
-                                }
+                                auto const point = juce::Desktop::getMousePosition();
+                                auto const rulerBounds = rulerPtr->getScreenBounds();
+                                auto const bounds = rulerBounds.withY(point.getY() - rulerBounds.getWidth()).withHeight(rulerBounds.getWidth());
+                                juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr).setArrowSize(0.0f);
                                 return false;
                             }
                             return true;

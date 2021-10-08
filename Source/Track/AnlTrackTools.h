@@ -105,8 +105,8 @@ namespace Track
         Zoom::Range getValueRange(std::vector<Results::Columns> const& results);
         Zoom::Range getValueRange(std::vector<Results::Points> const& results);
 
-        void showValueRangeEditor(Accessor& acsr);
-        void showBinRangeEditor(Accessor& acsr);
+        std::unique_ptr<juce::Component> createValueRangeEditor(Accessor& acsr);
+        std::unique_ptr<juce::Component> createBinRangeEditor(Accessor& acsr);
     } // namespace Tools
 } // namespace Track
 

@@ -622,7 +622,7 @@ Zoom::Range Track::Tools::getValueRange(std::vector<Results::Points> const& resu
                            });
 }
 
-void Track::Tools::showValueRangeEditor(Accessor& acsr)
+std::unique_ptr<juce::Component> Track::Tools::createValueRangeEditor(Accessor& acsr)
 {
     class RangeEditor
     : public juce::Component
@@ -697,16 +697,13 @@ void Track::Tools::showValueRangeEditor(Accessor& acsr)
         PropertyNumber mPropertyEnd;
     };
 
-    auto const point = juce::Desktop::getMousePosition();
     auto& zoomAcsr = acsr.getAcsr<AcsrType::valueZoom>();
     auto const name = acsr.getAttr<AttrType::name>();
     auto const unit = acsr.getAttr<AttrType::description>().output.unit;
-    auto& box = juce::CallOutBox::launchAsynchronously(std::make_unique<RangeEditor>(zoomAcsr, name, unit), {point.getX(), point.getY(), 180, 74}, nullptr);
-    box.setArrowSize(0.0f);
-    box.resized();
+    return std::make_unique<RangeEditor>(zoomAcsr, name, unit);
 }
 
-void Track::Tools::showBinRangeEditor(Accessor& acsr)
+std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& acsr)
 {
     class RangeEditor
     : public juce::Component
@@ -789,13 +786,10 @@ void Track::Tools::showBinRangeEditor(Accessor& acsr)
         PropertyNumber mPropertyEnd;
     };
 
-    auto const point = juce::Desktop::getMousePosition();
     auto& zoomAcsr = acsr.getAcsr<AcsrType::binZoom>();
     auto const name = acsr.getAttr<AttrType::name>();
     auto const unit = acsr.getAttr<AttrType::description>().output.binNames;
-    auto& box = juce::CallOutBox::launchAsynchronously(std::make_unique<RangeEditor>(zoomAcsr, name, unit), {point.getX(), point.getY(), 180, 74}, nullptr);
-    box.setArrowSize(0.0f);
-    box.resized();
+    return std::make_unique<RangeEditor>(zoomAcsr, name, unit);
 }
 
 ANALYSE_FILE_END
