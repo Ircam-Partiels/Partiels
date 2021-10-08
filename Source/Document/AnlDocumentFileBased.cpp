@@ -223,53 +223,29 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
     }
     auto xml = std::move(*std::get_if<0>(&fileResult));
 
-    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
-
-    Accessor tempAcsr;
-    tempAcsr.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
-    tempAcsr.setAttr<AttrType::reader>(mAccessor.getAttr<AttrType::reader>(), NotificationType::synchronous);
-    tempAcsr.setAttr<AttrType::path>(mAccessor.getAttr<AttrType::path>(), NotificationType::synchronous);
-    auto const tempSampleRate = tempAcsr.getAttr<AttrType::samplerate>();
-    auto const currentSampleRate = mAccessor.getAttr<AttrType::samplerate>();
-    auto const ratio = tempSampleRate > 0.0 ? currentSampleRate / tempSampleRate : 1.0;
-    for(auto const acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
-    {
-        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
-        if(resultFile.hasFileExtension("dat"))
-        {
-            acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
-        }
-        if(adaptOnSampleRate)
-        {
-            auto state = acsr.get().getAttr<Track::AttrType::state>();
-            state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
-            state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
-            acsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
-        }
-    }
-
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
-    mAccessor.copyFrom(tempAcsr, NotificationType::synchronous);
+
+    loadTemplate(mAccessor, *xml.get(), adaptOnSampleRate);
     mDirector.sanitize(NotificationType::synchronous);
+
     mDirector.setAlertCatcher(nullptr);
+    mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+    triggerAsyncUpdate();
 
     for(auto const& message : catcher.getMessages())
     {
         auto const type = std::get<0>(message.first);
         auto const title = std::get<1>(message.first) + (message.second.size() > 1 ? "(" + juce::String(message.second.size()) + ")" : "");
-        AlertWindow::showMessage(type, title, message.second.joinIntoString("\n"));
+
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(static_cast<juce::AlertWindow::AlertIconType>(type))
+                                 .withTitle(title)
+                                 .withMessage(message.second.joinIntoString("\n"))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
     }
 
-    auto var = std::make_unique<juce::DynamicObject>();
-    if(var != nullptr)
-    {
-        var->setProperty("x", viewport.getX());
-        var->setProperty("y", viewport.getY());
-        mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
-    }
-    mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
-    triggerAsyncUpdate();
     return juce::Result::ok();
 }
 
@@ -406,4 +382,43 @@ juce::Result Document::FileBased::saveTo(Accessor& accessor, juce::File const& f
     }
     return juce::Result::ok();
 }
+
+void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement const& xml, bool adaptOnSampleRate)
+{
+    auto const viewport = XmlParser::fromXml(xml, "viewport", juce::Point<int>());
+
+    Accessor tempAcsr;
+    tempAcsr.fromXml(xml, {"document"}, NotificationType::synchronous);
+    tempAcsr.setAttr<AttrType::reader>(accessor.getAttr<AttrType::reader>(), NotificationType::synchronous);
+    tempAcsr.setAttr<AttrType::path>(accessor.getAttr<AttrType::path>(), NotificationType::synchronous);
+    auto const tempSampleRate = tempAcsr.getAttr<AttrType::samplerate>();
+    auto const currentSampleRate = accessor.getAttr<AttrType::samplerate>();
+    auto const ratio = tempSampleRate > 0.0 ? currentSampleRate / tempSampleRate : 1.0;
+    for(auto const acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
+    {
+        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
+        if(resultFile.hasFileExtension("dat"))
+        {
+            acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
+        }
+        if(adaptOnSampleRate)
+        {
+            auto state = acsr.get().getAttr<Track::AttrType::state>();
+            state.blockSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) * ratio));
+            state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.stepSize) * ratio));
+            acsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
+        }
+    }
+
+    accessor.copyFrom(tempAcsr, NotificationType::synchronous);
+
+    auto var = std::make_unique<juce::DynamicObject>();
+    if(var != nullptr)
+    {
+        var->setProperty("x", viewport.getX());
+        var->setProperty("y", viewport.getY());
+        accessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
+    }
+}
+
 ANALYSE_FILE_END

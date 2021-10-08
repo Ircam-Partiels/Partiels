@@ -25,6 +25,7 @@ namespace Document
 
         static std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> parse(juce::File const& file);
         static juce::Result saveTo(Accessor& accessor, juce::File const& file);
+        static void loadTemplate(Accessor& accessor, juce::XmlElement const& xml, bool adaptOnSampleRate);
 
     protected:
         // juce::FileBasedDocument
