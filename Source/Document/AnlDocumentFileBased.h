@@ -24,6 +24,7 @@ namespace Document
         juce::Result saveBackup(juce::File const& file);
 
         static std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> parse(juce::File const& file);
+        static juce::Result saveTo(Accessor& accessor, juce::File const& file);
 
     protected:
         // juce::FileBasedDocument

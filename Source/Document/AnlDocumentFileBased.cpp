@@ -175,22 +175,13 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
 
 juce::Result Document::FileBased::saveDocument(juce::File const& file)
 {
-    auto const previousPath = mAccessor.getAttr<AttrType::path>();
-    mAccessor.setAttr<AttrType::path>(file, NotificationType::synchronous);
-    auto xml = mAccessor.toXml("document");
-    if(xml == nullptr)
+    auto const result = saveTo(mAccessor, file);
+    if(result.wasOk())
     {
-        mAccessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
-        return juce::Result::fail(juce::translate("The document cannot be parsed!"));
+        mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+        triggerAsyncUpdate();
     }
-    if(!xml->writeTo(file))
-    {
-        mAccessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
-        return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
-    }
-    mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
-    triggerAsyncUpdate();
-    return juce::Result::ok();
+    return result;
 }
 
 juce::Result Document::FileBased::consolidate()
@@ -398,4 +389,21 @@ std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> Document::FileBase
     return xml;
 }
 
+juce::Result Document::FileBased::saveTo(Accessor& accessor, juce::File const& file)
+{
+    auto const previousPath = accessor.getAttr<AttrType::path>();
+    accessor.setAttr<AttrType::path>(file, NotificationType::synchronous);
+    auto xml = accessor.toXml("document");
+    if(xml == nullptr)
+    {
+        accessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
+        return juce::Result::fail(juce::translate("The document cannot be parsed!"));
+    }
+    if(!xml->writeTo(file))
+    {
+        accessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
+        return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
+    }
+    return juce::Result::ok();
+}
 ANALYSE_FILE_END
