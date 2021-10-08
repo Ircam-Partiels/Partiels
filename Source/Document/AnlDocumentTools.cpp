@@ -141,7 +141,7 @@ std::optional<juce::String> Document::Tools::getFocusedGroup(Accessor const& acc
     return groupIt->get().getAttr<Group::AttrType::identifier>();
 }
 
-void Document::Tools::showTimeRangeEditor(Accessor& acsr)
+std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& acsr)
 {
     class RangeEditor
     : public juce::Component
@@ -216,11 +216,7 @@ void Document::Tools::showTimeRangeEditor(Accessor& acsr)
         PropertyHMSmsField mPropertyEnd;
     };
 
-    auto const point = juce::Desktop::getMousePosition();
-    auto& zoomAcsr = acsr.getAcsr<AcsrType::timeZoom>();
-    auto& box = juce::CallOutBox::launchAsynchronously(std::make_unique<RangeEditor>(zoomAcsr), {point.getX() + 2, point.getY() + 2, 180, 74}, nullptr);
-    box.setArrowSize(0.0f);
-    box.resized();
+    return std::make_unique<RangeEditor>(acsr.getAcsr<AcsrType::timeZoom>());
 }
 
 Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn)

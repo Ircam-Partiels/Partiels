@@ -37,7 +37,16 @@ Document::Section::Section(Director& director)
     {
         if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
         {
-            Tools::showTimeRangeEditor(mAccessor);
+            auto timeRangeEditor = Tools::createTimeRangeEditor(mAccessor);
+            if(timeRangeEditor == nullptr)
+            {
+                return false;
+            }
+
+            auto const x = juce::Desktop::getMousePosition().getX();
+            auto const timeRulerBounds = mTimeRuler.getScreenBounds();
+            auto const bounds = timeRulerBounds.withX(x - timeRulerBounds.getHeight() / 2).withWidth(timeRulerBounds.getHeight());
+            juce::CallOutBox::launchAsynchronously(std::move(timeRangeEditor), bounds, nullptr).setArrowSize(0.0f);
             return false;
         }
         return true;

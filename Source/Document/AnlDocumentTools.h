@@ -26,7 +26,7 @@ namespace Document
         std::optional<juce::String> getFocusedTrack(Accessor const& accessor);
         std::optional<juce::String> getFocusedGroup(Accessor const& accessor);
 
-        void showTimeRangeEditor(Accessor& acsr);
+        std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& acsr);
     } // namespace Tools
 
     class LayoutNotifier
