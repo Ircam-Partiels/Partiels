@@ -3,6 +3,38 @@
 
 ANALYSE_FILE_BEGIN
 
+static juce::Result createAndSave(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputFile, bool adaptationToSampleRate)
+{
+    anlDebug("CommandLine", "Begin creation...");
+    juce::AudioFormatManager audioFormatManager;
+    audioFormatManager.registerBasicFormats();
+    if(std::none_of(audioFormatManager.begin(), audioFormatManager.end(), [&](auto* audioFormat)
+                    {
+                        return audioFormat != nullptr && audioFormat->canHandleFile(audioFile);
+                    }))
+    {
+        return juce::Result::fail(juce::translate("The audio file FLNM is not supported!").replace("FLNM", audioFile.getFileName()));
+    }
+
+    auto fileResult = Document::FileBased::parse(templateFile);
+    if(fileResult.index() == 1_z)
+    {
+        return *std::get_if<1>(&fileResult);
+    }
+    auto xml = std::move(*std::get_if<0>(&fileResult));
+
+    auto parentDirectoryResult = outputFile.getParentDirectory().createDirectory();
+    if(parentDirectoryResult.failed())
+    {
+        return parentDirectoryResult;
+    }
+
+    Document::Accessor documentAccessor;
+    documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
+    Document::FileBased::loadTemplate(documentAccessor, *xml.get(), adaptationToSampleRate);
+    return Document::FileBased::saveTo(documentAccessor, outputFile);
+}
+
 static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, Document::Exporter::Options const& options, bool adaptationToSampleRate, juce::String const& identifier)
 {
     anlDebug("CommandLine", "Begin analysis...");
@@ -85,6 +117,30 @@ Application::CommandLine::CommandLine()
 {
     addHelpCommand("--help|-h", "Usage:", false);
     addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
+    addCommand(
+        {"--new|-n",
+         "--new|-n [options]",
+         "Creates a new document with a template and an audio file.\n\t"
+         "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
+         "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
+         "--output|-o <outputfile> Defines the path of the output file (required).\n\t"
+         "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
+         "",
+         "",
+         [](juce::ArgumentList const& args)
+         {
+             anlDebug("CommandLine", "Parsing arguments...");
+             auto const audioFile = args.getExistingFileForOption("-i|--input");
+             auto const templateFile = args.getExistingFileForOption("-t|--template");
+             auto const outputFile = args.getFileForOption("-o|--output");
+             auto const adaptationToSampleRate = args.containsOption("-adapt");
+
+             auto const result = createAndSave(audioFile, templateFile, outputFile, adaptationToSampleRate);
+             if(result.failed())
+             {
+                 juce::ConsoleApplication::fail(result.getErrorMessage());
+             }
+         }});
     addCommand(
         {"--export|-e",
          "--export|-e [options]",
