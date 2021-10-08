@@ -162,6 +162,7 @@ add_test(NAME ExportJpeg COMMAND Partiels --export --input=${TESTS_DIRECTORY}/So
 add_test(NAME ExportPng COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/PNG/ --format=png --width=1200 --height=900 --groups)
 add_test(NAME ExportCsv COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/CSV/ --format=csv --nogrids --header --separator=,)
 add_test(NAME ExportJson COMMAND Partiels --export --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/JSON/ --format=json)
+add_test(NAME NewDocument COMMAND Partiels --new --input=${TESTS_DIRECTORY}/Sound.wav --template=${TESTS_DIRECTORY}/Template.ptldoc --output=${CMAKE_CURRENT_BINARY_DIR}/TestsOutput/Document/new.ptldoc)
 
 set(EXPECTED_CSV_FILE_SV "${TESTS_DIRECTORY}/SpectralCentroid-SV.csv")
 set(EXPECTED_CSV_FILE_FAILURE "${TESTS_DIRECTORY}/SpectralCentroid-failure.csv")
