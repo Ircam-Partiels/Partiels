@@ -23,6 +23,8 @@ namespace Document
         juce::Result loadBackup(juce::File const& file);
         juce::Result saveBackup(juce::File const& file);
 
+        static std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> parse(juce::File const& file);
+
     protected:
         // juce::FileBasedDocument
         juce::String getDocumentTitle() override;

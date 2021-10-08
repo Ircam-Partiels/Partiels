@@ -116,15 +116,12 @@ juce::String Document::FileBased::getDocumentTitle()
 
 juce::Result Document::FileBased::loadDocument(juce::File const& file)
 {
-    auto xml = juce::XmlDocument::parse(file);
-    if(xml == nullptr || !xml->hasTagName("document"))
+    auto fileResult = parse(file);
+    if(fileResult.index() == 1_z)
     {
-        return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
+        return *std::get_if<1>(&fileResult);
     }
-    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
-    {
-        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
-    }
+    auto xml = std::move(*std::get_if<0>(&fileResult));
 
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     auto const original = XmlParser::fromXml(*xml.get(), "path", file);
@@ -228,15 +225,12 @@ juce::Result Document::FileBased::consolidate()
 
 juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adaptOnSampleRate)
 {
-    auto xml = juce::XmlDocument::parse(file);
-    if(xml == nullptr || !xml->hasTagName("document"))
+    auto fileResult = parse(file);
+    if(fileResult.index() == 1_z)
     {
-        return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
+        return *std::get_if<1>(&fileResult);
     }
-    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
-    {
-        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
-    }
+    auto xml = std::move(*std::get_if<0>(&fileResult));
 
     auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
 
@@ -290,15 +284,12 @@ juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adap
 
 juce::Result Document::FileBased::loadBackup(juce::File const& file)
 {
-    auto xml = juce::XmlDocument::parse(file);
-    if(xml == nullptr || !xml->hasTagName("document"))
+    auto fileResult = parse(file);
+    if(fileResult.index() == 1_z)
     {
-        return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
+        return *std::get_if<1>(&fileResult);
     }
-    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
-    {
-        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
-    }
+    auto xml = std::move(*std::get_if<0>(&fileResult));
 
     if(xml->hasAttribute("origin"))
     {
@@ -391,6 +382,20 @@ void Document::FileBased::changed()
         auto const state = mAccessor.isEquivalentTo(mSavedStateAccessor);
         setChangedFlag(!state);
     }
+}
+
+std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> Document::FileBased::parse(juce::File const& file)
+{
+    auto xml = juce::XmlDocument::parse(file);
+    if(xml == nullptr || !xml->hasTagName("document"))
+    {
+        return juce::Result::fail(juce::translate("The file FLNM cannot be parsed!").replace("FLNM", file.getFileName()));
+    }
+    if(xml->getIntAttribute("AnlModelVersion", 0) > ProjectInfo::versionNumber)
+    {
+        return juce::Result::fail("The file FLNM has been created with a newer version of Partiels. Update the version of the application to load the file.");
+    }
+    return xml;
 }
 
 ANALYSE_FILE_END
