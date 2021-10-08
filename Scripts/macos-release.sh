@@ -52,7 +52,6 @@ if [[ $request_status != "success" ]]; then
     exit 1
 fi
 
-APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
 $ThisPath/macos-package.sh
 
 echo '\033[0;34m' "done"
