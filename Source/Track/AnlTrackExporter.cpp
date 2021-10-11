@@ -447,6 +447,98 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     return juce::Result::ok();
 }
 
+juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
+{
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
+    auto const results = accessor.getAttr<AttrType::results>();
+    auto const name = accessor.getAttr<AttrType::name>();
+    lock.exit();
+
+    if(results.isEmpty())
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CUE because the results are not valid.").replace("ANLNAME", name));
+    }
+
+    auto const markers = results.getMarkers();
+    if(markers == nullptr)
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CUE because the results are not markers.").replace("ANLNAME", name));
+    }
+
+    juce::TemporaryFile temp(file);
+    std::ofstream stream(temp.getFile().getFullPathName().toStdString(), std::ios::out);
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME cannot be exported as binary because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    auto to2Digits = [](int value)
+    {
+        value = std::max(std::min(value, 99), 0);
+        auto const v10 = static_cast<int>(value / 10);
+        return std::to_string(v10) + std::to_string(value - (v10 * 10));
+    };
+
+    auto timeToString = [&](double time)
+    {
+        auto const minutes = std::floor(time / 60.0);
+        auto const seconds = std::floor(time - (minutes * 60.0));
+        auto const frames = std::round((time - (minutes * 60.0) - seconds) * 75.0);
+        return to2Digits(static_cast<int>(minutes)) + ":" + to2Digits(static_cast<int>(seconds)) + ":" + to2Digits(static_cast<int>(frames));
+    };
+
+    for(size_t channelIndex = 0_z; channelIndex < markers->size(); ++channelIndex)
+    {
+        auto const& channelResults = markers->at(channelIndex);
+        stream << "TITLE CHANNEL_" << to2Digits(static_cast<int>(channelIndex)) << "\n";
+        for(size_t frameIndex = 0_z; frameIndex < channelResults.size(); ++frameIndex)
+        {
+            if(shouldAbort)
+            {
+                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            }
+            auto const& frameResult = channelResults.at(frameIndex);
+            stream << "  "
+                   << "TRACK " << to2Digits(static_cast<int>(frameIndex)) << " AUDIO \n";
+            stream << "    "
+                   << "TITLE \"" << std::get<2>(frameResult) << "\"\n";
+            stream << "    "
+                   << "INDEX 01 " << timeToString(std::get<0>(frameResult)) << "\n";
+        }
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    stream.close();
+    if(!stream.good())
+    {
+        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as CUE because the writing of the output stream of the file FLNAME failed.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(shouldAbort)
+    {
+        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+    return juce::Result::ok();
+}
+
 juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
