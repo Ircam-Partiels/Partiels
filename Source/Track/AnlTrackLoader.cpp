@@ -154,6 +154,15 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(juce::Fil
             }
             return loadFromCsv(stream, shouldAbort, advancement);
         }
+        else if(file.hasFileExtension("cue"))
+        {
+            auto stream = std::ifstream(path);
+            if(!stream || !stream.is_open() || !stream.good())
+            {
+                return {juce::translate("The input stream of cannot be opened")};
+            }
+            return loadFromCue(stream, shouldAbort, advancement);
+        }
     }
     catch(std::exception& e)
     {
