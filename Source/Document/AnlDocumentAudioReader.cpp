@@ -54,7 +54,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
 
                 if(destChannels[channelIndex] != nullptr && reader != nullptr)
                 {
-                    auto const numChannels = layout < 0 ? static_cast<int>(reader->numChannels) : layout + 1;
+                    auto const usedNumChannels = layout < 0 ? static_cast<int>(reader->numChannels) : layout + 1;
                     auto startSample = startSampleInFile;
                     auto remaininSamples = numSamples;
                     auto outputOffset = startOffsetInDestBuffer;
@@ -64,7 +64,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         mBuffer.clear();
                         auto** internalBuffer = mBuffer.getArrayOfWritePointers();
                         auto const bufferSize = std::min(remaininSamples, mBuffer.getNumSamples());
-                        auto result = reader->readSamples(reinterpret_cast<int**>(internalBuffer), numChannels, 0, startSampleInFile, bufferSize);
+                        auto result = reader->readSamples(reinterpret_cast<int**>(internalBuffer), usedNumChannels, 0, startSampleInFile, bufferSize);
                         if(!result)
                         {
                             return false;
@@ -86,7 +86,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                             }
                             auto* outputBuffer = reinterpret_cast<float*>(destChannels[channelIndex] + outputOffset);
                             juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[0_z], bufferSize);
-                            for(size_t channelToCopy = 1_z; channelToCopy < static_cast<size_t>(numChannels); ++channelToCopy)
+                            for(size_t channelToCopy = 1_z; channelToCopy < static_cast<size_t>(usedNumChannels); ++channelToCopy)
                             {
                                 if(!reader->usesFloatingPointData)
                                 {
@@ -94,11 +94,11 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                                 }
                                 juce::FloatVectorOperations::add(outputBuffer, internalBuffer[channelToCopy], bufferSize);
                             }
-                            juce::FloatVectorOperations::multiply(outputBuffer, 1.0f / static_cast<float>(numChannels), bufferSize);
+                            juce::FloatVectorOperations::multiply(outputBuffer, 1.0f / static_cast<float>(usedNumChannels), bufferSize);
                         }
                         else if(layout == -2) // all
                         {
-                            for(size_t channelToCopy = 0_z; channelToCopy < static_cast<size_t>(numChannels); ++channelToCopy)
+                            for(size_t channelToCopy = 0_z; channelToCopy < static_cast<size_t>(usedNumChannels); ++channelToCopy)
                             {
                                 if(!reader->usesFloatingPointData)
                                 {
@@ -118,7 +118,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         outputOffset += bufferSize;
                         remaininSamples -= bufferSize;
                     }
-                    channelIndex += layout == -2 ? numChannels : 1;
+                    channelIndex += layout == -2 ? usedNumChannels : 1;
                 }
                 else
                 {
