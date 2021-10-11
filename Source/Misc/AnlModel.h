@@ -784,6 +784,12 @@ namespace Model
                                      anlWeakAssert((element_type::size_flags == 0 && accessors.empty()) || (element_type::size_flags != 0 && it->size() == accessors.size()));
                                      if constexpr(element_type::size_flags == 0)
                                      {
+                                         while(accessors.size() > 0_z)
+                                         {
+                                             static_cast<parent_t*>(&accessor)->template eraseAcsr<element_type::type>(accessors.size() - 1_z, NotificationType::synchronous);
+                                         }
+
+                                         anlWeakAssert(accessors.empty());
                                          for(auto index = 0_z; index < it->size(); ++index)
                                          {
                                              if(static_cast<parent_t*>(&accessor)->template insertAcsr<element_type::type>(index, NotificationType::synchronous))
@@ -850,6 +856,11 @@ namespace Model
 
                                      if constexpr(element_type::size_flags == 0)
                                      {
+                                         while(accessors.size() > 0_z)
+                                         {
+                                             static_cast<parent_t*>(&accessor)->template eraseAcsr<element_type::type>(accessors.size() - 1_z, NotificationType::synchronous);
+                                         }
+
                                          anlWeakAssert(accessors.empty());
                                          for(auto index = 0_z; index < childs.size(); ++index)
                                          {
