@@ -26,6 +26,7 @@ namespace Track
         static std::variant<Results, juce::String> loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromBinary(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static std::variant<Results, juce::String> loadFromCue(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
 
     private:
         void abortLoading();

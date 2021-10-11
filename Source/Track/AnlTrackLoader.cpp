@@ -500,6 +500,120 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
     return {std::move(res)};
 }
 
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    using namespace std::string_literals;
+    std::vector<Track::Results::Markers> channelResults;
+
+    auto trimString = [](std::string const& s)
+    {
+        auto ltrim = [](std::string const& sr)
+        {
+            auto const start = sr.find_first_not_of(" \n\r\t\f\v");
+            return (start == std::string::npos) ? "" : sr.substr(start);
+        };
+
+        auto rtrim = [](std::string const& sr)
+        {
+            auto const end = sr.find_last_not_of(" \n\r\t\f\v");
+            return (end == std::string::npos) ? "" : sr.substr(0, end + 1);
+        };
+
+        return rtrim(ltrim(s));
+    };
+
+    auto unescapeString = [](std::string const& s)
+    {
+        return juce::String(s).replace("\\\"", "\"").replace("\\\'", "\'").replace("\\t", "\t").replace("\\r", "\r").replace("\\n", "\n").unquoted().toStdString();
+    };
+
+    auto hasKey = [](std::string const& line, std::string const& key, size_t indentation)
+    {
+        auto generateKey = [&](std::string const& strIndentation, bool upperCase)
+        {
+            std::string fkey;
+            while(indentation > 0_z)
+            {
+                fkey += strIndentation;
+                --indentation;
+            }
+            fkey += key;
+            if(upperCase)
+            {
+                std::transform(fkey.begin(), fkey.end(), fkey.begin(), [](auto c)
+                               {
+                                   return std::toupper(c);
+                               });
+            }
+            else
+            {
+                std::transform(fkey.begin(), fkey.end(), fkey.begin(), [](auto c)
+                               {
+                                   return std::tolower(c);
+                               });
+            }
+            return fkey;
+        };
+        return line.find(generateKey("  ", true)) == 0_z || line.find(generateKey("  ", false)) == 0_z || line.find(generateKey("\t", true)) == 0_z || line.find(generateKey("\t", false)) == 0_z;
+    };
+
+    auto addNewChannel = true;
+    std::string line;
+    while(getline(stream, line, '\n'))
+    {
+        if(shouldAbort)
+        {
+            return {};
+        }
+
+        if(hasKey(line, "TITLE"s, 0_z))
+        {
+            addNewChannel = true;
+        }
+        else if(hasKey(line, "TRACK"s, 1_z))
+        {
+            if(std::exchange(addNewChannel, false))
+            {
+                channelResults.push_back({});
+            }
+            if(channelResults.empty())
+            {
+                return {juce::translate("Parsing error")};
+            }
+            channelResults.back().push_back({});
+        }
+        else if(hasKey(line, "TITLE"s, 2_z))
+        {
+            if(channelResults.empty() || channelResults.back().empty())
+            {
+                return {juce::translate("Parsing error")};
+            }
+            auto& frameResult = channelResults.back().back();
+            auto const label = unescapeString(trimString(trimString(line).substr("TITLE"s.length())));
+            std::get<2>(frameResult) = label;
+        }
+        else if(hasKey(line, "INDEX 01"s, 2_z))
+        {
+            if(channelResults.empty() || channelResults.back().empty())
+            {
+                return {juce::translate("Parsing error")};
+            }
+            auto& frameResult = channelResults.back().back();
+            auto const timeString = trimString(trimString(line).substr("INDEX 01"s.length()));
+            std::string minutes, secondes, frames;
+            std::istringstream timeStream(timeString);
+            getline(timeStream, minutes, ':');
+            getline(timeStream, secondes, ':');
+            getline(timeStream, frames, ':');
+            auto const time = std::stod(minutes) * 60.0 + std::stod(secondes) + std::stod(frames) / 75.0;
+            std::get<0>(frameResult) = time;
+        }
+    }
+
+    advancement.store(1.0f);
+    return Results(std::make_shared<const std::vector<Results::Markers>>(std::move(channelResults)));
+}
+
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     std::vector<std::vector<Plugin::Result>> pluginResults;
