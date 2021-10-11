@@ -96,7 +96,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                     juce::ignoreUnused(index);
                     sanitizeProperties(true);
                 })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON", "CUE"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
@@ -404,7 +404,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
     }
 
     auto const itemId = mPropertyItem.entry.getSelectedId();
-    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0);
+    mPropertyIgnoreGrids.setEnabled(itemId % groupItemFactor == 0 && mOptions.format != Options::Format::cue);
 }
 
 Document::Exporter::Options const& Document::Exporter::Panel::getOptions() const
@@ -684,6 +684,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         {
             return juce::Result::ok();
         }
+        if(identifier != trackIdentifier && options.format == Options::Format::cue && Track::Tools::getDisplayType(trackAcsr) != Track::Tools::DisplayType::markers)
+        {
+            return juce::Result::ok();
+        }
         auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
         lock.exit();
 
@@ -697,6 +701,8 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return Track::Exporter::toCsv(trackAcsr, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, fileUsed, options.includeDescription, shouldAbort);
+            case Options::Format::cue:
+                return Track::Exporter::toCue(trackAcsr, fileUsed, shouldAbort);
         }
         return juce::Result::fail("Unsupported format");
     };

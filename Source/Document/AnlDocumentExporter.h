@@ -20,6 +20,7 @@ namespace Document
                 , png
                 , csv
                 , json
+                , cue
             };
             
             enum class ColumnSeparator
