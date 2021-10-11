@@ -715,7 +715,7 @@ public:
 
     void runTest() override
     {
-        auto checkMakers = [this](std::variant<Results, juce::String> vResult)
+        auto checkMakers = [this](std::variant<Results, juce::String> vResult, double timeEpsilon = 1e-9)
         {
             expectEquals(vResult.index(), 0_z);
             if(vResult.index() == 1_z)
@@ -737,9 +737,9 @@ public:
             }
 
             using namespace std::string_literals;
-            auto expectMarker = [this](Results::Marker const& marker, double time, std::string const& label)
+            auto expectMarker = [this, timeEpsilon](Results::Marker const& marker, double time, std::string const& label)
             {
-                expectWithinAbsoluteError(std::get<0>(marker), time, 1e-9);
+                expectWithinAbsoluteError(std::get<0>(marker), time, timeEpsilon);
                 expectWithinAbsoluteError(std::get<1>(marker), 0.0, 1e-9);
                 expectEquals(std::get<2>(marker), label);
             };
@@ -811,6 +811,24 @@ public:
             expectChannel(points->at(0_z), {{0.0, 2361.65478515625f}, {0.023219955, 3899.171630859375f}, {0.046439909, 3270.79541015625f}, {0.069659864, 2604.403564453125f}});
             expectChannel(points->at(1_z), {{0.0, 2503.146484375f}, {0.023219955, 3616.829833984375f}, {0.046439909, 3045.656005859375f}});
         };
+
+        beginTest("load cue error");
+        {
+            auto const result = std::string(TestResultsData::Error_cue);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            expectEquals(loadFromCsv(stream, shouldAbort, advancement).index(), 1_z);
+        }
+
+        beginTest("load cue markers");
+        {
+            auto const result = std::string(TestResultsData::Markers_cue);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromCue(stream, shouldAbort, advancement), 1.0 / 75.0);
+        }
 
         beginTest("load csv error");
         {
