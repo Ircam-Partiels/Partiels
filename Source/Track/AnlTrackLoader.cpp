@@ -644,8 +644,8 @@ public:
                 }
             };
 
-            expectChannel(markers->at(0_z), {{0.023219955, "N"s}, {0.023582767, "B7/D#"s}, {0.026122449, "A"s}});
-            expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {0.023582767, "A"s}});
+            expectChannel(markers->at(0_z), {{0.023219955, "N"s}, {1.023582767, "B7/D#"s}, {78.026122449, "A"s}});
+            expectChannel(markers->at(1_z), {{0.023219955, "Z"s}, {10.023582767, "A"s}});
         };
 
         auto checkPoints = [this](std::variant<Results, juce::String> vResult)
