@@ -419,7 +419,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::documentImport:
         {
             auto const position = Tools::getNewTrackPosition();
-            mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, "*.json;*.csv");
+            mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load file"), juce::File{}, "*.json;*.csv;*.cue");
             if(mFileChooser == nullptr)
             {
                 return true;

@@ -94,12 +94,13 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
 
 void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position, juce::File const& file)
 {
-    if(!file.hasFileExtension("json") && !file.hasFileExtension("csv"))
+    juce::WildcardFileFilter wildcardFilter("*.json;*.csv;*.cue", file.getParentDirectory().getFullPathName(), "");
+    if(!wildcardFilter.isFileSuitable(file))
     {
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("File format not supported!"))
-                                 .withMessage(juce::translate("The application only supports JSON and CSV formats."))
+                                 .withMessage(juce::translate("The application only supports JSON, CSV and CUE formats."))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
         return;
