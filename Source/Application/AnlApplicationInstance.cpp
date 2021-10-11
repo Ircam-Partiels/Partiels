@@ -465,7 +465,7 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
                                  .withButton(juce::translate("Restore"))
                                  .withButton(juce::translate("Ignore"));
 
-        juce::AlertWindow::showAsync(options, [=](int result)
+        juce::AlertWindow::showAsync(options, [=, this](int result)
                                      {
                                          if(result == 0)
                                          {
