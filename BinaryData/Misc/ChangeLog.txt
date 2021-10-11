@@ -7,6 +7,7 @@ v1.0.0
 - Add: Command line option "new" to create document with an audio file and a template (#148)
 - Imp: Use shift modifier and vertical scrolling to simulate the trackpad horizontal scrolling (#147)
 - Imp: Add plugin name or file path to the tooltips of the tracks (#146)
+- Add: Support for import/export of CUE sheet files as markers (#144)
 
 v0.0.9 (alpha)
 
