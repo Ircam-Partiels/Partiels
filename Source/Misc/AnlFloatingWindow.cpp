@@ -2,8 +2,8 @@
 
 ANALYSE_FILE_BEGIN
 
-FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton, bool addToDesktop, bool alwayOnTop)
-: juce::DialogWindow(name, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(ColourIds::backgroundColourId), escapeKeyTriggersCloseButton, addToDesktop)
+FloatingWindow::FloatingWindow(juce::String const& name, bool escapeKeyTriggersClose, bool addToDesktop, bool alwayOnTop)
+: juce::DialogWindow(name, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(ColourIds::backgroundColourId), escapeKeyTriggersClose, addToDesktop)
 {
     if(alwayOnTop)
     {

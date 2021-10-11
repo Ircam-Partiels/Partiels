@@ -19,7 +19,7 @@ public:
     };
     // clang-format on
 
-    FloatingWindow(juce::String const& name, bool escapeKeyTriggersCloseButton = true, bool addToDesktop = true, bool alwayOnTop = false);
+    FloatingWindow(juce::String const& name, bool escapeKeyTriggersClose = true, bool addToDesktop = true, bool alwayOnTop = false);
     ~FloatingWindow() override;
 
     std::function<void(void)> onChanged = nullptr;
