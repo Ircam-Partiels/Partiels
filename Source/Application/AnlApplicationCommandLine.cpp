@@ -148,12 +148,12 @@ Application::CommandLine::CommandLine()
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
-         "--format|-f <formatname> Defines the export format (jpeg, png, csv or json) (required).\n\t"
+         "--format|-f <formatname> Defines the export format (jpeg, png, csv, json or cue) (required).\n\t"
          "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
          "--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).\n\t"
-         "--nogrids Ignores the export of the grid tracks (optional with the csv and json formats).\n\t"
+         "--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).\n\t"
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
          "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
          "--description Includes the plugin description (optional with the json format).\n\t"
@@ -198,7 +198,7 @@ Application::CommandLine::CommandLine()
              }
              else if(!args.containsOption("-f|--format"))
              {
-                 juce::ConsoleApplication::fail("Format not specified! Available formats are jpeg, png, csv or json.");
+                 juce::ConsoleApplication::fail("Format not specified! Available formats are jpeg, png, csv, json or cue.");
              }
              else if(format == "jpeg" || format == "png")
              {
@@ -216,9 +216,20 @@ Application::CommandLine::CommandLine()
                  options.imageHeight = args.getValueForOption("-h|--height").getIntValue();
                  options.useGroupOverview = args.containsOption("--groups");
              }
-             else if(format == "csv" || format == "json")
+             else if(format == "csv" || format == "json" || format == "cue")
              {
-                 options.format = format == "csv" ? Options::Format::csv : Options::Format::json;
+                 if(format == "csv")
+                 {
+                     options.format = Options::Format::csv;
+                 }
+                 else if(format == "json")
+                 {
+                     options.format = Options::Format::json;
+                 }
+                 else
+                 {
+                     options.format = Options::Format::cue;
+                 }
                  options.ignoreGridResults = args.containsOption("--nogrids");
                  options.includeHeaderRaw = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
