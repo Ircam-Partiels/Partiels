@@ -4,3 +4,4 @@
 - Windows signature
 - Remove any modal approach
 - Check supported input files extension from OS (json/csv/sdif/etc.)
+- Add coverage
