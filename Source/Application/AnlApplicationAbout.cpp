@@ -1,13 +1,12 @@
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationInstance.h"
-#include <IconsData.h>
-#include <MiscData.h>
+#include <ResourceData.h>
 
 ANALYSE_FILE_BEGIN
 
 Application::About::About()
 : FloatingWindowContainer("About Partiels - v" + juce::String(ProjectInfo::versionString), *this)
-, mImage(juce::Drawable::createFromImageData(IconsData::icon_png, IconsData::icon_pngSize))
+, mImage(juce::Drawable::createFromImageData(ResourceData::icon_png, ResourceData::icon_pngSize))
 {
     setSize(400, 400);
 }
@@ -21,7 +20,7 @@ void Application::About::paint(juce::Graphics& g)
 
     g.setColour(findColour(juce::Label::ColourIds::textColourId, true));
     g.setFont(16.0f);
-    juce::String const text(MiscData::About_txt, MiscData::About_txtSize);
+    juce::String const text(ResourceData::About_txt, ResourceData::About_txtSize);
     g.drawFittedText(text, getLocalBounds().reduced(4), juce::Justification::left, 40);
 }
 

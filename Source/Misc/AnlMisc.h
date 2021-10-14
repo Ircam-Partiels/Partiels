@@ -1,34 +1,15 @@
 #pragma once
 
-#include "AnlAlertWindow.h"
-#include "AnlAtomicManager.h"
-#include "AnlAudioFileInfoPanel.h"
-#include "AnlAudioFileLayout.h"
-#include "AnlBasics.h"
-#include "AnlBroadcaster.h"
-#include "AnlChrono.h"
-#include "AnlColourSelector.h"
-#include "AnlColouredPanel.h"
-#include "AnlComponentListener.h"
-#include "AnlComponentSnapshot.h"
-#include "AnlConcertinaTable.h"
-#include "AnlDecorator.h"
-#include "AnlDraggableTable.h"
-#include "AnlFileSearchPathTable.h"
-#include "AnlFileWatcher.h"
-#include "AnlFloatingWindow.h"
-#include "AnlHMSmsField.h"
-#include "AnlIconManager.h"
-#include "AnlJsonParser.h"
-#include "AnlLoadingCircle.h"
-#include "AnlLowResCachedImageComponent.h"
-#include "AnlModel.h"
-#include "AnlNotifier.h"
-#include "AnlNumberField.h"
-#include "AnlPropertyComponent.h"
-#include "AnlResizerBar.h"
-#include "AnlScrollHelper.h"
-#include "AnlSdifConverter.h"
-#include "AnlTimerClock.h"
-#include "AnlTooltip.h"
-#include "AnlXmlParser.h"
+#include "../../Dependencies/Misc/Source/Misc.h"
+namespace Anl = Misc;
+
+#define ANALYSE_FILE_BEGIN \
+    namespace Misc         \
+    {
+#define ANALYSE_FILE_END }
+
+#define anlWeakAssert MiscWeakAssert
+#define anlStrongAssert MiscStrongAssert
+
+#define anlDebug MiscDebug
+#define anlError MiscError

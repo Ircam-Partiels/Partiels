@@ -13,6 +13,8 @@ add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
 include(vamp.cmake)
 include(xcode-warnings.cmake)
+include(Dependencies/Misc/Misc.cmake)
+source_group("Misc" FILES ${MiscSource})
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
@@ -21,7 +23,7 @@ juce_add_gui_app(Partiels
     COMPANY_COPYRIGHT                   "Copyright 2021 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
-    ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Icons/icon.png"
+    ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png"
     DOCUMENT_EXTENSIONS                 "ptldoc,aac,aiff,aif,flac,m4a,mp3,ogg,wav,wma"
     NEEDS_CURL                          FALSE
     NEEDS_WEB_BROWSER                   FALSE
@@ -69,7 +71,7 @@ source_group("Source/Global" FILES ${GlobalSources})
 file(GLOB TranslationsSources ${BINARYDATA_DIRECTORY}/Translations/*.txt)
 source_group("Source/Translations" FILES ${TranslationsSources})
 
-target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${TranslationsSources})
+target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${MiscSource} ${TranslationsSources})
 
 set(PartielsDefinitions
     APP_DOC_PREFIX="ptl"
@@ -87,6 +89,7 @@ set(PartielsDefinitions
     JUCE_WASAPI
     JUCE_DIRECTSOUND
     JUCE_ASIO
+    MISC_SUPPORTS_SDIF=1
     )
 
 target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
@@ -97,20 +100,11 @@ if(WIN32)
 target_include_directories(Partiels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
 endif()
 
-file(GLOB IconsDataSources ${BINARYDATA_DIRECTORY}/Icons/*.png)
-juce_add_binary_data(IconsData HEADER_NAME "IconsData.h" NAMESPACE IconsData SOURCES ${IconsDataSources})
-
-file(GLOB CursorsDataSources ${BINARYDATA_DIRECTORY}/Cursors/*.png)
-juce_add_binary_data(CursorsData HEADER_NAME "CursorsData.h" NAMESPACE CursorsData SOURCES ${CursorsDataSources})
-
 file(GLOB TranslationsDataSources ${TranslationsSources})
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
-file(GLOB FontsDataSources ${BINARYDATA_DIRECTORY}/Fonts/*.ttf)
-juce_add_binary_data(FontsData HEADER_NAME "FontsData.h" NAMESPACE FontsData SOURCES ${FontsDataSources})
-
-file(GLOB MiscDataSources ${BINARYDATA_DIRECTORY}/Misc/About.txt)
-juce_add_binary_data(MiscData HEADER_NAME "MiscData.h" NAMESPACE MiscData SOURCES ${MiscDataSources})
+file(GLOB ResourceDataSources ${BINARYDATA_DIRECTORY}/Resource/About.txt ${BINARYDATA_DIRECTORY}/Resource/icon.png)
+juce_add_binary_data(ResourceData HEADER_NAME "ResourceData.h" NAMESPACE ResourceData SOURCES ${ResourceDataSources})
 
 file(GLOB TestResultsDataSources ${BINARYDATA_DIRECTORY}/Tests/*.csv ${BINARYDATA_DIRECTORY}/Tests/*.json ${BINARYDATA_DIRECTORY}/Tests/*.dat ${BINARYDATA_DIRECTORY}/Tests/*.cue)
 juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
@@ -118,11 +112,9 @@ juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE T
 target_link_libraries(Partiels PRIVATE
     vamp
     sdif
-    IconsData
-    CursorsData
-    FontsData
-    TranslationsData
     MiscData
+    TranslationsData
+    ResourceData
     TestResultsData
     juce::juce_gui_extra
     juce::juce_audio_formats

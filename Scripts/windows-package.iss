@@ -36,8 +36,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\build\Partiels_artefacts\Release\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\BinaryData\Misc\About.txt"; DestDir: "{app}"
-Source: "..\BinaryData\Misc\ChangeLog.txt"; DestDir: "{app}"
+Source: "..\BinaryData\Resource\About.txt"; DestDir: "{app}"
+Source: "..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
