@@ -102,13 +102,13 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertyGroupMode("Preserve group overlay", "Preserve group overlay of tracks when exporting", [this](bool state)
+, mPropertyGroupMode("Preserve Group Overlay", "Preserve group overlay of tracks when exporting", [this](bool state)
                      {
                          auto options = mOptions;
                          options.useGroupOverview = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyAutoSizeMode("Preserve item size", "Preserve the size of the track or the group", [this](bool state)
+, mPropertyAutoSizeMode("Preserve Size", "Preserve the current size of the track or the group", [this](bool state)
                         {
                             auto options = mOptions;
                             options.useAutoSize = state;
@@ -144,7 +144,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                                   options.includeDescription = state;
                                   setOptions(options, juce::NotificationType::sendNotificationSync);
                               })
-, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results", [this](bool state)
+, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results (sonagrams)", [this](bool state)
                        {
                            auto options = mOptions;
                            options.ignoreGridResults = state;
