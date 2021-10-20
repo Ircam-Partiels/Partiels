@@ -350,6 +350,13 @@ namespace XmlParser
     template <>
     auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
         -> Track::ColourSet;
+
+    template <>
+    void toXml<Track::FileInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::FileInfo const& value);
+
+    template <>
+    auto fromXml<Track::FileInfo>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::FileInfo const& defaultValue)
+        -> Track::FileInfo;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
