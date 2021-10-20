@@ -2,6 +2,7 @@ v1.0.0
 
 - Fix: Expand/shrink group button is not updated when inserting a track in an empty group (#159)
 - Fix: The case of the text is not consistent in the export and bash windows (#158)
+- Fix: Use only the link to the project page instead of the link to the manual that doesn't exist (#156)
 - Fix: Zoom range editor windows are not always positioned correctly (#154)
 - Fix: Loading a document using the file directly from the OS file system doesn't work (#153)
 - Fix: Popup menus can't be displayed at the very bottom of the screen (#150)
