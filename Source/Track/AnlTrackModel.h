@@ -166,6 +166,29 @@ namespace Track
     void to_json(nlohmann::json& j, ColourSet const& colourSet);
     void from_json(nlohmann::json const& j, ColourSet& colourSet);
 
+    struct FileInfo
+    {
+        juce::File file;
+        juce::StringPairArray args;
+
+        FileInfo(juce::File const& f = {}, juce::StringPairArray const& a = {})
+        : file(f)
+        , args(a)
+        {
+        }
+
+        inline bool operator==(FileInfo const& rhd) const noexcept
+        {
+            return file == rhd.file &&
+                   args == rhd.args;
+        }
+
+        inline bool operator!=(FileInfo const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+
     // clang-format off
     enum class GridMode
     {
