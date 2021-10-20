@@ -19,11 +19,10 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf64}\{#MyAppName}
 DisableProgramGroupPage=yes
-OutputDir=..
+DisableDirPage=no
+OutputDir=..\build
 OutputBaseFilename={#MyAppName}-install
-; Uncomment the following line to run in non administrative install mode (install for current user only.)
-;PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+InfoBeforeFile=..\build\Install.txt
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -35,10 +34,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\build\Partiels_artefacts\Release\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\Partiels_artefacts\Release\Partiels.exe"; DestDir: "{app}"
 Source: "..\BinaryData\Resource\About.txt"; DestDir: "{app}"
 Source: "..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

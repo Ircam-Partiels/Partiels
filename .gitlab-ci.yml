@@ -92,7 +92,9 @@ Build::Windows:
     - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Release"
     - echo $env:VAMP_PATH
     - ctest -C Release -VV
+    - Get-Content "$CI_PROJECT_DIR\BinaryData\Resource\About.txt", "$CI_PROJECT_DIR\BinaryData\Resource\ChangeLog.txt" | Out-File "$CI_PROJECT_DIR\build\Install.txt"
     - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR\Scripts\windows-package.iss"'
+    - Move-Item -Path $CI_PROJECT_DIR\build\Partiels-install.exe -Destination $CI_PROJECT_DIR\Partiels-install.exe
   artifacts:
     paths:
       - $CI_PROJECT_DIR\Partiels-install.exe
