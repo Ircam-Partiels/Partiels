@@ -1,3 +1,4 @@
+
 v1.0.0
 
 - Fix: Expand/shrink group button is not updated when inserting a track in an empty group (#159)
