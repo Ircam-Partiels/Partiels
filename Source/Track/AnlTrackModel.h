@@ -189,6 +189,9 @@ namespace Track
         }
     };
 
+    void to_json(nlohmann::json& j, FileInfo const& file);
+    void from_json(nlohmann::json const& j, FileInfo& file);
+
     // clang-format off
     enum class GridMode
     {

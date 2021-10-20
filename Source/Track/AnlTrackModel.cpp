@@ -84,4 +84,16 @@ auto XmlParser::fromXml<Track::FileInfo>(juce::XmlElement const& xml, juce::Iden
     return value;
 }
 
+void Track::to_json(nlohmann::json& j, FileInfo const& file)
+{
+    j["path"] = file.file;
+    j["args"] = file.args;
+}
+
+void Track::from_json(nlohmann::json const& j, FileInfo& file)
+{
+    file.file = j.value("path", file.file);
+    file.args = j.value("args", file.args);
+}
+
 ANALYSE_FILE_END
