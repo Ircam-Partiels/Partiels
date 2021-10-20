@@ -46,8 +46,7 @@ namespace Application
             , helpOpenAudioSettings
             , helpOpenPluginSettings
             , helpOpenAbout
-            , helpOpenManual
-            , helpOpenForum
+            , helpOpenProjectPage
             , helpSdifConverter
         };
         // clang-format on

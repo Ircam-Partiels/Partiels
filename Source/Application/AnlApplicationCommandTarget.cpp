@@ -83,8 +83,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenAudioSettings
         , CommandIDs::helpOpenPluginSettings
         , CommandIDs::helpOpenAbout
-        , CommandIDs::helpOpenManual
-        , CommandIDs::helpOpenForum
+        , CommandIDs::helpOpenProjectPage
         , CommandIDs::helpSdifConverter
     });
     // clang-format on
@@ -287,15 +286,9 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 #endif
         }
         break;
-        case CommandIDs::helpOpenManual:
+        case CommandIDs::helpOpenProjectPage:
         {
-            result.setInfo(juce::translate("Open Manual"), juce::translate("Open the manual in a web browser"), "Help", 0);
-            result.setActive(true);
-        }
-        break;
-        case CommandIDs::helpOpenForum:
-        {
-            result.setInfo(juce::translate("Proceed to Forum"), juce::translate("Open the forum page in a web browser"), "Help", 0);
+            result.setInfo(juce::translate("Proceed to Project Page"), juce::translate("Open the project page of the Ircam Forum in a web browser"), "Help", 0);
             result.setActive(true);
         }
         break;
@@ -647,16 +640,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             }
             return true;
         }
-        case CommandIDs::helpOpenManual:
-        {
-            juce::URL const url("https://forum.ircam.fr/contact/documentations-logiciels/");
-            if(url.isWellFormed())
-            {
-                url.launchInDefaultBrowser();
-            }
-            return true;
-        }
-        case CommandIDs::helpOpenForum:
+        case CommandIDs::helpOpenProjectPage:
         {
             juce::URL const url("https://forum.ircam.fr/projects/detail/partiels/");
             if(url.isWellFormed())

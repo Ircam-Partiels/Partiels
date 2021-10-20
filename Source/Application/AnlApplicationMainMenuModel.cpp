@@ -117,8 +117,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
 #ifndef JUCE_MAC
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
 #endif
-        menu.addCommandItem(&commandManager, CommandIDs::helpOpenManual);
-        menu.addCommandItem(&commandManager, CommandIDs::helpOpenForum);
+        menu.addCommandItem(&commandManager, CommandIDs::helpOpenProjectPage);
 #ifndef JUCE_MAC
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
