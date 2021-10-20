@@ -77,9 +77,14 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colour:
+                break;
             case AttrType::layout:
             case AttrType::tracks:
-                break;
+            {
+                mExpandButton.setEnabled(!mAccessor.getAttr<AttrType::layout>().empty());
+                lookAndFeelChanged();
+            }
+            break;
             case AttrType::focused:
             {
                 repaint();
@@ -157,9 +162,7 @@ void Group::Thumbnail::resized()
     layoutButton(leftBounds, mPropertiesButton);
 
     auto rightBounds = bounds.withTrimmedLeft(separator);
-    auto const hasTrack = !mAccessor.getAttr<AttrType::layout>().empty();
     layoutButton(rightBounds, mExpandButton);
-    mExpandButton.setEnabled(hasTrack);
 }
 
 void Group::Thumbnail::paint(juce::Graphics& g)
