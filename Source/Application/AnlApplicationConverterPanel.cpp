@@ -69,7 +69,7 @@ Application::ConverterPanel::ConverterPanel()
                               auto const min = std::min(static_cast<float>(mPropertyToJsonMinValue.entry.getValue()), value);
                               mPropertyToJsonMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
                           })
-, mPropertyToJsonLoadInDocument("Load in current document", "Load the JSON file directly in the current document", [](bool state)
+, mPropertyToJsonLoadInDocument("Load In Current Document", "Load the JSON file directly in the current document", [](bool state)
                                 {
                                     Instance::get().getApplicationAccessor().setAttr<AttrType::autoLoadConvertedFile>(state, NotificationType::synchronous);
                                 })
