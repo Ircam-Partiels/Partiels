@@ -13,7 +13,7 @@ namespace Track
         Loader() = default;
         ~Loader() override;
 
-        void loadAnalysis(Accessor const& accessor, juce::File const& file);
+        void loadAnalysis(Accessor const& accessor, FileInfo const& fileInfo);
 
         std::function<void(Results const& results)> onLoadingSucceeded = nullptr;
         std::function<void(juce::String const& message)> onLoadingFailed = nullptr;
@@ -22,13 +22,18 @@ namespace Track
         bool isRunning() const;
         float getAdvancement() const;
 
-        static std::variant<Results, juce::String> loadFromFile(juce::File const& file, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static std::variant<Results, juce::String> loadFromFile(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static std::variant<Results, juce::String> loadFromJson(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static std::variant<Results, juce::String> loadFromBinary(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static std::variant<Results, juce::String> loadFromCsv(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static std::variant<Results, juce::String> loadFromCue(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+
+    private:
         static std::variant<Results, juce::String> loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromBinary(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromCue(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
 
-    private:
         void abortLoading();
 
         // juce::AsyncUpdater

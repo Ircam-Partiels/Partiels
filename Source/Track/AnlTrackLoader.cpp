@@ -16,7 +16,7 @@ Track::Loader::~Loader()
     abortLoading();
 }
 
-void Track::Loader::loadAnalysis(Accessor const& accessor, juce::File const& file)
+void Track::Loader::loadAnalysis(Accessor const& accessor, FileInfo const& fileInfo)
 {
     auto const name = accessor.getAttr<AttrType::name>();
 
@@ -36,7 +36,7 @@ void Track::Loader::loadAnalysis(Accessor const& accessor, juce::File const& fil
 
     mShouldAbort = false;
     mAdvancement.store(0.0f);
-    mLoadingProcess = std::async([this, file = file]() mutable -> std::variant<Results, juce::String>
+    mLoadingProcess = std::async([this, fileInfo = fileInfo]() mutable -> std::variant<Results, juce::String>
                                  {
                                      if(mShouldAbort)
                                      {
@@ -44,7 +44,7 @@ void Track::Loader::loadAnalysis(Accessor const& accessor, juce::File const& fil
                                      }
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
                                      juce::Thread::setCurrentThreadPriority(10);
-                                     auto results = loadFromFile(file, mShouldAbort, mAdvancement);
+                                     auto results = loadFromFile(fileInfo, mShouldAbort, mAdvancement);
                                      triggerAsyncUpdate();
                                      return results;
                                  });
@@ -122,46 +122,25 @@ void Track::Loader::abortLoading()
     mShouldAbort.store(false);
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(juce::File const& file, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    auto const path = file.getFullPathName().toStdString();
     try
     {
-        if(file.hasFileExtension("dat"))
+        if(fileInfo.file.hasFileExtension("dat"))
         {
-            auto stream = std::ifstream(path, std::ios::in | std::ios::binary);
-            if(!stream || !stream.is_open() || !stream.good())
-            {
-                return {juce::translate("The input stream of cannot be opened")};
-            }
-            return loadFromBinary(stream, shouldAbort, advancement);
+            return loadFromBinary(fileInfo, shouldAbort, advancement);
         }
-        if(file.hasFileExtension("json"))
+        if(fileInfo.file.hasFileExtension("json"))
         {
-            auto stream = std::ifstream(path);
-            if(!stream || !stream.is_open() || !stream.good())
-            {
-                return {juce::translate("The input stream of cannot be opened")};
-            }
-            return loadFromJson(stream, shouldAbort, advancement);
+            return loadFromJson(fileInfo, shouldAbort, advancement);
         }
-        else if(file.hasFileExtension("csv"))
+        else if(fileInfo.file.hasFileExtension("csv"))
         {
-            auto stream = std::ifstream(path);
-            if(!stream || !stream.is_open() || !stream.good())
-            {
-                return {juce::translate("The input stream of cannot be opened")};
-            }
-            return loadFromCsv(stream, shouldAbort, advancement);
+            return loadFromCsv(fileInfo, shouldAbort, advancement);
         }
-        else if(file.hasFileExtension("cue"))
+        else if(fileInfo.file.hasFileExtension("cue"))
         {
-            auto stream = std::ifstream(path);
-            if(!stream || !stream.is_open() || !stream.good())
-            {
-                return {juce::translate("The input stream of cannot be opened")};
-            }
-            return loadFromCue(stream, shouldAbort, advancement);
+            return loadFromCue(fileInfo, shouldAbort, advancement);
         }
     }
     catch(std::exception& e)
@@ -173,6 +152,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(juce::Fil
         return juce::String("Parsing error");
     }
     return {juce::translate("The file format is not supported")};
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString());
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return {juce::translate("The input stream of cannot be opened")};
+    }
+    return loadFromJson(stream, shouldAbort, advancement);
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -330,6 +319,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     auto results = Tools::getResults(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
     return {std::move(results)};
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString(), std::ios::in | std::ios::binary);
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return {juce::translate("The input stream of cannot be opened")};
+    }
+    return loadFromBinary(stream, shouldAbort, advancement);
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -509,6 +508,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
     return {std::move(res)};
 }
 
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString());
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return {juce::translate("The input stream of cannot be opened")};
+    }
+    return loadFromCue(stream, shouldAbort, advancement);
+}
+
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     using namespace std::string_literals;
@@ -621,6 +630,16 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istre
 
     advancement.store(1.0f);
     return Results(std::make_shared<const std::vector<Results::Markers>>(std::move(channelResults)));
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    auto stream = std::ifstream(fileInfo.file.getFullPathName().toStdString());
+    if(!stream || !stream.is_open() || !stream.good())
+    {
+        return {juce::translate("The input stream of cannot be opened")};
+    }
+    return loadFromCsv(stream, shouldAbort, advancement);
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
