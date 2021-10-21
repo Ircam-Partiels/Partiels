@@ -142,6 +142,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(FileInfo 
         {
             return loadFromCue(fileInfo, shouldAbort, advancement);
         }
+        else if(fileInfo.file.hasFileExtension("sdif"))
+        {
+            return loadFromSdif(fileInfo, shouldAbort, advancement);
+        }
     }
     catch(std::exception& e)
     {
@@ -720,6 +724,133 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 channelResults.push_back(std::move(result));
             }
         }
+    }
+
+    Plugin::Output output;
+    output.hasFixedBinCount = false;
+    advancement.store(0.9f);
+    auto results = Tools::getResults(output, pluginResults, shouldAbort);
+    advancement.store(1.0f);
+    return {std::move(results)};
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    if(!fileInfo.file.existsAsFile())
+    {
+        return {juce::translate("The input stream of cannot be opened")};
+    }
+    auto const& args = fileInfo.args;
+    auto const frame = static_cast<uint32_t>(args.getValue("frame", "").getIntValue());
+    auto const matrix = static_cast<uint32_t>(args.getValue("matrix", "").getIntValue());
+    auto const row = args.containsKey("row") ? std::optional<size_t>(static_cast<size_t>(args.getValue("row", "").getIntValue())) : std::optional<size_t>();
+    auto const column = args.containsKey("column") ? std::optional<size_t>(static_cast<size_t>(args.getValue("column", "").getIntValue())) : std::optional<size_t>();
+    return loadFromSdif(fileInfo.file, frame, matrix, row, column, shouldAbort, advancement);
+}
+
+std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+{
+    advancement.store(0.0f);
+
+    juce::String message;
+    std::vector<std::vector<Plugin::Result>> pluginResults;
+    auto const readResult = SdifConverter::read(
+        file, [&](uint32_t frameSignature, size_t frameIndex, double time, size_t numMarix)
+        {
+            juce::ignoreUnused(frameIndex, time, numMarix);
+            return !shouldAbort && message.isEmpty() && frameSignature == frameId;
+        },
+        [&](uint32_t frameSignature, size_t frameIndex, uint32_t matrixSignature, size_t numRows, size_t numColumns, std::vector<std::string> names)
+        {
+            juce::ignoreUnused(frameSignature, frameIndex, numRows, numColumns, names);
+            return !shouldAbort && message.isEmpty() && matrixSignature == matrixId;
+        },
+        [&](uint32_t frameSignature, size_t frameIndex, uint32_t matrixSignature, double time, size_t numRows, size_t numColumns, std::variant<std::vector<std::string>, std::vector<std::vector<double>>> data)
+        {
+            juce::ignoreUnused(frameSignature, matrixSignature);
+            if(shouldAbort || !message.isEmpty())
+            {
+                return false;
+            }
+            if(data.index() == 0_z && column.has_value() && *column != 0_z)
+            {
+                message = "Column index cannot be specified with text data type";
+                return false;
+            }
+            if(numRows != 1_z && !row.has_value() && numColumns != 1_z && !column.has_value())
+            {
+                message = "Can't convert all rows and all columns (either one row or one column must be selected)";
+                return false;
+            }
+
+            pluginResults.resize(std::max(pluginResults.size(), frameIndex + 1_z));
+            if(pluginResults.size() < frameIndex)
+            {
+                message = "Channels cannot be alocated";
+                return false;
+            }
+            auto& channelResults = pluginResults[frameIndex];
+
+            auto const* labels = std::get_if<0_z>(&data);
+            auto const* values = std::get_if<1_z>(&data);
+
+            Plugin::Result result;
+            result.hasTimestamp = true;
+            result.timestamp = Vamp::RealTime::fromSeconds(time);
+
+            if(row.has_value() || numRows == 1_z)
+            {
+                auto const rowIndex = row.has_value() ? *row : 0_z;
+                if(labels != nullptr && labels->size() > rowIndex)
+                {
+                    result.label = labels->at(rowIndex);
+                }
+                else if(values != nullptr && values->size() > rowIndex)
+                {
+                    if(column.has_value() || numColumns == 1)
+                    {
+                        auto const columnIndex = column.has_value() ? *column : 0_z;
+                        if(values->at(rowIndex).size() > columnIndex)
+                        {
+                            result.values = {static_cast<float>(values->at(rowIndex).at(columnIndex))};
+                        }
+                    }
+                    else
+                    {
+                        auto const& rowValues = values->at(rowIndex);
+                        result.values.reserve(rowValues.size());
+                        for(auto index = 0_z; index < rowValues.size(); ++index)
+                        {
+                            result.values.push_back(static_cast<float>(rowValues[index]));
+                        }
+                    }
+                }
+            }
+            else if(values != nullptr)
+            {
+                auto const columnIndex = column.has_value() ? *column : 0_z;
+                result.values.reserve(values->size());
+                for(auto rowIndex = 0_z; rowIndex < values->size(); ++rowIndex)
+                {
+                    if(columnIndex < values->at(rowIndex).size())
+                    {
+                        result.values.push_back(static_cast<float>(values->at(rowIndex).at(columnIndex)));
+                    }
+                }
+            }
+            channelResults.push_back(std::move(result));
+            advancement.store(std::min(advancement.load() + 0.001f, 1.0f));
+            return true;
+        });
+
+    if(readResult.failed())
+    {
+        return {readResult.getErrorMessage()};
+    }
+
+    if(!message.isEmpty())
+    {
+        return {message};
     }
 
     Plugin::Output output;
