@@ -349,12 +349,28 @@ Application::CommandLine::CommandLine()
          }});
 }
 
-static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::File const& generatedFile)
+static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::File const& generatedFile, juce::File const& arguments)
 {
     std::atomic<bool> const shouldAbort{false};
     std::atomic<float> advancement{0.0f};
-    auto const expectedResults = Track::Loader::loadFromFile(expectedFile, shouldAbort, advancement);
-    auto const generatedResults = Track::Loader::loadFromFile(generatedFile, shouldAbort, advancement);
+    Track::FileInfo expectedTrackInfo;
+    expectedTrackInfo.file = expectedFile;
+    Track::FileInfo generatedTrackInfo;
+    generatedTrackInfo.file = generatedFile;
+    if(arguments != juce::File{})
+    {
+        auto xml = juce::XmlDocument::parse(arguments);
+        if(xml == nullptr)
+        {
+            return juce::Result::fail("Cannot parse arguments!");
+        }
+        auto const args = XmlParser::fromXml(*xml.get(), "args", juce::StringPairArray{});
+        generatedTrackInfo.args = args;
+        expectedTrackInfo.args = args;
+    }
+
+    auto const expectedResults = Track::Loader::loadFromFile(expectedTrackInfo, shouldAbort, advancement);
+    auto const generatedResults = Track::Loader::loadFromFile(generatedTrackInfo, shouldAbort, advancement);
     if(expectedResults.index() == 1_z)
     {
         return juce::Result::fail(*std::get_if<juce::String>(&expectedResults));
@@ -478,12 +494,13 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
 
     if(args[0].isLongOption("compare-files"))
     {
-        if(args.size() != 3)
+        if(args.size() < 3 || args.size() > 4)
         {
-            std::cerr << "Missing arguments! Expected two results file paths!" << std::endl;
+            std::cerr << "Missing arguments! Expected two results file and one optional argument xml file!" << std::endl;
             return 1;
         }
-        auto const results = compareResultsFiles(args[1].resolveAsFile(), args[2].resolveAsFile());
+        auto const arguments = args.size() == 4 ? args[3].resolveAsFile() : juce::File();
+        auto const results = compareResultsFiles(args[1].resolveAsFile(), args[2].resolveAsFile(), arguments);
         if(results.failed())
         {
             std::cerr << results.getErrorMessage() << std::endl;
