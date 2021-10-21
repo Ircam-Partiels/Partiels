@@ -179,8 +179,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                                                     return;
                                                                 }
 
-                                                                auto const file = results.getFirst();
-                                                                auto const result = Exporter::fromPreset(mAccessor, file);
+                                                                auto const result = Exporter::fromPreset(mAccessor, results.getFirst());
                                                                 if(result.failed())
                                                                 {
                                                                     mDirector.endAction(ActionState::abort);
@@ -190,8 +189,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                                                 {
                                                                     mDirector.endAction(ActionState::newTransaction, juce::translate("Load track properties from preset file"));
                                                                 }
-
-                                                                mAccessor.setAttr<AttrType::file>(file, NotificationType::synchronous);
                                                             });
                                   break;
                               }
