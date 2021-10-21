@@ -185,7 +185,7 @@ std::optional<float> Track::Tools::getValue(Results::SharedColumns results, size
 juce::String Track::Tools::getInfoTooltip(Accessor const& acsr)
 {
     auto const& name = acsr.getAttr<AttrType::name>();
-    auto const& file = acsr.getAttr<AttrType::file>();
+    auto const& file = acsr.getAttr<AttrType::file>().file;
     if(file != juce::File{})
     {
         return name + " (File): " + file.getFullPathName();
@@ -290,7 +290,7 @@ juce::String Track::Tools::getStateTootip(Accessor const& acsr)
 {
     auto const& state = acsr.getAttr<AttrType::processing>();
     auto const& warnings = acsr.getAttr<AttrType::warnings>();
-    auto const isLoading = acsr.getAttr<AttrType::file>() != juce::File{};
+    auto const isLoading = acsr.getAttr<AttrType::file>().file != juce::File{};
     auto const name = acsr.getAttr<AttrType::name>() + ": ";
     if(std::get<0>(state))
     {

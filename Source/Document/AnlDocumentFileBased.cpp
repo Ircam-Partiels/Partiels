@@ -396,10 +396,10 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
     auto const ratio = tempSampleRate > 0.0 ? currentSampleRate / tempSampleRate : 1.0;
     for(auto const acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
     {
-        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
+        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>().file;
         if(resultFile.hasFileExtension("dat"))
         {
-            acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
+            acsr.get().setAttr<Track::AttrType::file>(Track::FileInfo{}, NotificationType::synchronous);
         }
         if(adaptOnSampleRate)
         {

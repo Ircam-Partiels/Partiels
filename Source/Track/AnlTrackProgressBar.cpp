@@ -21,7 +21,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto const isLoading = acsr.getAttr<AttrType::file>() != juce::File{};
+                auto const isLoading = acsr.getAttr<AttrType::file>().file != juce::File{};
                 if(std::get<0>(state))
                 {
                     mMessage = isLoading ? "Loading... " : "Analysing... ";

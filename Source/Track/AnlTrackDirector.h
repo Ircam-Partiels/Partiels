@@ -30,6 +30,8 @@ namespace Track
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
 
+        void askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification);
+
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
@@ -68,7 +70,9 @@ namespace Track
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
+        JUCE_DECLARE_WEAK_REFERENCEABLE(Director)
     };
 
     class MultiDirector

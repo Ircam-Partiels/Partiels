@@ -245,7 +245,7 @@ namespace Track
     using AttrContainer = Model::Container
     < Model::Attr<AttrType::identifier, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
-    , Model::Attr<AttrType::file, juce::File, Model::Flag::basic>
+    , Model::Attr<AttrType::file, FileInfo, Model::Flag::basic>
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>

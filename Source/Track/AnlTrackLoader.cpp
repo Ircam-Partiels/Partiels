@@ -741,8 +741,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo 
         return {juce::translate("The input stream of cannot be opened")};
     }
     auto const& args = fileInfo.args;
-    auto const frame = static_cast<uint32_t>(args.getValue("frame", "").getIntValue());
-    auto const matrix = static_cast<uint32_t>(args.getValue("matrix", "").getIntValue());
+    auto const frame = SdifConverter::getSignature(args.getValue("frame", ""));
+    auto const matrix = SdifConverter::getSignature(args.getValue("matrix", ""));
     auto const row = args.containsKey("row") ? std::optional<size_t>(static_cast<size_t>(args.getValue("row", "").getIntValue())) : std::optional<size_t>();
     auto const column = args.containsKey("column") ? std::optional<size_t>(static_cast<size_t>(args.getValue("column", "").getIntValue())) : std::optional<size_t>();
     return loadFromSdif(fileInfo.file, frame, matrix, row, column, shouldAbort, advancement);

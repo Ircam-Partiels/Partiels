@@ -47,7 +47,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                         mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
                     }
                 }
-                else if(mAccessor.getAttr<AttrType::file>() == juce::File{})
+                else if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -55,7 +55,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::state:
             {
-                if(mAccessor.getAttr<AttrType::file>() == juce::File{})
+                if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
                 {
                     runAnalysis(notification);
                 }
@@ -69,7 +69,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::file:
             {
                 clearFilesToWatch();
-                auto const file = mAccessor.getAttr<AttrType::file>();
+                auto const file = mAccessor.getAttr<AttrType::file>().file;
                 if(file != juce::File{})
                 {
                     addFileToWatch(file);
@@ -321,38 +321,34 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             return;
         }
 
-        auto const file = mAccessor.getAttr<AttrType::file>();
+        auto const trackFile = mAccessor.getAttr<AttrType::file>();
         mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-        auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Loading results failed!", "The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file? If no, the application will try to run the analysis if possible.", {{"FILENAME", file.getFullPathName()}, {"ERRORMESSAGE", message}});
-        switch(answer)
-        {
-            case AlertWindow::Answer::yes:
-            {
-                mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load analysis results..."), file, "*.csv;*.json;*.cue;*.dat");
-                if(mFileChooser == nullptr)
-                {
-                    return;
-                }
-                using Flags = juce::FileBrowserComponent::FileChooserFlags;
-                mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
-                                          {
-                                              auto const results = fileChooser.getResults();
-                                              if(results.isEmpty())
-                                              {
-                                                  return;
-                                              }
-                                              mAccessor.setAttr<AttrType::file>(results.getFirst(), NotificationType::synchronous);
-                                          });
-            }
-            break;
-            case AlertWindow::Answer::no:
-            {
-                mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
-            }
-            break;
-            case AlertWindow::Answer::cancel:
-                break;
-        }
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Loading results file failed!"))
+                                 .withMessage(juce::translate("The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file, to run the plugin or to continue with the missing file?").replace("FILENAME", trackFile.file.getFullPathName()).replace("ERRORMESSAGE", message))
+                                 .withButton(juce::translate("Select File"))
+                                 .withButton(juce::translate("Run Plugin"))
+                                 .withButton(juce::translate("Continue"));
+        juce::WeakReference<Director> safePointer(this);
+        juce::AlertWindow::showAsync(options, [=, this](int result)
+                                     {
+                                         if(safePointer.get() == nullptr)
+                                         {
+                                             return;
+                                         }
+                                         if(result == 1)
+                                         {
+                                             askForResultsFile(juce::translate("Load analysis results..."), trackFile.file, NotificationType::synchronous);
+                                         }
+                                         else if(result == 2)
+                                         {
+                                             startAction();
+                                             mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                             mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
+                                             endAction(ActionState::newTransaction, juce::translate("Remove results file"));
+                                         }
+                                     });
     };
 
     mLoader.onLoadingAborted = [&]()
@@ -379,7 +375,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         timerCallback();
     };
 
-    if(mAccessor.getAttr<AttrType::file>() == juce::File{})
+    if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
     {
         runAnalysis(NotificationType::synchronous);
     }
@@ -494,7 +490,7 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 
     std::swap(mAudioFormatReader, audioFormatReader);
-    if(mAccessor.getAttr<AttrType::file>() == juce::File{})
+    if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
     {
         runAnalysis(notification);
     }
@@ -592,18 +588,19 @@ void Track::Director::runAnalysis(NotificationType const notification)
 void Track::Director::runLoading()
 {
     mGraphics.stopRendering();
-    auto const file = mAccessor.getAttr<AttrType::file>();
-    if(file != juce::File{})
+    auto const trackFile = mAccessor.getAttr<AttrType::file>();
+    if(trackFile.file != juce::File{})
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
         startTimer(50);
         timerCallback();
-        mLoader.loadAnalysis(mAccessor, file);
-        if(!file.hasFileExtension("json"))
+        mLoader.loadAnalysis(mAccessor, trackFile);
+        if(!trackFile.file.hasFileExtension("json"))
         {
             return;
         }
 
+        auto const& file = trackFile.file;
         auto stream = std::ifstream(file.getFullPathName().toStdString());
         if(!stream || !stream.is_open() || !stream.good())
         {
@@ -686,24 +683,10 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
 
 bool Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file cannot be found!", "The analysis file FILENAME has been moved or deleted. Would you like to restore it?", {{"FILENAME", file.getFullPathName()}}))
+    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been removed!", "The analysis file FILENAME has been moved or deleted. Would you like to restore it?", {{"FILENAME", file.getFullPathName()}}))
     {
-        mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore analysis results..."), file, "*.csv;*.cue;*.json;*.dat");
-        if(mFileChooser == nullptr)
-        {
-            mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-            return true;
-        }
-        using Flags = juce::FileBrowserComponent::FileChooserFlags;
-        mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
-                                  {
-                                      auto const results = fileChooser.getResults();
-                                      if(results.isEmpty())
-                                      {
-                                          return;
-                                      }
-                                      mAccessor.setAttr<AttrType::file>(results.getFirst(), NotificationType::synchronous);
-                                  });
+        askForResultsFile(juce::translate("Restore analysis results..."), file, NotificationType::synchronous);
+        return false;
     }
     mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
     return true;
@@ -750,7 +733,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
         return result;
     }
 
-    auto const currentFile = mAccessor.getAttr<AttrType::file>();
+    auto const currentFile = mAccessor.getAttr<AttrType::file>().file;
     auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
     if(currentFile == expectedFile)
     {
@@ -772,8 +755,49 @@ juce::Result Track::Director::consolidate(juce::File const& file)
             return juce::Result::fail(juce::translate("Cannot copy to SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", currentFile.getFullPathName()).replace("DSTFLNAME", expectedFile.getFullPathName()));
         }
     }
-    mAccessor.setAttr<AttrType::file>(expectedFile, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::file>(FileInfo{expectedFile}, NotificationType::synchronous);
     return juce::Result::ok();
+}
+
+void Track::Director::askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification)
+{
+    mFileChooser = std::make_unique<juce::FileChooser>(message, defaultFile, "*.csv;*.cue;*.json;*.sdif;*.dat");
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<Director> safePointer(this);
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  if(safePointer.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  auto const file = results.getFirst();
+                                  if(file.hasFileExtension("sdif"))
+                                  {
+                                  }
+                                  else
+                                  {
+                                      auto isPerformingAction = mIsPerformingAction;
+                                      if(!isPerformingAction)
+                                      {
+                                          startAction();
+                                      }
+                                      mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
+                                      mAccessor.setAttr<AttrType::file>(FileInfo{file}, notification);
+                                      if(!isPerformingAction)
+                                      {
+                                          endAction(ActionState::newTransaction, juce::translate("Change results file"));
+                                      }
+                                  }
+                              });
 }
 
 ANALYSE_FILE_END

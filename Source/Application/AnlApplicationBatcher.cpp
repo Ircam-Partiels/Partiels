@@ -218,10 +218,10 @@ void Application::Batcher::process()
                                   copyAcsr->setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
                                   for(auto const acsr : copyAcsr->getAcsrs<Document::AcsrType::tracks>())
                                   {
-                                      auto const resultFile = acsr.get().getAttr<Track::AttrType::file>();
+                                      auto const resultFile = acsr.get().getAttr<Track::AttrType::file>().file;
                                       if(resultFile.hasFileExtension("dat"))
                                       {
-                                          acsr.get().setAttr<Track::AttrType::file>(juce::File{}, NotificationType::synchronous);
+                                          acsr.get().setAttr<Track::AttrType::file>(Track::FileInfo{}, NotificationType::synchronous);
                                       }
                                   }
                                   mAlertCatcher.clearMessages();

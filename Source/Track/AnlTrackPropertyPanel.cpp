@@ -18,8 +18,8 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 , mPropertyResultsFile("Results File", "The path of the results file", [this]()
                        {
-                           auto const file = mAccessor.getAttr<AttrType::file>();
-                           if(file.existsAsFile())
+                           auto const trackFile = mAccessor.getAttr<AttrType::file>();
+                           if(trackFile.file.existsAsFile())
                            {
                                if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
                                {
@@ -33,41 +33,37 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                                }
                                else
                                {
-                                   file.revealToUser();
+                                   trackFile.file.revealToUser();
                                }
                            }
                            else
                            {
-                               auto const answer = AlertWindow::showYesNoCancel(AlertWindow::MessageType::warning, "Results file cannot be found!", "The results file cannot be found. Would you like to select another file? If no, the application will try to run the analysis if possible.");
-                               switch(answer)
-                               {
-                                   case AlertWindow::Answer::yes:
-                                   {
-                                       mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load analysis results"), file, "*.json;*.dat");
-                                       if(mFileChooser == nullptr)
-                                       {
-                                           return;
-                                       }
-                                       using Flags = juce::FileBrowserComponent::FileChooserFlags;
-                                       mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [this](juce::FileChooser const& fileChooser)
-                                                                 {
-                                                                     auto const results = fileChooser.getResults();
-                                                                     if(results.isEmpty())
-                                                                     {
-                                                                         return;
-                                                                     }
-                                                                     mAccessor.setAttr<AttrType::file>(results.getFirst(), NotificationType::synchronous);
-                                                                 });
-                                   }
-                                   break;
-                                   case AlertWindow::Answer::no:
-                                   {
-                                       mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
-                                   }
-                                   break;
-                                   case AlertWindow::Answer::cancel:
-                                       break;
-                               }
+                               auto const options = juce::MessageBoxOptions()
+                                                        .withIconType(juce::AlertWindow::WarningIcon)
+                                                        .withTitle(juce::translate("Results file cannot be found!"))
+                                                        .withMessage(juce::translate("The results file cannot be found. Would you like to select another file, to run the plugin or to continue with the missing file?"))
+                                                        .withButton(juce::translate("Select File"))
+                                                        .withButton(juce::translate("Run Plugin"))
+                                                        .withButton(juce::translate("Continue"));
+                               juce::WeakReference<juce::Component> safePointer(this);
+                               juce::AlertWindow::showAsync(options, [=, this](int result)
+                                                            {
+                                                                if(safePointer.get() == nullptr)
+                                                                {
+                                                                    return;
+                                                                }
+                                                                if(result == 1)
+                                                                {
+                                                                    mDirector.askForResultsFile(juce::translate("Load analysis results..."), trackFile.file, NotificationType::synchronous);
+                                                                }
+                                                                else if(result == 2)
+                                                                {
+                                                                    mDirector.startAction();
+                                                                    mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                                                    mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
+                                                                    mDirector.endAction(ActionState::newTransaction, juce::translate("Remove results file"));
+                                                                }
+                                                            });
                            }
                        })
 , mPropertyWindowType("Window Type", "The window type of the FFT.", "", std::vector<std::string>{"Rectangular", "Triangular", "Hamming", "Hanning", "Blackman", "Nuttall", "Blackman-Harris"}, [&](size_t index)
@@ -470,7 +466,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 std::vector<ConcertinaTable::ComponentRef> components;
 
                 // Processor Part
-                auto const resultsFile = mAccessor.getAttr<AttrType::file>();
+                auto const resultsFile = mAccessor.getAttr<AttrType::file>().file;
                 mPropertyResultsFile.entry.setButtonText(resultsFile.getFileName());
                 mPropertyResultsFile.entry.setTooltip(resultsFile.getFullPathName());
                 if(resultsFile != juce::File{})
@@ -828,7 +824,7 @@ void Track::PropertyPanel::lookAndFeelChanged()
 
 bool Track::PropertyPanel::canModifyProcessor()
 {
-    auto const file = mAccessor.getAttr<AttrType::file>();
+    auto const file = mAccessor.getAttr<AttrType::file>().file;
     if(file != juce::File{})
     {
         if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Locked Plugin", "Analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
@@ -836,7 +832,7 @@ bool Track::PropertyPanel::canModifyProcessor()
             return false;
         }
         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-        mAccessor.setAttr<AttrType::file>(juce::File{}, NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
     }
     return true;
 }
