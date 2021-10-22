@@ -92,15 +92,16 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
     }
 }
 
-void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position, juce::File const& file)
+void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position, Track::FileInfo const& fileInfo)
 {
-    juce::WildcardFileFilter wildcardFilter("*.json;*.csv;*.cue", file.getParentDirectory().getFullPathName(), "");
+    auto const& file = fileInfo.file;
+    juce::WildcardFileFilter wildcardFilter("*.json;*.csv;*.cue;*.sdif", file.getParentDirectory().getFullPathName(), "");
     if(!wildcardFilter.isFileSuitable(file))
     {
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("File format not supported!"))
-                                 .withMessage(juce::translate("The application only supports JSON, CSV and CUE formats."))
+                                 .withMessage(juce::translate("The application only supports JSON, CSV, CUE, SDIF formats."))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
         return;
@@ -154,7 +155,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
         trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
 
-        trackAcsr.setAttr<Track::AttrType::file>(file, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::file>(fileInfo, NotificationType::synchronous);
 
         auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);

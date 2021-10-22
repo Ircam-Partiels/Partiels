@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Plugin/AnlPluginModel.h"
+#include "../Track/AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +10,7 @@ namespace Application
     {
         std::tuple<juce::String, size_t> getNewTrackPosition();
         void addPluginTrack(std::tuple<juce::String, size_t> position, Plugin::Key const& key, Plugin::Description const& description);
-        void addFileTrack(std::tuple<juce::String, size_t> position, juce::File const& file);
+        void addFileTrack(std::tuple<juce::String, size_t> position, Track::FileInfo const& fileInfo);
     } // namespace Tools
 } // namespace Application
 
