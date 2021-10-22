@@ -19,6 +19,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 , mPropertyResultsFile("Results File", "The path of the results file", [this]()
                        {
                            auto const trackFile = mAccessor.getAttr<AttrType::file>();
+                           auto const& key = mAccessor.getAttr<AttrType::key>();
                            if(trackFile.file.existsAsFile())
                            {
                                if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
@@ -38,15 +39,27 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                            }
                            else
                            {
-                               auto const options = juce::MessageBoxOptions()
-                                                        .withIconType(juce::AlertWindow::WarningIcon)
-                                                        .withTitle(juce::translate("Results file cannot be found!"))
-                                                        .withMessage(juce::translate("The results file cannot be found. Would you like to select another file, to run the plugin or to continue with the missing file?"))
-                                                        .withButton(juce::translate("Select File"))
-                                                        .withButton(juce::translate("Run Plugin"))
-                                                        .withButton(juce::translate("Continue"));
+                               auto getMessageBoxOptions = [&]()
+                               {
+                                   if(!key.identifier.empty() && !key.feature.empty())
+                                   {
+                                       return juce::MessageBoxOptions()
+                                           .withIconType(juce::AlertWindow::WarningIcon)
+                                           .withTitle(juce::translate("Results file cannot be found!"))
+                                           .withMessage(juce::translate("The results file cannot be found. Would you like to select another file, to run the plugin or to ignore the missing file?"))
+                                           .withButton(juce::translate("Select File"))
+                                           .withButton(juce::translate("Run Plugin"))
+                                           .withButton(juce::translate("Ignore File"));
+                                   }
+                                   return juce::MessageBoxOptions()
+                                       .withIconType(juce::AlertWindow::WarningIcon)
+                                       .withTitle(juce::translate("Results file cannot be found!"))
+                                       .withMessage(juce::translate("The results file cannot be found. Would you like to select another file or to ignore the missing file?"))
+                                       .withButton(juce::translate("Select File"))
+                                       .withButton(juce::translate("Ignore File"));
+                               };
                                juce::WeakReference<juce::Component> safePointer(this);
-                               juce::AlertWindow::showAsync(options, [=, this](int result)
+                               juce::AlertWindow::showAsync(getMessageBoxOptions(), [=, this](int result)
                                                             {
                                                                 if(safePointer.get() == nullptr)
                                                                 {
