@@ -1,11 +1,15 @@
 
 v1.0.0
 
+- Fix: Prevent to detach a result file from a track and to try to run the plugin if no plugin is defined (#163)
+- Imp: Button texts when asking to replace the analysis file or run the plug-in (#162)
+- Fix: SDIF conversion of empty frame should not be ignored (#161)
 - Add: Allow choosing installation directory in the Windows installer (#160)
 - Fix: Expand/shrink group button is not updated when inserting a track in an empty group (#159)
 - Fix: The case of the text is not consistent in the export and bash windows (#158)
 - Add: About and ChangeLog info in the Windows installer (#157)
 - Fix: Use only the link to the project page instead of the link to the manual that doesn't exist (#156)
+- Add: Import files in SDIF format (#155)
 - Fix: Zoom range editor windows are not always positioned correctly (#154)
 - Fix: Loading a document using the file directly from the OS file system doesn't work (#153)
 - Fix: Popup menus can't be displayed at the very bottom of the screen (#150)
