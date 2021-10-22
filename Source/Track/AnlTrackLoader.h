@@ -29,6 +29,24 @@ namespace Track
         static std::variant<Results, juce::String> loadFromCue(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
 
+        class SdifArgumentSelector
+        : public FloatingWindowContainer
+        {
+        public:
+            SdifArgumentSelector(juce::File const& file);
+            ~SdifArgumentSelector() override = default;
+
+            // juce::Component
+            void resized() override;
+
+            std::function<void(FileInfo)> onLoad = nullptr;
+
+        private:
+            juce::File const mFile;
+            SdifConverter::Panel mPanel;
+            PropertyTextButton mLoad;
+        };
+
     private:
         static std::variant<Results, juce::String> loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromBinary(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);

@@ -861,6 +861,50 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
     return {std::move(results)};
 }
 
+Track::Loader::SdifArgumentSelector::SdifArgumentSelector(juce::File const& file)
+: FloatingWindowContainer("SDIF", *this, true)
+, mFile(file)
+, mLoad("Load", "Load the SDIF file with the arguments", [&]()
+        {
+            auto const format = mPanel.getFromSdifFormat();
+            Track::FileInfo fileInfo;
+            fileInfo.file = mFile;
+            fileInfo.args.set("frame", SdifConverter::getString(std::get<0_z>(format)));
+            fileInfo.args.set("matrix", SdifConverter::getString(std::get<1_z>(format)));
+            if(std::get<2_z>(format).has_value())
+            {
+                fileInfo.args.set("row", juce::String(*std::get<2_z>(format)));
+            }
+            if(std::get<3_z>(format).has_value())
+            {
+                fileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
+            }
+            if(onLoad != nullptr)
+            {
+                onLoad(fileInfo);
+            }
+        })
+{
+    addAndMakeVisible(mPanel);
+    addAndMakeVisible(mLoad);
+
+    mPanel.setFile(file);
+    mPanel.onUpdated = [this]()
+    {
+        auto const format = mPanel.getFromSdifFormat();
+        mLoad.setEnabled(std::get<0_z>(format) != uint32_t(0) && std::get<1_z>(format) != uint32_t(0));
+    };
+    setSize(300, 100);
+}
+
+void Track::Loader::SdifArgumentSelector::resized()
+{
+    auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
+    mPanel.setBounds(bounds.removeFromTop(mPanel.getHeight()));
+    mLoad.setBounds(bounds.removeFromTop(mLoad.getHeight()));
+    setSize(bounds.getWidth(), bounds.getY());
+}
+
 class Track::Loader::UnitTest
 : public juce::UnitTest
 {
