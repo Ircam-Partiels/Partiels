@@ -52,6 +52,9 @@ if [[ $request_status != "success" ]]; then
     exit 1
 fi
 
+xcrun stapler staple $APP_NAME.app
+xcrun stapler validate $APP_NAME.app
+
 $ThisPath/macos-package.sh
 
 echo '\033[0;34m' "done"
