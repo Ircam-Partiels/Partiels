@@ -795,6 +795,32 @@ void Track::Director::askForResultsFile(juce::String const& message, juce::File 
                                   auto const file = results.getFirst();
                                   if(file.hasFileExtension("sdif"))
                                   {
+                                      auto selector = std::make_unique<Loader::SdifArgumentSelector>(file);
+                                      if(selector != nullptr)
+                                      {
+                                          selector->onLoad = [=, this](Track::FileInfo fileInfo)
+                                          {
+                                              if(safePointer.get() == nullptr)
+                                              {
+                                                  return;
+                                              }
+                                              mSdifSelector.reset();
+                                              auto isPerformingAction = mIsPerformingAction;
+                                              if(!isPerformingAction)
+                                              {
+                                                  startAction();
+                                              }
+                                              mAccessor.setAttr<AttrType::results>(Results{}, notification);
+                                              mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
+                                              mAccessor.setAttr<AttrType::file>(fileInfo, notification);
+                                              if(!isPerformingAction)
+                                              {
+                                                  endAction(ActionState::newTransaction, juce::translate("Change results file"));
+                                              }
+                                          };
+                                          selector->show();
+                                      }
+                                      mSdifSelector = std::move(selector);
                                   }
                                   else
                                   {
