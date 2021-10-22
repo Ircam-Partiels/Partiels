@@ -825,12 +825,15 @@ void Track::PropertyPanel::lookAndFeelChanged()
 bool Track::PropertyPanel::canModifyProcessor()
 {
     auto const file = mAccessor.getAttr<AttrType::file>().file;
-    if(file != juce::File{})
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    MiscWeakAssert(!key.identifier.empty() && !key.feature.empty());
+    if(file != juce::File{} && !key.identifier.empty() && !key.feature.empty())
     {
-        if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Locked Plugin", "Analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
+        if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Plugin Locked!", "Analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
         {
             return false;
         }
+        mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
     }
