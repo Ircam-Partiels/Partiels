@@ -328,20 +328,7 @@ namespace Track
             }
         }
 
-        std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override
-        {
-            auto copy = std::make_unique<juce::XmlElement>(xml);
-            if(copy != nullptr && version <= 0x8)
-            {
-                auto* child = copy->getChildByName("results");
-                if(child != nullptr)
-                {
-                    auto const file = XmlParser::fromXml(*child, "file", juce::File{});
-                    XmlParser::toXml(*copy.get(), "file", file);
-                }
-            }
-            return copy;
-        }
+        std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
     };
 } // namespace Track
 

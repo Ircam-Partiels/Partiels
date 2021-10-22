@@ -2,6 +2,29 @@
 
 ANALYSE_FILE_BEGIN
 
+std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement const& xml, int version)
+{
+    auto copy = std::make_unique<juce::XmlElement>(xml);
+    if(copy != nullptr)
+    {
+        if(version <= 0x8)
+        {
+            auto* child = copy->getChildByName("results");
+            if(child != nullptr)
+            {
+                auto const file = XmlParser::fromXml(*child, "file", juce::File{});
+                XmlParser::toXml(*copy.get(), "file", file);
+            }
+        }
+        if(version <= 0x9)
+        {
+            FileInfo const fileInfo{XmlParser::fromXml(*copy.get(), "file", juce::File{})};
+            XmlParser::toXml(*copy.get(), "file", fileInfo);
+        }
+    }
+    return copy;
+}
+
 template <>
 void XmlParser::toXml<Track::ColourSet>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::ColourSet const& value)
 {
