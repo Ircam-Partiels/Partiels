@@ -323,15 +323,28 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
         auto const trackFile = mAccessor.getAttr<AttrType::file>();
         mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("Loading results file failed!"))
-                                 .withMessage(juce::translate("The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file, to run the plugin or to continue with the missing file?").replace("FILENAME", trackFile.file.getFullPathName()).replace("ERRORMESSAGE", message))
-                                 .withButton(juce::translate("Select File"))
-                                 .withButton(juce::translate("Run Plugin"))
-                                 .withButton(juce::translate("Continue"));
+        auto const& key = mAccessor.getAttr<AttrType::key>();
+        auto getMessageBoxOptions = [&]()
+        {
+            if(!key.identifier.empty() && !key.feature.empty())
+            {
+                return juce::MessageBoxOptions()
+                    .withIconType(juce::AlertWindow::WarningIcon)
+                    .withTitle(juce::translate("Loading results file failed!"))
+                    .withMessage(juce::translate("The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file, to run the plugin or to ignore the missing file?").replace("FILENAME", trackFile.file.getFullPathName()).replace("ERRORMESSAGE", message))
+                    .withButton(juce::translate("Select File"))
+                    .withButton(juce::translate("Run Plugin"))
+                    .withButton(juce::translate("Ignore File"));
+            }
+            return juce::MessageBoxOptions()
+                .withIconType(juce::AlertWindow::WarningIcon)
+                .withTitle(juce::translate("Loading results file failed!"))
+                .withMessage(juce::translate("The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file, to run the plugin or to ignore the missing file?").replace("FILENAME", trackFile.file.getFullPathName()).replace("ERRORMESSAGE", message))
+                .withButton(juce::translate("Select File"))
+                .withButton(juce::translate("Ignore File"));
+        };
         juce::WeakReference<Director> safePointer(this);
-        juce::AlertWindow::showAsync(options, [=, this](int result)
+        juce::AlertWindow::showAsync(getMessageBoxOptions(), [=, this](int result)
                                      {
                                          if(safePointer.get() == nullptr)
                                          {
@@ -790,6 +803,7 @@ void Track::Director::askForResultsFile(juce::String const& message, juce::File 
                                       {
                                           startAction();
                                       }
+                                      mAccessor.setAttr<AttrType::results>(Results{}, notification);
                                       mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
                                       mAccessor.setAttr<AttrType::file>(FileInfo{file}, notification);
                                       if(!isPerformingAction)
