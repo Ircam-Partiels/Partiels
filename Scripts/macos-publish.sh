@@ -25,18 +25,22 @@ echo '\033[0m'
 
 echo '\033[0;34m' "Compressing apple image disk..."
 echo '\033[0m'
+test -f "$APP_NAME-v$APP_FULL_VERSION-MacOS.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-MacOS.zip"
 zip -r "$APP_NAME-v$APP_FULL_VERSION-MacOS.zip" "$APP_NAME-v$APP_VERSION.dmg"
 
 echo '\033[0;34m' "Downloading debian artifact..."
 echo '\033[0m'
+test -f "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip"
 curl --output $APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts/$APP_FULL_VERSION/download?job=Build::Debian"
 
 echo '\033[0;34m' "Downloading ubuntu artifact..."
 echo '\033[0m'
+test -f "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip"
 curl --output $APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts/$APP_FULL_VERSION/download?job=Build::Ubuntu"
 
 echo '\033[0;34m' "Downloading windows artifact..."
 echo '\033[0m'
+test -f "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip"
 curl --output $APP_NAME-v$APP_FULL_VERSION-Windows-10.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts/$APP_FULL_VERSION/download?job=Build::Windows"
 
 echo '\033[0;34m' "Installing zip files..."
