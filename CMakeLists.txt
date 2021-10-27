@@ -7,7 +7,9 @@ set(SDIF_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDIF_TESTS OFF CACHE BOOL "" FORCE)
 set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
+
 project(Partiels VERSION 1.0.0 LANGUAGES C CXX)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
@@ -18,7 +20,7 @@ source_group("Misc" FILES ${MiscSource})
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
-    VERSION                             "1.0.0"
+    VERSION                             ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                           fr.ircam.dev.partiels
     COMPANY_COPYRIGHT                   "Copyright 2021 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
