@@ -5,14 +5,17 @@
 #define MyAppPublisher "Ircam"
 #define MyAppURL "www.ircam.fr"
 #define MyAppExeName "Partiels.exe"
-#define MyAppVersionName GetVersionNumbersString("Partiels.exe")
+#define MyVersionFile FileOpen("..\build\version.txt")
+#define MyAppVersion FileRead(MyVersionFile)
+#expr FileClose(MyVersionFile)
+#undef MyVersionFile
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{2BE88D38-04D3-44AE-B6F6-2D78BD410D58}}
 AppName={#MyAppName}
-AppVerName={#MyAppName} {#MyAppVersionName}
+AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
