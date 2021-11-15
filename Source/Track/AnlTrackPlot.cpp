@@ -229,11 +229,11 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
                 {
                     auto const& output = accessor.getAttr<AttrType::description>().output;
                     auto const binIndex = value >= 0.0 ? static_cast<size_t>(std::round(value)) : 0_z;
-                    if(binIndex >= output.binNames.size())
+                    if(binIndex >= output.binNames.size() || output.binNames[binIndex].empty())
                     {
                         return juce::String(binIndex);
                     }
-                    return juce::String(binIndex) + " - " + output.binNames[binIndex];
+                    return juce::String(output.binNames[binIndex]);
                 };
             }
         }
