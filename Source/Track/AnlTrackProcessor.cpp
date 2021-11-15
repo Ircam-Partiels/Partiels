@@ -18,7 +18,7 @@ void Track::Processor::stopAnalysis()
 
 Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
 {
-    auto const& state = accessor.getAttr<AttrType::state>();
+    auto state = accessor.getAttr<AttrType::state>();
 
     std::unique_lock<std::mutex> lock(mAnalysisMutex, std::try_to_lock);
     anlWeakAssert(lock.owns_lock());
@@ -35,10 +35,13 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         return {};
     }
 
-    anlWeakAssert(state.blockSize > 0 && state.stepSize > 0);
-    if(state.blockSize == 0 || state.stepSize == 0)
+    if(state.blockSize == 0_z)
     {
-        return {};
+        state.blockSize = 64_z;
+    }
+    if(state.stepSize == 0_z)
+    {
+        state.stepSize = state.blockSize;
     }
 
     std::unique_ptr<Plugin::Processor> processor;
