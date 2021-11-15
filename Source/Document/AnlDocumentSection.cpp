@@ -495,7 +495,7 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
     }
     if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::vertical && !event.mods.isShiftDown())
     {
-        mouseMagnify(event, event.mods.isShiftDown() ? 1.0f + wheel.deltaY : 1.0f + wheel.deltaX);
+        mouseMagnify(event, 1.0f + wheel.deltaY);
     }
     else
     {
