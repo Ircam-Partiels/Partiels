@@ -3,6 +3,7 @@ v1.0.1
 
 - Imp: Do not display bin indices on the spectrogram grid if bin names are available (#172)
 - Fix: Properties windows block other applications on Linux (#171)
+- Imp: Hide block size and step size parameters for SuperVP plugins (#168)
 
 v1.0.0
 
