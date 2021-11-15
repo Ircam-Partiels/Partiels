@@ -117,6 +117,7 @@ Application::CommandLine::CommandLine()
 {
     addHelpCommand("--help|-h", "Usage:", false);
     addVersionCommand("--version|-v", juce::String(ProjectInfo::projectName) + " v" + ProjectInfo::versionString);
+    addCommand({"", "[file(s)]", "Loads the document or creates a new document with the audio files specified as arguments.", ""});
     addCommand(
         {"--new|-n",
          "--new|-n [options]",
