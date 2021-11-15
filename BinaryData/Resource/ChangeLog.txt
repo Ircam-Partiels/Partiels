@@ -1,4 +1,9 @@
 
+v1.0.1
+
+- Imp: Do not display bin indices on the spectrogram grid if bin names are available (#172)
+- Fix: Properties windows block other applications on Linux (#171)
+
 v1.0.0
 
 - Fix: Prevent to detach a result file from a track and to try to run the plugin if no plugin is defined (#163)
