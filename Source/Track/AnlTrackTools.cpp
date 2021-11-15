@@ -273,7 +273,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
             auto const& output = accessor.getAttr<AttrType::description>().output;
             auto getBinName = [&]()
             {
-                if(*binIndex >= output.binNames.size())
+                if(*binIndex >= output.binNames.size() || output.binNames[*binIndex].empty())
                 {
                     return "[" + juce::String(*binIndex) + "]";
                 }
