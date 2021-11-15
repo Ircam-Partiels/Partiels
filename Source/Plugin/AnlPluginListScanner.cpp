@@ -165,10 +165,8 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
 
             auto initializeState = [&](Plugin::State& state, bool defaultValues)
             {
-                auto const blockSize = plugin.getPreferredBlockSize();
-                state.blockSize = blockSize > 0 ? blockSize : 512;
-                auto const stepSize = plugin.getPreferredStepSize();
-                state.stepSize = stepSize > 0 ? stepSize : description.defaultState.blockSize;
+                state.blockSize = plugin.getPreferredBlockSize();
+                state.stepSize = plugin.getPreferredStepSize();
                 for(auto const& parameter : parameters)
                 {
                     state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
