@@ -90,8 +90,8 @@ namespace Plugin
     //! @details The type of data returned by a plugin.
     struct State
     {
-        size_t blockSize{512};                            //!< The default block size (or window size for frequency domain plugins)
-        size_t stepSize{512};                             //!< The default step size
+        size_t blockSize{0_z};                            //!< The default block size (or window size for frequency domain plugins)
+        size_t stepSize{0_z};                             //!< The default step size
         WindowType windowType{WindowType::HanningWindow}; //!< The window type for frequency domain plugins
         std::map<std::string, float> parameters{};        //!< The values of the parameters of the plugin
 
