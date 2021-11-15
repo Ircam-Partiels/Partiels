@@ -492,10 +492,20 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     if(description.inputDomain == Plugin::InputDomain::FrequencyDomain)
                     {
                         components.push_back(mPropertyWindowType);
+                        components.push_back(mPropertyBlockSize);
+                        components.push_back(mPropertyStepSize);
                     }
-
-                    components.push_back(mPropertyBlockSize);
-                    components.push_back(mPropertyStepSize);
+                    else
+                    {
+                        if(description.defaultState.blockSize == 0_z)
+                        {
+                            components.push_back(mPropertyBlockSize);
+                        }
+                        if(description.defaultState.stepSize > 0_z)
+                        {
+                            components.push_back(mPropertyStepSize);
+                        }
+                    }
 
                     mParameterProperties.clear();
                     for(auto const& parameter : description.parameters)
