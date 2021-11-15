@@ -7,6 +7,7 @@ APP_NAME="Partiels"
 mkdir -p $REPO_PATH/build
 cd $REPO_PATH/build
 
+PROJECT_URL="https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts"
 APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
 PRIVATE_TOKEN=$(security find-generic-password -s 'Forge2 Ircam Token' -w)
 
@@ -31,24 +32,24 @@ zip -r "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip" "$APP_NAME-v$APP_VERSI
 echo '\033[0;34m' "Downloading debian artifact..."
 echo '\033[0m'
 test -f "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip"
-curl --output $APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts/$APP_FULL_VERSION/download?job=Build::Debian"
+curl --output $APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Debian"
 
 echo '\033[0;34m' "Downloading ubuntu artifact..."
 echo '\033[0m'
 test -f "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip"
-curl --output $APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts/$APP_FULL_VERSION/download?job=Build::Ubuntu"
+curl --output $APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Ubuntu"
 
 echo '\033[0;34m' "Downloading windows artifact..."
 echo '\033[0m'
 test -f "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip"
-curl --output $APP_NAME-v$APP_FULL_VERSION-Windows-10.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://forge-2.ircam.fr/api/v4/projects/567/jobs/artifacts/$APP_FULL_VERSION/download?job=Build::Windows"
+curl --output $APP_NAME-v$APP_FULL_VERSION-Windows-10.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Windows"
 
 echo '\033[0;34m' "Installing zip files..."
 echo '\033[0m'
-cp "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip" /Users/guillot/Nextcloud/Partiels/Temp
-cp "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip" /Users/guillot/Nextcloud/Partiels/Temp
-cp "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip" /Users/guillot/Nextcloud/Partiels/Temp
-cp "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip" /Users/guillot/Nextcloud/Partiels/Temp
+cp "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip" $HOME/Nextcloud/Partiels/Temp
+cp "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip" $HOME/Nextcloud/Partiels/Temp
+cp "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip" $HOME/Nextcloud/Partiels/Temp
+cp "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip" $HOME/Nextcloud/Partiels/Temp
 
 echo '\033[0;34m' "done"
 echo '\033[0m'
