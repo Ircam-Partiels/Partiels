@@ -277,7 +277,7 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
 
     const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
     g.setColour(columnId == ColumnType::name || columnId == ColumnType::feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
-    g.setFont(juce::Font(static_cast<float>(height) * 0.7f, juce::Font::bold));
+    g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
     g.drawText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, false);
 }
 
