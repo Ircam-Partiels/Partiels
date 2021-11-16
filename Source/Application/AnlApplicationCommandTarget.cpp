@@ -340,7 +340,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                          {
                                                              return;
                                                          }
-                                                         auto const wildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
+                                                         auto const wildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getDocumentFileWildCard();
                                                          mFileChooser = std::make_unique<juce::FileChooser>(description, Instance::get().getDocumentFileBased().getFile(), wildcard);
                                                          if(mFileChooser == nullptr)
                                                          {
@@ -568,7 +568,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 Document::Accessor accessor;
                 juce::UndoManager undoManager;
                 Document::Director director{accessor, Instance::get().getAudioFormatManager(), undoManager};
-                Document::FileBased fileBased{director, Instance::getFileExtension(), Instance::getFileWildCard(), juce::translate("Open a document"), juce::translate("Save the document")};
+                Document::FileBased fileBased{director, Instance::getDocumentFileExtension(), Instance::getDocumentFileWildCard(), juce::translate("Open a document"), juce::translate("Save the document")};
             };
 
             auto tempDocument = std::make_shared<DocumentCtn>();

@@ -88,7 +88,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     AppQuitIfInvalidPointer(mLookAndFeel);
     juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
 
-    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getFileExtension(), getFileWildCard(), "Open a document", "Save the document");
+    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getDocumentFileExtension(), getDocumentFileWildCard(), "Open a document", "Save the document");
     AppQuitIfInvalidPointer(mDocumentFileBased);
 
     mWindow = std::make_unique<Window>();
@@ -266,12 +266,12 @@ Application::Instance& Application::Instance::get()
     return *static_cast<Instance*>(JUCEApplication::getInstance());
 }
 
-juce::String Application::Instance::getFileExtension()
+juce::String Application::Instance::getDocumentFileExtension()
 {
     return App::getFileExtensionFor("doc");
 }
 
-juce::String Application::Instance::getFileWildCard()
+juce::String Application::Instance::getDocumentFileWildCard()
 {
     return App::getFileWildCardFor("doc");
 }
@@ -294,7 +294,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     juce::StringArray array;
     for(auto const& file : files)
     {
-        if(file.hasFileExtension(getFileExtension()))
+        if(file.hasFileExtension(getDocumentFileExtension()))
         {
             mDocumentFileBased->loadFrom(file, true);
             return;
@@ -428,7 +428,7 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
 
 juce::File Application::Instance::getBackupFile() const
 {
-    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getFileExtension());
+    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getDocumentFileExtension());
 }
 
 juce::ApplicationCommandManager* App::getApplicationCommandManager()

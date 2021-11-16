@@ -122,7 +122,7 @@ Application::Interface::Loader::Loader()
     mLoadFileInfo.setText(juce::translate("or\nDrag & Drop\n(Document/Audio)"), juce::NotificationType::dontSendNotification);
     mLoadFileInfo.setJustificationType(juce::Justification::centredTop);
 
-    mLoadFileWildcard.setText(juce::translate("Document: DOCWILDCARD\nAudio: AUDIOWILDCARD").replace("DOCWILDCARD", Instance::getFileWildCard()).replace("AUDIOWILDCARD", "*.aac,*.aiff,*.aif,*.flac,*.m4a,*.mp3,*.ogg,*.wav,*.wma"), juce::NotificationType::dontSendNotification);
+    mLoadFileWildcard.setText(juce::translate("Document: DOCWILDCARD\nAudio: AUDIOWILDCARD").replace("DOCWILDCARD", Instance::getDocumentFileWildCard()).replace("AUDIOWILDCARD", "*.aac,*.aiff,*.aif,*.flac,*.m4a,*.mp3,*.ogg,*.wav,*.wma"), juce::NotificationType::dontSendNotification);
     mLoadFileWildcard.setJustificationType(juce::Justification::bottomLeft);
 
     mAddTrackInfo.setText(juce::translate("Insert an analysis plugin as a new track"), juce::NotificationType::dontSendNotification);
@@ -328,7 +328,7 @@ bool Application::Interface::Loader::isInterestedInFileDrag(juce::StringArray co
     {
         return false;
     }
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getDocumentFileWildCard();
     for(auto const& fileName : files)
     {
         if(audioFormatWildcard.contains(juce::File(fileName).getFileExtension()))
@@ -360,7 +360,7 @@ void Application::Interface::Loader::filesDropped(juce::StringArray const& files
     mIsDragging = false;
     juce::ignoreUnused(x, y);
     mLoadFileButton.setState(juce::Button::ButtonState::buttonNormal);
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getFileWildCard();
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getDocumentFileWildCard();
     auto getFiles = [&]()
     {
         std::vector<juce::File> juceFiles;
