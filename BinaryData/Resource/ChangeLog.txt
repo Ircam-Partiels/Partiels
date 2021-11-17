@@ -1,11 +1,13 @@
 
 v1.0.1
 
+- Fix: When attempting to load a document or audio file, the user should be asked to save the current document only if another document has been selected (#176)
 - Fix: Time zoom with the mouse wheel is broken on Linux and not well-functioning on macOS and Windows (#175)
 - Add: Command line help message for the default command that loads a document or audio files (#174)
 - Imp: Do not display bin indices on the spectrogram grid if bin names are available (#172)
 - Fix: Properties windows block other applications on Linux (#171)
 - Imp: Hide block size and step size parameters for SuperVP plugins (#168)
+- Add: Support for drag and drop of analysis files from the file system to the application (#167)
 
 v1.0.0
 
