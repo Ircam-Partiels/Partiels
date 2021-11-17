@@ -95,7 +95,7 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
 void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position, Track::FileInfo const& fileInfo)
 {
     auto const& file = fileInfo.file;
-    juce::WildcardFileFilter wildcardFilter("*.json;*.csv;*.cue;*.sdif", file.getParentDirectory().getFullPathName(), "");
+    juce::WildcardFileFilter wildcardFilter(Instance::getWildCardForImportFormats(), file.getParentDirectory().getFullPathName(), "");
     if(!wildcardFilter.isFileSuitable(file))
     {
         auto const options = juce::MessageBoxOptions()
