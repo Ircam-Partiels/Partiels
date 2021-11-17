@@ -320,7 +320,7 @@ void Application::Instance::openDocumentFile(juce::File const& file)
 {
     auto const documentFileExtension = getDocumentFileExtension();
     anlWeakAssert(file.existsAsFile() && file.hasFileExtension(documentFileExtension));
-    if(file.existsAsFile() || !file.hasFileExtension(documentFileExtension) || file == mDocumentFileBased->getFile())
+    if(!file.existsAsFile() || !file.hasFileExtension(documentFileExtension) || file == mDocumentFileBased->getFile())
     {
         return;
     }
@@ -563,8 +563,11 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
                                          if(result == 0)
                                          {
                                              mDocumentFileBased->addChangeListener(this);
-                                             anlDebug("Application", "Reopening last document...");
-                                             openDocumentFile(previousFile);
+                                             if(previousFile.existsAsFile())
+                                             {
+                                                 anlDebug("Application", "Reopening last document...");
+                                                 openDocumentFile(previousFile);
+                                             }
                                          }
                                          else
                                          {
@@ -582,8 +585,11 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
     else
     {
         mDocumentFileBased->addChangeListener(this);
-        anlDebug("Application", "Reopening last document...");
-        openDocumentFile(previousFile);
+        if(previousFile.existsAsFile())
+        {
+            anlDebug("Application", "Reopening last document...");
+            openDocumentFile(previousFile);
+        }
     }
 }
 
