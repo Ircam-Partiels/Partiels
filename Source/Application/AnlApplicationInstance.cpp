@@ -371,19 +371,24 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
 
 void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
+    auto const documentFileExtension = getDocumentFileExtension();
+    auto const documentFile = std::find_if(files.cbegin(), files.cend(), [&](auto const& file)
+                                           {
+                                               return file.existsAsFile() && file.hasFileExtension(documentFileExtension);
+                                           });
+    if(documentFile != files.cend())
+    {
+        openDocumentFile(*documentFile);
+        return;
+    }
+
     std::vector<juce::File> audioFiles;
     juce::StringArray array;
+    auto const audioFormatsWildCard = getWildCardForAudioFormats();
     for(auto const& file : files)
     {
-        if(file.hasFileExtension(getDocumentFileExtension()))
-        {
-            mDocumentFileBased->loadFrom(file, true);
-            return;
-        }
-        if(file == juce::File{})
-        {
-        }
-        else if(!file.getFileExtension().isEmpty() && getWildCardForAudioFormats().contains(file.getFileExtension()))
+        auto const fileExtension = file.getFileExtension();
+        if(file.existsAsFile() && fileExtension.isNotEmpty() && audioFormatsWildCard.contains(fileExtension))
         {
             audioFiles.push_back(file);
         }
@@ -394,31 +399,16 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     }
     if(!audioFiles.empty())
     {
-        mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
-        std::vector<AudioFileLayout> readerLayout;
-        for(auto const& file : files)
-        {
-            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager->createReaderFor(file));
-            if(reader != nullptr)
-            {
-                for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
-                {
-                    readerLayout.push_back({file, static_cast<int>(channel)});
-                }
-            }
-        }
-        mDocumentAccessor->setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
-        mDocumentFileBased->setFile({});
+        openAudioFiles(audioFiles);
+        return;
     }
-    else if(array.isEmpty())
-    {
-        mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
-        mDocumentFileBased->setFile({});
-    }
-    else
-    {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "File format not supported!", "The format(s) of the file(s) FILENAMES is not supported by the application.", {{"FILENAMES", array.joinIntoString(",")}});
-    }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("File formats not supported!"))
+                             .withMessage(juce::translate("The formats of the files are not supported by the application:\n FILEPATHS").replace("FILEPATHS", array.joinIntoString("\n")))
+                             .withButton(juce::translate("Ok"));
+    juce::AlertWindow::showAsync(options, nullptr);
 }
 
 void Application::Instance::importFile(std::tuple<juce::String, size_t> const position, juce::File const& file)
