@@ -226,14 +226,6 @@ Application::Interface::Loader::~Loader()
     Instance::get().getApplicationAccessor().removeListener(mListener);
 }
 
-void Application::Interface::Loader::setDragging(bool state)
-{
-    mIsDragging = state;
-    using ButtonState = juce::Button::ButtonState;
-    mLoadFileButton.setState(state ? ButtonState::buttonOver : ButtonState::buttonNormal);
-    repaint();
-}
-
 void Application::Interface::Loader::updateState()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
@@ -309,12 +301,6 @@ void Application::Interface::Loader::resized()
             mLoadTemplateInfo.setBounds(centerRightBounds);
         }
     }
-}
-
-void Application::Interface::Loader::paint(juce::Graphics& g)
-{
-    g.setColour(mIsDragging ? findColour(juce::TextButton::ColourIds::buttonColourId) : findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
-    g.fillRoundedRectangle(getLocalBounds().withTrimmedRight(222).toFloat(), 2.0f);
 }
 
 void Application::Interface::Loader::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
@@ -412,6 +398,15 @@ void Application::Interface::resized()
     mLoaderDecorator.setBounds(loaderBounds.withY(std::max(loaderBounds.getY(), 80)));
 }
 
+void Application::Interface::paintOverChildren(juce::Graphics& g)
+{
+    if(mIsDragging)
+    {
+        g.setColour(findColour(juce::TextButton::ColourIds::buttonColourId).withAlpha(0.5f));
+        g.fillRoundedRectangle(mDocumentSection.getBounds().toFloat(), 2.0f);
+    }
+}
+
 bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& files)
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
@@ -434,7 +429,11 @@ bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& fil
 void Application::Interface::fileDragEnter(juce::StringArray const& files, int x, int y)
 {
     juce::ignoreUnused(files);
-    mLoader.setDragging(mDocumentSection.getBounds().contains(x, y));
+    if(mIsDragging != mDocumentSection.getBounds().contains(x, y))
+    {
+        mIsDragging = !mIsDragging;
+        repaint();
+    }
 }
 
 void Application::Interface::fileDragMove(juce::StringArray const& files, int x, int y)
@@ -445,12 +444,16 @@ void Application::Interface::fileDragMove(juce::StringArray const& files, int x,
 void Application::Interface::fileDragExit(juce::StringArray const& files)
 {
     juce::ignoreUnused(files);
-    mLoader.setDragging(false);
+    if(mIsDragging)
+    {
+        mIsDragging = false;
+        repaint();
+    }
 }
 
 void Application::Interface::filesDropped(juce::StringArray const& files, int x, int y)
 {
-    mLoader.setDragging(false);
+    fileDragExit(files);
     if(!mDocumentSection.getBounds().contains(x, y))
     {
         return;

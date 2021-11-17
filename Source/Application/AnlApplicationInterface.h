@@ -23,6 +23,7 @@ namespace Application
 
         // juce::Component
         void resized() override;
+        void paintOverChildren(juce::Graphics& g) override;
 
         // juce::FileDragAndDropTarget
         bool isInterestedInFileDrag(juce::StringArray const& files) override;
@@ -41,11 +42,9 @@ namespace Application
             ~Loader() override;
 
             void updateState();
-            void setDragging(bool state);
 
             // juce::Component
             void resized() override;
-            void paint(juce::Graphics& g) override;
 
         private:
             // juce::ApplicationCommandManagerListener
@@ -96,7 +95,6 @@ namespace Application
             juce::Label mAdaptationInfo;
 
             Accessor::Listener mListener{typeid(*this).name()};
-            bool mIsDragging{false};
         };
 
         Accessor::Listener mListener{typeid(*this).name()};
@@ -106,6 +104,7 @@ namespace Application
         Decorator mLoaderDecorator{mLoader};
         ColouredPanel mToolTipSeparator;
         Tooltip::Display mToolTipDisplay;
+        bool mIsDragging{false};
     };
 } // namespace Application
 
