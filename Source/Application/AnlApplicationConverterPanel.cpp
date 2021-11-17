@@ -24,7 +24,7 @@ Application::ConverterPanel::ConverterPanel()
                                                   setFile(results.getFirst());
                                               });
                 })
-, mPropertyName("File", "The SDIF file to convert", nullptr)
+, mPropertyName("File", "The SDIF/JSON file to convert", nullptr)
 
 , mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", nullptr)
 , mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", nullptr)
