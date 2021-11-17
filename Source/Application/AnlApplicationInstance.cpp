@@ -281,6 +281,11 @@ juce::String Application::Instance::getWildCardForImportFormats()
     return "*.json;*.csv;*.cue;*.sdif";
 }
 
+juce::String Application::Instance::getWildCardForAudioFormats()
+{
+    return get().getAudioFormatManager().getWildcardForAllFormats();
+}
+
 std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identifier)
 {
     auto* window = get().getWindow();
@@ -307,7 +312,7 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
         if(file == juce::File{})
         {
         }
-        else if(!file.getFileExtension().isEmpty() && mAudioFormatManager->getWildcardForAllFormats().contains(file.getFileExtension()))
+        else if(!file.getFileExtension().isEmpty() && getWildCardForAudioFormats().contains(file.getFileExtension()))
         {
             audioFiles.push_back(file);
         }

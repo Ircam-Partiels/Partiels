@@ -340,7 +340,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                          {
                                                              return;
                                                          }
-                                                         auto const wildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getDocumentFileWildCard();
+                                                         auto const wildcard = Instance::getWildCardForAudioFormats() + ";" + Instance::getDocumentFileWildCard();
                                                          mFileChooser = std::make_unique<juce::FileChooser>(description, Instance::get().getDocumentFileBased().getFile(), wildcard);
                                                          if(mFileChooser == nullptr)
                                                          {

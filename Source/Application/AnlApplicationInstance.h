@@ -40,6 +40,7 @@ namespace Application
         static juce::String getDocumentFileExtension();
         static juce::String getDocumentFileWildCard();
         static juce::String getWildCardForImportFormats();
+        static juce::String getWildCardForAudioFormats();
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
         void openFiles(std::vector<juce::File> const& files);
