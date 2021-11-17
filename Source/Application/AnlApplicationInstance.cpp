@@ -334,6 +334,41 @@ void Application::Instance::openDocumentFile(juce::File const& file)
                                                        });
 }
 
+void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
+{
+    auto const audioFileWilcards = getWildCardForAudioFormats();
+    std::vector<AudioFileLayout> readerLayout;
+    for(auto const& file : files)
+    {
+        auto const fileExtension = file.getFileExtension();
+        anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && audioFileWilcards.contains(fileExtension));
+        if(file.existsAsFile() && fileExtension.isNotEmpty() && audioFileWilcards.contains(fileExtension))
+        {
+            auto reader = std::unique_ptr<juce::AudioFormatReader>(mAudioFormatManager->createReaderFor(file));
+            if(reader != nullptr)
+            {
+                for(unsigned int channel = 0; channel < reader->numChannels; ++channel)
+                {
+                    readerLayout.push_back({file, static_cast<int>(channel)});
+                }
+            }
+        }
+    }
+    if(!readerLayout.empty())
+    {
+        mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
+                                                           {
+                                                               if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
+                                                               {
+                                                                   return;
+                                                               }
+                                                               mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
+                                                               mDocumentAccessor->setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
+                                                               mDocumentFileBased->setFile({});
+                                                           });
+    }
+}
+
 void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
     std::vector<juce::File> audioFiles;
