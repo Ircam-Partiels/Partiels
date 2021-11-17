@@ -225,6 +225,14 @@ Application::Interface::Loader::~Loader()
     Instance::get().getApplicationAccessor().removeListener(mListener);
 }
 
+void Application::Interface::Loader::setDragging(bool state)
+{
+    mIsDragging = state;
+    using ButtonState = juce::Button::ButtonState;
+    mLoadFileButton.setState(state ? ButtonState::buttonOver : ButtonState::buttonNormal);
+    repaint();
+}
+
 void Application::Interface::Loader::updateState()
 {
     auto& documentAccessor = Instance::get().getDocumentAccessor();
@@ -322,67 +330,6 @@ void Application::Interface::Loader::applicationCommandListChanged()
     mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editLoadTemplate));
 }
 
-bool Application::Interface::Loader::isInterestedInFileDrag(juce::StringArray const& files)
-{
-    if(!mLoadFileButton.isVisible())
-    {
-        return false;
-    }
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getDocumentFileWildCard();
-    for(auto const& fileName : files)
-    {
-        if(audioFormatWildcard.contains(juce::File(fileName).getFileExtension()))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-void Application::Interface::Loader::fileDragEnter(juce::StringArray const& files, int x, int y)
-{
-    mIsDragging = true;
-    juce::ignoreUnused(files, x, y);
-    mLoadFileButton.setState(juce::Button::ButtonState::buttonOver);
-    repaint();
-}
-
-void Application::Interface::Loader::fileDragExit(juce::StringArray const& files)
-{
-    mIsDragging = false;
-    juce::ignoreUnused(files);
-    mLoadFileButton.setState(juce::Button::ButtonState::buttonNormal);
-    repaint();
-}
-
-void Application::Interface::Loader::filesDropped(juce::StringArray const& files, int x, int y)
-{
-    mIsDragging = false;
-    juce::ignoreUnused(x, y);
-    mLoadFileButton.setState(juce::Button::ButtonState::buttonNormal);
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats() + ";" + Instance::getDocumentFileWildCard();
-    auto getFiles = [&]()
-    {
-        std::vector<juce::File> juceFiles;
-        for(auto const& fileName : files)
-        {
-            juce::File const file(fileName);
-            if(audioFormatWildcard.contains(file.getFileExtension()))
-            {
-                juceFiles.push_back(file);
-            }
-        }
-        return juceFiles;
-    };
-    auto const juceFiles = getFiles();
-    if(juceFiles.empty())
-    {
-        return;
-    }
-    Instance::get().openFiles(juceFiles);
-    repaint();
-}
-
 Application::Interface::Interface()
 : mDocumentSection(Instance::get().getDocumentDirector())
 {
@@ -462,6 +409,76 @@ void Application::Interface::resized()
     mDocumentSection.setBounds(bounds);
     auto const loaderBounds = bounds.withSizeKeepingCentre(800, 600);
     mLoaderDecorator.setBounds(loaderBounds.withY(std::max(loaderBounds.getY(), 80)));
+}
+
+bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& files)
+{
+    auto& documentAccessor = Instance::get().getDocumentAccessor();
+    auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
+
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    auto const documentWildcard = Instance::getDocumentFileWildCard();
+    auto const fileWildcard = documentWildcard + (documentHasAudioFiles ? "" : (";" + audioFormatWildcard));
+    for(auto const& fileName : files)
+    {
+        if(fileWildcard.contains(juce::File(fileName).getFileExtension()))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Application::Interface::fileDragEnter(juce::StringArray const& files, int x, int y)
+{
+    juce::ignoreUnused(files);
+    mLoader.setDragging(mDocumentSection.getBounds().contains(x, y));
+}
+
+void Application::Interface::fileDragMove(juce::StringArray const& files, int x, int y)
+{
+    fileDragEnter(files, x, y);
+}
+
+void Application::Interface::fileDragExit(juce::StringArray const& files)
+{
+    juce::ignoreUnused(files);
+    mLoader.setDragging(false);
+}
+
+void Application::Interface::filesDropped(juce::StringArray const& files, int x, int y)
+{
+    mLoader.setDragging(false);
+    if(!mDocumentSection.getBounds().contains(x, y))
+    {
+        return;
+    }
+
+    auto& documentAccessor = Instance::get().getDocumentAccessor();
+    auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
+
+    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    auto const documentWildcard = Instance::getDocumentFileWildCard();
+    auto const fileWildcard = documentWildcard + (documentHasAudioFiles ? "" : (";" + audioFormatWildcard));
+    auto getFiles = [&]()
+    {
+        std::vector<juce::File> loadedFiles;
+        for(auto const& fileName : files)
+        {
+            juce::File const file(fileName);
+            if(fileWildcard.contains(file.getFileExtension()))
+            {
+                loadedFiles.push_back(file);
+            }
+        }
+        return loadedFiles;
+    };
+    auto const loadedFiles = getFiles();
+    if(loadedFiles.empty())
+    {
+        return;
+    }
+    Instance::get().openFiles(loadedFiles);
 }
 
 void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)

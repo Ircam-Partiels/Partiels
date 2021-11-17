@@ -11,6 +11,7 @@ namespace Application
 {
     class Interface
     : public juce::Component
+    , public juce::FileDragAndDropTarget
     , public CommandTarget
     {
     public:
@@ -23,10 +24,16 @@ namespace Application
         // juce::Component
         void resized() override;
 
+        // juce::FileDragAndDropTarget
+        bool isInterestedInFileDrag(juce::StringArray const& files) override;
+        void fileDragEnter(juce::StringArray const& files, int x, int y) override;
+        void fileDragMove(juce::StringArray const& files, int x, int y) override;
+        void fileDragExit(juce::StringArray const& files) override;
+        void filesDropped(juce::StringArray const& files, int x, int y) override;
+
     private:
         class Loader
         : public juce::Component
-        , public juce::FileDragAndDropTarget
         , private juce::ApplicationCommandManagerListener
         {
         public:
@@ -34,16 +41,11 @@ namespace Application
             ~Loader() override;
 
             void updateState();
+            void setDragging(bool state);
 
             // juce::Component
             void resized() override;
             void paint(juce::Graphics& g) override;
-
-            // juce::FileDragAndDropTarget
-            bool isInterestedInFileDrag(juce::StringArray const& files) override;
-            void fileDragEnter(juce::StringArray const& files, int x, int y) override;
-            void fileDragExit(juce::StringArray const& files) override;
-            void filesDropped(juce::StringArray const& files, int x, int y) override;
 
         private:
             // juce::ApplicationCommandManagerListener
