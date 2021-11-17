@@ -158,7 +158,11 @@ void Application::Instance::initialise(juce::String const& commandLine)
             commandFiles.push_back(file);
         }
     }
-    openStartupFiles(commandFiles, mApplicationAccessor->getAttr<AttrType::currentDocumentFile>());
+    auto const previousFile = mApplicationAccessor->getAttr<AttrType::currentDocumentFile>();
+    juce::MessageManager::callAsync([=, this]()
+                                    {
+                                        openStartupFiles(commandFiles, previousFile);
+                                    });
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
