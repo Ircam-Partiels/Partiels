@@ -144,7 +144,7 @@ Application::Interface::Loader::Loader()
         auto const documentHasFile = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
         if(!documentHasFile)
         {
-            Instance::get().openFiles({file});
+            Instance::get().openDocumentFile(file);
         }
         else
         {
