@@ -1,5 +1,6 @@
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationCommandLine.h"
+#include "AnlApplicationTools.h"
 #include <TranslationsData.h>
 
 ANALYSE_FILE_BEGIN
@@ -347,6 +348,28 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
     else
     {
         AlertWindow::showMessage(AlertWindow::MessageType::warning, "File format not supported!", "The format(s) of the file(s) FILENAMES is not supported by the application.", {{"FILENAMES", array.joinIntoString(",")}});
+    }
+}
+
+void Application::Instance::importFile(std::tuple<juce::String, size_t> const position, juce::File const& file)
+{
+    if(file.hasFileExtension("sdif"))
+    {
+        auto selector = std::make_unique<Track::Loader::SdifArgumentSelector>(file);
+        if(selector != nullptr)
+        {
+            selector->onLoad = [=, this](Track::FileInfo fileInfo)
+            {
+                Tools::addFileTrack(position, fileInfo);
+                mSdifSelector.reset();
+            };
+            selector->show();
+        }
+        mSdifSelector = std::move(selector);
+    }
+    else
+    {
+        Tools::addFileTrack(position, file);
     }
 }
 

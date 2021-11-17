@@ -418,41 +418,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 return true;
             }
             using Flags = juce::FileBrowserComponent::FileChooserFlags;
-            juce::WeakReference<Application::CommandTarget> safePointer(this);
-            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
                                       {
                                           auto const results = fileChooser.getResults();
                                           if(results.isEmpty())
                                           {
                                               return;
                                           }
-                                          if(safePointer.get() == nullptr)
-                                          {
-                                              return;
-                                          }
-                                          auto const file = results.getFirst();
-                                          if(file.hasFileExtension("sdif"))
-                                          {
-                                              auto selector = std::make_unique<Track::Loader::SdifArgumentSelector>(file);
-                                              if(selector != nullptr)
-                                              {
-                                                  selector->onLoad = [=, this](Track::FileInfo fileInfo)
-                                                  {
-                                                      Tools::addFileTrack(position, fileInfo);
-                                                      if(safePointer.get() == nullptr)
-                                                      {
-                                                          return;
-                                                      }
-                                                      mSdifSelector.reset();
-                                                  };
-                                                  selector->show();
-                                              }
-                                              mSdifSelector = std::move(selector);
-                                          }
-                                          else
-                                          {
-                                              Tools::addFileTrack(position, file);
-                                          }
+                                          Instance::get().importFile(position, results.getFirst());
                                       });
             return true;
         }

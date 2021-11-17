@@ -44,6 +44,7 @@ namespace Application
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
         void openFiles(std::vector<juce::File> const& files);
+        void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
         Accessor& getApplicationAccessor();
         AudioSettings* getAudioSettings();
@@ -95,6 +96,8 @@ namespace Application
         std::unique_ptr<AudioSettings> mAudioSettings;
         std::unique_ptr<Exporter> mExporter;
         std::unique_ptr<Batcher> mBatcher;
+
+        std::unique_ptr<juce::Component> mSdifSelector;
 
         std::atomic<bool> mIsPluginListReady{true};
     };

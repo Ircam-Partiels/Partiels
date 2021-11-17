@@ -69,7 +69,6 @@ namespace Application
         PluginList::SearchPath mPluginListSearchPath;
         ConverterPanel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;
-        std::unique_ptr<juce::Component> mSdifSelector;
 
         JUCE_DECLARE_WEAK_REFERENCEABLE(CommandTarget)
     };
