@@ -322,39 +322,28 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentOpen:
         {
-            juce::WeakReference<Application::CommandTarget> safePointer(this);
-            fileBased.saveIfNeededAndUserAgreesAsync([=, this, description = getCommandDescription()](juce::FileBasedDocument::SaveResult saveResult)
-                                                     {
-                                                         if(safePointer.get() == nullptr)
-                                                         {
-                                                             return;
-                                                         }
-                                                         if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
-                                                         {
-                                                             return;
-                                                         }
-                                                         auto const wildcard = Instance::getWildCardForAudioFormats() + ";" + Instance::getDocumentFileWildCard();
-                                                         mFileChooser = std::make_unique<juce::FileChooser>(description, Instance::get().getDocumentFileBased().getFile(), wildcard);
-                                                         if(mFileChooser == nullptr)
-                                                         {
-                                                             return;
-                                                         }
-                                                         using Flags = juce::FileBrowserComponent::FileChooserFlags;
-                                                         mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems, [](juce::FileChooser const& fileChooser)
-                                                                                   {
-                                                                                       auto const results = fileChooser.getResults();
-                                                                                       if(results.isEmpty())
-                                                                                       {
-                                                                                           return;
-                                                                                       }
-                                                                                       std::vector<juce::File> files;
-                                                                                       for(auto const& result : results)
-                                                                                       {
-                                                                                           files.push_back(result);
-                                                                                       }
-                                                                                       Instance::get().openFiles(files);
-                                                                                   });
-                                                     });
+            auto const wildcard = Instance::getWildCardForAudioFormats() + ";" + Instance::getDocumentFileWildCard();
+            mFileChooser = std::make_unique<juce::FileChooser>(getCommandDescription(), Instance::get().getDocumentFileBased().getFile(), wildcard);
+            if(mFileChooser == nullptr)
+            {
+                return true;
+            }
+            using Flags = juce::FileBrowserComponent::FileChooserFlags;
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles | Flags::canSelectMultipleItems, [&](juce::FileChooser const& fileChooser)
+                                      {
+                                          auto const results = fileChooser.getResults();
+                                          if(results.isEmpty())
+                                          {
+                                              return;
+                                          }
+                                          std::vector<juce::File> files;
+                                          for(auto const& result : results)
+                                          {
+                                              files.push_back(result);
+                                          }
+                                          Instance::get().openFiles(files);
+                                      });
+
             return true;
         }
         case CommandIDs::documentSave:

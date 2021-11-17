@@ -69,8 +69,6 @@ namespace Application
         PluginList::SearchPath mPluginListSearchPath;
         ConverterPanel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;
-
-        JUCE_DECLARE_WEAK_REFERENCEABLE(CommandTarget)
     };
 } // namespace Application
 
