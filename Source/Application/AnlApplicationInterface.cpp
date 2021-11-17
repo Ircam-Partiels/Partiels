@@ -1,5 +1,6 @@
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationInstance.h"
+#include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -416,9 +417,10 @@ bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& fil
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
 
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
+    auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
     auto const documentWildcard = Instance::getDocumentFileWildCard();
-    auto const fileWildcard = documentWildcard + (documentHasAudioFiles ? "" : (";" + audioFormatWildcard));
+    auto const fileWildcard = documentWildcard + ";" + (documentHasAudioFiles ? importFormatsWildcard : audioFormatsWildcard);
     for(auto const& fileName : files)
     {
         if(fileWildcard.contains(juce::File(fileName).getFileExtension()))
@@ -457,28 +459,39 @@ void Application::Interface::filesDropped(juce::StringArray const& files, int x,
     auto& documentAccessor = Instance::get().getDocumentAccessor();
     auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
 
-    auto const audioFormatWildcard = Instance::get().getAudioFormatManager().getWildcardForAllFormats();
+    auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
     auto const documentWildcard = Instance::getDocumentFileWildCard();
-    auto const fileWildcard = documentWildcard + (documentHasAudioFiles ? "" : (";" + audioFormatWildcard));
+    auto const openWildcard = documentWildcard + (documentHasAudioFiles ? "" : ";" + audioFormatsWildcard);
+    auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
     auto getFiles = [&]()
     {
-        std::vector<juce::File> loadedFiles;
+        std::vector<juce::File> openFiles;
+        std::vector<juce::File> importFiles;
         for(auto const& fileName : files)
         {
             juce::File const file(fileName);
-            if(fileWildcard.contains(file.getFileExtension()))
+            if(openWildcard.contains(file.getFileExtension()))
             {
-                loadedFiles.push_back(file);
+                openFiles.push_back(file);
+            }
+            else if(importFormatsWildcard.contains(file.getFileExtension()))
+            {
+                importFiles.push_back(file);
             }
         }
-        return loadedFiles;
+        return std::make_tuple(openFiles, importFiles);
     };
-    auto const loadedFiles = getFiles();
-    if(loadedFiles.empty())
+    auto const validFiles = getFiles();
+    if(!std::get<0>(validFiles).empty())
     {
+        Instance::get().openFiles(std::get<0>(validFiles));
         return;
     }
-    Instance::get().openFiles(loadedFiles);
+    for(auto const& importFile : std::get<1>(validFiles))
+    {
+        auto const position = Tools::getNewTrackPosition();
+        Instance::get().importFile(position, importFile);
+    }
 }
 
 void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)
