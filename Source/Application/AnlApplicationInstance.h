@@ -44,6 +44,7 @@ namespace Application
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
 
         void openFiles(std::vector<juce::File> const& files);
+        void newDocument();
         void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
         Accessor& getApplicationAccessor();

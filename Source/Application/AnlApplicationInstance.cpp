@@ -299,6 +299,23 @@ std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identi
     return {0, 0};
 }
 
+void Application::Instance::newDocument()
+{
+    if(mDocumentAccessor->isEquivalentTo(mDocumentFileBased->getDefaultAccessor()))
+    {
+        return;
+    }
+    mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
+                                                       {
+                                                           if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
+                                                           {
+                                                               return;
+                                                           }
+                                                           mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
+                                                           mDocumentFileBased->setFile({});
+                                                       });
+}
+
 void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
     std::vector<juce::File> audioFiles;

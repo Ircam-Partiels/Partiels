@@ -317,14 +317,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
     {
         case CommandIDs::documentNew:
         {
-            fileBased.saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult saveResult)
-                                                     {
-                                                         if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
-                                                         {
-                                                             return;
-                                                         }
-                                                         Instance::get().openFiles({});
-                                                     });
+            Instance::get().newDocument();
             return true;
         }
         case CommandIDs::documentOpen:
