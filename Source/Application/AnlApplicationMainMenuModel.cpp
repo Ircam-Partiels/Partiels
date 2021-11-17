@@ -62,7 +62,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
             auto const name = fileName + (hasDuplicate ? " (" + recentFile.getParentDirectory().getFileName() + ")" : "");
             recentFilesMenu.addItem(name, isActive, !isActive, [=]()
                                     {
-                                        Instance::get().openFiles({recentFile});
+                                        Instance::get().openDocumentFile(recentFile);
                                     });
         }
 

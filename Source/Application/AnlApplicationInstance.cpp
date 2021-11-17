@@ -316,6 +316,24 @@ void Application::Instance::newDocument()
                                                        });
 }
 
+void Application::Instance::openDocumentFile(juce::File const& file)
+{
+    auto const documentFileExtension = getDocumentFileExtension();
+    anlWeakAssert(file.existsAsFile() && file.hasFileExtension(documentFileExtension));
+    if(file.existsAsFile() || !file.hasFileExtension(documentFileExtension) || file == mDocumentFileBased->getFile())
+    {
+        return;
+    }
+    mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
+                                                       {
+                                                           if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
+                                                           {
+                                                               return;
+                                                           }
+                                                           mDocumentFileBased->loadFrom(file, true);
+                                                       });
+}
+
 void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
     std::vector<juce::File> audioFiles;
@@ -521,7 +539,7 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
                                          {
                                              mDocumentFileBased->addChangeListener(this);
                                              anlDebug("Application", "Reopening last document...");
-                                             openFiles({previousFile});
+                                             openDocumentFile(previousFile);
                                          }
                                          else
                                          {
@@ -540,7 +558,7 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
     {
         mDocumentFileBased->addChangeListener(this);
         anlDebug("Application", "Reopening last document...");
-        openFiles({previousFile});
+        openDocumentFile(previousFile);
     }
 }
 

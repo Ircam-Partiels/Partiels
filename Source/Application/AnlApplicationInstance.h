@@ -45,6 +45,7 @@ namespace Application
 
         void openFiles(std::vector<juce::File> const& files);
         void newDocument();
+        void openDocumentFile(juce::File const& file);
         void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
         Accessor& getApplicationAccessor();
