@@ -123,7 +123,7 @@ Application::Interface::Loader::Loader()
     mLoadFileInfo.setText(juce::translate("or\nDrag & Drop\n(Document/Audio)"), juce::NotificationType::dontSendNotification);
     mLoadFileInfo.setJustificationType(juce::Justification::centredTop);
 
-    mLoadFileWildcard.setText(juce::translate("Document: DOCWILDCARD\nAudio: AUDIOWILDCARD").replace("DOCWILDCARD", Instance::getDocumentFileWildCard()).replace("AUDIOWILDCARD", "*.aac,*.aiff,*.aif,*.flac,*.m4a,*.mp3,*.ogg,*.wav,*.wma"), juce::NotificationType::dontSendNotification);
+    mLoadFileWildcard.setText(juce::translate("Document: DOCWILDCARD\nAudio: AUDIOWILDCARD").replace("DOCWILDCARD", Instance::getWildCardForDocumentFile()).replace("AUDIOWILDCARD", "*.aac,*.aiff,*.aif,*.flac,*.m4a,*.mp3,*.ogg,*.wav,*.wma"), juce::NotificationType::dontSendNotification);
     mLoadFileWildcard.setJustificationType(juce::Justification::bottomLeft);
 
     mAddTrackInfo.setText(juce::translate("Insert an analysis plugin as a new track"), juce::NotificationType::dontSendNotification);
@@ -419,7 +419,7 @@ bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& fil
 
     auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
     auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
-    auto const documentWildcard = Instance::getDocumentFileWildCard();
+    auto const documentWildcard = Instance::getWildCardForDocumentFile();
     auto const fileWildcard = documentWildcard + ";" + (documentHasAudioFiles ? importFormatsWildcard : audioFormatsWildcard);
     for(auto const& fileName : files)
     {
@@ -460,7 +460,7 @@ void Application::Interface::filesDropped(juce::StringArray const& files, int x,
     auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
 
     auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
-    auto const documentWildcard = Instance::getDocumentFileWildCard();
+    auto const documentWildcard = Instance::getWildCardForDocumentFile();
     auto const openWildcard = documentWildcard + (documentHasAudioFiles ? "" : ";" + audioFormatsWildcard);
     auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
     auto getFiles = [&]()

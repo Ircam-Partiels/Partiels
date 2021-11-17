@@ -37,8 +37,8 @@ namespace Application
         void shutdown() override;
 
         static Instance& get();
-        static juce::String getDocumentFileExtension();
-        static juce::String getDocumentFileWildCard();
+        static juce::String getExtensionForDocumentFile();
+        static juce::String getWildCardForDocumentFile();
         static juce::String getWildCardForImportFormats();
         static juce::String getWildCardForAudioFormats();
         static std::pair<int, int> getSizeFor(juce::String const& identifier);

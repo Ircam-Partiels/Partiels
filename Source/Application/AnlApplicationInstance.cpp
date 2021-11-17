@@ -89,7 +89,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     AppQuitIfInvalidPointer(mLookAndFeel);
     juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
 
-    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getDocumentFileExtension(), getDocumentFileWildCard(), "Open a document", "Save the document");
+    mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
     AppQuitIfInvalidPointer(mDocumentFileBased);
 
     mWindow = std::make_unique<Window>();
@@ -271,12 +271,12 @@ Application::Instance& Application::Instance::get()
     return *static_cast<Instance*>(JUCEApplication::getInstance());
 }
 
-juce::String Application::Instance::getDocumentFileExtension()
+juce::String Application::Instance::getExtensionForDocumentFile()
 {
     return App::getFileExtensionFor("doc");
 }
 
-juce::String Application::Instance::getDocumentFileWildCard()
+juce::String Application::Instance::getWildCardForDocumentFile()
 {
     return App::getFileWildCardFor("doc");
 }
@@ -322,7 +322,7 @@ void Application::Instance::newDocument()
 
 void Application::Instance::openDocumentFile(juce::File const& file)
 {
-    auto const documentFileExtension = getDocumentFileExtension();
+    auto const documentFileExtension = getExtensionForDocumentFile();
     anlWeakAssert(file.existsAsFile() && file.hasFileExtension(documentFileExtension));
     if(!file.existsAsFile() || !file.hasFileExtension(documentFileExtension) || file == mDocumentFileBased->getFile())
     {
@@ -375,7 +375,7 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
 
 void Application::Instance::openFiles(std::vector<juce::File> const& files)
 {
-    auto const documentFileExtension = getDocumentFileExtension();
+    auto const documentFileExtension = getExtensionForDocumentFile();
     auto const documentFile = std::find_if(files.cbegin(), files.cend(), [&](auto const& file)
                                            {
                                                return file.existsAsFile() && file.hasFileExtension(documentFileExtension);
@@ -525,7 +525,7 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
 
 juce::File Application::Instance::getBackupFile() const
 {
-    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getDocumentFileExtension());
+    return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getExtensionForDocumentFile());
 }
 
 juce::ApplicationCommandManager* App::getApplicationCommandManager()

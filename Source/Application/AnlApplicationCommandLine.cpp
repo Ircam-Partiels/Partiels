@@ -67,7 +67,7 @@ static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File con
     juce::UndoManager undoManager;
     Document::Accessor documentAccessor;
     Document::Director documentDirector(documentAccessor, audioFormatManager, undoManager);
-    Document::FileBased documentFileBased(documentDirector, Application::Instance::getDocumentFileExtension(), Application::Instance::getDocumentFileWildCard(), "", "");
+    Document::FileBased documentFileBased(documentDirector, Application::Instance::getExtensionForDocumentFile(), Application::Instance::getWildCardForDocumentFile(), "", "");
 
     anlDebug("CommandLine", "Loading audio file...");
     documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
