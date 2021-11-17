@@ -248,8 +248,6 @@ void Application::Instance::shutdown()
     mMainMenuModel.reset();
     mWindow.reset();
     mDocumentFileBased.reset();
-    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-    mLookAndFeel.reset();
     mAudioReader.reset();
     mProperties.reset();
     mDocumentDirector.reset();
@@ -262,6 +260,9 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
+
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    mLookAndFeel.reset();
 
     anlDebug("Application", "Done");
 }
