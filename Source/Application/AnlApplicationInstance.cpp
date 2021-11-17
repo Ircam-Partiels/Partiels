@@ -276,6 +276,11 @@ juce::String Application::Instance::getDocumentFileWildCard()
     return App::getFileWildCardFor("doc");
 }
 
+juce::String Application::Instance::getWildCardForImportFormats()
+{
+    return "*.json;*.csv;*.cue;*.sdif";
+}
+
 std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identifier)
 {
     auto* window = get().getWindow();
