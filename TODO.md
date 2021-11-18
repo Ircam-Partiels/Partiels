@@ -6,3 +6,6 @@
 - Check supported input files extension from OS (json/csv/sdif/etc.)
 - Add coverage
 - Move Model ctor and parseXml methods to cpp files
+- Ensure return key validates floating windows
+- Check frequency zoom without horizontal scrolling
+- Enable SDIF conversion only if the format is valid
