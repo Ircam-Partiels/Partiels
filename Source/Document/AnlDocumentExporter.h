@@ -59,6 +59,8 @@ namespace Document
             juce::String getFormatWilcard() const;
 
             char getSeparatorChar() const;
+
+            bool isValid() const;
         };
 
         class Panel

@@ -91,6 +91,11 @@ char Document::Exporter::Options::getSeparatorChar() const
     }
 }
 
+bool Document::Exporter::Options::isValid() const
+{
+    return format != Format::sdif || (sdifFrameSignature.length() == 4 && !sdifFrameSignature.contains("?") && sdifMatrixSignature.length() == 4 && !sdifMatrixSignature.contains("?"));
+}
+
 Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
 : mAccessor(accessor)
 , mGetSizeForFn(getSizeFor)
@@ -471,6 +476,10 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
     if(file == juce::File())
     {
         return juce::Result::fail("Invalid file");
+    }
+    if(!options.isValid())
+    {
+        return juce::Result::fail("Invalid options");
     }
 
     if(options.useImageFormat())
