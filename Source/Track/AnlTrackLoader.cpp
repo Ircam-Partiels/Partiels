@@ -861,48 +861,188 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
     return {std::move(results)};
 }
 
-Track::Loader::SdifArgumentSelector::SdifArgumentSelector(juce::File const& file)
-: FloatingWindowContainer("SDIF", *this, true)
-, mFile(file)
-, mLoad("Load", "Load the SDIF file with the arguments", [&]()
-        {
-            auto const format = mPanel.getFromSdifFormat();
-            Track::FileInfo fileInfo;
-            fileInfo.file = mFile;
-            fileInfo.args.set("frame", SdifConverter::getString(std::get<0_z>(format)));
-            fileInfo.args.set("matrix", SdifConverter::getString(std::get<1_z>(format)));
-            if(std::get<2_z>(format).has_value())
-            {
-                fileInfo.args.set("row", juce::String(*std::get<2_z>(format)));
-            }
-            if(std::get<3_z>(format).has_value())
-            {
-                fileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
-            }
-            if(onLoad != nullptr)
-            {
-                onLoad(fileInfo);
-            }
-        })
+Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
+: FloatingWindowContainer("File Loader", *this, true)
+, mPropertyName("File", "The file to import", nullptr)
+, mPropertyUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
+                {
+                    mPropertyMinValue.entry.setTextValueSuffix(text);
+                    mPropertyMaxValue.entry.setTextValueSuffix(text);
+                })
+, mPropertyMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+                    {
+                        auto const max = std::max(static_cast<float>(mPropertyMaxValue.entry.getValue()), value);
+                        mPropertyMaxValue.entry.setValue(max, juce::NotificationType::dontSendNotification);
+                    })
+, mPropertyMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
+                    {
+                        auto const min = std::min(static_cast<float>(mPropertyMinValue.entry.getValue()), value);
+                        mPropertyMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
+                    })
+, mLoadButton("Load", "Load the file with the arguments", [this]()
+              {
+                  loadButtonClicked();
+              })
 {
-    addAndMakeVisible(mPanel);
-    addAndMakeVisible(mLoad);
-
-    mPanel.setFile(file);
-    mPanel.onUpdated = [this]()
+    mPropertyName.entry.setEnabled(false);
+    addAndMakeVisible(mPropertyName);
+    addAndMakeVisible(mPropertyUnit);
+    addAndMakeVisible(mPropertyMinValue);
+    addAndMakeVisible(mPropertyMaxValue);
+    mSdifPanel.onUpdated = [this]()
     {
-        auto const format = mPanel.getFromSdifFormat();
-        mLoad.setEnabled(std::get<0_z>(format) != uint32_t(0) && std::get<1_z>(format) != uint32_t(0));
+        auto const format = mSdifPanel.getFromSdifFormat();
+        mLoadButton.setEnabled(mSdifPanel.isVisible() && std::get<0_z>(format) != uint32_t(0) && std::get<1_z>(format) != uint32_t(0));
     };
+    addAndMakeVisible(mSdifPanel);
+    mLoadButton.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
+    addAndMakeVisible(mLoadButton);
     setSize(300, 100);
+    setFile(file);
 }
 
-void Track::Loader::SdifArgumentSelector::resized()
+void Track::Loader::ArgumentSelector::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    mPanel.setBounds(bounds.removeFromTop(mPanel.getHeight()));
-    mLoad.setBounds(bounds.removeFromTop(mLoad.getHeight()));
-    setSize(bounds.getWidth(), bounds.getY());
+    auto setBounds = [&](juce::Component& component)
+    {
+        if(component.isVisible())
+        {
+            component.setBounds(bounds.removeFromTop(component.getHeight()));
+        }
+    };
+    setBounds(mPropertyName);
+    setBounds(mPropertyUnit);
+    setBounds(mPropertyMinValue);
+    setBounds(mPropertyMaxValue);
+    setBounds(mSdifPanel);
+    setBounds(mLoadButton);
+    setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
+}
+
+void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
+{
+    mFileInfo.file = file;
+    mFileInfo.args.clear();
+    mFileInfo.extra = {};
+    mPropertyUnit.entry.setText("", juce::NotificationType::dontSendNotification);
+
+    juce::WildcardFileFilter wildcardFilter(getWildCardForAllFormats(), "*", "");
+    auto const streamFlag = file.hasFileExtension("dat") ? std::ios::in | std::ios::binary : std::ios::in;
+    auto stream = std::ifstream(file.getFullPathName().toStdString(), streamFlag);
+    if(file != juce::File() && !stream)
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::InfoIcon)
+                                 .withTitle(juce::translate("Invalid file!"))
+                                 .withMessage(juce::translate("The input stream of the file 'FLNAME' cannot be opened.").replace("FLNAME", file.getFullPathName()))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+    }
+
+    auto const isFileValid = wildcardFilter.isFileSuitable(file) && static_cast<bool>(stream);
+
+    mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
+    mPropertyUnit.setEnabled(isFileValid);
+    mPropertyMinValue.setEnabled(isFileValid);
+    mPropertyMaxValue.setEnabled(isFileValid);
+    mSdifPanel.setEnabled(isFileValid);
+    mSdifPanel.setVisible(file.hasFileExtension("sdif"));
+    mSdifPanel.setFile(file);
+    mLoadButton.setEnabled(isFileValid);
+
+    if(isFileValid && file.hasFileExtension("json"))
+    {
+        auto json = nlohmann::sax_parse_json_object(stream, "track", 1_z);
+        if(json.count("track") > 0_z)
+        {
+            Accessor temp;
+            temp.fromJson(json.at("track"), NotificationType::synchronous);
+            auto const& valueZoomAcsr = temp.getAcsr<AcsrType::valueZoom>();
+            auto const globalRange = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
+            mPropertyUnit.entry.setText(temp.getAttr<AttrType::description>().output.unit, juce::NotificationType::sendNotificationSync);
+            mPropertyMinValue.entry.setValue(globalRange.getStart(), juce::NotificationType::sendNotificationSync);
+            mPropertyMaxValue.entry.setValue(globalRange.getEnd(), juce::NotificationType::sendNotificationSync);
+
+            json["track"].erase("identifier");
+            json["track"].erase("file");
+            mFileInfo.extra = std::move(json);
+        }
+    }
+
+    resized();
+}
+
+void Track::Loader::ArgumentSelector::loadButtonClicked()
+{
+    anlWeakAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
+    if(!juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        return;
+    }
+
+    auto const unit = mPropertyUnit.entry.getText();
+    if(!unit.isEmpty())
+    {
+        mFileInfo.extra["unit"] = unit;
+    }
+    juce::Range<double> const range{mPropertyMinValue.entry.getValue(), mPropertyMaxValue.entry.getValue()};
+    if(!range.isEmpty())
+    {
+        mFileInfo.extra["range"] = range;
+    }
+
+    if(mSdifPanel.isVisible())
+    {
+        auto const format = mSdifPanel.getFromSdifFormat();
+        mFileInfo.args.set("frame", SdifConverter::getString(std::get<0_z>(format)));
+        mFileInfo.args.set("matrix", SdifConverter::getString(std::get<1_z>(format)));
+        if(std::get<2_z>(format).has_value())
+        {
+            mFileInfo.args.set("row", juce::String(*std::get<2_z>(format)));
+        }
+        if(std::get<3_z>(format).has_value())
+        {
+            mFileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
+        }
+    }
+
+    if(onLoad != nullptr)
+    {
+        onLoad(mFileInfo);
+    }
+}
+
+void Track::Loader::ArgumentSelector::showAt(juce::Point<int> const& pt)
+{
+    FloatingWindowContainer::showAt(pt);
+    mFloatingWindow.enterModalState();
+}
+
+void Track::Loader::ArgumentSelector::hide()
+{
+    mFloatingWindow.exitModalState(0);
+    FloatingWindowContainer::hide();
+}
+
+void Track::Loader::ArgumentSelector::apply(Accessor& accessor, FileInfo const& fileInfo, NotificationType const notification)
+{
+    if(fileInfo.extra.count("track") > 0_z)
+    {
+        accessor.fromJson(fileInfo.extra.at("track"), notification);
+    }
+    if(fileInfo.extra.count("unit") > 0_z)
+    {
+        auto description = accessor.getAttr<AttrType::description>();
+        description.output.unit = fileInfo.extra.at("unit").get<std::string>();
+        accessor.setAttr<AttrType::description>(description, notification);
+    }
+    if(fileInfo.extra.count("range") > 0_z)
+    {
+        auto& valueZoomAcsr = accessor.getAcsr<AcsrType::valueZoom>();
+        auto const range = fileInfo.extra.at("range").get<juce::Range<double>>();
+        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, notification);
+    }
 }
 
 class Track::Loader::UnitTest

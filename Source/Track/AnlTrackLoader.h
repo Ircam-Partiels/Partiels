@@ -29,22 +29,35 @@ namespace Track
         static std::variant<Results, juce::String> loadFromCue(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
 
-        class SdifArgumentSelector
+        class ArgumentSelector
         : public FloatingWindowContainer
         {
         public:
-            SdifArgumentSelector(juce::File const& file);
-            ~SdifArgumentSelector() override = default;
+            ArgumentSelector(juce::File const& file = juce::File());
+            ~ArgumentSelector() override = default;
 
             // juce::Component
             void resized() override;
 
+            // FloatingWindowContainer
+            void showAt(juce::Point<int> const& pt) override;
+            void hide() override;
+
+            void setFile(juce::File const& file);
             std::function<void(FileInfo)> onLoad = nullptr;
 
+            static void apply(Accessor& accessor, FileInfo const& fileInfo, NotificationType const notification);
+
         private:
-            juce::File const mFile;
-            SdifConverter::Panel mPanel;
-            PropertyTextButton mLoad;
+            void loadButtonClicked();
+
+            FileInfo mFileInfo;
+            PropertyText mPropertyName;
+            PropertyText mPropertyUnit;
+            PropertyNumber mPropertyMinValue;
+            PropertyNumber mPropertyMaxValue;
+            PropertyTextButton mLoadButton;
+            SdifConverter::Panel mSdifPanel;
         };
 
     private:
