@@ -288,7 +288,7 @@ juce::String Application::Instance::getWildCardForDocumentFile()
 
 juce::String Application::Instance::getWildCardForImportFormats()
 {
-    return "*.json;*.csv;*.cue;*.sdif";
+    return Track::Loader::getWildCardForAllFormats();
 }
 
 juce::String Application::Instance::getWildCardForAudioFormats()
