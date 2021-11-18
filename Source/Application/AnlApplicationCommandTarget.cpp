@@ -87,6 +87,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpSdifConverter
     });
     // clang-format on
+    Instance::get().getAllCommands(commands);
 }
 
 void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result)
@@ -299,6 +300,8 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
     }
+
+    Instance::get().getCommandInfo(commandID, result);
 }
 
 bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::InvocationInfo const& info)
@@ -637,7 +640,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
     }
-    return false;
+    return Instance::get().perform(info);
 }
 
 void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster* source)
