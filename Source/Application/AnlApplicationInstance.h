@@ -100,7 +100,7 @@ namespace Application
         std::unique_ptr<Exporter> mExporter;
         std::unique_ptr<Batcher> mBatcher;
 
-        std::unique_ptr<juce::Component> mSdifSelector;
+        std::unique_ptr<Track::Loader::ArgumentSelector> mTrackLoader;
 
         std::atomic<bool> mIsPluginListReady{true};
     };

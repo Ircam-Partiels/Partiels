@@ -110,6 +110,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mBatcher = std::make_unique<Batcher>();
     AppQuitIfInvalidPointer(mBatcher);
 
+    mTrackLoader = std::make_unique<Track::Loader::ArgumentSelector>();
+    AppQuitIfInvalidPointer(mTrackLoader);
+
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -260,6 +263,7 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
+    mTrackLoader.reset();
 
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();
@@ -418,24 +422,24 @@ void Application::Instance::openFiles(std::vector<juce::File> const& files)
 
 void Application::Instance::importFile(std::tuple<juce::String, size_t> const position, juce::File const& file)
 {
-    if(file.hasFileExtension("sdif"))
+    auto const importFileWildcard = getWildCardForImportFormats();
+    auto const fileExtension = file.getFileExtension();
+    anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && importFileWildcard.contains(fileExtension));
+    if(mTrackLoader == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
     {
-        auto selector = std::make_unique<Track::Loader::SdifArgumentSelector>(file);
-        if(selector != nullptr)
-        {
-            selector->onLoad = [=, this](Track::FileInfo fileInfo)
-            {
-                Tools::addFileTrack(position, fileInfo);
-                mSdifSelector.reset();
-            };
-            selector->show();
-        }
-        mSdifSelector = std::move(selector);
+        return;
     }
-    else
+    mTrackLoader->onLoad = [this, position = position](Track::FileInfo fileInfo)
     {
-        Tools::addFileTrack(position, file);
-    }
+        Tools::addFileTrack(position, fileInfo);
+        mTrackLoader->hide();
+    };
+    mTrackLoader->setFile(file);
+    mTrackLoader->show();
+    juce::MessageManager::callAsync([this]()
+                                    {
+                                        mTrackLoader->toFront(true);
+                                    });
 }
 
 Application::Accessor& Application::Instance::getApplicationAccessor()
