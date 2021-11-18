@@ -103,6 +103,7 @@ namespace Application
         std::unique_ptr<Track::Loader::ArgumentSelector> mTrackLoader;
 
         std::atomic<bool> mIsPluginListReady{true};
+        JUCE_DECLARE_WEAK_REFERENCEABLE(Instance)
     };
 } // namespace Application
 

@@ -162,8 +162,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
         }
     }
     auto const previousFile = mApplicationAccessor->getAttr<AttrType::currentDocumentFile>();
+    juce::WeakReference<Instance> weakReference(this);
     juce::MessageManager::callAsync([=, this]()
                                     {
+                                        if(weakReference.get() == nullptr)
+                                        {
+                                            return;
+                                        }
                                         openStartupFiles(commandFiles, previousFile);
                                     });
 }
@@ -206,8 +211,13 @@ void Application::Instance::systemRequestedQuit()
         if(modalComponentManager->cancelAllModalComponents())
         {
             anlDebug("Application", "Delayed...");
-            juce::Timer::callAfterDelay(500, [this]()
+            juce::WeakReference<Instance> weakReference(this);
+            juce::Timer::callAfterDelay(500, [=, this]()
                                         {
+                                            if(weakReference.get() == nullptr)
+                                            {
+                                                return;
+                                            }
                                             systemRequestedQuit();
                                         });
             return;
@@ -314,8 +324,13 @@ void Application::Instance::newDocument()
     {
         return;
     }
+    juce::WeakReference<Instance> weakReference(this);
     mDocumentFileBased->saveIfNeededAndUserAgreesAsync([=, this](juce::FileBasedDocument::SaveResult saveResult)
                                                        {
+                                                           if(weakReference.get() == nullptr)
+                                                           {
+                                                               return;
+                                                           }
                                                            if(saveResult != juce::FileBasedDocument::SaveResult::savedOk)
                                                            {
                                                                return;
@@ -429,15 +444,24 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
     {
         return;
     }
-    mTrackLoader->onLoad = [this, position = position](Track::FileInfo fileInfo)
+    juce::WeakReference<Instance> weakReference(this);
+    mTrackLoader->onLoad = [=, this](Track::FileInfo fileInfo)
     {
+        if(weakReference.get() == nullptr)
+        {
+            return;
+        }
         Tools::addFileTrack(position, fileInfo);
         mTrackLoader->hide();
     };
     mTrackLoader->setFile(file);
     mTrackLoader->show();
-    juce::MessageManager::callAsync([this]()
+    juce::MessageManager::callAsync([=, this]()
                                     {
+                                        if(weakReference.get() == nullptr)
+                                        {
+                                            return;
+                                        }
                                         mTrackLoader->toFront(true);
                                     });
 }
@@ -542,8 +566,13 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
 {
     if(!mIsPluginListReady)
     {
+        juce::WeakReference<Instance> weakReference(this);
         juce::MessageManager::callAsync([=, this]()
                                         {
+                                            if(weakReference.get() == nullptr)
+                                            {
+                                                return;
+                                            }
                                             openStartupFiles(commandFiles, previousFile);
                                         });
         return;
@@ -567,8 +596,13 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
                                  .withButton(juce::translate("Restore"))
                                  .withButton(juce::translate("Ignore"));
 
+        juce::WeakReference<Instance> weakReference(this);
         juce::AlertWindow::showAsync(options, [=, this](int result)
                                      {
+                                         if(weakReference.get() == nullptr)
+                                         {
+                                             return;
+                                         }
                                          if(result == 0)
                                          {
                                              mDocumentFileBased->addChangeListener(this);
@@ -625,8 +659,13 @@ void Application::Instance::checkPluginsQuarantine()
                                  .withButton(juce::translate("Proceed"))
                                  .withButton(juce::translate("Ignore"));
         mIsPluginListReady = false;
-        juce::AlertWindow::showAsync(options, [this, files](int result)
+        juce::WeakReference<Instance> weakReference(this);
+        juce::AlertWindow::showAsync(options, [=, this](int result)
                                      {
+                                         if(weakReference.get() == nullptr)
+                                         {
+                                             return;
+                                         }
                                          if(result == 0)
                                          {
                                              mIsPluginListReady = true;
