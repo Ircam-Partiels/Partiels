@@ -104,7 +104,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                     juce::ignoreUnused(index);
                     sanitizeProperties(true);
                 })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON", "CUE"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON", "CUE", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
@@ -152,6 +152,34 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                                   options.includeDescription = state;
                                   setOptions(options, juce::NotificationType::sendNotificationSync);
                               })
+, mPropertySdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", [this](juce::String text)
+                     {
+                         while(text.length() < 4)
+                         {
+                             text += "?";
+                         }
+                         text = text.substring(0, 4).toUpperCase();
+                         auto options = mOptions;
+                         options.sdifFrameSignature = text;
+                         setOptions(options, juce::NotificationType::sendNotificationSync);
+                     })
+, mPropertySdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String text)
+                      {
+                          while(text.length() < 4)
+                          {
+                              text += "?";
+                          }
+                          text = text.substring(0, 4).toUpperCase();
+                          auto options = mOptions;
+                          options.sdifMatrixSignature = text;
+                          setOptions(options, juce::NotificationType::sendNotificationSync);
+                      })
+, mPropertySdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", [this](juce::String text)
+                       {
+                           auto options = mOptions;
+                           options.sdifColumnName = text;
+                           setOptions(options, juce::NotificationType::sendNotificationSync);
+                       })
 , mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results (sonagrams)", [this](bool state)
                        {
                            auto options = mOptions;
@@ -175,7 +203,29 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
     addChildComponent(mPropertyRawHeader);
     addChildComponent(mPropertyRawSeparator);
     addChildComponent(mPropertyIncludeDescription);
+    addChildComponent(mPropertySdifFrame);
+    addChildComponent(mPropertySdifMatrix);
+    addChildComponent(mPropertySdifColName);
     addChildComponent(mPropertyIgnoreGrids);
+
+    mPropertySdifFrame.entry.onEditorShow = [this]()
+    {
+        if(auto* textEditor = mPropertySdifFrame.entry.getCurrentTextEditor())
+        {
+            textEditor->setInputRestrictions(4);
+            textEditor->setJustification(juce::Justification::right);
+        }
+    };
+    mPropertySdifFrame.entry.setText("????", juce::NotificationType::dontSendNotification);
+    mPropertySdifMatrix.entry.onEditorShow = [this]()
+    {
+        if(auto* textEditor = mPropertySdifMatrix.entry.getCurrentTextEditor())
+        {
+            textEditor->setInputRestrictions(4);
+            textEditor->setJustification(juce::Justification::right);
+        }
+    };
+    mPropertySdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
 
     mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
@@ -270,6 +320,9 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertyRawHeader);
     setBounds(mPropertyRawSeparator);
     setBounds(mPropertyIncludeDescription);
+    setBounds(mPropertySdifFrame);
+    setBounds(mPropertySdifMatrix);
+    setBounds(mPropertySdifColName);
     setBounds(mPropertyIgnoreGrids);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
@@ -437,6 +490,9 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyRawSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
+    mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
+    mPropertySdifMatrix.entry.setText(options.sdifMatrixSignature, silent);
+    mPropertySdifColName.entry.setText(options.sdifColumnName, silent);
 
     mPropertyGroupMode.setVisible(options.useImageFormat());
     mPropertyAutoSizeMode.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
@@ -445,6 +501,9 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyRawSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyIncludeDescription.setVisible(options.format == Document::Exporter::Options::Format::json);
+    mPropertySdifFrame.setVisible(options.format == Document::Exporter::Options::Format::sdif);
+    mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
+    mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
     sanitizeProperties(false);
     resized();

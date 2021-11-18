@@ -100,6 +100,9 @@ namespace Document
             PropertyToggle mPropertyRawHeader;
             PropertyList mPropertyRawSeparator;
             PropertyToggle mPropertyIncludeDescription;
+            PropertyText mPropertySdifFrame;
+            PropertyText mPropertySdifMatrix;
+            PropertyText mPropertySdifColName;
             PropertyToggle mPropertyIgnoreGrids;
 
             Accessor::Listener mListener{typeid(*this).name()};
