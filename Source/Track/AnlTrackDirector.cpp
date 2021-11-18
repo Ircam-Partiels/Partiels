@@ -718,7 +718,7 @@ void Track::Director::timerCallback()
 
 juce::Result Track::Director::consolidate(juce::File const& file)
 {
-    juce::Result result = file.createDirectory();
+    auto result = file.createDirectory();
     if(result.failed())
     {
         return result;
@@ -728,7 +728,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
     auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
     if(currentFile == expectedFile)
     {
-        return juce::Result::ok();
+        return result;
     }
     if(currentFile == juce::File{} || !currentFile.hasFileExtension("dat"))
     {
@@ -747,7 +747,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
         }
     }
     mAccessor.setAttr<AttrType::file>(FileInfo{expectedFile}, NotificationType::synchronous);
-    return juce::Result::ok();
+    return result;
 }
 
 void Track::Director::askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification)
