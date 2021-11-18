@@ -309,6 +309,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
     mLoader.onLoadingSucceeded = [&](Results const& results)
     {
+        auto const fileInfo = mAccessor.getAttr<AttrType::file>();
+        Loader::ArgumentSelector::apply(mAccessor, fileInfo, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
     };
