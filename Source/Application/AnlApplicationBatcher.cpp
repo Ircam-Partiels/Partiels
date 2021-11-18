@@ -59,6 +59,7 @@ Application::Batcher::Batcher()
                 auto options = acsr.getAttr<AttrType::exportOptions>();
                 options.useAutoSize = false;
                 mExporterPanel.setOptions(options, juce::NotificationType::dontSendNotification);
+                mPropertyExport.setEnabled(options.isValid());
             }
             break;
             case AttrType::adaptationToSampleRate:
