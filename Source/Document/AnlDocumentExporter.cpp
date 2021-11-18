@@ -16,7 +16,10 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            includeHeaderRaw == rhd.includeHeaderRaw &&
            ignoreGridResults == rhd.ignoreGridResults &&
            columnSeparator == rhd.columnSeparator &&
-           includeDescription == rhd.includeDescription;
+           includeDescription == rhd.includeDescription &&
+           sdifFrameSignature == rhd.sdifFrameSignature &&
+           sdifMatrixSignature == rhd.sdifMatrixSignature &&
+           sdifColumnName == rhd.sdifColumnName;
 }
 
 bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
@@ -808,6 +811,9 @@ void XmlParser::toXml<Document::Exporter::Options>(juce::XmlElement& xml, juce::
         toXml(*child, "ignoreGridResults", value.ignoreGridResults);
         toXml(*child, "columnSeparator", value.columnSeparator);
         toXml(*child, "includeDescription", value.includeDescription);
+        toXml(*child, "sdifFrameSignature", value.sdifFrameSignature);
+        toXml(*child, "sdifMatrixSignature", value.sdifMatrixSignature);
+        toXml(*child, "sdifColumnName", value.sdifColumnName);
         xml.addChildElement(child.release());
     }
 }
@@ -832,6 +838,9 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     value.ignoreGridResults = fromXml(*child, "ignoreGridResults", defaultValue.ignoreGridResults);
     value.columnSeparator = fromXml(*child, "columnSeparator", defaultValue.columnSeparator);
     value.includeDescription = fromXml(*child, "includeDescription", defaultValue.includeDescription);
+    value.sdifFrameSignature = fromXml(*child, "sdifFrameSignature", defaultValue.sdifFrameSignature);
+    value.sdifMatrixSignature = fromXml(*child, "sdifMatrixSignature", defaultValue.sdifMatrixSignature);
+    value.sdifColumnName = fromXml(*child, "sdifColumnName", defaultValue.sdifColumnName);
     return value;
 }
 

@@ -21,6 +21,7 @@ namespace Document
                 , csv
                 , json
                 , cue
+                , sdif
             };
             
             enum class ColumnSeparator
@@ -43,6 +44,9 @@ namespace Document
             bool ignoreGridResults{true};
             ColumnSeparator columnSeparator{ColumnSeparator::comma};
             bool includeDescription{true};
+            juce::String sdifFrameSignature{"????"};
+            juce::String sdifMatrixSignature{"????"};
+            juce::String sdifColumnName;
 
             bool operator==(Options const& rhd) const noexcept;
             bool operator!=(Options const& rhd) const noexcept;
