@@ -49,7 +49,9 @@ Application::Exporter::Exporter()
                 break;
             case AttrType::exportOptions:
             {
-                mExporterPanel.setOptions(acsr.getAttr<AttrType::exportOptions>(), juce::NotificationType::dontSendNotification);
+                auto const options = acsr.getAttr<AttrType::exportOptions>();
+                mExporterPanel.setOptions(options, juce::NotificationType::dontSendNotification);
+                mPropertyExport.setEnabled(options.isValid());
             }
             break;
         }
