@@ -28,6 +28,7 @@ namespace Track
         static std::variant<Results, juce::String> loadFromCsv(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromCue(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
         static std::variant<Results, juce::String> loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement);
+        static juce::String getWildCardForAllFormats();
 
         class ArgumentSelector
         : public FloatingWindowContainer

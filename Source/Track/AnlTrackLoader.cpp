@@ -861,6 +861,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
     return {std::move(results)};
 }
 
+juce::String Track::Loader::getWildCardForAllFormats()
+{
+    return "*.json;*.csv;*.cue;*.sdif;*.dat";
+}
+
 Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
 : FloatingWindowContainer("File Loader", *this, true)
 , mPropertyName("File", "The file to import", nullptr)
