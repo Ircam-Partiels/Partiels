@@ -16,6 +16,7 @@ namespace Track
         juce::Result toJson(Accessor const& accessor, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort);
         juce::Result toCue(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort);
         juce::Result toBinary(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort);
+        juce::Result toSdif(Accessor const& accessor, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort);
     } // namespace Exporter
 } // namespace Track
 

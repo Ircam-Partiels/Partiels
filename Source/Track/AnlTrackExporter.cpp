@@ -658,4 +658,63 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
+juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort)
+{
+    juce::MessageManager::Lock lock;
+    if(!lock.tryEnter())
+    {
+        return juce::Result::fail("Invalid threaded access to model");
+    }
+    auto const results = accessor.getAttr<AttrType::results>();
+    auto const name = accessor.getAttr<AttrType::name>();
+    lock.exit();
+
+    if(results.isEmpty())
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as SDIF because the results are not valid.").replace("ANLNAME", name));
+    }
+
+    juce::TemporaryFile temp(file);
+
+    if(auto const markers = results.getMarkers())
+    {
+        auto const result = SdifConverter::write(temp.getFile(), frameId, matrixId, columnName, *markers.get(), [&]()
+                                                 {
+                                                     return shouldAbort == false;
+                                                 });
+        if(result.failed())
+        {
+            return result;
+        }
+    }
+    else if(auto const points = results.getPoints())
+    {
+        auto const result = SdifConverter::write(temp.getFile(), frameId, matrixId, columnName, *points.get(), [&]()
+                                                 {
+                                                     return shouldAbort == false;
+                                                 });
+        if(result.failed())
+        {
+            return result;
+        }
+    }
+    else if(auto const columns = results.getColumns())
+    {
+        auto const result = SdifConverter::write(temp.getFile(), frameId, matrixId, columnName, *columns.get(), [&]()
+                                                 {
+                                                     return shouldAbort == false;
+                                                 });
+        if(result.failed())
+        {
+            return result;
+        }
+    }
+
+    if(!temp.overwriteTargetFileWithTemporary())
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+    }
+    return juce::Result::ok();
+}
+
 ANALYSE_FILE_END
