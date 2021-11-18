@@ -774,6 +774,13 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
                 return Track::Exporter::toJson(trackAcsr, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
                 return Track::Exporter::toCue(trackAcsr, fileUsed, shouldAbort);
+            case Options::Format::sdif:
+            {
+                auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);
+                auto const matrixId = SdifConverter::getSignature(options.sdifMatrixSignature);
+                auto const columnName = options.sdifColumnName.isEmpty() ? std::optional<juce::String>{} : options.sdifColumnName;
+                return Track::Exporter::toSdif(trackAcsr, fileUsed, frameId, matrixId, columnName, shouldAbort);
+            }
         }
         return juce::Result::fail("Unsupported format");
     };
