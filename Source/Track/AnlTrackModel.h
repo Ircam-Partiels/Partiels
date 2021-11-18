@@ -169,11 +169,13 @@ namespace Track
     struct FileInfo
     {
         juce::File file;
-        juce::StringPairArray args;
+        juce::StringPairArray args; // saved values (mainly for parsing SDIF)
+        nlohmann::json extra;       // parsed values (mainly for restoring track attributes from JSON)
 
-        FileInfo(juce::File const& f = {}, juce::StringPairArray const& a = {})
+        FileInfo(juce::File const& f = {}, juce::StringPairArray const& a = {}, nlohmann::json const& e = {})
         : file(f)
         , args(a)
+        , extra(e)
         {
         }
 
