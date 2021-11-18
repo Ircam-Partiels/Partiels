@@ -610,30 +610,6 @@ void Track::Director::runLoading()
         startTimer(50);
         timerCallback();
         mLoader.loadAnalysis(mAccessor, trackFile);
-        if(!trackFile.file.hasFileExtension("json"))
-        {
-            return;
-        }
-
-        auto const& file = trackFile.file;
-        auto stream = std::ifstream(file.getFullPathName().toStdString());
-        if(!stream || !stream.is_open() || !stream.good())
-        {
-            return;
-        }
-
-        nlohmann::json::parser_callback_t cb = [](int depth, nlohmann::json::parse_event_t event, nlohmann::json& parsed)
-        {
-            return depth != 1 or event != nlohmann::json::parse_event_t::key or parsed == nlohmann::json("track");
-        };
-
-        auto json = nlohmann::json::parse(stream, cb, false);
-        if(json.count("track") > 0_z)
-        {
-            json["track"]["identifier"] = mAccessor.getAttr<AttrType::identifier>();
-            json["track"]["file"] = mAccessor.getAttr<AttrType::file>();
-            mAccessor.fromJson(json.at("track"), NotificationType::synchronous);
-        }
     }
 }
 
@@ -794,38 +770,22 @@ void Track::Director::askForResultsFile(juce::String const& message, juce::File 
                                   {
                                       return;
                                   }
-                                  auto const file = results.getFirst();
-                                  if(file.hasFileExtension("sdif"))
+                                  if(mLoaderArgumentSelector == nullptr)
                                   {
-                                      auto selector = std::make_unique<Loader::SdifArgumentSelector>(file);
-                                      if(selector != nullptr)
+                                      mLoaderArgumentSelector = std::make_unique<Loader::ArgumentSelector>();
+                                      anlWeakAssert(mLoaderArgumentSelector != nullptr);
+                                      if(mLoaderArgumentSelector == nullptr)
                                       {
-                                          selector->onLoad = [=, this](Track::FileInfo fileInfo)
-                                          {
-                                              if(safePointer.get() == nullptr)
-                                              {
-                                                  return;
-                                              }
-                                              mSdifSelector.reset();
-                                              auto isPerformingAction = mIsPerformingAction;
-                                              if(!isPerformingAction)
-                                              {
-                                                  startAction();
-                                              }
-                                              mAccessor.setAttr<AttrType::results>(Results{}, notification);
-                                              mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
-                                              mAccessor.setAttr<AttrType::file>(fileInfo, notification);
-                                              if(!isPerformingAction)
-                                              {
-                                                  endAction(ActionState::newTransaction, juce::translate("Change results file"));
-                                              }
-                                          };
-                                          selector->show();
+                                          return;
                                       }
-                                      mSdifSelector = std::move(selector);
                                   }
-                                  else
+                                  mLoaderArgumentSelector->onLoad = [=, this](Track::FileInfo fileInfo)
                                   {
+                                      if(safePointer.get() == nullptr)
+                                      {
+                                          return;
+                                      }
+                                      mLoaderArgumentSelector->hide();
                                       auto isPerformingAction = mIsPerformingAction;
                                       if(!isPerformingAction)
                                       {
@@ -833,12 +793,14 @@ void Track::Director::askForResultsFile(juce::String const& message, juce::File 
                                       }
                                       mAccessor.setAttr<AttrType::results>(Results{}, notification);
                                       mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
-                                      mAccessor.setAttr<AttrType::file>(FileInfo{file}, notification);
+                                      mAccessor.setAttr<AttrType::file>(fileInfo, notification);
                                       if(!isPerformingAction)
                                       {
                                           endAction(ActionState::newTransaction, juce::translate("Change results file"));
                                       }
-                                  }
+                                  };
+                                  mLoaderArgumentSelector->setFile(results.getFirst());
+                                  mLoaderArgumentSelector->show();
                               });
 }
 
