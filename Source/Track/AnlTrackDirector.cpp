@@ -752,7 +752,7 @@ juce::Result Track::Director::consolidate(juce::File const& file)
 
 void Track::Director::askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification)
 {
-    mFileChooser = std::make_unique<juce::FileChooser>(message, defaultFile, "*.csv;*.cue;*.json;*.sdif;*.dat");
+    mFileChooser = std::make_unique<juce::FileChooser>(message, defaultFile, Loader::getWildCardForAllFormats());
     if(mFileChooser == nullptr)
     {
         return;
