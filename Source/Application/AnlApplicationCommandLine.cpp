@@ -149,7 +149,7 @@ Application::CommandLine::CommandLine()
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
-         "--format|-f <formatname> Defines the export format (jpeg, png, csv, json or cue) (required).\n\t"
+         "--format|-f <formatname> Defines the export format (jpeg, png, csv, json, cue or sdif) (required).\n\t"
          "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
@@ -158,6 +158,9 @@ Application::CommandLine::CommandLine()
          "--header Includes header row before the data rows (optional with the csv format).\n\t"
          "--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').\n\t"
          "--description Includes the plugin description (optional with the json format).\n\t"
+         "--frame <framesignature> Defines the 4 characters frame signaturer (required with the sdif format).\n\t"
+         "--matrix <matrixsignature> Defines the 4 characters matrix signaturer (required with the sdif format).\n\t"
+         "--colname <string> Defines the name of the column (optional with the sdif format).\n\t"
          "",
          "",
          [](juce::ArgumentList const& args)
@@ -217,7 +220,7 @@ Application::CommandLine::CommandLine()
                  options.imageHeight = args.getValueForOption("-h|--height").getIntValue();
                  options.useGroupOverview = args.containsOption("--groups");
              }
-             else if(format == "csv" || format == "json" || format == "cue")
+             else if(format == "csv" || format == "json" || format == "cue" || format == "sdif")
              {
                  if(format == "csv")
                  {
@@ -227,13 +230,28 @@ Application::CommandLine::CommandLine()
                  {
                      options.format = Options::Format::json;
                  }
-                 else
+                 else if(format == "cue")
                  {
                      options.format = Options::Format::cue;
+                 }
+                 else
+                 {
+                     options.format = Options::Format::sdif;
+                     if(!args.containsOption("--frame"))
+                     {
+                         juce::ConsoleApplication::fail("Frame signature not specified! Specifiy the frame signature of the SDIf file.");
+                     }
+                     if(!args.containsOption("--matrix"))
+                     {
+                         juce::ConsoleApplication::fail("Matrix signature not specified! Specifiy the matrix signature of the SDIf file.");
+                     }
                  }
                  options.ignoreGridResults = args.containsOption("--nogrids");
                  options.includeHeaderRaw = args.containsOption("--header");
                  options.includeDescription = args.containsOption("--description");
+                 options.sdifFrameSignature = args.getValueForOption("--frame").removeCharacters("\"").toUpperCase();
+                 options.sdifMatrixSignature = args.getValueForOption("--matrix").removeCharacters("\"").toUpperCase();
+                 options.sdifColumnName = args.getValueForOption("--colname");
                  auto const separator = magic_enum::enum_cast<Document::Exporter::Options::ColumnSeparator>(args.getValueForOption("--separator").toStdString());
                  if(separator.has_value())
                  {
