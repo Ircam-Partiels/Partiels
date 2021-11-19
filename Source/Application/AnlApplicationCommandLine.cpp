@@ -133,7 +133,7 @@ Application::CommandLine::CommandLine()
              anlDebug("CommandLine", "Parsing arguments...");
              auto const audioFile = args.getExistingFileForOption("-i|--input");
              auto const templateFile = args.getExistingFileForOption("-t|--template");
-             auto const outputFile = args.getFileForOption("-o|--output");
+             auto const outputFile = args.getFileForOption("-o|--output").withFileExtension(Instance::getExtensionForDocumentFile());
              auto const adaptationToSampleRate = args.containsOption("-adapt");
 
              auto const result = createAndSave(audioFile, templateFile, outputFile, adaptationToSampleRate);
