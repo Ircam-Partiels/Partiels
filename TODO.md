@@ -9,3 +9,5 @@
 - Ensure return key validates floating windows
 - Check frequency zoom without horizontal scrolling
 - Enable SDIF conversion only if the format is valid
+- Check font of key names of main menu on Linux
+
