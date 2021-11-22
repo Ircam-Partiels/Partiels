@@ -378,7 +378,7 @@ juce::Result Document::FileBased::saveTo(Accessor& accessor, juce::File const& f
     if(!xml->writeTo(file))
     {
         accessor.setAttr<AttrType::path>(previousPath, NotificationType::synchronous);
-        return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
+        return juce::Result::fail(juce::translate("The document cannot be written to the file FLNM!").replace("FLNM", file.getFileName()));
     }
     return juce::Result::ok();
 }
