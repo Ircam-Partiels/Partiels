@@ -515,8 +515,8 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
     {
         if(args.size() < 3 || args.size() > 4)
         {
-            std::cerr << "Missing arguments! Expected two results file and one optional argument xml file!" << std::endl;
             return 1;
+            std::cerr << "Missing arguments! Expected two result files and one optional XML file!" << std::endl;
         }
         auto const arguments = args.size() == 4 ? args[3].resolveAsFile() : juce::File();
         auto const results = compareResultsFiles(args[1].resolveAsFile(), args[2].resolveAsFile(), arguments);
