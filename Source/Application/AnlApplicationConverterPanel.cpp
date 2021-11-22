@@ -26,8 +26,16 @@ Application::ConverterPanel::ConverterPanel()
                 })
 , mPropertyName("File", "The SDIF/JSON file to convert", nullptr)
 
-, mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", nullptr)
-, mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", nullptr)
+, mPropertyToSdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", [this](juce::String const& text)
+                       {
+                           juce::ignoreUnused(text);
+                           sdifAttributeUpdated();
+                       })
+, mPropertyToSdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String const& text)
+                        {
+                            juce::ignoreUnused(text);
+                            sdifAttributeUpdated();
+                        })
 , mPropertyToSdifColName("Column Name", "Define the name of the column to encode the results in the SDIF file", nullptr)
 , mPropertyToSdifExport("Convert to SDIF", "Convert the JSON file to a SDIF file", [&]()
                         {
@@ -94,12 +102,6 @@ Application::ConverterPanel::ConverterPanel()
             textEditor->setJustification(juce::Justification::right);
         }
     };
-    mPropertyToSdifFrame.entry.onTextChange = [this]()
-    {
-        auto const text = mPropertyToSdifFrame.entry.getText().toUpperCase();
-        mPropertyToSdifFrame.entry.setText(text, juce::NotificationType::dontSendNotification);
-        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifMatrix.entry.getText().isNotEmpty());
-    };
     mPropertyToSdifFrame.entry.setText("????", juce::NotificationType::dontSendNotification);
     mPropertyToSdifMatrix.entry.onEditorShow = [this]()
     {
@@ -108,12 +110,6 @@ Application::ConverterPanel::ConverterPanel()
             textEditor->setInputRestrictions(4);
             textEditor->setJustification(juce::Justification::right);
         }
-    };
-    mPropertyToSdifMatrix.entry.onTextChange = [this]()
-    {
-        auto const text = mPropertyToSdifMatrix.entry.getText().toUpperCase();
-        mPropertyToSdifMatrix.entry.setText(text, juce::NotificationType::dontSendNotification);
-        mPropertyToSdifExport.setEnabled(text.isNotEmpty() && mPropertyToSdifFrame.entry.getText().isNotEmpty());
     };
     mPropertyToSdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
 
@@ -137,6 +133,7 @@ Application::ConverterPanel::ConverterPanel()
     mInfos.setReadOnly(true);
     addAndMakeVisible(mInfos);
 
+    sdifAttributeUpdated();
     setFile({});
     setSize(300, 200);
 
@@ -371,6 +368,23 @@ void Application::ConverterPanel::setFile(juce::File const& file)
         mPropertyToJsonLoadInDocument.setVisible(false);
     }
     resized();
+}
+
+void Application::ConverterPanel::sdifAttributeUpdated()
+{
+    auto getFormattedText = [](juce::String text)
+    {
+        while(text.length() < 4)
+        {
+            text += "?";
+        }
+        return text.substring(0, 4).toUpperCase();
+    };
+    auto const matrixText = getFormattedText(mPropertyToSdifMatrix.entry.getText().toUpperCase());
+    mPropertyToSdifMatrix.entry.setText(matrixText, juce::NotificationType::dontSendNotification);
+    auto const frameText = getFormattedText(mPropertyToSdifFrame.entry.getText().toUpperCase());
+    mPropertyToSdifFrame.entry.setText(frameText, juce::NotificationType::dontSendNotification);
+    mPropertyToSdifExport.setEnabled(!matrixText.contains("?") && !frameText.contains("?"));
 }
 
 void Application::ConverterPanel::selectedFrameUpdated()

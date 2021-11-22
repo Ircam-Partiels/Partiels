@@ -29,6 +29,7 @@ namespace Application
     private:
         void setFile(juce::File const& file);
 
+        void sdifAttributeUpdated();
         void selectedFrameUpdated();
         void selectedMatrixUpdated();
         void selectedRowColumnUpdated();
