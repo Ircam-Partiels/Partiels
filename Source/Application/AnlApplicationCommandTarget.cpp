@@ -27,6 +27,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::desktopGlobalScaleFactor:
                 break;
         }
     };

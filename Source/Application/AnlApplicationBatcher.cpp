@@ -53,6 +53,7 @@ Application::Batcher::Batcher()
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::desktopGlobalScaleFactor:
                 break;
             case AttrType::exportOptions:
             {

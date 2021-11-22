@@ -26,6 +26,7 @@ Application::Interface::Loader::FileTable::FileTable()
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::desktopGlobalScaleFactor:
                 break;
         }
     };
@@ -201,6 +202,7 @@ Application::Interface::Loader::Loader()
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::desktopGlobalScaleFactor:
                 break;
             case AttrType::adaptationToSampleRate:
             {
@@ -367,6 +369,7 @@ Application::Interface::Interface()
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::desktopGlobalScaleFactor:
                 break;
             case AttrType::showInfoBubble:
             {

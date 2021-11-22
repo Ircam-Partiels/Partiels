@@ -46,6 +46,7 @@ Application::Exporter::Exporter()
             case AttrType::showInfoBubble:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::desktopGlobalScaleFactor:
                 break;
             case AttrType::exportOptions:
             {
