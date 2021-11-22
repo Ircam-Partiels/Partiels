@@ -12,7 +12,8 @@ namespace Application
     // clang-format off
     enum class AttrType : size_t
     {
-          windowState
+          desktopGlobalScaleFactor
+        , windowState
         , recentlyOpenedFilesList
         , currentDocumentFile
         , colourMode
@@ -23,7 +24,8 @@ namespace Application
     };
 
     using AttrContainer = Model::Container
-    < Model::Attr<AttrType::windowState, juce::String, Flag::basic>
+    < Model::Attr<AttrType::desktopGlobalScaleFactor, float, Flag::basic>
+    , Model::Attr<AttrType::windowState, juce::String, Flag::basic>
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
     , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
@@ -43,7 +45,8 @@ namespace Application
         Accessor()
         : Accessor(AttrContainer(
         {
-              {juce::String{}}
+              {1.0f}
+            , {juce::String{}}
             , {std::vector<juce::File>{}}
             , {juce::File{}}
             , {LookAndFeel::ColourChart::Mode::day}
@@ -75,7 +78,11 @@ namespace Application
                     return copy;
                 };
 
-                Anl::Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+                Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+            }
+            else if constexpr(type == AttrType::desktopGlobalScaleFactor)
+            {
+                Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, value_v>(std::clamp(value, 1.0f, 4.0f), notification);
             }
             else
             {
