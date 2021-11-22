@@ -94,6 +94,7 @@ Application::ConverterPanel::ConverterPanel()
     addChildComponent(mPropertyToSdifMatrix);
     addChildComponent(mPropertyToSdifColName);
     addChildComponent(mPropertyToSdifExport);
+    mPropertyToSdifExport.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
     mPropertyToSdifFrame.entry.onEditorShow = [this]()
     {
         if(auto* textEditor = mPropertyToSdifFrame.entry.getCurrentTextEditor())
@@ -122,6 +123,7 @@ Application::ConverterPanel::ConverterPanel()
     addChildComponent(mPropertyToJsonMaxValue);
     addChildComponent(mPropertyToJsonLoadInDocument);
     addChildComponent(mPropertyToJsonExport);
+    mPropertyToJsonExport.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
     mPropertyToJsonFrame.entry.setTextWhenNoChoicesAvailable(juce::translate("No frame available"));
     mPropertyToJsonMatrix.entry.setTextWhenNoChoicesAvailable(juce::translate("No matrix available"));
     mPropertyToJsonRow.entry.setTextWhenNoChoicesAvailable(juce::translate("No row available"));
