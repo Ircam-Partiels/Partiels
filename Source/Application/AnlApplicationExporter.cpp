@@ -27,6 +27,7 @@ Application::Exporter::Exporter()
 {
     addAndMakeVisible(mExporterPanel);
     addAndMakeVisible(mPropertyExport);
+    mPropertyExport.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
     addAndMakeVisible(mLoadingCircle);
     mComponentListener.onComponentResized = [this](juce::Component const&)
     {
