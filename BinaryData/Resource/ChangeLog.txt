@@ -1,6 +1,9 @@
 
 v1.0.1
 
+- Fix: Command-line option '--adat' is not well parsed (#183)
+- Fix: Command-line tools are dependent on graphical user interface parts of the application (#180)
+- Imp: Generate automatically file extension ptldoc with the command new (#179)
 - Fix: Floating windows prevent from closing the app with key shortcuts (#178)
 - Imp: Speed-up loading of track extra information from JSON files (#177)
 - Fix: When attempting to load a document or audio file, the user should be asked to save the current document only if another document has been selected (#176)
@@ -12,6 +15,7 @@ v1.0.1
 - Add: Support for drag and drop of analysis files from the file system to the application (#167)
 - Add: Allow to edit the unit of values when importing results files (#166)
 - Add: Allow to edit the default value range when importing results files (#165)
+- Add: Export results in SDIF file format (#164)
 
 v1.0.0
 
