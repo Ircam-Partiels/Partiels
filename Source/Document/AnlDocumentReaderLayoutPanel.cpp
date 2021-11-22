@@ -52,6 +52,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         mDirector.endAction(ActionState::newTransaction, juce::translate("Change Audio Reader Layout"));
         mAudioFileLayoutTable.onLayoutChanged();
     };
+    mApplyButton.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
 
     mResetButton.onClick = [this]()
     {
