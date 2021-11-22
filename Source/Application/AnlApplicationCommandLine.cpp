@@ -24,8 +24,8 @@ Application::CommandLine::CommandLine()
              auto const audioFile = args.getExistingFileForOption("-i|--input");
              auto const templateFile = args.getExistingFileForOption("-t|--template");
              auto const outputFile = args.getFileForOption("-o|--output").withFileExtension(Instance::getExtensionForDocumentFile());
-             auto const adaptToSampleRate = args.containsOption("-adapt");
-             
+             auto const adaptToSampleRate = args.containsOption("--adapt");
+
              auto parentDirectoryResult = outputFile.getParentDirectory().createDirectory();
              if(parentDirectoryResult.failed())
              {
@@ -91,7 +91,7 @@ Application::CommandLine::CommandLine()
                  fail("Could not find folder: " + outputDir.getFullPathName());
              }
 
-             auto const adaptToSampleRate = args.containsOption("-adapt");
+             auto const adaptToSampleRate = args.containsOption("--adapt");
 
              Options options;
              auto const format = args.getValueForOption("-f|--format");
