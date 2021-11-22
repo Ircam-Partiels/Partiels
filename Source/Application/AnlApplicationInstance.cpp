@@ -122,6 +122,12 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
                 break;
+            case AttrType::desktopGlobalScaleFactor:
+            {
+                auto const scale = acsr.getAttr<AttrType::desktopGlobalScaleFactor>();
+                juce::Desktop::getInstance().setGlobalScaleFactor(scale);
+            }
+            break;
             case AttrType::colourMode:
             {
                 mLookAndFeel->setColourChart({acsr.getAttr<AttrType::colourMode>()});
