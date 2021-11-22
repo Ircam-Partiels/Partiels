@@ -3,6 +3,7 @@ v1.0.1
 
 - Fix: SDIF conversion button is clickable even if the signatures are not valid (#184)
 - Fix: Command-line option '--adat' is not well parsed (#183)
+- Add: An interface to modify the desktop scale factor via the View menu (#182)
 - Fix: Command-line tools are dependent on graphical user interface parts of the application (#180)
 - Imp: Generate automatically file extension ptldoc with the command new (#179)
 - Fix: Floating windows prevent from closing the app with key shortcuts (#178)
