@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
+#include "../Document/AnlDocumentExecutor.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -11,9 +11,19 @@ namespace Application
     {
     public:
         CommandLine();
-        ~CommandLine() = default;
+        ~CommandLine();
 
-        static std::optional<int> tryToRun(juce::String const& commandLine);
+        bool isRunning() const;
+
+        static std::unique_ptr<CommandLine> createAndRun(juce::String const& commandLine);
+
+    private:
+        void runUnitTests();
+        void compareFiles(juce::ArgumentList const& args);
+
+        static void sendQuitSignal(int value);
+
+        std::unique_ptr<Document::Executor> mExecutor;
     };
 } // namespace Application
 

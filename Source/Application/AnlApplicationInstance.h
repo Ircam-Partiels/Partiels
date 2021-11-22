@@ -4,6 +4,7 @@
 #include "AnlApplicationAudioReader.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
+#include "AnlApplicationCommandLine.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationLookAndFeel.h"
@@ -99,10 +100,11 @@ namespace Application
         std::unique_ptr<AudioSettings> mAudioSettings;
         std::unique_ptr<Exporter> mExporter;
         std::unique_ptr<Batcher> mBatcher;
-
         std::unique_ptr<Track::Loader::ArgumentSelector> mTrackLoader;
+        std::unique_ptr<CommandLine> mCommandLine;
 
         std::atomic<bool> mIsPluginListReady{true};
+
         JUCE_DECLARE_WEAK_REFERENCEABLE(Instance)
     };
 } // namespace Application

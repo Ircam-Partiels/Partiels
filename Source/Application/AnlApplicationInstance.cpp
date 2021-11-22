@@ -1,5 +1,4 @@
 #include "AnlApplicationInstance.h"
-#include "AnlApplicationCommandLine.h"
 #include "AnlApplicationTools.h"
 #include <TranslationsData.h>
 
@@ -34,11 +33,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     anlDebug("Application", "Begin...");
     anlDebug("Application", "Command line '" + commandLine + "'");
 
-    auto const cmdResult = CommandLine::tryToRun(commandLine);
-    if(cmdResult.has_value())
+    mCommandLine = CommandLine::createAndRun(commandLine);
+    if(mCommandLine != nullptr)
     {
-        setApplicationReturnValue(*cmdResult);
-        quit();
         return;
     }
 
@@ -201,6 +198,21 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 void Application::Instance::systemRequestedQuit()
 {
     anlDebug("Application", "Begin...");
+    if(mCommandLine != nullptr && mCommandLine->isRunning())
+    {
+        anlDebug("Application", "Delayed...");
+        juce::WeakReference<Instance> weakReference(this);
+        juce::Timer::callAfterDelay(500, [=, this]()
+                                    {
+                                        if(weakReference.get() == nullptr)
+                                        {
+                                            return;
+                                        }
+                                        systemRequestedQuit();
+                                    });
+        return;
+    }
+
     if(mApplicationAccessor != nullptr)
     {
         mApplicationAccessor->setAttr<AttrType::currentDocumentFile>(mDocumentFileBased->getFile(), NotificationType::synchronous);
@@ -243,6 +255,11 @@ void Application::Instance::systemRequestedQuit()
 void Application::Instance::shutdown()
 {
     anlDebug("Application", "Begin...");
+    if(mCommandLine != nullptr)
+    {
+        mCommandLine.reset();
+        return;
+    }
 
     if(mApplicationAccessor != nullptr)
     {

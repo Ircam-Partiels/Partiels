@@ -3,116 +3,6 @@
 
 ANALYSE_FILE_BEGIN
 
-static juce::Result createAndSave(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputFile, bool adaptationToSampleRate)
-{
-    anlDebug("CommandLine", "Begin creation...");
-    juce::AudioFormatManager audioFormatManager;
-    audioFormatManager.registerBasicFormats();
-    if(std::none_of(audioFormatManager.begin(), audioFormatManager.end(), [&](auto* audioFormat)
-                    {
-                        return audioFormat != nullptr && audioFormat->canHandleFile(audioFile);
-                    }))
-    {
-        return juce::Result::fail(juce::translate("The audio file FLNM is not supported!").replace("FLNM", audioFile.getFileName()));
-    }
-
-    auto fileResult = Document::FileBased::parse(templateFile);
-    if(fileResult.index() == 1_z)
-    {
-        return *std::get_if<1>(&fileResult);
-    }
-    auto xml = std::move(*std::get_if<0>(&fileResult));
-
-    auto parentDirectoryResult = outputFile.getParentDirectory().createDirectory();
-    if(parentDirectoryResult.failed())
-    {
-        return parentDirectoryResult;
-    }
-
-    Document::Accessor documentAccessor;
-    documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
-    Document::FileBased::loadTemplate(documentAccessor, *xml.get(), adaptationToSampleRate);
-    return Document::FileBased::saveTo(documentAccessor, outputFile);
-}
-
-static juce::Result analyzeAndExport(juce::File const& audioFile, juce::File const& templateFile, juce::File const& outputDir, Document::Exporter::Options const& options, bool adaptationToSampleRate, juce::String const& identifier)
-{
-    anlDebug("CommandLine", "Begin analysis...");
-    auto* messageManager = juce::MessageManager::getInstanceWithoutCreating();
-    if(messageManager == nullptr)
-    {
-        return juce::Result::fail("Message manager doesn't exist!");
-    }
-
-    Application::LookAndFeel lookAndFeel;
-    juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
-
-    if(options.useAutoSize)
-    {
-        return juce::Result::fail(juce::translate("The auto-size option is not supported by the command-line interface!"));
-    }
-
-    anlDebug("CommandLine", "Register audio formats...");
-    juce::AudioFormatManager audioFormatManager;
-    audioFormatManager.registerBasicFormats();
-    if(std::none_of(audioFormatManager.begin(), audioFormatManager.end(), [&](auto* audioFormat)
-                    {
-                        return audioFormat != nullptr && audioFormat->canHandleFile(audioFile);
-                    }))
-    {
-        return juce::Result::fail(juce::translate("The audio file FLNM is not supported!").replace("FLNM", audioFile.getFileName()));
-    }
-
-    anlDebug("CommandLine", "Preparing document...");
-    juce::UndoManager undoManager;
-    Document::Accessor documentAccessor;
-    Document::Director documentDirector(documentAccessor, audioFormatManager, undoManager);
-    Document::FileBased documentFileBased(documentDirector, Application::Instance::getExtensionForDocumentFile(), Application::Instance::getWildCardForDocumentFile(), "", "");
-
-    anlDebug("CommandLine", "Loading audio file...");
-    documentAccessor.setAttr<Document::AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
-
-    anlDebug("CommandLine", "Loading template file...");
-    auto const result = documentFileBased.loadTemplate(templateFile, adaptationToSampleRate);
-    if(result.failed())
-    {
-        return result;
-    }
-    documentAccessor.getAcsr<Document::AcsrType::timeZoom>().setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, std::numeric_limits<double>::max()}, NotificationType::synchronous);
-
-    auto const trackAcsrs = documentAccessor.getAcsrs<Document::AcsrType::tracks>();
-    if(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-                   {
-                       return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
-                   }))
-    {
-        return juce::Result::fail(juce::translate("Error"));
-    }
-
-    for(auto trackAcsr : trackAcsrs)
-    {
-        auto trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
-        std::fill(trackChannelsLayout.begin(), trackChannelsLayout.end(), true);
-        trackAcsr.get().setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
-    }
-
-    anlDebug("CommandLine", "Analysing file...");
-    while(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
-                      {
-                          auto const& processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
-                          return std::get<0>(processing) || std::get<2>(processing);
-                      }))
-    {
-        messageManager->runDispatchLoopUntil(2);
-    }
-
-    anlDebug("CommandLine", "Exporting results...");
-    std::atomic<bool> shouldAbort{false};
-    auto const results = Document::Exporter::toFile(documentAccessor, outputDir, audioFile.getFileNameWithoutExtension() + " ", identifier, options, shouldAbort, nullptr);
-    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-    return results;
-}
-
 Application::CommandLine::CommandLine()
 {
     addHelpCommand("--help|-h", "Usage:", false);
@@ -128,18 +18,35 @@ Application::CommandLine::CommandLine()
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
          "",
          "",
-         [](juce::ArgumentList const& args)
+         [this](juce::ArgumentList const& args)
          {
              anlDebug("CommandLine", "Parsing arguments...");
              auto const audioFile = args.getExistingFileForOption("-i|--input");
              auto const templateFile = args.getExistingFileForOption("-t|--template");
              auto const outputFile = args.getFileForOption("-o|--output").withFileExtension(Instance::getExtensionForDocumentFile());
-             auto const adaptationToSampleRate = args.containsOption("-adapt");
+             auto const adaptToSampleRate = args.containsOption("-adapt");
+             
+             auto parentDirectoryResult = outputFile.getParentDirectory().createDirectory();
+             if(parentDirectoryResult.failed())
+             {
+                 fail(parentDirectoryResult.getErrorMessage());
+             }
 
-             auto const result = createAndSave(audioFile, templateFile, outputFile, adaptationToSampleRate);
+             mExecutor = std::make_unique<Document::Executor>();
+             if(mExecutor == nullptr)
+             {
+                 fail("Cannot allocate executor!");
+             }
+             auto result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
              if(result.failed())
              {
-                 juce::ConsoleApplication::fail(result.getErrorMessage());
+                 fail(result.getErrorMessage());
+             }
+
+             result = mExecutor->saveTo(outputFile);
+             if(result.failed())
+             {
+                 fail(result.getErrorMessage());
              }
          }});
     addCommand(
@@ -163,7 +70,7 @@ Application::CommandLine::CommandLine()
          "--colname <string> Defines the name of the column (optional with the sdif format).\n\t"
          "",
          "",
-         [](juce::ArgumentList const& args)
+         [this](juce::ArgumentList const& args)
          {
              anlDebug("CommandLine", "Parsing arguments...");
              using Options = Document::Exporter::Options;
@@ -176,15 +83,15 @@ Application::CommandLine::CommandLine()
                  auto const result = outputDir.createDirectory();
                  if(result.failed())
                  {
-                     juce::ConsoleApplication::fail(result.getErrorMessage());
+                     fail(result.getErrorMessage());
                  }
              }
              if(!outputDir.isDirectory())
              {
-                 juce::ConsoleApplication::fail("Could not find folder: " + outputDir.getFullPathName());
+                 fail("Could not find folder: " + outputDir.getFullPathName());
              }
 
-             auto const adaptationToSampleRate = args.containsOption("-adapt");
+             auto const adaptToSampleRate = args.containsOption("-adapt");
 
              Options options;
              auto const format = args.getValueForOption("-f|--format");
@@ -195,24 +102,24 @@ Application::CommandLine::CommandLine()
                  if(xml == nullptr)
                  {
                      auto const result = juce::Result::fail(juce::translate("The options file FLNM cannot be parsed!").replace("FLNM", optionsFile.getFileName()));
-                     juce::ConsoleApplication::fail(result.getErrorMessage());
+                     fail(result.getErrorMessage());
                  }
 
                  options = XmlParser::fromXml(*xml, "exportOptions", options);
              }
              else if(!args.containsOption("-f|--format"))
              {
-                 juce::ConsoleApplication::fail("Format not specified! Available formats are jpeg, png, csv, json or cue.");
+                 fail("Format not specified! Available formats are jpeg, png, csv, json or cue.");
              }
              else if(format == "jpeg" || format == "png")
              {
                  if(!args.containsOption("-w|--width"))
                  {
-                     juce::ConsoleApplication::fail("Width not specified! Specifiy the width of the image in pixels.");
+                     fail("Width not specified! Specifiy the width of the image in pixels.");
                  }
                  if(!args.containsOption("-h|--height"))
                  {
-                     juce::ConsoleApplication::fail("Height not specified! Specifiy the height of the image in pixels.");
+                     fail("Height not specified! Specifiy the height of the image in pixels.");
                  }
 
                  options.format = format == "jpeg" ? Options::Format::jpeg : Options::Format::png;
@@ -239,11 +146,11 @@ Application::CommandLine::CommandLine()
                      options.format = Options::Format::sdif;
                      if(!args.containsOption("--frame"))
                      {
-                         juce::ConsoleApplication::fail("Frame signature not specified! Specifiy the frame signature of the SDIf file.");
+                         fail("Frame signature not specified! Specifiy the frame signature of the SDIf file.");
                      }
                      if(!args.containsOption("--matrix"))
                      {
-                         juce::ConsoleApplication::fail("Matrix signature not specified! Specifiy the matrix signature of the SDIf file.");
+                         fail("Matrix signature not specified! Specifiy the matrix signature of the SDIf file.");
                      }
                  }
                  options.ignoreGridResults = args.containsOption("--nogrids");
@@ -260,13 +167,36 @@ Application::CommandLine::CommandLine()
              }
              else
              {
-                 juce::ConsoleApplication::fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv or json.");
+                 fail("Format '" + format + "' unsupported! Available formats are jpeg, png, csv or json.");
              }
 
-             auto const result = analyzeAndExport(audioFile, templateFile, outputDir, options, adaptationToSampleRate, "");
+             options.useAutoSize = false;
+
+             mExecutor = std::make_unique<Document::Executor>();
+             if(mExecutor == nullptr)
+             {
+                 fail("Cannot allocate executor!");
+             }
+             mExecutor->onEnded = [=, this]()
+             {
+                 auto const result = mExecutor->exportTo(outputDir, audioFile.getFileNameWithoutExtension() + " ", options, "");
+                 if(result.failed())
+                 {
+                     sendQuitSignal(1);
+                 }
+                 sendQuitSignal(0);
+             };
+
+             auto result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
              if(result.failed())
              {
-                 juce::ConsoleApplication::fail(result.getErrorMessage());
+                 fail(result.getErrorMessage());
+             }
+
+             result = mExecutor->launch();
+             if(result.failed())
+             {
+                 fail(result.getErrorMessage());
              }
          }});
     addCommand(
@@ -330,7 +260,7 @@ Application::CommandLine::CommandLine()
              auto const result = SdifConverter::toJson(inputFile, outputFile, frameSig, matrixSig, row < 0 ? std::optional<size_t>{} : static_cast<size_t>(row), column < 0 ? std::optional<size_t>{} : static_cast<size_t>(column), extra);
              if(result.failed())
              {
-                 juce::ConsoleApplication::fail(result.getErrorMessage());
+                 fail(result.getErrorMessage());
              }
          }});
     addCommand(
@@ -363,40 +293,96 @@ Application::CommandLine::CommandLine()
              auto const result = SdifConverter::fromJson(inputFile, outputFile, frameSig, matrixSig, colname);
              if(result.failed())
              {
-                 juce::ConsoleApplication::fail(result.getErrorMessage());
+                 fail(result.getErrorMessage());
              }
          }});
 }
 
-static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::File const& generatedFile, juce::File const& arguments)
+Application::CommandLine::~CommandLine()
 {
+    anlWeakAssert(!isRunning());
+}
+
+bool Application::CommandLine::isRunning() const
+{
+    return mExecutor != nullptr && mExecutor->isRunning();
+}
+
+void Application::CommandLine::sendQuitSignal(int value)
+{
+    Instance::get().setApplicationReturnValue(value);
+    Instance::get().systemRequestedQuit();
+}
+
+void Application::CommandLine::runUnitTests()
+{
+    std::unique_ptr<juce::MessageManager> mm(juce::MessageManager::getInstance());
+    juce::UnitTestRunner unitTestRunner;
+    unitTestRunner.runAllTests();
+
+    int failures = 0;
+    for(int i = 0; i < unitTestRunner.getNumResults(); ++i)
+    {
+        if(auto* result = unitTestRunner.getResult(i))
+        {
+            failures += result->failures;
+        }
+    }
+    if(failures > 0)
+    {
+        fail("Unit Tests Failed!");
+    }
+}
+
+void Application::CommandLine::compareFiles(juce::ArgumentList const& args)
+{
+    if(args.size() < 3 || args.size() > 4)
+    {
+        fail("Missing arguments! Expected two result files and one optional XML file!");
+    }
+    auto const expectedFile = args[1].resolveAsFile();
+    if(!expectedFile.existsAsFile())
+    {
+        fail("Could not find file:" + expectedFile.getFullPathName());
+    }
+    auto const generatedFile = args[2].resolveAsFile();
+    if(!generatedFile.existsAsFile())
+    {
+        fail("Could not find file:" + generatedFile.getFullPathName());
+    }
+    auto const argumentsFile = args.size() == 4 ? args[3].resolveAsFile() : juce::File();
+    if(argumentsFile != juce::File() && !argumentsFile.existsAsFile())
+    {
+        fail("Could not find file:" + argumentsFile.getFullPathName());
+    }
+
     std::atomic<bool> const shouldAbort{false};
     std::atomic<float> advancement{0.0f};
     Track::FileInfo expectedTrackInfo;
     expectedTrackInfo.file = expectedFile;
     Track::FileInfo generatedTrackInfo;
     generatedTrackInfo.file = generatedFile;
-    if(arguments != juce::File{})
+    if(argumentsFile != juce::File{})
     {
-        auto xml = juce::XmlDocument::parse(arguments);
+        auto xml = juce::XmlDocument::parse(argumentsFile);
         if(xml == nullptr)
         {
-            return juce::Result::fail("Cannot parse arguments!");
+            fail("Cannot parse arguments!");
         }
-        auto const args = XmlParser::fromXml(*xml.get(), "args", juce::StringPairArray{});
-        generatedTrackInfo.args = args;
-        expectedTrackInfo.args = args;
+        auto const xmlArgs = XmlParser::fromXml(*xml.get(), "args", juce::StringPairArray{});
+        generatedTrackInfo.args = xmlArgs;
+        expectedTrackInfo.args = xmlArgs;
     }
 
     auto const expectedResults = Track::Loader::loadFromFile(expectedTrackInfo, shouldAbort, advancement);
     auto const generatedResults = Track::Loader::loadFromFile(generatedTrackInfo, shouldAbort, advancement);
     if(expectedResults.index() == 1_z)
     {
-        return juce::Result::fail(*std::get_if<juce::String>(&expectedResults));
+        fail(*std::get_if<juce::String>(&expectedResults));
     }
     if(generatedResults.index() == 1_z)
     {
-        return juce::Result::fail(*std::get_if<juce::String>(&generatedResults));
+        fail(*std::get_if<juce::String>(&generatedResults));
     }
     auto const expectedTrackResults = *std::get_if<Track::Results>(&expectedResults);
     auto const generatedTrackResults = *std::get_if<Track::Results>(&generatedResults);
@@ -404,9 +390,9 @@ static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::Fi
     {
         if(!generatedTrackResults.isEmpty())
         {
-            return juce::Result::fail("Different types!");
+            fail("Different types!");
         }
-        return juce::Result::ok();
+        return;
     }
 
     auto timeAndDurationAreEquivalent = [](auto const& lhs, auto const& rhs)
@@ -443,7 +429,7 @@ static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::Fi
                                  return timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs) == std::get<2>(rhs);
                              }))
     {
-        return juce::Result::fail("Different results!");
+        fail("Different results!");
     }
 
     if(!resultsAreEquivalent(expectedTrackResults.getPoints(), generatedTrackResults.getPoints(), [&](Track::Results::Point const& lhs, Track::Results::Point const& rhs)
@@ -455,7 +441,7 @@ static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::Fi
                                  return false;
                              }))
     {
-        return juce::Result::fail("Different results!");
+        fail("Different results!");
     }
 
     if(!resultsAreEquivalent(expectedTrackResults.getColumns(), generatedTrackResults.getColumns(), [&](Track::Results::Column const& lhs, Track::Results::Column const& rhs)
@@ -470,24 +456,30 @@ static juce::Result compareResultsFiles(juce::File const& expectedFile, juce::Fi
                                  return false;
                              }))
     {
-        return juce::Result::fail("Different results!");
+        fail("Different results!");
     }
-    return juce::Result::ok();
 }
 
-std::optional<int> Application::CommandLine::tryToRun(juce::String const& commandLine)
+std::unique_ptr<Application::CommandLine> Application::CommandLine::createAndRun(juce::String const& commandLine)
 {
     if(commandLine.isEmpty() || commandLine.startsWith("-NSDocumentRevisionsDebugMode"))
     {
         anlDebug("Application", "Command line is empty or contains '-NSDocumentRevisionsDebugMode'");
-        return {};
+        return nullptr;
     }
 
     juce::ArgumentList const args("Partiels", commandLine);
     if(!args[0].isLongOption() && !args[0].isShortOption())
     {
         anlDebug("Application", "Command line doesn't contains any option");
-        return {};
+        return nullptr;
+    }
+
+    auto cli = std::make_unique<CommandLine>();
+    if(cli == nullptr)
+    {
+        anlDebug("Application", "Command line allocation failed!");
+        return nullptr;
     }
 
 #if JUCE_MAC
@@ -496,41 +488,34 @@ std::optional<int> Application::CommandLine::tryToRun(juce::String const& comman
 
     if(args[0].isLongOption("unit-tests"))
     {
-        std::unique_ptr<juce::MessageManager> mm(juce::MessageManager::getInstance());
-        juce::UnitTestRunner unitTestRunner;
-        unitTestRunner.runAllTests();
-
-        int failures = 0;
-        for(int i = 0; i < unitTestRunner.getNumResults(); ++i)
-        {
-            if(auto* result = unitTestRunner.getResult(i))
-            {
-                failures += result->failures;
-            }
-        }
-        return failures;
+        anlDebug("Application", "Running as CLI - Unit Tests");
+        auto const result = cli->invokeCatchingFailures([&]()
+                                                        {
+                                                            cli->runUnitTests();
+                                                            return 0;
+                                                        });
+        sendQuitSignal(result);
     }
-
-    if(args[0].isLongOption("compare-files"))
+    else if(args[0].isLongOption("compare-files"))
     {
-        if(args.size() < 3 || args.size() > 4)
-        {
-            return 1;
-            std::cerr << "Missing arguments! Expected two result files and one optional XML file!" << std::endl;
-        }
-        auto const arguments = args.size() == 4 ? args[3].resolveAsFile() : juce::File();
-        auto const results = compareResultsFiles(args[1].resolveAsFile(), args[2].resolveAsFile(), arguments);
-        if(results.failed())
-        {
-            std::cerr << results.getErrorMessage() << std::endl;
-            return 1;
-        }
-        return 0;
+        anlDebug("Application", "Running as CLI - Compare Files");
+        auto const result = cli->invokeCatchingFailures([&]()
+                                                        {
+                                                            cli->compareFiles(args);
+                                                            return 0;
+                                                        });
+        sendQuitSignal(result);
     }
-
-    anlDebug("Application", "Running as CLI");
-    CommandLine cmd;
-    return cmd.findAndRunCommand(args);
+    else
+    {
+        anlDebug("Application", "Running as CLI - Default");
+        auto const result = cli->findAndRunCommand(args);
+        if(!cli->isRunning())
+        {
+            sendQuitSignal(result);
+        }
+    }
+    return cli;
 }
 
 ANALYSE_FILE_END
