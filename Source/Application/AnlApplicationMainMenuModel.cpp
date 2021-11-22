@@ -105,7 +105,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
                                        accessor.setAttr<AttrType::colourMode>(entry.first, NotificationType::synchronous);
                                    });
         }
-        menu.addSubMenu("Theme", colourModeMenu);
+        menu.addSubMenu(juce::translate("Theme"), colourModeMenu);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewZoomIn);
         menu.addCommandItem(&commandManager, CommandIDs::viewZoomOut);
