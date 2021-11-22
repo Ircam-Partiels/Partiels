@@ -64,14 +64,29 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
     {
         if(mApplyButton.isEnabled())
         {
-            if(AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Apply audio reader modification?", "The audio reader layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-            {
-                mApplyButton.onClick();
-            }
-            else
-            {
-                mResetButton.onClick();
-            }
+            auto const options = juce::MessageBoxOptions()
+                                     .withIconType(juce::AlertWindow::QuestionIcon)
+                                     .withTitle(juce::translate("Apply audio reader modification?"))
+                                     .withMessage(juce::translate("The audio reader layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                                     .withButton(juce::translate("Apply"))
+                                     .withButton(juce::translate("Discard"));
+
+            juce::WeakReference<juce::Component> weakReference(this);
+            juce::AlertWindow::showAsync(options, [=, this](int result)
+                                         {
+                                             if(weakReference.get() == nullptr)
+                                             {
+                                                 return;
+                                             }
+                                             if(result == 0)
+                                             {
+                                                 mResetButton.onClick();
+                                             }
+                                             else
+                                             {
+                                                 mApplyButton.onClick();
+                                             }
+                                         });
         }
         return true;
     };
