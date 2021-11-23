@@ -604,11 +604,11 @@ Zoom::Range Track::Tools::getValueRange(std::vector<Results::Points> const& resu
                                                                                }
                                                                                if(!std::get<2>(lhs).has_value())
                                                                                {
-                                                                                   return false;
+                                                                                   return true;
                                                                                }
                                                                                return *std::get<2>(lhs) < *std::get<2>(rhs);
                                                                            });
-                               if(min == channel.cend() || max == channel.cend())
+                               if(min == channel.cend() || max == channel.cend() || !std::get<2>(*min).has_value() || !std::get<2>(*max).has_value())
                                {
                                    return range;
                                }
