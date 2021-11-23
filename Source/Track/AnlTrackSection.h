@@ -24,6 +24,7 @@ namespace Track
         ~Section() override;
 
         juce::Rectangle<int> getPlotBounds() const;
+        void setResizable(bool state);
 
         // juce::Component
         void resized() override;

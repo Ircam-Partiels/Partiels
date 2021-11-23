@@ -78,6 +78,11 @@ juce::Rectangle<int> Track::Section::getPlotBounds() const
     return mPlot.getBounds();
 }
 
+void Track::Section::setResizable(bool state)
+{
+    mResizerBar.setEnabled(state);
+}
+
 void Track::Section::resized()
 {
     mResizerBar.setBounds(getLocalBounds().removeFromBottom(2).reduced(2, 0));
