@@ -180,6 +180,7 @@ Application::Interface::Loader::Loader()
             case Document::AttrType::viewport:
             case Document::AttrType::path:
             case Document::AttrType::grid:
+            case Document::AttrType::autoresize:
             case Document::AttrType::samplerate:
                 break;
         }

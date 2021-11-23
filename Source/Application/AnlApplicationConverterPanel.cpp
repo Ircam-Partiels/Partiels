@@ -183,6 +183,7 @@ Application::ConverterPanel::ConverterPanel()
             case Document::AttrType::viewport:
             case Document::AttrType::path:
             case Document::AttrType::grid:
+            case Document::AttrType::autoresize:
             case Document::AttrType::samplerate:
                 break;
         }
