@@ -49,7 +49,9 @@ namespace Document
         void globalFocusChanged(juce::Component* focusedComponent) override;
 
         void updateLayout();
-        void updateExpandButton();
+        void updateHeights(bool force = false);
+        void updateExpandState();
+        void resizeHeader(juce::Rectangle<int>& bounds);
         void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
         void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
 

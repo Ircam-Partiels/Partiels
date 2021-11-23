@@ -141,44 +141,20 @@ Document::Section::Section(Director& director)
     };
 
     addAndMakeVisible(mResizeLayoutButton);
+    mResizeLayoutButton.setToggleable(true);
     mResizeLayoutButton.setTooltip(juce::translate("Optimize the height of groups and tracks to fit the height of the document"));
     mResizeLayoutButton.onClick = [this]()
     {
-        auto height = mViewport.getHeight();
-        auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
-        auto const numElements = std::accumulate(groupAcsrs.cbegin(), groupAcsrs.cend(), 0_z, [this](auto v, auto const groupAcsr)
-                                                 {
-                                                     auto const expanded = groupAcsr.get().template getAttr<Group::AttrType::expanded>();
-                                                     auto const layout = copy_with_erased_if(groupAcsr.get().template getAttr<Group::AttrType::layout>(), [this](auto const& identifier)
-                                                                                             {
-                                                                                                 return !Tools::hasTrackAcsr(mAccessor, identifier);
-                                                                                             });
-                                                     return v + 1_z + (expanded ? layout.size() : 0_z);
-                                                 });
-        auto const elementHeight = static_cast<float>(height) / static_cast<float>(numElements);
-        auto remainder = 0.0f;
-        for(auto groupAcsr : groupAcsrs)
+        auto const isShiftDown = juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isShiftDown();
+        auto const autoresize = mAccessor.getAttr<AttrType::autoresize>();
+        if(isShiftDown && !autoresize)
         {
-            auto const groupHeight = std::min(static_cast<int>(std::round(elementHeight - remainder)), height);
-            remainder = elementHeight - static_cast<float>(groupHeight);
-            height -= groupHeight;
-            groupAcsr.get().setAttr<Group::AttrType::height>(groupHeight - 1, NotificationType::synchronous);
-            auto const expanded = groupAcsr.get().getAttr<Group::AttrType::expanded>();
-            if(expanded)
-            {
-                auto const layout = copy_with_erased_if(groupAcsr.get().template getAttr<Group::AttrType::layout>(), [this](auto const& identifier)
-                                                        {
-                                                            return !Tools::hasTrackAcsr(mAccessor, identifier);
-                                                        });
-                for(auto const& identifier : layout)
-                {
-                    auto& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-                    auto const trackHeight = std::min(static_cast<int>(std::round(elementHeight - remainder)), height);
-                    remainder = elementHeight - static_cast<float>(trackHeight);
-                    height -= groupHeight;
-                    trackAcsr.setAttr<Track::AttrType::height>(trackHeight - 1, NotificationType::synchronous);
-                }
-            }
+            updateHeights(true);
+            mResizeLayoutButton.setToggleState(false, juce::NotificationType::dontSendNotification);
+        }
+        else if(!isShiftDown)
+        {
+            mAccessor.setAttr<AttrType::autoresize>(!autoresize, NotificationType::synchronous);
         }
     };
 
@@ -267,12 +243,39 @@ Document::Section::Section(Director& director)
                 lookAndFeelChanged();
             }
             break;
+            case AttrType::autoresize:
+            {
+                auto const autoresize = acsr.getAttr<AttrType::autoresize>();
+                for(auto& groupSection : mGroupSections)
+                {
+                    if(groupSection.second != nullptr)
+                    {
+                        groupSection.second->setResizable(!autoresize);
+                    }
+                }
+                if(autoresize)
+                {
+                    // It ensures asynchronous access to the model even if this is not the best approach.
+                    juce::WeakReference<juce::Component> weakReference(this);
+                    juce::MessageManager::callAsync([=, this]()
+                                                    {
+                                                        if(weakReference.get() == nullptr)
+                                                        {
+                                                            return;
+                                                        }
+                                                        updateHeights();
+                                                    });
+                }
+                mResizeLayoutButton.setToggleState(autoresize, juce::NotificationType::dontSendNotification);
+            }
+            break;
             case AttrType::path:
             {
                 auto const file = acsr.getAttr<AttrType::path>();
                 mDocumentName.setButtonText(file != juce::File{} ? file.getFileName() : juce::translate("Untitled"));
                 mDocumentName.setTooltip(file != juce::File{} ? file.getFullPathName() : juce::translate("Document not saved"));
-                resized();
+                auto bounds = getLocalBounds();
+                resizeHeader(bounds);
             }
             break;
             case AttrType::layout:
@@ -294,7 +297,18 @@ Document::Section::Section(Director& director)
                                                                                      juce::ignoreUnused(groupAcsr);
                                                                                      if(groupAttribute == Group::AttrType::expanded)
                                                                                      {
-                                                                                         updateExpandButton();
+                                                                                         updateExpandState();
+                                                                                         // Using a delay ensures that the group and track size animations are preserved.
+                                                                                         // It also ensures asynchronous access to the model even if this is not the best approach.
+                                                                                         juce::WeakReference<juce::Component> weakReference(this);
+                                                                                         juce::Timer::callAfterDelay(350, [=, this]()
+                                                                                                                     {
+                                                                                                                         if(weakReference.get() == nullptr)
+                                                                                                                         {
+                                                                                                                             return;
+                                                                                                                         }
+                                                                                                                         updateHeights();
+                                                                                                                     });
                                                                                      }
                                                                                  });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
@@ -317,7 +331,7 @@ Document::Section::Section(Director& director)
             {
                 mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
                 anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
-                updateExpandButton();
+                updateExpandState();
             }
             break;
             case AcsrType::tracks:
@@ -344,13 +358,14 @@ Document::Section::Section(Director& director)
 
     mViewport.onVisibleAreaChanged = [this](juce::Rectangle<int> const& area)
     {
-        juce::WeakReference<juce::Component> target(this);
+        juce::WeakReference<juce::Component> weakReference(this);
         juce::MessageManager::callAsync([=, point = area.getTopLeft(), this]
                                         {
-                                            if(target.get() != nullptr)
+                                            if(weakReference == nullptr)
                                             {
-                                                mAccessor.setAttr<AttrType::viewport>(point, NotificationType::synchronous);
+                                                return;
                                             }
+                                            mAccessor.setAttr<AttrType::viewport>(point, NotificationType::synchronous);
                                         });
     };
 
@@ -366,23 +381,25 @@ Document::Section::~Section()
     mAccessor.removeListener(mListener);
 }
 
+void Document::Section::resizeHeader(juce::Rectangle<int>& bounds)
+{
+    auto header = bounds.removeFromTop(40);
+    mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
+    header.removeFromLeft(5);
+    header = header.withRight(mTransportDisplay.getX());
+    mReaderLayoutButton.setBounds(header.removeFromLeft(24).withSizeKeepingCentre(24, 24));
+    header.removeFromLeft(4);
+    auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
+    auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
+    auto const buttonWidth = std::min(textWidth, header.getWidth());
+    mDocumentName.setBounds(header.removeFromLeft(buttonWidth).withSizeKeepingCentre(buttonWidth, 24));
+}
+
 void Document::Section::resized()
 {
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
     auto bounds = getLocalBounds();
-
-    {
-        auto header = bounds.removeFromTop(40);
-        mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-        header.removeFromLeft(5);
-        header = header.withRight(mTransportDisplay.getX());
-        mReaderLayoutButton.setBounds(header.removeFromLeft(24).withSizeKeepingCentre(24, 24));
-        header.removeFromLeft(4);
-        auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
-        auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
-        auto const buttonWidth = std::min(textWidth, header.getWidth());
-        mDocumentName.setBounds(header.removeFromLeft(buttonWidth).withSizeKeepingCentre(buttonWidth, 24));
-    }
+    resizeHeader(bounds);
 
     {
         auto topPart = bounds.removeFromTop(28);
@@ -407,6 +424,7 @@ void Document::Section::resized()
 
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
+    updateHeights();
 }
 
 void Document::Section::paint(juce::Graphics& g)
@@ -450,11 +468,55 @@ void Document::Section::lookAndFeelChanged()
             }
             break;
         }
-        updateExpandButton();
+        updateExpandState();
     }
 }
 
-void Document::Section::updateExpandButton()
+void Document::Section::updateHeights(bool force)
+{
+    if(mViewport.getHeight() <= 0 || (!mAccessor.getAttr<AttrType::autoresize>() && !force))
+    {
+        return;
+    }
+    auto height = mViewport.getHeight();
+    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    auto const numElements = std::accumulate(groupAcsrs.cbegin(), groupAcsrs.cend(), 0_z, [this](auto v, auto const groupAcsr)
+                                             {
+                                                 auto const expanded = groupAcsr.get().template getAttr<Group::AttrType::expanded>();
+                                                 auto const layout = copy_with_erased_if(groupAcsr.get().template getAttr<Group::AttrType::layout>(), [this](auto const& identifier)
+                                                                                         {
+                                                                                             return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                                                                         });
+                                                 return v + 1_z + (expanded ? layout.size() : 0_z);
+                                             });
+    auto const elementHeight = static_cast<float>(height) / static_cast<float>(numElements);
+    auto remainder = 0.0f;
+    for(auto groupAcsr : groupAcsrs)
+    {
+        auto const groupHeight = std::min(static_cast<int>(std::round(elementHeight - remainder)), height);
+        remainder = elementHeight - static_cast<float>(groupHeight);
+        height -= groupHeight;
+        groupAcsr.get().setAttr<Group::AttrType::height>(groupHeight - 1, NotificationType::synchronous);
+        auto const expanded = groupAcsr.get().getAttr<Group::AttrType::expanded>();
+        if(expanded)
+        {
+            auto const layout = copy_with_erased_if(groupAcsr.get().template getAttr<Group::AttrType::layout>(), [this](auto const& identifier)
+                                                    {
+                                                        return !Tools::hasTrackAcsr(mAccessor, identifier);
+                                                    });
+            for(auto const& identifier : layout)
+            {
+                auto& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+                auto const trackHeight = std::min(static_cast<int>(std::round(elementHeight - remainder)), height);
+                remainder = elementHeight - static_cast<float>(trackHeight);
+                height -= trackHeight;
+                trackAcsr.setAttr<Track::AttrType::height>(trackHeight - 1, NotificationType::synchronous);
+            }
+        }
+    }
+}
+
+void Document::Section::updateExpandState()
 {
     auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
     anlWeakAssert(laf != nullptr);
@@ -670,7 +732,8 @@ void Document::Section::updateLayout()
     }
 
     mDraggableTable.setComponents(components);
-    resized();
+    auto const scrollbarWidth = mViewport.getScrollBarThickness();
+    mDraggableTable.setBounds(0, 0, mViewport.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
 }
 
 void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier)
