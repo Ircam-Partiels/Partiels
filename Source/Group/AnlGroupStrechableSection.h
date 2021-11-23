@@ -16,6 +16,7 @@ namespace Group
 
         void moveKeyboardFocusTo(juce::String const& identifier);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        void setResizable(bool state);
 
         std::function<void(juce::String const& identifier, size_t index, bool copy)> onTrackInserted = nullptr;
 
@@ -37,6 +38,7 @@ namespace Group
         DraggableTable mDraggableTable{"Track"};
         ConcertinaTable mConcertinaTable{"", false};
         ComponentListener mComponentListener;
+        bool mIsResizable{true};
 
         LayoutNotifier mLayoutNotifier;
     };

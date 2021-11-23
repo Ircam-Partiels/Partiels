@@ -131,6 +131,22 @@ juce::Rectangle<int> Group::StrechableSection::getPlotBounds(juce::String const&
     return {};
 }
 
+void Group::StrechableSection::setResizable(bool state)
+{
+    if(mIsResizable != state)
+    {
+        mIsResizable = state;
+        mSection.setResizable(state);
+        for(auto& trackSection : mTrackSections.getContents())
+        {
+            if(trackSection.second != nullptr)
+            {
+                trackSection.second->setResizable(state);
+            }
+        }
+    }
+}
+
 std::unique_ptr<juce::ComponentTraverser> Group::StrechableSection::createKeyboardFocusTraverser()
 {
     class FocusTraverser
@@ -258,7 +274,12 @@ void Group::StrechableSection::updateContent()
         {
             auto const identifier = trackAccessor.getAttr<Track::AttrType::identifier>();
             auto& trackDirector = mDirector.getTrackDirector(identifier);
-            return std::make_unique<Track::Section>(trackDirector, mTimeZoomAccessor, mTransportAccessor);
+            auto trackSection = std::make_unique<Track::Section>(trackDirector, mTimeZoomAccessor, mTransportAccessor);
+            if(trackSection != nullptr)
+            {
+                trackSection->setResizable(mIsResizable);
+            }
+            return trackSection;
         },
         nullptr);
 
