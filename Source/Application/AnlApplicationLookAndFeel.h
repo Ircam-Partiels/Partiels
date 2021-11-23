@@ -10,7 +10,7 @@ namespace Application
     : public Misc::LookAndFeel
     {
     public:
-        LookAndFeel() = default;
+        LookAndFeel();
         ~LookAndFeel() override = default;
 
         void setColourChart(ColourChart const& colourChart) override;

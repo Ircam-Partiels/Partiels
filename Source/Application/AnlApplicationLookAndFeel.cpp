@@ -4,6 +4,11 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::LookAndFeel::LookAndFeel()
+{
+    setColourChart(ColourChart::Mode::night);
+}
+
 void Application::LookAndFeel::setColourChart(ColourChart const& colourChart)
 {
     using Type = ColourChart::Type;
