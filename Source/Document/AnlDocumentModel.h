@@ -40,9 +40,9 @@ namespace Document
     < Model::Attr<AttrType::reader, std::vector<AudioFileLayout>, Model::Flag::basic>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::viewport, juce::Point<int>, Model::Flag::saveable>
-    , Model::Attr<AttrType::path, juce::File, Model::Flag::saveable| Model::Flag::notifying>
-    , Model::Attr<AttrType::grid, GridMode, Model::Flag::saveable| Model::Flag::notifying>
-    , Model::Attr<AttrType::samplerate, double, Model::Flag::saveable| Model::Flag::notifying>
+    , Model::Attr<AttrType::path, juce::File, Model::Flag::saveable | Model::Flag::notifying>
+    , Model::Attr<AttrType::grid, GridMode, Model::Flag::saveable | Model::Flag::notifying>
+    , Model::Attr<AttrType::samplerate, double, Model::Flag::saveable | Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
