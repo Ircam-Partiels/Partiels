@@ -27,6 +27,7 @@ namespace Group
 
         std::function<void(juce::String const& identifier, bool copy)> onTrackInserted = nullptr;
         juce::Rectangle<int> getPlotBounds() const;
+        void setResizable(bool state);
 
         // juce::Component
         void resized() override;
