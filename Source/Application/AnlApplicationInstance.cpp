@@ -124,8 +124,13 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 break;
             case AttrType::desktopGlobalScaleFactor:
             {
+                auto const windowState = acsr.getAttr<AttrType::windowState>();
                 auto const scale = acsr.getAttr<AttrType::desktopGlobalScaleFactor>();
                 juce::Desktop::getInstance().setGlobalScaleFactor(scale);
+                if(mWindow != nullptr && !windowState.isEmpty())
+                {
+                    mWindow->restoreWindowStateFromString(windowState);
+                }
             }
             break;
             case AttrType::colourMode:
