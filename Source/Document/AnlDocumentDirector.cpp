@@ -80,6 +80,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::path:
+            case AttrType::autoresize:
                 break;
         }
     };
