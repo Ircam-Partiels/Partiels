@@ -108,70 +108,10 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSubMenu(juce::translate("Theme"), colourModeMenu);
         menu.addItem(juce::translate("Global Scale"), []()
                      {
-                         class GlobalScaler
-                         : public juce::Component
+                         if(auto* window = Instance::get().getWindow())
                          {
-                         public:
-                             GlobalScaler()
-                             : mScale(juce::translate("Global Scale"), juce::translate("Defines the desktop global scale"), "x", juce::Range<float>{1.0f, 4.0f}, 0.1f, [this](float scale)
-                                      {
-                                          auto& acsr = Instance::get().getApplicationAccessor();
-                                          acsr.setAttr<AttrType::desktopGlobalScaleFactor>(scale, NotificationType::synchronous);
-                                          if(auto* parent = dynamic_cast<juce::CallOutBox*>(getParentComponent()))
-                                          {
-                                              parent->dismiss();
-                                          }
-                                      })
-                             {
-                                 addAndMakeVisible(mScale);
-                                 setBounds(0, 0, 120, 24);
-                                 mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-                                 {
-                                     switch(attribute)
-                                     {
-                                         case AttrType::windowState:
-                                         case AttrType::recentlyOpenedFilesList:
-                                         case AttrType::currentDocumentFile:
-                                         case AttrType::colourMode:
-                                         case AttrType::showInfoBubble:
-                                         case AttrType::autoLoadConvertedFile:
-                                         case AttrType::adaptationToSampleRate:
-                                         case AttrType::exportOptions:
-                                             break;
-                                         case AttrType::desktopGlobalScaleFactor:
-                                         {
-                                             mScale.entry.setValue(acsr.getAttr<AttrType::desktopGlobalScaleFactor>(), juce::NotificationType::dontSendNotification);
-                                         }
-                                         break;
-                                     }
-                                 };
-                                 Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
-                             }
-
-                             ~GlobalScaler() override
-                             {
-                                 Instance::get().getApplicationAccessor().removeListener(mListener);
-                             }
-
-                             void resized() override
-                             {
-                                 auto bounds = getLocalBounds();
-                                 mScale.setBounds(bounds.removeFromTop(mScale.getHeight()));
-                                 setSize(bounds.getWidth(), bounds.getY());
-                             }
-
-                         private:
-                             PropertyNumber mScale;
-                             Accessor::Listener mListener{typeid(*this).name()};
-                         };
-                         auto globalScaler = std::make_unique<GlobalScaler>();
-                         if(globalScaler == nullptr)
-                         {
-                             return;
+                             window->showDesktopScaler();
                          }
-                         auto const mousePosition = juce::Desktop::getMousePosition();
-                         auto const rectangle = juce::Rectangle<int>(mousePosition.x, mousePosition.y, 2, 2);
-                         juce::CallOutBox::launchAsynchronously(std::move(globalScaler), rectangle, nullptr).setArrowSize(0.0f);
                      });
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewZoomIn);
