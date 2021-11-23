@@ -3,6 +3,51 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::Window::DesktopScaler::DesktopScaler()
+: FloatingWindowContainer("Desktop Global Scale", *this)
+, mScale(juce::translate("Scale"), juce::translate("Defines the desktop global scale"), "x", juce::Range<float>{1.0f, 4.0f}, 0.1f, [](float scale)
+         {
+             auto& acsr = Instance::get().getApplicationAccessor();
+             acsr.setAttr<AttrType::desktopGlobalScaleFactor>(scale, NotificationType::synchronous);
+         })
+{
+    addAndMakeVisible(mScale);
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case AttrType::windowState:
+            case AttrType::recentlyOpenedFilesList:
+            case AttrType::currentDocumentFile:
+            case AttrType::colourMode:
+            case AttrType::showInfoBubble:
+            case AttrType::autoLoadConvertedFile:
+            case AttrType::adaptationToSampleRate:
+            case AttrType::exportOptions:
+                break;
+            case AttrType::desktopGlobalScaleFactor:
+            {
+                mScale.entry.setValue(acsr.getAttr<AttrType::desktopGlobalScaleFactor>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+        }
+    };
+    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
+    setBounds(0, 0, 200, 24);
+}
+
+Application::Window::DesktopScaler::~DesktopScaler()
+{
+    Instance::get().getApplicationAccessor().removeListener(mListener);
+}
+
+void Application::Window::DesktopScaler::resized()
+{
+    auto bounds = getLocalBounds();
+    mScale.setBounds(bounds.removeFromTop(mScale.getHeight()));
+    setSize(bounds.getWidth(), std::max(bounds.getY(), 24) + 2);
+}
+
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
@@ -75,6 +120,11 @@ void Application::Window::moveKeyboardFocusTo(juce::String const& identifier)
 juce::Rectangle<int> Application::Window::getPlotBounds(juce::String const& identifier) const
 {
     return mInterface.getPlotBounds(identifier);
+}
+
+void Application::Window::showDesktopScaler()
+{
+    mDesktopScaler.show();
 }
 
 ANALYSE_FILE_END

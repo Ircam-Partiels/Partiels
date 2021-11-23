@@ -17,6 +17,7 @@ namespace Application
 
         void moveKeyboardFocusTo(juce::String const& identifier);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        void showDesktopScaler();
 
         // juce::DocumentWindow
         void closeButtonPressed() override;
@@ -31,8 +32,22 @@ namespace Application
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
+        class DesktopScaler
+        : public FloatingWindowContainer
+        {
+        public:
+            DesktopScaler();
+            ~DesktopScaler() override;
+            void resized() override;
+
+        private:
+            PropertyNumber mScale;
+            Accessor::Listener mListener{typeid(*this).name()};
+        };
+
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         Interface mInterface;
+        DesktopScaler mDesktopScaler;
     };
 } // namespace Application
 
