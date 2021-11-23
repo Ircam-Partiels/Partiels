@@ -1,14 +1,15 @@
 #!/bin/sh
 
+APP_NAME="Partiels"
+
 ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_PATH="$ThisPath/.."
-APP_NAME="Partiels"
+BUILD_PATH="$REPO_PATH/release"
+APP_VERSION=$(defaults read $BUILD_PATH/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
+DMG_PATH="$BUILD_PATH/$APP_NAME-v$APP_VERSION.dmg"
 
 APPLE_ACCOUNT="pierre.guillot@ircam.fr"
 APPLE_PASSWORD="Developer-altool"
-
-APP_VERSION=$(defaults read $REPO_PATH/build/Partiels.app/Contents/Info.plist CFBundleShortVersionString)
-DMG_PATH="$REPO_PATH/build/$APP_NAME-v$APP_VERSION.dmg"
 
 test -f "$DMG_PATH" && rm "$DMG_PATH"
 

@@ -1,13 +1,17 @@
 #!/bin/sh
 
+APP_NAME="Partiels"
+
 ThisPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_PATH="$ThisPath/.."
-APP_NAME="Partiels"
+BUILD_PATH="$REPO_PATH/release"
+
 APPLE_ACCOUNT="pierre.guillot@ircam.fr"
 APPLE_PASSWORD="Developer-altool"
 
-mkdir -p $REPO_PATH/build
-cd $REPO_PATH/build
+mkdir -p $BUILD_PATH
+cd $BUILD_PATH
+rm -rf *
 
 echo '\033[0;34m' "Prepare project..."
 echo '\033[0m'
