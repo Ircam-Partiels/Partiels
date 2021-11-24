@@ -21,6 +21,7 @@ namespace Group
         , layout
         , tracks
         , focused
+        , zoomid
     };
 
     enum class AcsrType : size_t
@@ -42,6 +43,7 @@ namespace Group
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::tracks, TrackList, Model::Flag::notifying>
     , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::zoomid, juce::String, Model::Flag::basic>
     >;
 
     using AcsrContainer = Model::Container
@@ -57,7 +59,7 @@ namespace Group
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({}, {}, {144}, {juce::Colours::transparentBlack}, {true}, {}, {}, {false}))
+        : Accessor(AttrContainer({}, {}, {144}, {juce::Colours::transparentBlack}, {true}, {}, {}, {false}, {""}))
         {
         }
 
