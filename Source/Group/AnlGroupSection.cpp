@@ -38,6 +38,11 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
                 mThumbnailDecoration.setHighlighted(focused);
             }
             break;
+            case AttrType::zoomid:
+            {
+                updateContent();
+            }
+            break;
         }
     };
 
@@ -256,28 +261,37 @@ void Group::Section::updateContent()
     }
     else
     {
-        auto trackAcrs = Tools::getTrackAcsr(mAccessor, layout.front());
-        if(!trackAcrs.has_value())
+        auto getZoomAcsrInfo = [&]() -> std::tuple<std::optional<std::reference_wrapper<Track::Accessor>>, juce::String>
+        {
+            auto selectedTrack = Tools::getTrackAcsr(mAccessor, mAccessor.getAttr<AttrType::zoomid>());
+            if(selectedTrack.has_value())
+            {
+                return {selectedTrack, mAccessor.getAttr<AttrType::zoomid>()};
+            }
+            return {Tools::getTrackAcsr(mAccessor, layout.front()), layout.front()};
+        };
+        auto trackAcsrInfo = getZoomAcsrInfo();
+        if(!std::get<0>(trackAcsrInfo).has_value())
         {
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
             mGridIdentier.clear();
         }
-        else if(mGridIdentier != layout.front())
+        else if(mGridIdentier != std::get<1>(trackAcsrInfo))
         {
-            mRuler = std::make_unique<Track::Ruler>(*trackAcrs);
+            mRuler = std::make_unique<Track::Ruler>(*std::get<0>(trackAcsrInfo));
             if(mRuler != nullptr)
             {
                 mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
                 addAndMakeVisible(mDecoratorRuler.get());
             }
-            mScrollBar = std::make_unique<Track::ScrollBar>(*trackAcrs);
+            mScrollBar = std::make_unique<Track::ScrollBar>(*std::get<0>(trackAcsrInfo));
             if(mScrollBar != nullptr)
             {
                 addAndMakeVisible(mScrollBar.get());
             }
-            mGridIdentier = layout.front();
+            mGridIdentier = std::get<1>(trackAcsrInfo);
         }
     }
 
