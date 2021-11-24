@@ -289,6 +289,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                                                                                          case Group::AttrType::layout:
                                                                                          case Group::AttrType::tracks:
                                                                                          case Group::AttrType::focused:
+                                                                                         case Group::AttrType::zoomid:
                                                                                              break;
                                                                                      }
                                                                                  });

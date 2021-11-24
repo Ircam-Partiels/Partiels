@@ -204,6 +204,7 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::layout:
             case AttrType::tracks:
             case AttrType::focused:
+            case AttrType::zoomid:
                 break;
             case AttrType::colour:
             {

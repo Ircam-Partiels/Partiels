@@ -77,6 +77,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colour:
+            case AttrType::zoomid:
                 break;
             case AttrType::layout:
             case AttrType::tracks:

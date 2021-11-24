@@ -58,6 +58,7 @@ Group::StateButton::StateButton(Accessor& accessor)
             case AttrType::focused:
             case AttrType::layout:
             case AttrType::tracks:
+            case AttrType::zoomid:
                 break;
         }
     };

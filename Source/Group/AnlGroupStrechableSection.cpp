@@ -23,6 +23,7 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
             case AttrType::focused:
             case AttrType::layout:
             case AttrType::tracks:
+            case AttrType::zoomid:
                 break;
             case AttrType::expanded:
             {

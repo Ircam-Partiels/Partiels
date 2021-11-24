@@ -168,6 +168,7 @@ Group::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::layout:
             case AttrType::tracks:
             case AttrType::focused:
+            case AttrType::zoomid:
                 break;
             case AttrType::colour:
             {

@@ -52,6 +52,7 @@ Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(voi
             case AttrType::colour:
             case AttrType::focused:
             case AttrType::expanded:
+            case AttrType::zoomid:
                 break;
             case AttrType::layout:
             {
