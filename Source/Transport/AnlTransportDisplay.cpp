@@ -1,4 +1,5 @@
 #include "AnlTransportDisplay.h"
+#include "AnlTransportTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -13,6 +14,7 @@ Transport::Display::Display(Accessor& accessor)
             {
                 auto const state = acsr.getAttr<AttrType::playback>();
                 mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                mRewindButton.setEnabled(Tools::canRewindPlayhead(acsr) || state);
                 mPosition.setEnabled(!state);
                 lookAndFeelChanged();
             }
@@ -39,9 +41,14 @@ Transport::Display::Display(Accessor& accessor)
             {
                 auto const state = acsr.getAttr<AttrType::looping>();
                 mLoopButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                mRewindButton.setEnabled(Tools::canRewindPlayhead(acsr));
             }
             break;
             case AttrType::loopRange:
+            {
+                mRewindButton.setEnabled(Tools::canRewindPlayhead(acsr));
+            }
+            break;
             case AttrType::gain:
             {
                 auto const decibel = juce::Decibels::gainToDecibels(acsr.getAttr<AttrType::gain>(), -90.0);
@@ -55,16 +62,7 @@ Transport::Display::Display(Accessor& accessor)
 
     mRewindButton.onClick = [&]()
     {
-        auto const isPlaying = mAccessor.getAttr<Transport::AttrType::playback>();
-        if(isPlaying)
-        {
-            mAccessor.setAttr<Transport::AttrType::playback>(false, NotificationType::synchronous);
-        }
-        mAccessor.setAttr<AttrType::startPlayhead>(0.0, NotificationType::synchronous);
-        if(isPlaying)
-        {
-            mAccessor.setAttr<Transport::AttrType::playback>(true, NotificationType::synchronous);
-        }
+        Tools::rewindPlayhead(mAccessor);
     };
 
     mPlaybackButton.setClickingTogglesState(true);
