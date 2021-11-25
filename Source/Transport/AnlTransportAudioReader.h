@@ -42,6 +42,7 @@ namespace Transport
             void setStartPlayheadPosition(double position);
             void setLooping(bool shouldLoop);
             void setLoopRange(juce::Range<double> const& loopRange);
+            void setStopAtLoopEnd(bool shouldStop);
 
             double getSampleRate() const;
             bool isPlaying() const;
@@ -55,6 +56,7 @@ namespace Transport
             std::atomic<juce::int64> mReadPosition{0};
             std::atomic<juce::int64> mStartPosition{0};
             std::atomic<bool> mIsLooping{false};
+            std::atomic<bool> mStopAtLoopEnd{false};
             std::atomic<juce::Range<juce::int64>> mLoopRange{};
             juce::LinearSmoothedValue<float> mVolume;
             std::atomic<float> mVolumeTargetValue;
@@ -77,6 +79,7 @@ namespace Transport
             void setStartPlayheadPosition(double position);
             void setLooping(bool shouldLoop);
             void setLoopRange(juce::Range<double> const& loopRange);
+            void setStopAtLoopEnd(bool shouldStop);
 
             bool isPlaying() const;
             double getReadPlayheadPosition() const;

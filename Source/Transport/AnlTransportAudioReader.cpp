@@ -43,8 +43,10 @@ void Transport::AudioReader::Source::getNextAudioBlock(juce::AudioSourceChannelI
         {
             auto const currentReadPosition = mReadPosition.load();
             auto const loopRange = mLoopRange.load();
-            auto const isLooping = mIsLooping && !loopRange.isEmpty() && currentReadPosition < loopRange.getEnd();
-            auto const endPosition = isLooping ? loopRange.getEnd() : mAudioFormatReaderSource.getTotalLength() - 1;
+            auto const canLoop = !loopRange.isEmpty() && currentReadPosition < loopRange.getEnd();
+            auto const stopAtLoopEnd = mStopAtLoopEnd.load() && canLoop;
+            auto const isLooping = mIsLooping && canLoop;
+            auto const endPosition = (isLooping || stopAtLoopEnd) ? loopRange.getEnd() : mAudioFormatReaderSource.getTotalLength() - 1;
             auto const numRemainingSamples = static_cast<int>(std::min(endPosition - currentReadPosition, static_cast<juce::int64>(numSamplesToProceed)));
             juce::AudioSourceChannelInfo tempBuffer(buffer, outputPosition, numRemainingSamples);
 
@@ -125,6 +127,11 @@ void Transport::AudioReader::Source::setLoopRange(juce::Range<double> const& loo
     mLoopRange.store({start, end});
 }
 
+void Transport::AudioReader::Source::setStopAtLoopEnd(bool shouldStop)
+{
+    mStopAtLoopEnd = shouldStop;
+}
+
 Transport::AudioReader::ResamplingSource::ResamplingSource(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, int numChannels)
 : mSource(std::move(audioFormatReader))
 , mResamplingAudioSource(&mSource, false, numChannels)
@@ -189,6 +196,11 @@ void Transport::AudioReader::ResamplingSource::setLoopRange(juce::Range<double> 
     mSource.setLoopRange(loopRange);
 }
 
+void Transport::AudioReader::ResamplingSource::setStopAtLoopEnd(bool shouldStop)
+{
+    mSource.setStopAtLoopEnd(shouldStop);
+}
+
 Transport::AudioReader::AudioReader(Accessor& accessor)
 : mAccessor(accessor)
 {
@@ -247,6 +259,15 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                 }
             }
             break;
+            case AttrType::stopAtLoopEnd:
+            {
+                auto instance = mSourceManager.getInstance();
+                if(instance != nullptr)
+                {
+                    instance->setStopAtLoopEnd(acsr.getAttr<AttrType::stopAtLoopEnd>());
+                }
+            }
+            break;
             case AttrType::gain:
             {
                 auto instance = mSourceManager.getInstance();
@@ -281,6 +302,7 @@ void Transport::AudioReader::setAudioFormatReader(std::unique_ptr<juce::AudioFor
         source->setStartPlayheadPosition(mAccessor.getAttr<AttrType::startPlayhead>());
         source->setLooping(mAccessor.getAttr<AttrType::looping>());
         source->setLoopRange(mAccessor.getAttr<AttrType::loopRange>());
+        source->setStopAtLoopEnd(mAccessor.getAttr<AttrType::stopAtLoopEnd>());
         source->prepareToPlay(mSamplesPerBlockExpected, mSampleRate);
         source->setPlaying(mAccessor.getAttr<AttrType::playback>());
     }
@@ -297,6 +319,7 @@ void Transport::AudioReader::prepareToPlay(int samplesPerBlockExpected, double s
         instance->setGain(static_cast<float>(mAccessor.getAttr<AttrType::gain>()));
         instance->setLooping(mAccessor.getAttr<AttrType::looping>());
         instance->setPlaying(mAccessor.getAttr<AttrType::playback>());
+        instance->setStopAtLoopEnd(mAccessor.getAttr<AttrType::stopAtLoopEnd>());
         instance->prepareToPlay(samplesPerBlockExpected, sampleRate);
     }
 }
