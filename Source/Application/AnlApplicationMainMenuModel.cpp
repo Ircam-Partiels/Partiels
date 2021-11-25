@@ -88,6 +88,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     {
         menu.addCommandItem(&commandManager, CommandIDs::transportTogglePlayback);
         menu.addCommandItem(&commandManager, CommandIDs::transportToggleLooping);
+        menu.addCommandItem(&commandManager, CommandIDs::transportToggleStopAtLoopEnd);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::transportRewindPlayHead);
     }
