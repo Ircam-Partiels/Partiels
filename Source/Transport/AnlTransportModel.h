@@ -17,6 +17,7 @@ namespace Transport
         , loopRange
         , stopAtLoopEnd
         , gain
+        , markers
     };
     
     using AttrContainer = Model::Container
@@ -27,6 +28,7 @@ namespace Transport
     , Model::Attr<AttrType::loopRange, Zoom::Range, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::stopAtLoopEnd, bool, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::gain, double, Model::Flag::notifying | Model::Flag::saveable>
+    , Model::Attr<AttrType::markers, std::set<double>, Model::Flag::notifying>
     >;
     
     class Accessor
@@ -43,6 +45,7 @@ namespace Transport
                                  , {Zoom::Range{0.0, 0.0}}
                                  , {false}
                                  , {1.0}
+                                 , {}
                                  ))
         {
         }
