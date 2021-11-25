@@ -36,7 +36,7 @@ void Transport::Tools::rewindPlayhead(Accessor& accessor)
 double Transport::Tools::getNearestTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
 {
     auto const& markers = accessor.getAttr<AttrType::markers>();
-    if(markers.empty())
+    if(markers.empty() || !accessor.getAttr<AttrType::magnetize>())
     {
         return range.has_value() ? range->clipValue(time) : time;
     }
