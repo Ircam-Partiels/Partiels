@@ -69,14 +69,38 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
         repaint();
     };
 
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::colour:
+            case AttrType::expanded:
+            case AttrType::layout:
+            case AttrType::tracks:
+            case AttrType::focused:
+                break;
+            case AttrType::zoomid:
+            {
+                repaint();
+            }
+            break;
+        }
+    };
+
     setInterceptsMouseClicks(false, false);
     setCachedComponentImage(new LowResCachedComponentImage(*this));
     setSize(100, 80);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::Plot::~Plot()
 {
+    mAccessor.removeListener(mListener);
     mTimeZoomAccessor.removeListener(mZoomListener);
     for(auto& trackAcsr : mTrackAccessors.getContents())
     {
@@ -92,12 +116,15 @@ void Group::Plot::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const zoomid = mAccessor.getAttr<AttrType::zoomid>();
+    auto const hasZoomTrack = Tools::hasTrackAcsr(mAccessor, zoomid);
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value())
         {
-            auto const colour = it == std::prev(layout.crend()) ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            auto const isSelected = (!hasZoomTrack && it == std::prev(layout.crend())) || zoomid == *it;
+            auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Plot::paint(*trackAcsr, mTimeZoomAccessor, g, bounds, colour);
         }
     }
