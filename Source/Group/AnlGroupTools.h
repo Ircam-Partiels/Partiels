@@ -15,12 +15,13 @@ namespace Group
     class LayoutNotifier
     {
     public:
-        LayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr);
+        LayoutNotifier(Accessor& accessor, std::function<void(void)> fn = nullptr, std::set<Track::AttrType> attributes = {Track::AttrType::identifier});
         ~LayoutNotifier();
 
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
+        std::set<Track::AttrType> mAttributes;
 
     public:
         std::function<void(void)> onLayoutUpdated = nullptr;
