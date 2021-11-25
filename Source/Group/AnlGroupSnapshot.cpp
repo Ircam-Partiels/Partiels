@@ -95,14 +95,38 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
         repaint();
     };
 
+    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case AttrType::identifier:
+            case AttrType::name:
+            case AttrType::height:
+            case AttrType::colour:
+            case AttrType::expanded:
+            case AttrType::layout:
+            case AttrType::tracks:
+            case AttrType::focused:
+                break;
+            case AttrType::zoomid:
+            {
+                repaint();
+            }
+            break;
+        }
+    };
+
     setInterceptsMouseClicks(false, false);
     setSize(100, 80);
     mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
     mTimeZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+    mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::Snapshot::~Snapshot()
 {
+    mAccessor.removeListener(mListener);
     mTimeZoomAccessor.removeListener(mZoomListener);
     mTransportAccessor.removeListener(mTransportListener);
     for(auto& trackAcsr : mTrackAccessors.getContents())
@@ -122,12 +146,15 @@ void Group::Snapshot::paint(juce::Graphics& g)
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
+    auto const zoomid = mAccessor.getAttr<AttrType::zoomid>();
+    auto const hasZoomTrack = Tools::hasTrackAcsr(mAccessor, zoomid);
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value())
         {
-            auto const colour = it == std::prev(layout.crend()) ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
+            auto const isSelected = (!hasZoomTrack && it == std::prev(layout.crend())) || zoomid == *it;
+            auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Snapshot::paint(*trackAcsr, mTimeZoomAccessor, time, g, bounds, colour);
         }
     }
