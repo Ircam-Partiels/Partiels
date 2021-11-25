@@ -36,6 +36,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
             }
             case AttrType::gain:
             case AttrType::markers:
+            case AttrType::magnetize:
                 break;
         }
     };

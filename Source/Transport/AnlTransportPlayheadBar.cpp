@@ -39,6 +39,7 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
             case AttrType::stopAtLoopEnd:
             case AttrType::gain:
             case AttrType::markers:
+            case AttrType::magnetize:
                 break;
         }
     };

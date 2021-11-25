@@ -57,6 +57,7 @@ Transport::Display::Display(Accessor& accessor)
             break;
             case AttrType::stopAtLoopEnd:
             case AttrType::markers:
+            case AttrType::magnetize:
                 break;
         }
     };

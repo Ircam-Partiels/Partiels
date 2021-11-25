@@ -99,6 +99,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
             case Transport::AttrType::markers:
+            case Transport::AttrType::magnetize:
                 break;
         }
     };
@@ -408,6 +409,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
             case Transport::AttrType::markers:
+            case Transport::AttrType::magnetize:
                 break;
         }
     };
