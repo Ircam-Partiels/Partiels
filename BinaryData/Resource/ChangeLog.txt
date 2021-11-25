@@ -1,6 +1,7 @@
 
 v1.0.1
 
+- Add: Magnetism mechanism with markers (#193)
 - Fix: Rewind the play-head should move to the start of the loop if enabled - otherwise, to the beginning of the file (#192)
 - Add: Add playback mode that stops playback to the end of loop (#191)
 - Add: Selection of the track used for vertical zoom in the groups (#190)
