@@ -47,6 +47,8 @@ namespace Document
 
         void initializeAudioReaders(NotificationType notification);
 
+        void updateMarkers(NotificationType notification);
+
         Accessor& mAccessor;
         juce::AudioFormatManager& mAudioFormatManager;
         juce::UndoManager& mUndoManager;

@@ -115,6 +115,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                             }
                         }
                     };
+                    director->onResultsUpdated = [this](NotificationType localNotification)
+                    {
+                        updateMarkers(localNotification);
+                    };
                 }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
@@ -870,6 +874,28 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
             anl->setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)), notification);
         }
     }
+}
+
+void Document::Director::updateMarkers(NotificationType notification)
+{
+    std::set<double> markers;
+    auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        auto const& results = trackAcsr.get().getAttr<Track::AttrType::results>();
+        auto const markerResults = results.getMarkers();
+        if(markerResults != nullptr)
+        {
+            for(auto const& channelMarkers : *markerResults)
+            {
+                for(auto const& marker : channelMarkers)
+                {
+                    markers.insert(std::get<0_z>(marker));
+                }
+            }
+        }
+    }
+    mAccessor.getAcsr<AcsrType::transport>().setAttr<Transport::AttrType::markers>(markers, notification);
 }
 
 ANALYSE_FILE_END
