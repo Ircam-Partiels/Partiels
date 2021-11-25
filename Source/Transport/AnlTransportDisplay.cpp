@@ -56,6 +56,7 @@ Transport::Display::Display(Accessor& accessor)
             }
             break;
             case AttrType::stopAtLoopEnd:
+            case AttrType::markers:
                 break;
         }
     };

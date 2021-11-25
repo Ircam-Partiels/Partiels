@@ -34,6 +34,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
                 clearCurrentRange();
             }
             case AttrType::gain:
+            case AttrType::markers:
                 break;
         }
     };

@@ -37,6 +37,7 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
             case AttrType::loopRange:
             case AttrType::stopAtLoopEnd:
             case AttrType::gain:
+            case AttrType::markers:
                 break;
         }
     };

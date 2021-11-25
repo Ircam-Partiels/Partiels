@@ -98,6 +98,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case Transport::AttrType::loopRange:
             case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
+            case Transport::AttrType::markers:
                 break;
         }
     };
@@ -406,6 +407,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case Transport::AttrType::loopRange:
             case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
+            case Transport::AttrType::markers:
                 break;
         }
     };

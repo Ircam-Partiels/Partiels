@@ -277,6 +277,8 @@ Transport::AudioReader::AudioReader(Accessor& accessor)
                 }
             }
             break;
+            case AttrType::markers:
+                break;
         }
     };
 
