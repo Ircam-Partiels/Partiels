@@ -33,4 +33,42 @@ void Transport::Tools::rewindPlayhead(Accessor& accessor)
     }
 }
 
+double Transport::Tools::getNearestTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
+{
+    auto const& markers = accessor.getAttr<AttrType::markers>();
+    if(markers.empty())
+    {
+        return range.has_value() ? range->clipValue(time) : time;
+    }
+    if(time <= *markers.cbegin())
+    {
+        if(range.has_value())
+        {
+            auto const next = range->clipValue(*markers.cbegin());
+            auto const previous = range->getStart();
+            return std::abs(next - time) <= std::abs(previous - time) ? next : previous;
+        }
+        return *markers.cbegin();
+    }
+    if(time > *markers.crbegin())
+    {
+        if(range.has_value())
+        {
+            auto const previous = range->clipValue(*markers.crbegin());
+            auto const next = range->getEnd();
+            return std::abs(next - time) <= std::abs(previous - time) ? next : previous;
+        }
+        return *markers.crbegin();
+    }
+    auto const nextIt = std::lower_bound(markers.cbegin(), markers.cend(), time);
+    auto const previousIt = std::prev(nextIt);
+    if(range.has_value())
+    {
+        auto const next = range->clipValue(*nextIt);
+        auto const previous = range->clipValue(*previousIt);
+        return std::abs(next - time) <= std::abs(previous - time) ? next : previous;
+    }
+    return std::abs(*nextIt - time) <= std::abs(*previousIt - time) ? *nextIt : *previousIt;
+}
+
 ANALYSE_FILE_END
