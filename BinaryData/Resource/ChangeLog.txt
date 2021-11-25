@@ -7,7 +7,7 @@ v1.0.1
 - Add: Trigger the analysis export using the return key (#186)
 - Add: Trigger SDIF/JSON conversion using the return key (#185)
 - Fix: SDIF conversion button is clickable even if the signatures are not valid (#184)
-- Fix: Command-line option '--adat' is not well parsed (#183)
+- Fix: Command-line option '--adapt' is not well parsed (#183)
 - Add: An interface to modify the desktop scale factor via the View menu (#182)
 - Add: Tracks and groups heights optimization can be standing using the toggle button - previous behavior can still be accessed by pressing the shift key with clicking (#181)
 - Fix: Command-line tools are dependent on graphical user interface parts of the application (#180)
