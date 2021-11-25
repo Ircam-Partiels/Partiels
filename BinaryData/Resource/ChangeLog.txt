@@ -1,6 +1,7 @@
 
 v1.0.1
 
+- Add: Selection of the track used for vertical zoom in the groups (#190)
 - Fix: Buttons of the alert window of the audio reader layout panel are not explicit - use apply/discard instead of ok/cancel (#188)
 - Add: Trigger audio reader layout changes using the return key (#187)
 - Add: Trigger the analysis export using the return key (#186)
