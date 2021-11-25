@@ -242,7 +242,15 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Rewind Playhead"), juce::translate("Moves the playhead to the start of the document"), "Transport", 0);
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty() && transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() > 0.0);
+            auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
+            auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
+            auto const isLooping = transportAcsr.getAttr<Transport::AttrType::looping>();
+            auto const stopAtEnd = transportAcsr.getAttr<Transport::AttrType::stopAtLoopEnd>();
+            auto const shouldUseLoopRange = !loopRange.isEmpty() && (isLooping || stopAtEnd);
+            auto const start = shouldUseLoopRange ? loopRange.getStart() : 0.0;
+            auto const position = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+            auto const isActive = hasReader && std::abs(position - start) > std::numeric_limits<double>::epsilon();
+            result.setActive(isActive);
         }
         break;
 
@@ -584,11 +592,15 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             auto constexpr attr = Transport::AttrType::startPlayhead;
             auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
+            auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
+            auto const isLooping = transportAcsr.getAttr<Transport::AttrType::looping>();
+            auto const stopAtEnd = transportAcsr.getAttr<Transport::AttrType::stopAtLoopEnd>();
+            auto const shouldUseLoopRange = !loopRange.isEmpty() && (isLooping || stopAtEnd);
             if(isPlaying)
             {
                 transportAcsr.setAttr<Transport::AttrType::playback>(false, NotificationType::synchronous);
             }
-            transportAcsr.setAttr<attr>(0.0, NotificationType::synchronous);
+            transportAcsr.setAttr<attr>(shouldUseLoopRange ? loopRange.getStart() : 0.0, NotificationType::synchronous);
             if(isPlaying)
             {
                 transportAcsr.setAttr<Transport::AttrType::playback>(true, NotificationType::synchronous);
