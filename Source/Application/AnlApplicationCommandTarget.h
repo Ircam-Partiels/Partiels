@@ -37,6 +37,7 @@ namespace Application
             
             , transportTogglePlayback
             , transportToggleLooping
+            , transportToggleStopAtLoopEnd
             , transportRewindPlayHead
             
             , viewZoomIn

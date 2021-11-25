@@ -75,6 +75,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::transportTogglePlayback
         , CommandIDs::transportToggleLooping
+        , CommandIDs::transportToggleStopAtLoopEnd
         , CommandIDs::transportRewindPlayHead
         
         , CommandIDs::viewZoomIn
@@ -228,6 +229,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress('l', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::looping>());
+        }
+        break;
+        case CommandIDs::transportToggleStopAtLoopEnd:
+        {
+            result.setInfo(juce::translate("Toggle Stop Playback at Loop End"), juce::translate("Enables or disables the stop playback at the end of loop if repeat disabled"), "Transport", 0);
+            result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
+            result.setTicked(transportAcsr.getAttr<Transport::AttrType::stopAtLoopEnd>());
         }
         break;
         case CommandIDs::transportRewindPlayHead:
@@ -563,6 +571,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::transportToggleLooping:
         {
             auto constexpr attr = Transport::AttrType::looping;
+            transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::transportToggleStopAtLoopEnd:
+        {
+            auto constexpr attr = Transport::AttrType::stopAtLoopEnd;
             transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
