@@ -1,5 +1,6 @@
 #include "AnlTransportLoopBar.h"
 #include "../Zoom/AnlZoomTools.h"
+#include "AnlTransportTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -91,18 +92,18 @@ void Transport::LoopBar::paint(juce::Graphics& g)
 void Transport::LoopBar::mouseMove(juce::MouseEvent const& event)
 {
     mSavedRange = mAccessor.getAttr<AttrType::loopRange>();
-    mCickTime = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
+    auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
     if(!event.mods.isShiftDown())
     {
         auto constexpr pixelEpsilon = 2.0;
         auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
         auto const timeEpsilon = static_cast<double>(pixelEpsilon) * timeRange.getLength() / static_cast<double>(getWidth());
-        if(!mSavedRange.isEmpty() && std::abs(mSavedRange.getStart() - mCickTime) <= timeEpsilon)
+        if(!mSavedRange.isEmpty() && std::abs(mSavedRange.getStart() - time) <= timeEpsilon)
         {
             mEditMode = EditMode::resizeLeft;
             setMouseCursor(juce::MouseCursor::LeftEdgeResizeCursor);
         }
-        else if(!mSavedRange.isEmpty() && std::abs(mSavedRange.getEnd() - mCickTime) <= timeEpsilon)
+        else if(!mSavedRange.isEmpty() && std::abs(mSavedRange.getEnd() - time) <= timeEpsilon)
         {
             mEditMode = EditMode::resizeRight;
             setMouseCursor(juce::MouseCursor::RightEdgeResizeCursor);
@@ -113,7 +114,7 @@ void Transport::LoopBar::mouseMove(juce::MouseEvent const& event)
             setMouseCursor(juce::MouseCursor::NormalCursor);
         }
     }
-    else if(mSavedRange.contains({mCickTime, mCickTime}))
+    else if(mSavedRange.contains({time, time}))
     {
         mEditMode = EditMode::drag;
         setMouseCursor(juce::MouseCursor::DraggingHandCursor);
@@ -128,6 +129,8 @@ void Transport::LoopBar::mouseMove(juce::MouseEvent const& event)
 void Transport::LoopBar::mouseDown(juce::MouseEvent const& event)
 {
     mouseMove(event);
+    auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
+    mCickTime = Tools::getNearestTime(mAccessor, time, mZoomAccessor.getAttr<Zoom::AttrType::globalRange>());
     mouseDrag(event);
 }
 
@@ -140,26 +143,30 @@ void Transport::LoopBar::mouseDrag(juce::MouseEvent const& event)
         case EditMode::select:
         {
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
-            mAccessor.setAttr<AttrType::loopRange>(juce::Range<double>::between(mCickTime, time), NotificationType::synchronous);
+            auto const usedTime = Tools::getNearestTime(mAccessor, time, mZoomAccessor.getAttr<Zoom::AttrType::globalRange>());
+            mAccessor.setAttr<AttrType::loopRange>(juce::Range<double>::between(mCickTime, usedTime), NotificationType::synchronous);
         }
         break;
         case EditMode::drag:
         {
             auto const timeRange = mZoomAccessor.getAttr<Zoom::AttrType::visibleRange>();
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.getDistanceFromDragStartX()) - timeRange.getStart();
-            mAccessor.setAttr<AttrType::loopRange>(mSavedRange + time, NotificationType::synchronous);
+            auto const usedTime = Tools::getNearestTime(mAccessor, time + mSavedRange.getStart(), mZoomAccessor.getAttr<Zoom::AttrType::globalRange>());
+            mAccessor.setAttr<AttrType::loopRange>(juce::Range<double>::withStartAndLength(usedTime, mSavedRange.getLength()), NotificationType::synchronous);
         }
         break;
         case EditMode::resizeLeft:
         {
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
-            mAccessor.setAttr<AttrType::loopRange>(mSavedRange.withStart(time), NotificationType::synchronous);
+            auto const usedTime = Tools::getNearestTime(mAccessor, time, mZoomAccessor.getAttr<Zoom::AttrType::globalRange>());
+            mAccessor.setAttr<AttrType::loopRange>(mSavedRange.withStart(usedTime), NotificationType::synchronous);
         }
         break;
         case EditMode::resizeRight:
         {
             auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
-            mAccessor.setAttr<AttrType::loopRange>(mSavedRange.withEnd(time), NotificationType::synchronous);
+            auto const usedTime = Tools::getNearestTime(mAccessor, time, mZoomAccessor.getAttr<Zoom::AttrType::globalRange>());
+            mAccessor.setAttr<AttrType::loopRange>(mSavedRange.withEnd(usedTime), NotificationType::synchronous);
         }
         break;
     }
