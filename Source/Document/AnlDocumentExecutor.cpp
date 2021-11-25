@@ -23,7 +23,8 @@ juce::Result Document::Executor::load(juce::File const& audioFile, juce::File co
     mAccessor.copyFrom(Accessor(), NotificationType::synchronous);
 
     anlDebug("Executor", "Loading audio file...");
-    mAccessor.setAttr<AttrType::reader>({AudioFileLayout{audioFile, AudioFileLayout::ChannelLayout::all}}, NotificationType::synchronous);
+    auto const layout = getAudioFileLayouts(mAudioFormatManager, {audioFile}, AudioFileLayout::ChannelLayout::split);
+    mAccessor.setAttr<AttrType::reader>(layout, NotificationType::synchronous);
 
     anlDebug("Executor", "Loading template file...");
     AlertWindow::Catcher catcher;
