@@ -15,6 +15,7 @@ namespace Transport
         , runningPlayhead
         , looping
         , loopRange
+        , stopAtLoopEnd
         , gain
     };
     
@@ -24,6 +25,7 @@ namespace Transport
     , Model::Attr<AttrType::runningPlayhead, double, Model::Flag::notifying>
     , Model::Attr<AttrType::looping, bool, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::loopRange, Zoom::Range, Model::Flag::notifying | Model::Flag::saveable>
+    , Model::Attr<AttrType::stopAtLoopEnd, bool, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::gain, double, Model::Flag::notifying | Model::Flag::saveable>
     >;
     
@@ -39,6 +41,7 @@ namespace Transport
                                  , {0.0}
                                  , {false}
                                  , {Zoom::Range{0.0, 0.0}}
+                                 , {false}
                                  , {1.0}
                                  ))
         {
