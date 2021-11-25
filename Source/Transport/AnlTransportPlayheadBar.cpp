@@ -1,5 +1,6 @@
 #include "AnlTransportPlayheadBar.h"
 #include "../Zoom/AnlZoomTools.h"
+#include "AnlTransportTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -89,7 +90,9 @@ void Transport::PlayheadBar::mouseDrag(juce::MouseEvent const& event)
 {
     auto const relEvent = event.getEventRelativeTo(this);
     auto const x = getLocalBounds().getHorizontalRange().clipValue(relEvent.x);
-    mAccessor.setAttr<AttrType::startPlayhead>(Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, x), NotificationType::synchronous);
+    auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, x);
+    auto const expectedTime = Tools::getNearestTime(mAccessor, time, {mZoomAccessor.getAttr<Zoom::AttrType::globalRange>()});
+    mAccessor.setAttr<AttrType::startPlayhead>(expectedTime, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
