@@ -33,9 +33,32 @@ Application::CommandTarget::CommandTarget()
         }
     };
 
+    mTransportListener.onAttrChanged = [](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Transport::AttrType::runningPlayhead:
+                break;
+            case Transport::AttrType::playback:
+            case Transport::AttrType::startPlayhead:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
+            case Transport::AttrType::gain:
+            case Transport::AttrType::markers:
+            case Transport::AttrType::magnetize:
+            {
+                Instance::get().getApplicationCommandManager().commandStatusChanged();
+            }
+            break;
+        }
+    };
+
     Instance::get().getDocumentFileBased().addChangeListener(this);
     Instance::get().getUndoManager().addChangeListener(this);
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
+    Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
     Instance::get().getApplicationCommandManager().setFirstCommandTarget(this);
 }
@@ -43,6 +66,7 @@ Application::CommandTarget::CommandTarget()
 Application::CommandTarget::~CommandTarget()
 {
     Instance::get().getApplicationCommandManager().setFirstCommandTarget(nullptr);
+    Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().removeListener(mTransportListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getUndoManager().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);

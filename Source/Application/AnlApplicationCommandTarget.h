@@ -67,6 +67,7 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         Accessor::Listener mListener{typeid(*this).name()};
+        Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         PluginList::Table mPluginListTable;
         PluginList::SearchPath mPluginListSearchPath;
         ConverterPanel mSdifConverter;
