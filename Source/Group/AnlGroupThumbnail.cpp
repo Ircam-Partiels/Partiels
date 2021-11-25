@@ -25,7 +25,7 @@ Group::Thumbnail::Thumbnail(Director& director)
     {
         juce::PopupMenu menu;
         juce::WeakReference<juce::Component> safePointer(this);
-        menu.addItem(juce::translate("Show 'GROUPNAME' group properties").replace("GROUPNAME", mAccessor.getAttr<AttrType::name>()), [=, this]()
+        menu.addItem(juce::translate("Group properties"), [=, this]()
                      {
                          if(safePointer.get() == nullptr)
                          {
@@ -46,7 +46,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             if(trackAcsr.has_value())
             {
                 auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
-                menu.addItem(juce::translate("Show 'TRACKNAME' track properties").replace("TRACKNAME", trackName), [=, this]
+                menu.addItem(juce::translate("Track properties: TRACKNAME").replace("TRACKNAME", trackName), [=, this]
                              {
                                  if(safePointer.get() == nullptr)
                                  {
