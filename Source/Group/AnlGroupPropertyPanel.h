@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnlGroupDirector.h"
-#include "AnlGroupModel.h"
+#include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -19,6 +19,7 @@ namespace Group
         void resized() override;
 
     private:
+        void updateContent();
         void showChannelLayout();
 
         Director& mDirector;
@@ -27,9 +28,13 @@ namespace Group
 
         PropertyText mPropertyName;
         PropertyColourButton mPropertyBackgroundColour;
+        PropertyList mPropertyZoomTrack;
         PropertyTextButton mPropertyChannelLayout;
 
         bool mChannelLayoutActionStarted{false};
+
+        LayoutNotifier mLayoutNotifier;
+
         static auto constexpr sInnerWidth = 300;
     };
 } // namespace Group

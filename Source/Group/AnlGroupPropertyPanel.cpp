@@ -34,10 +34,29 @@ Group::PropertyPanel::PropertyPanel(Director& director)
       {
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change group background color"));
       })
-, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
+, mPropertyZoomTrack("Zoom Track", "The selected track used for the zoom", "", std::vector<std::string>{""}, [this](size_t index)
+                     {
+                         mDirector.startAction();
+                         auto const layout = mAccessor.getAttr<AttrType::layout>();
+                         if(index == 0_z || index - 1_z >= layout.size())
+                         {
+                             mAccessor.setAttr<AttrType::zoomid>("", NotificationType::synchronous);
+                         }
+                         else
+                         {
+                             mAccessor.setAttr<AttrType::zoomid>(layout[index - 1_z], NotificationType::synchronous);
+                         }
+                         mDirector.endAction(ActionState::newTransaction, "Change group zoom");
+                     })
+, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [this]()
                          {
                              showChannelLayout();
                          })
+, mLayoutNotifier(mAccessor, [this]()
+                  {
+                      updateContent();
+                  },
+                  {Track::AttrType::identifier, Track::AttrType::name})
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -57,6 +76,11 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyBackgroundColour.entry.setCurrentColour(acsr.getAttr<AttrType::colour>(), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::zoomid:
+            {
+                updateContent();
+            }
+            break;
             case AttrType::height:
             case AttrType::expanded:
             case AttrType::layout:
@@ -69,6 +93,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mPropertyBackgroundColour);
     addAndMakeVisible(mPropertyChannelLayout);
+    addAndMakeVisible(mPropertyZoomTrack);
     mFloatingWindow.setResizable(false, false);
     setSize(sInnerWidth, 400);
 
@@ -83,10 +108,50 @@ Group::PropertyPanel::~PropertyPanel()
 void Group::PropertyPanel::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    mPropertyName.setBounds(bounds.removeFromTop(mPropertyName.getHeight()));
-    mPropertyBackgroundColour.setBounds(bounds.removeFromTop(mPropertyBackgroundColour.getHeight()));
-    mPropertyChannelLayout.setBounds(bounds.removeFromTop(mPropertyChannelLayout.getHeight()));
+    auto setBounds = [&](juce::Component& component)
+    {
+        if(component.isVisible())
+        {
+            component.setBounds(bounds.removeFromTop(component.getHeight()));
+        }
+    };
+    setBounds(mPropertyName);
+    setBounds(mPropertyBackgroundColour);
+    setBounds(mPropertyZoomTrack);
+    setBounds(mPropertyChannelLayout);
     setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
+}
+
+void Group::PropertyPanel::updateContent()
+{
+    auto const zoomId = mAccessor.getAttr<AttrType::zoomid>();
+    auto const currentTrack = Tools::getTrackAcsr(mAccessor, zoomId);
+    auto& entry = mPropertyZoomTrack.entry;
+    entry.clear(juce::NotificationType::dontSendNotification);
+    entry.addItem(juce::translate("Front"), 1);
+    if(!currentTrack.has_value())
+    {
+        entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
+    }
+
+    auto const layout = mAccessor.getAttr<AttrType::layout>();
+    for(size_t layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+    {
+        auto const trackId = layout[layoutIndex];
+        auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
+        if(trackAcsr.has_value())
+        {
+            auto const& trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+            if(!trackName.isEmpty())
+            {
+                entry.addItem(trackName, static_cast<int>(layoutIndex) + 2);
+                if(trackId == zoomId)
+                {
+                    entry.setSelectedId(static_cast<int>(layoutIndex) + 2, juce::NotificationType::dontSendNotification);
+                }
+            }
+        }
+    }
 }
 
 void Group::PropertyPanel::showChannelLayout()
@@ -224,7 +289,7 @@ void Group::PropertyPanel::showChannelLayout()
                        {
                            if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
                            {
-                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change tracks' channels layout"));
+                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change group channels layout"));
                                for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
                                {
                                    auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
