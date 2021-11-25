@@ -183,6 +183,15 @@ Document::Section::Section(Director& director)
         }
     };
 
+    addAndMakeVisible(mMagnetizeButton);
+    mMagnetizeButton.setClickingTogglesState(true);
+    mMagnetizeButton.setTooltip(juce::translate("Toggle the magnetism mechanism with markers"));
+    mMagnetizeButton.onClick = [this]()
+    {
+        auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+        transportAcsr.setAttr<Transport::AttrType::magnetize>(mMagnetizeButton.getToggleState(), NotificationType::synchronous);
+    };
+
     mAddButton.setButtonText("+");
     mAddButton.setWantsKeyboardFocus(false);
     mAddButton.setMouseClickGrabsKeyboardFocus(false);
@@ -220,6 +229,31 @@ Document::Section::Section(Director& director)
     addAndMakeVisible(mTimeScrollBar);
     addAndMakeVisible(mAddButton);
     setSize(480, 200);
+
+    mTransportListener.onAttrChanged = [&](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Transport::AttrType::playback:
+            case Transport::AttrType::startPlayhead:
+            case Transport::AttrType::runningPlayhead:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
+            case Transport::AttrType::gain:
+                break;
+            case Transport::AttrType::markers:
+            {
+                mMagnetizeButton.setEnabled(!acsr.getAttr<Transport::AttrType::markers>().empty());
+            }
+            break;
+            case Transport::AttrType::magnetize:
+            {
+                mMagnetizeButton.setToggleState(acsr.getAttr<Transport::AttrType::magnetize>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+        }
+    };
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -369,6 +403,7 @@ Document::Section::Section(Director& director)
                                         });
     };
 
+    mAccessor.getAcsr<AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
     juce::Desktop::getInstance().addFocusChangeListener(this);
@@ -379,6 +414,7 @@ Document::Section::~Section()
     juce::Desktop::getInstance().removeFocusChangeListener(this);
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
+    mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
 }
 
 void Document::Section::resizeHeader(juce::Rectangle<int>& bounds)
@@ -407,6 +443,7 @@ void Document::Section::resized()
         mExpandLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
         mResizeLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
         tooltipButton.setBounds(topPart.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
+        mMagnetizeButton.setBounds(tooltipButton.getBounds().translated(0, -28));
         mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
         mLoopBarDecoration.setBounds(topPart);
         mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
@@ -450,6 +487,7 @@ void Document::Section::lookAndFeelChanged()
         }
         laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::layers);
         laf->setButtonIcon(tooltipButton, IconManager::IconType::comment);
+        laf->setButtonIcon(mMagnetizeButton, IconManager::IconType::magnet);
         switch(mAccessor.getAttr<AttrType::grid>())
         {
             case GridMode::hidden:

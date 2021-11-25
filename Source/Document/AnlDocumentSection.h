@@ -72,6 +72,7 @@ namespace Document
         Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
 
+        Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
@@ -81,6 +82,7 @@ namespace Document
         juce::ImageButton mGridButton;
         juce::ImageButton mExpandLayoutButton;
         juce::ImageButton mResizeLayoutButton;
+        juce::ImageButton mMagnetizeButton;
 
         Zoom::Ruler mTimeRuler;
         Decorator mTimeRulerDecoration{mTimeRuler};
