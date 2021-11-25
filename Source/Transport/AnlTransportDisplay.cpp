@@ -49,7 +49,7 @@ Transport::Display::Display(Accessor& accessor)
             }
             break;
             case AttrType::stopAtLoopEnd:
-            break;
+                break;
         }
     };
 
