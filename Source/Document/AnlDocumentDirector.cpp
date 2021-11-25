@@ -217,6 +217,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             break;
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
                 break;
         }

@@ -84,6 +84,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Transport::AttrType::playback:
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
                 break;
         }
@@ -214,6 +215,7 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case Transport::AttrType::playback:
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
                 break;
         }

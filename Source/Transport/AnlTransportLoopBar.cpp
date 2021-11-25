@@ -20,6 +20,7 @@ Transport::LoopBar::LoopBar(Accessor& accessor, Zoom::Accessor& zoomAcsr)
             case AttrType::playback:
             case AttrType::startPlayhead:
             case AttrType::runningPlayhead:
+            case AttrType::stopAtLoopEnd:
                 break;
             case AttrType::looping:
             {

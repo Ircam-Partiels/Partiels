@@ -35,6 +35,7 @@ Transport::PlayheadBar::PlayheadBar(Accessor& accessor, Zoom::Accessor& zoomAcsr
             break;
             case AttrType::looping:
             case AttrType::loopRange:
+            case AttrType::stopAtLoopEnd:
             case AttrType::gain:
                 break;
         }

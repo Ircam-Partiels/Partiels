@@ -48,6 +48,8 @@ Transport::Display::Display(Accessor& accessor)
                 mVolumeSlider.setValue(decibel, juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::stopAtLoopEnd:
+            break;
         }
     };
 

@@ -96,6 +96,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case Transport::AttrType::playback:
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
                 break;
         }
@@ -403,6 +404,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case Transport::AttrType::playback:
             case Transport::AttrType::looping:
             case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
                 break;
         }
