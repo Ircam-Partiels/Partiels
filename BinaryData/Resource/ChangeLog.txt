@@ -1,6 +1,8 @@
 
 v1.0.1
 
+- Fix: Rewind the play-head should move to the start of the loop if enabled - otherwise, to the beginning of the file (#192)
+- Add: Add playback mode that stops playback to the end of loop (#191)
 - Add: Selection of the track used for vertical zoom in the groups (#190)
 - Fix: Buttons of the alert window of the audio reader layout panel are not explicit - use apply/discard instead of ok/cancel (#188)
 - Add: Trigger audio reader layout changes using the return key (#187)
