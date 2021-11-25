@@ -117,6 +117,11 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     channelsLayout.resize(*numChannels, true);
                     mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, NotificationType::synchronous);
                 }
+
+                if(onResultsUpdated != nullptr)
+                {
+                    onResultsUpdated(notification);
+                }
             }
             break;
             case AttrType::graphics:
