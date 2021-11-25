@@ -7,14 +7,14 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 : FloatingWindowContainer("Properties", *this)
 , mDirector(director)
 
-, mPropertyName("Name", "The name of the group", [&](juce::String text)
+, mPropertyName("Name", "The name of the group", [this](juce::String text)
                 {
                     mDirector.startAction();
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
-                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change track name"));
+                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change group name"));
                 })
 , mPropertyBackgroundColour(
-      "Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
+      "Background Color", "The background current color of the graphical renderer.", "Select the background color", [this](juce::Colour const& colour)
       {
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
