@@ -11,7 +11,7 @@ Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 , mPluginListSearchPath(Instance::get().getPluginListAccessor())
 {
-    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
         switch(attribute)
@@ -77,6 +77,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::transportTogglePlayback
         , CommandIDs::transportToggleLooping
         , CommandIDs::transportToggleStopAtLoopEnd
+        , CommandIDs::transportToggleMagnetism
         , CommandIDs::transportRewindPlayHead
         
         , CommandIDs::viewZoomIn
@@ -237,6 +238,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Toggle Stop Playback at Loop End"), juce::translate("Enables or disables the stop playback at the end of loop if repeat disabled"), "Transport", 0);
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
             result.setTicked(transportAcsr.getAttr<Transport::AttrType::stopAtLoopEnd>());
+        }
+        break;
+        case CommandIDs::transportToggleMagnetism:
+        {
+            result.setInfo(juce::translate("Toggle Magnetize"), juce::translate("Enables or disables the magnetism mechanism with markers"), "Transport", 0);
+            result.setActive(!transportAcsr.getAttr<Transport::AttrType::markers>().empty());
+            result.setTicked(transportAcsr.getAttr<Transport::AttrType::magnetize>());
         }
         break;
         case CommandIDs::transportRewindPlayHead:
@@ -579,6 +587,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::transportToggleStopAtLoopEnd:
         {
             auto constexpr attr = Transport::AttrType::stopAtLoopEnd;
+            transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::transportToggleMagnetism:
+        {
+            auto constexpr attr = Transport::AttrType::magnetize;
             transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
             return true;
         }
