@@ -18,6 +18,7 @@ namespace Transport
         , stopAtLoopEnd
         , gain
         , markers
+        , magnetize
     };
     
     using AttrContainer = Model::Container
@@ -29,6 +30,7 @@ namespace Transport
     , Model::Attr<AttrType::stopAtLoopEnd, bool, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::gain, double, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::markers, std::set<double>, Model::Flag::notifying>
+    , Model::Attr<AttrType::magnetize, bool, Model::Flag::notifying | Model::Flag::saveable>
     >;
     
     class Accessor
@@ -46,6 +48,7 @@ namespace Transport
                                  , {false}
                                  , {1.0}
                                  , {}
+                                 , {false}
                                  ))
         {
         }
