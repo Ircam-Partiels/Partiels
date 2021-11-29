@@ -55,7 +55,7 @@ Application::Window::Window()
     {
         centreWithSize(1024, 768);
     }
-    mBoundsConstrainer.setSizeLimits(1024, 768, std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    mBoundsConstrainer.setSizeLimits(512, 384, std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mBoundsConstrainer.setMinimumOnscreenAmounts(0xffffff, 50, 50, 50);
     setConstrainer(&mBoundsConstrainer);
 
