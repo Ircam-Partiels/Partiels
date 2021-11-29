@@ -170,6 +170,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
+                updateMarkers(notification);
             }
             break;
             case AcsrType::groups:
