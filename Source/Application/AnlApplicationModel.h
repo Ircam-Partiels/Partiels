@@ -82,7 +82,7 @@ namespace Application
             }
             else if constexpr(type == AttrType::desktopGlobalScaleFactor)
             {
-                Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, value_v>(std::clamp(value, 1.0f, 4.0f), notification);
+                Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, value_v>(std::clamp(value, 1.0f, 2.0f), notification);
             }
             else
             {
