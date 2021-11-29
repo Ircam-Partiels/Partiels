@@ -41,7 +41,8 @@ namespace Application
             void resized() override;
 
         private:
-            PropertyNumber mScale;
+            PropertyNumber mNumber;
+            juce::Slider mSlider;
             Accessor::Listener mListener{typeid(*this).name()};
         };
 

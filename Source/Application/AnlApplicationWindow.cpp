@@ -5,13 +5,14 @@ ANALYSE_FILE_BEGIN
 
 Application::Window::DesktopScaler::DesktopScaler()
 : FloatingWindowContainer("Desktop Global Scale", *this)
-, mScale(juce::translate("Scale"), juce::translate("Defines the desktop global scale"), "x", juce::Range<float>{1.0f, 4.0f}, 0.1f, [](float scale)
-         {
-             auto& acsr = Instance::get().getApplicationAccessor();
-             acsr.setAttr<AttrType::desktopGlobalScaleFactor>(scale, NotificationType::synchronous);
-         })
+, mNumber(juce::translate("Scale"), juce::translate("Defines the desktop global scale"), "x", juce::Range<float>{1.0f, 2.0f}, 0.1f, [this](float scale)
+          {
+              auto& acsr = Instance::get().getApplicationAccessor();
+              acsr.setAttr<AttrType::desktopGlobalScaleFactor>(scale, NotificationType::synchronous);
+              setBounds(0, 0, 200, 50);
+          })
 {
-    addAndMakeVisible(mScale);
+    addAndMakeVisible(mNumber);
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -27,13 +28,27 @@ Application::Window::DesktopScaler::DesktopScaler()
                 break;
             case AttrType::desktopGlobalScaleFactor:
             {
-                mScale.entry.setValue(acsr.getAttr<AttrType::desktopGlobalScaleFactor>(), juce::NotificationType::dontSendNotification);
+                mNumber.entry.setValue(acsr.getAttr<AttrType::desktopGlobalScaleFactor>(), juce::NotificationType::dontSendNotification);
+                mSlider.setValue(acsr.getAttr<AttrType::desktopGlobalScaleFactor>(), juce::NotificationType::dontSendNotification);
             }
             break;
         }
     };
+
+    addAndMakeVisible(mSlider);
+    mSlider.setRange(mNumber.entry.getRange(), mNumber.entry.getInterval());
+    mSlider.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
+    mSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
+    mSlider.setTooltip(mNumber.getTooltip());
+    mSlider.onValueChange = [&]()
+    {
+        auto& acsr = Instance::get().getApplicationAccessor();
+        acsr.setAttr<AttrType::desktopGlobalScaleFactor>(static_cast<float>(mSlider.getValue()), NotificationType::synchronous);
+        setBounds(0, 0, 200, 50);
+    };
+
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
-    setBounds(0, 0, 200, 24);
+    setBounds(0, 0, 200, 50);
 }
 
 Application::Window::DesktopScaler::~DesktopScaler()
@@ -44,8 +59,9 @@ Application::Window::DesktopScaler::~DesktopScaler()
 void Application::Window::DesktopScaler::resized()
 {
     auto bounds = getLocalBounds();
-    mScale.setBounds(bounds.removeFromTop(mScale.getHeight()));
-    setSize(bounds.getWidth(), std::max(bounds.getY(), 24) + 2);
+    mNumber.setBounds(bounds.removeFromTop(mNumber.getHeight()));
+    mSlider.setBounds(bounds.removeFromTop(24));
+    setSize(bounds.getWidth(), std::max(bounds.getY(), 48) + 2);
 }
 
 Application::Window::Window()
