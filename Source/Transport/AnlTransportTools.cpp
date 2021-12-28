@@ -9,7 +9,7 @@ bool Transport::Tools::canRewindPlayhead(Accessor const& accessor)
     auto const stopAtEnd = accessor.getAttr<AttrType::stopAtLoopEnd>();
     auto const shouldUseLoopRange = !loopRange.isEmpty() && (isLooping || stopAtEnd);
     auto const position = accessor.getAttr<AttrType::startPlayhead>();
-    auto const start = shouldUseLoopRange && position > loopRange.getStart() ? loopRange.getStart() : 0.0;
+    auto const start = shouldUseLoopRange ? loopRange.getStart() : 0.0;
     return std::abs(position - start) > std::numeric_limits<double>::epsilon();
 }
 
@@ -32,8 +32,7 @@ void Transport::Tools::rewindPlayhead(Accessor& accessor, NotificationType notif
     auto const isLooping = accessor.getAttr<AttrType::looping>();
     auto const stopAtEnd = accessor.getAttr<AttrType::stopAtLoopEnd>();
     auto const shouldUseLoopRange = !loopRange.isEmpty() && (isLooping || stopAtEnd);
-    auto const position = accessor.getAttr<AttrType::startPlayhead>();
-    auto const start = shouldUseLoopRange && position > loopRange.getStart() ? loopRange.getStart() : 0.0;
+    auto const start = shouldUseLoopRange ? loopRange.getStart() : 0.0;
     if(isPlaying)
     {
         accessor.setAttr<AttrType::playback>(false, notification);
