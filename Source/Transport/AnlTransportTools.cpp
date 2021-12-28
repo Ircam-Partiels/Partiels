@@ -71,4 +71,42 @@ double Transport::Tools::getNearestTime(Accessor const& accessor, double time, s
     return std::abs(*nextIt - time) <= std::abs(*previousIt - time) ? *nextIt : *previousIt;
 }
 
+juce::Range<double> Transport::Tools::getTimeRange(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
+{
+    auto const& markers = accessor.getAttr<AttrType::markers>();
+    if(markers.empty() || !accessor.getAttr<AttrType::magnetize>())
+    {
+        return range.has_value() ? *range : juce::Range<double>{time, time};
+    }
+    if(time <= *markers.cbegin())
+    {
+        if(range.has_value())
+        {
+            auto const next = range->clipValue(*markers.cbegin());
+            auto const previous = range->getStart();
+            return {previous, next};
+        }
+        return {*markers.cbegin(), *markers.cbegin()};
+    }
+    if(time > *markers.crbegin())
+    {
+        if(range.has_value())
+        {
+            auto const previous = range->clipValue(*markers.crbegin());
+            auto const next = range->getEnd();
+            return {previous, next};
+        }
+        return {*markers.crbegin(), *markers.crbegin()};
+    }
+    auto const nextIt = std::lower_bound(markers.cbegin(), markers.cend(), time);
+    auto const previousIt = std::prev(nextIt);
+    if(range.has_value())
+    {
+        auto const next = range->clipValue(*nextIt);
+        auto const previous = range->clipValue(*previousIt);
+        return {previous, next};
+    }
+    return {*previousIt, *nextIt};
+}
+
 ANALYSE_FILE_END

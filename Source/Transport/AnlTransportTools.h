@@ -11,6 +11,7 @@ namespace Transport
         bool canRewindPlayhead(Accessor const& accessor);
         void rewindPlayhead(Accessor& accessor);
         double getNearestTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range);
+        juce::Range<double> getTimeRange(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range);
     } // namespace Tools
 } // namespace Transport
 
