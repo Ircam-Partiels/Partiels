@@ -298,7 +298,7 @@ void Transport::AudioReader::setAudioFormatReader(std::unique_ptr<juce::AudioFor
         mSourceManager.setInstance(nullptr);
         return;
     }
-    auto source = std::make_shared<ResamplingSource>(std::move(audioFormatReader), static_cast<int>(audioFormatReader->numChannels));
+    auto source = std::make_shared<ResamplingSource>(std::move(audioFormatReader), std::max(static_cast<int>(audioFormatReader->numChannels), 2));
     if(source != nullptr)
     {
         source->setGain(static_cast<float>(mAccessor.getAttr<AttrType::gain>()));
