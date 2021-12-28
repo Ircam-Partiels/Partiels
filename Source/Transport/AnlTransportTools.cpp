@@ -33,6 +33,44 @@ void Transport::Tools::rewindPlayhead(Accessor& accessor)
     }
 }
 
+double Transport::Tools::getPreviousTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
+{
+    auto const& markers = accessor.getAttr<AttrType::markers>();
+    if(markers.empty() || !accessor.getAttr<AttrType::magnetize>())
+    {
+        return range.has_value() ? range->getStart() : time;
+    }
+    if(time <= *markers.cbegin())
+    {
+        return range.has_value() ? range->getStart() : *markers.cbegin();
+    }
+    if(time > *markers.crbegin())
+    {
+        return range.has_value() ? range->clipValue(*markers.crbegin()) : *markers.crbegin();
+    }
+    auto const value = *std::prev(std::lower_bound(markers.cbegin(), markers.cend(), time));
+    return range.has_value() ? range->clipValue(value) : value;
+}
+
+double Transport::Tools::getNextTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
+{
+    auto const& markers = accessor.getAttr<AttrType::markers>();
+    if(markers.empty() || !accessor.getAttr<AttrType::magnetize>())
+    {
+        return range.has_value() ? range->getEnd() : time;
+    }
+    if(time < *markers.cbegin())
+    {
+        return range.has_value() ? range->clipValue(*markers.cbegin()) : *markers.cbegin();
+    }
+    if(time >= *markers.crbegin())
+    {
+        return range.has_value() ? range->getEnd() : *markers.crbegin();
+    }
+    auto const value = *std::upper_bound(markers.cbegin(), markers.cend(), time);
+    return range.has_value() ? range->clipValue(value) : value;
+}
+
 double Transport::Tools::getNearestTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
 {
     auto const& markers = accessor.getAttr<AttrType::markers>();
