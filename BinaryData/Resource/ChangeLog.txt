@@ -1,6 +1,7 @@
 
 v1.0.2
 
+- Imp: Double-click on the loop bar should select between two markers if the magnetism is enabled (#205)
 - Fix: Automatic resize not working when adding new tracks (#204)
 - Fix: Invisible marker channels should not be used for magnetism (#203)
 - Fix: Audio playback should use at minimum two channels even if the audio file layout is mono (#202)
