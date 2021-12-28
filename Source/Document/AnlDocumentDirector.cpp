@@ -119,6 +119,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     {
                         updateMarkers(localNotification);
                     };
+                    director->onChannelsLayoutUpdated = [this](NotificationType localNotification)
+                    {
+                        updateMarkers(localNotification);
+                    };
                 }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
@@ -885,14 +889,19 @@ void Document::Director::updateMarkers(NotificationType notification)
     for(auto const& trackAcsr : trackAcsrs)
     {
         auto const& results = trackAcsr.get().getAttr<Track::AttrType::results>();
+        auto const channelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
         auto const markerResults = results.getMarkers();
         if(markerResults != nullptr)
         {
-            for(auto const& channelMarkers : *markerResults)
+            for(auto channelIndex = 0_z; channelIndex < std::min(markerResults->size(), channelsLayout.size()); ++channelIndex)
             {
-                for(auto const& marker : channelMarkers)
+                if(channelsLayout[channelIndex])
                 {
-                    markers.insert(std::get<0_z>(marker));
+                    auto const& channelMarkers = markerResults->at(channelIndex);
+                    for(auto const& marker : channelMarkers)
+                    {
+                        markers.insert(std::get<0_z>(marker));
+                    }
                 }
             }
         }
