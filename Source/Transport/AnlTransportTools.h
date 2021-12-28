@@ -12,7 +12,7 @@ namespace Transport
         bool canMovePlayheadBackward(Accessor const& accessor, std::optional<juce::Range<double>> const& range);
         bool canMovePlayheadForward(Accessor const& accessor, std::optional<juce::Range<double>> const& range);
 
-        void rewindPlayhead(Accessor& accessor);
+        void rewindPlayhead(Accessor& accessor, NotificationType notification);
         void movePlayheadBackward(Accessor& accessor, std::optional<juce::Range<double>> const& range, NotificationType notification);
         void movePlayheadForward(Accessor& accessor, std::optional<juce::Range<double>> const& range, NotificationType notification);
 

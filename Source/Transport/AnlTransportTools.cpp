@@ -25,7 +25,7 @@ bool Transport::Tools::canMovePlayheadForward(Accessor const& accessor, std::opt
     return std::abs(getNextTime(accessor, position, range) - position) > std::numeric_limits<double>::epsilon();
 }
 
-void Transport::Tools::rewindPlayhead(Accessor& accessor)
+void Transport::Tools::rewindPlayhead(Accessor& accessor, NotificationType notification)
 {
     auto const isPlaying = accessor.getAttr<AttrType::playback>();
     auto const loopRange = accessor.getAttr<AttrType::loopRange>();
@@ -36,12 +36,12 @@ void Transport::Tools::rewindPlayhead(Accessor& accessor)
     auto const start = shouldUseLoopRange && position > loopRange.getStart() ? loopRange.getStart() : 0.0;
     if(isPlaying)
     {
-        accessor.setAttr<AttrType::playback>(false, NotificationType::synchronous);
+        accessor.setAttr<AttrType::playback>(false, notification);
     }
-    accessor.setAttr<AttrType::startPlayhead>(start, NotificationType::synchronous);
+    accessor.setAttr<AttrType::startPlayhead>(start, notification);
     if(isPlaying)
     {
-        accessor.setAttr<AttrType::playback>(true, NotificationType::synchronous);
+        accessor.setAttr<AttrType::playback>(true, notification);
     }
 }
 

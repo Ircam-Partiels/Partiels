@@ -642,7 +642,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::transportRewindPlayHead:
         {
-            Transport::Tools::rewindPlayhead(transportAcsr);
+            Transport::Tools::rewindPlayhead(transportAcsr, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::transportMovePlayHeadBackward:

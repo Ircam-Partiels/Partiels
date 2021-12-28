@@ -64,7 +64,7 @@ Transport::Display::Display(Accessor& accessor)
 
     mRewindButton.onClick = [&]()
     {
-        Tools::rewindPlayhead(mAccessor);
+        Tools::rewindPlayhead(mAccessor, NotificationType::synchronous);
     };
 
     mPlaybackButton.setClickingTogglesState(true);
