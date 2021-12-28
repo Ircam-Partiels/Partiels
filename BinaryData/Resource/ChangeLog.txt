@@ -7,6 +7,7 @@ v1.0.2
 - Fix: Audio playback should use at minimum two channels even if the audio file layout is mono (#202)
 - Fix: Block size and step size of plugins are not well supported if their default value is 0 (#201)
 - Fix: Vertical zoom using vertical mouse wheel and shift+control modifiers on groups is not working (#195)
+- Add: Move the playhead forward/backward shortcuts and commands + improve the playhead rewind (#194)
 
 v1.0.1
 
