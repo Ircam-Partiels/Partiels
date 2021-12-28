@@ -45,6 +45,18 @@ void Transport::Tools::rewindPlayhead(Accessor& accessor)
     }
 }
 
+void Transport::Tools::movePlayheadBackward(Accessor& accessor, std::optional<juce::Range<double>> const& range, NotificationType notification)
+{
+    auto const position = accessor.getAttr<AttrType::startPlayhead>();
+    accessor.setAttr<AttrType::startPlayhead>(getPreviousTime(accessor, position, range), notification);
+}
+
+void Transport::Tools::movePlayheadForward(Accessor& accessor, std::optional<juce::Range<double>> const& range, NotificationType notification)
+{
+    auto const position = accessor.getAttr<AttrType::startPlayhead>();
+    accessor.setAttr<AttrType::startPlayhead>(getNextTime(accessor, position, range), notification);
+}
+
 double Transport::Tools::getPreviousTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range)
 {
     auto const& markers = accessor.getAttr<AttrType::markers>();

@@ -13,6 +13,9 @@ namespace Transport
         bool canMovePlayheadForward(Accessor const& accessor, std::optional<juce::Range<double>> const& range);
 
         void rewindPlayhead(Accessor& accessor);
+        void movePlayheadBackward(Accessor& accessor, std::optional<juce::Range<double>> const& range, NotificationType notification);
+        void movePlayheadForward(Accessor& accessor, std::optional<juce::Range<double>> const& range, NotificationType notification);
+
         double getPreviousTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range);
         double getNextTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range);
         double getNearestTime(Accessor const& accessor, double time, std::optional<juce::Range<double>> const& range);
