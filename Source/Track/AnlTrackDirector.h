@@ -28,6 +28,7 @@ namespace Track
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
         std::function<void(NotificationType notification)> onResultsUpdated = nullptr;
+        std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
 

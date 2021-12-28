@@ -143,7 +143,13 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             }
             break;
             case AttrType::channelsLayout:
-                break;
+            {
+                if(onChannelsLayoutUpdated != nullptr)
+                {
+                    onChannelsLayoutUpdated(notification);
+                }
+            }
+            break;
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             {
