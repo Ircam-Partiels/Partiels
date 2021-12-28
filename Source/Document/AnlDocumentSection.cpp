@@ -319,44 +319,54 @@ Document::Section::Section(Director& director)
         }
     };
 
-    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
+    auto upddateHeightsAsync = [this]()
+    {
+        // Using a delay ensures that the group and track size animations are preserved.
+        // It also ensures asynchronous access to the model even if this is not the best approach.
+        juce::WeakReference<juce::Component> weakReference(this);
+        juce::Timer::callAfterDelay(350, [=, this]()
+                                    {
+                                        if(weakReference.get() == nullptr)
+                                        {
+                                            return;
+                                        }
+                                        updateHeights();
+                                    });
+    };
+
+    mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
         switch(type)
         {
             case AcsrType::groups:
             {
-                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
+                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [=, this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                                                                  {
                                                                                      juce::ignoreUnused(groupAcsr);
                                                                                      if(groupAttribute == Group::AttrType::expanded)
                                                                                      {
                                                                                          updateExpandState();
-                                                                                         // Using a delay ensures that the group and track size animations are preserved.
-                                                                                         // It also ensures asynchronous access to the model even if this is not the best approach.
-                                                                                         juce::WeakReference<juce::Component> weakReference(this);
-                                                                                         juce::Timer::callAfterDelay(350, [=, this]()
-                                                                                                                     {
-                                                                                                                         if(weakReference.get() == nullptr)
-                                                                                                                         {
-                                                                                                                             return;
-                                                                                                                         }
-                                                                                                                         updateHeights();
-                                                                                                                     });
+                                                                                         upddateHeightsAsync();
                                                                                      }
                                                                                  });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
                 anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
+                upddateHeightsAsync();
             }
             break;
             case AcsrType::tracks:
+            {
+                upddateHeightsAsync();
+            }
+            break;
             case AcsrType::timeZoom:
             case AcsrType::transport:
                 break;
         }
     };
 
-    mListener.onAccessorErased = [this](Accessor const& acsr, AcsrType type, size_t index)
+    mListener.onAccessorErased = [=, this](Accessor const& acsr, AcsrType type, size_t index)
     {
         juce::ignoreUnused(acsr);
         switch(type)
@@ -366,9 +376,14 @@ Document::Section::Section(Director& director)
                 mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
                 anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
                 updateExpandState();
+                upddateHeightsAsync();
             }
             break;
             case AcsrType::tracks:
+            {
+                upddateHeightsAsync();
+            }
+            break;
             case AcsrType::timeZoom:
             case AcsrType::transport:
                 break;
