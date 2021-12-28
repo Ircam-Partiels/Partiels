@@ -25,7 +25,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::key:
             {
-                if(mAccessor.getAttr<AttrType::state>() == Plugin::State{})
+                if(mAccessor.getAttr<AttrType::description>() == Plugin::Description{})
                 {
                     auto getDescription = [&]()
                     {
@@ -41,10 +41,19 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     };
 
                     auto const description = getDescription();
-                    if(description != Plugin::Description())
+                    if(description != Plugin::Description{})
                     {
                         mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
-                        mAccessor.setAttr<AttrType::state>(description.defaultState, NotificationType::synchronous);
+                        auto newState = description.defaultState;
+                        if(newState.blockSize == 0_z)
+                        {
+                            newState.blockSize = 64_z;
+                        }
+                        if(newState.stepSize == 0_z)
+                        {
+                            newState.stepSize = newState.blockSize;
+                        }
+                        mAccessor.setAttr<AttrType::state>(newState, NotificationType::synchronous);
                     }
                 }
                 else if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
