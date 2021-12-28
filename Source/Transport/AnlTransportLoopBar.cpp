@@ -181,8 +181,9 @@ void Transport::LoopBar::mouseUp(juce::MouseEvent const& event)
 
 void Transport::LoopBar::mouseDoubleClick(juce::MouseEvent const& event)
 {
-    juce::ignoreUnused(event);
-    mAccessor.setAttr<AttrType::loopRange>(mZoomAccessor.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+    auto const time = Zoom::Tools::getScaledValueFromWidth(mZoomAccessor, *this, event.x);
+    auto const loopRange = Tools::getTimeRange(mAccessor, time, mZoomAccessor.getAttr<Zoom::AttrType::globalRange>());
+    mAccessor.setAttr<AttrType::loopRange>(loopRange, NotificationType::synchronous);
 }
 
 ANALYSE_FILE_END
