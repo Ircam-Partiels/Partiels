@@ -92,6 +92,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::transportToggleMagnetism);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::transportRewindPlayHead);
+        menu.addCommandItem(&commandManager, CommandIDs::transportMovePlayHeadBackward);
+        menu.addCommandItem(&commandManager, CommandIDs::transportMovePlayHeadForward);
     }
     else if(menuName == "View")
     {
