@@ -112,7 +112,15 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                          }
                          auto const overlapping = static_cast<double>(state.blockSize) / static_cast<double>(state.stepSize);
                          state.blockSize = blockSize;
-                         state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) / overlapping));
+                         auto const defaultStep = mAccessor.getAttr<AttrType::description>().defaultState.stepSize;
+                         if(defaultStep == 0_z)
+                         {
+                             state.stepSize = state.blockSize;
+                         }
+                         else
+                         {
+                             state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) / overlapping));
+                         }
                          mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track block size"));
                      })
