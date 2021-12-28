@@ -3,6 +3,7 @@ v1.0.2
 
 - Fix: Automatic resize not working when adding new tracks (#204)
 - Fix: Invisible marker channels should not be used for magnetism (#203)
+- Fix: Audio playback should use at minimum two channels even if the audio file layout is mono (#202)
 - Fix: Block size and step size of plugins are not well supported if their default value is 0 (#201)
 
 v1.0.1
