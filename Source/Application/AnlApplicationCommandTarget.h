@@ -40,6 +40,8 @@ namespace Application
             , transportToggleStopAtLoopEnd
             , transportToggleMagnetism
             , transportRewindPlayHead
+            , transportMovePlayHeadBackward
+            , transportMovePlayHeadForward
             
             , viewZoomIn
             , viewZoomOut

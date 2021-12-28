@@ -103,6 +103,8 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::transportToggleStopAtLoopEnd
         , CommandIDs::transportToggleMagnetism
         , CommandIDs::transportRewindPlayHead
+        , CommandIDs::transportMovePlayHeadBackward
+        , CommandIDs::transportMovePlayHeadForward
         
         , CommandIDs::viewZoomIn
         , CommandIDs::viewZoomOut
@@ -277,6 +279,24 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.defaultKeypresses.add(juce::KeyPress('w', juce::ModifierKeys::commandModifier, 0));
             auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
             result.setActive(hasReader && Transport::Tools::canRewindPlayhead(transportAcsr));
+        }
+        break;
+        case CommandIDs::transportMovePlayHeadBackward:
+        {
+            result.setInfo(juce::translate("Move the Playhead Backward"), juce::translate("Moves the playhead to the previous marker"), "Transport", 0);
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::leftKey, juce::ModifierKeys::commandModifier, 0));
+            auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
+            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+            result.setActive(hasReader && Transport::Tools::canMovePlayheadBackward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
+        }
+        break;
+        case CommandIDs::transportMovePlayHeadForward:
+        {
+            result.setInfo(juce::translate("Move the Playhead Forward"), juce::translate("Moves the playhead to the previous marker"), "Transport", 0);
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::rightKey, juce::ModifierKeys::commandModifier, 0));
+            auto const hasReader = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
+            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+            result.setActive(hasReader && Transport::Tools::canMovePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>()));
         }
         break;
 
@@ -623,6 +643,18 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::transportRewindPlayHead:
         {
             Transport::Tools::rewindPlayhead(transportAcsr);
+            return true;
+        }
+        case CommandIDs::transportMovePlayHeadBackward:
+        {
+            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+            Transport::Tools::movePlayheadBackward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::transportMovePlayHeadForward:
+        {
+            auto const& timeZoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
+            Transport::Tools::movePlayheadForward(transportAcsr, timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
             return true;
         }
 
