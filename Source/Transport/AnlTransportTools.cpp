@@ -13,6 +13,18 @@ bool Transport::Tools::canRewindPlayhead(Accessor const& accessor)
     return std::abs(position - start) > std::numeric_limits<double>::epsilon();
 }
 
+bool Transport::Tools::canMovePlayheadBackward(Accessor const& accessor, std::optional<juce::Range<double>> const& range)
+{
+    auto const position = accessor.getAttr<AttrType::startPlayhead>();
+    return std::abs(getPreviousTime(accessor, position, range) - position) > std::numeric_limits<double>::epsilon();
+}
+
+bool Transport::Tools::canMovePlayheadForward(Accessor const& accessor, std::optional<juce::Range<double>> const& range)
+{
+    auto const position = accessor.getAttr<AttrType::startPlayhead>();
+    return std::abs(getNextTime(accessor, position, range) - position) > std::numeric_limits<double>::epsilon();
+}
+
 void Transport::Tools::rewindPlayhead(Accessor& accessor)
 {
     auto const isPlaying = accessor.getAttr<AttrType::playback>();
