@@ -200,7 +200,7 @@ void Group::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
     }
     if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal || event.mods.isShiftDown())
     {
-        mouseMagnify(event, 1.0f + wheel.deltaX);
+        mouseMagnify(event, event.mods.isShiftDown() ? 1.0f + wheel.deltaY : 1.0f + wheel.deltaX);
     }
     else
     {
