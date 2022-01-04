@@ -29,7 +29,7 @@ Test::Windows:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
-    - cmake .. -G "Visual Studio 16 2019" -A x64
+    - cmake .. -G "Visual Studio 17 2022" -A x64
     - cmake --build . --config Debug
     - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Debug"
     - echo $env:VAMP_PATH
@@ -87,7 +87,7 @@ Build::Windows:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
-    - cmake .. -G "Visual Studio 16 2019" -A x64
+    - cmake .. -G "Visual Studio 17 2022" -A x64
     - cmake --build . --config Release
     - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Release"
     - echo $env:VAMP_PATH
