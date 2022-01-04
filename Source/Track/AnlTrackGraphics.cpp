@@ -35,8 +35,21 @@ void Track::Graphics::runRendering(Accessor const& accessor)
         return;
     }
 
-    auto const width = static_cast<int>(Tools::getNumColumns(accessor));
-    auto const height = static_cast<int>(Tools::getNumBins(accessor));
+    auto const maxNumColumns = std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
+                                               {
+                                                   return std::max(val, channel.size());
+                                               });
+
+    auto const maxNumBins = std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
+                                            {
+                                                return std::accumulate(channel.cbegin(), channel.cend(), val, [](auto const& rval, auto const& column)
+                                                                       {
+                                                                           return std::max(rval, std::get<2>(column).size());
+                                                                       });
+                                            });
+
+    auto const width = static_cast<int>(maxNumColumns);
+    auto const height = static_cast<int>(maxNumBins);
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
     {
