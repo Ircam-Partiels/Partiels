@@ -218,7 +218,7 @@ void Application::Batcher::process()
 
                                   copyAcsr->copyFrom(Instance::get().getDocumentAccessor(), NotificationType::synchronous);
                                   copyAcsr->setAttr<Document::AttrType::reader>(std::vector<AudioFileLayout>{}, NotificationType::synchronous);
-                                  for(auto const acsr : copyAcsr->getAcsrs<Document::AcsrType::tracks>())
+                                  for(auto const& acsr : copyAcsr->getAcsrs<Document::AcsrType::tracks>())
                                   {
                                       auto const resultFile = acsr.get().getAttr<Track::AttrType::file>().file;
                                       if(resultFile.hasFileExtension("dat"))
