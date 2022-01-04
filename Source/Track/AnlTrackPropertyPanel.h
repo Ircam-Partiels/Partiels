@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlTrackDirector.h"
-#include "AnlTrackModel.h"
 #include "AnlTrackProgressBar.h"
 
 ANALYSE_FILE_BEGIN
