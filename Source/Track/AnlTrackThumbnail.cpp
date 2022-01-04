@@ -178,14 +178,8 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     anlWeakAssert(dragContainer != nullptr && parent != nullptr);
     if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
     {
-        juce::Image snapshot(juce::Image::ARGB, parent->getWidth(), parent->getHeight(), true);
-        juce::Graphics g(snapshot);
-        g.beginTransparencyLayer(0.6f);
-        parent->paintEntireComponent(g, false);
-        g.endTransparencyLayer();
-
         auto const p = -event.getMouseDownPosition();
-        dragContainer->startDragging(DraggableTable::createDescription(event, "Track", mAccessor.getAttr<AttrType::identifier>(), parent->getHeight()), parent, snapshot, true, &p, &event.source);
+        dragContainer->startDragging(DraggableTable::createDescription(event, "Track", mAccessor.getAttr<AttrType::identifier>(), parent->getHeight()), parent, juce::ScaledImage{}, true, &p, &event.source);
     }
 }
 
