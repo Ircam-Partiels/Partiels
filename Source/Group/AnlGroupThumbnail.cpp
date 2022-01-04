@@ -237,15 +237,10 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StrechableSection>();
-    anlWeakAssert(dragContainer != nullptr && parent != nullptr);
-    if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && section != nullptr && parent != nullptr)
+    auto* laf = dynamic_cast<LookAndFeel*>(&getLookAndFeel());
+    anlWeakAssert(dragContainer != nullptr && parent != nullptr && laf != nullptr);
+    if(dragContainer != nullptr && laf != nullptr && !dragContainer->isDragAndDropActive() && section != nullptr && parent != nullptr)
     {
-        juce::Image snapshot(juce::Image::ARGB, section->getWidth(), section->getHeight(), true);
-        juce::Graphics g(snapshot);
-        g.beginTransparencyLayer(0.6f);
-        section->paintEntireComponent(g, false);
-        g.endTransparencyLayer();
-
         auto const p = -event.getMouseDownPosition();
         auto const expanded = mAccessor.getAttr<AttrType::expanded>();
         dragContainer->startDragging(DraggableTable::createDescription(
@@ -263,7 +258,7 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
                                                  mAccessor.setAttr<AttrType::expanded>(true, NotificationType::synchronous);
                                              }
                                          }),
-                                     parent, snapshot, true, &p, &event.source);
+                                     parent, laf->createDragImage(*section), true, &p, &event.source);
     }
 }
 
