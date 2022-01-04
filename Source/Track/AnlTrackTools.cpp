@@ -45,62 +45,6 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
     return DisplayType::points;
 }
 
-size_t Track::Tools::getNumColumns(Accessor const& acsr)
-{
-    auto const& results = acsr.getAttr<AttrType::results>();
-    if(results.isEmpty())
-    {
-        return 0_z;
-    }
-    if(auto markers = results.getMarkers())
-    {
-        return std::accumulate(markers->cbegin(), markers->cend(), 0_z, [](auto const& val, auto const& channel)
-                               {
-                                   return std::max(val, channel.size());
-                               });
-    }
-    if(auto points = results.getPoints())
-    {
-        return std::accumulate(points->cbegin(), points->cend(), 0_z, [](auto const& val, auto const& channel)
-                               {
-                                   return std::max(val, channel.size());
-                               });
-    }
-    if(auto columns = results.getColumns())
-    {
-        return std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
-                               {
-                                   return std::max(val, channel.size());
-                               });
-    }
-    return 0_z;
-}
-
-size_t Track::Tools::getNumBins(Accessor const& acsr)
-{
-    auto const& results = acsr.getAttr<AttrType::results>();
-    if(results.isEmpty() || results.getMarkers() != nullptr)
-    {
-        return 0_z;
-    }
-    if(results.getPoints() != nullptr)
-    {
-        return 1_z;
-    }
-    auto const columns = results.getColumns();
-    if(columns == nullptr || columns->empty())
-    {
-        return 0_z;
-    }
-    return std::accumulate(columns->cbegin(), columns->cend(), 0_z, [](auto const& val, auto const& channel)
-                           {
-                               return std::accumulate(channel.cbegin(), channel.cend(), val, [](auto const& rval, auto const& column)
-                                                      {
-                                                          return std::max(rval, std::get<2>(column).size());
-                                                      });
-                           });
-}
-
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
 {
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();

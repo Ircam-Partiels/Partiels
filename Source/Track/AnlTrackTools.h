@@ -18,8 +18,6 @@ namespace Track
         // clang-format on
 
         DisplayType getDisplayType(Accessor const& acsr);
-        size_t getNumColumns(Accessor const& acsr);
-        size_t getNumBins(Accessor const& acsr);
 
         float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
         float secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
