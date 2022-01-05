@@ -54,7 +54,7 @@ namespace Track
             {
                 auto it = std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
                                        {
-                                           return std::get<0>(result) + std::get<1>(result) <= time;
+                                           return std::get<0>(result) + std::get<1>(result) < time;
                                        });
                 if(it == results.crend())
                 {
