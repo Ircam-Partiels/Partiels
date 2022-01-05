@@ -19,7 +19,12 @@ cmake .. -G Xcode
 
 echo '\033[0;34m' "Creating archive..."
 echo '\033[0m'
-xcodebuild archive -project "$APP_NAME.xcodeproj" -quiet -configuration "Release" -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS
+if ! command -v xcbeautify &> /dev/null; then
+  echo "Install xcbeautify \`brew install xcbeautify\` to generates clean xcodebuild output"
+  xcodebuild archive -project "$APP_NAME.xcodeproj" -configuration "Release" -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS
+else
+  xcodebuild archive -project "$APP_NAME.xcodeproj" -configuration "Release" -scheme "Partiels" -archivePath "$APP_NAME.xcarchive" -destination platform=macOS | xcbeautify
+fi
 
 echo '\033[0;34m' "Exporting archive..."
 echo '\033[0m'
