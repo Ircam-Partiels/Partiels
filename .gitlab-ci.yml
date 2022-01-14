@@ -11,12 +11,16 @@ Test::MacOS:
   stage: test
   tags:
     - osx
+  before_script:
+    - export GEM_HOME="$HOME/.gem"
+    - export PATH="$PATH:$HOME/.gem/bin"
+    - gem install xcpretty
   script:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
     - cmake .. -G Xcode
-    - cmake --build . --config Debug
+    - set -o pipefail && cmake --build . --config Debug | xcpretty
     - export VAMP_PATH="$CI_PROJECT_DIR/build/Debug"
     - echo $VAMP_PATH
     - ctest -C Debug -VV
@@ -68,12 +72,16 @@ Build::MacOS:
   needs: ["Test::MacOS"]
   tags:
     - osx
+  before_script:
+    - export GEM_HOME="$HOME/.gem"
+    - export PATH="$PATH:$HOME/.gem/bin"
+    - gem install xcpretty
   script:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
     - cmake .. -G Xcode
-    - cmake --build . --config Release
+    - set -o pipefail && cmake --build . --config Release | xcpretty
     - export VAMP_PATH="$CI_PROJECT_DIR/build/Release"
     - echo $VAMP_PATH
     - ctest -C Release -VV
