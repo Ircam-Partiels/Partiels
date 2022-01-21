@@ -1,4 +1,10 @@
 
+v1.0.3
+
+- Fix: The factory preset is not selected by default in the track property window when the plugin uses a step size equal to the block size (#208)
+- Fix: HMSms field should apply changes if the focus is lost (#207)
+- Fix: Vertical zoom editor for tracks and groups not showing when control-clicking vertical ruler (#206)
+
 v1.0.2
 
 - Imp: Double-click on the loop bar should select between two markers if the magnetism is enabled (#205)
