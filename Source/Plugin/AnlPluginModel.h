@@ -98,7 +98,7 @@ namespace Plugin
         inline bool operator==(State const& rhd) const noexcept
         {
             return blockSize == rhd.blockSize &&
-                   stepSize == rhd.stepSize &&
+                   (stepSize == 0_z || rhd.stepSize == 0_z || stepSize == rhd.stepSize) &&
                    windowType == rhd.windowType &&
                    parameters == rhd.parameters;
         }
