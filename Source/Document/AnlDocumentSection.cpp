@@ -45,7 +45,8 @@ Document::Section::Section(Director& director)
 
             auto const x = juce::Desktop::getMousePosition().getX();
             auto const timeRulerBounds = mTimeRuler.getScreenBounds();
-            auto const bounds = timeRulerBounds.withX(x - timeRulerBounds.getHeight() / 2).withWidth(timeRulerBounds.getHeight());
+            auto const height = timeRulerBounds.getHeight();
+            auto const bounds = timeRulerBounds.withX(x - height / 2).withWidth(height);
             juce::CallOutBox::launchAsynchronously(std::move(timeRangeEditor), bounds, nullptr).setArrowSize(0.0f);
             return false;
         }
