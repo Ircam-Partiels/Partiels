@@ -62,7 +62,8 @@ Track::Ruler::Ruler(Accessor& accessor)
                                 }
                                 auto const point = juce::Desktop::getMousePosition();
                                 auto const rulerBounds = rulerPtr->getScreenBounds();
-                                auto const bounds = rulerBounds.withY(point.getY() - rulerBounds.getWidth()).withHeight(rulerBounds.getWidth());
+                                auto const width = rulerBounds.getWidth();
+                                auto const bounds = rulerBounds.withY(point.getY() - width / 2).withHeight(width);
                                 juce::CallOutBox::launchAsynchronously(std::move(rangeEditor), bounds, nullptr).setArrowSize(0.0f);
                                 return false;
                             }
