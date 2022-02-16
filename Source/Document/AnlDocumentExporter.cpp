@@ -394,7 +394,7 @@ void Document::Exporter::Panel::updateItems()
             entryBox.addItem(juce::translate("GROUPNAME (Group)").replace("GROUPNAME", groupName), groupItemId);
             if(groupId == selectedId)
             {
-                entryBox.setSelectedId(groupItemId);
+                entryBox.setSelectedId(groupItemId, juce::NotificationType::dontSendNotification);
             }
 
             auto const groupLayout = copy_with_erased_if(groupAcsr.getAttr<Group::AttrType::layout>(), [&](auto const& trackId)
@@ -414,17 +414,18 @@ void Document::Exporter::Panel::updateItems()
                     entryBox.addItem(juce::translate("GROUPNAME: TRACKNAME (Track)").replace("GROUPNAME", groupName).replace("TRACKNAME", trackName), trackItemId);
                     if(trackId == selectedId)
                     {
-                        entryBox.setSelectedId(trackItemId);
+                        entryBox.setSelectedId(trackItemId, juce::NotificationType::dontSendNotification);
                     }
                 }
             }
         }
     }
 
-    if(mPropertyItem.entry.getSelectedId() == 0)
+    if(entryBox.getSelectedId() == 0)
     {
-        mPropertyItem.entry.setSelectedId(documentItemFactor);
+        entryBox.setSelectedId(documentItemFactor, juce::NotificationType::dontSendNotification);
     }
+    sanitizeProperties(false);
 }
 
 void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
