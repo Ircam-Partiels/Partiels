@@ -28,7 +28,7 @@ namespace Document
         void showBubbleInfo(bool state);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
-        juce::ImageButton tooltipButton;
+        Icon tooltipButton{Icon::Type::comment};
         std::function<void(void)> onSaveButtonClicked = nullptr;
         std::function<void(void)> onNewTrackButtonClicked = nullptr;
         std::function<void(void)> onNewGroupButtonClicked = nullptr;
@@ -36,7 +36,6 @@ namespace Document
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
-        void lookAndFeelChanged() override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
         std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
@@ -73,13 +72,12 @@ namespace Document
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
-        juce::ImageButton mReaderLayoutButton;
-        juce::String mReaderAlertMessage;
+        Icon mReaderLayoutButton{Icon::Type::music};
         juce::TextButton mDocumentName;
-        juce::ImageButton mGridButton;
-        juce::ImageButton mExpandLayoutButton;
-        juce::ImageButton mResizeLayoutButton;
-        juce::ImageButton mMagnetizeButton;
+        Icon mGridButton{Icon::Type::gridOff};
+        Icon mExpandLayoutButton{Icon::Type::expand};
+        Icon mResizeLayoutButton{Icon::Type::layers};
+        Icon mMagnetizeButton{Icon::Type::magnet};
 
         Zoom::Ruler mTimeRuler;
         Decorator mTimeRulerDecoration{mTimeRuler};

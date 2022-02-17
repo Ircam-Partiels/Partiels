@@ -19,9 +19,9 @@ Track::StateButton::StateButton(Accessor& accessor)
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
                 auto getInactiveIconType = [warnings]()
                 {
-                    return warnings == WarningType::none ? IconManager::IconType::verified : IconManager::IconType::alert;
+                    return warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert;
                 };
-                mProcessingButton.setInactiveImage(IconManager::getIcon(getInactiveIconType()));
+                mProcessingButton.setInactiveImage(Icon::getImage(getInactiveIconType()));
                 auto const tooltip = Tools::getStateTootip(acsr);
                 mProcessingButton.setTooltip(tooltip);
                 setTooltip(tooltip);

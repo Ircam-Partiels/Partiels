@@ -140,21 +140,6 @@ void Track::Thumbnail::paint(juce::Graphics& g)
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, bottom, width, juce::Justification::centredLeft, 1, 1.0f);
 }
 
-void Track::Thumbnail::lookAndFeelChanged()
-{
-    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(laf != nullptr);
-    if(laf != nullptr)
-    {
-        laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
-    }
-}
-
-void Track::Thumbnail::parentHierarchyChanged()
-{
-    lookAndFeelChanged();
-}
-
 void Track::Thumbnail::mouseMove(juce::MouseEvent const& event)
 {
     setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);

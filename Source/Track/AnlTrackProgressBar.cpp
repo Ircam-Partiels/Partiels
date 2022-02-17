@@ -38,7 +38,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                 else
                 {
                     mProgressBar.setVisible(false);
-                    mStateImage = IconManager::getIcon(warnings == WarningType::none ? IconManager::IconType::verified : IconManager::IconType::alert);
+                    mStateImage = Icon::getImage(warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert);
                     auto getMessage = [&, warnings]()
                     {
                         switch(warnings)

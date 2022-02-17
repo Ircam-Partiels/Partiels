@@ -64,7 +64,7 @@ Group::StateButton::StateButton(Accessor& accessor)
     };
 
     mProcessingButton.setActive(false);
-    mProcessingButton.setInactiveImage(IconManager::getIcon(IconManager::IconType::verified));
+    mProcessingButton.setInactiveImage(Icon::getImage(Icon::Type::verified));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -144,7 +144,7 @@ void Group::StateButton::updateTooltip()
     auto const changed = mHasWarning != !valid || (processing || rendering) != mProcessingButton.isActive();
     mHasWarning = !valid;
     mProcessingButton.setActive(processing || rendering);
-    mProcessingButton.setInactiveImage(IconManager::getIcon(valid ? IconManager::IconType::verified : IconManager::IconType::alert));
+    mProcessingButton.setInactiveImage(Icon::getImage(valid ? Icon::Type::verified : Icon::Type::alert));
     if(changed && onStateChanged != nullptr)
     {
         onStateChanged();

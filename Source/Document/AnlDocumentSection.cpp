@@ -107,11 +107,11 @@ Document::Section::Section(Director& director)
 
     addAndMakeVisible(mReaderLayoutButton);
     mReaderLayoutButton.setWantsKeyboardFocus(false);
-    mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
     mReaderLayoutButton.onClick = [this]()
     {
         mReaderLayoutPanel.show();
     };
+
     addAndMakeVisible(mDocumentName);
     mDocumentName.onClick = [this]()
     {
@@ -264,18 +264,45 @@ Document::Section::Section(Director& director)
             case AttrType::reader:
             {
                 auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
-                mReaderAlertMessage = std::get<1>(result).joinIntoString("");
+                auto const alertMessage = std::get<1>(result).joinIntoString("");
+                if(alertMessage.isEmpty())
+                {
+                    mReaderLayoutButton.setTypes(Icon::Type::music);
+                    mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
+                }
+                else
+                {
+                    mReaderLayoutButton.setTypes(Icon::Type::alert);
+                    mReaderLayoutButton.setTooltip(alertMessage);
+                }
+
                 if(std::get<0>(result) && std::get<0>(result)->sampleRate > 0.0)
                 {
                     auto const maxTime = static_cast<double>(std::get<0>(result)->lengthInSamples) / std::get<0>(result)->sampleRate;
                     mTransportDisplay.setMaxTime(maxTime);
                 }
-                lookAndFeelChanged();
             }
             break;
             case AttrType::grid:
             {
-                lookAndFeelChanged();
+                switch(mAccessor.getAttr<AttrType::grid>())
+                {
+                    case GridMode::hidden:
+                    {
+                        mGridButton.setTypes(Icon::Type::gridOff);
+                    }
+                    break;
+                    case GridMode::partial:
+                    {
+                        mGridButton.setTypes(Icon::Type::gridPartial);
+                    }
+                    break;
+                    case GridMode::full:
+                    {
+                        mGridButton.setTypes(Icon::Type::gridFull);
+                    }
+                    break;
+                }
             }
             break;
             case AttrType::autoresize:
@@ -485,47 +512,6 @@ void Document::Section::paint(juce::Graphics& g)
     g.fillAll(findColour(ColourIds::backgroundColourId));
 }
 
-void Document::Section::lookAndFeelChanged()
-{
-    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(laf != nullptr);
-    if(laf != nullptr)
-    {
-        if(!mReaderAlertMessage.isEmpty())
-        {
-            mReaderLayoutButton.setTooltip(mReaderAlertMessage);
-            laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::alert);
-        }
-        else
-        {
-            mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
-            laf->setButtonIcon(mReaderLayoutButton, IconManager::IconType::music);
-        }
-        laf->setButtonIcon(mResizeLayoutButton, IconManager::IconType::layers);
-        laf->setButtonIcon(tooltipButton, IconManager::IconType::comment);
-        laf->setButtonIcon(mMagnetizeButton, IconManager::IconType::magnet);
-        switch(mAccessor.getAttr<AttrType::grid>())
-        {
-            case GridMode::hidden:
-            {
-                laf->setButtonIcon(mGridButton, IconManager::IconType::gridOff);
-            }
-            break;
-            case GridMode::partial:
-            {
-                laf->setButtonIcon(mGridButton, IconManager::IconType::gridPartial);
-            }
-            break;
-            case GridMode::full:
-            {
-                laf->setButtonIcon(mGridButton, IconManager::IconType::gridFull);
-            }
-            break;
-        }
-        updateExpandState();
-    }
-}
-
 void Document::Section::updateHeights(bool force)
 {
     if(mViewport.getHeight() <= 0 || (!mAccessor.getAttr<AttrType::autoresize>() && !force))
@@ -572,12 +558,6 @@ void Document::Section::updateHeights(bool force)
 
 void Document::Section::updateExpandState()
 {
-    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(laf != nullptr);
-    if(laf == nullptr)
-    {
-        return;
-    }
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     mExpandLayoutButton.setEnabled(!groupAcsrs.empty());
     if(std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [](auto const groupAcsr)
@@ -585,12 +565,12 @@ void Document::Section::updateExpandState()
                        return groupAcsr.get().template getAttr<Group::AttrType::expanded>();
                    }))
     {
-        laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::shrink);
+        mExpandLayoutButton.setTypes(Icon::Type::shrink);
         mExpandLayoutButton.setTooltip(juce::translate("Shrink all the groups"));
     }
     else
     {
-        laf->setButtonIcon(mExpandLayoutButton, IconManager::IconType::expand);
+        mExpandLayoutButton.setTypes(Icon::Type::expand);
         mExpandLayoutButton.setTooltip(juce::translate("Expand all the groups"));
     }
 }

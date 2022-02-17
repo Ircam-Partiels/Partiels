@@ -99,7 +99,16 @@ Group::Thumbnail::Thumbnail(Director& director)
             break;
             case AttrType::expanded:
             {
-                lookAndFeelChanged();
+                if(mAccessor.getAttr<AttrType::expanded>())
+                {
+                    mExpandButton.setTypes(Icon::Type::shrink);
+                    mExpandButton.setTooltip(juce::translate("Shrink the tracks"));
+                }
+                else
+                {
+                    mExpandButton.setTypes(Icon::Type::expand);
+                    mExpandButton.setTooltip(juce::translate("Expand the tracks"));
+                }
             }
             break;
         }
@@ -189,31 +198,6 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     g.setColour(findColour(ColourIds::textColourId));
     g.addTransform(juce::AffineTransform::rotation(rotation, 0.0f, static_cast<float>(bottom)));
     g.drawFittedText(mAccessor.getAttr<AttrType::name>(), 0, bottom, bottom, width, juce::Justification::centredLeft, 1, 1.0f);
-}
-
-void Group::Thumbnail::lookAndFeelChanged()
-{
-    auto* laf = dynamic_cast<IconManager::LookAndFeelMethods*>(&getLookAndFeel());
-    anlWeakAssert(laf != nullptr);
-    if(laf != nullptr)
-    {
-        laf->setButtonIcon(mPropertiesButton, IconManager::IconType::properties);
-        if(mAccessor.getAttr<AttrType::expanded>())
-        {
-            laf->setButtonIcon(mExpandButton, IconManager::IconType::shrink);
-            mExpandButton.setTooltip(juce::translate("Shrink the tracks"));
-        }
-        else
-        {
-            laf->setButtonIcon(mExpandButton, IconManager::IconType::expand);
-            mExpandButton.setTooltip(juce::translate("Expand the tracks"));
-        }
-    }
-}
-
-void Group::Thumbnail::parentHierarchyChanged()
-{
-    lookAndFeelChanged();
 }
 
 void Group::Thumbnail::mouseMove(juce::MouseEvent const& event)

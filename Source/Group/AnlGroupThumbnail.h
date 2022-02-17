@@ -26,8 +26,6 @@ namespace Group
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
-        void lookAndFeelChanged() override;
-        void parentHierarchyChanged() override;
         void mouseMove(juce::MouseEvent const& event) override;
         void mouseDown(juce::MouseEvent const& event) override;
         void mouseDrag(juce::MouseEvent const& event) override;
@@ -40,9 +38,9 @@ namespace Group
         Accessor::Receiver mReceiver;
 
         PropertyPanel mPropertyPanel{mDirector};
-        juce::ImageButton mPropertiesButton;
+        Icon mPropertiesButton{Icon::Type::properties};
         StateButton mStateButton{mAccessor};
-        juce::ImageButton mExpandButton;
+        Icon mExpandButton{Icon::Type::expand};
     };
 } // namespace Group
 
