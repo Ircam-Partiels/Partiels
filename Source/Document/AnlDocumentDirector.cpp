@@ -229,6 +229,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case Transport::AttrType::gain:
             case Transport::AttrType::markers:
             case Transport::AttrType::magnetize:
+            case Transport::AttrType::autoScroll:
                 break;
         }
     };

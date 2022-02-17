@@ -87,6 +87,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Transport::AttrType::gain:
             case Transport::AttrType::markers:
             case Transport::AttrType::magnetize:
+            case Transport::AttrType::autoScroll:
                 break;
         }
     };
@@ -220,6 +221,7 @@ Group::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case Transport::AttrType::gain:
             case Transport::AttrType::markers:
             case Transport::AttrType::magnetize:
+            case Transport::AttrType::autoScroll:
                 break;
         }
     };

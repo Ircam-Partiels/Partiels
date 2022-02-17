@@ -47,6 +47,7 @@ Application::CommandTarget::CommandTarget()
             case Transport::AttrType::gain:
             case Transport::AttrType::markers:
             case Transport::AttrType::magnetize:
+            case Transport::AttrType::autoScroll:
             {
                 Instance::get().getApplicationCommandManager().commandStatusChanged();
             }

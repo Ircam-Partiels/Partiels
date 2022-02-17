@@ -242,6 +242,7 @@ Document::Section::Section(Director& director)
             case Transport::AttrType::loopRange:
             case Transport::AttrType::stopAtLoopEnd:
             case Transport::AttrType::gain:
+            case Transport::AttrType::autoScroll:
                 break;
             case Transport::AttrType::markers:
             {
