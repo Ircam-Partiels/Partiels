@@ -414,10 +414,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                     auto& zoomAcsr = Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
                     auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
                     mZoomGridPropertyPanel.setGrid(gridAcsr);
-                    mZoomGridPropertyPanel.onChanged = [&](Zoom::Grid::Accessor const& acsr)
-                    {
-                        gridAcsr.copyFrom(acsr, NotificationType::synchronous);
-                    };
                     mZoomGridPropertyPanel.show();
                 })
 , mPropertyRangeLink("Range Link", "Toggle the group link for zoom range.", [&](bool value)
@@ -759,20 +755,25 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mComponentListener.attachTo(mGraphicalSection);
     mComponentListener.attachTo(mPluginSection);
 
-    mZoomGridPropertyPanel.onShow = [this]()
+    mZoomGridPropertyPanel.onChangeBegin = [this](Zoom::Grid::Accessor const& acsr)
     {
+        juce::ignoreUnused(acsr);
         mDirector.startAction();
     };
 
-    mZoomGridPropertyPanel.onHide = [this]()
+    mZoomGridPropertyPanel.onChangeEnd = [this](Zoom::Grid::Accessor const& acsr)
     {
-        mDirector.endAction(ActionState::newTransaction, "Edit Grid Properties");
+        mDirector.startAction();
+        auto& zoomAcsr = Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
+        auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
+        gridAcsr.copyFrom(acsr, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Edit Grid Properties"));
     };
 
     mProgressBarAnalysis.setSize(sInnerWidth, 36);
     mProgressBarRendering.setSize(sInnerWidth, 36);
 
-    mPropertyResultsFileInfo.setText("Analysis results were consolidated or loaded from a file.", false);
+    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were consolidated or loaded from a file."), false);
     mPropertyResultsFileInfo.setSize(sInnerWidth, 24);
 
     mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
