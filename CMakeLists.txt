@@ -16,7 +16,6 @@ add_subdirectory(Dependencies/sdif)
 include(vamp.cmake)
 include(xcode-warnings.cmake)
 include(Dependencies/Misc/Misc.cmake)
-source_group("Misc" FILES ${MiscSource})
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
@@ -38,6 +37,8 @@ juce_add_gui_app(Partiels
 juce_generate_juce_header(Partiels)
 
 set_target_properties(Partiels PROPERTIES CXX_STANDARD 20)
+
+target_misc_setup(Partiels MISC_ZOOM_ENABLED MISC_TRANSPORT_ENABLED)
 
 set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
@@ -95,7 +96,6 @@ set(PartielsDefinitions
     )
 
 target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
-
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
 
 if(WIN32)
