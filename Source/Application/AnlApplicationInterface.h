@@ -2,7 +2,6 @@
 
 #include "../Document/AnlDocumentModel.h"
 #include "../Document/AnlDocumentSection.h"
-#include "../Transport/AnlTransportDisplay.h"
 #include "AnlApplicationCommandTarget.h"
 
 ANALYSE_FILE_BEGIN

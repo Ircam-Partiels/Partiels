@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../Misc/AnlMisc.h"
 #include "../Plugin/AnlPluginModel.h"
-#include "../Zoom/AnlZoomModel.h"
 #include <tinycolormap/tinycolormap.hpp>
 
 ANALYSE_FILE_BEGIN

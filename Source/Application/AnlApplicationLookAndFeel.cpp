@@ -1,6 +1,5 @@
 #include "AnlApplicationLookAndFeel.h"
 #include "../Document/AnlDocumentSection.h"
-#include "../Zoom/AnlZoomRuler.h"
 
 ANALYSE_FILE_BEGIN
 

@@ -1,5 +1,4 @@
 #include "AnlTrackPropertyPanel.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
 

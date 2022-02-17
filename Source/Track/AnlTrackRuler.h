@@ -1,8 +1,5 @@
 #pragma once
 
-#include "../Zoom/AnlZoomRuler.h"
-#include "../Zoom/AnlZoomScrollBar.h"
-#include "AnlTrackModel.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN

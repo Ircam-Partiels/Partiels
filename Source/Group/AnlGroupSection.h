@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Transport/AnlTransportPlayheadBar.h"
 #include "AnlGroupPlot.h"
 #include "AnlGroupSnapshot.h"
 #include "AnlGroupThumbnail.h"

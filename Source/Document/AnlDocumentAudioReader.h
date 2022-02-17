@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Transport/AnlTransportAudioReader.h"
 #include "AnlDocumentModel.h"
 
 ANALYSE_FILE_BEGIN

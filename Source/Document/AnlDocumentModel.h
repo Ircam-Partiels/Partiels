@@ -3,8 +3,6 @@
 #include "../Group/AnlGroupModel.h"
 #include "../Misc/AnlMisc.h"
 #include "../Track/AnlTrackModel.h"
-#include "../Transport/AnlTransportModel.h"
-#include "../Zoom/AnlZoomModel.h"
 
 ANALYSE_FILE_BEGIN
 

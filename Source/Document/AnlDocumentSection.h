@@ -1,9 +1,6 @@
 #pragma once
 
 #include "../Group/AnlGroupStrechableSection.h"
-#include "../Transport/AnlTransportDisplay.h"
-#include "../Transport/AnlTransportLoopBar.h"
-#include "../Transport/AnlTransportPlayheadBar.h"
 #include "AnlDocumentReaderLayoutPanel.h"
 #include "AnlDocumentTools.h"
 

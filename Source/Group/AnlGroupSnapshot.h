@@ -1,8 +1,6 @@
 #pragma once
 
 #include "../Track/AnlTrackSnapshot.h"
-#include "../Transport/AnlTransportModel.h"
-#include "../Zoom/AnlZoomModel.h"
 #include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN

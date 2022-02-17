@@ -1,6 +1,5 @@
 #include "AnlGroupSnapshot.h"
 #include "../Track/AnlTrackTools.h"
-#include "../Zoom/AnlZoomTools.h"
 
 ANALYSE_FILE_BEGIN
 

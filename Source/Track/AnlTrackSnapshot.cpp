@@ -1,5 +1,4 @@
 #include "AnlTrackSnapshot.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN

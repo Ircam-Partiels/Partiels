@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Transport/AnlTransportPlayheadBar.h"
 #include "AnlTrackModel.h"
 
 ANALYSE_FILE_BEGIN

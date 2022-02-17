@@ -1,6 +1,5 @@
 #include "AnlGroupSection.h"
 #include "../Track/AnlTrackSection.h"
-#include "../Zoom/AnlZoomTools.h"
 #include "AnlGroupStrechableSection.h"
 
 ANALYSE_FILE_BEGIN
