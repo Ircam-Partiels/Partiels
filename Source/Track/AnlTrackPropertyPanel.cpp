@@ -592,13 +592,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
                 // Plugin Information Part
                 mPluginSection.setVisible(!key.identifier.empty());
-                mPropertyPluginName.entry.setText(description.name, silent);
-                mPropertyPluginFeature.entry.setText(description.output.name, silent);
-                mPropertyPluginMaker.entry.setText(description.maker, silent);
-                mPropertyPluginVersion.entry.setText(juce::String(description.version), silent);
-                mPropertyPluginCategory.entry.setText(description.category.isEmpty() ? "-" : description.category, silent);
-                auto const details = juce::String(description.output.description) + (description.output.description.empty() ? "" : "\n") + description.details;
-                mPropertyPluginDetails.setText(details, silent);
 
                 auto const& programs = mAccessor.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
@@ -776,22 +769,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mPropertyResultsFileInfo.setText(juce::translate("Analysis results were consolidated or loaded from a file."), false);
     mPropertyResultsFileInfo.setSize(sInnerWidth, 24);
 
-    mPropertyPluginDetails.setTooltip(juce::translate("The details of the plugin"));
-    mPropertyPluginDetails.setSize(sInnerWidth, 48);
-    mPropertyPluginDetails.setJustification(juce::Justification::horizontallyJustified);
-    mPropertyPluginDetails.setMultiLine(true);
-    mPropertyPluginDetails.setReadOnly(true);
-    mPropertyPluginDetails.setScrollbarsShown(true);
-    // clang-format off
-    mPluginSection.setComponents({
-                                      mPropertyPluginName
-                                    , mPropertyPluginFeature
-                                    , mPropertyPluginMaker
-                                    , mPropertyPluginVersion
-                                    , mPropertyPluginCategory
-                                    , mPropertyPluginDetails
-                                 });
-    // clang-format on
+    mPluginSection.setComponents({mPropertyPluginSection});
 
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mProcessorSection);
@@ -841,16 +819,9 @@ void Track::PropertyPanel::resized()
 
 void Track::PropertyPanel::lookAndFeelChanged()
 {
-    {
-        auto const text = mPropertyPluginDetails.getText();
-        mPropertyPluginDetails.clear();
-        mPropertyPluginDetails.setText(text);
-    }
-    {
-        auto const text = mPropertyResultsFileInfo.getText();
-        mPropertyResultsFileInfo.clear();
-        mPropertyResultsFileInfo.setText(text);
-    }
+    auto const text = mPropertyResultsFileInfo.getText();
+    mPropertyResultsFileInfo.clear();
+    mPropertyResultsFileInfo.setText(text);
 }
 
 bool Track::PropertyPanel::canModifyProcessor()

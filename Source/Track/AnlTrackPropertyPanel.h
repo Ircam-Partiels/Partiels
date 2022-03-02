@@ -2,6 +2,7 @@
 
 #include "AnlTrackDirector.h"
 #include "AnlTrackProgressBar.h"
+#include "AnlTrackPropertyPluginSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -59,17 +60,12 @@ namespace Track
         PropertyTextButton mPropertyChannelLayout;
         ProgressBar mProgressBarRendering{mAccessor, ProgressBar::Mode::rendering};
 
-        PropertyLabel mPropertyPluginName{"Name", "The name of the plugin"};
-        PropertyLabel mPropertyPluginFeature{"Feature", "The feature of the plugin"};
-        PropertyLabel mPropertyPluginMaker{"Maker", "The maker of the plugin"};
-        PropertyLabel mPropertyPluginVersion{"Version", "The version of the plugin"};
-        PropertyLabel mPropertyPluginCategory{"Category", "The category of the plugin"};
-        juce::TextEditor mPropertyPluginDetails;
-
         ConcertinaTable mProcessorSection{juce::translate("PROCESSOR"), true,
                                           juce::translate("The processor parameters of the track")};
         ConcertinaTable mGraphicalSection{juce::translate("GRAPHICAL"), true,
                                           juce::translate("The graphical parameters of the track")};
+
+        PropertyPluginSection mPropertyPluginSection{mDirector};
         ConcertinaTable mPluginSection{juce::translate("PLUGIN"), true,
                                        juce::translate("The plugin information")};
 
