@@ -146,7 +146,6 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                     }
                 }
 
-                // Plugin Information Part
                 auto const& programs = acsr.getAttr<AttrType::description>().programs;
                 mPropertyPreset.entry.clear(juce::NotificationType::dontSendNotification);
 
