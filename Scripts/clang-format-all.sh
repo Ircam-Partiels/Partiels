@@ -5,3 +5,4 @@ cd "$ThisPath/../Source"
 clang-format -i -style=file */*.cpp */*.h
 cd "$ThisPath/../Dependencies/Misc/Source"
 clang-format -i -style=file *.cpp *.h
+clang-format -i -style=file */*.cpp */*.h
