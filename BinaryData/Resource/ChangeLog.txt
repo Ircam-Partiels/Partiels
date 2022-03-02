@@ -1,6 +1,7 @@
 
 v1.0.3
 
+- Fix: Remove the unnecessary grid option "Division Factor" (#213)
 - Fix: The factory preset is not selected by default in the track property window when the plugin uses a step size equal to the block size (#208)
 - Fix: HMSms field should apply changes if the focus is lost (#207)
 - Fix: Vertical zoom editor for tracks and groups not showing when control-clicking vertical ruler (#206)
