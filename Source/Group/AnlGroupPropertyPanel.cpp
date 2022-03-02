@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Group::PropertyPanel::PropertyPanel(Director& director)
-: FloatingWindowContainer("Properties", *this)
+: FloatingWindowContainer("Properties", mViewport)
 , mDirector(director)
 
 , mPropertyName("Name", "The name of the group", [this](juce::String text)
@@ -94,14 +94,32 @@ Group::PropertyPanel::PropertyPanel(Director& director)
     addAndMakeVisible(mPropertyBackgroundColour);
     addAndMakeVisible(mPropertyChannelLayout);
     addAndMakeVisible(mPropertyZoomTrack);
-    mFloatingWindow.setResizable(false, false);
-    setSize(sInnerWidth, 400);
+    addAndMakeVisible(mProcessorsSection);
+
+    mComponentListener.onComponentResized = [&](juce::Component& component)
+    {
+        juce::ignoreUnused(component);
+        resized();
+    };
+    mComponentListener.attachTo(mProcessorsSection);
+    mProcessorsSection.setComponents({mPropertyProcessorsSection});
+
+    setSize(300, 400);
+    mViewport.setSize(getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
+    mViewport.setScrollBarsShown(true, false, true, false);
+    mViewport.setViewedComponent(this, false);
+    mFloatingWindow.setResizable(true, false);
+    mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMinimumHeight(120);
+    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::PropertyPanel::~PropertyPanel()
 {
+    mComponentListener.detachFrom(mProcessorsSection);
     mAccessor.removeListener(mListener);
 }
 
@@ -119,7 +137,8 @@ void Group::PropertyPanel::resized()
     setBounds(mPropertyBackgroundColour);
     setBounds(mPropertyZoomTrack);
     setBounds(mPropertyChannelLayout);
-    setSize(sInnerWidth, std::max(bounds.getY(), 120) + 2);
+    setBounds(mProcessorsSection);
+    setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
 }
 
 void Group::PropertyPanel::updateContent()

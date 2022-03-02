@@ -1,7 +1,6 @@
 #pragma once
 
-#include "AnlGroupDirector.h"
-#include "AnlGroupTools.h"
+#include "AnlGroupPropertyProcessorsSection.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -25,17 +24,20 @@ namespace Group
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
+        ComponentListener mComponentListener;
 
         PropertyText mPropertyName;
         PropertyColourButton mPropertyBackgroundColour;
         PropertyList mPropertyZoomTrack;
         PropertyTextButton mPropertyChannelLayout;
-
         bool mChannelLayoutActionStarted{false};
 
-        LayoutNotifier mLayoutNotifier;
+        PropertyProcessorsSection mPropertyProcessorsSection{mDirector};
+        ConcertinaTable mProcessorsSection{juce::translate("PROCESSORS"), true,
+                                           juce::translate("The processors' parameters of the group")};
 
-        static auto constexpr sInnerWidth = 300;
+        juce::Viewport mViewport;
+        LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
 
