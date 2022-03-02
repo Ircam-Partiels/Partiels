@@ -7,7 +7,6 @@ Track::PropertyPluginSection::PropertyPluginSection(Director& director)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         auto constexpr silent = juce::NotificationType::dontSendNotification;
         switch(attribute)
         {
