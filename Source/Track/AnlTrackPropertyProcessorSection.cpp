@@ -1,4 +1,5 @@
 #include "AnlTrackPropertyProcessorSection.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackExporter.h"
 #include "AnlTrackTools.h"
 
@@ -103,7 +104,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::file:
             case AttrType::results:
             {
-                auto const description = mAccessor.getAttr<AttrType::description>();
+                auto const& description = mAccessor.getAttr<AttrType::description>();
                 auto const results = mAccessor.getAttr<AttrType::results>();
 
                 auto const resultsFile = mAccessor.getAttr<AttrType::file>().file;
@@ -124,9 +125,18 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 mPropertyStepSize.setVisible(Tools::supportsStepSize(mAccessor));
 
                 mParameterProperties.clear();
+                juce::WeakReference<juce::Component> weakReference(this);
+                auto applyValye = [=, this](auto const& parameter, float value)
+                {
+                    if(weakReference.get() == nullptr)
+                    {
+                        return;
+                    }
+                    applyParameterValue(parameter, value);
+                };
                 for(auto const& parameter : description.parameters)
                 {
-                    auto property = createProperty(parameter);
+                    auto property = Plugin::Tools::createProperty(parameter, applyValye);
                     anlWeakAssert(property != nullptr);
                     if(property != nullptr)
                     {
@@ -229,44 +239,6 @@ void Track::PropertyProcessorSection::lookAndFeelChanged()
     auto const text = mPropertyResultsFileInfo.getText();
     mPropertyResultsFileInfo.clear();
     mPropertyResultsFileInfo.setText(text);
-}
-
-std::unique_ptr<juce::Component> Track::PropertyProcessorSection::createProperty(Plugin::Parameter const& parameter)
-{
-    juce::WeakReference<juce::Component> weakReference(this);
-    auto const name = juce::String(Format::withFirstCharUpperCase(parameter.name));
-    if(!parameter.valueNames.empty())
-    {
-        return std::make_unique<PropertyList>(name, parameter.description, parameter.unit, parameter.valueNames, [=, this](size_t index)
-                                              {
-                                                  if(weakReference.get() == nullptr)
-                                                  {
-                                                      return;
-                                                  }
-                                                  applyParameterValue(parameter, static_cast<float>(index));
-                                              });
-    }
-    else if(parameter.isQuantized && std::abs(parameter.quantizeStep - 1.0f) < std::numeric_limits<float>::epsilon() && std::abs(parameter.minValue) < std::numeric_limits<float>::epsilon() && std::abs(parameter.maxValue - 1.0f) < std::numeric_limits<float>::epsilon())
-    {
-        return std::make_unique<PropertyToggle>(name, parameter.description, [=, this](bool state)
-                                                {
-                                                    if(weakReference.get() == nullptr)
-                                                    {
-                                                        return;
-                                                    }
-                                                    applyParameterValue(parameter, state ? 1.0f : 0.f);
-                                                });
-    }
-
-    auto const description = juce::String(parameter.description) + " [" + juce::String(parameter.minValue, 2) + ":" + juce::String(parameter.maxValue, 2) + (!parameter.isQuantized ? "" : ("-" + juce::String(parameter.quantizeStep, 2))) + "]";
-    return std::make_unique<PropertyNumber>(name, description, parameter.unit, juce::Range<float>{parameter.minValue, parameter.maxValue}, parameter.isQuantized ? parameter.quantizeStep : 0.0f, [=, this](float value)
-                                            {
-                                                if(weakReference.get() == nullptr)
-                                                {
-                                                    return;
-                                                }
-                                                applyParameterValue(parameter, value);
-                                            });
 }
 
 void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform)

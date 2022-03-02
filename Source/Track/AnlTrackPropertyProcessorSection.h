@@ -19,7 +19,6 @@ namespace Track
         void lookAndFeelChanged() override;
 
     private:
-        std::unique_ptr<juce::Component> createProperty(Plugin::Parameter const& parameter);
         void askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform);
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
         void revealResultFile();
