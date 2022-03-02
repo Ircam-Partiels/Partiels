@@ -38,6 +38,19 @@ std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getTrackAcs
     return it != trackAcsrs.cend() ? *it : std::optional<std::reference_wrapper<Track::Accessor>>{};
 }
 
+std::vector<std::reference_wrapper<Track::Accessor>> Group::Tools::getTrackAcsrs(Accessor const& accessor)
+{
+    auto const& layout = accessor.getAttr<AttrType::layout>();
+    return copy_with_erased_if(accessor.getAttr<AttrType::tracks>(), [&](auto const& trackAcsr)
+                               {
+                                   auto const identifier = trackAcsr.get().template getAttr<Track::AttrType::identifier>();
+                                   return std::none_of(layout.cbegin(), layout.cend(), [&](auto const& layoutId)
+                                                       {
+                                                           return layoutId == identifier;
+                                                       });
+                               });
+}
+
 Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(void)> fn, std::set<Track::AttrType> attributes)
 : mAccessor(accessor)
 , mAttributes(std::move(attributes))

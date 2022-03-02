@@ -10,6 +10,7 @@ namespace Group
     {
         bool hasTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         std::optional<std::reference_wrapper<Track::Accessor>> getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
+        std::vector<std::reference_wrapper<Track::Accessor>> getTrackAcsrs(Accessor const& accessor);
     } // namespace Tools
 
     class LayoutNotifier
