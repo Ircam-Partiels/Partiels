@@ -2,6 +2,34 @@
 
 ANALYSE_FILE_BEGIN
 
+bool Track::Tools::hasPluginKey(Accessor const& acsr)
+{
+    return !acsr.getAttr<AttrType::key>().identifier.empty();
+}
+
+bool Track::Tools::hasResultFile(Accessor const& acsr)
+{
+    return acsr.getAttr<AttrType::file>().file != juce::File{};
+}
+
+bool Track::Tools::supportsWindowType(Accessor const& acsr)
+{
+    auto const description = acsr.getAttr<AttrType::description>();
+    return description.inputDomain == Plugin::InputDomain::FrequencyDomain;
+}
+
+bool Track::Tools::supportsBlockSize(Accessor const& acsr)
+{
+    auto const description = acsr.getAttr<AttrType::description>();
+    return description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.blockSize == 0_z;
+}
+
+bool Track::Tools::supportsStepSize(Accessor const& acsr)
+{
+    auto const description = acsr.getAttr<AttrType::description>();
+    return description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.stepSize > 0_z;
+}
+
 Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
 {
     auto const& results = acsr.getAttr<AttrType::results>();

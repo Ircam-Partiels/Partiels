@@ -17,6 +17,11 @@ namespace Track
         };
         // clang-format on
 
+        bool hasPluginKey(Accessor const& acsr);
+        bool hasResultFile(Accessor const& acsr);
+        bool supportsWindowType(Accessor const& acsr);
+        bool supportsBlockSize(Accessor const& acsr);
+        bool supportsStepSize(Accessor const& acsr);
         DisplayType getDisplayType(Accessor const& acsr);
 
         float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
