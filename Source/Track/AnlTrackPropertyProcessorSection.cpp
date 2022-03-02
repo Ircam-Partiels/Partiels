@@ -41,7 +41,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                                restoreResultFile();
                            }
                        })
-, mPropertyWindowType(juce::translate("Window Type"), juce::translate("The window type of the FFT."), "", getWindowTypeNames(), [&](size_t index)
+, mPropertyWindowType(juce::translate("Window Type"), juce::translate("The window type of the FFT used by the track."), "", getWindowTypeNames(), [&](size_t index)
                       {
                           setWindowType(static_cast<Plugin::WindowType>(index));
                       })
