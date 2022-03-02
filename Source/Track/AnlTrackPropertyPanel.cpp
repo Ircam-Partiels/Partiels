@@ -253,180 +253,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                       };
                       updatePresets();
                   })
-
-, mPropertyColourMap("Color Map", "The color map of the graphical renderer.", "", std::vector<std::string>{"Parula", "Heat", "Jet", "Turbo", "Hot", "Gray", "Magma", "Inferno", "Plasma", "Viridis", "Cividis", "Github"}, [&](size_t index)
-                     {
-                         mDirector.startAction();
-                         auto colours = mAccessor.getAttr<AttrType::colours>();
-                         colours.map = static_cast<ColourMap>(index);
-                         mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track color map"));
-                     })
-, mPropertyForegroundColour(
-      "Foreground Color", "The foreground current color of the graphical renderer.", "Select the foreground color", [&](juce::Colour const& colour)
-      {
-          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          auto colours = mAccessor.getAttr<AttrType::colours>();
-          colours.foreground = colour;
-          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-          if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
-      })
-, mPropertyBackgroundColour(
-      "Background Color", "The background current color of the graphical renderer.", "Select the background color", [&](juce::Colour const& colour)
-      {
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          auto colours = mAccessor.getAttr<AttrType::colours>();
-          colours.background = colour;
-          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-          if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
-      })
-, mPropertyTextColour(
-      "Text Color", "The text current color of the graphical renderer.", "Select the text color", [&](juce::Colour const& colour)
-      {
-          if(!mPropertyTextColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          auto colours = mAccessor.getAttr<AttrType::colours>();
-          colours.text = colour;
-          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-          if(!mPropertyTextColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
-      })
-, mPropertyShadowColour(
-      "Shadow Color", "The shadow current color of the graphical renderer.", "Select the shadow color", [&](juce::Colour const& colour)
-      {
-          if(!mPropertyShadowColour.entry.isColourSelectorVisible())
-          {
-              mDirector.startAction();
-          }
-          auto colours = mAccessor.getAttr<AttrType::colours>();
-          colours.shadow = colour;
-          mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
-          if(!mPropertyShadowColour.entry.isColourSelectorVisible())
-          {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
-          }
-      },
-      [&]()
-      {
-          mDirector.startAction();
-      },
-      [&]()
-      {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
-      })
-, mPropertyValueRangeMode("Value Range Mode", "The mode of the value range.", "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
-                          {
-                              auto applyRange = [&](std::optional<Zoom::Range> const& globalRange)
-                              {
-                                  if(!globalRange.has_value() || globalRange->isEmpty())
-                                  {
-                                      return;
-                                  }
-                                  mDirector.startAction();
-                                  auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                                  auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, *globalRange);
-                                  zoomAcsr.setAttr<Zoom::AttrType::globalRange>(*globalRange, NotificationType::synchronous);
-                                  zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
-                                  mDirector.endAction(ActionState::newTransaction, juce::translate("Change track minimum and maximum values"));
-                              };
-
-                              switch(index)
-                              {
-                                  case 0:
-                                  {
-                                      applyRange(Tools::getValueRange(mAccessor.getAttr<AttrType::description>()));
-                                  }
-                                  break;
-                                  case 1:
-                                  {
-                                      applyRange(Tools::getValueRange(mAccessor.getAttr<AttrType::results>()));
-                                  }
-                                  break;
-                                  default:
-                                      break;
-                              }
-                          })
-, mPropertyValueRangeMin("Value Range Min.", "The minimum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
-                         {
-                             mDirector.startAction();
-                             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                             auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), static_cast<double>(value) + 1.0);
-                             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{static_cast<double>(value), end}, NotificationType::synchronous);
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track minimum value"));
-                         })
-, mPropertyValueRangeMax("Value Range Max.", "The maximum value of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
-                         {
-                             mDirector.startAction();
-                             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                             auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), static_cast<double>(value) - 1.0);
-                             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{start, static_cast<double>(value)}, NotificationType::synchronous);
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track maximum value"));
-                         })
-, mPropertyValueRange("Value Range", "The range of the output.", "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
-                      {
-                          mDirector.startAction();
-                          auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                          zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range(min, max), NotificationType::synchronous);
-                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
-                      })
-, mPropertyGrid("Grid", "Edit the grid properties", [&]()
-                {
-                    auto& zoomAcsr = Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
-                    auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
-                    mZoomGridPropertyPanel.setGrid(gridAcsr);
-                    mZoomGridPropertyPanel.show();
-                })
-, mPropertyRangeLink("Range Link", "Toggle the group link for zoom range.", [&](bool value)
-                     {
-                         mDirector.startAction();
-                         mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
-                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change range link state"));
-                     })
-, mPropertyNumBins("Num Bins", "The number of bins.", "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
-, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [&]()
-                         {
-                             showChannelLayout();
-                         })
 {
     mPropertyBlockSize.entry.getProperties().set("isNumber", true);
     NumberField::Label::storeProperties(mPropertyBlockSize.entry.getProperties(), {1.0, 65536.0}, 1.0, 0, "samples");
@@ -529,67 +355,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mProcessorSection.setComponents(components);
                 components.clear();
 
-                // Graphical Part
-                auto const output = description.output;
-                mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
-                mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
-
-                switch(Tools::getDisplayType(acsr))
-                {
-                    case Tools::DisplayType::markers:
-                    {
-                        // clang-format off
-                        mGraphicalSection.setComponents({
-                                                              mPropertyForegroundColour
-                                                            , mPropertyTextColour
-                                                            , mPropertyBackgroundColour
-                                                            , mPropertyShadowColour
-                                                            , mPropertyChannelLayout
-                                                        });
-                        // clang-format on
-                    }
-                    break;
-                    case Tools::DisplayType::points:
-                    {
-                        mPropertyRangeLink.title.setText("Value Range Link", juce::NotificationType::dontSendNotification);
-                        // clang-format off
-                        mGraphicalSection.setComponents({
-                                                              mPropertyForegroundColour
-                                                            , mPropertyTextColour
-                                                            , mPropertyBackgroundColour
-                                                            , mPropertyShadowColour
-                                                            , mPropertyValueRangeMode
-                                                            , mPropertyValueRangeMin
-                                                            , mPropertyValueRangeMax
-                                                            , mPropertyRangeLink
-                                                            , mPropertyGrid
-                                                            , mPropertyChannelLayout
-                                                        });
-                        // clang-format on
-                    }
-                    break;
-                    case Tools::DisplayType::columns:
-                    {
-                        mPropertyRangeLink.title.setText("Bin Range Link", juce::NotificationType::dontSendNotification);
-                        mPropertyNumBins.entry.setEnabled(false);
-                        // clang-format off
-                        mGraphicalSection.setComponents({
-                                                              mPropertyColourMap
-                                                            , mPropertyValueRangeMode
-                                                            , mPropertyValueRangeMin
-                                                            , mPropertyValueRangeMax
-                                                            , mPropertyValueRange
-                                                            , mPropertyNumBins
-                                                            , mPropertyRangeLink
-                                                            , mPropertyGrid
-                                                            , mPropertyChannelLayout
-                                                            , mProgressBarRendering
-                                                        });
-                        // clang-format on
-                    }
-                    break;
-                }
-
                 // Plugin Information Part
                 mPluginSection.setVisible(!key.identifier.empty());
 
@@ -610,8 +375,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
                 mPropertyPreset.entry.addSeparator();
                 mPropertyPreset.entry.addItem("Load...", items.size() + 3);
                 mPropertyPreset.entry.addItem("Save...", items.size() + 4);
-
-                updateZoomMode();
                 resized();
             }
             case AttrType::state:
@@ -659,82 +422,14 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::graphics:
             case AttrType::processing:
             case AttrType::warnings:
-                break;
             case AttrType::colours:
-            {
-                auto const colours = acsr.getAttr<AttrType::colours>();
-                mPropertyBackgroundColour.entry.setCurrentColour(colours.background, juce::NotificationType::dontSendNotification);
-                mPropertyForegroundColour.entry.setCurrentColour(colours.foreground, juce::NotificationType::dontSendNotification);
-                mPropertyTextColour.entry.setCurrentColour(colours.text, juce::NotificationType::dontSendNotification);
-                mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
-                mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
-            }
-            break;
             case AttrType::channelsLayout:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::zoomAcsr:
             case AttrType::focused:
             case AttrType::grid:
-                break;
             case AttrType::zoomLink:
-            {
-                mPropertyRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
-            }
-            break;
-        }
-    };
-
-    mValueZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case Zoom::AttrType::globalRange:
-            case Zoom::AttrType::minimumLength:
-            {
-                auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                auto const isEnable = !range.isEmpty();
-                mPropertyValueRangeMode.entry.setEnabled(isEnable);
-                mPropertyValueRangeMin.entry.setEnabled(isEnable);
-                mPropertyValueRangeMax.entry.setEnabled(isEnable);
-                mPropertyValueRange.entry.setEnabled(isEnable);
-                if(isEnable)
-                {
-                    anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
-                    auto const interval = acsr.getAttr<Zoom::AttrType::minimumLength>();
-                    mPropertyValueRangeMin.entry.setValue(range.getStart(), juce::NotificationType::dontSendNotification);
-                    mPropertyValueRangeMax.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
-                    mPropertyValueRange.entry.setRange(range.getStart(), range.getEnd(), interval);
-                }
-
-                updateZoomMode();
-                mPropertyValueRange.repaint();
-            }
-            break;
-            case Zoom::AttrType::visibleRange:
-            {
-                auto const range = acsr.getAttr<Zoom::AttrType::visibleRange>();
-                mPropertyValueRange.entry.setMinAndMaxValues(range.getStart(), range.getEnd(), juce::NotificationType::dontSendNotification);
-            }
-            break;
-            case Zoom::AttrType::anchor:
-                break;
-        }
-    };
-
-    mBinZoomListener.onAttrChanged = [&](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case Zoom::AttrType::globalRange:
-            {
-                auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                mPropertyNumBins.entry.setValue(range.getEnd(), juce::NotificationType::dontSendNotification);
-            }
-            break;
-            case Zoom::AttrType::minimumLength:
-            case Zoom::AttrType::visibleRange:
-            case Zoom::AttrType::anchor:
                 break;
         }
     };
@@ -748,27 +443,12 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mComponentListener.attachTo(mGraphicalSection);
     mComponentListener.attachTo(mPluginSection);
 
-    mZoomGridPropertyPanel.onChangeBegin = [this](Zoom::Grid::Accessor const& acsr)
-    {
-        juce::ignoreUnused(acsr);
-        mDirector.startAction();
-    };
-
-    mZoomGridPropertyPanel.onChangeEnd = [this](Zoom::Grid::Accessor const& acsr)
-    {
-        mDirector.startAction();
-        auto& zoomAcsr = Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
-        auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
-        gridAcsr.copyFrom(acsr, NotificationType::synchronous);
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Edit Grid Properties"));
-    };
-
     mProgressBarAnalysis.setSize(sInnerWidth, 36);
-    mProgressBarRendering.setSize(sInnerWidth, 36);
 
     mPropertyResultsFileInfo.setText(juce::translate("Analysis results were consolidated or loaded from a file."), false);
     mPropertyResultsFileInfo.setSize(sInnerWidth, 24);
 
+    mGraphicalSection.setComponents({mPropertyGraphicalSection});
     mPluginSection.setComponents({mPropertyPluginSection});
 
     addAndMakeVisible(mPropertyName);
@@ -789,8 +469,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     // This avoids to move the focus to the first component
     // (the name property) when recreating properties.
     setWantsKeyboardFocus(true);
-    mAccessor.getAcsr<AcsrType::valueZoom>().addListener(mValueZoomListener, NotificationType::synchronous);
-    mAccessor.getAcsr<AcsrType::binZoom>().addListener(mBinZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -800,8 +478,6 @@ Track::PropertyPanel::~PropertyPanel()
     mComponentListener.detachFrom(mGraphicalSection);
     mComponentListener.detachFrom(mPluginSection);
     mAccessor.removeListener(mListener);
-    mAccessor.getAcsr<AcsrType::binZoom>().removeListener(mBinZoomListener);
-    mAccessor.getAcsr<AcsrType::valueZoom>().removeListener(mValueZoomListener);
 }
 
 void Track::PropertyPanel::resized()
@@ -879,107 +555,6 @@ void Track::PropertyPanel::updatePresets()
         ++index;
     }
     mPropertyPreset.entry.setSelectedItemIndex(1, juce::NotificationType::dontSendNotification);
-}
-
-void Track::PropertyPanel::updateZoomMode()
-{
-    auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-    anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
-    auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-    auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
-    mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
-    mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
-    mPropertyValueRangeMode.entry.setItemEnabled(3, false);
-    if(pluginRange.has_value() && !range.isEmpty() && range == *pluginRange)
-    {
-        mPropertyValueRangeMode.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
-    }
-    else if(resultsRange.has_value() && !range.isEmpty() && range == *resultsRange)
-    {
-        mPropertyValueRangeMode.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
-    }
-    else
-    {
-        mPropertyValueRangeMode.entry.setSelectedId(3, juce::NotificationType::dontSendNotification);
-    }
-}
-
-void Track::PropertyPanel::showChannelLayout()
-{
-    auto const channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
-    auto const numChannels = channelsLayout.size();
-    auto const numVisibleChannels = static_cast<size_t>(std::count(channelsLayout.cbegin(), channelsLayout.cend(), true));
-    juce::PopupMenu menu;
-    juce::WeakReference<juce::Component> safePointer(this);
-    if(numChannels > 2_z)
-    {
-        auto const allActive = numChannels != numVisibleChannels;
-        menu.addItem(juce::translate("All Channels"), allActive, !allActive, [=, this]()
-                     {
-                         if(safePointer.get() == nullptr)
-                         {
-                             return;
-                         }
-                         auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
-                         std::fill(copy.begin(), copy.end(), true);
-                         mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                         showChannelLayout();
-                     });
-
-        auto const oneActive = !channelsLayout[0_z] || numVisibleChannels > 1_z;
-        menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [=, this]()
-                     {
-                         if(safePointer.get() == nullptr)
-                         {
-                             return;
-                         }
-                         auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
-                         copy[0_z] = true;
-                         std::fill(std::next(copy.begin()), copy.end(), false);
-                         mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                         showChannelLayout();
-                     });
-    }
-    for(size_t channel = 0_z; channel < channelsLayout.size(); ++channel)
-    {
-        menu.addItem(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)), numChannels > 1_z, channelsLayout[channel], [=, this]()
-                     {
-                         if(safePointer.get() == nullptr)
-                         {
-                             return;
-                         }
-                         auto copy = mAccessor.getAttr<AttrType::channelsLayout>();
-                         copy[channel] = !copy[channel];
-                         if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
-                                         {
-                                             return state == true;
-                                         }))
-                         {
-                             if(channel < copy.size() - 1_z)
-                             {
-                                 copy[channel + 1_z] = true;
-                             }
-                             else
-                             {
-                                 copy[channel - 1_z] = true;
-                             }
-                         }
-                         mAccessor.setAttr<AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                         showChannelLayout();
-                     });
-    }
-    if(!std::exchange(mChannelLayoutActionStarted, true))
-    {
-        mDirector.startAction();
-    }
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyChannelLayout.entry), [=, this](int menuResult)
-                       {
-                           if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
-                           {
-                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change track channels layout"));
-                           }
-                       });
 }
 
 ANALYSE_FILE_END
