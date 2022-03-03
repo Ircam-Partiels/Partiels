@@ -1,8 +1,12 @@
 
 v1.0.3
 
-- Imp: New tracks should try to use the same channel visibility layout as the group they belong to (217)
+- Fix: Group zoom reference should not be editable if there is no tracks (#220)
+- Fix: Group window properties should not display the channels layout if there is no track (#219)
+- Fix: Group window properties should not display background if a track is a spectrogram (#218)
+- Imp: New tracks should try to use the same channel visibility layout as the group they belong to (#217)
 - Imp: Add tooltips to properties sections (#216)
+- Imp: Access parameters of all tracks from the group properties window (#215)
 - Fix: Crash when modifying track properties (#214)
 - Fix: Remove the unnecessary grid option "Division Factor" (#213)
 - Imp: Double-click on the loop ruler selects between two markers even if the magnetism is off (use Cmd on MacOS or Ctrl on Linux & Windows to select the globale time range) (#212)
