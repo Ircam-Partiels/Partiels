@@ -175,39 +175,16 @@ void Group::PropertyPanel::updateContent()
 
 void Group::PropertyPanel::showChannelLayout()
 {
-    std::vector<int> channelslayout;
-    for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-    {
-        auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-        if(trackAcsr.has_value())
-        {
-            auto const& trackChannelsLayout = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-            for(size_t i = 0; i < channelslayout.size(); ++i)
-            {
-                if(i < trackChannelsLayout.size())
-                {
-                    if(channelslayout[i] != static_cast<int>(trackChannelsLayout[i]))
-                    {
-                        channelslayout[i] = -1;
-                    }
-                }
-            }
-            for(size_t i = channelslayout.size(); i < trackChannelsLayout.size(); ++i)
-            {
-                channelslayout.push_back(trackChannelsLayout[i] ? 1 : 0);
-            }
-        }
-    }
-
+    auto const channelslayout = Tools::getChannelVisibilityStates(mAccessor);
     auto const numChannels = channelslayout.size();
     juce::PopupMenu menu;
     if(numChannels > 2_z)
     {
-        auto const allActive = std::any_of(channelslayout.cbegin(), channelslayout.cend(), [](int state)
+        auto const oneHidden = std::any_of(channelslayout.cbegin(), channelslayout.cend(), [](auto const state)
                                            {
-                                               return state < 1;
+                                               return state != ChannelVisibilityState::visible;
                                            });
-        menu.addItem(juce::translate("All Channels"), allActive, !allActive, [this]()
+        menu.addItem(juce::translate("All Channels"), oneHidden, !oneHidden, [this]()
                      {
                          for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
                          {
@@ -222,11 +199,11 @@ void Group::PropertyPanel::showChannelLayout()
                          showChannelLayout();
                      });
 
-        auto const oneActive = channelslayout[0_z] != 1 || std::any_of(std::next(channelslayout.cbegin()), channelslayout.cend(), [](int state)
-                                                                       {
-                                                                           return state == 1;
-                                                                       });
-        menu.addItem(juce::translate("Channel 1 Only"), oneActive, !oneActive, [this]()
+        auto const firstHidden = channelslayout[0_z] != ChannelVisibilityState::visible || std::any_of(std::next(channelslayout.cbegin()), channelslayout.cend(), [](auto const state)
+                                                                                                       {
+                                                                                                           return state == ChannelVisibilityState::visible;
+                                                                                                       });
+        menu.addItem(juce::translate("Channel 1 Only"), firstHidden, !firstHidden, [this]()
                      {
                          for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
                          {
@@ -251,12 +228,13 @@ void Group::PropertyPanel::showChannelLayout()
     {
         juce::PopupMenu::Item item(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)));
         item.isEnabled = !channelslayout.empty();
-        item.isTicked = channelslayout[channel] != 0;
-        if(channelslayout[channel] == -1)
+        item.isTicked = channelslayout[channel] != ChannelVisibilityState::hidden;
+        if(channelslayout[channel] == ChannelVisibilityState::both)
         {
             item.colour = colour;
         }
-        item.action = [this, channel, newState = channelslayout[channel] != 1]()
+        auto const newState = channelslayout[channel] != ChannelVisibilityState::visible ? ChannelVisibilityState::visible : ChannelVisibilityState::hidden;
+        item.action = [this, channel, newState]()
         {
             for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
             {
@@ -269,16 +247,16 @@ void Group::PropertyPanel::showChannelLayout()
                         copy[channel] = newState;
                         if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
                                         {
-                                            return state == true;
+                                            return state == ChannelVisibilityState::visible;
                                         }))
                         {
                             if(channel + 1_z < copy.size())
                             {
-                                copy[channel + 1_z] = true;
+                                copy[channel + 1_z] = ChannelVisibilityState::visible;
                             }
                             else if(channel > 0_z)
                             {
-                                copy[channel - 1_z] = true;
+                                copy[channel - 1_z] = ChannelVisibilityState::visible;
                             }
                         }
                         trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
