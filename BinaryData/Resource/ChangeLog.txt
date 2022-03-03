@@ -1,6 +1,7 @@
 
 v1.0.3
 
+- Imp: Add tooltips to properties sections (#216)
 - Fix: Crash when modifying track properties (#214)
 - Fix: Remove the unnecessary grid option "Division Factor" (#213)
 - Imp: Double-click on the loop ruler selects between two markers even if the magnetism is off (use Cmd on MacOS or Ctrl on Linux & Windows to select the globale time range) (#212)
