@@ -7,6 +7,15 @@ ANALYSE_FILE_BEGIN
 
 namespace Group
 {
+    // clang-format off
+    enum ChannelVisibilityState
+    {
+          hidden
+        , visible
+        , both
+    };
+    // clang-format on
+
     using TrackList = std::vector<std::reference_wrapper<Track::Accessor>>;
 
     // clang-format off
