@@ -1,4 +1,5 @@
 #include "AnlGroupPropertyPanel.h"
+#include "../Track/AnlTrackTools.h"
 #include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -7,14 +8,14 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 : FloatingWindowContainer("Properties", mViewport)
 , mDirector(director)
 
-, mPropertyName("Name", "The name of the group", [this](juce::String text)
+, mPropertyName(juce::translate("Group Name"), juce::translate("The name of the group"), [this](juce::String text)
                 {
                     mDirector.startAction(false);
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
                     mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group name"));
                 })
 , mPropertyBackgroundColour(
-      "Background Color", "The background current color of the graphical renderer.", "Select the background color", [this](juce::Colour const& colour)
+      juce::translate("Background Color"), juce::translate("The background color of the group."), juce::translate("Select the background color"), [this](juce::Colour const& colour)
       {
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
@@ -34,7 +35,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
       {
           mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
       })
-, mPropertyZoomTrack("Zoom Track", "The selected track used for the zoom", "", std::vector<std::string>{""}, [this](size_t index)
+, mPropertyZoomTrack(juce::translate("Group Zoom Reference"), juce::translate("The selected track used for the zoom"), "", std::vector<std::string>{""}, [this](size_t index)
                      {
                          mDirector.startAction(false);
                          auto const layout = mAccessor.getAttr<AttrType::layout>();
@@ -46,13 +47,13 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                          {
                              mAccessor.setAttr<AttrType::zoomid>(layout[index - 1_z], NotificationType::synchronous);
                          }
-                         mDirector.endAction(false, ActionState::newTransaction, "Change group zoom");
+                         mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group zoom"));
                      })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::description, Track::AttrType::results})
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -173,6 +174,15 @@ void Group::PropertyPanel::updateContent()
             }
         }
     }
+    mPropertyZoomTrack.setEnabled(!layout.empty());
+
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    auto const hasNoColumns = std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcrs)
+                                           {
+                                               return Track::Tools::getDisplayType(trackAcrs.get()) == Track::Tools::DisplayType::columns;
+                                           });
+    mPropertyBackgroundColour.setVisible(!layout.empty() && hasNoColumns);
+    resized();
 }
 
 ANALYSE_FILE_END
