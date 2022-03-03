@@ -15,7 +15,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                     mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group name"));
                 })
 , mPropertyBackgroundColour(
-      juce::translate("Background Color"), juce::translate("The background color of the group."), juce::translate("Select the background color"), [this](juce::Colour const& colour)
+      juce::translate("Group Background Color"), juce::translate("The background color of the group."), juce::translate("Select the background color"), [this](juce::Colour const& colour)
       {
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
