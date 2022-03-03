@@ -23,6 +23,7 @@ namespace Application
     class Instance
     : public juce::JUCEApplication
     , private juce::ChangeListener
+    , private juce::AsyncUpdater
     {
     public:
         Instance() = default;
@@ -72,8 +73,11 @@ namespace Application
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
+        // juce::AsyncUpdater
+        void handleAsyncUpdate() override;
+
         juce::File getBackupFile() const;
-        void openStartupFiles(std::vector<juce::File> const commandFiles, juce::File const previousFile);
+        void openStartupFiles();
         void checkPluginsQuarantine();
 
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
@@ -104,6 +108,9 @@ namespace Application
         std::unique_ptr<CommandLine> mCommandLine;
 
         std::atomic<bool> mIsPluginListReady{true};
+        juce::File mPreviousFile{};
+        std::vector<juce::File> mCommandFiles;
+        bool mStartupFilesAreLoaded{false};
 
         JUCE_DECLARE_WEAK_REFERENCEABLE(Instance)
     };

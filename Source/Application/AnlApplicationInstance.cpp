@@ -160,25 +160,17 @@ void Application::Instance::initialise(juce::String const& commandLine)
     anlDebug("Application", "Ready!");
 
     juce::ArgumentList const args("Partiels", commandLine);
-    std::vector<juce::File> commandFiles;
+    mCommandFiles.clear();
     for(int i = 0; i < args.size(); ++i)
     {
         auto const file = args[i].resolveAsFile();
         if(file.existsAsFile())
         {
-            commandFiles.push_back(file);
+            mCommandFiles.push_back(file);
         }
     }
-    auto const previousFile = mApplicationAccessor->getAttr<AttrType::currentDocumentFile>();
-    juce::WeakReference<Instance> weakReference(this);
-    juce::MessageManager::callAsync([=, this]()
-                                    {
-                                        if(weakReference.get() == nullptr)
-                                        {
-                                            return;
-                                        }
-                                        openStartupFiles(commandFiles, previousFile);
-                                    });
+    mPreviousFile = mApplicationAccessor->getAttr<AttrType::currentDocumentFile>();
+    triggerAsyncUpdate();
 }
 
 void Application::Instance::anotherInstanceStarted(juce::String const& commandLine)
@@ -199,7 +191,12 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
             files.push_back(file);
         }
     }
-    if(!files.empty())
+    if(!mStartupFilesAreLoaded)
+    {
+        mCommandFiles = std::move(files);
+        triggerAsyncUpdate();
+    }
+    else
     {
         anlDebug("Application", "Opening new file(s)...");
         openFiles(files);
@@ -580,6 +577,11 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
     anlWeakAssert(!result.failed());
 }
 
+void Application::Instance::handleAsyncUpdate()
+{
+    openStartupFiles();
+}
+
 juce::File Application::Instance::getBackupFile() const
 {
     return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getExtensionForDocumentFile());
@@ -590,27 +592,22 @@ juce::ApplicationCommandManager* App::getApplicationCommandManager()
     return &Application::Instance::get().getApplicationCommandManager();
 }
 
-void Application::Instance::openStartupFiles(std::vector<juce::File> const commandFiles, juce::File const previousFile)
+void Application::Instance::openStartupFiles()
 {
     if(!mIsPluginListReady)
     {
-        juce::WeakReference<Instance> weakReference(this);
-        juce::MessageManager::callAsync([=, this]()
-                                        {
-                                            if(weakReference.get() == nullptr)
-                                            {
-                                                return;
-                                            }
-                                            openStartupFiles(commandFiles, previousFile);
-                                        });
+        triggerAsyncUpdate();
         return;
     }
 
+    auto const commandFiles = std::move(mCommandFiles);
+    auto const previousFile = std::move(mPreviousFile);
     if(!commandFiles.empty())
     {
         mDocumentFileBased->addChangeListener(this);
         anlDebug("Application", "Opening new file(s)...");
         openFiles(commandFiles);
+        mStartupFilesAreLoaded = true;
         return;
     }
 
@@ -662,6 +659,7 @@ void Application::Instance::openStartupFiles(std::vector<juce::File> const comma
             openDocumentFile(previousFile);
         }
     }
+    mStartupFilesAreLoaded = true;
 }
 
 void Application::Instance::checkPluginsQuarantine()
