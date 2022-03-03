@@ -83,6 +83,7 @@ namespace Track
     {
     public:
         virtual ~MultiDirector() = default;
+        virtual Director const& getTrackDirector(juce::String const& identifier) const = 0;
         virtual Director& getTrackDirector(juce::String const& identifier) = 0;
     };
 } // namespace Track

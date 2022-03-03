@@ -20,6 +20,7 @@ namespace Document
         Accessor& getAccessor();
         juce::AudioFormatManager& getAudioFormatManager();
         Group::Director& getGroupDirector(juce::String const& identifier);
+        Track::Director const& getTrackDirector(juce::String const& identifier) const override;
         Track::Director& getTrackDirector(juce::String const& identifier) override;
 
         juce::Result consolidate(juce::File const& file);

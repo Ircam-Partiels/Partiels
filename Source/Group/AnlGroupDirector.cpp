@@ -125,6 +125,11 @@ void Group::Director::endAction(ActionState state, juce::String const& name)
     }
 }
 
+Track::Director const& Group::Director::getTrackDirector(juce::String const& identifier) const
+{
+    return mTrackMultiDirector.getTrackDirector(identifier);
+}
+
 Track::Director& Group::Director::getTrackDirector(juce::String const& identifier)
 {
     return mTrackMultiDirector.getTrackDirector(identifier);

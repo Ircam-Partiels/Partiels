@@ -21,6 +21,7 @@ namespace Group
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
 
+        Track::Director const& getTrackDirector(juce::String const& identifier) const override;
         Track::Director& getTrackDirector(juce::String const& identifier) override;
 
     private:
