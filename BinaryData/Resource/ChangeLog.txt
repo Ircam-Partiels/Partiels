@@ -1,6 +1,7 @@
 
 v1.0.3
 
+- Imp: New tracks should try to use the same channel visibility layout as the group they belong to (217)
 - Imp: Add tooltips to properties sections (#216)
 - Fix: Crash when modifying track properties (#214)
 - Fix: Remove the unnecessary grid option "Division Factor" (#213)
