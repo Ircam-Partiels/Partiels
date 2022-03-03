@@ -439,6 +439,11 @@ Track::Accessor& Track::Director::getAccessor()
     return mAccessor;
 }
 
+bool Track::Director::hasChanged() const
+{
+    return !mAccessor.isEquivalentTo(mSavedState);
+}
+
 void Track::Director::startAction()
 {
     anlWeakAssert(mIsPerformingAction == false);
@@ -451,7 +456,7 @@ void Track::Director::startAction()
 void Track::Director::endAction(ActionState state, juce::String const& name)
 {
     anlWeakAssert(mIsPerformingAction == true);
-    if(mAccessor.isEquivalentTo(mSavedState))
+    if(!hasChanged())
     {
         mIsPerformingAction = false;
         return;

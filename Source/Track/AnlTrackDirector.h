@@ -22,6 +22,7 @@ namespace Track
 
         juce::Result consolidate(juce::File const& file);
 
+        bool hasChanged() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
