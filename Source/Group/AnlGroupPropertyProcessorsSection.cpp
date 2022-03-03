@@ -40,7 +40,7 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::key, Track::AttrType::description, Track::AttrType::file, Track::AttrType::results})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::key, Track::AttrType::description, Track::AttrType::file, Track::AttrType::results})
 , mStateNotifier(mAccessor, [this]()
                  {
                      updateState();
@@ -291,6 +291,7 @@ void Group::PropertyProcessorsSection::updateContent()
 
 void Group::PropertyProcessorsSection::updateWindowType()
 {
+    juce::StringArray trackNames;
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     std::set<Plugin::WindowType> windowTypes;
     for(auto const& trackAcsr : trackAcsrs)
@@ -299,8 +300,10 @@ void Group::PropertyProcessorsSection::updateWindowType()
         {
             auto const windowType = trackAcsr.get().getAttr<Track::AttrType::state>().windowType;
             windowTypes.insert(windowType);
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
+    mPropertyWindowType.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The window type of the FFT used by the tracks of the group."));
     mPropertyWindowType.setVisible(!windowTypes.empty());
     if(windowTypes.size() == 1_z)
     {
@@ -319,6 +322,7 @@ void Group::PropertyProcessorsSection::updateWindowType()
 
 void Group::PropertyProcessorsSection::updateBlockSize()
 {
+    juce::StringArray trackNames;
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     std::set<size_t> blockSizes;
     for(auto const& trackAcsr : trackAcsrs)
@@ -327,8 +331,10 @@ void Group::PropertyProcessorsSection::updateBlockSize()
         {
             auto const blockSize = trackAcsr.get().getAttr<Track::AttrType::state>().blockSize;
             blockSizes.insert(blockSize);
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
+    mPropertyBlockSize.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The block size used by the tracks of the group."));
     mPropertyBlockSize.setVisible(!blockSizes.empty());
     if(blockSizes.size() == 1_z)
     {
@@ -352,6 +358,7 @@ void Group::PropertyProcessorsSection::updateBlockSize()
 
 void Group::PropertyProcessorsSection::updateStepSize()
 {
+    juce::StringArray trackNames;
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     std::set<size_t> stepSizes;
     for(auto const& trackAcsr : trackAcsrs)
@@ -360,6 +367,7 @@ void Group::PropertyProcessorsSection::updateStepSize()
         {
             auto const stepSize = trackAcsr.get().getAttr<Track::AttrType::state>().stepSize;
             stepSizes.insert(stepSize);
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
         }
     }
     auto const blockSize = std::accumulate(trackAcsrs.cbegin(), trackAcsrs.cend(), 16384_z, [](auto blkSize, auto const& trackAcsr)
@@ -370,6 +378,7 @@ void Group::PropertyProcessorsSection::updateStepSize()
                                                }
                                                return blkSize;
                                            });
+    mPropertyStepSize.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The step size used by the tracks of the group."));
     mPropertyStepSize.setVisible(!stepSizes.empty());
     if(stepSizes.size() == 1_z)
     {
@@ -433,6 +442,22 @@ void Group::PropertyProcessorsSection::updateParameters()
                     mParameterProperties[parameter.identifier] = std::move(property);
                 }
             }
+        }
+    }
+
+    for(auto& parameter : mParameterProperties)
+    {
+        if(auto* tooltipClient = dynamic_cast<juce::SettableTooltipClient*>(parameter.second.get()))
+        {
+            juce::StringArray trackNames;
+            for(auto& trackAcsr : trackAcsrs)
+            {
+                if(trackAcsr.get().getAttr<Track::AttrType::state>().parameters.count(parameter.first))
+                {
+                    trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+                }
+            }
+            tooltipClient->setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + tooltipClient->getTooltip());
         }
     }
 }
