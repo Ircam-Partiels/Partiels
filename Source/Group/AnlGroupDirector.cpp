@@ -92,6 +92,15 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
 {
     if(!hasChanged(includeTracks))
     {
+        if(includeTracks)
+        {
+            auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+            for(auto& trackAcr : trackAcrs)
+            {
+                auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+                trackDirector.endAction(ActionState::abort);
+            }
+        }
         return;
     }
 
