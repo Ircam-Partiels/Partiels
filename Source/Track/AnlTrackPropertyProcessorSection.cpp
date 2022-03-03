@@ -423,6 +423,7 @@ void Track::PropertyProcessorSection::setBlockSize(size_t const blockSize)
     auto const currentBlockSize = mAccessor.getAttr<AttrType::state>().blockSize;
     if(currentBlockSize == blockSize)
     {
+        updateState();
         return;
     }
     askToModifyProcessor([this](bool result)
@@ -457,6 +458,7 @@ void Track::PropertyProcessorSection::setStepSize(size_t const stepSize)
     auto const currentStepSize = mAccessor.getAttr<AttrType::state>().stepSize;
     if(currentStepSize == stepSize)
     {
+        updateState();
         return;
     }
     askToModifyProcessor([this](bool result)
