@@ -52,11 +52,11 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
         }
         else
         {
-            mDirector.startAction();
+            mDirector.startAction(false);
             auto layout = copy_with_erased(mAccessor.getAttr<AttrType::layout>(), identifier);
             layout.insert(layout.begin() + static_cast<long>(index), identifier);
             mAccessor.setAttr<AttrType::layout>(layout, NotificationType::synchronous);
-            mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
+            mDirector.endAction(false, ActionState::newTransaction, juce::translate("Move Track"));
         }
     };
 

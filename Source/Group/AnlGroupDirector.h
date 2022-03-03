@@ -18,8 +18,9 @@ namespace Group
 
         void updateTracks(NotificationType notification);
 
-        void startAction();
-        void endAction(ActionState state, juce::String const& name = {});
+        bool hasChanged(bool includeTracks) const;
+        void startAction(bool includeTracks);
+        void endAction(bool includeTracks, ActionState state, juce::String const& name = {});
 
         Track::Director const& getTrackDirector(juce::String const& identifier) const override;
         Track::Director& getTrackDirector(juce::String const& identifier) override;

@@ -9,34 +9,34 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 
 , mPropertyName("Name", "The name of the group", [this](juce::String text)
                 {
-                    mDirector.startAction();
+                    mDirector.startAction(false);
                     mAccessor.setAttr<AttrType::name>(text, NotificationType::synchronous);
-                    mDirector.endAction(ActionState::newTransaction, juce::translate("Change group name"));
+                    mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group name"));
                 })
 , mPropertyBackgroundColour(
       "Background Color", "The background current color of the graphical renderer.", "Select the background color", [this](juce::Colour const& colour)
       {
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
-              mDirector.startAction();
+              mDirector.startAction(false);
           }
           mAccessor.setAttr<AttrType::colour>(colour, NotificationType::synchronous);
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
-              mDirector.endAction(ActionState::newTransaction, juce::translate("Change group background color"));
+              mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
           }
       },
       [&]()
       {
-          mDirector.startAction();
+          mDirector.startAction(false);
       },
       [&]()
       {
-          mDirector.endAction(ActionState::newTransaction, juce::translate("Change group background color"));
+          mDirector.endAction(false, ActionState::newTransaction, juce::translate("Change group background color"));
       })
 , mPropertyZoomTrack("Zoom Track", "The selected track used for the zoom", "", std::vector<std::string>{""}, [this](size_t index)
                      {
-                         mDirector.startAction();
+                         mDirector.startAction(false);
                          auto const layout = mAccessor.getAttr<AttrType::layout>();
                          if(index == 0_z || index - 1_z >= layout.size())
                          {
@@ -46,7 +46,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                          {
                              mAccessor.setAttr<AttrType::zoomid>(layout[index - 1_z], NotificationType::synchronous);
                          }
-                         mDirector.endAction(ActionState::newTransaction, "Change group zoom");
+                         mDirector.endAction(false, ActionState::newTransaction, "Change group zoom");
                      })
 , mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [this]()
                          {
@@ -271,30 +271,14 @@ void Group::PropertyPanel::showChannelLayout()
 
     if(!std::exchange(mChannelLayoutActionStarted, true))
     {
-        mDirector.startAction();
-        for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-        {
-            auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-            if(trackAcsr.has_value())
-            {
-                mDirector.getTrackDirector(trackIdentifer).startAction();
-            }
-        }
+        mDirector.startAction(true);
     }
     juce::WeakReference<juce::Component> safePointer(this);
     menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyChannelLayout.entry), [=, this](int menuResult)
                        {
                            if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
                            {
-                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change group channels layout"));
-                               for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-                               {
-                                   auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-                                   if(trackAcsr.has_value())
-                                   {
-                                       mDirector.getTrackDirector(trackIdentifer).endAction(ActionState::continueTransaction);
-                                   }
-                               }
+                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group channels layout"));
                            }
                        });
 }

@@ -57,14 +57,40 @@ void Group::Director::updateTracks(NotificationType notification)
     }
 }
 
-void Group::Director::startAction()
+bool Group::Director::hasChanged(bool includeTracks) const
 {
-    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    if(includeTracks)
+    {
+        auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+        for(auto& trackAcr : trackAcrs)
+        {
+            auto const& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+            if(trackDirector.hasChanged())
+            {
+                return true;
+            }
+        }
+    }
+    return !mAccessor.isEquivalentTo(mSavedState);
 }
 
-void Group::Director::endAction(ActionState state, juce::String const& name)
+void Group::Director::startAction(bool includeTracks)
 {
-    if(mAccessor.isEquivalentTo(mSavedState))
+    mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
+    if(includeTracks)
+    {
+        auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+        for(auto& trackAcr : trackAcrs)
+        {
+            auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+            trackDirector.startAction();
+        }
+    }
+}
+
+void Group::Director::endAction(bool includeTracks, ActionState state, juce::String const& name)
+{
+    if(!hasChanged(includeTracks))
     {
         return;
     }
@@ -121,6 +147,16 @@ void Group::Director::endAction(ActionState state, juce::String const& name)
                 mUndoManager.perform(action.release());
             }
             break;
+        }
+    }
+
+    if(includeTracks)
+    {
+        auto trackAcrs = Tools::getTrackAcsrs(mAccessor);
+        for(auto& trackAcr : trackAcrs)
+        {
+            auto& trackDirector = getTrackDirector(trackAcr.get().getAttr<Track::AttrType::identifier>());
+            trackDirector.endAction(ActionState::continueTransaction);
         }
     }
 }

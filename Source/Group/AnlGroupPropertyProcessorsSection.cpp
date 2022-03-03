@@ -78,7 +78,6 @@ void Group::PropertyProcessorsSection::resized()
             setBounds(*property.second.get());
         }
     }
-    //    setBounds(mProgressBarAnalysis);
     setSize(getWidth(), bounds.getY());
 }
 
@@ -153,7 +152,7 @@ void Group::PropertyProcessorsSection::applyParameterValue(Plugin::Parameter con
                           {
                               if(result)
                               {
-                                  mDirector.startAction();
+                                  mDirector.startAction(true);
                               }
                               return result;
                           },
@@ -171,7 +170,7 @@ void Group::PropertyProcessorsSection::applyParameterValue(Plugin::Parameter con
                                       trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                                   }
                               }
-                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change group properties"));
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group properties"));
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
@@ -185,7 +184,7 @@ void Group::PropertyProcessorsSection::setWindowType(Plugin::WindowType const& w
                           {
                               if(result)
                               {
-                                  mDirector.startAction();
+                                  mDirector.startAction(true);
                               }
                               return result;
                           },
@@ -201,7 +200,7 @@ void Group::PropertyProcessorsSection::setWindowType(Plugin::WindowType const& w
                                       trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                                   }
                               }
-                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change group's window type"));
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's window type"));
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
@@ -215,7 +214,7 @@ void Group::PropertyProcessorsSection::setBlockSize(size_t const blockSize)
                           {
                               if(result)
                               {
-                                  mDirector.startAction();
+                                  mDirector.startAction(true);
                               }
                               return result;
                           },
@@ -241,7 +240,7 @@ void Group::PropertyProcessorsSection::setBlockSize(size_t const blockSize)
                                       trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                                   }
                               }
-                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change group's block size"));
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's block size"));
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
@@ -255,7 +254,7 @@ void Group::PropertyProcessorsSection::setStepSize(size_t const stepSize)
                           {
                               if(result)
                               {
-                                  mDirector.startAction();
+                                  mDirector.startAction(true);
                               }
                               return result;
                           },
@@ -271,7 +270,7 @@ void Group::PropertyProcessorsSection::setStepSize(size_t const stepSize)
                                       trackAcsr.get().setAttr<Track::AttrType::state>(state, NotificationType::synchronous);
                                   }
                               }
-                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change group's block size"));
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's step size"));
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
