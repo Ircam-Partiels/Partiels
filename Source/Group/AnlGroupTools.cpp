@@ -51,6 +51,31 @@ std::vector<std::reference_wrapper<Track::Accessor>> Group::Tools::getTrackAcsrs
                                });
 }
 
+std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilityStates(Accessor const& accessor)
+{
+    std::vector<ChannelVisibilityState> channelslayout;
+    auto const trackAcsrs = getTrackAcsrs(accessor);
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        auto const& trackChannelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
+        for(size_t i = 0; i < channelslayout.size(); ++i)
+        {
+            if(i < trackChannelsLayout.size() && channelslayout[i] != ChannelVisibilityState::both)
+            {
+                if(channelslayout[i] != static_cast<int>(trackChannelsLayout[i]))
+                {
+                    channelslayout[i] = ChannelVisibilityState::both;
+                }
+            }
+        }
+        for(size_t i = channelslayout.size(); i < trackChannelsLayout.size(); ++i)
+        {
+            channelslayout.push_back(trackChannelsLayout[i] ? ChannelVisibilityState::visible : ChannelVisibilityState::hidden);
+        }
+    }
+    return channelslayout;
+}
+
 Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(void)> fn, std::set<Track::AttrType> attributes)
 : mAccessor(accessor)
 , mAttributes(std::move(attributes))
