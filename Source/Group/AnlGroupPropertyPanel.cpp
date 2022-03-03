@@ -48,10 +48,6 @@ Group::PropertyPanel::PropertyPanel(Director& director)
                          }
                          mDirector.endAction(false, ActionState::newTransaction, "Change group zoom");
                      })
-, mPropertyChannelLayout("Channel Layout", "The visible state of the channels.", [this]()
-                         {
-                             showChannelLayout();
-                         })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -92,17 +88,22 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mPropertyBackgroundColour);
-    addAndMakeVisible(mPropertyChannelLayout);
     addAndMakeVisible(mPropertyZoomTrack);
     addAndMakeVisible(mProcessorsSection);
+    addAndMakeVisible(mGraphicalsSection);
 
     mComponentListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
+        mProcessorsSection.setEnabled(mPropertyProcessorsSection.getHeight() > 0);
+        mGraphicalsSection.setEnabled(mPropertyGraphicalsSection.getHeight() > 0);
         resized();
     };
+
     mComponentListener.attachTo(mProcessorsSection);
+    mComponentListener.attachTo(mGraphicalsSection);
     mProcessorsSection.setComponents({mPropertyProcessorsSection});
+    mGraphicalsSection.setComponents({mPropertyGraphicalsSection});
 
     setSize(300, 400);
     mViewport.setSize(getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
@@ -119,6 +120,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 
 Group::PropertyPanel::~PropertyPanel()
 {
+    mComponentListener.detachFrom(mGraphicalsSection);
     mComponentListener.detachFrom(mProcessorsSection);
     mAccessor.removeListener(mListener);
 }
@@ -136,8 +138,8 @@ void Group::PropertyPanel::resized()
     setBounds(mPropertyName);
     setBounds(mPropertyBackgroundColour);
     setBounds(mPropertyZoomTrack);
-    setBounds(mPropertyChannelLayout);
     setBounds(mProcessorsSection);
+    setBounds(mGraphicalsSection);
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
 }
 
@@ -171,116 +173,6 @@ void Group::PropertyPanel::updateContent()
             }
         }
     }
-}
-
-void Group::PropertyPanel::showChannelLayout()
-{
-    auto const channelslayout = Tools::getChannelVisibilityStates(mAccessor);
-    auto const numChannels = channelslayout.size();
-    juce::PopupMenu menu;
-    if(numChannels > 2_z)
-    {
-        auto const oneHidden = std::any_of(channelslayout.cbegin(), channelslayout.cend(), [](auto const state)
-                                           {
-                                               return state != ChannelVisibilityState::visible;
-                                           });
-        menu.addItem(juce::translate("All Channels"), oneHidden, !oneHidden, [this]()
-                     {
-                         for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-                         {
-                             auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-                             if(trackAcsr.has_value())
-                             {
-                                 auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-                                 std::fill(copy.begin(), copy.end(), true);
-                                 trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                             }
-                         }
-                         showChannelLayout();
-                     });
-
-        auto const firstHidden = channelslayout[0_z] != ChannelVisibilityState::visible || std::any_of(std::next(channelslayout.cbegin()), channelslayout.cend(), [](auto const state)
-                                                                                                       {
-                                                                                                           return state == ChannelVisibilityState::visible;
-                                                                                                       });
-        menu.addItem(juce::translate("Channel 1 Only"), firstHidden, !firstHidden, [this]()
-                     {
-                         for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-                         {
-                             auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-                             if(trackAcsr.has_value())
-                             {
-                                 auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-                                 if(!copy.empty())
-                                 {
-                                     copy[0_z] = true;
-                                     std::fill(std::next(copy.begin()), copy.end(), false);
-                                     trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                                 }
-                             }
-                         }
-                         showChannelLayout();
-                     });
-    }
-
-    auto const colour = juce::Colour::contrasting(findColour(juce::PopupMenu::ColourIds::backgroundColourId), findColour(juce::PopupMenu::ColourIds::textColourId));
-    for(size_t channel = 0_z; channel < channelslayout.size(); ++channel)
-    {
-        juce::PopupMenu::Item item(juce::translate("Channel CHINDEX").replace("CHINDEX", juce::String(channel + 1)));
-        item.isEnabled = !channelslayout.empty();
-        item.isTicked = channelslayout[channel] != ChannelVisibilityState::hidden;
-        if(channelslayout[channel] == ChannelVisibilityState::both)
-        {
-            item.colour = colour;
-        }
-        auto const newState = channelslayout[channel] != ChannelVisibilityState::visible ? ChannelVisibilityState::visible : ChannelVisibilityState::hidden;
-        item.action = [this, channel, newState]()
-        {
-            for(auto const& trackIdentifer : mAccessor.getAttr<AttrType::layout>())
-            {
-                auto trackAcsr = Group::Tools::getTrackAcsr(mAccessor, trackIdentifer);
-                if(trackAcsr.has_value())
-                {
-                    auto copy = trackAcsr->get().getAttr<Track::AttrType::channelsLayout>();
-                    if(channel < copy.size())
-                    {
-                        copy[channel] = newState;
-                        if(std::none_of(copy.cbegin(), copy.cend(), [](auto const& state)
-                                        {
-                                            return state == ChannelVisibilityState::visible;
-                                        }))
-                        {
-                            if(channel + 1_z < copy.size())
-                            {
-                                copy[channel + 1_z] = ChannelVisibilityState::visible;
-                            }
-                            else if(channel > 0_z)
-                            {
-                                copy[channel - 1_z] = ChannelVisibilityState::visible;
-                            }
-                        }
-                        trackAcsr->get().setAttr<Track::AttrType::channelsLayout>(copy, NotificationType::synchronous);
-                    }
-                }
-            }
-            showChannelLayout();
-        };
-
-        menu.addItem(std::move(item));
-    }
-
-    if(!std::exchange(mChannelLayoutActionStarted, true))
-    {
-        mDirector.startAction(true);
-    }
-    juce::WeakReference<juce::Component> safePointer(this);
-    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyChannelLayout.entry), [=, this](int menuResult)
-                       {
-                           if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
-                           {
-                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group channels layout"));
-                           }
-                       });
 }
 
 ANALYSE_FILE_END
