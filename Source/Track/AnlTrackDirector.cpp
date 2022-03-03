@@ -446,6 +446,7 @@ bool Track::Director::hasChanged() const
 
 void Track::Director::startAction()
 {
+    MiscDebug("Track", "Director::startAction");
     anlWeakAssert(mIsPerformingAction == false);
     if(!std::exchange(mIsPerformingAction, true))
     {
@@ -455,6 +456,7 @@ void Track::Director::startAction()
 
 void Track::Director::endAction(ActionState state, juce::String const& name)
 {
+    MiscDebug("Track", "Director::endAction");
     anlWeakAssert(mIsPerformingAction == true);
     if(!hasChanged())
     {
