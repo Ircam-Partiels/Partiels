@@ -48,6 +48,9 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     mComponentListener.onComponentResized = [&](juce::Component& component)
     {
         juce::ignoreUnused(component);
+        mProcessorSection.setEnabled(mPropertyProcessorSection.getHeight() > 0);
+        mGraphicalSection.setEnabled(mPropertyGraphicalSection.getHeight() > 0);
+        mPluginSection.setEnabled(mPropertyPluginSection.getHeight() > 0);
         resized();
     };
     mComponentListener.attachTo(mProcessorSection);
