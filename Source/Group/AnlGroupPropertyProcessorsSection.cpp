@@ -350,7 +350,7 @@ void Group::PropertyProcessorsSection::updateBlockSize()
     mPropertyBlockSize.setEnabled(hasPlugin);
     auto const isTimeDomainOnly = std::all_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
                                               {
-                                                  return Track::Tools::supportsBlockSize(trackAcsr.get()) && trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
+                                                  return !Track::Tools::supportsBlockSize(trackAcsr.get()) || trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
                                               });
     mPropertyBlockSize.entry.setEditableText(isTimeDomainOnly);
 }
@@ -399,7 +399,7 @@ void Group::PropertyProcessorsSection::updateStepSize()
     mPropertyStepSize.setEnabled(hasPlugin);
     auto const isTimeDomainOnly = std::all_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
                                               {
-                                                  return Track::Tools::supportsBlockSize(trackAcsr.get()) && trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
+                                                  return Track::Tools::supportsBlockSize(trackAcsr.get()) || trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
                                               });
     mPropertyBlockSize.entry.setEditableText(isTimeDomainOnly);
 }
