@@ -512,11 +512,18 @@ void Group::PropertyProcessorsSection::updateState()
         {
             if(values.empty())
             {
+                propertyToggle->entry.getProperties().remove("Multiple Values");
                 propertyToggle->setEnabled(!values.empty());
+            }
+            else if(values.size() == 1_z)
+            {
+                propertyToggle->entry.getProperties().remove("Multiple Values");
+                propertyToggle->entry.setToggleState(static_cast<bool>(*values.cbegin()), juce::NotificationType::dontSendNotification);
             }
             else
             {
-                propertyToggle->entry.setToggleState(static_cast<bool>(*values.cbegin()), juce::NotificationType::dontSendNotification);
+                propertyToggle->entry.getProperties().set("Multiple Values", {true});
+                propertyToggle->entry.setToggleState(false, juce::NotificationType::dontSendNotification);
             }
         }
         else
