@@ -154,7 +154,7 @@ void Group::PropertyPanel::updateContent()
     }
 
     auto const layout = mAccessor.getAttr<AttrType::layout>();
-    for(size_t layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
+    for(auto layoutIndex = 0_z; layoutIndex < layout.size(); ++layoutIndex)
     {
         auto const trackId = layout[layoutIndex];
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackId);
