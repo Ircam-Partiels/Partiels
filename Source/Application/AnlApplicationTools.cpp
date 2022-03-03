@@ -62,9 +62,18 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
     auto const identifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
     if(identifier.has_value())
     {
+        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
+        auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
+        std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
+        std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
+                       {
+                           return visibleState == Group::ChannelVisibilityState::visible;
+                       });
+
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
         trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+        trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
         auto const& acsr = Instance::get().getApplicationAccessor();
         LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
@@ -73,7 +82,6 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
         colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
         trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
 
-        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
         groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
 
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
