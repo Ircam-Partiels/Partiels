@@ -22,7 +22,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                          mDirector.endAction(ActionState::newTransaction, juce::translate("Change track color map"));
                      })
 , mPropertyForegroundColour(
-      juce::translate("Foreground Color"), juce::translate("The foreground current color of the graphical renderer."), juce::translate("Select the foreground color"), [&](juce::Colour const& colour)
+      juce::translate("Foreground Color"), juce::translate("The foreground color of the graphical renderer."), juce::translate("Select the foreground color"), [&](juce::Colour const& colour)
       {
           if(!mPropertyForegroundColour.entry.isColourSelectorVisible())
           {
@@ -43,7 +43,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track foreground color"));
       })
 , mPropertyBackgroundColour(
-      juce::translate("Background Color"), juce::translate("The background current color of the graphical renderer."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
+      juce::translate("Background Color"), juce::translate("The background color of the graphical renderer."), juce::translate("Select the background color"), [&](juce::Colour const& colour)
       {
           if(!mPropertyBackgroundColour.entry.isColourSelectorVisible())
           {
@@ -64,7 +64,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track background color"));
       })
 , mPropertyTextColour(
-      juce::translate("Text Color"), juce::translate("The text current color of the graphical renderer."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
+      juce::translate("Text Color"), juce::translate("The text color of the graphical renderer."), juce::translate("Select the text color"), [&](juce::Colour const& colour)
       {
           if(!mPropertyTextColour.entry.isColourSelectorVisible())
           {
@@ -85,7 +85,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track text color"));
       })
 , mPropertyShadowColour(
-      juce::translate("Shadow Color"), juce::translate("The shadow current color of the graphical renderer."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
+      juce::translate("Shadow Color"), juce::translate("The shadow color of the graphical renderer."), juce::translate("Select the shadow color"), [&](juce::Colour const& colour)
       {
           if(!mPropertyShadowColour.entry.isColourSelectorVisible())
           {
