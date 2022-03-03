@@ -448,7 +448,7 @@ void Track::PropertyProcessorSection::setBlockSize(size_t const blockSize)
                                  state.stepSize = static_cast<size_t>(std::round(static_cast<double>(state.blockSize) / overlapping));
                              }
                              mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's window type"));
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's block size"));
                          });
 }
 
@@ -472,7 +472,7 @@ void Track::PropertyProcessorSection::setStepSize(size_t const stepSize)
                              auto state = mAccessor.getAttr<AttrType::state>();
                              state.stepSize = stepSize;
                              mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's window type"));
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's step size"));
                          });
 }
 
