@@ -216,6 +216,10 @@ void Group::PropertyProcessorsSection::setBlockSize(size_t const blockSize)
                               {
                                   mDirector.startAction(true);
                               }
+                              else
+                              {
+                                  updateBlockSize();
+                              }
                               return result;
                           },
                           [=, this]()
@@ -241,6 +245,7 @@ void Group::PropertyProcessorsSection::setBlockSize(size_t const blockSize)
                                   }
                               }
                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's block size"));
+                              updateBlockSize();
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
@@ -255,6 +260,10 @@ void Group::PropertyProcessorsSection::setStepSize(size_t const stepSize)
                               if(result)
                               {
                                   mDirector.startAction(true);
+                              }
+                              else
+                              {
+                                  updateStepSize();
                               }
                               return result;
                           },
@@ -271,6 +280,7 @@ void Group::PropertyProcessorsSection::setStepSize(size_t const stepSize)
                                   }
                               }
                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's step size"));
+                              updateStepSize();
                           },
                           [=](Track::Accessor const& trackAcsr)
                           {
