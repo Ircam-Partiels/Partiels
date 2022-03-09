@@ -1,6 +1,7 @@
 
 v1.0.3
 
+- Add: Automatic color mode to update the color mode based on OS mode (#221)
 - Fix: Group zoom reference should not be editable if there is no tracks (#220)
 - Fix: Group window properties should not display the channels layout if there is no track (#219)
 - Fix: Group window properties should not display background if a track is a spectrogram (#218)
