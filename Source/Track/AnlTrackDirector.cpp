@@ -552,16 +552,20 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
     auto showWarningWindow = [&](juce::String const& reason)
     {
-        auto constexpr type = AlertWindow::MessageType::warning;
-        auto constexpr title = "Plugin cannot be loaded";
+        auto const title = juce::translate("Plugin cannot be loaded!");
         auto const message = juce::String("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.").replace("KEYID", mAccessor.getAttr<AttrType::key>().identifier).replace("KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature).replace("TRACKNAME", mAccessor.getAttr<AttrType::name>()).replace("REASON", reason);
         if(mAlertCatcher != nullptr)
         {
-            mAlertCatcher->postMessage(type, title, message);
+            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, title, message);
         }
         else
         {
-            AlertWindow::showMessage(type, title, message);
+            auto const options = juce::MessageBoxOptions()
+                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                     .withTitle(title)
+                                     .withMessage(message)
+                                     .withButton(juce::translate("Ok"));
+            juce::AlertWindow::showAsync(options, nullptr);
         }
     };
 
