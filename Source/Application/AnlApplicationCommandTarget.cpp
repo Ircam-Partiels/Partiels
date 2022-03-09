@@ -581,38 +581,40 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editLoadTemplate:
         {
-            struct DocumentCtn
-            {
-                DocumentCtn() = default;
-                ~DocumentCtn() = default;
-
-                Document::Accessor accessor;
-                juce::UndoManager undoManager;
-                Document::Director director{accessor, Instance::get().getAudioFormatManager(), undoManager};
-                Document::FileBased fileBased{director, Instance::getExtensionForDocumentFile(), Instance::getWildCardForDocumentFile(), juce::translate("Open a document"), juce::translate("Save the document")};
-            };
-
-            auto tempDocument = std::make_shared<DocumentCtn>();
-            if(tempDocument == nullptr)
+            auto const wildcard = Instance::getWildCardForDocumentFile();
+            mFileChooser = std::make_unique<juce::FileChooser>(getCommandDescription(), Instance::get().getDocumentFileBased().getFile(), wildcard);
+            if(mFileChooser == nullptr)
             {
                 return true;
             }
+            using Flags = juce::FileBrowserComponent::FileChooserFlags;
+            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
+                                      {
+                                          auto const results = fileChooser.getResults();
+                                          if(results.isEmpty())
+                                          {
+                                              return;
+                                          }
 
-            auto& copyFileBased = tempDocument->fileBased;
-            copyFileBased.loadFromUserSpecifiedFileAsync(true, [tempDocument](juce::Result loadResult)
-                                                         {
-                                                             anlWeakAssert(tempDocument != nullptr);
-                                                             if(tempDocument == nullptr || loadResult.failed())
-                                                             {
-                                                                 return;
-                                                             }
-                                                             tempDocument->accessor.setAttr<Document::AttrType::reader>(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>(), NotificationType::synchronous);
-
-                                                             auto& documentDir = Instance::get().getDocumentDirector();
-                                                             documentDir.startAction();
-                                                             Instance::get().getDocumentAccessor().copyFrom(tempDocument->accessor, NotificationType::synchronous);
-                                                             documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
-                                                         });
+                                          auto& documentDir = Instance::get().getDocumentDirector();
+                                          documentDir.startAction();
+                                          auto const adaptation = Instance::get().getApplicationAccessor().getAttr<AttrType::adaptationToSampleRate>();
+                                          auto const loadResults = Instance::get().getDocumentFileBased().loadTemplate(results.getFirst(), adaptation);
+                                          if(loadResults.failed())
+                                          {
+                                              auto const options = juce::MessageBoxOptions()
+                                                                       .withIconType(juce::AlertWindow::WarningIcon)
+                                                                       .withTitle(juce::translate("Failed to load template!"))
+                                                                       .withMessage(loadResults.getErrorMessage())
+                                                                       .withButton(juce::translate("Ok"));
+                                              juce::AlertWindow::showAsync(options, nullptr);
+                                              documentDir.endAction(ActionState::abort);
+                                          }
+                                          else
+                                          {
+                                              documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
+                                          }
+                                      });
             return true;
         }
 
