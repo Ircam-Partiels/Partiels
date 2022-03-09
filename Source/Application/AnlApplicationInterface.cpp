@@ -156,7 +156,12 @@ Application::Interface::Loader::Loader()
             auto const results = Instance::get().getDocumentFileBased().loadTemplate(file, adaptation);
             if(results.failed())
             {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Failed to load template!", results.getErrorMessage());
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::WarningIcon)
+                                         .withTitle(juce::translate("Failed to load template!"))
+                                         .withMessage(results.getErrorMessage())
+                                         .withButton(juce::translate("Ok"));
+                juce::AlertWindow::showAsync(options, nullptr);
                 documentDir.endAction(ActionState::abort);
             }
             else
