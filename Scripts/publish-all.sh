@@ -30,26 +30,20 @@ echo '\033[0m'
 test -f "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip"
 zip -r "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip" "$APP_NAME-v$APP_VERSION.dmg"
 
-echo '\033[0;34m' "Downloading debian artifact..."
+echo '\033[0;34m' "Downloading Linux artifact..."
 echo '\033[0m'
-test -f "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip"
-curl --output $APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Debian"
-
-echo '\033[0;34m' "Downloading ubuntu artifact..."
-echo '\033[0m'
-test -f "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip"
-curl --output $APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Ubuntu"
+test -f "$APP_NAME-v$APP_FULL_VERSION-Linux-64bit.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Linux-64bit.zip"
+curl --output $APP_NAME-v$APP_FULL_VERSION-Linux-64bit.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Linux"
 
 echo '\033[0;34m' "Downloading windows artifact..."
 echo '\033[0m'
-test -f "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip"
-curl --output $APP_NAME-v$APP_FULL_VERSION-Windows-10.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Windows"
+test -f "$APP_NAME-v$APP_FULL_VERSION-Windows-64bit.zip" && rm "$APP_NAME-v$APP_FULL_VERSION-Windows-64bit.zip"
+curl --output $APP_NAME-v$APP_FULL_VERSION-Windows-64bit.zip --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "$PROJECT_URL/$APP_FULL_VERSION/download?job=Build::Windows"
 
 echo '\033[0;34m' "Installing zip files..."
 echo '\033[0m'
-cp "$APP_NAME-v$APP_FULL_VERSION-Debian-10.9.zip" $HOME/Nextcloud/Partiels/Temp
-cp "$APP_NAME-v$APP_FULL_VERSION-Ubuntu-20.04.zip" $HOME/Nextcloud/Partiels/Temp
-cp "$APP_NAME-v$APP_FULL_VERSION-Windows-10.zip" $HOME/Nextcloud/Partiels/Temp
+cp "$APP_NAME-v$APP_FULL_VERSION-Linux-64bit.zip" $HOME/Nextcloud/Partiels/Temp
+cp "$APP_NAME-v$APP_FULL_VERSION-Windows-64bit.zip" $HOME/Nextcloud/Partiels/Temp
 cp "$APP_NAME-v$APP_FULL_VERSION-MacOS-Universal.zip" $HOME/Nextcloud/Partiels/Temp
 
 echo '\033[0;34m' "done"

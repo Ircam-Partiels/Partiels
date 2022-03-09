@@ -39,7 +39,7 @@ Test::Windows:
     - echo $env:VAMP_PATH
     - ctest -C Debug -VV
 
-Test::Ubuntu:
+Test::Linux:
   stage: test
   tags:
     - linux
@@ -48,20 +48,6 @@ Test::Ubuntu:
     - mkdir build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - cmake --build .
-    - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - echo $VAMP_PATH
-    - ctest -C Debug -V
-
-Test::Debian:
-  stage: test
-  tags:
-    - debian
-  script:
-    - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-11 -DCMAKE_CXX_COMPILER=clang++-11
     - cmake --build .
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
     - echo $VAMP_PATH
@@ -108,9 +94,9 @@ Build::Windows:
       - $CI_PROJECT_DIR\Partiels-install.exe
     expire_in: 1 week
 
-Build::Ubuntu:
+Build::Linux:
   stage: build
-  needs: ["Test::Ubuntu"]
+  needs: ["Test::Linux"]
   tags:
     - linux
   script:
@@ -118,25 +104,6 @@ Build::Ubuntu:
     - mkdir build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build .
-    - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - ctest -C Release -V
-    - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
-  artifacts:
-    paths:
-      - $CI_PROJECT_DIR/Partiels/
-    expire_in: 1 week
-
-Build::Debian:
-  stage: build
-  needs: ["Test::Debian"]
-  tags:
-    - debian
-  script:
-    - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-11 -DCMAKE_CXX_COMPILER=clang++-11
     - cmake --build .
     - export VAMP_PATH="$CI_PROJECT_DIR/build"
     - ctest -C Release -V
