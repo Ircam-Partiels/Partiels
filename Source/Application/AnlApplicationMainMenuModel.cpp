@@ -98,7 +98,6 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     else if(menuName == "View")
     {
         juce::PopupMenu colourModeMenu;
-        using ColourMode = LookAndFeel::ColourChart::Mode;
         auto const selectedMode = Instance::get().getApplicationAccessor().getAttr<AttrType::colourMode>();
         for(auto const& entry : magic_enum::enum_entries<ColourMode>())
         {

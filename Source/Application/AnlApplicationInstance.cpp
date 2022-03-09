@@ -135,27 +135,14 @@ void Application::Instance::initialise(juce::String const& commandLine)
             break;
             case AttrType::colourMode:
             {
-                mLookAndFeel->setColourChart({acsr.getAttr<AttrType::colourMode>()});
-                juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
-                if(mMainMenuModel != nullptr)
-                {
-                    mMainMenuModel->menuItemsChanged();
-                }
-                if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
-                {
-                    for(int i = 0; i < modalComponentManager->getNumModalComponents(); ++i)
-                    {
-                        if(auto* resizableWindow = dynamic_cast<juce::ResizableWindow*>(modalComponentManager->getModalComponent(i)))
-                        {
-                            resizableWindow->setBackgroundColour(mLookAndFeel->findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
-                        }
-                    }
-                }
+                updateLookAndFeel();
             }
             break;
         }
     };
     mApplicationAccessor->addListener(*mApplicationListener.get(), NotificationType::synchronous);
+
+    juce::Desktop::getInstance().addDarkModeSettingListener(this);
 
     anlDebug("Application", "Ready!");
 
@@ -262,6 +249,8 @@ void Application::Instance::systemRequestedQuit()
 
 void Application::Instance::shutdown()
 {
+    juce::Desktop::getInstance().removeDarkModeSettingListener(this);
+
     anlDebug("Application", "Begin...");
     if(mCommandLine != nullptr)
     {
@@ -341,6 +330,35 @@ std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identi
         return {bounds.getWidth(), bounds.getHeight()};
     }
     return {0, 0};
+}
+
+LookAndFeel::ColourChart Application::Instance::getColourChart()
+{
+    auto& instance = get();
+    MiscWeakAssert(instance.mApplicationAccessor != nullptr);
+    if(instance.mApplicationAccessor == nullptr)
+    {
+        return {LookAndFeel::ColourChart::Mode::night};
+    }
+
+    switch(instance.mApplicationAccessor->getAttr<AttrType::colourMode>())
+    {
+        case ColourMode::night:
+            return {LookAndFeel::ColourChart::Mode::night};
+        case ColourMode::day:
+            return {LookAndFeel::ColourChart::Mode::day};
+        case ColourMode::grass:
+            return {LookAndFeel::ColourChart::Mode::grass};
+        case ColourMode::automatic:
+        {
+            if(juce::Desktop::getInstance().isDarkModeActive())
+            {
+                return {LookAndFeel::ColourChart::Mode::night};
+            }
+            return {LookAndFeel::ColourChart::Mode::day};
+        }
+    }
+    return {LookAndFeel::ColourChart::Mode::night};
 }
 
 void Application::Instance::newDocument()
@@ -705,6 +723,37 @@ void Application::Instance::checkPluginsQuarantine()
                                      });
     }
 #endif
+}
+
+void Application::Instance::darkModeSettingChanged()
+{
+    updateLookAndFeel();
+}
+
+void Application::Instance::updateLookAndFeel()
+{
+    MiscWeakAssert(mLookAndFeel != nullptr);
+    if(mLookAndFeel == nullptr)
+    {
+        return;
+    }
+
+    mLookAndFeel->setColourChart(getColourChart());
+    juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
+    if(mMainMenuModel != nullptr)
+    {
+        mMainMenuModel->menuItemsChanged();
+    }
+    if(auto* modalComponentManager = juce::ModalComponentManager::getInstance())
+    {
+        for(int i = 0; i < modalComponentManager->getNumModalComponents(); ++i)
+        {
+            if(auto* resizableWindow = dynamic_cast<juce::ResizableWindow*>(modalComponentManager->getModalComponent(i)))
+            {
+                resizableWindow->setBackgroundColour(mLookAndFeel->findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+            }
+        }
+    }
 }
 
 ANALYSE_FILE_END

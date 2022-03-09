@@ -75,8 +75,7 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
         trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
-        auto const& acsr = Instance::get().getApplicationAccessor();
-        LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
+        auto const colourChart = Instance::getColourChart();
         auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
         colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
         colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
@@ -156,8 +155,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
     {
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
         trackAcsr.setAttr<Track::AttrType::name>(file.getFileNameWithoutExtension(), NotificationType::synchronous);
-        auto const& acsr = Instance::get().getApplicationAccessor();
-        LookAndFeel::ColourChart const colourChart(acsr.getAttr<AttrType::colourMode>());
+        auto const colourChart = Instance::getColourChart();
         auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
         colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
         colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);

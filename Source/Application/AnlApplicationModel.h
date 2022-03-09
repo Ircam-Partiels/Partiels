@@ -10,6 +10,14 @@ namespace Application
     using Flag = Model::Flag;
 
     // clang-format off
+    enum class ColourMode
+    {
+          night
+        , day
+        , grass
+        , automatic
+    };
+
     enum class AttrType : size_t
     {
           desktopGlobalScaleFactor
@@ -28,7 +36,7 @@ namespace Application
     , Model::Attr<AttrType::windowState, juce::String, Flag::basic>
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
-    , Model::Attr<AttrType::colourMode, LookAndFeel::ColourChart::Mode, Flag::basic>
+    , Model::Attr<AttrType::colourMode, ColourMode, Flag::basic>
     , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Flag::basic>
     , Model::Attr<AttrType::adaptationToSampleRate, bool, Flag::basic>
@@ -49,7 +57,7 @@ namespace Application
             , {juce::String{}}
             , {std::vector<juce::File>{}}
             , {juce::File{}}
-            , {LookAndFeel::ColourChart::Mode::day}
+            , {ColourMode::automatic}
             , {true}
             , {}
             , {false}

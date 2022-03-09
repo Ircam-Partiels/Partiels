@@ -24,6 +24,7 @@ namespace Application
     : public juce::JUCEApplication
     , private juce::ChangeListener
     , private juce::AsyncUpdater
+    , private juce::DarkModeSettingListener
     {
     public:
         Instance() = default;
@@ -44,6 +45,7 @@ namespace Application
         static juce::String getWildCardForImportFormats();
         static juce::String getWildCardForAudioFormats();
         static std::pair<int, int> getSizeFor(juce::String const& identifier);
+        static LookAndFeel::ColourChart getColourChart();
 
         void newDocument();
         void openDocumentFile(juce::File const& file);
@@ -76,6 +78,10 @@ namespace Application
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
 
+        // juce::DarkModeSettingListener
+        void darkModeSettingChanged() override;
+
+        void updateLookAndFeel();
         juce::File getBackupFile() const;
         void openStartupFiles();
         void checkPluginsQuarantine();
