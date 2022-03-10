@@ -207,6 +207,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
     addChildComponent(mPropertySdifMatrix);
     addChildComponent(mPropertySdifColName);
     addChildComponent(mPropertyIgnoreGrids);
+    setSize(300, 200);
 
     mPropertySdifFrame.entry.onEditorShow = [this]()
     {
@@ -292,7 +293,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    setSize(300, 200);
+    mOptions.format = Options::Format::sdif;
+    setOptions({}, juce::NotificationType::dontSendNotification);
 }
 
 Document::Exporter::Panel::~Panel()
