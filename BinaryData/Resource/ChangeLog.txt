@@ -1,6 +1,7 @@
 
 v1.0.3
 
+- Fix: Loading a template using the start panel button displays warnings if an audio file is missing (#222)
 - Add: Automatic color mode to update the color mode based on OS mode (#221)
 - Fix: Group zoom reference should not be editable if there is no tracks (#220)
 - Fix: Group window properties should not display the channels layout if there is no track (#219)
