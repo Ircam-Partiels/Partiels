@@ -1,6 +1,7 @@
 
 v1.0.3
 
+- Imp: Improve zoom interactions and shortcuts (#225)
 - Fix: Exporter panel doesn't show default values when using it for the first time (#224)
 - Fix: Preset button of track panel is not well updated when saving or loading presets (#223)
 - Fix: Loading a template using the start panel button displays warnings if an audio file is missing (#222)
