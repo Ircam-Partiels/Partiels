@@ -355,7 +355,7 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
     auto const font = g.getCurrentFont();
 
     auto const& channelResults = markers->at(channel);
-    auto it = Tools::findFirstAt(channelResults, globalRange, clipTimeStart);
+    auto it = Results::findFirstAt(channelResults, globalRange, clipTimeStart);
     while(it != channelResults.cend() && std::get<0>(*it) < clipTimeEnd)
     {
         auto const start = std::get<0>(*it);
@@ -493,7 +493,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         return;
     }
 
-    auto it = Tools::findFirstAt(channelResults, globalRange, clipTimeStart);
+    auto it = Results::findFirstAt(channelResults, globalRange, clipTimeStart);
     if(it != channelResults.cbegin())
     {
         it = std::prev(it);

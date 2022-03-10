@@ -226,13 +226,7 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
     }
 
     auto const results = accessor.getAttr<AttrType::results>();
-    auto const points = results.getPoints();
-    if(points == nullptr || points->size() <= channel)
-    {
-        return;
-    }
-
-    auto const value = Tools::getValue(points, channel, globalRange, time);
+    auto const value = Results::getValue(results.getPoints(), channel, globalRange, time);
     if(!value.has_value())
     {
         return;

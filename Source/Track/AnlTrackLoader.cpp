@@ -400,7 +400,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
             results.push_back(std::move(markers));
         }
 
-        res = Results(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
+        res = Results::create(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
     }
     else if(std::string(type) == "PTLPTS")
     {
@@ -451,8 +451,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
             results.push_back(std::move(points));
         }
 
-        auto const valueRange = Tools::getValueRange(results);
-        res = Results(std::make_shared<const std::vector<Results::Points>>(std::move(results)), valueRange);
+        res = Results::create(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
     }
     else if(std::string(type) == "PTLCLS")
     {
@@ -498,10 +497,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
             }
             results.push_back(std::move(columns));
         }
-
-        auto const numBins = Tools::getNumBins(results);
-        auto const valueRange = Tools::getValueRange(results);
-        res = Results(std::make_shared<const std::vector<Results::Columns>>(std::move(results)), numBins, valueRange);
+        res = Results::create(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
     }
     else
     {
@@ -633,7 +629,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istre
     }
 
     advancement.store(1.0f);
-    return Results(std::make_shared<const std::vector<Results::Markers>>(std::move(channelResults)));
+    return Results::create(std::make_shared<const std::vector<Results::Markers>>(std::move(channelResults)));
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)

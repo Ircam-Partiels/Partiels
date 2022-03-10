@@ -28,67 +28,6 @@ namespace Track
         float secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
         double pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
 
-        template <typename T>
-        typename T::const_iterator findFirstAt(T const& results, Zoom::Range const& globalRange, double time)
-        {
-            anlWeakAssert(!globalRange.isEmpty());
-            if(globalRange.isEmpty())
-            {
-                return results.cend();
-            }
-            if(results.empty())
-            {
-                return results.cend();
-            }
-
-            auto const timeRatioPosition = std::max(std::min((time - globalRange.getStart()) / globalRange.getLength(), 1.0), 0.0);
-            auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
-
-            auto const expectedIt = std::next(results.cbegin(), expectedIndex);
-            anlWeakAssert(expectedIt != results.cend());
-            if(expectedIt == results.cend())
-            {
-                return results.cend();
-            }
-            auto const position = std::get<0>(*expectedIt);
-            if(position >= time && position + std::get<1>(*expectedIt) <= time)
-            {
-                return expectedIt;
-            }
-            else if(position >= time)
-            {
-                auto it = std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
-                                       {
-                                           return std::get<0>(result) + std::get<1>(result) < time;
-                                       });
-                if(it == results.crend())
-                {
-                    return results.cbegin();
-                }
-                return std::next(it).base();
-            }
-            else
-            {
-                auto const it = std::find_if(expectedIt, results.cend(), [&](auto const& result)
-                                             {
-                                                 return std::get<0>(result) + std::get<1>(result) >= time;
-                                             });
-                if(it == results.cend())
-                {
-                    return std::prev(it);
-                }
-                if(std::get<0>(*it) > time && it != results.cbegin())
-                {
-                    return std::prev(it);
-                }
-                return it;
-            }
-        }
-
-        std::optional<std::string> getValue(Results::SharedMarkers results, size_t channel, Zoom::Range const& globalRange, double time);
-        std::optional<float> getValue(Results::SharedPoints results, size_t channel, Zoom::Range const& globalRange, double time);
-        std::optional<float> getValue(Results::SharedColumns results, size_t channel, Zoom::Range const& globalRange, double time, size_t bin);
-
         juce::String getInfoTooltip(Accessor const& acsr);
         juce::String getValueTootip(Accessor const& acsr, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time);
         juce::String getStateTootip(Accessor const& acsr);
@@ -103,10 +42,6 @@ namespace Track
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);
 
         Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort);
-
-        size_t getNumBins(std::vector<Results::Columns> const& results);
-        Zoom::Range getValueRange(std::vector<Results::Columns> const& results);
-        Zoom::Range getValueRange(std::vector<Results::Points> const& results);
 
         std::unique_ptr<juce::Component> createValueRangeEditor(Accessor& acsr);
         std::unique_ptr<juce::Component> createBinRangeEditor(Accessor& acsr);

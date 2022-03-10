@@ -25,9 +25,7 @@ namespace Track
         Results(Results const& rhs) = default;
         ~Results() = default;
 
-        explicit Results(SharedMarkers ptr);
-        explicit Results(SharedPoints ptr, Zoom::Range const& valueRange);
-        explicit Results(SharedColumns ptr, size_t const numBins, Zoom::Range const& valueRange);
+        static Results create(std::variant<SharedMarkers, SharedPoints, SharedColumns> results);
 
         SharedMarkers const getMarkers() const noexcept;
         SharedPoints const getPoints() const noexcept;
@@ -39,7 +37,17 @@ namespace Track
         bool operator==(Results const& rhd) const noexcept;
         bool operator!=(Results const& rhd) const noexcept;
 
+        static Markers::const_iterator findFirstAt(Markers const& results, Zoom::Range const& globalRange, double time);
+        static Points::const_iterator findFirstAt(Points const& results, Zoom::Range const& globalRange, double time);
+        static Columns::const_iterator findFirstAt(Columns const& results, Zoom::Range const& globalRange, double time);
+
+        static std::optional<std::string> getValue(SharedMarkers results, size_t channel, Zoom::Range const& globalRange, double time);
+        static std::optional<float> getValue(SharedPoints results, size_t channel, Zoom::Range const& globalRange, double time);
+        static std::optional<float> getValue(SharedColumns results, size_t channel, Zoom::Range const& globalRange, double time, size_t bin);
+
     private:
+        explicit Results(std::variant<SharedMarkers, SharedPoints, SharedColumns> results, size_t const numBins, Zoom::Range const& valueRange);
+
         std::variant<SharedMarkers, SharedPoints, SharedColumns> mResults{SharedPoints(nullptr)};
         size_t mNumBins{0_z};
         Zoom::Range mValueRange{};
