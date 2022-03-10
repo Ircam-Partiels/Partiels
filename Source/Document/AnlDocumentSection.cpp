@@ -578,7 +578,8 @@ void Document::Section::updateExpandState()
 
 void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
 {
-    if(event.mods.isCommandDown())
+    mScrollHelper.mouseWheelMove(event, wheel);
+    if(mScrollHelper.getModifierKeys().isCtrlDown())
     {
         return;
     }
@@ -590,7 +591,7 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
         mViewport.useMouseWheelMoveIfNeeded(event.getEventRelativeTo(&mViewport), wheel);
         return;
     }
-    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::vertical && !event.mods.isShiftDown())
+    if(mScrollHelper.getOrientation() == ScrollHelper::vertical && !mScrollHelper.getModifierKeys().isShiftDown())
     {
         mouseMagnify(event, 1.0f + wheel.deltaY);
     }
@@ -598,7 +599,7 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
     {
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        auto const delta = event.mods.isShiftDown() ? static_cast<double>(wheel.deltaY) : static_cast<double>(wheel.deltaX);
+        auto const delta = mScrollHelper.getModifierKeys().isShiftDown() ? static_cast<double>(wheel.deltaY) : static_cast<double>(wheel.deltaX);
         auto const offset = delta * visibleRange.getLength();
         timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
     }
@@ -606,7 +607,7 @@ void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::Mous
 
 void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
 {
-    if(event.mods.isCommandDown())
+    if(event.mods.isCtrlDown())
     {
         return;
     }

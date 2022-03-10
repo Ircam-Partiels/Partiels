@@ -192,27 +192,30 @@ void Group::Section::itemDropped(juce::DragAndDropTarget::SourceDetails const& d
 
 void Group::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
 {
-    if(!event.mods.isCommandDown())
+    mScrollHelper.mouseWheelMove(event, wheel);
+    if(!mScrollHelper.getModifierKeys().isCtrlDown())
     {
         Component::mouseWheelMove(event, wheel);
         return;
     }
-    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal || event.mods.isShiftDown())
+    if(!mScrollHelper.getModifierKeys().isShiftDown())
     {
-        mouseMagnify(event, event.mods.isShiftDown() ? 1.0f + wheel.deltaY : 1.0f + wheel.deltaX);
+        auto const delta = mScrollHelper.getOrientation() == ScrollHelper::Orientation::vertical ? wheel.deltaY : wheel.deltaX;
+        mouseMagnify(event, 1.0f + delta);
     }
     else
     {
+        auto const delta = mScrollHelper.getModifierKeys().isShiftDown() ? wheel.deltaY : wheel.deltaX;
         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
         auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-        auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+        auto const offset = static_cast<double>(-delta) * visibleRange.getLength();
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
     }
 }
 
 void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
 {
-    if(!event.mods.isCommandDown())
+    if(!event.mods.isCtrlDown())
     {
         Component::mouseMagnify(event, magnifyAmount);
         return;

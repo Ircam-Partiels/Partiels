@@ -45,6 +45,7 @@ namespace Group
         void itemDropped(juce::DragAndDropTarget::SourceDetails const& dragSourceDetails) override;
 
         void updateContent();
+        void performMagnify(float magnifyAmount);
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};

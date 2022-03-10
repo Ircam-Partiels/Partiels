@@ -102,17 +102,20 @@ void Track::Section::paint(juce::Graphics& g)
 
 void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
 {
-    if(!event.mods.isCommandDown())
+    mScrollHelper.mouseWheelMove(event, wheel);
+    if(!mScrollHelper.getModifierKeys().isCtrlDown())
     {
         Component::mouseWheelMove(event, wheel);
         return;
     }
-    if(mScrollHelper.mouseWheelMove(wheel) == ScrollHelper::Orientation::horizontal || event.mods.isShiftDown())
+    if(!mScrollHelper.getModifierKeys().isShiftDown())
     {
-        mouseMagnify(event, event.mods.isShiftDown() ? 1.0f + wheel.deltaY : 1.0f + wheel.deltaX);
+        auto const delta = mScrollHelper.getOrientation() == ScrollHelper::Orientation::vertical ? wheel.deltaY : wheel.deltaX;
+        mouseMagnify(event, 1.0f + delta);
     }
     else
     {
+        auto const delta = mScrollHelper.getModifierKeys().isShiftDown() ? wheel.deltaY : wheel.deltaX;
         switch(Tools::getDisplayType(mAccessor))
         {
             case Tools::DisplayType::markers:
@@ -121,7 +124,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                 auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+                auto const offset = static_cast<double>(-delta) * visibleRange.getLength();
                 zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
             }
             break;
@@ -129,7 +132,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
                 auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                auto const offset = static_cast<double>(-wheel.deltaY) * visibleRange.getLength();
+                auto const offset = static_cast<double>(-delta) * visibleRange.getLength();
                 zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
             }
             break;
@@ -139,7 +142,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
 
 void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAmount)
 {
-    if(!event.mods.isCommandDown())
+    if(!event.mods.isCtrlDown())
     {
         Component::mouseMagnify(event, magnifyAmount);
         return;
