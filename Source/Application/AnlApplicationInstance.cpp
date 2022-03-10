@@ -192,10 +192,9 @@ void Application::Instance::anotherInstanceStarted(juce::String const& commandLi
 
 void Application::Instance::systemRequestedQuit()
 {
-    anlDebug("Application", "Begin...");
-    if(mCommandLine != nullptr && mCommandLine->isRunning())
+    auto delaySystemRequestedQuit = [this]()
     {
-        anlDebug("Application", "Delayed...");
+        anlDebug("Application", "Delay System Requested Quit...");
         juce::WeakReference<Instance> weakReference(this);
         juce::Timer::callAfterDelay(500, [=, this]()
                                     {
@@ -205,6 +204,12 @@ void Application::Instance::systemRequestedQuit()
                                         }
                                         systemRequestedQuit();
                                     });
+    };
+
+    anlDebug("Application", "Begin...");
+    if(mCommandLine != nullptr && mCommandLine->isRunning())
+    {
+        delaySystemRequestedQuit();
         return;
     }
 
@@ -217,34 +222,59 @@ void Application::Instance::systemRequestedQuit()
     {
         if(modalComponentManager->cancelAllModalComponents())
         {
-            anlDebug("Application", "Delayed...");
-            juce::WeakReference<Instance> weakReference(this);
-            juce::Timer::callAfterDelay(500, [=, this]()
-                                        {
-                                            if(weakReference.get() == nullptr)
-                                            {
-                                                return;
-                                            }
-                                            systemRequestedQuit();
-                                        });
+            delaySystemRequestedQuit();
             return;
         }
     }
-    if(mDocumentFileBased != nullptr)
+
+    auto saveAndQuit = [this]()
     {
-        mDocumentFileBased->saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult result)
-                                                           {
-                                                               if(result == juce::FileBasedDocument::SaveResult::savedOk)
+        if(mDocumentFileBased != nullptr)
+        {
+            mDocumentFileBased->saveIfNeededAndUserAgreesAsync([](juce::FileBasedDocument::SaveResult result)
                                                                {
-                                                                   anlDebug("Application", "Ready");
-                                                                   quit();
-                                                               }
-                                                           });
-    }
-    else
+                                                                   if(result == juce::FileBasedDocument::SaveResult::savedOk)
+                                                                   {
+                                                                       anlDebug("Application", "Ready to Quit");
+                                                                       quit();
+                                                                   }
+                                                               });
+        }
+        else
+        {
+            anlDebug("Application", "Ready to Quit");
+            quit();
+        }
+    };
+
+    if(mDocumentAccessor != nullptr)
     {
-        quit();
+        auto const trackAcsrs = mDocumentAccessor->getAcsrs<Document::AcsrType::tracks>();
+        auto const isRunning = std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                           {
+                                               auto const& processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
+                                               return std::get<0>(processing) || std::get<2>(processing);
+                                           });
+        if(isRunning)
+        {
+            auto const options = juce::MessageBoxOptions()
+                                     .withIconType(juce::AlertWindow::QuestionIcon)
+                                     .withTitle(juce::translate("Some analyses are still running!"))
+                                     .withMessage(juce::translate("Do you still want to quit the app? Note that a running analysis may block the application from closing until it completes."))
+                                     .withButton(juce::translate("Quit"))
+                                     .withButton(juce::translate("Cancel"));
+
+            juce::AlertWindow::showAsync(options, [=](int result)
+                                         {
+                                             if(result == 1)
+                                             {
+                                                 saveAndQuit();
+                                             }
+                                         });
+            return;
+        }
     }
+    saveAndQuit();
 }
 
 void Application::Instance::shutdown()
