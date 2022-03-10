@@ -520,13 +520,19 @@ void Track::PropertyProcessorSection::loadPreset()
         {
             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's properties from preset file"));
         }
+        updateState();
     };
     juce::WeakReference<juce::Component> weakReference(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
                               {
                                   auto const results = fileChooser.getResults();
-                                  if(weakReference.get() == nullptr || results.isEmpty())
+                                  if(weakReference.get() == nullptr)
                                   {
+                                      return;
+                                  }
+                                  if(results.isEmpty())
+                                  {
+                                      updateState();
                                       return;
                                   }
                                   askToModifyProcessor([this](bool result)
@@ -556,11 +562,15 @@ void Track::PropertyProcessorSection::savePreset()
     mFileChooser->launchAsync(Flags::saveMode | Flags::canSelectFiles | Flags::warnAboutOverwriting, [=, this](juce::FileChooser const& fileChooser)
                               {
                                   auto const results = fileChooser.getResults();
-                                  if(weakReference.get() == nullptr || results.isEmpty())
+                                  if(weakReference.get() == nullptr)
                                   {
                                       return;
                                   }
-
+                                  if(results.isEmpty())
+                                  {
+                                      updateState();
+                                      return;
+                                  }
                                   auto const result = Exporter::toPreset(mAccessor, results.getFirst());
                                   if(result.failed())
                                   {
@@ -571,6 +581,7 @@ void Track::PropertyProcessorSection::savePreset()
                                                                .withButton(juce::translate("Ok"));
                                       juce::AlertWindow::showAsync(options, nullptr);
                                   }
+                                  updateState();
                               });
 }
 
