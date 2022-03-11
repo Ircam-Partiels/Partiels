@@ -87,7 +87,7 @@ static Zoom::Range getPointsValueRange(Track::Results::SharedPoints const& resul
 
 Track::Results Track::Results::create(std::variant<SharedMarkers, SharedPoints, SharedColumns> results)
 {
-    if(auto const* markersPtr = std::get_if<SharedMarkers>(&results))
+    if(std::get_if<SharedMarkers>(&results) != nullptr)
     {
         return Results(std::move(results), 0_z, {});
     }
