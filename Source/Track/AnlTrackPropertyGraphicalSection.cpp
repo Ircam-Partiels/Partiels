@@ -147,9 +147,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                       })
 , mPropertyGrid(juce::translate("Grid"), juce::translate("Edit the grid properties"), [&]()
                 {
-                    auto& zoomAcsr = getCurrentZoomAcsr();
-                    auto& gridAcsr = zoomAcsr.getAcsr<Zoom::AcsrType::grid>();
-                    mZoomGridPropertyPanel.setGrid(gridAcsr);
+                    mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
                     mZoomGridPropertyPanel.show();
                 })
 , mPropertyRangeLink(juce::translate("Range Link"), juce::translate("Toggle the group link for zoom range."), [&](bool value)
