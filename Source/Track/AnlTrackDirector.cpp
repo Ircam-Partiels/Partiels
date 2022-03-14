@@ -441,7 +441,7 @@ Track::Accessor& Track::Director::getAccessor()
 
 bool Track::Director::hasChanged() const
 {
-    return !mAccessor.isEquivalentTo(mSavedState);
+    return !mAccessor.isEquivalentTo(mSavedState) || !mAccessor.getAcsr<AcsrType::valueZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::valueZoom>()) || !mAccessor.getAcsr<AcsrType::binZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::binZoom>());
 }
 
 void Track::Director::startAction()
