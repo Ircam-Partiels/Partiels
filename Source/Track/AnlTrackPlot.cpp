@@ -360,6 +360,19 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
     {
         auto const start = std::get<0>(*it);
         auto const x1 = Tools::secondsToPixel(start, timeRange, fbounds);
+
+        if(showLabel && !std::get<2>(*it).empty())
+        {
+            auto const previousLabelLimit = labels.empty() ? x1 : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
+            if(previousLabelLimit <= x1)
+            {
+                auto const text = std::get<2>(*it) + unit;
+                auto const textWidth = font.getStringWidth(text) + 2;
+                auto const textX = static_cast<int>(std::round(x1)) + 2;
+                labels.push_back(std::make_tuple(text, textX, textWidth));
+            }
+        }
+
         auto timeLimit = std::min(std::get<0>(*it) + std::get<1>(*it) + timeEpsilon, clipTimeEnd);
         // Skip any adjacent result with a distance inferior to epsilon pixels
         auto next = std::next(it);
@@ -370,17 +383,9 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
         }
 
         auto const end = std::get<0>(*it) + std::get<1>(*it);
-        auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
         auto const w = Tools::secondsToPixel(end, timeRange, fbounds) - x1;
         rectangles.addWithoutMerging({x1, fbounds.getY(), std::max(w, 1.0f), fbounds.getHeight()});
 
-        if(showLabel && !std::get<2>(*it).empty() && (labels.empty() || static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back())) <= x2))
-        {
-            auto const text = std::get<2>(*it) + unit;
-            auto const textWidth = font.getStringWidth(text) + 2;
-            auto const textX = static_cast<int>(std::round(x2)) + 2;
-            labels.push_back(std::make_tuple(text, textX, textWidth));
-        }
         it = std::next(it);
     }
 
