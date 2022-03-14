@@ -131,13 +131,13 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                          {
                              mDirector.startAction();
                              setValueRangeMin(static_cast<double>(value));
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track minimum value"));
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
 , mPropertyValueRangeMax(juce::translate("Value Range Max."), juce::translate("The maximum value of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float value)
                          {
                              mDirector.startAction();
                              setValueRangeMax(static_cast<double>(value));
-                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track maximum value"));
+                             mDirector.endAction(ActionState::newTransaction, juce::translate("Change track value range"));
                          })
 , mPropertyValueRange(juce::translate("Value Range"), juce::translate("The range of the output."), "", {static_cast<float>(Zoom::lowest()), static_cast<float>(Zoom::max())}, 0.0f, [&](float min, float max)
                       {
@@ -150,11 +150,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
                     mZoomGridPropertyPanel.show();
                 })
-, mPropertyRangeLink(juce::translate("Range Link"), juce::translate("Toggle the group link for zoom range."), [&](bool value)
+, mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range."), [&](bool value)
                      {
                          mDirector.startAction();
                          mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
-                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change range link state"));
+                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track zoom link"));
                      })
 , mPropertyNumBins(juce::translate("Num Bins"), juce::translate("The number of bins."), "", {0.0f, static_cast<float>(Zoom::max())}, 1.0f, nullptr)
 , mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visible state of the channels."), [&]()
