@@ -1,4 +1,8 @@
 
+v1.0.4
+
+- Fix: The changes of the zoom range of the track are not undoable (#226)
+
 v1.0.3
 
 - Imp: Improve zoom interactions and shortcuts (#225)
