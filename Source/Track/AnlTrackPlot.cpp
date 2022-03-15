@@ -382,8 +382,23 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
             timeLimit = std::min(std::get<0>(*it) + std::get<1>(*it) + timeEpsilon, clipTimeEnd);
         }
 
-        auto const end = std::get<0>(*it) + std::get<1>(*it);
+        auto const start2 = std::get<0>(*it);
+        auto const end = start2 + std::get<1>(*it);
         auto const w = Tools::secondsToPixel(end, timeRange, fbounds) - x1;
+
+        if(showLabel && !std::get<2>(*it).empty())
+        {
+            auto const x2 = Tools::secondsToPixel(start2, timeRange, fbounds);
+            auto const previousLabelLimit = labels.empty() ? x2 : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
+            if(previousLabelLimit <= x2)
+            {
+                auto const text = std::get<2>(*it) + unit;
+                auto const textWidth = font.getStringWidth(text) + 2;
+                auto const textX = static_cast<int>(std::round(x2)) + 2;
+                labels.push_back(std::make_tuple(text, textX, textWidth));
+            }
+        }
+
         rectangles.addWithoutMerging({x1, fbounds.getY(), std::max(w, 1.0f), fbounds.getHeight()});
 
         it = std::next(it);
