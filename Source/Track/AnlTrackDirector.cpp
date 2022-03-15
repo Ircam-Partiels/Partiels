@@ -569,6 +569,18 @@ void Track::Director::runAnalysis(NotificationType const notification)
         }
     };
 
+    auto const key = mAccessor.getAttr<AttrType::key>();
+    if(key.identifier.empty() || key.feature.empty())
+    {
+        return;
+    }
+    auto const sampleRate = mAudioFormatReader->sampleRate;
+    auto const description = PluginList::Scanner::loadDescription(key, sampleRate);
+    if(description != Plugin::Description{})
+    {
+        mAccessor.setAttr<AttrType::description>(description, notification);
+    }
+
     auto const result = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get());
     if(!result.has_value())
     {
@@ -582,11 +594,6 @@ void Track::Director::runAnalysis(NotificationType const notification)
         case WarningType::none:
         {
             anlDebug("Track", "analysis launched");
-            auto const key = mAccessor.getAttr<AttrType::key>();
-            auto const sampleRate = mAudioFormatReader->sampleRate;
-            auto description = PluginList::Scanner::loadDescription(key, sampleRate);
-            description.output = std::get<2>(*result);
-            mAccessor.setAttr<AttrType::description>(description, notification);
             startTimer(50);
             timerCallback();
         }

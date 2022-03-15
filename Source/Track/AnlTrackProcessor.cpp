@@ -51,19 +51,17 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     }
     catch(std::exception& e)
     {
-        return std::make_tuple(WarningType::plugin, e.what(), Plugin::Output{});
+        return std::make_tuple(WarningType::plugin, e.what());
     }
     catch(...)
     {
-        return std::make_tuple(WarningType::plugin, "unknown error", Plugin::Output{});
+        return std::make_tuple(WarningType::plugin, "unknown error");
     }
 
     if(processor == nullptr)
     {
-        return std::make_tuple(WarningType::state, "invalid state", Plugin::Output{});
+        return std::make_tuple(WarningType::state, "invalid state");
     }
-
-    auto const output = processor->getOutput();
 
     mChrono.start();
     mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> Results
@@ -111,7 +109,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                       return {};
                                   });
 
-    return std::make_tuple(WarningType::none, "", std::move(output));
+    return std::make_tuple(WarningType::none, "");
 }
 
 void Track::Processor::handleAsyncUpdate()
