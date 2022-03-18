@@ -77,7 +77,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mProperties = std::make_unique<Properties>();
     AppQuitIfInvalidPointer(mProperties);
-    checkPluginsQuarantine();
 
     mAudioReader = std::make_unique<AudioReader>();
     AppQuitIfInvalidPointer(mAudioReader);
@@ -109,6 +108,8 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mTrackLoader = std::make_unique<Track::Loader::ArgumentSelector>();
     AppQuitIfInvalidPointer(mTrackLoader);
+
+    checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
