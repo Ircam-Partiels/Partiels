@@ -8,11 +8,11 @@ v1.0.4
 v1.0.3
 
 - Imp: Improve zoom interactions and shortcuts (#225)
-- Fix: Exporter panel doesn't show default values when using it for the first time (#224)
-- Fix: Preset button of track panel is not well updated when saving or loading presets (#223)
+- Fix: The exporter panel doesn't show default values when using it for the first time (#224)
+- Fix: Preset button of the track panel is not well updated when saving or loading presets (#223)
 - Fix: Loading a template using the start panel button displays warnings if an audio file is missing (#222)
 - Add: Automatic color mode to update the color mode based on OS mode (#221)
-- Fix: Group zoom reference should not be editable if there is no tracks (#220)
+- Fix: Group zoom reference should not be editable if there is no track (#220)
 - Fix: Group window properties should not display the channels layout if there is no track (#219)
 - Fix: Group window properties should not display background if a track is a spectrogram (#218)
 - Imp: New tracks should try to use the same channel visibility layout as the group they belong to (#217)
@@ -20,7 +20,7 @@ v1.0.3
 - Imp: Access parameters of all tracks from the group properties window (#215)
 - Fix: Crash when modifying track properties (#214)
 - Fix: Remove the unnecessary grid option "Division Factor" (#213)
-- Imp: Double-click on the loop ruler selects between two markers even if the magnetism is off (use Cmd on MacOS or Ctrl on Linux & Windows to select the globale time range) (#212)
+- Imp: Double-click on the loop ruler selects between two markers even if the magnetism is off (use Cmd on MacOS or Ctrl on Linux & Windows to select the global time range) (#212)
 - Fix: Launching the app with files (using open with... from the OS) doesn't work (#210)
 - Imp: When quitting the application, warn the user that if an analysis is running (#209)
 - Fix: The factory preset is not selected by default in the track property window when the plugin uses a step size equal to the block size (#208)
