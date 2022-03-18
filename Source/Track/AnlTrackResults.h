@@ -22,8 +22,6 @@ namespace Track
         using SharedColumns = std::shared_ptr<const std::vector<Columns>>;
 
         Results() = default;
-        Results(Results const& rhs) = default;
-        ~Results() = default;
 
         static Results create(std::variant<SharedMarkers, SharedPoints, SharedColumns> results);
 
