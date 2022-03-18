@@ -64,8 +64,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         mBuffer.clear();
                         auto** internalBuffer = mBuffer.getArrayOfWritePointers();
                         auto const bufferSize = std::min(remaininSamples, mBuffer.getNumSamples());
-                        auto result = reader->readSamples(reinterpret_cast<int**>(internalBuffer), usedNumChannels, 0, startSampleInFile, bufferSize);
-                        if(!result)
+                        if(!reader->readSamples(reinterpret_cast<int**>(internalBuffer), usedNumChannels, 0, startSample, bufferSize))
                         {
                             return false;
                         }
