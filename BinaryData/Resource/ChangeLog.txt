@@ -1,6 +1,7 @@
 
 v1.0.4
 
+- Fix: Look and feel not properly initialised when plugin is in quarantine (#230)
 - Fix: A marker's label is not visible if another marker is pasted after it (#227)
 - Fix: The changes of the zoom range of the track are not undoable (#226)
 
