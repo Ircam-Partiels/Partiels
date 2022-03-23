@@ -23,6 +23,7 @@ namespace Application
         void closeButtonPressed() override;
         void resized() override;
         void moved() override;
+        void maximiseButtonPressed() override;
         void lookAndFeelChanged() override;
 
     private:

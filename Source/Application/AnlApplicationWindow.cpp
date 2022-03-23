@@ -67,10 +67,6 @@ void Application::Window::DesktopScaler::resized()
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
 {
-    if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
-    {
-        centreWithSize(1024, 768);
-    }
     mBoundsConstrainer.setSizeLimits(512, 384, std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mBoundsConstrainer.setMinimumOnscreenAmounts(0xffffff, 50, 50, 50);
     setConstrainer(&mBoundsConstrainer);
@@ -82,10 +78,15 @@ Application::Window::Window()
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     Instance::get().getDocumentFileBased().addChangeListener(this);
+    if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
+    {
+        centreWithSize(1024, 768);
+    }
 }
 
 Application::Window::~Window()
 {
+    handleAsyncUpdate();
     Instance::get().getDocumentFileBased().removeChangeListener(this);
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
 }
@@ -107,6 +108,12 @@ void Application::Window::moved()
     triggerAsyncUpdate();
 }
 
+void Application::Window::maximiseButtonPressed()
+{
+    juce::DocumentWindow::maximiseButtonPressed();
+    triggerAsyncUpdate();
+}
+
 void Application::Window::lookAndFeelChanged()
 {
     juce::DocumentWindow::lookAndFeelChanged();
@@ -115,7 +122,7 @@ void Application::Window::lookAndFeelChanged()
 
 void Application::Window::handleAsyncUpdate()
 {
-    Instance::get().getApplicationAccessor().setAttr<AttrType::windowState>(getBounds().toString(), NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().setAttr<AttrType::windowState>(getWindowStateAsString(), NotificationType::synchronous);
 }
 
 void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source)
