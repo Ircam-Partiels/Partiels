@@ -777,52 +777,92 @@ juce::Result Document::Director::consolidate(juce::File const& file)
 
 bool Document::Director::fileHasBeenRemoved(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
-    {
-        auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
-        mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
-        if(mFileChooser == nullptr)
-        {
-            return true;
-        }
-        using Flags = juce::FileBrowserComponent::FileChooserFlags;
-        mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [file = file, this](juce::FileChooser const& fileChooser)
-                                  {
-                                      auto const results = fileChooser.getResults();
-                                      if(results.isEmpty())
-                                      {
-                                          return;
-                                      }
-                                      auto const newFile = results.getFirst();
-                                      auto copyReader = mAccessor.getAttr<AttrType::reader>();
-                                      for(auto& copyChannelLayout : copyReader)
-                                      {
-                                          if(copyChannelLayout.file == file)
-                                          {
-                                              copyChannelLayout.file = newFile;
-                                          }
-                                      }
-                                      mAccessor.setAttr<AttrType::reader>(copyReader, NotificationType::asynchronous);
-                                  });
-    }
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Audio file has been removed!"))
+                             .withMessage(juce::translate("The audio file FLNAME has been removed. Would you like to restore it?").replace("FLNAME", file.getFullPathName()))
+                             .withButton(juce::translate("Restore"))
+                             .withButton(juce::translate("Cancel"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr || result != 1)
+                                     {
+                                         return;
+                                     }
+                                     auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
+                                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
+                                     if(mFileChooser == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     using Flags = juce::FileBrowserComponent::FileChooserFlags;
+                                     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                                                               {
+                                                                   if(weakReference.get() == nullptr)
+                                                                   {
+                                                                       return;
+                                                                   }
+                                                                   auto const results = fileChooser.getResults();
+                                                                   if(results.isEmpty())
+                                                                   {
+                                                                       return;
+                                                                   }
+                                                                   auto const newFile = results.getFirst();
+                                                                   auto copyReader = mAccessor.getAttr<AttrType::reader>();
+                                                                   for(auto& copyChannelLayout : copyReader)
+                                                                   {
+                                                                       if(copyChannelLayout.file == file)
+                                                                       {
+                                                                           copyChannelLayout.file = newFile;
+                                                                       }
+                                                                   }
+                                                                   mAccessor.setAttr<AttrType::reader>(copyReader, NotificationType::synchronous);
+                                                               });
+                                 });
     return true;
 }
 
 bool Document::Director::fileHasBeenRestored(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file has been restored!", "The audio file FILENAME has been restored. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
-    {
-        initializeAudioReaders(NotificationType::asynchronous);
-    }
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Audio file has been restored!"))
+                             .withMessage(juce::translate("The audio file FLNAME has been restored. Would you like to reload it?").replace("FLNAME", file.getFullPathName()))
+                             .withButton(juce::translate("Reload"))
+                             .withButton(juce::translate("Cancel"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr || result != 1)
+                                     {
+                                         return;
+                                     }
+                                     initializeAudioReaders(NotificationType::synchronous);
+                                 });
     return true;
 }
 
 bool Document::Director::fileHasBeenModified(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file has been modified!", "The audio file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
-    {
-        initializeAudioReaders(NotificationType::asynchronous);
-    }
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Audio file has been modified!"))
+                             .withMessage(juce::translate("The audio file FLNAME has been modified. Would you like to reload it?").replace("FLNAME", file.getFullPathName()))
+                             .withButton(juce::translate("Reload"))
+                             .withButton(juce::translate("Cancel"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr || result != 1)
+                                     {
+                                         return;
+                                     }
+                                     initializeAudioReaders(NotificationType::synchronous);
+                                 });
     return true;
 }
 

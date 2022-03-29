@@ -63,6 +63,7 @@ namespace Document
         std::unique_ptr<juce::FileChooser> mFileChooser;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
+        JUCE_DECLARE_WEAK_REFERENCEABLE(Director)
     };
 } // namespace Document
 
