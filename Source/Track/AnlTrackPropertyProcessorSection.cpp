@@ -10,7 +10,8 @@ static std::vector<std::string> getWindowTypeNames()
     std::vector<std::string> names;
     for(auto const& name : magic_enum::enum_names<Plugin::WindowType>())
     {
-        names.push_back(std::string(name));
+        auto const windowName = std::string(name);
+        names.push_back(windowName.substr(0, windowName.find("Window")));
     }
     return names;
 }
