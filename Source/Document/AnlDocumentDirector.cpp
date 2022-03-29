@@ -885,7 +885,12 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     auto const& errors = std::get<1>(result);
     if(reader == nullptr)
     {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Audio format reader cannot be loaded!", errors.joinIntoString("\n"));
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Audio format reader cannot be loaded!"))
+                                 .withMessage(errors.joinIntoString("\n"))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
         mSampleRate.reset();
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         mDuration = 0.0;
@@ -896,7 +901,12 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     }
     else if(!errors.isEmpty())
     {
-        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Invalid audio format reader!", errors.joinIntoString("\n"));
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Invalid audio format reader!"))
+                                 .withMessage(errors.joinIntoString("\n"))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
     }
 
     mSampleRate = reader->sampleRate;
