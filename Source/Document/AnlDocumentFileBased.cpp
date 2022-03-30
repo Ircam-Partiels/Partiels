@@ -154,12 +154,7 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
-    for(auto const& message : catcher.getMessages())
-    {
-        auto const type = std::get<0>(message.first);
-        auto const title = std::get<1>(message.first) + (message.second.size() > 1 ? "(" + juce::String(message.second.size()) + ")" : "");
-        AlertWindow::showMessage(type, title, message.second.joinIntoString("\n"));
-    }
+    catcher.showAsync();
 
     auto var = std::make_unique<juce::DynamicObject>();
     if(var != nullptr)
@@ -274,12 +269,7 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
-    for(auto const& message : catcher.getMessages())
-    {
-        auto const type = std::get<0>(message.first);
-        auto const title = std::get<1>(message.first) + (message.second.size() > 1 ? "(" + juce::String(message.second.size()) + ")" : "");
-        AlertWindow::showMessage(type, title, message.second.joinIntoString("\n"));
-    }
+    catcher.showAsync();
 
     auto var = std::make_unique<juce::DynamicObject>();
     if(var != nullptr)
