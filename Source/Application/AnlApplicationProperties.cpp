@@ -133,11 +133,30 @@ void Application::Properties::loadFromFile(PropertyType type)
             auto const error = manager.initialise(0, sMaxIONumber, xml.get(), true);
             if(error.isNotEmpty())
             {
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                askToRestoreDefaultAudioSettings(error);
             }
         }
         break;
     }
+}
+
+void Application::Properties::askToRestoreDefaultAudioSettings(juce::String const& error)
+{
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::QuestionIcon)
+                             .withTitle(juce::translate("Error loading audio device settings!"))
+                             .withMessage(juce::translate("An error accured while loading audio device settings: ERROR. Do you want to restore the default settings?").replace("ERROR", error))
+                             .withButton(juce::translate("Restore Default Settings"))
+                             .withButton(juce::translate("Ignore"));
+
+    juce::AlertWindow::showAsync(options, [=](int result)
+                                 {
+                                     if(result == 1)
+                                     {
+                                         auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
+                                         audioDeviceManager.initialiseWithDefaultDevices(0, sMaxIONumber);
+                                     }
+                                 });
 }
 
 ANALYSE_FILE_END

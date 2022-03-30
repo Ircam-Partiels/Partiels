@@ -17,6 +17,8 @@ namespace Application
         Properties();
         ~Properties() override;
 
+        static void askToRestoreDefaultAudioSettings(juce::String const& error);
+
     private:
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
