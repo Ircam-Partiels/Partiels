@@ -42,9 +42,9 @@ namespace Track
         void runRendering();
 
         // FileWatcher
-        bool fileHasBeenRemoved(juce::File const& file) override;
-        bool fileHasBeenRestored(juce::File const& file) override;
-        bool fileHasBeenModified(juce::File const& file) override;
+        void fileHasBeenRemoved(juce::File const& file) override;
+        void fileHasBeenRestored(juce::File const& file) override;
+        void fileHasBeenModified(juce::File const& file) override;
 
         // juce::Timer
         void timerCallback() override;

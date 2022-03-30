@@ -76,12 +76,9 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::file:
             {
-                clearFilesToWatch();
                 auto const file = mAccessor.getAttr<AttrType::file>().file;
-                if(file != juce::File{})
-                {
-                    addFileToWatch(file);
-                }
+                FileWatcher::clearAllFiles();
+                FileWatcher::addFile(file);
                 auto const results = mAccessor.getAttr<AttrType::results>();
                 if(!results.isEmpty())
                 {
@@ -89,7 +86,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 }
                 if(file != juce::File{})
                 {
-                    runLoading();
+                    if(!file.existsAsFile())
+                    {
+                        fileHasBeenRemoved(file);
+                    }
+                    else
+                    {
+                        runLoading();
+                    }
                 }
                 else
                 {
@@ -709,35 +713,65 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
     }
 }
 
-bool Track::Director::fileHasBeenRemoved(juce::File const& file)
+void Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been removed!", "The analysis file FILENAME has been moved or deleted. Would you like to restore it?", {{"FILENAME", file.getFullPathName()}}))
-    {
-        askForResultsFile(juce::translate("Restore analysis results..."), file, NotificationType::synchronous);
-        return false;
-    }
     mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-    return true;
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Results file has been removed!"))
+                             .withMessage(juce::translate("The results file FLNAME of the track TKNAME has been removed. Would you like to restore it?").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()))
+                             .withButton(juce::translate("Restore"))
+                             .withButton(juce::translate("Cancel"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr || result != 1)
+                                     {
+                                         return;
+                                     }
+                                     askForResultsFile(juce::translate("Restore results file..."), file, NotificationType::synchronous);
+                                 });
 }
 
-bool Track::Director::fileHasBeenRestored(juce::File const& file)
+void Track::Director::fileHasBeenRestored(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been restored!", "The analysis file FILENAME has been restored. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
-    {
-        runLoading();
-        return false;
-    }
-    return true;
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Results file has been restored!"))
+                             .withMessage(juce::translate("The results file FLNAME of the track TKNAME has been restored. Would you like to reload it?").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()))
+                             .withButton(juce::translate("Reload"))
+                             .withButton(juce::translate("Cancel"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr || result != 1)
+                                     {
+                                         return;
+                                     }
+                                     runLoading();
+                                 });
 }
 
-bool Track::Director::fileHasBeenModified(juce::File const& file)
+void Track::Director::fileHasBeenModified(juce::File const& file)
 {
-    if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Analysis file has been modified!", "The analysis file FILENAME has been modified. Would you like to reload it?", {{"FILENAME", file.getFullPathName()}}))
-    {
-        runLoading();
-        return false;
-    }
-    return true;
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Results file has been modified!"))
+                             .withMessage(juce::translate("The results file FLNAME of the track TKNAME has been modified. Would you like to reload it?").replace("FLNAME", file.getFullPathName()).replace("TKNAME", mAccessor.getAttr<AttrType::name>()))
+                             .withButton(juce::translate("Reload"))
+                             .withButton(juce::translate("Cancel"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                 {
+                                     if(weakReference.get() == nullptr || result != 1)
+                                     {
+                                         return;
+                                     }
+                                     runLoading();
+                                 });
 }
 
 void Track::Director::timerCallback()
