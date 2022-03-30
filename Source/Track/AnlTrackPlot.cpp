@@ -526,8 +526,8 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     PathArrangement pathArr;
     auto getNextItBeforeTime = [](decltype(it) _start, decltype(it) _end, double const& l)
     {
-        float min = *std::get<2>(*_start);
-        float max = min;
+        auto min = *std::get<2>(*_start);
+        auto max = min;
         _start = std::next(_start);
         while(_start != _end && std::get<0>(*_start) < l)
         {
