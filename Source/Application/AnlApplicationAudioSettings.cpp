@@ -29,7 +29,7 @@ Application::AudioSettings::AudioSettings()
                             auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
                             if(error.isNotEmpty())
                             {
-                                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                                Properties::askToRestoreDefaultAudioSettings(error);
                             }
                         })
 , mPropertySampleRate(juce::translate("Sample Rate"), juce::translate("The current device sample rate"), "Hz", {}, [&](size_t index)
@@ -46,7 +46,7 @@ Application::AudioSettings::AudioSettings()
                           auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
                           if(error.isNotEmpty())
                           {
-                              AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                              Properties::askToRestoreDefaultAudioSettings(error);
                           }
                       })
 , mPropertyBufferSize(juce::translate("Buffer Size"), juce::translate("The current buffer size"), "samples", {}, [&](size_t index)
@@ -63,7 +63,7 @@ Application::AudioSettings::AudioSettings()
                           auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
                           if(error.isNotEmpty())
                           {
-                              AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                              Properties::askToRestoreDefaultAudioSettings(error);
                           }
                       })
 , mPropertyBufferSizeNumber(juce::translate("Buffer Size"), juce::translate("The current buffer size"), "samples", {8.0f, 8192.0f}, 1.0f, [&](float value)
@@ -79,7 +79,7 @@ Application::AudioSettings::AudioSettings()
                                 anlStrongAssert(currentDevice != nullptr);
                                 if(currentDevice == nullptr)
                                 {
-                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", "No audio device selected.");
+                                    Properties::askToRestoreDefaultAudioSettings(juce::translate("No audio device selected."));
                                     return;
                                 }
 
@@ -87,7 +87,7 @@ Application::AudioSettings::AudioSettings()
                                 auto const it = std::lower_bound(bufferSizes.begin(), bufferSizes.end(), bufferSize);
                                 if(it == bufferSizes.end())
                                 {
-                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", "Buffer size BUFFERSIZE is not supported by the audio device.", {{"BUFFERSIZE", juce::String(bufferSize)}});
+                                    Properties::askToRestoreDefaultAudioSettings(juce::translate("Buffer size BUFFERSIZE is not supported by the audio device.").replace("BUFFERSIZE", juce::String(bufferSize)));
                                     return;
                                 }
 
@@ -95,7 +95,7 @@ Application::AudioSettings::AudioSettings()
                                 auto const error = audioDeviceManager.setAudioDeviceSetup(currentAudioSetup, true);
                                 if(error.isNotEmpty())
                                 {
-                                    AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
+                                    Properties::askToRestoreDefaultAudioSettings(error);
                                 }
                             })
 , mPropertyDriverPanel(juce::translate("Audio Device Panel..."), juce::translate("Show audio device panel"), []()
