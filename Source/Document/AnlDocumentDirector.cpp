@@ -16,46 +16,42 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         {
             case AttrType::reader:
             {
-                clearFilesToWatch();
+                FileWatcher::clearAllFiles();
                 auto const reader = mAccessor.getAttr<AttrType::reader>();
                 for(auto const& channelLayout : reader)
                 {
-                    auto const file = channelLayout.file;
-                    if(file != juce::File() && !file.existsAsFile())
-                    {
-                        if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning, "Audio file cannot be found!", "The audio file FILENAME has been moved or deleted. Would you like to restore  it?", {{"FILENAME", file.getFullPathName()}}))
-                        {
-                            auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
-                            mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
-                            if(mFileChooser == nullptr)
-                            {
-                                return;
-                            }
-                            using Flags = juce::FileBrowserComponent::FileChooserFlags;
-                            mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
-                                                      {
-                                                          auto const results = fileChooser.getResults();
-                                                          if(results.isEmpty())
-                                                          {
-                                                              return;
-                                                          }
-                                                          auto const newFile = results.getFirst();
-                                                          auto copyReader = mAccessor.getAttr<AttrType::reader>();
-                                                          for(auto& copyChannelLayout : copyReader)
-                                                          {
-                                                              if(copyChannelLayout.file == file)
-                                                              {
-                                                                  copyChannelLayout.file = newFile;
-                                                              }
-                                                          }
-                                                          mAccessor.setAttr<AttrType::reader>(copyReader, notification);
-                                                      });
-                            return;
-                        }
-                    }
-                    addFileToWatch(file);
+                    FileWatcher::addFile(channelLayout.file);
                 }
-                initializeAudioReaders(notification);
+                if(std::none_of(reader.cbegin(), reader.cend(), [](auto const& channelLayout)
+                                {
+                                    auto const file = channelLayout.file;
+                                    return file != juce::File{} && !file.existsAsFile();
+                                }))
+                {
+                    initializeAudioReaders(notification);
+                }
+                else
+                {
+                    auto const options = juce::MessageBoxOptions()
+                                             .withIconType(juce::AlertWindow::WarningIcon)
+                                             .withTitle(juce::translate("Audio(s) files cannot be found!"))
+                                             .withMessage(juce::translate("Audio file(s) cannot be found. Would you like to use the audio reader layout panel to restore the file(s)?"))
+                                             .withButton(juce::translate("Open Panel"))
+                                             .withButton(juce::translate("Ignore"));
+
+                    juce::WeakReference<Director> weakReference(this);
+                    juce::AlertWindow::showAsync(options, [=, this](int result)
+                                                 {
+                                                     if(weakReference.get() == nullptr)
+                                                     {
+                                                         return;
+                                                     }
+                                                     if(result == 1)
+                                                     {
+                                                         mAccessor.sendSignal(SignalType::showReaderPanel, {}, NotificationType::asynchronous);
+                                                     }
+                                                 });
+                }
             }
             break;
             case AttrType::grid:
@@ -775,7 +771,7 @@ juce::Result Document::Director::consolidate(juce::File const& file)
     return juce::Result::ok();
 }
 
-bool Document::Director::fileHasBeenRemoved(juce::File const& file)
+void Document::Director::fileHasBeenRemoved(juce::File const& file)
 {
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
@@ -787,44 +783,18 @@ bool Document::Director::fileHasBeenRemoved(juce::File const& file)
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int result)
                                  {
-                                     if(weakReference.get() == nullptr || result != 1)
+                                     if(weakReference.get() == nullptr)
                                      {
                                          return;
                                      }
-                                     auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
-                                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
-                                     if(mFileChooser == nullptr)
+                                     if(result == 1)
                                      {
-                                         return;
+                                         restoreAudioFile(file);
                                      }
-                                     using Flags = juce::FileBrowserComponent::FileChooserFlags;
-                                     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
-                                                               {
-                                                                   if(weakReference.get() == nullptr)
-                                                                   {
-                                                                       return;
-                                                                   }
-                                                                   auto const results = fileChooser.getResults();
-                                                                   if(results.isEmpty())
-                                                                   {
-                                                                       return;
-                                                                   }
-                                                                   auto const newFile = results.getFirst();
-                                                                   auto copyReader = mAccessor.getAttr<AttrType::reader>();
-                                                                   for(auto& copyChannelLayout : copyReader)
-                                                                   {
-                                                                       if(copyChannelLayout.file == file)
-                                                                       {
-                                                                           copyChannelLayout.file = newFile;
-                                                                       }
-                                                                   }
-                                                                   mAccessor.setAttr<AttrType::reader>(copyReader, NotificationType::synchronous);
-                                                               });
                                  });
-    return true;
 }
 
-bool Document::Director::fileHasBeenRestored(juce::File const& file)
+void Document::Director::fileHasBeenRestored(juce::File const& file)
 {
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
@@ -842,10 +812,9 @@ bool Document::Director::fileHasBeenRestored(juce::File const& file)
                                      }
                                      initializeAudioReaders(NotificationType::synchronous);
                                  });
-    return true;
 }
 
-bool Document::Director::fileHasBeenModified(juce::File const& file)
+void Document::Director::fileHasBeenModified(juce::File const& file)
 {
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
@@ -863,7 +832,41 @@ bool Document::Director::fileHasBeenModified(juce::File const& file)
                                      }
                                      initializeAudioReaders(NotificationType::synchronous);
                                  });
-    return true;
+}
+
+void Document::Director::restoreAudioFile(juce::File const& file)
+{
+    auto const wildcard = mAudioFormatManager.getWildcardForAllFormats();
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Restore the audio file..."), file, wildcard);
+    MiscWeakAssert(mFileChooser != nullptr);
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<Director> weakReference(this);
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  if(weakReference.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  auto const newFile = results.getFirst();
+                                  auto copyReader = mAccessor.getAttr<AttrType::reader>();
+                                  for(auto& copyChannelLayout : copyReader)
+                                  {
+                                      if(copyChannelLayout.file == file)
+                                      {
+                                          copyChannelLayout.file = newFile;
+                                      }
+                                  }
+                                  mAccessor.setAttr<AttrType::reader>(copyReader, NotificationType::synchronous);
+                              });
 }
 
 void Document::Director::initializeAudioReaders(NotificationType notification)
