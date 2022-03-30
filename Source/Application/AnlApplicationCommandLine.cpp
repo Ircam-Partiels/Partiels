@@ -316,8 +316,8 @@ void Application::CommandLine::sendQuitSignal(int value)
 
 void Application::CommandLine::runUnitTests()
 {
-    std::unique_ptr<juce::MessageManager> mm(juce::MessageManager::getInstance());
     juce::UnitTestRunner unitTestRunner;
+    unitTestRunner.setAssertOnFailure(false);
     unitTestRunner.runAllTests();
 
     int failures = 0;
