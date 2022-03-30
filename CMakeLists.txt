@@ -138,11 +138,9 @@ endif()
 target_enable_xcode_full_warnings(Partiels)
 
 if(WIN32)
-target_compile_options(Partiels PRIVATE /wd4244)
+    target_compile_options(Partiels PRIVATE /wd4244)
 elseif(APPLE)
-target_compile_options(Partiels PRIVATE -fno-aligned-allocation)
-else()
-target_link_libraries(Partiels PRIVATE atomic)
+    target_compile_options(Partiels PRIVATE -fno-aligned-allocation)
 endif()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
