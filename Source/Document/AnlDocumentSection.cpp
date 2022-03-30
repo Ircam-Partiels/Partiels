@@ -109,7 +109,7 @@ Document::Section::Section(Director& director)
     mReaderLayoutButton.setWantsKeyboardFocus(false);
     mReaderLayoutButton.onClick = [this]()
     {
-        mReaderLayoutPanel.show();
+        mAccessor.sendSignal(SignalType::showReaderPanel, {}, NotificationType::synchronous);
     };
 
     addAndMakeVisible(mDocumentName);
@@ -429,6 +429,11 @@ Document::Section::Section(Director& director)
                 auto const x = static_cast<int>(value.getProperty("x", mViewport.getViewPositionX()));
                 auto const y = static_cast<int>(value.getProperty("y", mViewport.getViewPositionY()));
                 mViewport.setViewPosition(x, y);
+            }
+            break;
+            case SignalType::showReaderPanel:
+            {
+                mReaderLayoutPanel.show();
             }
             break;
         }

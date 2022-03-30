@@ -33,6 +33,7 @@ namespace Document
     enum class SignalType
     {
           viewport
+        , showReaderPanel
     };
     
     using AttrContainer = Model::Container
