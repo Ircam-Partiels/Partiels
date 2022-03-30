@@ -49,12 +49,14 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
 , mPropertyBlockSize(juce::translate("Block Size"), juce::translate("The block size used by the track."), "samples", getBlockSizeNames(), [&](size_t index)
                      {
                          juce::ignoreUnused(index);
-                         setBlockSize(static_cast<size_t>(mPropertyBlockSize.entry.getText().getIntValue()));
+                         auto const newValue = mPropertyBlockSize.entry.getText().getIntValue();
+                         setBlockSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                      })
 , mPropertyStepSize(juce::translate("Step Size"), juce::translate("The step size (overlapping) used by the track."), "x", std::vector<std::string>{}, [&](size_t index)
                     {
                         juce::ignoreUnused(index);
-                        setStepSize(static_cast<size_t>(mPropertyStepSize.entry.getText().getIntValue()));
+                        auto const newValue = mPropertyStepSize.entry.getText().getIntValue();
+                        setStepSize(static_cast<size_t>(std::clamp(newValue, 1, 65536)));
                     })
 , mPropertyPreset("Preset", "The preset of the track", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
                   {
