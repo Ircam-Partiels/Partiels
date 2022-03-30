@@ -172,8 +172,8 @@ std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor
                     case Zoom::AttrType::globalRange:
                     {
                         auto const range = acsr.getAttr<Zoom::AttrType::globalRange>();
-                        mPropertyStart.entry.setMaxTime(range.getEnd(), juce::NotificationType::dontSendNotification);
-                        mPropertyEnd.entry.setMaxTime(range.getEnd(), juce::NotificationType::dontSendNotification);
+                        mPropertyStart.entry.setRange(range, juce::NotificationType::dontSendNotification);
+                        mPropertyEnd.entry.setRange(range, juce::NotificationType::dontSendNotification);
                     }
                     break;
                     case Zoom::AttrType::visibleRange:
