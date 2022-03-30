@@ -529,7 +529,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             else
             {
                 documentDir.endAction(ActionState::abort);
-                AlertWindow::showMessage(AlertWindow::MessageType::warning, "Group cannot be created!", "The group cannot be inserted into the document.");
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::WarningIcon)
+                                         .withTitle(juce::translate("Group cannot be created!"))
+                                         .withMessage(juce::translate("The group cannot be inserted into the document."))
+                                         .withButton(juce::translate("Ok"));
+                juce::AlertWindow::showAsync(options, nullptr);
             }
             return true;
         }
