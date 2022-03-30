@@ -554,30 +554,32 @@ void Track::Director::runAnalysis(NotificationType const notification)
         mProcessor.stopAnalysis();
         return;
     }
-    auto showWarningWindow = [&](juce::String const& reason)
+
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    if(key.identifier.empty() || key.feature.empty())
     {
-        auto const title = juce::translate("Plugin cannot be loaded!");
-        auto const message = juce::String("The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be loaded due to: REASON.").replace("KEYID", mAccessor.getAttr<AttrType::key>().identifier).replace("KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature).replace("TRACKNAME", mAccessor.getAttr<AttrType::name>()).replace("REASON", reason);
+        return;
+    }
+
+    auto const errorTitle = juce::translate("Plugin cannot be loaded!");
+    auto const errorMessage = juce::translate("The plugin KEYID - KEYFEATURE of the track TKNAME cannot be loaded: REASON.").replace("KEYID", key.identifier).replace("KEYFEATURE", key.feature).replace("TKNAME", mAccessor.getAttr<AttrType::name>());
+    auto showWarningWindow = [&](juce::String const& message)
+    {
         if(mAlertCatcher != nullptr)
         {
-            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, title, message);
+            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, errorTitle, message);
         }
         else
         {
             auto const options = juce::MessageBoxOptions()
                                      .withIconType(juce::AlertWindow::WarningIcon)
-                                     .withTitle(title)
+                                     .withTitle(errorTitle)
                                      .withMessage(message)
                                      .withButton(juce::translate("Ok"));
             juce::AlertWindow::showAsync(options, nullptr);
         }
     };
 
-    auto const key = mAccessor.getAttr<AttrType::key>();
-    if(key.identifier.empty() || key.feature.empty())
-    {
-        return;
-    }
     auto const sampleRate = mAudioFormatReader->sampleRate;
     auto const description = PluginList::Scanner::loadDescription(key, sampleRate);
     if(description != Plugin::Description{})
@@ -608,32 +610,40 @@ void Track::Director::runAnalysis(NotificationType const notification)
             auto const& defaultState = mAccessor.getAttr<AttrType::description>().defaultState;
             if(mAlertCatcher != nullptr || (currentState.blockSize == defaultState.blockSize && currentState.stepSize == defaultState.stepSize))
             {
-                showWarningWindow(message);
+                showWarningWindow(errorMessage.replace("REASON", message));
             }
-            else if(AlertWindow::showOkCancel(AlertWindow::MessageType::warning,
-                                              "Plugin cannot be loaded",
-                                              "The plugin \"KEYID - KEYFEATURE\" of the track \"TRACKNAME\" cannot be initialized because the step size, the block size or the number of channels might not be supported. Would you like to use the plugin default value for the block size and the step size?",
-                                              {{"KEYID", mAccessor.getAttr<AttrType::key>().identifier}, {"KEYFEATURE", mAccessor.getAttr<AttrType::key>().feature}, {"TRACKNAME", mAccessor.getAttr<AttrType::name>()}}))
-
+            else
             {
-                auto isPerformingAction = mIsPerformingAction;
-                if(!isPerformingAction)
-                {
-                    startAction();
-                }
-                currentState.blockSize = defaultState.blockSize;
-                currentState.stepSize = defaultState.stepSize;
-                mAccessor.setAttr<AttrType::state>(defaultState, notification);
-                if(!isPerformingAction)
-                {
-                    endAction(ActionState::newTransaction, juce::translate("Restore track factory properties"));
-                }
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::WarningIcon)
+                                         .withTitle(errorTitle)
+                                         .withMessage(errorMessage.replace("REASON", "the step size, the block size or the number of channels might not be supported") + juce::translate("Would you like to use the plugin default values for the block size and the step size?"))
+                                         .withButton(juce::translate("Restore Default Values"))
+                                         .withButton(juce::translate("Ignore"));
+
+                juce::WeakReference<Director> weakReference(this);
+                juce::AlertWindow::showAsync(options, [=, this](int windowResult)
+                                             {
+                                                 if(weakReference.get() == nullptr)
+                                                 {
+                                                     return;
+                                                 }
+                                                 if(windowResult == 1)
+                                                 {
+                                                     startAction();
+                                                     auto newState = currentState;
+                                                     newState.blockSize = defaultState.blockSize;
+                                                     newState.stepSize = defaultState.stepSize;
+                                                     mAccessor.setAttr<AttrType::state>(newState, notification);
+                                                     endAction(ActionState::newTransaction, juce::translate("Restore track factory properties"));
+                                                 }
+                                             });
             }
         }
         break;
         case WarningType::plugin:
         {
-            showWarningWindow(message);
+            showWarningWindow(errorMessage.replace("REASON", message));
         }
         break;
         case WarningType::file:
