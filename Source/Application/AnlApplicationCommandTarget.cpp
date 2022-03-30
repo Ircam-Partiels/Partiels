@@ -437,13 +437,24 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                         return;
                                     }
                                     auto const result = Instance::get().getDocumentFileBased().consolidate();
+                                    auto const fileName = Instance::get().getDocumentFileBased().getFile().getFullPathName();
                                     if(result.wasOk())
                                     {
-                                        AlertWindow::showMessage(AlertWindow::MessageType::info, "Document consolidated!", "The document has been consolidated with the audio files and the analyses to FLNAME.", {{"FLNAME", Instance::get().getDocumentFileBased().getFile().getFullPathName()}});
+                                        auto const options = juce::MessageBoxOptions()
+                                                                 .withIconType(juce::AlertWindow::InfoIcon)
+                                                                 .withTitle(juce::translate("Document consolidated!"))
+                                                                 .withMessage(juce::translate("The document has been consolidated with the audio files and the analyses to FLNAME.").replace("FLNAME", fileName))
+                                                                 .withButton(juce::translate("Ok"));
+                                        juce::AlertWindow::showAsync(options, nullptr);
                                     }
                                     else
                                     {
-                                        AlertWindow::showMessage(AlertWindow::MessageType::warning, "Document consolidation failed!", "The document cannot be consolidated with the audio files and the analyses to FLNAME. ERROR", {{"FLNAME", Instance::get().getDocumentFileBased().getFile().getFullPathName()}, {"ERROR", result.getErrorMessage()}});
+                                        auto const options = juce::MessageBoxOptions()
+                                                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                                                 .withTitle(juce::translate("Document consolidation failed!"))
+                                                                 .withMessage(juce::translate("The document cannot be consolidated with the audio files and the analyses to FLNAME: ERROR.").replace("FLNAME", fileName).replace("ERROR", result.getErrorMessage()))
+                                                                 .withButton(juce::translate("Ok"));
+                                        juce::AlertWindow::showAsync(options, nullptr);
                                     }
                                 });
             return true;
