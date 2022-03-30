@@ -129,7 +129,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
 
                 mParameterProperties.clear();
                 juce::WeakReference<juce::Component> weakReference(this);
-                auto applyValye = [=, this](auto const& parameter, float value)
+                auto applyValue = [=, this](auto const& parameter, float value)
                 {
                     if(weakReference.get() == nullptr)
                     {
@@ -139,7 +139,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 };
                 for(auto const& parameter : description.parameters)
                 {
-                    auto property = Plugin::Tools::createProperty(parameter, applyValye);
+                    auto property = Plugin::Tools::createProperty(parameter, applyValue);
                     anlWeakAssert(property != nullptr);
                     if(property != nullptr)
                     {
@@ -308,9 +308,10 @@ void Track::PropertyProcessorSection::applyParameterValue(Plugin::Parameter cons
                          {
                              auto state = mAccessor.getAttr<AttrType::state>();
                              anlWeakAssert(value >= parameter.minValue && value <= parameter.maxValue);
-                             state.parameters[parameter.identifier] = std::min(std::max(value, parameter.minValue), parameter.maxValue);
+                             state.parameters[parameter.identifier] = std::clamp(value, parameter.minValue, parameter.maxValue);
                              mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track property"));
+                             updateState();
                          });
 }
 
