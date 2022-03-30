@@ -551,47 +551,66 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editRemoveItem:
         {
-            auto& documentDir = Instance::get().getDocumentDirector();
-
             auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
-            auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
             if(focusedTrack.has_value())
             {
                 auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *focusedTrack);
                 auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
-                if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Remove Track", "Are you sure you want to remove the \"TRACKNAME\" track from the project?", {{"TRACKNAME", trackName}}))
-                {
-                    return true;
-                }
-
-                documentDir.startAction();
-                if(documentDir.removeTrack(*focusedTrack, NotificationType::synchronous))
-                {
-                    documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Track"));
-                }
-                else
-                {
-                    documentDir.endAction(ActionState::abort);
-                }
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::QuestionIcon)
+                                         .withTitle(juce::translate("Remove Track?"))
+                                         .withMessage(juce::translate("Are you sure you want to remove the TKNAME track from the project?").replace("TKNAME", trackName))
+                                         .withButton(juce::translate("Remove"))
+                                         .withButton(juce::translate("Cancel"));
+                juce::AlertWindow::showAsync(options, [=](int windowResult)
+                                             {
+                                                 if(windowResult != 1)
+                                                 {
+                                                     return;
+                                                 }
+                                                 auto& documentDir = Instance::get().getDocumentDirector();
+                                                 documentDir.startAction();
+                                                 if(documentDir.removeTrack(*focusedTrack, NotificationType::synchronous))
+                                                 {
+                                                     documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Track"));
+                                                 }
+                                                 else
+                                                 {
+                                                     documentDir.endAction(ActionState::abort);
+                                                 }
+                                             });
+                return true;
             }
-            else if(focusedGroup.has_value())
+
+            auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
+            if(focusedGroup.has_value())
             {
                 auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *focusedGroup);
                 auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
-                if(!AlertWindow::showOkCancel(AlertWindow::MessageType::question, "Remove Group", "Are you sure you want to remove the \"GROUPNAME\" group from the project? This will also remove all the contained analyses!", {{"GROUPNAME", groupName}}))
-                {
-                    return true;
-                }
-
-                documentDir.startAction();
-                if(documentDir.removeGroup(*focusedGroup, NotificationType::synchronous))
-                {
-                    documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group").replace("GROUPNAME", groupName));
-                }
-                else
-                {
-                    documentDir.endAction(ActionState::abort);
-                }
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::QuestionIcon)
+                                         .withTitle(juce::translate("Remove Group?"))
+                                         .withMessage(juce::translate("Are you sure you want to remove the GPNAME group from the project? This will also remove all the contained analyses!").replace("GPNAME", groupName))
+                                         .withButton(juce::translate("Remove"))
+                                         .withButton(juce::translate("Cancel"));
+                juce::AlertWindow::showAsync(options, [=](int windowResult)
+                                             {
+                                                 if(windowResult != 1)
+                                                 {
+                                                     return;
+                                                 }
+                                                 auto& documentDir = Instance::get().getDocumentDirector();
+                                                 documentDir.startAction();
+                                                 if(documentDir.removeGroup(*focusedGroup, NotificationType::synchronous))
+                                                 {
+                                                     documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group"));
+                                                 }
+                                                 else
+                                                 {
+                                                     documentDir.endAction(ActionState::abort);
+                                                 }
+                                             });
+                return true;
             }
             return true;
         }
