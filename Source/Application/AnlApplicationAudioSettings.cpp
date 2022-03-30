@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 Application::AudioSettings::AudioSettings()
 : FloatingWindowContainer("Audio Settings", *this)
-, mPropertyDriver("Driver", "The current audio device driver", "", {}, [&](size_t index)
+, mPropertyDriver(juce::translate("Driver"), juce::translate("The current audio device driver"), "", {}, [&](size_t index)
                   {
                       auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));
                       auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -13,10 +13,9 @@ Application::AudioSettings::AudioSettings()
                       {
                           return;
                       }
-
                       audioDeviceManager.setCurrentAudioDeviceType(driverName, true);
                   })
-, mPropertyOutputDevice("Output Device", "The current output device", "", {}, [&](size_t index)
+, mPropertyOutputDevice(juce::translate("Output Device"), juce::translate("The current output device"), "", {}, [&](size_t index)
                         {
                             auto const deviceName = mPropertyOutputDevice.entry.getItemText(static_cast<int>(index));
                             auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -33,7 +32,7 @@ Application::AudioSettings::AudioSettings()
                                 AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
                             }
                         })
-, mPropertySampleRate("Sample Rate", "The current device sample rate", "Hz", {}, [&](size_t index)
+, mPropertySampleRate(juce::translate("Sample Rate"), juce::translate("The current device sample rate"), "Hz", {}, [&](size_t index)
                       {
                           auto const sampleRate = static_cast<double>(mPropertySampleRate.entry.getItemId(static_cast<int>(index)));
                           auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -50,7 +49,7 @@ Application::AudioSettings::AudioSettings()
                               AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
                           }
                       })
-, mPropertyBufferSize("Buffer Size", "The current buffer size", "samples", {}, [&](size_t index)
+, mPropertyBufferSize(juce::translate("Buffer Size"), juce::translate("The current buffer size"), "samples", {}, [&](size_t index)
                       {
                           auto const bufferSize = mPropertyBufferSize.entry.getItemId(static_cast<int>(index));
                           auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -67,7 +66,7 @@ Application::AudioSettings::AudioSettings()
                               AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
                           }
                       })
-, mPropertyBufferSizeNumber("Buffer Size", "The current buffer size", "samples", {8.0f, 8192.0f}, 1.0f, [&](float value)
+, mPropertyBufferSizeNumber(juce::translate("Buffer Size"), juce::translate("The current buffer size"), "samples", {8.0f, 8192.0f}, 1.0f, [&](float value)
                             {
                                 auto const bufferSize = static_cast<int>(std::round(value));
                                 auto& audioDeviceManager = Instance::get().getAudioDeviceManager();
@@ -99,7 +98,7 @@ Application::AudioSettings::AudioSettings()
                                     AlertWindow::showMessage(AlertWindow::MessageType::warning, "Error loading audio device settings!", error);
                                 }
                             })
-, mPropertyDriverPanel("Audio Device Panel...", "Show audio device panel", []()
+, mPropertyDriverPanel(juce::translate("Audio Device Panel..."), juce::translate("Show audio device panel"), []()
                        {
 #if JUCE_MAC
                            juce::File("/System/Applications/Utilities/Audio MIDI Setup.app").startAsProcess();
