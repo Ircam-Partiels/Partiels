@@ -155,7 +155,12 @@ void Application::Batcher::handleAsyncUpdate()
         message += std::get<1>(alertMessage.first) + (alertMessage.second.size() > 1 ? "(" + juce::String(alertMessage.second.size()) + ")" : ": ");
         message += alertMessage.second.joinIntoString(" - ");
     }
-    AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), message);
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(static_cast<juce::AlertWindow::AlertIconType>(std::get<0>(result)))
+                             .withTitle(std::get<1>(result))
+                             .withMessage(message)
+                             .withButton(juce::translate("Ok"));
+    juce::AlertWindow::showAsync(options, nullptr);
 }
 
 void Application::Batcher::process()
