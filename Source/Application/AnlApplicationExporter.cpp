@@ -175,7 +175,12 @@ void Application::Exporter::handleAsyncUpdate()
         return;
     }
     auto const result = mProcess.get();
-    AlertWindow::showMessage(std::get<0>(result), std::get<1>(result), std::get<2>(result));
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(static_cast<juce::MessageBoxIconType>(std::get<0>(result)))
+                             .withTitle(std::get<1>(result))
+                             .withMessage(std::get<2>(result))
+                             .withButton(juce::translate("Ok"));
+    juce::AlertWindow::showAsync(options, nullptr);
 }
 
 ANALYSE_FILE_END
