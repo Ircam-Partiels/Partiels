@@ -114,7 +114,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::description, Track::AttrType::results})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::results})
 {
     addAndMakeVisible(mPropertyColourMap);
     addAndMakeVisible(mPropertyForegroundColour);
@@ -347,7 +347,12 @@ void Group::PropertyGraphicalsSection::updateContent()
 {
     updateColourMap();
     updateColours();
-    mPropertyChannelLayout.setVisible(!Tools::getTrackAcsrs(mAccessor).empty());
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    auto const numChannels = std::accumulate(trackAcsrs.cbegin(), trackAcsrs.cend(), 0_z, [](auto n, auto const& trackAcsr)
+                                             {
+                                                 return std::max(n, trackAcsr.get().template getAttr<Track::AttrType::channelsLayout>().size());
+                                             });
+    mPropertyChannelLayout.setVisible(numChannels > 1_z);
     resized();
 }
 
