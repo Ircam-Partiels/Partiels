@@ -3,6 +3,16 @@
 
 ANALYSE_FILE_BEGIN
 
+Plugin::Processor::LoadingError::LoadingError(char const* message)
+: std::runtime_error(message)
+{
+}
+
+Plugin::Processor::ParametersError::ParametersError(char const* message)
+: std::runtime_error(message)
+{
+}
+
 Plugin::Processor::CircularReader::CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize)
 : mBlocksize(static_cast<int>(blockSize))
 , mStepSize(static_cast<int>(stepSize))
@@ -263,32 +273,32 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     anlStrongAssert(!key.identifier.empty());
     if(key.identifier.empty())
     {
-        throw std::invalid_argument("plugin key is not defined");
+        throw LoadingError("plugin key is not defined.");
     }
     anlStrongAssert(!key.feature.empty());
     if(key.feature.empty())
     {
-        throw std::invalid_argument("plugin feature is not defined");
+        throw LoadingError("plugin feature is not defined.");
     }
     anlStrongAssert(state.blockSize > 0);
     if(state.blockSize == 0)
     {
-        throw std::invalid_argument("block size cannot be null");
+        throw ParametersError("plugin block size is invalid");
     }
     anlStrongAssert(state.stepSize > 0);
     if(state.stepSize == 0)
     {
-        throw std::invalid_argument("step size cannot be null");
+        throw ParametersError("plugin step size is invalid");
     }
 
     std::vector<std::unique_ptr<Vamp::Plugin>> plugins;
     auto addAndInitializeInstance = [&](std::unique_ptr<Vamp::Plugin>& plugin, size_t numChannels) -> bool
     {
+        MiscWeakAssert(plugin != nullptr);
         if(plugin == nullptr)
         {
-            throw std::runtime_error("allocation failed");
+            return false;
         }
-
         auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(plugin.get());
         if(wrapper != nullptr)
         {
@@ -310,13 +320,13 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
             }
             else
             {
-                throw std::invalid_argument("invalid parameters");
+                throw ParametersError("plugin parameter is invalid");
             }
         }
 
         if(!plugin->initialise(numChannels, state.stepSize, state.blockSize))
         {
-            return false;
+            throw ParametersError("plugin initialization failed");
         }
         plugins.push_back(std::move(plugin));
         return true;
@@ -326,7 +336,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
     auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
     if(instance == nullptr)
     {
-        throw std::runtime_error("allocation failed");
+        throw LoadingError("plugin library couldn't be loaded");
     }
 
     auto const outputs = instance->getOutputDescriptors();
@@ -336,7 +346,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
                                       });
     if(feature == outputs.cend())
     {
-        throw std::runtime_error("plugin feature is not invalid");
+        throw LoadingError("plugin feature is invalid");
     }
     auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
 
@@ -355,7 +365,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
             instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
             if(instance == nullptr)
             {
-                throw std::runtime_error("allocation failed");
+                throw LoadingError("plugin library couldn't be loaded");
             }
         }
     }
