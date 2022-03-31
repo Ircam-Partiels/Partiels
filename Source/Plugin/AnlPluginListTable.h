@@ -25,7 +25,8 @@ namespace PluginList
         void showAt(juce::Point<int> const& pt) override;
         void hide() override;
 
-        std::function<void(Plugin::Key const& key, Plugin::Description const& description)> onPluginSelected = nullptr;
+        std::function<void(std::set<Plugin::Key> keys)> onPluginSelected = nullptr;
+        void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;
 
     private:
         void updateContent();

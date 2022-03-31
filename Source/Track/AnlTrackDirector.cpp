@@ -812,10 +812,15 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
                                      }
                                      if(windowResult == 1)
                                      {
-                                         mPluginTable->onPluginSelected = [=, this](Plugin::Key const& k, Plugin::Description const& d)
+                                         mPluginTable->setMultipleSelectionEnabled(false);
+                                         mPluginTable->onPluginSelected = [=, this](std::set<Plugin::Key> keys)
                                          {
-                                             juce::ignoreUnused(d);
                                              if(weakReference.get() == nullptr)
+                                             {
+                                                 return;
+                                             }
+                                             MiscWeakAssert(keys.size() == 1_z);
+                                             if(keys.size() < 1_z)
                                              {
                                                  return;
                                              }
@@ -824,7 +829,7 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
                                                  mPluginTable->hide();
                                              }
                                              startAction();
-                                             mAccessor.setAttr<AttrType::key>(k, NotificationType::synchronous);
+                                             mAccessor.setAttr<AttrType::key>(*keys.cbegin(), NotificationType::synchronous);
                                              endAction(ActionState::newTransaction, juce::translate("Change track's plugin"));
                                          };
                                          mPluginTable->show();

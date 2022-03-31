@@ -22,7 +22,7 @@ std::tuple<juce::String, size_t> Application::Tools::getNewTrackPosition()
     return std::make_tuple(juce::String(""), 0_z);
 }
 
-void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> position, Plugin::Key const& key, Plugin::Description const& description)
+void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> position, std::set<Plugin::Key> const& keys)
 {
     auto& documentAcsr = Instance::get().getDocumentAccessor();
     auto& documentDir = Instance::get().getDocumentDirector();
@@ -59,53 +59,62 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
         trackPosition = 0_z;
     }
 
-    auto const identifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
-    if(identifier.has_value())
+    auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
+    std::optional<juce::String> lastTrack;
+    for(auto const& key : keys)
     {
-        auto& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupIdentifier);
-        auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
-        std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
-        std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
-                       {
-                           return visibleState == Group::ChannelVisibilityState::visible;
-                       });
-
-        auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-        auto getPluginName = [&]() -> juce::String
+        auto const identifier = documentDir.addTrack(groupIdentifier, trackPosition, NotificationType::synchronous);
+        if(identifier.has_value())
         {
-            try
+            auto const groupChannelStates = Group::Tools::getChannelVisibilityStates(groupAcsr);
+            std::vector<bool> trackChannelsLayout(groupChannelStates.size(), false);
+            std::transform(groupChannelStates.cbegin(), groupChannelStates.cend(), trackChannelsLayout.begin(), [](auto const& visibleState)
+                           {
+                               return visibleState == Group::ChannelVisibilityState::visible;
+                           });
+
+            auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
+            auto getPluginName = [&]() -> juce::String
             {
-                auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
-                return description.name;
-            }
-            catch(...)
-            {
+                try
+                {
+                    auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
+                    return description.name;
+                }
+                catch(...)
+                {
+                    return "";
+                }
                 return "";
-            }
-            return "";
-        };
+            };
 
-        trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
-        trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
+            trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
-        auto const colourChart = Instance::getColourChart();
-        auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
-        colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
-        colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
-        trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
+            auto const colourChart = Instance::getColourChart();
+            auto colours = trackAcsr.getAttr<Track::AttrType::colours>();
+            colours.foreground = colourChart.get(LookAndFeel::ColourChart::Type::inactive);
+            colours.text = colourChart.get(LookAndFeel::ColourChart::Type::text);
+            trackAcsr.setAttr<Track::AttrType::colours>(colours, NotificationType::synchronous);
 
-        groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
+            groupAcsr.setAttr<Group::AttrType::expanded>(true, NotificationType::synchronous);
+            lastTrack = identifier;
+            ++trackPosition;
+        }
+    }
 
-        documentDir.endAction(ActionState::newTransaction, juce::translate("New Track"));
+    if(lastTrack.has_value())
+    {
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
-        juce::Timer::callAfterDelay(500, [idtf = *identifier]()
+        juce::Timer::callAfterDelay(500, [idtf = *lastTrack]()
                                     {
                                         if(auto* window = Instance::get().getWindow())
                                         {
                                             window->moveKeyboardFocusTo(idtf);
                                         }
                                     });
+        documentDir.endAction(ActionState::newTransaction, juce::translate("New Tracks"));
     }
     else
     {

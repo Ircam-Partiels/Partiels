@@ -543,10 +543,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::editNewTrack:
         {
             auto const position = Tools::getNewTrackPosition();
-            mPluginListTable.onPluginSelected = [this, position](Plugin::Key const& key, Plugin::Description const& description)
+            mPluginListTable.setMultipleSelectionEnabled(true);
+            mPluginListTable.onPluginSelected = [this, position](std::set<Plugin::Key> keys)
             {
                 mPluginListTable.hide();
-                Tools::addPluginTrack(position, key, description);
+                Tools::addPluginTracks(position, keys);
             };
             mPluginListTable.show();
             return true;

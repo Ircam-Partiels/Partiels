@@ -283,14 +283,26 @@ void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int 
 
 void PluginList::Table::returnKeyPressed(int lastRowSelected)
 {
+    if(onPluginSelected == nullptr)
+    {
+        return;
+    }
     if(lastRowSelected < 0 || lastRowSelected >= static_cast<int>(mFilteredList.size()))
     {
         return;
     }
-    if(onPluginSelected != nullptr)
+    auto const indices = mPluginTable.getSelectedRows();
+    std::set<Plugin::Key> selection;
+    for(int i = 0; i < indices.size(); ++i)
     {
-        onPluginSelected(mFilteredList[static_cast<size_t>(lastRowSelected)].first, mFilteredList[static_cast<size_t>(lastRowSelected)].second);
+        auto const index = indices[i];
+        MiscWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
+        if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
+        {
+            selection.insert(mFilteredList[static_cast<size_t>(index)].first);
+        }
     }
+    onPluginSelected(std::move(selection));
 }
 
 void PluginList::Table::deleteKeyPressed(int lastRowSelected)
@@ -321,6 +333,11 @@ juce::String PluginList::Table::getCellTooltip(int rowNumber, int columnId)
     auto const index = static_cast<size_t>(rowNumber);
     auto const& description = mFilteredList[index].second;
     return description.details;
+}
+
+void PluginList::Table::setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept
+{
+    mPluginTable.setMultipleSelectionEnabled(shouldBeEnabled);
 }
 
 ANALYSE_FILE_END
