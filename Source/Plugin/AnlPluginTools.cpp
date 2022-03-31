@@ -1,4 +1,3 @@
-
 #include "AnlPluginTools.h"
 
 ANALYSE_FILE_BEGIN
