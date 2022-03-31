@@ -3,7 +3,9 @@
 #include "../Misc/AnlMisc.h"
 #include <tinycolormap/tinycolormap.hpp>
 #include <vamp-hostsdk/PluginHostAdapter.h>
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wzero-as-null-pointer-constant")
 #include <vamp-hostsdk/PluginInputDomainAdapter.h>
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 #include <vamp-hostsdk/PluginWrapper.h>
 
 ANALYSE_FILE_BEGIN
