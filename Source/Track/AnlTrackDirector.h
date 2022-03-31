@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Plugin/AnlPluginListScanner.h"
+#include "../Plugin/AnlPluginListTable.h"
 #include "AnlTrackGraphics.h"
 #include "AnlTrackLoader.h"
 #include "AnlTrackModel.h"
@@ -32,6 +32,7 @@ namespace Track
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
+        void setPluginTable(PluginList::Table* table);
 
         void askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification);
 
@@ -72,6 +73,7 @@ namespace Track
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
+        PluginList::Table* mPluginTable = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
         std::unique_ptr<Loader::ArgumentSelector> mLoaderArgumentSelector;
 

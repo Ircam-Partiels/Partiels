@@ -16,7 +16,7 @@ void Track::Processor::stopAnalysis()
     abortAnalysis();
 }
 
-Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
+bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
 {
     auto state = accessor.getAttr<AttrType::state>();
 
@@ -25,14 +25,14 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
     if(!lock.owns_lock())
     {
         anlError("Track", "Concurrent thread access!");
-        return {};
+        return false;
     }
     abortAnalysis();
 
     auto const key = accessor.getAttr<AttrType::key>();
     if(key.identifier.empty() || key.feature.empty())
     {
-        return {};
+        return false;
     }
 
     if(state.blockSize == 0_z)
@@ -44,23 +44,10 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
         state.stepSize = state.blockSize;
     }
 
-    std::unique_ptr<Plugin::Processor> processor;
-    try
-    {
-        processor = Plugin::Processor::create(key, state, reader);
-    }
-    catch(std::exception& e)
-    {
-        return std::make_tuple(WarningType::plugin, e.what());
-    }
-    catch(...)
-    {
-        return std::make_tuple(WarningType::plugin, "unknown error");
-    }
-
+    auto processor = Plugin::Processor::create(key, state, reader);
     if(processor == nullptr)
     {
-        return std::make_tuple(WarningType::state, "invalid state");
+        throw std::runtime_error("allocation failed");
     }
 
     mChrono.start();
@@ -108,8 +95,7 @@ Track::Processor::Result Track::Processor::runAnalysis(Accessor const& accessor,
                                       triggerAsyncUpdate();
                                       return {};
                                   });
-
-    return std::make_tuple(WarningType::none, "");
+    return true;
 }
 
 void Track::Processor::handleAsyncUpdate()

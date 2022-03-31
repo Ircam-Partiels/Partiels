@@ -10,12 +10,10 @@ namespace Track
     : private juce::AsyncUpdater
     {
     public:
-        using Result = std::optional<std::tuple<WarningType, juce::String>>;
-
         Processor() = default;
         ~Processor() override;
 
-        Result runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader);
+        bool runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader);
         void stopAnalysis();
         bool isRunning() const;
         float getAdvancement() const;
