@@ -151,25 +151,22 @@ Zoom::Range const& Track::Results::getValueRange() const noexcept
 
 bool Track::Results::isEmpty() const noexcept
 {
-    if(auto const* markersPtr = std::get_if<SharedMarkers>(&mResults))
+    if(auto const markers = getMarkers())
     {
-        auto const markers = *markersPtr;
         return markers == nullptr || markers->empty() || std::all_of(markers->cbegin(), markers->cend(), [](auto const& channel)
                                                                      {
                                                                          return channel.empty();
                                                                      });
     }
-    else if(auto const* pointsPtr = std::get_if<SharedPoints>(&mResults))
+    else if(auto const points = getPoints())
     {
-        auto const points = *pointsPtr;
         return points == nullptr || points->empty() || std::all_of(points->cbegin(), points->cend(), [](auto const& channel)
                                                                    {
                                                                        return channel.empty();
                                                                    });
     }
-    else if(auto const* columnsPtr = std::get_if<SharedColumns>(&mResults))
+    else if(auto const columns = getColumns())
     {
-        auto const columns = *columnsPtr;
         return columns == nullptr || columns->empty() || std::all_of(columns->cbegin(), columns->cend(), [](auto const& channel)
                                                                      {
                                                                          return channel.empty();
