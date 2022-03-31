@@ -168,6 +168,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
         {
             case AttrType::description:
             case AttrType::results:
+            case AttrType::channelsLayout:
             {
                 for(auto* child : getChildren())
                 {
@@ -177,6 +178,8 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         child->setVisible(false);
                     }
                 }
+                auto const& channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+                auto const numChannels = channelsLayout.size();
                 switch(Tools::getDisplayType(acsr))
                 {
                     case Tools::DisplayType::markers:
@@ -185,7 +188,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyTextColour.setVisible(true);
                         mPropertyBackgroundColour.setVisible(true);
                         mPropertyShadowColour.setVisible(true);
-                        mPropertyChannelLayout.setVisible(true);
+                        mPropertyChannelLayout.setVisible(numChannels > 1_z);
                     }
                     break;
                     case Tools::DisplayType::points:
@@ -203,7 +206,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyValueRangeMax.setVisible(true);
                         mPropertyRangeLink.setVisible(true);
                         mPropertyGrid.setVisible(true);
-                        mPropertyChannelLayout.setVisible(true);
+                        mPropertyChannelLayout.setVisible(numChannels > 1_z);
                     }
                     break;
                     case Tools::DisplayType::columns:
@@ -220,7 +223,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyNumBins.setVisible(true);
                         mPropertyRangeLink.setVisible(true);
                         mPropertyGrid.setVisible(true);
-                        mPropertyChannelLayout.setVisible(true);
+                        mPropertyChannelLayout.setVisible(numChannels > 1_z);
                         mProgressBarRendering.setVisible(true);
                     }
                     break;
@@ -251,7 +254,6 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::graphics:
             case AttrType::processing:
             case AttrType::warnings:
-            case AttrType::channelsLayout:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::zoomAcsr:
