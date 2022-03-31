@@ -35,6 +35,7 @@ namespace PluginList
         void paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected) override;
         void paintCell(juce::Graphics& g, int row, int columnId, int width, int height, bool rowIsSelected) override;
         void returnKeyPressed(int lastRowSelected) override;
+        void deleteKeyPressed(int lastRowSelected) override;
         void cellDoubleClicked(int rowNumber, int columnId, juce::MouseEvent const& e) override;
         void sortOrderChanged(int newSortColumnId, bool isForwards) override;
         juce::String getCellTooltip(int rowNumber, int columnId) override;

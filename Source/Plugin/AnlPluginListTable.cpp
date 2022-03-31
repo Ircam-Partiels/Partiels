@@ -293,6 +293,12 @@ void PluginList::Table::returnKeyPressed(int lastRowSelected)
     }
 }
 
+void PluginList::Table::deleteKeyPressed(int lastRowSelected)
+{
+    juce::ignoreUnused(lastRowSelected);
+    getLookAndFeel().playAlertSound();
+}
+
 void PluginList::Table::cellDoubleClicked(int rowNumber, int columnId, juce::MouseEvent const& e)
 {
     juce::ignoreUnused(columnId, e);
