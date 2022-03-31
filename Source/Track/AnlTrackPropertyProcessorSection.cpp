@@ -645,7 +645,7 @@ void Track::PropertyProcessorSection::updateState()
             }
             else if(auto* propertyNumber = dynamic_cast<PropertyNumber*>(it->second.get()))
             {
-                propertyNumber->entry.setValue(static_cast<float>(parameter.second), silent);
+                propertyNumber->entry.setValue(static_cast<double>(parameter.second), silent);
             }
             else if(auto* propertyToggle = dynamic_cast<PropertyToggle*>(it->second.get()))
             {
