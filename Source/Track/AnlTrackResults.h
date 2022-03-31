@@ -29,6 +29,7 @@ namespace Track
         SharedPoints const getPoints() const noexcept;
         SharedColumns const getColumns() const noexcept;
 
+        size_t const getNumChannels() const noexcept;
         size_t const getNumBins() const noexcept;
         Zoom::Range const& getValueRange() const noexcept;
         bool isEmpty() const noexcept;

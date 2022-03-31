@@ -139,6 +139,23 @@ Track::Results::SharedColumns const Track::Results::getColumns() const noexcept
     return nullptr;
 }
 
+size_t const Track::Results::getNumChannels() const noexcept
+{
+    if(auto const markers = getMarkers())
+    {
+        return markers->size();
+    }
+    else if(auto const points = getPoints())
+    {
+        return points->size();
+    }
+    else if(auto const columns = getColumns())
+    {
+        return columns->size();
+    }
+    return 0_z;
+}
+
 size_t const Track::Results::getNumBins() const noexcept
 {
     return mNumBins;
