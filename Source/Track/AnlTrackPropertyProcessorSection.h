@@ -21,9 +21,6 @@ namespace Track
     private:
         void askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform);
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
-        void revealResultFile();
-        void detachResultFile();
-        void restoreResultFile();
         void setWindowType(Plugin::WindowType const& windowType);
         void setBlockSize(size_t const blockSize);
         void setStepSize(size_t const stepSize);

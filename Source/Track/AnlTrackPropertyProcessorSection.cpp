@@ -30,16 +30,16 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                            {
                                if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
                                {
-                                   detachResultFile();
+                                   mDirector.askToRemoveFile();
                                }
                                else
                                {
-                                   revealResultFile();
+                                   trackFile.file.revealToUser();
                                }
                            }
                            else
                            {
-                               restoreResultFile();
+                               mDirector.askToReloadFile("The file cannot be found!");
                            }
                        })
 , mPropertyWindowType(juce::translate("Window Type"), juce::translate("The window type of the FFT used by the track."), "", getWindowTypeNames(), [&](size_t index)
@@ -313,94 +313,6 @@ void Track::PropertyProcessorSection::applyParameterValue(Plugin::Parameter cons
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track property"));
                              updateState();
                          });
-}
-
-void Track::PropertyProcessorSection::revealResultFile()
-{
-    auto const trackFile = mAccessor.getAttr<AttrType::file>();
-    if(trackFile.file.existsAsFile())
-    {
-        trackFile.file.revealToUser();
-    }
-}
-
-void Track::PropertyProcessorSection::detachResultFile()
-{
-    auto const file = mAccessor.getAttr<AttrType::file>().file;
-    if(file != juce::File{})
-    {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::QuestionIcon)
-                                 .withTitle(juce::translate("Detach result files?"))
-                                 .withMessage(juce::translate("The plugin analysis results were consolidated or loaded from a file. Do you want to detach the file (it will restart the analysis if a plugin is selected)?"))
-                                 .withButton(juce::translate("Detach File"))
-                                 .withButton(juce::translate("Cancel Changes"));
-        juce::WeakReference<juce::Component> weakReference(this);
-        juce::AlertWindow::showAsync(options, [=, this](auto result)
-                                     {
-                                         if(result == 0 || weakReference.get() == nullptr)
-                                         {
-                                             return;
-                                         }
-                                         mDirector.startAction();
-                                         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-                                         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-                                         mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
-                                         mDirector.endAction(ActionState::newTransaction, juce::translate("Detach the track's results file"));
-                                     });
-    }
-}
-
-void Track::PropertyProcessorSection::restoreResultFile()
-{
-    auto const file = mAccessor.getAttr<AttrType::file>().file;
-    MiscWeakAssert(!file.existsAsFile());
-    if(file.existsAsFile())
-    {
-        return;
-    }
-    auto const title = juce::translate("Results file cannot be found!");
-    auto const& key = mAccessor.getAttr<AttrType::key>();
-    auto getMessageBoxOptions = [&]()
-    {
-        auto const canAnalyze = !key.identifier.empty() && !key.feature.empty();
-        if(!canAnalyze)
-        {
-            return juce::MessageBoxOptions()
-                .withIconType(juce::AlertWindow::WarningIcon)
-                .withTitle(title)
-                .withMessage(juce::translate("The results file cannot be found. Would you like to select another file, to restart the analyse or to ignore the missing file?"))
-                .withButton(juce::translate("Select New File"))
-                .withButton(juce::translate("Restart Analysis"))
-                .withButton(juce::translate("Ignore Missing File"));
-        }
-        return juce::MessageBoxOptions()
-            .withIconType(juce::AlertWindow::WarningIcon)
-            .withTitle(juce::translate("Results file cannot be found!"))
-            .withMessage(juce::translate("The results file cannot be found. Would you like to select another file or to ignore the missing file?"))
-            .withButton(juce::translate("Select New File"))
-            .withButton(juce::translate("Ignore Missing File"));
-    };
-
-    juce::WeakReference<juce::Component> safePointer(this);
-    juce::AlertWindow::showAsync(getMessageBoxOptions(), [=, this](int result)
-                                 {
-                                     if(safePointer.get() == nullptr)
-                                     {
-                                         return;
-                                     }
-                                     if(result == 1)
-                                     {
-                                         mDirector.askForResultsFile(juce::translate("Load analysis results..."), file, NotificationType::synchronous);
-                                     }
-                                     else if(result == 2)
-                                     {
-                                         mDirector.startAction();
-                                         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-                                         mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
-                                         mDirector.endAction(ActionState::newTransaction, juce::translate("Remove results file"));
-                                     }
-                                 });
 }
 
 void Track::PropertyProcessorSection::setWindowType(Plugin::WindowType const& windowType)
