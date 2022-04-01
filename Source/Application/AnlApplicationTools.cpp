@@ -71,7 +71,21 @@ void Application::Tools::addPluginTrack(std::tuple<juce::String, size_t> positio
                        });
 
         auto& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *identifier);
-        trackAcsr.setAttr<Track::AttrType::name>(description.name, NotificationType::synchronous);
+        auto getPluginName = [&]() -> juce::String
+        {
+            try
+            {
+                auto const description = PluginList::Scanner::loadDescription(key, 48000.0);
+                return description.name;
+            }
+            catch(...)
+            {
+                return "";
+            }
+            return "";
+        };
+
+        trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::key>(key, NotificationType::synchronous);
         trackAcsr.setAttr<Track::AttrType::channelsLayout>(trackChannelsLayout, NotificationType::synchronous);
 
