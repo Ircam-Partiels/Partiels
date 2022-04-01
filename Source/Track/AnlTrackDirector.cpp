@@ -776,6 +776,11 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
 
 void Track::Director::fileHasBeenRemoved(juce::File const& file)
 {
+    if(mAlertCatcher != nullptr)
+    {
+        return;
+    }
+
     mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
@@ -797,6 +802,11 @@ void Track::Director::fileHasBeenRemoved(juce::File const& file)
 
 void Track::Director::fileHasBeenRestored(juce::File const& file)
 {
+    if(mAlertCatcher != nullptr)
+    {
+        return;
+    }
+
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Results file has been restored!"))
@@ -817,6 +827,11 @@ void Track::Director::fileHasBeenRestored(juce::File const& file)
 
 void Track::Director::fileHasBeenModified(juce::File const& file)
 {
+    if(mAlertCatcher != nullptr)
+    {
+        return;
+    }
+
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::WarningIcon)
                              .withTitle(juce::translate("Results file has been modified!"))
