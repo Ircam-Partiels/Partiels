@@ -192,41 +192,50 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
     return "-";
 }
 
-juce::String Track::Tools::getStateTootip(Accessor const& acsr)
+juce::String Track::Tools::getStateTootip(Accessor const& acsr, bool includeAnalysisState, bool includeRenderingState)
 {
-    auto getMessage = [&]()
+    auto const& state = acsr.getAttr<AttrType::processing>();
+    auto const& warnings = acsr.getAttr<AttrType::warnings>();
+    auto const isLoading = acsr.getAttr<AttrType::file>().file != juce::File{};
+    if(std::get<0>(state))
     {
-        auto const& state = acsr.getAttr<AttrType::processing>();
-        auto const& warnings = acsr.getAttr<AttrType::warnings>();
-        auto const isLoading = acsr.getAttr<AttrType::file>().file != juce::File{};
-        if(std::get<0>(state))
+        if(isLoading)
         {
-            if(isLoading)
-            {
-                return juce::translate("loading... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)");
-            }
-            return juce::translate("analysing... (" + juce::String(static_cast<int>(std::round(std::get<1>(state) * 100.f))) + "%)");
+            return juce::translate("Loading...");
         }
-        else if(std::get<2>(state))
-        {
-            return juce::translate("rendering... (" + juce::String(static_cast<int>(std::round(std::get<3>(state) * 100.f))) + "%)");
-        }
-        switch(warnings)
-        {
-            case WarningType::none:
-                break;
-            case WarningType::library:
-                return juce::translate("The library cannot be found or loaded!");
-            case WarningType::plugin:
-                return juce::translate("The plugin cannot be allocated!");
-            case WarningType::state:
-                return juce::translate("The parameters are invalid!");
-            case WarningType::file:
-                return juce::translate("The file cannot be parsed!");
-        }
+        return juce::translate("Analysing...");
+    }
+    if(std::get<2>(state) && includeRenderingState)
+    {
+        return juce::translate("Rendering...");
+    }
+
+    switch(warnings)
+    {
+        case WarningType::none:
+            break;
+        case WarningType::library:
+            return juce::translate("The library cannot be found or loaded!");
+        case WarningType::plugin:
+            return juce::translate("The plugin cannot be allocated!");
+        case WarningType::state:
+            return juce::translate("The parameters are invalid!");
+        case WarningType::file:
+            return juce::translate("The file cannot be parsed!");
+    }
+    if(includeAnalysisState && includeRenderingState)
+    {
         return isLoading ? juce::translate("Loading and rendering completed successfully!") : juce::translate("Analysis and rendering are completed successfully!");
-    };
-    return acsr.getAttr<AttrType::name>() + ": " + getMessage();
+    }
+    else if(includeAnalysisState)
+    {
+        return isLoading ? juce::translate("Loading completed successfully!") : juce::translate("Analysis completed successfully!");
+    }
+    else if(includeRenderingState)
+    {
+        return juce::translate("Rendering completed successfully!");
+    }
+    return juce::translate("Loading and rendering completed successfully!");
 }
 
 std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const& description)

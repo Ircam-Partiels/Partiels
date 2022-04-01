@@ -30,7 +30,7 @@ namespace Track
 
         juce::String getInfoTooltip(Accessor const& acsr);
         juce::String getValueTootip(Accessor const& acsr, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time);
-        juce::String getStateTootip(Accessor const& acsr);
+        juce::String getStateTootip(Accessor const& acsr, bool includeAnalysisState = true, bool includeRenderingState = true);
 
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getValueRange(Results const& results);
