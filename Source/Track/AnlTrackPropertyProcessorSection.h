@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AnlTrackDirector.h"
 #include "AnlTrackProgressBar.h"
 
 ANALYSE_FILE_BEGIN
@@ -41,7 +40,7 @@ namespace Track
         PropertyList mPropertyStepSize;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
-        ProgressBar mProgressBarAnalysis{mAccessor, ProgressBar::Mode::analysis};
+        ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};
 
         std::unique_ptr<juce::FileChooser> mFileChooser;
     };

@@ -3,11 +3,18 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
-: mAccessor(accessor)
+Track::ProgressBar::ProgressBar(Director& director, Mode mode)
+: mDirector(director)
 , mMode(mode)
 {
     addChildComponent(mProgressBar);
+    addAndMakeVisible(mStateIcon);
+    mStateIcon.setWantsKeyboardFocus(false);
+    addMouseListener(&mStateIcon, false);
+    mStateIcon.onClick = [this]()
+    {
+        mDirector.askToResolveWarnings();
+    };
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -28,17 +35,21 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                     mProgressBar.setVisible(mMode == Mode::analysis || mMode == Mode::both);
                     mProgressValue = static_cast<double>(std::get<1>(state));
                     mProgressBar.setTextToDisplay(mMessage);
+                    mStateIcon.setVisible(false);
                 }
                 else if(std::get<2>(state) && (mMode == Mode::rendering || mMode == Mode::both))
                 {
                     mProgressBar.setVisible(true);
                     mProgressValue = static_cast<double>(std::get<3>(state));
                     mProgressBar.setTextToDisplay("Rendering... ");
+                    mStateIcon.setVisible(false);
                 }
                 else
                 {
                     mProgressBar.setVisible(false);
-                    mStateImage = Icon::getImage(warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert);
+                    mStateIcon.setVisible(true);
+                    mStateIcon.setTypes(warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert);
+                    mStateIcon.setEnabled(warnings != WarningType::none);
                     auto getMessage = [&, warnings]()
                     {
                         switch(warnings)
@@ -57,20 +68,20 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                         switch(mMode)
                         {
                             case Mode::analysis:
-                                return isLoading ? juce::translate("Loading successfully completed!") : juce::translate("Analysis successfully completed!");
+                                return isLoading ? juce::translate("Loading completed successfully!") : juce::translate("Analysis completed successfully!");
                             case Mode::rendering:
-                                return juce::translate("Rendering successfully completed!");
+                                return juce::translate("Rendering completed successfully!");
                             case Mode::both:
-                                return isLoading ? juce::translate("Loading and rendering successfully completed!") : juce::translate("Analysis and rendering successfully completed!");
+                                return isLoading ? juce::translate("Loading and rendering completed successfully!") : juce::translate("Analysis and rendering completed successfully!");
                         }
-                        return juce::translate("Loading and rendering successfully completed!");
+                        return juce::translate("Loading and rendering completed successfully!");
                     };
-
                     mMessage = getMessage();
                 }
 
                 auto const tooltip = Tools::getStateTootip(acsr);
                 mProgressBar.setTooltip(tooltip);
+                mStateIcon.setTooltip(tooltip);
                 setTooltip(tooltip);
 
                 repaint();
@@ -97,6 +108,7 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
 
 Track::ProgressBar::~ProgressBar()
 {
+    removeMouseListener(&mStateIcon);
     mAccessor.removeListener(mListener);
 }
 
@@ -104,7 +116,11 @@ void Track::ProgressBar::resized()
 {
     auto localBounds = getLocalBounds().reduced(2);
     auto const halfHeight = localBounds.getHeight() / 2;
-    mProgressBar.setBounds(localBounds.removeFromTop(halfHeight));
+    if(mProgressBar.isVisible())
+    {
+        mProgressBar.setBounds(localBounds.removeFromTop(halfHeight));
+    }
+    mStateIcon.setBounds(localBounds.removeFromLeft(halfHeight).withSizeKeepingCentre(halfHeight, halfHeight));
 }
 
 void Track::ProgressBar::paint(juce::Graphics& g)
@@ -114,14 +130,8 @@ void Track::ProgressBar::paint(juce::Graphics& g)
         auto localBounds = getLocalBounds().reduced(2);
         auto const halfHeight = localBounds.getHeight() / 2;
         g.setColour(findColour(juce::Label::ColourIds::textColourId));
-        juce::RectanglePlacement const placement(juce::RectanglePlacement::Flags::stretchToFit);
-        if(mStateImage.isValid())
-        {
-            auto const imageBounds = localBounds.removeFromLeft(halfHeight).withSizeKeepingCentre(halfHeight, halfHeight).toFloat();
-            g.drawImageTransformed(mStateImage, placement.getTransformToFit(mStateImage.getBounds().toFloat(), imageBounds), true);
-        }
         g.setFont(juce::Font(static_cast<float>(halfHeight)));
-        g.drawFittedText(mMessage, localBounds.withTrimmedLeft(4), juce::Justification::left, 2);
+        g.drawFittedText(mMessage, localBounds.withTrimmedLeft(4 + (mStateIcon.isVisible() ? halfHeight : 0)), juce::Justification::left, 2);
     }
 }
 

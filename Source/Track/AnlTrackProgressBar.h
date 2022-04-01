@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlTrackModel.h"
+#include "AnlTrackDirector.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -20,7 +20,7 @@ namespace Track
         };
         // clang-format on
 
-        ProgressBar(Accessor& accessor, Mode mode);
+        ProgressBar(Director& director, Mode mode);
         ~ProgressBar() override;
 
         // juce::Component
@@ -28,12 +28,13 @@ namespace Track
         void paint(juce::Graphics& g) override;
 
     private:
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Mode const mMode;
         Accessor::Listener mListener{typeid(*this).name()};
         double mProgressValue;
         juce::ProgressBar mProgressBar{mProgressValue};
-        juce::Image mStateImage;
+        Icon mStateIcon{Icon::Type::verified};
         juce::String mMessage;
     };
 } // namespace Track

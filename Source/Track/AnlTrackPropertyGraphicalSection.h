@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AnlTrackDirector.h"
 #include "AnlTrackProgressBar.h"
 
 ANALYSE_FILE_BEGIN
@@ -51,7 +50,7 @@ namespace Track
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
         PropertyTextButton mPropertyChannelLayout;
-        ProgressBar mProgressBarRendering{mAccessor, ProgressBar::Mode::rendering};
+        ProgressBar mProgressBarRendering{mDirector, ProgressBar::Mode::rendering};
 
         Zoom::Grid::PropertyPanel mZoomGridPropertyPanel;
         bool mChannelLayoutActionStarted{false};
