@@ -28,20 +28,20 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto const isLoading = acsr.getAttr<AttrType::file>().file != juce::File{};
+                auto const includeAnalysis = mMode == Mode::analysis || mMode == Mode::both;
+                auto const includeRendering = mMode == Mode::rendering || mMode == Mode::both;
+                mMessage = Tools::getStateTootip(acsr, includeAnalysis, includeRendering);
+                mProgressBar.setTextToDisplay(mMessage);
                 if(std::get<0>(state))
                 {
-                    mMessage = isLoading ? "Loading... " : "Analysing... ";
-                    mProgressBar.setVisible(mMode == Mode::analysis || mMode == Mode::both);
+                    mProgressBar.setVisible(includeAnalysis);
                     mProgressValue = static_cast<double>(std::get<1>(state));
-                    mProgressBar.setTextToDisplay(mMessage);
                     mStateIcon.setVisible(false);
                 }
-                else if(std::get<2>(state) && (mMode == Mode::rendering || mMode == Mode::both))
+                else if(std::get<2>(state) && includeRendering)
                 {
                     mProgressBar.setVisible(true);
                     mProgressValue = static_cast<double>(std::get<3>(state));
-                    mProgressBar.setTextToDisplay("Rendering... ");
                     mStateIcon.setVisible(false);
                 }
                 else
@@ -50,40 +50,11 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                     mStateIcon.setVisible(true);
                     mStateIcon.setTypes(warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert);
                     mStateIcon.setEnabled(warnings != WarningType::none);
-                    auto getMessage = [&, warnings]()
-                    {
-                        switch(warnings)
-                        {
-                            case WarningType::none:
-                                break;
-                            case WarningType::library:
-                                return juce::translate("The library cannot be found or loaded!");
-                            case WarningType::plugin:
-                                return juce::translate("The plugin cannot be allocated!");
-                            case WarningType::state:
-                                return juce::translate("The parameters are invalid!");
-                            case WarningType::file:
-                                return juce::translate("The file cannot be parsed!");
-                        }
-                        switch(mMode)
-                        {
-                            case Mode::analysis:
-                                return isLoading ? juce::translate("Loading completed successfully!") : juce::translate("Analysis completed successfully!");
-                            case Mode::rendering:
-                                return juce::translate("Rendering completed successfully!");
-                            case Mode::both:
-                                return isLoading ? juce::translate("Loading and rendering completed successfully!") : juce::translate("Analysis and rendering completed successfully!");
-                        }
-                        return juce::translate("Loading and rendering completed successfully!");
-                    };
-                    mMessage = getMessage();
                 }
-
-                auto const tooltip = Tools::getStateTootip(acsr);
+                auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + mMessage;
                 mProgressBar.setTooltip(tooltip);
                 mStateIcon.setTooltip(tooltip);
                 setTooltip(tooltip);
-
                 repaint();
             }
             break;
@@ -114,13 +85,10 @@ Track::ProgressBar::~ProgressBar()
 
 void Track::ProgressBar::resized()
 {
-    auto localBounds = getLocalBounds().reduced(2);
+    auto const localBounds = getLocalBounds().reduced(2);
     auto const halfHeight = localBounds.getHeight() / 2;
-    if(mProgressBar.isVisible())
-    {
-        mProgressBar.setBounds(localBounds.removeFromTop(halfHeight));
-    }
-    mStateIcon.setBounds(localBounds.removeFromLeft(halfHeight).withSizeKeepingCentre(halfHeight, halfHeight));
+    mProgressBar.setBounds(localBounds.withHeight(halfHeight));
+    mStateIcon.setBounds(localBounds.withWidth(halfHeight).withSizeKeepingCentre(halfHeight, halfHeight));
 }
 
 void Track::ProgressBar::paint(juce::Graphics& g)
