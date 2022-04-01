@@ -17,6 +17,9 @@ namespace Track
         // juce::Component
         void resized() override;
 
+        bool isProcessingOrRendering() const;
+        bool hasWarning() const;
+
     private:
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};

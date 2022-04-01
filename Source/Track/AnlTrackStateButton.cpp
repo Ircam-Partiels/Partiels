@@ -22,21 +22,16 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::processing:
             case AttrType::warnings:
             {
-                auto const state = acsr.getAttr<AttrType::processing>();
-                auto const isProcessing = std::get<0>(state) || std::get<2>(state);
-                auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto const hasWarnings = warnings != WarningType::none;
-                auto const tooltip = Tools::getStateTootip(acsr);
-
-                mProcessingButton.setInactiveImage(Icon::getImage(hasWarnings ? Icon::Type::alert : Icon::Type::verified));
+                auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + Tools::getStateTootip(acsr);
+                mProcessingButton.setInactiveImage(Icon::getImage(hasWarning() ? Icon::Type::alert : Icon::Type::verified));
                 mProcessingButton.setTooltip(tooltip);
-                mProcessingButton.setVisible(isProcessing);
-                mProcessingButton.setActive(isProcessing);
+                mProcessingButton.setVisible(isProcessingOrRendering());
+                mProcessingButton.setActive(isProcessingOrRendering());
 
-                mStateIcon.setTypes(hasWarnings ? Icon::Type::alert : Icon::Type::verified);
-                mStateIcon.setEnabled(hasWarnings);
+                mStateIcon.setTypes(hasWarning() ? Icon::Type::alert : Icon::Type::verified);
+                mStateIcon.setEnabled(hasWarning());
                 mStateIcon.setTooltip(tooltip);
-                mStateIcon.setVisible(!isProcessing);
+                mStateIcon.setVisible(!isProcessingOrRendering());
             }
             break;
             case AttrType::key:
@@ -69,6 +64,18 @@ void Track::StateButton::resized()
 {
     mProcessingButton.setBounds(getLocalBounds());
     mStateIcon.setBounds(getLocalBounds());
+}
+
+bool Track::StateButton::isProcessingOrRendering() const
+{
+    auto const state = mAccessor.getAttr<AttrType::processing>();
+    return std::get<0>(state) || std::get<2>(state);
+}
+
+bool Track::StateButton::hasWarning() const
+{
+    return mAccessor.getAttr<AttrType::warnings>() != WarningType::none;
+    ;
 }
 
 ANALYSE_FILE_END
