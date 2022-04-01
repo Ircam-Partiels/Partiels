@@ -105,9 +105,7 @@ void Track::Thumbnail::resized()
         }
     };
 
-    auto const state = mAccessor.getAttr<AttrType::processing>();
-    auto const warnings = mAccessor.getAttr<AttrType::warnings>();
-    if(std::get<0>(state) || std::get<2>(state) || warnings != WarningType::none)
+    if(mStateButton.isProcessingOrRendering() || mStateButton.hasWarning())
     {
         layoutButton(mStateButton);
     }
