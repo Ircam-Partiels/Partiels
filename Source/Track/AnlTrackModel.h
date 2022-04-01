@@ -76,6 +76,7 @@ namespace Track
     enum class WarningType
     {
           none
+        , library
         , plugin
         , state
         , file

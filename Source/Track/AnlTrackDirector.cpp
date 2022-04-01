@@ -591,7 +591,7 @@ void Track::Director::runAnalysis(NotificationType const notification)
     }
     catch(Plugin::Processor::LoadingError& e)
     {
-        mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
+        mAccessor.setAttr<AttrType::warnings>(WarningType::library, notification);
         if(mAlertCatcher != nullptr)
         {
             mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage.replace("REASON", e.what()));

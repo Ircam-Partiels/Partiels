@@ -45,23 +45,25 @@ Track::ProgressBar::ProgressBar(Accessor& accessor, Mode mode)
                         {
                             case WarningType::none:
                                 break;
+                            case WarningType::library:
+                                return juce::translate("The library cannot be found or loaded!");
                             case WarningType::plugin:
-                                return "Analysis failed: the plugin cannot be found or allocated!";
+                                return juce::translate("The plugin cannot be allocated!");
                             case WarningType::state:
-                                return "Analysis failed: the step size or the block size might not be supported!";
+                                return juce::translate("The parameters are invalid!");
                             case WarningType::file:
-                                return "Loading failed: the results file cannot be parsed!";
+                                return juce::translate("The file cannot be parsed!");
                         }
                         switch(mMode)
                         {
                             case Mode::analysis:
-                                return isLoading ? "Loading successfully completed!" : "Analysis successfully completed!";
+                                return isLoading ? juce::translate("Loading successfully completed!") : juce::translate("Analysis successfully completed!");
                             case Mode::rendering:
-                                return "Rendering successfully completed!";
+                                return juce::translate("Rendering successfully completed!");
                             case Mode::both:
-                                return isLoading ? "Loading and rendering successfully completed!" : "Analysis and rendering successfully completed!";
+                                return isLoading ? juce::translate("Loading and rendering successfully completed!") : juce::translate("Analysis and rendering successfully completed!");
                         }
-                        return "Loading and rendering successfully completed!";
+                        return juce::translate("Loading and rendering successfully completed!");
                     };
 
                     mMessage = getMessage();
