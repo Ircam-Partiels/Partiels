@@ -341,53 +341,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
     mLoader.onLoadingFailed = [&](juce::String const& message)
     {
-        if(mAlertCatcher != nullptr)
-        {
-            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, "Loading results failed!", message);
-            return;
-        }
-
-        auto const trackFile = mAccessor.getAttr<AttrType::file>();
         mAccessor.setAttr<AttrType::warnings>(WarningType::file, NotificationType::synchronous);
-        auto const& key = mAccessor.getAttr<AttrType::key>();
-        auto getMessageBoxOptions = [&]()
-        {
-            if(!key.identifier.empty() && !key.feature.empty())
-            {
-                return juce::MessageBoxOptions()
-                    .withIconType(juce::AlertWindow::WarningIcon)
-                    .withTitle(juce::translate("Loading results file failed!"))
-                    .withMessage(juce::translate("The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file, to run the plugin or to ignore the missing file?").replace("FILENAME", trackFile.file.getFullPathName()).replace("ERRORMESSAGE", message))
-                    .withButton(juce::translate("Select File"))
-                    .withButton(juce::translate("Run Plugin"))
-                    .withButton(juce::translate("Ignore File"));
-            }
-            return juce::MessageBoxOptions()
-                .withIconType(juce::AlertWindow::WarningIcon)
-                .withTitle(juce::translate("Loading results file failed!"))
-                .withMessage(juce::translate("The loading of results from file FILENAME failed: ERRORMESSAGE. Would you like to select another file, to run the plugin or to ignore the missing file?").replace("FILENAME", trackFile.file.getFullPathName()).replace("ERRORMESSAGE", message))
-                .withButton(juce::translate("Select File"))
-                .withButton(juce::translate("Ignore File"));
-        };
-        juce::WeakReference<Director> safePointer(this);
-        juce::AlertWindow::showAsync(getMessageBoxOptions(), [=, this](int result)
-                                     {
-                                         if(safePointer.get() == nullptr)
-                                         {
-                                             return;
-                                         }
-                                         if(result == 1)
-                                         {
-                                             askForResultsFile(juce::translate("Load analysis results..."), trackFile.file, NotificationType::synchronous);
-                                         }
-                                         else if(result == 2)
-                                         {
-                                             startAction();
-                                             mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-                                             mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
-                                             endAction(ActionState::newTransaction, juce::translate("Remove results file"));
-                                         }
-                                     });
+        askToReloadFile(message);
     };
 
     mLoader.onLoadingAborted = [&]()
@@ -574,11 +529,6 @@ void Track::Director::runAnalysis(NotificationType const notification)
         mAccessor.setAttr<AttrType::description>(description, notification);
     }
 
-    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
-                                  .replace("KEYID", key.identifier)
-                                  .replace("KEYFEATURE", key.feature)
-                                  .replace("TKNAME", mAccessor.getAttr<AttrType::name>());
-
     try
     {
         if(mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get()))
@@ -592,113 +542,22 @@ void Track::Director::runAnalysis(NotificationType const notification)
     catch(Plugin::Processor::LoadingError& e)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::library, notification);
-        if(mAlertCatcher != nullptr)
-        {
-            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage.replace("REASON", e.what()));
-        }
-        else
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::WarningIcon)
-                                     .withTitle(juce::translate("Plugin cannot be loaded!"))
-                                     .withMessage(errorMessage.replace("REASON", e.what()) + " " + juce::translate("Would you like to select another plugin?"))
-                                     .withButton(juce::translate("Replace Plugin"))
-                                     .withButton(juce::translate("Ignore"));
-
-            juce::WeakReference<Director> weakReference(this);
-            juce::AlertWindow::showAsync(options, [=, this](int windowResult)
-                                         {
-                                             if(weakReference.get() == nullptr || mPluginTable == nullptr)
-                                             {
-                                                 return;
-                                             }
-                                             if(windowResult == 1)
-                                             {
-                                                 mPluginTable->onPluginSelected = [=, this](Plugin::Key const& k, Plugin::Description const& d)
-                                                 {
-                                                     juce::ignoreUnused(d);
-                                                     if(weakReference.get() == nullptr)
-                                                     {
-                                                         return;
-                                                     }
-                                                     if(mPluginTable != nullptr)
-                                                     {
-                                                         mPluginTable->hide();
-                                                     }
-                                                     startAction();
-                                                     mAccessor.setAttr<AttrType::key>(k, NotificationType::synchronous);
-                                                     endAction(ActionState::newTransaction, juce::translate("Change track's plugin"));
-                                                 };
-                                                 mPluginTable->show();
-                                             }
-                                         });
-        }
+        askToReloadPlugin(e.what());
     }
     catch(Plugin::Processor::ParametersError& e)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::state, notification);
-        if(mAlertCatcher != nullptr)
-        {
-            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage.replace("REASON", e.what()));
-        }
-        else
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::WarningIcon)
-                                     .withTitle(juce::translate("Plugin cannot be loaded!"))
-                                     .withMessage(errorMessage.replace("REASON", e.what()) + " " + juce::translate("Would you like to restore the default parameters?"))
-                                     .withButton(juce::translate("Restore Default Parameters"))
-                                     .withButton(juce::translate("Ignore"));
-
-            juce::WeakReference<Director> weakReference(this);
-            juce::AlertWindow::showAsync(options, [=, this](int windowResult)
-                                         {
-                                             if(weakReference.get() == nullptr)
-                                             {
-                                                 return;
-                                             }
-                                             if(windowResult == 1)
-                                             {
-                                                 startAction();
-                                                 mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, notification);
-                                                 endAction(ActionState::newTransaction, juce::translate("Restore track's default parameters"));
-                                             }
-                                         });
-        }
+        askToRestoreState(e.what());
     }
     catch(std::exception& e)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
-        if(mAlertCatcher != nullptr)
-        {
-            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage.replace("REASON", e.what()));
-        }
-        else
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::WarningIcon)
-                                     .withTitle(juce::translate("Plugin cannot be loaded!"))
-                                     .withMessage(errorMessage.replace("REASON", e.what()))
-                                     .withButton(juce::translate("Ok"));
-            juce::AlertWindow::showAsync(options, nullptr);
-        }
+        warmAboutPlugin(e.what());
     }
     catch(...)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::plugin, notification);
-        if(mAlertCatcher != nullptr)
-        {
-            mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage.replace("REASON", "Reason unknown"));
-        }
-        else
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::WarningIcon)
-                                     .withTitle(juce::translate("Plugin cannot be loaded!"))
-                                     .withMessage(errorMessage.replace("REASON", "Reason unknown"))
-                                     .withButton(juce::translate("Ok"));
-            juce::AlertWindow::showAsync(options, nullptr);
-        }
+        warmAboutPlugin("The plugin cannot be allocated!");
     }
 }
 
@@ -796,7 +655,7 @@ void Track::Director::fileHasBeenRemoved(juce::File const& file)
                                      {
                                          return;
                                      }
-                                     askForResultsFile(juce::translate("Restore results file..."), file, NotificationType::synchronous);
+                                     askForFile();
                                  });
 }
 
@@ -895,6 +754,298 @@ juce::Result Track::Director::consolidate(juce::File const& file)
     }
     mAccessor.setAttr<AttrType::file>(FileInfo{expectedFile}, NotificationType::synchronous);
     return result;
+}
+
+void Track::Director::warmAboutPlugin(juce::String const& reason)
+{
+    auto const name = mAccessor.getAttr<AttrType::name>();
+    auto const key = mAccessor.getAttr<AttrType::key>();
+    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
+                                  .replace("KEYID", key.identifier)
+                                  .replace("KEYFEATURE", key.feature)
+                                  .replace("TKNAME", name)
+                                  .replace("REASON", reason);
+
+    if(mAlertCatcher != nullptr)
+    {
+        mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage);
+        return;
+    }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Plugin cannot be loaded!"))
+                             .withMessage(errorMessage)
+                             .withButton(juce::translate("Ok"));
+    juce::AlertWindow::showAsync(options, nullptr);
+}
+
+void Track::Director::askToReloadPlugin(juce::String const& reason)
+{
+    auto const name = mAccessor.getAttr<AttrType::name>();
+    auto const key = mAccessor.getAttr<AttrType::key>();
+    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
+                                  .replace("KEYID", key.identifier)
+                                  .replace("KEYFEATURE", key.feature)
+                                  .replace("TKNAME", name)
+                                  .replace("REASON", reason);
+
+    if(mAlertCatcher != nullptr)
+    {
+        mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage);
+        return;
+    }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Plugin cannot be loaded!"))
+                             .withMessage(errorMessage + " " + juce::translate("Would you like to select another plugin?"))
+                             .withButton(juce::translate("Replace plugin"))
+                             .withButton(juce::translate("Ignore"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int windowResult)
+                                 {
+                                     if(weakReference.get() == nullptr || mPluginTable == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(windowResult == 1)
+                                     {
+                                         mPluginTable->onPluginSelected = [=, this](Plugin::Key const& k, Plugin::Description const& d)
+                                         {
+                                             juce::ignoreUnused(d);
+                                             if(weakReference.get() == nullptr)
+                                             {
+                                                 return;
+                                             }
+                                             if(mPluginTable != nullptr)
+                                             {
+                                                 mPluginTable->hide();
+                                             }
+                                             startAction();
+                                             mAccessor.setAttr<AttrType::key>(k, NotificationType::synchronous);
+                                             endAction(ActionState::newTransaction, juce::translate("Change track's plugin"));
+                                         };
+                                         mPluginTable->show();
+                                     }
+                                 });
+}
+
+void Track::Director::askToRestoreState(juce::String const& reason)
+{
+    auto const name = mAccessor.getAttr<AttrType::name>();
+    auto const key = mAccessor.getAttr<AttrType::key>();
+    auto const errorMessage = juce::translate("The plugin [KEYID - KEYFEATURE] of the track TKNAME cannot be loaded: REASON.")
+                                  .replace("KEYID", key.identifier)
+                                  .replace("KEYFEATURE", key.feature)
+                                  .replace("TKNAME", name)
+                                  .replace("REASON", reason);
+
+    if(mAlertCatcher != nullptr)
+    {
+        mAlertCatcher->postMessage(AlertWindow::MessageType::warning, juce::translate("Plugin cannot be loaded!"), errorMessage);
+        return;
+    }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::WarningIcon)
+                             .withTitle(juce::translate("Plugin cannot be loaded!"))
+                             .withMessage(errorMessage + " " + juce::translate("Would you like to reset to the default state?"))
+                             .withButton(juce::translate("Restore default state"))
+                             .withButton(juce::translate("Ignore"));
+
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](int windowResult)
+                                 {
+                                     if(weakReference.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(windowResult == 1)
+                                     {
+                                         startAction();
+                                         mAccessor.setAttr<AttrType::state>(mAccessor.getAttr<AttrType::description>().defaultState, NotificationType::synchronous);
+                                         endAction(ActionState::newTransaction, juce::translate("Reset track to default state"));
+                                     }
+                                 });
+}
+
+void Track::Director::askToRemoveFile()
+{
+    auto const file = mAccessor.getAttr<AttrType::file>().file;
+    if(file == juce::File{})
+    {
+        return;
+    }
+
+    if(mAlertCatcher != nullptr)
+    {
+        return;
+    }
+
+    auto const options = juce::MessageBoxOptions()
+                             .withIconType(juce::AlertWindow::QuestionIcon)
+                             .withTitle(juce::translate("Remove result files?"))
+                             .withMessage(juce::translate("The analysis results are loaded from a file or have been consolidated to a file. Do you want to remove the file (it will restart the analysis if a plugin is selected)?"))
+                             .withButton(juce::translate("Remove file"))
+                             .withButton(juce::translate("Cancel"));
+    juce::WeakReference<Director> weakReference(this);
+    juce::AlertWindow::showAsync(options, [=, this](auto result)
+                                 {
+                                     if(result == 0 || weakReference.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     removeFile();
+                                 });
+}
+
+void Track::Director::askToReloadFile(juce::String const& reason)
+{
+    auto const file = mAccessor.getAttr<AttrType::file>().file;
+    auto const name = mAccessor.getAttr<AttrType::name>();
+    auto const errorMessage = juce::translate("The file FLNAME of the track TKNAME cannot be loaded: REASON.")
+                                  .replace("FLNAME", file.getFullPathName())
+                                  .replace("TKNAME", name)
+                                  .replace("REASON", reason);
+
+    if(mAlertCatcher != nullptr)
+    {
+        mAlertCatcher->postMessage(AlertWindow::MessageType::warning, "Loading file failed!", errorMessage);
+        return;
+    }
+
+    auto const& key = mAccessor.getAttr<AttrType::key>();
+    auto getMessageBoxOptions = [&]()
+    {
+        if(!key.identifier.empty() && !key.feature.empty())
+        {
+            return juce::MessageBoxOptions()
+                .withIconType(juce::AlertWindow::WarningIcon)
+                .withTitle(juce::translate("Loading file failed!"))
+                .withMessage(errorMessage + " " + juce::translate("Would you like to replace the file, run the analysis or to ignore the file?"))
+                .withButton(juce::translate("Replace"))
+                .withButton(juce::translate("Analyze"))
+                .withButton(juce::translate("Ignore"));
+        }
+        return juce::MessageBoxOptions()
+            .withIconType(juce::AlertWindow::WarningIcon)
+            .withTitle(juce::translate("Loading file failed!"))
+            .withMessage(errorMessage + " " + juce::translate("Would you like to replace the file or to ignore the file?"))
+            .withButton(juce::translate("Replace"))
+            .withButton(juce::translate("Ignore"));
+    };
+
+    juce::WeakReference<Director> safePointer(this);
+    juce::AlertWindow::showAsync(getMessageBoxOptions(), [=, this](int result)
+                                 {
+                                     if(safePointer.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(result == 1)
+                                     {
+                                         askForFile();
+                                     }
+                                     else if(result == 2)
+                                     {
+                                         removeFile();
+                                     }
+                                 });
+}
+
+void Track::Director::removeFile()
+{
+    startAction();
+    mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+    mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
+    endAction(ActionState::newTransaction, juce::translate("Remove track's results file"));
+}
+
+void Track::Director::askForFile()
+{
+    auto const file = mAccessor.getAttr<AttrType::file>().file;
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load track's results file..."), file, Loader::getWildCardForAllFormats());
+    if(mFileChooser == nullptr)
+    {
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    juce::WeakReference<Director> safePointer(this);
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
+                              {
+                                  if(safePointer.get() == nullptr)
+                                  {
+                                      return;
+                                  }
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      return;
+                                  }
+                                  if(mLoaderArgumentSelector == nullptr)
+                                  {
+                                      mLoaderArgumentSelector = std::make_unique<Loader::ArgumentSelector>();
+                                      anlWeakAssert(mLoaderArgumentSelector != nullptr);
+                                      if(mLoaderArgumentSelector == nullptr)
+                                      {
+                                          return;
+                                      }
+                                  }
+                                  mLoaderArgumentSelector->onLoad = [=, this](Track::FileInfo fileInfo)
+                                  {
+                                      if(safePointer.get() == nullptr)
+                                      {
+                                          return;
+                                      }
+                                      mLoaderArgumentSelector->hide();
+                                      auto isPerformingAction = mIsPerformingAction;
+                                      if(!isPerformingAction)
+                                      {
+                                          startAction();
+                                      }
+                                      mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                      mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+                                      mAccessor.setAttr<AttrType::file>(fileInfo, NotificationType::synchronous);
+                                      if(!isPerformingAction)
+                                      {
+                                          endAction(ActionState::newTransaction, juce::translate("Change results file"));
+                                      }
+                                  };
+                                  mLoaderArgumentSelector->setFile(results.getFirst());
+                                  mLoaderArgumentSelector->show();
+                              });
+}
+
+void Track::Director::askToResolveWarnings()
+{
+    switch(mAccessor.getAttr<AttrType::warnings>())
+    {
+        case WarningType::none:
+            break;
+        case WarningType::library:
+        {
+            askToReloadPlugin("Library cannot be loaded!");
+        }
+        break;
+        case WarningType::state:
+        {
+            askToRestoreState("Parameters are invalid!");
+        }
+        break;
+        case WarningType::file:
+        {
+            askToReloadFile("The file cannot be parsed!");
+        }
+        break;
+        case WarningType::plugin:
+        {
+            warmAboutPlugin("The plugin cannot be allocated!");
+        }
+        break;
+    }
 }
 
 void Track::Director::askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification)

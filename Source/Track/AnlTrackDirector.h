@@ -35,12 +35,20 @@ namespace Track
         void setPluginTable(PluginList::Table* table);
 
         void askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification);
+        void warmAboutPlugin(juce::String const& reason);
+        void askToReloadPlugin(juce::String const& reason);
+        void askToRestoreState(juce::String const& reason);
+        void askToReloadFile(juce::String const& reason);
+        void askToRemoveFile();
+        void askToResolveWarnings();
 
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
         void runLoading();
         void runRendering();
+        void askForFile();
+        void removeFile();
 
         // FileWatcher
         void fileHasBeenRemoved(juce::File const& file) override;
