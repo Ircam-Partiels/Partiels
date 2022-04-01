@@ -34,7 +34,6 @@ namespace Track
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         void setPluginTable(PluginList::Table* table);
 
-        void askForResultsFile(juce::String const& message, juce::File const& defaultFile, NotificationType const notification);
         void warmAboutPlugin(juce::String const& reason);
         void askToReloadPlugin(juce::String const& reason);
         void askToRestoreState(juce::String const& reason);
