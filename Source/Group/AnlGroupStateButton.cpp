@@ -2,42 +2,62 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::StateButton::StateButton(Accessor& accessor)
-: mAccessor(accessor)
-, mLayoutNotifier(accessor, [this]()
+Group::StateButton::StateButton(Director& director)
+: mDirector(director)
+, mLayoutNotifier(mAccessor, [this]()
                   {
-                      updateContent();
-                  })
+                      updateTooltip();
+                  },
+                  {Track::AttrType::processing, Track::AttrType::warnings, Track::AttrType::channelsLayout})
 {
     addAndMakeVisible(mProcessingButton);
+    mStateIcon.setWantsKeyboardFocus(false);
+    addAndMakeVisible(mStateIcon);
 
-    mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
+    mStateIcon.onClick = [this]()
     {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
+        auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+        auto const numTrackWarnings = std::count_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                                    {
+                                                        return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
+                                                    });
+        if(numTrackWarnings == 1)
         {
-            case Track::AttrType::processing:
-            case Track::AttrType::warnings:
-            case Track::AttrType::channelsLayout:
+            auto it = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                   {
+                                       return trackAcsr.get().template getAttr<Track::AttrType::warnings>() != Track::WarningType::none;
+                                   });
+            MiscWeakAssert(it != trackAcsrs.cend());
+            if(it != trackAcsrs.cend())
             {
-                updateTooltip();
+                mDirector.getTrackDirector(it->get().getAttr<Track::AttrType::identifier>()).askToResolveWarnings();
             }
-            break;
-            case Track::AttrType::name:
-            case Track::AttrType::key:
-            case Track::AttrType::file:
-            case Track::AttrType::description:
-            case Track::AttrType::state:
-            case Track::AttrType::results:
-            case Track::AttrType::graphics:
-            case Track::AttrType::identifier:
-            case Track::AttrType::height:
-            case Track::AttrType::colours:
-            case Track::AttrType::zoomLink:
-            case Track::AttrType::zoomAcsr:
-            case Track::AttrType::focused:
-            case Track::AttrType::grid:
-                break;
+        }
+        else if(numTrackWarnings > 1)
+        {
+            juce::PopupMenu menu;
+            juce::WeakReference<juce::Component> weakReference(this);
+            for(auto const& trackAcsr : trackAcsrs)
+            {
+                auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+                if(trackAcsr.get().getAttr<Track::AttrType::warnings>() != Track::WarningType::none)
+                {
+                    auto const name = trackAcsr.get().getAttr<Track::AttrType::name>();
+                    menu.addItem(juce::translate("Resolve: ") + name, [=, this]()
+                                 {
+                                     if(weakReference.get() == nullptr)
+                                     {
+                                         return;
+                                     }
+                                     if(!Tools::hasTrackAcsr(mAccessor, identifier))
+                                     {
+                                         return;
+                                     }
+                                     mDirector.getTrackDirector(identifier).askToResolveWarnings();
+                                 });
+                }
+            }
+            menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(*this));
         }
     };
 
@@ -71,80 +91,68 @@ Group::StateButton::StateButton(Accessor& accessor)
 Group::StateButton::~StateButton()
 {
     mAccessor.removeListener(mListener);
-    for(auto& trackAcsr : mTrackAccessors.getContents())
-    {
-        trackAcsr.second.get().removeListener(mTrackListener);
-    }
 }
 
 void Group::StateButton::resized()
 {
     mProcessingButton.setBounds(getLocalBounds());
-}
-
-void Group::StateButton::updateContent()
-{
-    mTrackAccessors.updateContents(
-        mAccessor,
-        [this](Track::Accessor& trackAccessor)
-        {
-            trackAccessor.addListener(mTrackListener, NotificationType::synchronous);
-            return std::ref(trackAccessor);
-        },
-        [this](std::reference_wrapper<Track::Accessor>& content)
-        {
-            content.get().removeListener(mTrackListener);
-        });
-    updateTooltip();
+    mStateIcon.setBounds(getLocalBounds());
 }
 
 void Group::StateButton::updateTooltip()
 {
     auto const& name = mAccessor.getAttr<AttrType::name>();
-    auto const& contents = mTrackAccessors.getContents();
-    auto const valid = std::all_of(contents.cbegin(), contents.cend(), [](auto const& pair)
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    auto const valid = std::all_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
                                    {
-                                       return pair.second.get().template getAttr<Track::AttrType::warnings>() == Track::WarningType::none;
+                                       return trackAcsr.get().template getAttr<Track::AttrType::warnings>() == Track::WarningType::none;
                                    });
 
-    auto const processing = std::any_of(contents.cbegin(), contents.cend(), [](auto const& pair)
+    auto const processing = std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
                                         {
-                                            return std::get<0>(pair.second.get().template getAttr<Track::AttrType::processing>());
+                                            return std::get<0>(trackAcsr.get().template getAttr<Track::AttrType::processing>());
                                         });
-    auto const rendering = std::any_of(contents.cbegin(), contents.cend(), [](auto const& pair)
+    auto const rendering = std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
                                        {
-                                           return std::get<2>(pair.second.get().template getAttr<Track::AttrType::processing>());
+                                           return std::get<2>(trackAcsr.get().template getAttr<Track::AttrType::processing>());
                                        });
-    if(processing && rendering)
+
+    auto getTooltip = [&]()
     {
-        setTooltip(name + ": processing and rendering...");
-        mProcessingButton.setTooltip(name + ": processing and rendering...");
-    }
-    else if(processing)
-    {
-        setTooltip(name + ": processing...");
-        mProcessingButton.setTooltip(name + ": processing...");
-    }
-    else if(rendering)
-    {
-        setTooltip(name + ": rendering...");
-        mProcessingButton.setTooltip(name + ": rendering...");
-    }
-    else if(valid)
-    {
-        setTooltip(name + ": analyses and renderings successfully completed!");
-        mProcessingButton.setTooltip(name + ": analyses and renderings successfully completed!");
-    }
-    else
-    {
-        setTooltip(name + ": analyses and renderings finished with errors!");
-        mProcessingButton.setTooltip(name + ":analyses and renderings finished with errors!");
-    }
+        if(processing && rendering)
+        {
+            return juce::translate("Processing and rendering...");
+        }
+        else if(processing)
+        {
+            return juce::translate("Processing...");
+        }
+        else if(rendering)
+        {
+            return juce::translate("Rendering...");
+        }
+        else if(valid)
+        {
+            return juce::translate("Analyses and renderings completed successfully!");
+        }
+        else
+        {
+            return juce::translate("Analyses and renderings completed with errors!");
+        }
+    };
+
+    auto const tooltip = name + ": " + getTooltip();
+    setTooltip(tooltip);
+    mProcessingButton.setTooltip(tooltip);
+    mStateIcon.setTooltip(tooltip);
 
     auto const changed = mHasWarning != !valid || (processing || rendering) != mProcessingButton.isActive();
     mHasWarning = !valid;
     mProcessingButton.setActive(processing || rendering);
     mProcessingButton.setInactiveImage(Icon::getImage(valid ? Icon::Type::verified : Icon::Type::alert));
+    mStateIcon.setTypes(mHasWarning ? Icon::Type::alert : Icon::Type::verified);
+    mStateIcon.setEnabled(mHasWarning);
+    mStateIcon.setVisible(!isProcessingOrRendering());
     if(changed && onStateChanged != nullptr)
     {
         onStateChanged();

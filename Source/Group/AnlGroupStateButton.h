@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnlGroupDirector.h"
 #include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -11,7 +12,7 @@ namespace Group
     , public juce::SettableTooltipClient
     {
     public:
-        StateButton(Accessor& groupAccessor);
+        StateButton(Director& director);
         ~StateButton() override;
 
         // juce::Component
@@ -23,16 +24,14 @@ namespace Group
         bool hasWarning() const;
 
     private:
-        void updateContent();
         void updateTooltip();
 
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
-        Track::Accessor::Listener mTrackListener{typeid(*this).name()};
         LoadingCircle mProcessingButton;
+        Icon mStateIcon{Icon::Type::alert};
         bool mHasWarning{false};
-
-        TrackMap<std::reference_wrapper<Track::Accessor>> mTrackAccessors;
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group
