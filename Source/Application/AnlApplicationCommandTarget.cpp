@@ -10,6 +10,7 @@ Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 , mPluginListSearchPath(Instance::get().getPluginListAccessor())
 {
+    Instance::get().getDocumentDirector().setPluginTable(&mPluginListTable);
     mListener.onAttrChanged = [](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -70,6 +71,7 @@ Application::CommandTarget::~CommandTarget()
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getUndoManager().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
+    Instance::get().getDocumentDirector().setPluginTable(nullptr);
 }
 
 juce::ApplicationCommandTarget* Application::CommandTarget::getNextCommandTarget()
