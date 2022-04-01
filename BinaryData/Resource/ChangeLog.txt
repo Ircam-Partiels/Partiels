@@ -2,6 +2,7 @@
 v1.0.4
 
 - Fix: Application crashes when a plugin library cannot be loaded (#241)
+- Imp: Allow restoring the default parameter of a plugin if the initialization failed (#240)
 - Imp: Hide channels button of properties if only one or no channel is available (#237)
 - Imp: Prompt to restore default audio settings when the current one is invalid (#236)
 - Fix: The properties' number fields crops the value after two decimals (#235)
@@ -11,6 +12,7 @@ v1.0.4
 - Fix: Restoring the application in fullscreen mode at startup is not working (#232)
 - Imp: Messages of deleted/modified files can be too abundant and unclear (#231)
 - Fix: Look and feel not properly initialised when plugin is in quarantine (#230)
+- Imp: Allow loading another plugin if the plugin library loading failed (#229)
 - Fix: A marker's label is not visible if another marker is pasted after it (#227)
 - Fix: The changes of the zoom range of the track are not undoable (#226)
 
