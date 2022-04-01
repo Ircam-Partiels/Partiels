@@ -3,10 +3,17 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::StateButton::StateButton(Accessor& accessor)
-: mAccessor(accessor)
+Track::StateButton::StateButton(Director& director)
+: mDirector(director)
 {
     addAndMakeVisible(mProcessingButton);
+    addAndMakeVisible(mStateIcon);
+    mStateIcon.setWantsKeyboardFocus(false);
+    mStateIcon.onClick = [this]()
+    {
+        mDirector.askToResolveWarnings();
+    };
+
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -16,16 +23,20 @@ Track::StateButton::StateButton(Accessor& accessor)
             case AttrType::warnings:
             {
                 auto const state = acsr.getAttr<AttrType::processing>();
+                auto const isProcessing = std::get<0>(state) || std::get<2>(state);
                 auto const warnings = acsr.getAttr<AttrType::warnings>();
-                auto getInactiveIconType = [warnings]()
-                {
-                    return warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert;
-                };
-                mProcessingButton.setInactiveImage(Icon::getImage(getInactiveIconType()));
+                auto const hasWarnings = warnings != WarningType::none;
                 auto const tooltip = Tools::getStateTootip(acsr);
+
+                mProcessingButton.setInactiveImage(Icon::getImage(hasWarnings ? Icon::Type::alert : Icon::Type::verified));
                 mProcessingButton.setTooltip(tooltip);
-                setTooltip(tooltip);
-                mProcessingButton.setActive(std::get<0>(state) || std::get<2>(state));
+                mProcessingButton.setVisible(isProcessing);
+                mProcessingButton.setActive(isProcessing);
+
+                mStateIcon.setTypes(hasWarnings ? Icon::Type::alert : Icon::Type::verified);
+                mStateIcon.setEnabled(hasWarnings);
+                mStateIcon.setTooltip(tooltip);
+                mStateIcon.setVisible(!isProcessing);
             }
             break;
             case AttrType::key:
@@ -57,6 +68,7 @@ Track::StateButton::~StateButton()
 void Track::StateButton::resized()
 {
     mProcessingButton.setBounds(getLocalBounds());
+    mStateIcon.setBounds(getLocalBounds());
 }
 
 ANALYSE_FILE_END

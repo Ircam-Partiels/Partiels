@@ -39,7 +39,7 @@ namespace Track
 
         PropertyPanel mPropertyPanel{mDirector};
         Icon mPropertiesButton{Icon::Type::properties};
-        StateButton mStateButton{mAccessor};
+        StateButton mStateButton{mDirector};
     };
 } // namespace Track
 
