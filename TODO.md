@@ -1,11 +1,11 @@
 - Replace model resizable by dynamic and fixed
 - Output all key shortcuts
-- Use button names on alert window
 - Windows signature
-- Remove any modal approach
 - Check supported input files extension from OS (json/csv/sdif/etc.)
 - Add coverage
 - Move Model ctor and parseXml methods to cpp files
 - Check frequency zoom without horizontal scrolling
 - Check font of key names of main menu on Linux
-
+- Add multi-feature tracks
+- Add allocation of multiple tracks with variable parameters values
+- Add support for analysis results as input of plugins
