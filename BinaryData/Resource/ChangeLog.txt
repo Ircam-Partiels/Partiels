@@ -4,7 +4,7 @@ v1.0.4
 - Fix: Application crashes when a plugin library cannot be loaded (#241)
 - Imp: Allow restoring the default parameter of a plugin if the initialization failed (#240)
 - Fix: Play alert sound when pressing the delete key in the plugin list panel (#239)
-- Imp: Add several analysis tracks by selecting multiple items in the plugin panel (#238)
+- Add: Allow inserting several analysis tracks by selecting multiple items in the plugin panel (#238)
 - Imp: Hide channels button of properties if only one or no channel is available (#237)
 - Imp: Prompt to restore default audio settings when the current one is invalid (#236)
 - Fix: The properties' number fields crops the value after two decimals (#235)
