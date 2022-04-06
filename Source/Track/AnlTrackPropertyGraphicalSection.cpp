@@ -15,6 +15,7 @@ static std::vector<std::string> getColourMapNames()
 
 Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
 : mDirector(director)
+, mZoomGridPropertyWindow(juce::translate("Grid Properties"), mZoomGridPropertyPanel)
 , mPropertyColourMap(juce::translate("Color Map"), juce::translate("The color map of the graphical renderer."), "", getColourMapNames(), [&](size_t index)
                      {
                          mDirector.startAction();
@@ -148,7 +149,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
 , mPropertyGrid(juce::translate("Grid"), juce::translate("Edit the grid properties"), [&]()
                 {
                     mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
-                    mZoomGridPropertyPanel.show();
+                    mZoomGridPropertyWindow.show();
                 })
 , mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range."), [&](bool value)
                      {

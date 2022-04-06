@@ -37,6 +37,9 @@ namespace Track
         Zoom::Accessor::Listener mValueZoomListener{typeid(*this).name()};
         Zoom::Accessor::Listener mBinZoomListener{typeid(*this).name()};
 
+        Zoom::Grid::PropertyPanel mZoomGridPropertyPanel;
+        FloatingWindowContainer mZoomGridPropertyWindow;
+
         PropertyList mPropertyColourMap;
         PropertyColourButton mPropertyForegroundColour;
         PropertyColourButton mPropertyBackgroundColour;
@@ -52,7 +55,6 @@ namespace Track
         PropertyTextButton mPropertyChannelLayout;
         ProgressBar mProgressBarRendering{mDirector, ProgressBar::Mode::rendering};
 
-        Zoom::Grid::PropertyPanel mZoomGridPropertyPanel;
         bool mChannelLayoutActionStarted{false};
     };
 } // namespace Track
