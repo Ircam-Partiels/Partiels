@@ -51,6 +51,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
     AppQuitIfInvalidPointer(mAudioFormatManager);
     mAudioFormatManager->registerBasicFormats();
 
+    // Should be done after look and feel
     mAudioDeviceManager = std::make_unique<juce::AudioDeviceManager>();
     AppQuitIfInvalidPointer(mAudioDeviceManager);
 
@@ -96,9 +97,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mAudioSettings = std::make_unique<AudioSettings>();
     AppQuitIfInvalidPointer(mAudioSettings);
-
-    mAbout = std::make_unique<About>();
-    AppQuitIfInvalidPointer(mAbout);
 
     mExporter = std::make_unique<Exporter>();
     AppQuitIfInvalidPointer(mExporter);
@@ -301,7 +299,6 @@ void Application::Instance::shutdown()
 
     mBatcher.reset();
     mExporter.reset();
-    mAbout.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
     mWindow.reset();
@@ -548,11 +545,6 @@ Application::Accessor& Application::Instance::getApplicationAccessor()
 Application::AudioSettings* Application::Instance::getAudioSettings()
 {
     return mAudioSettings.get();
-}
-
-Application::About* Application::Instance::getAbout()
-{
-    return mAbout.get();
 }
 
 Application::Window* Application::Instance::getWindow()

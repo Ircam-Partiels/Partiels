@@ -736,10 +736,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::helpOpenAbout:
         {
-            if(auto* about = Instance::get().getAbout())
-            {
-                about->show();
-            }
+            mAboutWindow.show();
             return true;
         }
         case CommandIDs::helpOpenProjectPage:

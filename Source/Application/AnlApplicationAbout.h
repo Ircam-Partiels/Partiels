@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class About
-    : public FloatingWindowContainer
+    : public juce::Component
     {
     public:
         About();
@@ -15,6 +15,17 @@ namespace Application
 
         // juce::Component
         void paint(juce::Graphics& g) override;
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(About& about);
+
+        private:
+            About& mAbout;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         std::unique_ptr<juce::Drawable> mImage;

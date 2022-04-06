@@ -4,9 +4,15 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::About::WindowContainer::WindowContainer(About& about)
+: FloatingWindowContainer(juce::translate("About Partiels - v") + juce::String(ProjectInfo::versionString), about)
+, mAbout(about)
+, mTooltip(&mAbout)
+{
+}
+
 Application::About::About()
-: FloatingWindowContainer("About Partiels - v" + juce::String(ProjectInfo::versionString), *this)
-, mImage(juce::Drawable::createFromImageData(ResourceData::icon_png, ResourceData::icon_pngSize))
+: mImage(juce::Drawable::createFromImageData(ResourceData::icon_png, ResourceData::icon_pngSize))
 {
     setSize(400, 400);
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AnlApplicationAbout.h"
 #include "AnlApplicationAudioReader.h"
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
@@ -55,7 +54,6 @@ namespace Application
 
         Accessor& getApplicationAccessor();
         AudioSettings* getAudioSettings();
-        About* getAbout();
         Window* getWindow();
         Exporter* getExporter();
         Batcher* getBatcher();
@@ -106,7 +104,6 @@ namespace Application
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
-        std::unique_ptr<About> mAbout;
         std::unique_ptr<AudioSettings> mAudioSettings;
         std::unique_ptr<Exporter> mExporter;
         std::unique_ptr<Batcher> mBatcher;

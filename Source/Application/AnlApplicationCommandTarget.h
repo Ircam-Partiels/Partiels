@@ -4,6 +4,7 @@
 #include "../Plugin/AnlPluginListScanner.h"
 #include "../Plugin/AnlPluginListSearchPath.h"
 #include "../Plugin/AnlPluginListTable.h"
+#include "AnlApplicationAbout.h"
 #include "AnlApplicationConverterPanel.h"
 #include "AnlApplicationModel.h"
 
@@ -72,6 +73,10 @@ namespace Application
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         PluginList::Table mPluginListTable;
         PluginList::SearchPath mPluginListSearchPath;
+
+        About mAbout;
+        About::WindowContainer mAboutWindow{mAbout};
+
         ConverterPanel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;
     };
