@@ -35,7 +35,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     auto const options = juce::MessageBoxOptions()
                                              .withIconType(juce::AlertWindow::WarningIcon)
                                              .withTitle(juce::translate("Audio(s) files cannot be found!"))
-                                             .withMessage(juce::translate("Audio file(s) cannot be found. Would you like to use the audio reader layout panel to restore the file(s)?"))
+                                             .withMessage(juce::translate("Audio file(s) cannot be found. Would you like to use the audio files layout panel to restore the file(s)?"))
                                              .withButton(juce::translate("Open Panel"))
                                              .withButton(juce::translate("Ignore"));
 

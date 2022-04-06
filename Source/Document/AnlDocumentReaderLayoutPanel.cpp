@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
-: FloatingWindowContainer("Audio Reader Layout", *this, true)
+: FloatingWindowContainer("Audio Files Layout", *this, true)
 , mDirector(director)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -50,7 +50,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
     {
         mDirector.startAction();
         mAccessor.setAttr<AttrType::reader>(mAudioFileLayoutTable.getLayout(), NotificationType::synchronous);
-        mDirector.endAction(ActionState::newTransaction, juce::translate("Change Audio Reader Layout"));
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Change audio files layout"));
         mAudioFileLayoutTable.onLayoutChanged();
     };
     mApplyButton.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
@@ -67,8 +67,8 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         {
             auto const options = juce::MessageBoxOptions()
                                      .withIconType(juce::AlertWindow::QuestionIcon)
-                                     .withTitle(juce::translate("Apply audio reader modification?"))
-                                     .withMessage(juce::translate("The audio reader layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                                     .withTitle(juce::translate("Apply audio files layout modification?"))
+                                     .withMessage(juce::translate("The audio files layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
                                      .withButton(juce::translate("Apply"))
                                      .withButton(juce::translate("Discard"));
 

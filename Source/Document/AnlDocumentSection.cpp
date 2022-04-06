@@ -269,7 +269,7 @@ Document::Section::Section(Director& director)
                 if(alertMessage.isEmpty())
                 {
                     mReaderLayoutButton.setTypes(Icon::Type::music);
-                    mReaderLayoutButton.setTooltip(juce::translate("Show audio reader layout panel"));
+                    mReaderLayoutButton.setTooltip(juce::translate("Show audio files layout panel"));
                 }
                 else
                 {
