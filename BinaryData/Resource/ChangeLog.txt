@@ -1,6 +1,7 @@
 
 v1.0.4
 
+- Imp: Rename Audio Reader Layout to Audio Files Layout (#243)
 - Fix: Application crashes when a plugin library cannot be loaded (#241)
 - Imp: Allow restoring the default parameter of a plugin if the initialization failed (#240)
 - Fix: Play alert sound when pressing the delete key in the plugin list panel (#239)
@@ -8,7 +9,6 @@ v1.0.4
 - Imp: Hide channels button of properties if only one or no channel is available (#237)
 - Imp: Prompt to restore default audio settings when the current one is invalid (#236)
 - Fix: The properties' number fields crops the value after two decimals (#235)
-- Fix: Using a negative block size or step size crashes the app (#234)
 - Fix: Using a negative block size or step size crashes the app (#234)
 - Fix: The names of the window types of frequency domain plugins are not well-formatted (#233)
 - Fix: Restoring the application in fullscreen mode at startup is not working (#232)
