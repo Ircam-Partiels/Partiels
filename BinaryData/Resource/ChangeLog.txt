@@ -1,6 +1,7 @@
 
 v1.0.4
 
+- Fix: Installer on Windows does not write files correctly if the application has already been installed (#246)
 - Fix: The graphical theme is not initialized if a warning window appears on startup due to invalid audio settings (#245)
 - Fix: Floating windows can crash the app when closing Windows (#244)
 - Imp: Rename Audio Reader Layout to Audio Files Layout (#243)
