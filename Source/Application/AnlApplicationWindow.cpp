@@ -4,8 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::Window::DesktopScaler::DesktopScaler()
-: FloatingWindowContainer("Desktop Global Scale", *this)
-, mNumber(juce::translate("Scale"), juce::translate("Defines the desktop global scale"), "x", juce::Range<float>{1.0f, 2.0f}, 0.1f, [this](float scale)
+: mNumber(juce::translate("Scale"), juce::translate("Defines the desktop global scale"), "x", juce::Range<float>{1.0f, 2.0f}, 0.1f, [this](float scale)
           {
               auto& acsr = Instance::get().getApplicationAccessor();
               acsr.setAttr<AttrType::desktopGlobalScaleFactor>(scale, NotificationType::synchronous);
@@ -66,6 +65,7 @@ void Application::Window::DesktopScaler::resized()
 
 Application::Window::Window()
 : juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
+, mDesktopScalerWindow(juce::translate("Desktop Global Scale"), mDesktopScaler)
 {
     mBoundsConstrainer.setSizeLimits(512, 384, std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mBoundsConstrainer.setMinimumOnscreenAmounts(0xffffff, 50, 50, 50);
@@ -147,7 +147,7 @@ juce::Rectangle<int> Application::Window::getPlotBounds(juce::String const& iden
 
 void Application::Window::showDesktopScaler()
 {
-    mDesktopScaler.show();
+    mDesktopScalerWindow.show();
 }
 
 ANALYSE_FILE_END

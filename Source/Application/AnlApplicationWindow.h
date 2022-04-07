@@ -34,7 +34,7 @@ namespace Application
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         class DesktopScaler
-        : public FloatingWindowContainer
+        : public juce::Component
         {
         public:
             DesktopScaler();
@@ -50,6 +50,7 @@ namespace Application
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         Interface mInterface;
         DesktopScaler mDesktopScaler;
+        FloatingWindowContainer mDesktopScalerWindow;
     };
 } // namespace Application
 
