@@ -121,6 +121,7 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 
 Group::PropertyPanel::~PropertyPanel()
 {
+    mFloatingWindow.clearContentComponent();
     mComponentListener.detachFrom(mGraphicalsSection);
     mComponentListener.detachFrom(mProcessorsSection);
     mAccessor.removeListener(mListener);
