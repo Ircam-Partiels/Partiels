@@ -84,6 +84,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 Track::PropertyPanel::~PropertyPanel()
 {
+    mFloatingWindow.clearContentComponent();
     mComponentListener.detachFrom(mProcessorSection);
     mComponentListener.detachFrom(mGraphicalSection);
     mComponentListener.detachFrom(mPluginSection);
