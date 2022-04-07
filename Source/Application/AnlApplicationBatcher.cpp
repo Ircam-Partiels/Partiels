@@ -3,9 +3,29 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::Batcher::WindowContainer::WindowContainer(Batcher& batcher)
+: FloatingWindowContainer(juce::translate("Batch"), batcher)
+, mBatcher(batcher)
+, mTooltip(&mBatcher)
+{
+    mFloatingWindow.onCloseButtonPressed = [this]()
+    {
+        if(mBatcher.canCloseWindow())
+        {
+            return true;
+        }
+        getLookAndFeel().playAlertSound();
+        return false;
+    };
+}
+
+Application::Batcher::WindowContainer::~WindowContainer()
+{
+    mFloatingWindow.onCloseButtonPressed = nullptr;
+}
+
 Application::Batcher::Batcher()
-: FloatingWindowContainer("Batch Processing", *this, true)
-, mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
+: mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::all, AudioFileLayout::ChannelLayout::all)
 , mExporterPanel(Instance::get().getDocumentAccessor(), nullptr)
 , mPropertyAdaptationToSampleRate("Adapt to Sample Rate", "Adapt the block size and the step size of the analyzes to the sample rate", [](bool state)
@@ -109,18 +129,6 @@ void Application::Batcher::resized()
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::Batcher::showAt(juce::Point<int> const& pt)
-{
-    FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.enterModalState(true);
-}
-
-void Application::Batcher::hide()
-{
-    mFloatingWindow.exitModalState(0);
-    FloatingWindowContainer::hide();
-}
-
 void Application::Batcher::handleAsyncUpdate()
 {
     mAudioFileLayoutTable.setEnabled(true);
@@ -132,7 +140,6 @@ void Application::Batcher::handleAsyncUpdate()
     mPropertyExport.entry.setButtonText(juce::translate("Process"));
     mPropertyExport.entry.setTooltip(juce::translate("Launch the batch processing."));
 
-    mFloatingWindow.onCloseButtonPressed = nullptr;
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     anlWeakAssert(mProcess.valid());
@@ -204,11 +211,6 @@ void Application::Batcher::process()
 
                                   mLoadingCircle.setActive(true);
                                   juce::MouseCursor::showWaitCursor();
-                                  mFloatingWindow.onCloseButtonPressed = [this]()
-                                  {
-                                      getLookAndFeel().playAlertSound();
-                                      return false;
-                                  };
 
                                   mAudioFileLayoutTable.setEnabled(false);
                                   mExporterPanel.setEnabled(false);
@@ -307,6 +309,11 @@ void Application::Batcher::process()
                                                             return std::make_tuple(AlertWindow::MessageType::info, juce::translate("Batch processing succeeded!"), juce::translate("The files have been successfully exported to DIRNAME.").replace("DIRNAME", file.getFullPathName()));
                                                         });
                               });
+}
+
+bool Application::Batcher::canCloseWindow() const
+{
+    return !mLoadingCircle.isActive();
 }
 
 ANALYSE_FILE_END

@@ -5,6 +5,7 @@
 #include "../Plugin/AnlPluginListSearchPath.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "AnlApplicationAbout.h"
+#include "AnlApplicationBatcher.h"
 #include "AnlApplicationConverterPanel.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationModel.h"
@@ -80,6 +81,9 @@ namespace Application
 
         Exporter mExporter;
         Exporter::WindowContainer mExporterWindow{mExporter};
+
+        Batcher mBatcher;
+        Batcher::WindowContainer mBatcherWindow{mBatcher};
 
         ConverterPanel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;

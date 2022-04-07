@@ -489,10 +489,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentBatch:
         {
-            if(auto* batcher = Instance::get().getBatcher())
-            {
-                batcher->show();
-            }
+            mBatcherWindow.show(true);
             return true;
         }
 

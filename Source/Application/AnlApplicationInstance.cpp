@@ -98,9 +98,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mAudioSettings = std::make_unique<AudioSettings>();
     AppQuitIfInvalidPointer(mAudioSettings);
 
-    mBatcher = std::make_unique<Batcher>();
-    AppQuitIfInvalidPointer(mBatcher);
-
     mTrackLoader = std::make_unique<Track::Loader::ArgumentSelector>();
     AppQuitIfInvalidPointer(mTrackLoader);
 
@@ -294,7 +291,6 @@ void Application::Instance::shutdown()
     }
     getBackupFile().deleteFile();
 
-    mBatcher.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
     mWindow.reset();
@@ -546,11 +542,6 @@ Application::AudioSettings* Application::Instance::getAudioSettings()
 Application::Window* Application::Instance::getWindow()
 {
     return mWindow.get();
-}
-
-Application::Batcher* Application::Instance::getBatcher()
-{
-    return mBatcher.get();
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()

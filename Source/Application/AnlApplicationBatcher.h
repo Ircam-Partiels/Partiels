@@ -9,7 +9,7 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class Batcher
-    : public FloatingWindowContainer
+    : public juce::Component
     , public juce::DragAndDropContainer
     , private juce::AsyncUpdater
     {
@@ -20,9 +20,19 @@ namespace Application
         // juce::Component
         void resized() override;
 
-        // FloatingWindowContainer
-        void showAt(juce::Point<int> const& pt) override;
-        void hide() override;
+        bool canCloseWindow() const;
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(Batcher& batcher);
+            ~WindowContainer() override;
+
+        private:
+            Batcher& mBatcher;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         // juce::AsyncUpdater
