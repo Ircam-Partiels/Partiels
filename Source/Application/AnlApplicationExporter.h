@@ -8,7 +8,7 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class Exporter
-    : public FloatingWindowContainer
+    : public juce::Component
     , private juce::AsyncUpdater
     {
     public:
@@ -18,9 +18,19 @@ namespace Application
         // juce::Component
         void resized() override;
 
-        // FloatingWindowContainer
-        void showAt(juce::Point<int> const& pt) override;
-        void hide() override;
+        bool canCloseWindow() const;
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(Exporter& exporer);
+            ~WindowContainer() override;
+
+        private:
+            Exporter& mExporter;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         // juce::AsyncUpdater

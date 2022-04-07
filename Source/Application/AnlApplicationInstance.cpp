@@ -98,9 +98,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mAudioSettings = std::make_unique<AudioSettings>();
     AppQuitIfInvalidPointer(mAudioSettings);
 
-    mExporter = std::make_unique<Exporter>();
-    AppQuitIfInvalidPointer(mExporter);
-
     mBatcher = std::make_unique<Batcher>();
     AppQuitIfInvalidPointer(mBatcher);
 
@@ -298,7 +295,6 @@ void Application::Instance::shutdown()
     getBackupFile().deleteFile();
 
     mBatcher.reset();
-    mExporter.reset();
     mAudioSettings.reset();
     mMainMenuModel.reset();
     mWindow.reset();
@@ -550,11 +546,6 @@ Application::AudioSettings* Application::Instance::getAudioSettings()
 Application::Window* Application::Instance::getWindow()
 {
     return mWindow.get();
-}
-
-Application::Exporter* Application::Instance::getExporter()
-{
-    return mExporter.get();
 }
 
 Application::Batcher* Application::Instance::getBatcher()

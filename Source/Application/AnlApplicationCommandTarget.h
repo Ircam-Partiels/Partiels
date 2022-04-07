@@ -6,6 +6,7 @@
 #include "../Plugin/AnlPluginListTable.h"
 #include "AnlApplicationAbout.h"
 #include "AnlApplicationConverterPanel.h"
+#include "AnlApplicationExporter.h"
 #include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
@@ -76,6 +77,9 @@ namespace Application
 
         About mAbout;
         About::WindowContainer mAboutWindow{mAbout};
+
+        Exporter mExporter;
+        Exporter::WindowContainer mExporterWindow{mExporter};
 
         ConverterPanel mSdifConverter;
         std::unique_ptr<juce::FileChooser> mFileChooser;

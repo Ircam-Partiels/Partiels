@@ -464,10 +464,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::documentExport:
         {
-            if(auto* exporter = Instance::get().getExporter())
-            {
-                exporter->show();
-            }
+            mExporterWindow.show(true);
             return true;
         }
         case CommandIDs::documentImport:

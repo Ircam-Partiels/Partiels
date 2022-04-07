@@ -7,9 +7,29 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::Exporter::WindowContainer::WindowContainer(Exporter& exporer)
+: FloatingWindowContainer(juce::translate("Export"), exporer)
+, mExporter(exporer)
+, mTooltip(&mExporter)
+{
+    mFloatingWindow.onCloseButtonPressed = [this]()
+    {
+        if(mExporter.canCloseWindow())
+        {
+            return true;
+        }
+        getLookAndFeel().playAlertSound();
+        return false;
+    };
+}
+
+Application::Exporter::WindowContainer::~WindowContainer()
+{
+    mFloatingWindow.onCloseButtonPressed = nullptr;
+}
+
 Application::Exporter::Exporter()
-: FloatingWindowContainer("Exporter", *this)
-, mExporterPanel(Instance::get().getDocumentAccessor(), Instance::getSizeFor)
+: mExporterPanel(Instance::get().getDocumentAccessor(), Instance::getSizeFor)
 , mPropertyExport("Export", "Export the results", [this]()
                   {
                       if(mProcess.valid())
@@ -90,18 +110,6 @@ void Application::Exporter::resized()
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::Exporter::showAt(juce::Point<int> const& pt)
-{
-    FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.enterModalState();
-}
-
-void Application::Exporter::hide()
-{
-    mFloatingWindow.exitModalState(0);
-    FloatingWindowContainer::hide();
-}
-
 void Application::Exporter::exportToFile()
 {
     auto const& acsr = Instance::get().getApplicationAccessor();
@@ -132,11 +140,6 @@ void Application::Exporter::exportToFile()
 
                                   mLoadingCircle.setActive(true);
                                   juce::MouseCursor::showWaitCursor();
-                                  mFloatingWindow.onCloseButtonPressed = [this]()
-                                  {
-                                      getLookAndFeel().playAlertSound();
-                                      return false;
-                                  };
 
                                   mExporterPanel.setEnabled(false);
                                   mPropertyExport.entry.setButtonText(juce::translate("Abort"));
@@ -166,7 +169,6 @@ void Application::Exporter::handleAsyncUpdate()
     mPropertyExport.entry.setButtonText(juce::translate("Export"));
     mPropertyExport.entry.setTooltip(juce::translate("Export the results"));
 
-    mFloatingWindow.onCloseButtonPressed = nullptr;
     mLoadingCircle.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     anlWeakAssert(mProcess.valid());
@@ -181,6 +183,11 @@ void Application::Exporter::handleAsyncUpdate()
                              .withMessage(std::get<2>(result))
                              .withButton(juce::translate("Ok"));
     juce::AlertWindow::showAsync(options, nullptr);
+}
+
+bool Application::Exporter::canCloseWindow() const
+{
+    return !mLoadingCircle.isActive();
 }
 
 ANALYSE_FILE_END

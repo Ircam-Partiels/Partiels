@@ -4,7 +4,6 @@
 #include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
 #include "AnlApplicationCommandLine.h"
-#include "AnlApplicationExporter.h"
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationLookAndFeel.h"
 #include "AnlApplicationMainMenuModel.h"
@@ -55,7 +54,6 @@ namespace Application
         Accessor& getApplicationAccessor();
         AudioSettings* getAudioSettings();
         Window* getWindow();
-        Exporter* getExporter();
         Batcher* getBatcher();
 
         PluginList::Accessor& getPluginListAccessor();
@@ -105,7 +103,6 @@ namespace Application
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<AudioSettings> mAudioSettings;
-        std::unique_ptr<Exporter> mExporter;
         std::unique_ptr<Batcher> mBatcher;
         std::unique_ptr<Track::Loader::ArgumentSelector> mTrackLoader;
         std::unique_ptr<CommandLine> mCommandLine;
