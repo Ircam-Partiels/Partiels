@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class AudioSettings
-    : public FloatingWindowContainer
+    : public juce::Component
     , private juce::ChangeListener
     {
     public:

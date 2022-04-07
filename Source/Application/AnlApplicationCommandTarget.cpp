@@ -11,6 +11,7 @@ Application::CommandTarget::CommandTarget()
 , mPluginListTableWindow(juce::translate("Add Plugins..."), mPluginListTable)
 , mPluginListSearchPath(Instance::get().getPluginListAccessor())
 , mSdifConverterWindow(juce::translate("SDIF Converter"), mSdifConverter)
+, mAudioSettingsWindow(juce::translate("Audio Settings"), mAudioSettings)
 {
     Instance::get().getDocumentDirector().setPluginTable(&mPluginTableContainer);
     Instance::get().getDocumentDirector().setLoaderSelector(Instance::get().getFileLoaderSelectorContainer());
@@ -721,10 +722,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::helpOpenAudioSettings:
         {
-            if(auto* audioSettings = Instance::get().getAudioSettings())
-            {
-                audioSettings->show();
-            }
+            mAudioSettingsWindow.show();
             return true;
         }
         case CommandIDs::helpOpenPluginSettings:

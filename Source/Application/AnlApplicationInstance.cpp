@@ -88,7 +88,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
     AppQuitIfInvalidPointer(mDocumentFileBased);
-    
+
     mFileLoader = std::make_unique<FileLoader>();
     AppQuitIfInvalidPointer(mFileLoader);
 
@@ -97,9 +97,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
     AppQuitIfInvalidPointer(mMainMenuModel);
-
-    mAudioSettings = std::make_unique<AudioSettings>();
-    AppQuitIfInvalidPointer(mAudioSettings);
 
     checkPluginsQuarantine();
 
@@ -291,7 +288,6 @@ void Application::Instance::shutdown()
     }
     getBackupFile().deleteFile();
 
-    mAudioSettings.reset();
     mMainMenuModel.reset();
     mWindow.reset();
     mDocumentFileBased.reset();
@@ -532,11 +528,6 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
 Application::Accessor& Application::Instance::getApplicationAccessor()
 {
     return *mApplicationAccessor.get();
-}
-
-Application::AudioSettings* Application::Instance::getAudioSettings()
-{
-    return mAudioSettings.get();
 }
 
 Application::Window* Application::Instance::getWindow()

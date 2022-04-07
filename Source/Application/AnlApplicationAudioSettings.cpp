@@ -4,8 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::AudioSettings::AudioSettings()
-: FloatingWindowContainer("Audio Settings", *this)
-, mPropertyDriver(juce::translate("Driver"), juce::translate("The current audio device driver"), "", {}, [&](size_t index)
+: mPropertyDriver(juce::translate("Driver"), juce::translate("The current audio device driver"), "", {}, [&](size_t index)
                   {
                       auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));
                       auto& audioDeviceManager = Instance::get().getAudioDeviceManager();

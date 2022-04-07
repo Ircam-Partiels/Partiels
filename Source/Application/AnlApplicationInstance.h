@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AnlApplicationAudioReader.h"
-#include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationCommandLine.h"
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationLookAndFeel.h"
@@ -53,7 +52,6 @@ namespace Application
         void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
         Accessor& getApplicationAccessor();
-        AudioSettings* getAudioSettings();
         Window* getWindow();
         FileLoaderSelectorContainer* getFileLoaderSelectorContainer();
 
@@ -108,10 +106,9 @@ namespace Application
             FileLoaderSelectorContainer container{selector, window};
         };
         std::unique_ptr<FileLoader> mFileLoader;
-        
+
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
-        std::unique_ptr<AudioSettings> mAudioSettings;
         std::unique_ptr<CommandLine> mCommandLine;
 
         std::atomic<bool> mIsPluginListReady{true};

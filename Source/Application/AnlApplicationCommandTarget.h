@@ -5,6 +5,7 @@
 #include "../Plugin/AnlPluginListSearchPath.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "AnlApplicationAbout.h"
+#include "AnlApplicationAudioSettings.h"
 #include "AnlApplicationBatcher.h"
 #include "AnlApplicationConverterPanel.h"
 #include "AnlApplicationExporter.h"
@@ -94,6 +95,9 @@ namespace Application
 
         ConverterPanel mSdifConverter;
         FloatingWindowContainer mSdifConverterWindow;
+
+        AudioSettings mAudioSettings;
+        FloatingWindowContainer mAudioSettingsWindow;
 
         std::unique_ptr<juce::FileChooser> mFileChooser;
     };
