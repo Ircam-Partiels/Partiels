@@ -5,17 +5,14 @@
 #define MyAppPublisher "Ircam"
 #define MyAppURL "www.ircam.fr"
 #define MyAppExeName "Partiels.exe"
-#define MyVersionFile FileOpen("..\build\version.txt")
-#define MyAppVersion FileRead(MyVersionFile)
-#expr FileClose(MyVersionFile)
-#undef MyVersionFile
+#define MyAppVersionName  GetVersionNumbersString("..\build\Partiels_artefacts\Release\Partiels.exe")
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{2BE88D38-04D3-44AE-B6F6-2D78BD410D58}}
 AppName={#MyAppName}
-AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersionName}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -37,9 +34,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\build\Partiels_artefacts\Release\Partiels.exe"; DestDir: "{app}"
-Source: "..\BinaryData\Resource\About.txt"; DestDir: "{app}"
-Source: "..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"
+Source: "..\build\Partiels_artefacts\Release\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\BinaryData\Resource\About.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

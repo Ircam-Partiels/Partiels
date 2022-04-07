@@ -9,7 +9,6 @@ set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 
 project(Partiels VERSION 1.0.4 LANGUAGES C CXX)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
