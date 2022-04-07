@@ -725,7 +725,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::helpOpenPluginSettings:
         {
-            mPluginListSearchPath.show();
+            mPluginListSearchPathWindow.show();
             return true;
         }
         case CommandIDs::helpOpenAbout:

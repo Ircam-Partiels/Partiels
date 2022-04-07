@@ -3,9 +3,25 @@
 
 ANALYSE_FILE_BEGIN
 
+PluginList::SearchPath::WindowContainer::WindowContainer(SearchPath& searchPath)
+: FloatingWindowContainer(juce::translate("Plugin Settings"), searchPath, true)
+, mSearchPath(searchPath)
+, mTooltip(&mSearchPath)
+{
+    mFloatingWindow.onCloseButtonPressed = [this]()
+    {
+        mSearchPath.warnBeforeClosing();
+        return true;
+    };
+}
+
+PluginList::SearchPath::WindowContainer::~WindowContainer()
+{
+    mFloatingWindow.onCloseButtonPressed = nullptr;
+}
+
 PluginList::SearchPath::SearchPath(Accessor& accessor)
-: FloatingWindowContainer("Plugin Settings", *this, true)
-, mAccessor(accessor)
+: mAccessor(accessor)
 {
     auto updateButtonsStates = [this]()
     {
@@ -119,41 +135,6 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
     };
 #endif
 
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-#if JUCE_MAC
-        if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>())
-#else
-        if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mEnvVariableButton.getToggleState() != mAccessor.getAttr<AttrType::useEnvVariable>())
-#endif
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::QuestionIcon)
-                                     .withTitle(juce::translate("Apply plugin settings modification?"))
-                                     .withMessage(juce::translate("The pugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-                                     .withButton(juce::translate("Apply"))
-                                     .withButton(juce::translate("Discard"));
-
-            juce::WeakReference<juce::Component> safePointer(this);
-            juce::AlertWindow::showAsync(options, [=, this](int windowResult)
-                                         {
-                                             if(safePointer.get() == nullptr)
-                                             {
-                                                 return;
-                                             }
-                                             if(windowResult == 1)
-                                             {
-                                                 mApplyButton.onClick();
-                                             }
-                                             else
-                                             {
-                                                 mResetButton.onClick();
-                                             }
-                                         });
-        }
-        return true;
-    };
-
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -230,6 +211,40 @@ void PluginList::SearchPath::resized()
     }
     mSeparator.setBounds(bounds.removeFromBottom(1));
     mFileSearchPathTable.setBounds(bounds);
+}
+
+void PluginList::SearchPath::warnBeforeClosing()
+{
+#if JUCE_MAC
+    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mUseEnvVariable != mAccessor.getAttr<AttrType::useEnvVariable>() || mQuarantineMode != mAccessor.getAttr<AttrType::quarantineMode>())
+#else
+    if(mFileSearchPathTable.getFileSearchPath() != mAccessor.getAttr<AttrType::searchPath>() || mEnvVariableButton.getToggleState() != mAccessor.getAttr<AttrType::useEnvVariable>())
+#endif
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::QuestionIcon)
+                                 .withTitle(juce::translate("Apply plugin settings modification?"))
+                                 .withMessage(juce::translate("The pugin settings have been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                                 .withButton(juce::translate("Apply"))
+                                 .withButton(juce::translate("Discard"));
+
+        juce::WeakReference<juce::Component> safePointer(this);
+        juce::AlertWindow::showAsync(options, [=, this](int windowResult)
+                                     {
+                                         if(safePointer.get() == nullptr)
+                                         {
+                                             return;
+                                         }
+                                         if(windowResult == 1)
+                                         {
+                                             mApplyButton.onClick();
+                                         }
+                                         else
+                                         {
+                                             mResetButton.onClick();
+                                         }
+                                     });
+    }
 }
 
 ANALYSE_FILE_END

@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 namespace PluginList
 {
     class SearchPath
-    : public FloatingWindowContainer
+    : public juce::Component
     , public juce::DragAndDropContainer
     {
     public:
@@ -16,6 +16,20 @@ namespace PluginList
 
         // juce::Component
         void resized() override;
+
+        void warnBeforeClosing();
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(SearchPath& searchPath);
+            ~WindowContainer() override;
+
+        private:
+            SearchPath& mSearchPath;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         Accessor& mAccessor;
@@ -33,7 +47,6 @@ namespace PluginList
         juce::Label mEnvVariableInfo;
         juce::ToggleButton mEnvVariableButton;
 #endif
-        juce::TooltipWindow mTooltipWindow{this};
 
         JUCE_LEAK_DETECTOR(SearchPath)
     };

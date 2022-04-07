@@ -74,7 +74,9 @@ namespace Application
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         PluginList::Table mPluginListTable;
+
         PluginList::SearchPath mPluginListSearchPath;
+        PluginList::SearchPath::WindowContainer mPluginListSearchPathWindow{mPluginListSearchPath};
 
         About mAbout;
         About::WindowContainer mAboutWindow{mAbout};
