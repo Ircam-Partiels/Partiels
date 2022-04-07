@@ -5,8 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::ConverterPanel::ConverterPanel()
-: FloatingWindowContainer("SDIF Converter", *this)
-, mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
+: mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
                 {
                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load a SDIF or a JSON file"), juce::File{}, "*.sdif;*.json");
                     if(mFileChooser == nullptr)

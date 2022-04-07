@@ -10,6 +10,7 @@ Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
 , mPluginListTableWindow(juce::translate("Add Plugins..."), mPluginListTable)
 , mPluginListSearchPath(Instance::get().getPluginListAccessor())
+, mSdifConverterWindow(juce::translate("SDIF Converter"), mSdifConverter)
 {
     Instance::get().getDocumentDirector().setPluginTable(&mPluginTableContainer);
     Instance::get().getDocumentDirector().setLoaderSelector(Instance::get().getFileLoaderSelectorContainer());
@@ -747,7 +748,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::helpSdifConverter:
         {
-            mSdifConverter.show();
+            mSdifConverterWindow.show();
             return true;
         }
     }

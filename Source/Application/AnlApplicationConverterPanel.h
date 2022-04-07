@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 namespace Application
 {
     class ConverterPanel
-    : public FloatingWindowContainer
+    : public juce::Component
     , public juce::FileDragAndDropTarget
     {
     public:

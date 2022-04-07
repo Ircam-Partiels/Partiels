@@ -93,6 +93,8 @@ namespace Application
         Batcher::WindowContainer mBatcherWindow{mBatcher};
 
         ConverterPanel mSdifConverter;
+        FloatingWindowContainer mSdifConverterWindow;
+
         std::unique_ptr<juce::FileChooser> mFileChooser;
     };
 } // namespace Application
