@@ -1,6 +1,7 @@
 
 v1.0.4
 
+- Fix: Floating windows can crash the app when closing Windows (#244)
 - Imp: Rename Audio Reader Layout to Audio Files Layout (#243)
 - Fix: Application crashes when a plugin library cannot be loaded (#241)
 - Imp: Allow restoring the default parameter of a plugin if the initialization failed (#240)
