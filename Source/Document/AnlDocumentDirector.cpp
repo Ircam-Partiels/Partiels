@@ -101,6 +101,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     director->setAlertCatcher(mAlertCatcher);
                     director->setPluginTable(mPluginTableContainer);
+                    director->setLoaderSelector(mLoaderSelectorContainer);
                     director->onIdentifierUpdated = [this](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
@@ -267,6 +268,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
 
 Document::Director::~Director()
 {
+    setPluginTable(nullptr);
+    setLoaderSelector(nullptr);
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = nullptr;
     mAccessor.onAttrUpdated = nullptr;
@@ -342,6 +345,21 @@ void Document::Director::setPluginTable(PluginTableContainer* table)
             if(track != nullptr)
             {
                 track->setPluginTable(table);
+            }
+        }
+    }
+}
+
+void Document::Director::setLoaderSelector(LoaderSelectorContainer* selector)
+{
+    if(mLoaderSelectorContainer != selector)
+    {
+        mLoaderSelectorContainer = selector;
+        for(auto& track : mTracks)
+        {
+            if(track != nullptr)
+            {
+                track->setLoaderSelector(selector);
             }
         }
     }

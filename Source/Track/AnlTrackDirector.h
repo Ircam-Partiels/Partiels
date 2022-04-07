@@ -32,12 +32,20 @@ namespace Track
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
+
         struct PluginTableContainer
         {
             PluginList::Table& table;
             FloatingWindowContainer& window;
         };
         void setPluginTable(PluginTableContainer* table);
+
+        struct LoaderSelectorContainer
+        {
+            Loader::ArgumentSelector& selector;
+            Loader::ArgumentSelector::WindowContainer& window;
+        };
+        void setLoaderSelector(LoaderSelectorContainer* selector);
 
         void warmAboutPlugin(juce::String const& reason);
         void askToReloadPlugin(juce::String const& reason);
@@ -86,8 +94,8 @@ namespace Track
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         PluginTableContainer* mPluginTableContainer = nullptr;
+        LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
-        std::unique_ptr<Loader::ArgumentSelector> mLoaderArgumentSelector;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)

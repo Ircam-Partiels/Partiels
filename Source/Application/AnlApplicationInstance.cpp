@@ -88,6 +88,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
     AppQuitIfInvalidPointer(mDocumentFileBased);
+    
+    mFileLoader = std::make_unique<FileLoader>();
+    AppQuitIfInvalidPointer(mFileLoader);
 
     mWindow = std::make_unique<Window>();
     AppQuitIfInvalidPointer(mWindow);
@@ -97,9 +100,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mAudioSettings = std::make_unique<AudioSettings>();
     AppQuitIfInvalidPointer(mAudioSettings);
-
-    mTrackLoader = std::make_unique<Track::Loader::ArgumentSelector>();
-    AppQuitIfInvalidPointer(mTrackLoader);
 
     checkPluginsQuarantine();
 
@@ -307,7 +307,7 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
-    mTrackLoader.reset();
+    mFileLoader.reset();
 
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     mLookAndFeel.reset();
@@ -503,29 +503,29 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
     auto const importFileWildcard = getWildCardForImportFormats();
     auto const fileExtension = file.getFileExtension();
     anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && importFileWildcard.contains(fileExtension));
-    if(mTrackLoader == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
+    if(mFileLoader == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
     {
         return;
     }
     juce::WeakReference<Instance> weakReference(this);
-    mTrackLoader->onLoad = [=, this](Track::FileInfo fileInfo)
+    mFileLoader->selector.onLoad = [=, this](Track::FileInfo fileInfo)
     {
         if(weakReference.get() == nullptr)
         {
             return;
         }
         Tools::addFileTrack(position, fileInfo);
-        mTrackLoader->hide();
+        mFileLoader->window.hide();
     };
-    mTrackLoader->setFile(file);
-    mTrackLoader->show();
+    mFileLoader->selector.setFile(file);
+    mFileLoader->window.show(true);
     juce::MessageManager::callAsync([=, this]()
                                     {
                                         if(weakReference.get() == nullptr)
                                         {
                                             return;
                                         }
-                                        mTrackLoader->toFront(true);
+                                        mFileLoader->window.toFront(true);
                                     });
 }
 
@@ -542,6 +542,11 @@ Application::AudioSettings* Application::Instance::getAudioSettings()
 Application::Window* Application::Instance::getWindow()
 {
     return mWindow.get();
+}
+
+Application::Instance::FileLoaderSelectorContainer* Application::Instance::getFileLoaderSelectorContainer()
+{
+    return mFileLoader == nullptr ? nullptr : &(mFileLoader->container);
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()

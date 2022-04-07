@@ -31,7 +31,7 @@ namespace Track
         static juce::String getWildCardForAllFormats();
 
         class ArgumentSelector
-        : public FloatingWindowContainer
+        : public juce::Component
         {
         public:
             ArgumentSelector(juce::File const& file = juce::File());
@@ -40,14 +40,21 @@ namespace Track
             // juce::Component
             void resized() override;
 
-            // FloatingWindowContainer
-            void showAt(juce::Point<int> const& pt) override;
-            void hide() override;
-
             void setFile(juce::File const& file);
             std::function<void(FileInfo)> onLoad = nullptr;
 
             static void apply(Accessor& accessor, FileInfo const& fileInfo, NotificationType const notification);
+
+            class WindowContainer
+            : public FloatingWindowContainer
+            {
+            public:
+                WindowContainer(ArgumentSelector& argumentSelector);
+
+            private:
+                ArgumentSelector& mArgumentSelector;
+                juce::TooltipWindow mTooltip;
+            };
 
         private:
             void loadButtonClicked();

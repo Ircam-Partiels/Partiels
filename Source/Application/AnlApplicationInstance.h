@@ -24,6 +24,8 @@ namespace Application
     , private juce::DarkModeSettingListener
     {
     public:
+        using FileLoaderSelectorContainer = Document::Director::LoaderSelectorContainer;
+
         Instance() = default;
         ~Instance() override = default;
 
@@ -53,6 +55,7 @@ namespace Application
         Accessor& getApplicationAccessor();
         AudioSettings* getAudioSettings();
         Window* getWindow();
+        FileLoaderSelectorContainer* getFileLoaderSelectorContainer();
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
@@ -93,15 +96,22 @@ namespace Application
         std::unique_ptr<Document::Accessor> mDocumentAccessor;
         std::unique_ptr<Document::Director> mDocumentDirector;
 
-        std::unique_ptr<Properties> mProperties;
         std::unique_ptr<AudioReader> mAudioReader;
         std::unique_ptr<LookAndFeel> mLookAndFeel;
+        std::unique_ptr<Properties> mProperties;
         std::unique_ptr<Document::FileBased> mDocumentFileBased;
 
+        struct FileLoader
+        {
+            Track::Loader::ArgumentSelector selector;
+            Track::Loader::ArgumentSelector::WindowContainer window{selector};
+            FileLoaderSelectorContainer container{selector, window};
+        };
+        std::unique_ptr<FileLoader> mFileLoader;
+        
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<AudioSettings> mAudioSettings;
-        std::unique_ptr<Track::Loader::ArgumentSelector> mTrackLoader;
         std::unique_ptr<CommandLine> mCommandLine;
 
         std::atomic<bool> mIsPluginListReady{true};

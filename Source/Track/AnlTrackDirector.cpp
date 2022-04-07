@@ -377,6 +377,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
 Track::Director::~Director()
 {
+    setPluginTable(nullptr);
+    setLoaderSelector(nullptr);
     if(mSharedZoomAccessor.has_value())
     {
         mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
@@ -505,6 +507,11 @@ void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
 void Track::Director::setPluginTable(PluginTableContainer* table)
 {
     mPluginTableContainer = table;
+}
+
+void Track::Director::setLoaderSelector(LoaderSelectorContainer* selector)
+{
+    mLoaderSelectorContainer = selector;
 }
 
 void Track::Director::runAnalysis(NotificationType const notification)
@@ -971,6 +978,10 @@ void Track::Director::removeFile()
 
 void Track::Director::askForFile()
 {
+    if(mLoaderSelectorContainer == nullptr)
+    {
+        return;
+    }
     auto const file = mAccessor.getAttr<AttrType::file>().file;
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load track's results file..."), file, Loader::getWildCardForAllFormats());
     if(mFileChooser == nullptr)
@@ -981,7 +992,7 @@ void Track::Director::askForFile()
     juce::WeakReference<Director> safePointer(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
                               {
-                                  if(safePointer.get() == nullptr)
+                                  if(safePointer.get() == nullptr || mLoaderSelectorContainer == nullptr)
                                   {
                                       return;
                                   }
@@ -990,22 +1001,13 @@ void Track::Director::askForFile()
                                   {
                                       return;
                                   }
-                                  if(mLoaderArgumentSelector == nullptr)
-                                  {
-                                      mLoaderArgumentSelector = std::make_unique<Loader::ArgumentSelector>();
-                                      anlWeakAssert(mLoaderArgumentSelector != nullptr);
-                                      if(mLoaderArgumentSelector == nullptr)
-                                      {
-                                          return;
-                                      }
-                                  }
-                                  mLoaderArgumentSelector->onLoad = [=, this](Track::FileInfo fileInfo)
+                                  mLoaderSelectorContainer->selector.onLoad = [=, this](Track::FileInfo fileInfo)
                                   {
                                       if(safePointer.get() == nullptr)
                                       {
                                           return;
                                       }
-                                      mLoaderArgumentSelector->hide();
+                                      mLoaderSelectorContainer->window.hide();
                                       auto isPerformingAction = mIsPerformingAction;
                                       if(!isPerformingAction)
                                       {
@@ -1019,8 +1021,8 @@ void Track::Director::askForFile()
                                           endAction(ActionState::newTransaction, juce::translate("Change results file"));
                                       }
                                   };
-                                  mLoaderArgumentSelector->setFile(results.getFirst());
-                                  mLoaderArgumentSelector->show();
+                                  mLoaderSelectorContainer->selector.setFile(results.getFirst());
+                                  mLoaderSelectorContainer->window.show(true);
                               });
 }
 

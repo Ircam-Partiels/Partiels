@@ -41,6 +41,8 @@ namespace Document
         void setAlertCatcher(AlertWindow::Catcher* catcher);
         using PluginTableContainer = Track::Director::PluginTableContainer;
         void setPluginTable(PluginTableContainer* table);
+        using LoaderSelectorContainer = Track::Director::LoaderSelectorContainer;
+        void setLoaderSelector(LoaderSelectorContainer* selector);
 
     private:
         // FileWatcher
@@ -64,6 +66,7 @@ namespace Document
         double mDuration = 0.0;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         PluginTableContainer* mPluginTableContainer = nullptr;
+        LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)

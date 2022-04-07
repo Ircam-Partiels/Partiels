@@ -862,9 +862,15 @@ juce::String Track::Loader::getWildCardForAllFormats()
     return "*.json;*.csv;*.cue;*.sdif;*.dat";
 }
 
+Track::Loader::ArgumentSelector::WindowContainer::WindowContainer(ArgumentSelector& argumentSelector)
+: FloatingWindowContainer(juce::translate("Load File..."), argumentSelector, true)
+, mArgumentSelector(argumentSelector)
+, mTooltip(&mArgumentSelector)
+{
+}
+
 Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
-: FloatingWindowContainer("File Loader", *this, true)
-, mPropertyName("File", "The file to import", nullptr)
+: mPropertyName("File", "The file to import", nullptr)
 , mPropertyUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
                 {
                     mPropertyMinValue.entry.setTextValueSuffix(text);
@@ -1012,18 +1018,6 @@ void Track::Loader::ArgumentSelector::loadButtonClicked()
     {
         onLoad(mFileInfo);
     }
-}
-
-void Track::Loader::ArgumentSelector::showAt(juce::Point<int> const& pt)
-{
-    FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.enterModalState();
-}
-
-void Track::Loader::ArgumentSelector::hide()
-{
-    mFloatingWindow.exitModalState(0);
-    FloatingWindowContainer::hide();
 }
 
 void Track::Loader::ArgumentSelector::apply(Accessor& accessor, FileInfo const& fileInfo, NotificationType const notification)
