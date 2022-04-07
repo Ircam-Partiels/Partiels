@@ -76,15 +76,15 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mDocumentDirector = std::make_unique<Document::Director>(*mDocumentAccessor.get(), *mAudioFormatManager.get(), *mUndoManager.get());
     AppQuitIfInvalidPointer(mDocumentDirector);
 
-    mProperties = std::make_unique<Properties>();
-    AppQuitIfInvalidPointer(mProperties);
-
     mAudioReader = std::make_unique<AudioReader>();
     AppQuitIfInvalidPointer(mAudioReader);
 
     mLookAndFeel = std::make_unique<LookAndFeel>();
     AppQuitIfInvalidPointer(mLookAndFeel);
     juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
+
+    mProperties = std::make_unique<Properties>();
+    AppQuitIfInvalidPointer(mProperties);
 
     mDocumentFileBased = std::make_unique<Document::FileBased>(*mDocumentDirector.get(), getExtensionForDocumentFile(), getWildCardForDocumentFile(), "Open a document", "Save the document");
     AppQuitIfInvalidPointer(mDocumentFileBased);
