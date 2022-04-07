@@ -8,7 +8,7 @@ ANALYSE_FILE_BEGIN
 namespace PluginList
 {
     class Table
-    : public FloatingWindowContainer
+    : public juce::Component
     , private juce::TableListBoxModel
     {
     public:
@@ -20,10 +20,6 @@ namespace PluginList
         void lookAndFeelChanged() override;
         void parentHierarchyChanged() override;
         void visibilityChanged() override;
-
-        // FloatingWindowContainer
-        void showAt(juce::Point<int> const& pt) override;
-        void hide() override;
 
         std::function<void(std::set<Plugin::Key> keys)> onPluginSelected = nullptr;
         void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;
@@ -51,7 +47,6 @@ namespace PluginList
         ColouredPanel mSeparator;
         juce::TextEditor mSearchField;
         juce::String mLookingWord;
-        juce::TooltipWindow mTooltipWindow{this};
 
         JUCE_LEAK_DETECTOR(Table)
     };

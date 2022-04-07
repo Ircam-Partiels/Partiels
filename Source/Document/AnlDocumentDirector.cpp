@@ -100,7 +100,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 if(director != nullptr)
                 {
                     director->setAlertCatcher(mAlertCatcher);
-                    director->setPluginTable(mPluginTable);
+                    director->setPluginTable(mPluginTableContainer);
                     director->onIdentifierUpdated = [this](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
@@ -332,11 +332,11 @@ void Document::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
     }
 }
 
-void Document::Director::setPluginTable(PluginList::Table* table)
+void Document::Director::setPluginTable(PluginTableContainer* table)
 {
-    if(mPluginTable != table)
+    if(mPluginTableContainer != table)
     {
-        mPluginTable = table;
+        mPluginTableContainer = table;
         for(auto& track : mTracks)
         {
             if(track != nullptr)

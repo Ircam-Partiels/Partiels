@@ -32,7 +32,12 @@ namespace Track
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
-        void setPluginTable(PluginList::Table* table);
+        struct PluginTableContainer
+        {
+            PluginList::Table& table;
+            FloatingWindowContainer& window;
+        };
+        void setPluginTable(PluginTableContainer* table);
 
         void warmAboutPlugin(juce::String const& reason);
         void askToReloadPlugin(juce::String const& reason);
@@ -80,7 +85,7 @@ namespace Track
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
-        PluginList::Table* mPluginTable = nullptr;
+        PluginTableContainer* mPluginTableContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
         std::unique_ptr<Loader::ArgumentSelector> mLoaderArgumentSelector;
 

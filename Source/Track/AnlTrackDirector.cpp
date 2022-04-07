@@ -502,9 +502,9 @@ void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
     mAlertCatcher = catcher;
 }
 
-void Track::Director::setPluginTable(PluginList::Table* table)
+void Track::Director::setPluginTable(PluginTableContainer* table)
 {
-    mPluginTable = table;
+    mPluginTableContainer = table;
 }
 
 void Track::Director::runAnalysis(NotificationType const notification)
@@ -806,14 +806,14 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int windowResult)
                                  {
-                                     if(weakReference.get() == nullptr || mPluginTable == nullptr)
+                                     if(weakReference.get() == nullptr || mPluginTableContainer == nullptr)
                                      {
                                          return;
                                      }
                                      if(windowResult == 1)
                                      {
-                                         mPluginTable->setMultipleSelectionEnabled(false);
-                                         mPluginTable->onPluginSelected = [=, this](std::set<Plugin::Key> keys)
+                                         mPluginTableContainer->table.setMultipleSelectionEnabled(false);
+                                         mPluginTableContainer->table.onPluginSelected = [=, this](std::set<Plugin::Key> keys)
                                          {
                                              if(weakReference.get() == nullptr)
                                              {
@@ -824,15 +824,15 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
                                              {
                                                  return;
                                              }
-                                             if(mPluginTable != nullptr)
+                                             if(mPluginTableContainer != nullptr)
                                              {
-                                                 mPluginTable->hide();
+                                                 mPluginTableContainer->window.hide();
                                              }
                                              startAction();
                                              mAccessor.setAttr<AttrType::key>(*keys.cbegin(), NotificationType::synchronous);
                                              endAction(ActionState::newTransaction, juce::translate("Change track's plugin"));
                                          };
-                                         mPluginTable->show();
+                                         mPluginTableContainer->window.show(true);
                                      }
                                  });
 }

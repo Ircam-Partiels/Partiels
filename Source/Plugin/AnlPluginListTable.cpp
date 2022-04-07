@@ -4,8 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
-: FloatingWindowContainer("Add Plugin...", *this)
-, mAccessor(accessor)
+: mAccessor(accessor)
 , mScanner(scanner)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
@@ -154,18 +153,6 @@ void PluginList::Table::parentHierarchyChanged()
 void PluginList::Table::visibilityChanged()
 {
     lookAndFeelChanged();
-}
-
-void PluginList::Table::showAt(juce::Point<int> const& pt)
-{
-    FloatingWindowContainer::showAt(pt);
-    mFloatingWindow.enterModalState();
-}
-
-void PluginList::Table::hide()
-{
-    mFloatingWindow.exitModalState(0);
-    FloatingWindowContainer::hide();
 }
 
 void PluginList::Table::updateContent()

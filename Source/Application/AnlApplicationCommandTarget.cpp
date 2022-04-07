@@ -8,9 +8,10 @@ ANALYSE_FILE_BEGIN
 
 Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
+, mPluginListTableWindow(juce::translate("Add Plugins..."), mPluginListTable)
 , mPluginListSearchPath(Instance::get().getPluginListAccessor())
 {
-    Instance::get().getDocumentDirector().setPluginTable(&mPluginListTable);
+    Instance::get().getDocumentDirector().setPluginTable(&mPluginTableContainer);
     mListener.onAttrChanged = [](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -540,10 +541,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             mPluginListTable.setMultipleSelectionEnabled(true);
             mPluginListTable.onPluginSelected = [this, position](std::set<Plugin::Key> keys)
             {
-                mPluginListTable.hide();
+                mPluginListTableWindow.hide();
                 Tools::addPluginTracks(position, keys);
             };
-            mPluginListTable.show();
+            mPluginListTableWindow.show(true);
             return true;
         }
         case CommandIDs::editRemoveItem:

@@ -39,7 +39,8 @@ namespace Document
         bool copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
-        void setPluginTable(PluginList::Table* table);
+        using PluginTableContainer = Track::Director::PluginTableContainer;
+        void setPluginTable(PluginTableContainer* table);
 
     private:
         // FileWatcher
@@ -62,7 +63,7 @@ namespace Document
         std::optional<double> mSampleRate;
         double mDuration = 0.0;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
-        PluginList::Table* mPluginTable = nullptr;
+        PluginTableContainer* mPluginTableContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)

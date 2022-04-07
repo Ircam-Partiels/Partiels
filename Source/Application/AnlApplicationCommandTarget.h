@@ -73,7 +73,12 @@ namespace Application
 
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
+
         PluginList::Table mPluginListTable;
+        FloatingWindowContainer mPluginListTableWindow;
+        juce::TooltipWindow mPluginListTableTooltipWindow{&mPluginListTable};
+        using PluginTableContainer = Document::Director::PluginTableContainer;
+        PluginTableContainer mPluginTableContainer{mPluginListTable, mPluginListTableWindow};
 
         PluginList::SearchPath mPluginListSearchPath;
         PluginList::SearchPath::WindowContainer mPluginListSearchPathWindow{mPluginListSearchPath};
