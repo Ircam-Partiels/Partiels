@@ -2,9 +2,25 @@
 
 ANALYSE_FILE_BEGIN
 
+Document::ReaderLayoutPanel::WindowContainer::WindowContainer(ReaderLayoutPanel& readerLayoutPanel)
+: FloatingWindowContainer(juce::translate("Audio Files Layout"), readerLayoutPanel, true)
+, mReaderLayoutPanel(readerLayoutPanel)
+, mTooltip(&mReaderLayoutPanel)
+{
+    mFloatingWindow.onCloseButtonPressed = [this]()
+    {
+        mReaderLayoutPanel.warnBeforeClosing();
+        return false;
+    };
+}
+
+Document::ReaderLayoutPanel::WindowContainer::~WindowContainer()
+{
+    mFloatingWindow.onCloseButtonPressed = nullptr;
+}
+
 Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
-: FloatingWindowContainer("Audio Files Layout", *this, true)
-, mDirector(director)
+: mDirector(director)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
@@ -61,37 +77,6 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         mAudioFileLayoutTable.onLayoutChanged();
     };
 
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        if(mApplyButton.isEnabled())
-        {
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::QuestionIcon)
-                                     .withTitle(juce::translate("Apply audio files layout modification?"))
-                                     .withMessage(juce::translate("The audio files layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
-                                     .withButton(juce::translate("Apply"))
-                                     .withButton(juce::translate("Discard"));
-
-            juce::WeakReference<juce::Component> weakReference(this);
-            juce::AlertWindow::showAsync(options, [=, this](int result)
-                                         {
-                                             if(weakReference.get() == nullptr)
-                                             {
-                                                 return;
-                                             }
-                                             if(result == 0)
-                                             {
-                                                 mResetButton.onClick();
-                                             }
-                                             else
-                                             {
-                                                 mApplyButton.onClick();
-                                             }
-                                         });
-        }
-        return true;
-    };
-
     addAndMakeVisible(mAudioFileLayoutTable);
     addAndMakeVisible(mSeparator);
     addAndMakeVisible(mApplyButton);
@@ -120,6 +105,36 @@ void Document::ReaderLayoutPanel::resized()
     mFileInfoPanel.setBounds(bounds.removeFromBottom(168));
     mInfoSeparator.setBounds(bounds.removeFromBottom(1));
     mAudioFileLayoutTable.setBounds(bounds);
+}
+
+void Document::ReaderLayoutPanel::warnBeforeClosing()
+{
+    if(mApplyButton.isEnabled())
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::QuestionIcon)
+                                 .withTitle(juce::translate("Apply audio files layout modification?"))
+                                 .withMessage(juce::translate("The audio files layout has been modified but the changes were not applied. Would you like to apply the changes or to discard the changes?"))
+                                 .withButton(juce::translate("Apply"))
+                                 .withButton(juce::translate("Discard"));
+
+        juce::WeakReference<juce::Component> weakReference(this);
+        juce::AlertWindow::showAsync(options, [=, this](int result)
+                                     {
+                                         if(weakReference.get() == nullptr)
+                                         {
+                                             return;
+                                         }
+                                         if(result == 0)
+                                         {
+                                             mResetButton.onClick();
+                                         }
+                                         else
+                                         {
+                                             mApplyButton.onClick();
+                                         }
+                                     });
+    }
 }
 
 ANALYSE_FILE_END

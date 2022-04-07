@@ -433,7 +433,7 @@ Document::Section::Section(Director& director)
             break;
             case SignalType::showReaderPanel:
             {
-                mReaderLayoutPanel.show();
+                mReaderLayoutWindow.show();
             }
             break;
         }

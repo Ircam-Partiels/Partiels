@@ -7,7 +7,7 @@ ANALYSE_FILE_BEGIN
 namespace Document
 {
     class ReaderLayoutPanel
-    : public FloatingWindowContainer
+    : public juce::Component
     , public juce::DragAndDropContainer
     {
     public:
@@ -16,6 +16,20 @@ namespace Document
 
         // juce::Component
         void resized() override;
+
+        void warnBeforeClosing();
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(ReaderLayoutPanel& readerLayoutPanel);
+            ~WindowContainer() override;
+
+        private:
+            ReaderLayoutPanel& mReaderLayoutPanel;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         Director& mDirector;

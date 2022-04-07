@@ -72,6 +72,8 @@ namespace Document
         Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
+        ReaderLayoutPanel::WindowContainer mReaderLayoutWindow{mReaderLayoutPanel};
+
         Icon mReaderLayoutButton{Icon::Type::music};
         juce::TextButton mDocumentName;
         Icon mGridButton{Icon::Type::gridOff};
