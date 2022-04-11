@@ -10,7 +10,7 @@ Document::ReaderLayoutPanel::WindowContainer::WindowContainer(ReaderLayoutPanel&
     mFloatingWindow.onCloseButtonPressed = [this]()
     {
         mReaderLayoutPanel.warnBeforeClosing();
-        return false;
+        return true;
     };
 }
 
