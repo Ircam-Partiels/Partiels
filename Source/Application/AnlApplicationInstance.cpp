@@ -44,6 +44,10 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory).getChildFile("Ircam").setAsCurrentWorkingDirectory();
 
+    mLookAndFeel = std::make_unique<LookAndFeel>();
+    AppQuitIfInvalidPointer(mLookAndFeel);
+    juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
+
     mApplicationCommandManager = std::make_unique<juce::ApplicationCommandManager>();
     AppQuitIfInvalidPointer(mApplicationCommandManager);
 
@@ -51,7 +55,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
     AppQuitIfInvalidPointer(mAudioFormatManager);
     mAudioFormatManager->registerBasicFormats();
 
-    // Should be done after look and feel
     mAudioDeviceManager = std::make_unique<juce::AudioDeviceManager>();
     AppQuitIfInvalidPointer(mAudioDeviceManager);
 
@@ -78,10 +81,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mAudioReader = std::make_unique<AudioReader>();
     AppQuitIfInvalidPointer(mAudioReader);
-
-    mLookAndFeel = std::make_unique<LookAndFeel>();
-    AppQuitIfInvalidPointer(mLookAndFeel);
-    juce::LookAndFeel::setDefaultLookAndFeel(mLookAndFeel.get());
 
     mProperties = std::make_unique<Properties>();
     AppQuitIfInvalidPointer(mProperties);
