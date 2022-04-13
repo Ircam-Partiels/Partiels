@@ -64,7 +64,17 @@ void Application::Window::DesktopScaler::resized()
 }
 
 Application::Window::Window()
-: juce::DocumentWindow(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId), juce::DocumentWindow::allButtons)
+// clang-format off
+: juce::DocumentWindow(  Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString
+                       , juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId)
+                       , juce::DocumentWindow::allButtons
+#ifdef JUCE_MAC
+                       , false
+#else
+                       , true
+#endif
+                       )
+// clang-format on
 , mDesktopScalerWindow(juce::translate("Desktop Global Scale"), mDesktopScaler)
 {
     mBoundsConstrainer.setSizeLimits(512, 384, std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
@@ -78,10 +88,28 @@ Application::Window::Window()
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     Instance::get().getDocumentFileBased().addChangeListener(this);
-    if(!restoreWindowStateFromString(Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>()))
+    auto const state = Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>();
+#ifdef JUCE_MAC
+    // This is a fix to properly restore fullscreen window state on macOS
+    juce::WeakReference<Component> weakReference(this);
+    juce::MessageManager::callAsync([=, this]()
+                                    {
+                                        if(weakReference.get() == nullptr)
+                                        {
+                                            return;
+                                        }
+                                        addToDesktop(getDesktopWindowStyleFlags());
+                                        if(!restoreWindowStateFromString(state))
+                                        {
+                                            centreWithSize(1024, 768);
+                                        }
+                                    });
+#else
+    if(!restoreWindowStateFromString(state))
     {
         centreWithSize(1024, 768);
     }
+#endif
 }
 
 Application::Window::~Window()
