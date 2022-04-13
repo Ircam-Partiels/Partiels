@@ -1,4 +1,8 @@
 
+v1.0.5
+
+- Fix: Application does not correctly capture mouse events when full screen mode is restored on startup (#247)
+
 v1.0.4
 
 - Fix: Installer on Windows does not write files correctly if the application has already been installed (#246)
