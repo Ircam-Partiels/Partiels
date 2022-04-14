@@ -198,7 +198,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
     addAndMakeVisible(mProgressBarAnalysis);
 
     mProgressBarAnalysis.setSize(300, 36);
-    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were consolidated or loaded from a file."), false);
+    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were consolidated or loaded from a file."), juce::NotificationType::dontSendNotification);
     mPropertyResultsFileInfo.setSize(300, 24);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
@@ -234,13 +234,6 @@ void Track::PropertyProcessorSection::resized()
     setBounds(mPropertyPreset);
     setBounds(mProgressBarAnalysis);
     setSize(getWidth(), bounds.getY());
-}
-
-void Track::PropertyProcessorSection::lookAndFeelChanged()
-{
-    auto const text = mPropertyResultsFileInfo.getText();
-    mPropertyResultsFileInfo.clear();
-    mPropertyResultsFileInfo.setText(text);
 }
 
 void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform)

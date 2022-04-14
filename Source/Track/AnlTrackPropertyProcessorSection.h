@@ -15,7 +15,6 @@ namespace Track
 
         // juce::Component
         void resized() override;
-        void lookAndFeelChanged() override;
 
     private:
         void askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform);
@@ -34,7 +33,7 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
 
         PropertyTextButton mPropertyResultsFile;
-        juce::TextEditor mPropertyResultsFileInfo;
+        juce::Label mPropertyResultsFileInfo;
         PropertyList mPropertyWindowType;
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
