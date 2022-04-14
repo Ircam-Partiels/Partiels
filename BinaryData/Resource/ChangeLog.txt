@@ -1,6 +1,7 @@
 
 v1.0.5
 
+- Fix: The text information of the results file in the track property panel should not be editable (#248)
 - Fix: Application does not correctly capture mouse events when full screen mode is restored on startup (#247)
 
 v1.0.4
