@@ -43,7 +43,7 @@ namespace Track
         struct LoaderSelectorContainer
         {
             Loader::ArgumentSelector& selector;
-            Loader::ArgumentSelector::WindowContainer& window;
+            FloatingWindowContainer& window;
         };
         void setLoaderSelector(LoaderSelectorContainer* selector);
 
