@@ -105,11 +105,8 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::key:
             case AttrType::description:
             case AttrType::file:
-            case AttrType::results:
             {
-                auto const& description = mAccessor.getAttr<AttrType::description>();
-                auto const results = mAccessor.getAttr<AttrType::results>();
-
+                auto const& description = acsr.getAttr<AttrType::description>();
                 auto const resultsFile = mAccessor.getAttr<AttrType::file>().file;
                 mPropertyResultsFile.entry.setButtonText(resultsFile.getFileName());
                 mPropertyResultsFile.entry.setTooltip(resultsFile.getFullPathName());
@@ -173,6 +170,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                 updateState();
             }
             break;
+            case AttrType::results:
             case AttrType::name:
             case AttrType::graphics:
             case AttrType::processing:
