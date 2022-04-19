@@ -400,7 +400,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
             results.push_back(std::move(markers));
         }
 
-        res = Results::create(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
+        res = Results(std::move(results));
     }
     else if(std::string(type) == "PTLPTS")
     {
@@ -451,7 +451,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
             results.push_back(std::move(points));
         }
 
-        res = Results::create(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
+        res = Results(std::move(results));
     }
     else if(std::string(type) == "PTLCLS")
     {
@@ -497,7 +497,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
             }
             results.push_back(std::move(columns));
         }
-        res = Results::create(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+        res = Results(std::move(results));
     }
     else
     {
@@ -629,7 +629,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCue(std::istre
     }
 
     advancement.store(1.0f);
-    return Results::create(std::make_shared<const std::vector<Results::Markers>>(std::move(channelResults)));
+    return Results(std::move(channelResults));
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -1061,7 +1061,9 @@ public:
                 expectNotEquals(vResult.index(), 1_z, *std::get_if<juce::String>(&vResult));
                 return;
             }
-            auto results = *std::get_if<Results>(&vResult);
+            auto const results = *std::get_if<Results>(&vResult);
+            auto const access = results.getReadAccess();
+            expect(static_cast<bool>(access));
             auto const markers = results.getMarkers();
             expect(markers != nullptr);
             if(markers == nullptr)
@@ -1108,7 +1110,9 @@ public:
                 expectNotEquals(vResult.index(), 1_z, *std::get_if<juce::String>(&vResult));
                 return;
             }
-            auto results = *std::get_if<Results>(&vResult);
+            auto const results = *std::get_if<Results>(&vResult);
+            auto const access = results.getReadAccess();
+            expect(static_cast<bool>(access));
             auto const points = results.getPoints();
             expect(points != nullptr);
             if(points == nullptr)

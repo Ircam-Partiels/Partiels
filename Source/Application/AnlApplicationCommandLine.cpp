@@ -389,76 +389,18 @@ void Application::CommandLine::compareFiles(juce::ArgumentList const& args)
         fail(*std::get_if<juce::String>(&generatedResults));
     }
     auto const expectedTrackResults = *std::get_if<Track::Results>(&expectedResults);
+    auto const expectedAccess = expectedTrackResults.getReadAccess();
+    if(!static_cast<bool>(expectedAccess))
+    {
+        fail("Cannot get access to expected results!");
+    }
     auto const generatedTrackResults = *std::get_if<Track::Results>(&generatedResults);
-    if(expectedTrackResults.isEmpty())
+    auto const generatedAccess = generatedTrackResults.getReadAccess();
+    if(!static_cast<bool>(generatedAccess))
     {
-        if(!generatedTrackResults.isEmpty())
-        {
-            fail("Different types!");
-        }
-        return;
+        fail("Cannot get access to expected results!");
     }
-
-    auto timeAndDurationAreEquivalent = [](auto const& lhs, auto const& rhs)
-    {
-        return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < 0.00001 && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < 0.00001;
-    };
-
-    auto resultsAreEquivalent = [](auto const& expectedResultsPtr, auto const& generatedResultsPtr, auto lambda)
-    {
-        if(expectedResultsPtr == nullptr && generatedResultsPtr == nullptr)
-        {
-            return true;
-        }
-        if(expectedResultsPtr == nullptr || generatedResultsPtr == nullptr)
-        {
-            return false;
-        }
-        if(expectedResultsPtr->size() != generatedResultsPtr->size())
-        {
-            return false;
-        }
-        return std::equal(expectedResultsPtr->cbegin(), expectedResultsPtr->cend(), generatedResultsPtr->cbegin(), [=](auto const& expectedChannel, auto const& generatedChannel)
-                          {
-                              if(expectedChannel.size() != generatedChannel.size())
-                              {
-                                  return false;
-                              }
-                              return std::equal(expectedChannel.cbegin(), expectedChannel.cend(), generatedChannel.cbegin(), lambda);
-                          });
-    };
-
-    if(!resultsAreEquivalent(expectedTrackResults.getMarkers(), generatedTrackResults.getMarkers(), [&](Track::Results::Marker const& lhs, Track::Results::Marker const& rhs)
-                             {
-                                 return timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs) == std::get<2>(rhs);
-                             }))
-    {
-        fail("Different results!");
-    }
-
-    if(!resultsAreEquivalent(expectedTrackResults.getPoints(), generatedTrackResults.getPoints(), [&](Track::Results::Point const& lhs, Track::Results::Point const& rhs)
-                             {
-                                 if(timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs).has_value() == std::get<2>(rhs).has_value())
-                                 {
-                                     return !std::get<2>(lhs).has_value() || std::abs(*std::get<2>(lhs) - *std::get<2>(rhs)) < 0.01;
-                                 }
-                                 return false;
-                             }))
-    {
-        fail("Different results!");
-    }
-
-    if(!resultsAreEquivalent(expectedTrackResults.getColumns(), generatedTrackResults.getColumns(), [&](Track::Results::Column const& lhs, Track::Results::Column const& rhs)
-                             {
-                                 if(timeAndDurationAreEquivalent(lhs, rhs) && std::get<2>(lhs).size() == std::get<2>(rhs).size())
-                                 {
-                                     return std::equal(std::get<2>(lhs).cbegin(), std::get<2>(lhs).cend(), std::get<2>(rhs).cbegin(), [](auto const& lhsv, auto const& rhsv)
-                                                       {
-                                                           return std::abs(lhsv - rhsv) < 0.01;
-                                                       });
-                                 }
-                                 return false;
-                             }))
+    if(!expectedTrackResults.matchWithEpsilon(generatedTrackResults, 0.00001, 0.01f))
     {
         fail("Different results!");
     }

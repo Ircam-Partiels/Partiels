@@ -313,8 +313,9 @@ void Track::Plot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoom
 
 void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    auto const results = accessor.getAttr<AttrType::results>();
-    if(results.isEmpty())
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access) || results.isEmpty())
     {
         return;
     }
@@ -330,9 +331,8 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
         return;
     }
 
-    auto const& globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    if(globalRange.isEmpty() || timeRange.isEmpty())
+    if(timeRange.isEmpty())
     {
         return;
     }
@@ -355,7 +355,7 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
     auto const font = g.getCurrentFont();
 
     auto const& channelResults = markers->at(channel);
-    auto it = Results::findFirstAt(channelResults, globalRange, clipTimeStart);
+    auto it = Results::findFirstAt(channelResults, clipTimeStart);
     while(it != channelResults.cend() && std::get<0>(*it) < clipTimeEnd)
     {
         auto const start = std::get<0>(*it);
@@ -431,8 +431,9 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
 
 void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
-    auto const results = accessor.getAttr<AttrType::results>();
-    if(results.isEmpty())
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access) || results.isEmpty())
     {
         return;
     }
@@ -448,9 +449,8 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         return;
     }
 
-    auto const& globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    if(globalRange.isEmpty() || timeRange.isEmpty())
+    if(timeRange.isEmpty())
     {
         return;
     }
@@ -513,7 +513,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         return;
     }
 
-    auto it = Results::findFirstAt(channelResults, globalRange, clipTimeStart);
+    auto it = Results::findFirstAt(channelResults, clipTimeStart);
     if(it != channelResults.cbegin())
     {
         it = std::prev(it);

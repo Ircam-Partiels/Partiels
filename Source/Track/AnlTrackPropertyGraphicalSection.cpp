@@ -445,7 +445,14 @@ void Track::PropertyGraphicalSection::setPluginValueRange()
 
 void Track::PropertyGraphicalSection::setResultValueRange()
 {
-    auto globalRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return;
+    }
+
+    auto const globalRange = results.getValueRange();
     if(!globalRange.has_value() || globalRange->isEmpty())
     {
         return;
@@ -559,7 +566,9 @@ void Track::PropertyGraphicalSection::updateZoomMode()
     auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     anlWeakAssert(std::isfinite(range.getStart()) && std::isfinite(range.getEnd()));
     auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-    auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
     mPropertyValueRangeMode.entry.setItemEnabled(1, pluginRange.has_value());
     mPropertyValueRangeMode.entry.setItemEnabled(2, resultsRange.has_value());
     mPropertyValueRangeMode.entry.setItemEnabled(3, false);

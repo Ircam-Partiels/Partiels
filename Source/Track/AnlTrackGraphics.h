@@ -40,6 +40,8 @@ namespace Track
 
         std::mutex mMutex;
         Images mImages;
+        Result::Data mData;
+        std::unique_ptr<Result::Access> mAccess;
         std::atomic<ProcessState> mRenderingState{ProcessState::available};
         std::thread mRenderingProcess;
         std::mutex mRenderingMutex;

@@ -33,9 +33,7 @@ namespace Track
         juce::String getStateTootip(Accessor const& acsr, bool includeAnalysisState = true, bool includeRenderingState = true);
 
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
-        std::optional<Zoom::Range> getValueRange(Results const& results);
         std::optional<Zoom::Range> getBinRange(Plugin::Description const& description);
-        std::optional<Zoom::Range> getBinRange(Results const& results);
 
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);

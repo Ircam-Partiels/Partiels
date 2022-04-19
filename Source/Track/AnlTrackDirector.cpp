@@ -80,8 +80,9 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                 auto const file = mAccessor.getAttr<AttrType::file>().file;
                 FileWatcher::clearAllFiles();
                 FileWatcher::addFile(file);
-                auto const results = mAccessor.getAttr<AttrType::results>();
-                if(!results.isEmpty())
+                auto const& results = mAccessor.getAttr<AttrType::results>();
+                auto const access = results.getReadAccess();
+                if(!static_cast<bool>(access) || !results.isEmpty())
                 {
                     break;
                 }
@@ -105,30 +106,17 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::results:
             {
                 sanitizeZooms(notification);
-                auto const results = mAccessor.getAttr<AttrType::results>();
-                auto getNumChannels = [&]() -> std::optional<size_t>
+                auto const& results = mAccessor.getAttr<AttrType::results>();
+                auto const access = results.getReadAccess();
+                if(static_cast<bool>(access))
                 {
-                    if(auto markers = results.getMarkers())
+                    auto const numChannels = results.getNumChannels();
+                    if(numChannels.has_value())
                     {
-                        return markers->size();
+                        auto channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+                        channelsLayout.resize(*numChannels, true);
+                        mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, NotificationType::synchronous);
                     }
-                    if(auto points = results.getPoints())
-                    {
-                        return points->size();
-                    }
-                    if(auto columns = results.getColumns())
-                    {
-                        return columns->size();
-                    }
-                    return {};
-                };
-
-                auto const numChannels = getNumChannels();
-                if(numChannels.has_value())
-                {
-                    auto channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
-                    channelsLayout.resize(*numChannels, true);
-                    mAccessor.setAttr<AttrType::channelsLayout>(channelsLayout, NotificationType::synchronous);
                 }
 
                 if(onResultsUpdated != nullptr)
@@ -220,7 +208,9 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             {
                 auto const globalRange = mAccessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::globalRange>();
                 auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-                auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+                auto const& results = mAccessor.getAttr<AttrType::results>();
+                auto const access = results.getReadAccess();
+                auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
                 if(globalRange.isEmpty())
                 {
                     mValueRangeMode = ValueRangeMode::undefined;
@@ -327,7 +317,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
     mProcessor.onAnalysisAborted = [&]()
     {
-        mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
 
@@ -347,7 +337,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
 
     mLoader.onLoadingAborted = [&]()
     {
-        mAccessor.setAttr<AttrType::results>(Results(), NotificationType::synchronous);
+        mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
         mAccessor.setAttr<AttrType::graphics>(Images{}, NotificationType::synchronous);
     };
 
@@ -605,7 +595,9 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
 
         auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
         auto const pluginRange = Tools::getValueRange(mAccessor.getAttr<AttrType::description>());
-        auto const resultsRange = Tools::getValueRange(mAccessor.getAttr<AttrType::results>());
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        auto const access = results.getReadAccess();
+        auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
         if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::plugin || globalRange.isEmpty()) && pluginRange.has_value() && !pluginRange->isEmpty())
         {
             applyZoom(*pluginRange);
@@ -628,14 +620,16 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         };
 
         auto const pluginRange = Tools::getBinRange(mAccessor.getAttr<AttrType::description>());
-        auto const resultsRange = Tools::getBinRange(mAccessor.getAttr<AttrType::results>());
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        auto const access = results.getReadAccess();
+        auto const numBins = static_cast<bool>(access) ? results.getNumBins() : decltype(results.getNumBins()){};
         if(pluginRange.has_value() && !pluginRange->isEmpty())
         {
             applyZoom(*pluginRange);
         }
-        else if(resultsRange.has_value() && !resultsRange->isEmpty())
+        else if(numBins.has_value() && *numBins != 0_z)
         {
-            applyZoom(*resultsRange);
+            applyZoom({0.0, static_cast<double>(*numBins)});
         }
     }
 }

@@ -134,9 +134,15 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const results = accessor.getAttr<AttrType::results>();
+    auto const& results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
+
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CSV because the being used.").replace("ANLNAME", name));
+    }
 
     if(results.isEmpty())
     {
@@ -317,10 +323,16 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const results = accessor.getAttr<AttrType::results>();
+    auto const& results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     auto const description = includeDescription ? accessor.toJson() : nlohmann::json::object();
     lock.exit();
+
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as JSON because the being used.").replace("ANLNAME", name));
+    }
 
     if(results.isEmpty())
     {
@@ -453,9 +465,15 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& 
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const results = accessor.getAttr<AttrType::results>();
+    auto const& results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
+
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as CUE because the being used.").replace("ANLNAME", name));
+    }
 
     if(results.isEmpty())
     {
@@ -545,9 +563,15 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const results = accessor.getAttr<AttrType::results>();
+    auto const& results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
+
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as binary because the being used.").replace("ANLNAME", name));
+    }
 
     if(results.isEmpty())
     {
@@ -664,9 +688,15 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const&
     {
         return juce::Result::fail("Invalid threaded access to model");
     }
-    auto const results = accessor.getAttr<AttrType::results>();
+    auto const& results = accessor.getAttr<AttrType::results>();
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
+
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as SDIF because the being used.").replace("ANLNAME", name));
+    }
 
     if(results.isEmpty())
     {

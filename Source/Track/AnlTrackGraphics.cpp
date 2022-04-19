@@ -25,7 +25,18 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     }
     abortRendering();
 
-    auto const columns = accessor.getAttr<AttrType::results>().getColumns();
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        if(onRenderingEnded != nullptr)
+        {
+            onRenderingEnded({});
+        }
+        return;
+    }
+
+    auto const columns = results.getColumns();
     if(columns == nullptr || columns->empty())
     {
         if(onRenderingEnded != nullptr)
@@ -52,6 +63,17 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     auto const height = static_cast<int>(maxNumBins);
     anlWeakAssert(width > 0 && height > 0);
     if(width < 0 || height < 0)
+    {
+        if(onRenderingEnded != nullptr)
+        {
+            onRenderingEnded({});
+        }
+        return;
+    }
+
+    mData = results;
+    mAccess = std::make_unique<Result::Access>(access);
+    if(mAccess == nullptr)
     {
         if(onRenderingEnded != nullptr)
         {
@@ -295,6 +317,8 @@ void Track::Graphics::handleAsyncUpdate()
             mRenderingState = ProcessState::available;
         }
     }
+    mAccess.reset();
+    mData = {};
 }
 
 void Track::Graphics::abortRendering()
@@ -305,7 +329,6 @@ void Track::Graphics::abortRendering()
         mRenderingState = ProcessState::aborted;
         mRenderingProcess.join();
         cancelPendingUpdate();
-
         if(onRenderingAborted != nullptr)
         {
             onRenderingAborted();
@@ -315,6 +338,8 @@ void Track::Graphics::abortRendering()
     mImages = {};
     lock.unlock();
     mRenderingState = ProcessState::available;
+    mAccess.reset();
+    mData = {};
 }
 
 ANALYSE_FILE_END

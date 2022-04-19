@@ -33,7 +33,8 @@ bool Track::Tools::supportsStepSize(Accessor const& acsr)
 Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
 {
     auto const& results = acsr.getAttr<AttrType::results>();
-    if(!results.isEmpty())
+    auto const access = results.getReadAccess();
+    if(static_cast<bool>(access))
     {
         if(results.getMarkers() != nullptr)
         {
@@ -106,7 +107,12 @@ juce::String Track::Tools::getInfoTooltip(Accessor const& acsr)
 
 juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time)
 {
-    auto const results = accessor.getAttr<AttrType::results>();
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return "-";
+    }
     auto const& timeGlobalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
     if(results.isEmpty() || timeGlobalRange.isEmpty())
     {
@@ -132,25 +138,25 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         return "-";
     }
 
-    if(auto markers = results.getMarkers())
+    if(auto const markers = results.getMarkers())
     {
-        auto const value = Results::getValue(markers, std::get<0>(*channel), timeGlobalRange, time);
+        auto const value = Results::getValue(markers, std::get<0>(*channel), time);
         if(value.has_value())
         {
             return *value + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }
-    if(auto points = results.getPoints())
+    if(auto const points = results.getPoints())
     {
-        auto const value = Results::getValue(points, std::get<0>(*channel), timeGlobalRange, time);
+        auto const value = Results::getValue(points, std::get<0>(*channel), time);
         if(value.has_value())
         {
             return Format::valueToString(*value, 4) + accessor.getAttr<AttrType::description>().output.unit;
         }
         return "-";
     }
-    if(auto columns = results.getColumns())
+    if(auto const columns = results.getColumns())
     {
         auto getBinIndex = [&]() -> std::optional<size_t>
         {
@@ -173,7 +179,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
             return "-";
         }
 
-        auto const value = Results::getValue(columns, std::get<0>(*channel), timeGlobalRange, time, *binIndex);
+        auto const value = Results::getValue(columns, std::get<0>(*channel), time, *binIndex);
         if(value.has_value())
         {
             auto const& output = accessor.getAttr<AttrType::description>().output;
@@ -253,15 +259,6 @@ std::optional<Zoom::Range> Track::Tools::getValueRange(Plugin::Description const
     return Zoom::Range(static_cast<double>(output.minValue), static_cast<double>(output.maxValue));
 }
 
-std::optional<Zoom::Range> Track::Tools::getValueRange(Results const& results)
-{
-    if(results.isEmpty())
-    {
-        return std::optional<Zoom::Range>();
-    }
-    return results.getValueRange().isEmpty() ? std::optional<Zoom::Range>() : results.getValueRange();
-}
-
 std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& description)
 {
     auto const& output = description.output;
@@ -270,15 +267,6 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& 
         return std::optional<Zoom::Range>();
     }
     return Zoom::Range(0.0, static_cast<double>(output.binCount));
-}
-
-std::optional<Zoom::Range> Track::Tools::getBinRange(Results const& results)
-{
-    if(results.isEmpty())
-    {
-        return std::optional<Zoom::Range>();
-    }
-    return Zoom::Range(0.0, static_cast<double>(results.getNumBins()));
 }
 
 std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
@@ -409,7 +397,7 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
                 }
                 results.push_back(std::move(markers));
             }
-            return Results::create(std::make_shared<const std::vector<Results::Markers>>(std::move(results)));
+            return Results(std::move(results));
         }
         break;
         case 1_z:
@@ -435,7 +423,7 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
                 }
                 results.push_back(std::move(points));
             }
-            return Results::create(std::make_shared<const std::vector<Results::Points>>(std::move(results)));
+            return Results(std::move(results));
         }
         break;
         default:
@@ -460,7 +448,7 @@ Track::Results Track::Tools::getResults(Plugin::Output const& output, std::vecto
                 }
                 results.push_back(std::move(columns));
             }
-            return Results::create(std::make_shared<const std::vector<Results::Columns>>(std::move(results)));
+            return Results(std::move(results));
         }
         break;
     }

@@ -78,45 +78,4 @@ void Track::from_json(nlohmann::json const& j, ColourSet& colourSet)
     colourSet.shadow = j.value("shadow", colourSet.shadow);
 }
 
-template <>
-void XmlParser::toXml<Track::FileInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::FileInfo const& value)
-{
-    auto child = std::make_unique<juce::XmlElement>(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child != nullptr)
-    {
-        toXml(*child, "path", value.file);
-        toXml(*child, "args", value.args);
-        xml.addChildElement(child.release());
-    }
-}
-
-template <>
-auto XmlParser::fromXml<Track::FileInfo>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::FileInfo const& defaultValue)
-    -> Track::FileInfo
-{
-    auto const* child = xml.getChildByName(attributeName);
-    anlWeakAssert(child != nullptr);
-    if(child == nullptr)
-    {
-        return defaultValue;
-    }
-    Track::FileInfo value;
-    value.file = fromXml(*child, "path", defaultValue.file);
-    value.args = fromXml(*child, "args", defaultValue.args);
-    return value;
-}
-
-void Track::to_json(nlohmann::json& j, FileInfo const& file)
-{
-    j["path"] = file.file;
-    j["args"] = file.args;
-}
-
-void Track::from_json(nlohmann::json const& j, FileInfo& file)
-{
-    file.file = j.value("path", file.file);
-    file.args = j.value("args", file.args);
-}
-
 ANALYSE_FILE_END

@@ -1,14 +1,16 @@
 #pragma once
 
-#include "AnlTrackResults.h"
+#include "../Plugin/AnlPluginModel.h"
+#include "Result/AnlTrackResultModel.h"
 #include <tinycolormap/tinycolormap.hpp>
 
 ANALYSE_FILE_BEGIN
 
 namespace Track
 {
+    using Results = Result::Data;
+    using FileInfo = Result::File;
     using Images = std::vector<std::vector<juce::Image>>;
-
     using ColourMap = tinycolormap::ColormapType;
 
     struct ColourSet
@@ -36,34 +38,6 @@ namespace Track
 
     void to_json(nlohmann::json& j, ColourSet const& colourSet);
     void from_json(nlohmann::json const& j, ColourSet& colourSet);
-
-    struct FileInfo
-    {
-        juce::File file;
-        juce::StringPairArray args; // saved values (mainly for parsing SDIF)
-        nlohmann::json extra;       // parsed values (mainly for restoring track attributes from JSON)
-
-        FileInfo(juce::File const& f = {}, juce::StringPairArray const& a = {}, nlohmann::json const& e = {})
-        : file(f)
-        , args(a)
-        , extra(e)
-        {
-        }
-
-        inline bool operator==(FileInfo const& rhd) const noexcept
-        {
-            return file == rhd.file &&
-                   args == rhd.args;
-        }
-
-        inline bool operator!=(FileInfo const& rhd) const noexcept
-        {
-            return !(*this == rhd);
-        }
-    };
-
-    void to_json(nlohmann::json& j, FileInfo const& file);
-    void from_json(nlohmann::json const& j, FileInfo& file);
 
     // clang-format off
     enum class GridMode
@@ -214,13 +188,6 @@ namespace XmlParser
     template <>
     auto fromXml<Track::ColourSet>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::ColourSet const& defaultValue)
         -> Track::ColourSet;
-
-    template <>
-    void toXml<Track::FileInfo>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::FileInfo const& value);
-
-    template <>
-    auto fromXml<Track::FileInfo>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Track::FileInfo const& defaultValue)
-        -> Track::FileInfo;
 } // namespace XmlParser
 
 ANALYSE_FILE_END
