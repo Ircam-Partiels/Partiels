@@ -8,17 +8,54 @@ Group::Thumbnail::Thumbnail(Director& director)
 {
     addAndMakeVisible(mPropertiesButton);
     mPropertiesButton.setWantsKeyboardFocus(false);
+    addAndMakeVisible(mEditButton);
+    mEditButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
     mExpandButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Show group or track properties"));
+    mEditButton.setTooltip(juce::translate("Show the track results"));
     mExpandButton.setTooltip(juce::translate("Expand the tracks"));
 
     mExpandButton.onClick = [&]()
     {
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
+    };
+
+    mEditButton.onClick = [&]()
+    {
+        juce::PopupMenu menu;
+        juce::WeakReference<juce::Component> safePointer(this);
+        auto const layout = mAccessor.getAttr<AttrType::layout>();
+        for(auto const& identifier : layout)
+        {
+            auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+            if(trackAcsr.has_value())
+            {
+                auto const trackName = trackAcsr->get().getAttr<Track::AttrType::name>();
+                menu.addItem(juce::translate("Track results: TRACKNAME").replace("TRACKNAME", trackName), [=, this]
+                             {
+                                 if(safePointer.get() == nullptr)
+                                 {
+                                     return;
+                                 }
+                                 if(auto var = std::make_unique<juce::DynamicObject>())
+                                 {
+                                     auto const position = juce::Desktop::getInstance().getMousePosition();
+                                     var->setProperty("x", position.x);
+                                     var->setProperty("y", position.y - 40);
+                                     auto trackAcsrRef = Tools::getTrackAcsr(mAccessor, identifier);
+                                     if(trackAcsrRef.has_value())
+                                     {
+                                         trackAcsr->get().sendSignal(Track::SignalType::showTable, var.release(), NotificationType::synchronous);
+                                     }
+                                 }
+                             });
+            }
+        }
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mEditButton));
     };
 
     mPropertiesButton.onClick = [this]()
@@ -83,7 +120,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::tracks:
             {
                 mExpandButton.setEnabled(!mAccessor.getAttr<AttrType::layout>().empty());
-                lookAndFeelChanged();
+                mEditButton.setEnabled(!mAccessor.getAttr<AttrType::layout>().empty());
             }
             break;
             case AttrType::focused:
@@ -170,6 +207,7 @@ void Group::Thumbnail::resized()
         mStateButton.setVisible(false);
     }
     layoutButton(leftBounds, mPropertiesButton);
+    layoutButton(leftBounds, mEditButton);
 
     auto rightBounds = bounds.withTrimmedLeft(separator);
     layoutButton(rightBounds, mExpandButton);
@@ -189,7 +227,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));
     g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(height - separator * 2));
 
-    auto const numElements = mStateButton.isVisible() ? 2 : 1;
+    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mEditButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
     auto const bottom = height - numElements * (width + separator);
     if(bottom <= 0)
     {

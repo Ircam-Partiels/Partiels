@@ -39,6 +39,7 @@ namespace Group
 
         PropertyPanel mPropertyPanel{mDirector};
         Icon mPropertiesButton{Icon::Type::properties};
+        Icon mEditButton{Icon::Type::edit};
         StateButton mStateButton{mDirector};
         Icon mExpandButton{Icon::Type::expand};
     };
