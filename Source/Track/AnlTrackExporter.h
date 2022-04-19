@@ -17,6 +17,9 @@ namespace Track
         juce::Result toCue(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort);
         juce::Result toBinary(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort);
         juce::Result toSdif(Accessor const& accessor, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort);
+
+        juce::File getConsolidatedFile(Accessor const& accessor, juce::File const& directory);
+        juce::Result consolidateInDirectory(Accessor const& accessor, juce::File const& directory);
     } // namespace Exporter
 } // namespace Track
 

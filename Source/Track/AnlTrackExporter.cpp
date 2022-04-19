@@ -746,4 +746,39 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const&
     return juce::Result::ok();
 }
 
+juce::File Track::Exporter::getConsolidatedFile(Accessor const& accessor, juce::File const& directory)
+{
+    auto const fileName = accessor.getAttr<AttrType::identifier>() + "-" + accessor.getAttr<AttrType::file>().commit;
+    return directory.getChildFile(fileName + ".dat");
+}
+
+juce::Result Track::Exporter::consolidateInDirectory(Accessor const& accessor, juce::File const& directory)
+{
+    auto const directoryResult = directory.createDirectory();
+    if(directoryResult.failed())
+    {
+        return directoryResult;
+    }
+
+    auto const currentFile = accessor.getAttr<AttrType::file>().file;
+    auto const newFile = getConsolidatedFile(accessor, directory);
+    if(currentFile == newFile)
+    {
+        return juce::Result::ok();
+    }
+    else if(currentFile.getFileName() == newFile.getFileName())
+    {
+        if(currentFile.copyFileTo(newFile))
+        {
+            return juce::Result::ok();
+        }
+        return juce::Result::fail(juce::translate("Cannot copy from SRCFILE to DSTFILE!").replace(currentFile.getFullPathName(), newFile.getFullPathName()));
+    }
+    else
+    {
+        std::atomic<bool> shouldAbort = false;
+        return toBinary(accessor, newFile, shouldAbort);
+    }
+}
+
 ANALYSE_FILE_END
