@@ -749,63 +749,6 @@ void Document::Director::sanitize(NotificationType const notification)
     }
 }
 
-juce::Result Document::Director::consolidate(juce::File const& file)
-{
-    juce::Result result = file.createDirectory();
-    if(result.failed())
-    {
-        return result;
-    }
-    auto reader = mAccessor.getAttr<AttrType::reader>();
-    std::set<juce::File> audioFiles;
-    for(auto i = 0_z; i < reader.size(); ++i)
-    {
-        auto const newAudioFile = file.getChildFile(reader[i].file.getFileName());
-        if(audioFiles.insert(reader[i].file).second)
-        {
-            if(reader[i].file.exists() && reader[i].file != newAudioFile && !reader[i].file.copyFileTo(newAudioFile))
-            {
-                return juce::Result::fail(juce::translate("Cannot copy to SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", reader[i].file.getFullPathName()).replace("DSTFLNAME", newAudioFile.getFullPathName()));
-            }
-        }
-        reader[i].file = newAudioFile;
-    }
-
-    auto const trackDirectory = file.getChildFile("Tracks");
-    result = trackDirectory.createDirectory();
-    if(result.failed())
-    {
-        return result;
-    }
-
-    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-    auto const childFiles = trackDirectory.findChildFiles(juce::File::TypesOfFileToFind::findFilesAndDirectories, true);
-    for(auto& childFile : childFiles)
-    {
-        if(childFile.isDirectory() || !childFile.hasFileExtension("dat") || std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcrs)
-                                                                                         {
-                                                                                             return trackAcrs.get().template getAttr<Track::AttrType::identifier>() == childFile.getFileNameWithoutExtension();
-                                                                                         }))
-        {
-            childFile.deleteRecursively();
-        }
-    }
-
-    for(auto& trackDirector : mTracks)
-    {
-        if(trackDirector != nullptr)
-        {
-            result = trackDirector->consolidate(trackDirectory);
-            if(result.failed())
-            {
-                return result;
-            }
-        }
-    }
-    mAccessor.setAttr<AttrType::reader>(reader, NotificationType::synchronous);
-    return juce::Result::ok();
-}
-
 void Document::Director::fileHasBeenRemoved(juce::File const& file)
 {
     auto const options = juce::MessageBoxOptions()
@@ -988,18 +931,22 @@ void Document::Director::updateMarkers(NotificationType notification)
     for(auto const& trackAcsr : trackAcsrs)
     {
         auto const& results = trackAcsr.get().getAttr<Track::AttrType::results>();
-        auto const channelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
-        auto const markerResults = results.getMarkers();
-        if(markerResults != nullptr)
+        auto const access = results.getReadAccess();
+        if(static_cast<bool>(access))
         {
-            for(auto channelIndex = 0_z; channelIndex < std::min(markerResults->size(), channelsLayout.size()); ++channelIndex)
+            auto const channelsLayout = trackAcsr.get().getAttr<Track::AttrType::channelsLayout>();
+            auto const markerResults = results.getMarkers();
+            if(markerResults != nullptr)
             {
-                if(channelsLayout[channelIndex])
+                for(auto channelIndex = 0_z; channelIndex < std::min(markerResults->size(), channelsLayout.size()); ++channelIndex)
                 {
-                    auto const& channelMarkers = markerResults->at(channelIndex);
-                    for(auto const& marker : channelMarkers)
+                    if(channelsLayout[channelIndex])
                     {
-                        markers.insert(std::get<0_z>(marker));
+                        auto const& channelMarkers = markerResults->at(channelIndex);
+                        for(auto const& marker : channelMarkers)
+                        {
+                            markers.insert(std::get<0_z>(marker));
+                        }
                     }
                 }
             }

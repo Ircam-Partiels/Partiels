@@ -922,4 +922,128 @@ auto XmlParser::fromXml<Document::Exporter::Options>(juce::XmlElement const& xml
     return value;
 }
 
+juce::Result Document::Exporter::clearUnusedAudioFiles(Accessor const& accessor, juce::File directory)
+{
+    directory = directory.getChildFile("Audio");
+    if(!directory.exists() || !directory.isDirectory())
+    {
+        return juce::Result::ok();
+    }
+
+    juce::StringArray errors;
+    auto reader = accessor.getAttr<AttrType::reader>();
+    auto const childFiles = directory.findChildFiles(juce::File::TypesOfFileToFind::findFilesAndDirectories, true);
+    for(auto& childFile : childFiles)
+    {
+        if(std::none_of(reader.cbegin(), reader.cend(), [&](AudioFileLayout const& audioFileLayout)
+                        {
+                            return audioFileLayout.file == childFile;
+                        }))
+        {
+            if(!childFile.deleteFile())
+            {
+                errors.add(childFile.getFullPathName());
+            }
+        }
+    }
+    if(errors.isEmpty())
+    {
+        return juce::Result::ok();
+    }
+    return juce::Result::fail(juce::translate("Cannot clear unused audio files: LIST").replace("LIST", errors.joinIntoString(", ")));
+}
+
+juce::Result Document::Exporter::clearUnusedTrackFiles(Accessor const& accessor, juce::File directory)
+{
+    directory = directory.getChildFile("Track");
+    if(!directory.exists() || !directory.isDirectory())
+    {
+        return juce::Result::ok();
+    }
+
+    juce::StringArray errors;
+    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
+    auto const childFiles = directory.findChildFiles(juce::File::TypesOfFileToFind::findFilesAndDirectories, true);
+    for(auto& childFile : childFiles)
+    {
+        if(childFile.isDirectory() || std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                                                   {
+                                                       return Track::Exporter::getConsolidatedFile(trackAcsr.get(), directory) == childFile;
+                                                   }))
+        {
+            if(!childFile.deleteFile())
+            {
+                errors.add(childFile.getFullPathName());
+            }
+        }
+    }
+    if(errors.isEmpty())
+    {
+        return juce::Result::ok();
+    }
+    return juce::Result::fail(juce::translate("Cannot clear unused track files: LIST").replace("LIST", errors.joinIntoString(", ")));
+}
+
+juce::Result Document::Exporter::consolidateAudioFiles(Accessor& accessor, juce::File directory)
+{
+    directory = directory.getChildFile("Audio");
+    auto reader = accessor.getAttr<AttrType::reader>();
+    std::set<juce::File> audioFiles;
+    std::set<juce::File> createdFiles;
+    auto result = juce::Result::ok();
+    for(auto i = 0_z; i < reader.size() && !result.failed(); ++i)
+    {
+        auto const newAudioFile = directory.getChildFile(reader[i].file.getFileName());
+        if(audioFiles.insert(reader[i].file).second)
+        {
+            if(reader[i].file.exists() && reader[i].file != newAudioFile)
+            {
+                if(reader[i].file.copyFileTo(newAudioFile))
+                {
+                    createdFiles.insert(newAudioFile);
+                }
+                else
+                {
+                    result = juce::Result::fail(juce::translate("Cannot copy from SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", reader[i].file.getFullPathName()).replace("DSTFLNAME", newAudioFile.getFullPathName()));
+                }
+            }
+        }
+        reader[i].file = newAudioFile;
+    }
+    if(result.failed())
+    {
+        while(!createdFiles.empty())
+        {
+            createdFiles.begin()->deleteFile();
+            createdFiles.erase(createdFiles.begin());
+        }
+    }
+    else
+    {
+        accessor.setAttr<AttrType::reader>(reader, NotificationType::synchronous);
+    }
+    return result;
+}
+
+juce::Result Document::Exporter::consolidateTrackFiles(Accessor& accessor, juce::File directory)
+{
+    directory = directory.getChildFile("Track");
+    auto trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        auto trackFileInfo = trackAcsr.get().getAttr<Track::AttrType::file>();
+        if(trackFileInfo.commit.isNotEmpty())
+        {
+            auto const trackResult = Track::Exporter::consolidateInDirectory(trackAcsr.get(), directory);
+            if(trackResult.failed())
+            {
+                return trackResult;
+            }
+            trackFileInfo.file = Track::Exporter::getConsolidatedFile(trackAcsr.get(), directory);
+            trackAcsr.get().setAttr<Track::AttrType::file>(trackFileInfo, NotificationType::synchronous);
+        }
+    }
+    return juce::Result::ok();
+}
+
 ANALYSE_FILE_END

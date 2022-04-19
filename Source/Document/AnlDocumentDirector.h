@@ -23,8 +23,6 @@ namespace Document
         Track::Director const& getTrackDirector(juce::String const& identifier) const override;
         Track::Director& getTrackDirector(juce::String const& identifier) override;
 
-        juce::Result consolidate(juce::File const& file);
-
         void sanitize(NotificationType const notification);
 
         void startAction();

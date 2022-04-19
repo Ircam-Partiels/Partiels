@@ -285,7 +285,9 @@ void Application::Instance::shutdown()
     {
         mDocumentFileBased->removeChangeListener(this);
     }
-    getBackupFile().deleteFile();
+    auto backupFile = getBackupFile();
+    backupFile.deleteFile();
+    Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
     mMainMenuModel.reset();
     mWindow.reset();

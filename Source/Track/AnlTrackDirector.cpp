@@ -723,40 +723,6 @@ void Track::Director::timerCallback()
     mAccessor.setAttr<AttrType::processing>(std::make_tuple(processorRunning, processorProgress, graphicsRunning, graphicsProgress), NotificationType::synchronous);
 }
 
-juce::Result Track::Director::consolidate(juce::File const& file)
-{
-    auto result = file.createDirectory();
-    if(result.failed())
-    {
-        return result;
-    }
-
-    auto const currentFile = mAccessor.getAttr<AttrType::file>().file;
-    auto const expectedFile = file.getChildFile(mAccessor.getAttr<AttrType::identifier>() + ".dat");
-    if(currentFile == expectedFile)
-    {
-        return result;
-    }
-    if(currentFile == juce::File{} || !currentFile.hasFileExtension("dat"))
-    {
-        std::atomic<bool> shouldAbort = false;
-        result = Exporter::toBinary(mAccessor, expectedFile, shouldAbort);
-        if(result.failed())
-        {
-            return result;
-        }
-    }
-    else if(currentFile.existsAsFile())
-    {
-        if(!currentFile.copyFileTo(expectedFile))
-        {
-            return juce::Result::fail(juce::translate("Cannot copy to SRCFLNAME to DSTFLNAME").replace("SRCFLNAME", currentFile.getFullPathName()).replace("DSTFLNAME", expectedFile.getFullPathName()));
-        }
-    }
-    mAccessor.setAttr<AttrType::file>(FileInfo{expectedFile}, NotificationType::synchronous);
-    return result;
-}
-
 void Track::Director::warmAboutPlugin(juce::String const& reason)
 {
     auto const name = mAccessor.getAttr<AttrType::name>();

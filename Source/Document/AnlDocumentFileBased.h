@@ -26,6 +26,7 @@ namespace Document
         static std::variant<std::unique_ptr<juce::XmlElement>, juce::Result> parse(juce::File const& file);
         static juce::Result saveTo(Accessor& accessor, juce::File const& file);
         static void loadTemplate(Accessor& accessor, juce::XmlElement const& xml, bool adaptOnSampleRate);
+        static juce::File getConsolidateDirectory(juce::File const& file);
 
     protected:
         // juce::FileBasedDocument
@@ -39,6 +40,8 @@ namespace Document
     private:
         // juce::AsyncUpdater
         void handleAsyncUpdate() override;
+
+        static void replacePath(juce::XmlElement& element, juce::String const& oldPath, juce::String const& newPath);
 
         Director& mDirector;
         Accessor& mAccessor;

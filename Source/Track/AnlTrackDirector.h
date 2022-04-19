@@ -19,8 +19,10 @@ namespace Track
         ~Director() override;
 
         Accessor& getAccessor();
+        juce::UndoManager& getUndoManager();
 
-        juce::Result consolidate(juce::File const& file);
+        juce::File getConsolidatedFile(juce::File const& directory) const;
+        juce::Result consolidateInDirectory(juce::File const& directory);
 
         bool hasChanged() const;
         void startAction();

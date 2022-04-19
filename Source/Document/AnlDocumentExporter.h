@@ -115,6 +115,11 @@ namespace Document
         };
 
         juce::Result toFile(Accessor& accessor, juce::File const file, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor);
+
+        juce::Result clearUnusedAudioFiles(Accessor const& accessor, juce::File directory);
+        juce::Result clearUnusedTrackFiles(Accessor const& accessor, juce::File directory);
+        juce::Result consolidateAudioFiles(Accessor& accessor, juce::File directory);
+        juce::Result consolidateTrackFiles(Accessor& accessor, juce::File directory);
     } // namespace Exporter
 } // namespace Document
 

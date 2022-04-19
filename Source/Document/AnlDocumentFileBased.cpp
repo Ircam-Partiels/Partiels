@@ -1,4 +1,6 @@
 #include "AnlDocumentFileBased.h"
+#include "../Track/AnlTrackExporter.h"
+#include "AnlDocumentExporter.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -123,32 +125,11 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     }
     auto xml = std::move(*std::get_if<0>(&fileResult));
 
-    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     auto const original = XmlParser::fromXml(*xml.get(), "path", file);
-    auto const oldParent = original.getParentDirectory().getFullPathName();
-    auto const newParent = file.getParentDirectory().getFullPathName();
-    if(oldParent != newParent)
-    {
-        std::function<void(juce::XmlElement&)> replacePath = [&](juce::XmlElement& element)
-        {
-            for(int i = 0; i < element.getNumAttributes(); ++i)
-            {
-                auto const& currentValue = element.getAttributeValue(i);
-                if(currentValue.contains(oldParent))
-                {
-                    element.setAttribute(element.getAttributeName(i), currentValue.replace(oldParent, newParent));
-                }
-            }
-            for(auto* child : element.getChildIterator())
-            {
-                if(child != nullptr)
-                {
-                    replacePath(*child);
-                }
-            }
-        };
-        replacePath(*xml.get());
-    }
+    auto const oldDirectory = getConsolidateDirectory(original);
+    auto const newDirectory = getConsolidateDirectory(file);
+    replacePath(*xml.get(), oldDirectory.getFullPathName(), newDirectory.getFullPathName());
+
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
@@ -159,24 +140,43 @@ juce::Result Document::FileBased::loadDocument(juce::File const& file)
     auto var = std::make_unique<juce::DynamicObject>();
     if(var != nullptr)
     {
+        auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
         var->setProperty("x", viewport.getX());
         var->setProperty("y", viewport.getY());
         mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
     }
+
     mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+
     triggerAsyncUpdate();
     return juce::Result::ok();
 }
 
+juce::File Document::FileBased::getConsolidateDirectory(juce::File const& file)
+{
+    return file.getParentDirectory().getChildFile(file.getFileNameWithoutExtension() + "_" + "ConsolidatedFiles");
+}
+
 juce::Result Document::FileBased::saveDocument(juce::File const& file)
 {
-    auto const result = saveTo(mAccessor, file);
-    if(result.wasOk())
+    mDirector.startAction();
+    auto const trackResult = Exporter::consolidateTrackFiles(mAccessor, getConsolidateDirectory(file));
+    if(trackResult.failed())
     {
+        mDirector.endAction(ActionState::abort);
+        return trackResult;
+    }
+    auto const saveResult = saveTo(mAccessor, file);
+    if(saveResult.wasOk())
+    {
+        mDirector.endAction(ActionState::continueTransaction);
         mSavedStateAccessor.copyFrom(mAccessor, NotificationType::synchronous);
         triggerAsyncUpdate();
+        return saveResult;
     }
-    return result;
+    mDirector.endAction(ActionState::abort);
+    triggerAsyncUpdate();
+    return saveResult;
 }
 
 juce::Result Document::FileBased::consolidate()
@@ -186,26 +186,53 @@ juce::Result Document::FileBased::consolidate()
     {
         return juce::Result::fail("The document file doesn't exist!");
     }
-    auto const subDirectory = file.getParentDirectory().getChildFile(file.getFileNameWithoutExtension() + "_" + "ConsolidatedFiles");
-    auto result = subDirectory.createDirectory();
-    if(result.failed())
+
+    auto const saveResult = saveDocument(file);
+    if(saveResult.failed())
     {
-        return result;
+        return saveResult;
     }
+
     mDirector.startAction();
-    result = mDirector.consolidate(subDirectory);
-    if(result.failed())
+
+    auto const directory = getConsolidateDirectory(file);
+
+    auto const audioResult = Exporter::consolidateAudioFiles(mAccessor, directory);
+    if(audioResult.failed())
     {
         mDirector.endAction(ActionState::abort);
-        return result;
+        return audioResult;
     }
-    result = saveDocument(file);
-    if(result.failed())
+
+    // Create a commmit for all tracks to for consolidation
+    auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    for(auto& trackAcsr : trackAcsrs)
+    {
+        auto trackFileInfo = trackAcsr.get().getAttr<Track::AttrType::file>();
+        if(trackFileInfo.commit.isEmpty())
+        {
+            trackFileInfo.commit = juce::Uuid().toString();
+            trackAcsr.get().setAttr<Track::AttrType::file>(trackFileInfo, NotificationType::synchronous);
+        }
+    }
+    auto const trackResult = Exporter::consolidateTrackFiles(mAccessor, directory);
+    if(trackResult.failed())
     {
         mDirector.endAction(ActionState::abort);
-        return result;
+        return trackResult;
     }
-    mDirector.endAction(ActionState::newTransaction, "Consolidate Document");
+    mDirector.endAction(ActionState::newTransaction, juce::translate("Consolidate Document"));
+
+    auto const audioClearResult = Exporter::clearUnusedAudioFiles(mAccessor, directory);
+    auto const trackClearResult = Exporter::clearUnusedTrackFiles(mAccessor, directory);
+    if(audioClearResult.failed())
+    {
+        return audioClearResult;
+    }
+    if(trackClearResult.failed())
+    {
+        return trackClearResult;
+    }
     return juce::Result::ok();
 }
 
@@ -251,7 +278,7 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     {
         return *std::get_if<1>(&fileResult);
     }
-    auto xml = std::move(*std::get_if<0>(&fileResult));
+    auto const xml = std::move(*std::get_if<0>(&fileResult));
 
     if(xml->hasAttribute("origin"))
     {
@@ -265,7 +292,6 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     AlertWindow::Catcher catcher;
     mDirector.setAlertCatcher(&catcher);
     mAccessor.copyFrom(getDefaultAccessor(), NotificationType::synchronous);
-    auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
     mAccessor.fromXml(*xml.get(), {"document"}, NotificationType::synchronous);
     mDirector.sanitize(NotificationType::synchronous);
     mDirector.setAlertCatcher(nullptr);
@@ -274,11 +300,14 @@ juce::Result Document::FileBased::loadBackup(juce::File const& file)
     auto var = std::make_unique<juce::DynamicObject>();
     if(var != nullptr)
     {
+        auto const viewport = XmlParser::fromXml(*xml.get(), "viewport", juce::Point<int>());
         var->setProperty("x", viewport.getX());
         var->setProperty("y", viewport.getY());
         mAccessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
     }
+
     triggerAsyncUpdate();
+
     return juce::Result::ok();
 }
 
@@ -289,13 +318,52 @@ juce::Result Document::FileBased::saveBackup(juce::File const& file)
     {
         return juce::Result::fail(juce::translate("The document cannot be parsed!"));
     }
-    if(getFile().existsAsFile())
+    auto const currentFile = getFile();
+    if(currentFile.existsAsFile())
     {
-        xml->setAttribute("origin", getFile().getFullPathName());
+        xml->setAttribute("origin", currentFile.getFullPathName());
     }
+    auto const directory = getConsolidateDirectory(file);
+
+    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        auto trackFileInfo = trackAcsr.get().getAttr<Track::AttrType::file>();
+        if(trackFileInfo.commit.isNotEmpty())
+        {
+            auto const trackResult = Track::Exporter::consolidateInDirectory(trackAcsr.get(), directory);
+            if(trackResult.failed())
+            {
+                return trackResult;
+            }
+            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+            auto findFileXml = [&]() -> juce::XmlElement*
+            {
+                for(auto* trackXml = xml->getChildByName("tracks"); trackXml != nullptr; trackXml = trackXml->getNextElementWithTagName("tracks"))
+                {
+                    MiscWeakAssert(trackXml != nullptr);
+                    if(trackXml != nullptr && trackXml->getStringAttribute("identifier") == identifier)
+                    {
+                        return trackXml->getChildByName("file");
+                    }
+                }
+                MiscWeakAssert(false);
+                return nullptr;
+            };
+
+            auto* fileXml = findFileXml();
+            MiscWeakAssert(fileXml != nullptr);
+            if(fileXml != nullptr)
+            {
+                auto const newFile = Track::Exporter::getConsolidatedFile(trackAcsr.get(), directory);
+                fileXml->setAttribute("path", newFile.getFullPathName());
+            }
+        }
+    }
+
     if(!xml->writeTo(file))
     {
-        return juce::Result::fail(juce::translate("The document cannot written to the file FLNM!").replace("FLNM", file.getFileName()));
+        return juce::Result::fail(juce::translate("The document cannot be written to the file FLNM!").replace("FLNM", file.getFileName()));
     }
     return juce::Result::ok();
 }
@@ -386,10 +454,11 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
     auto const ratio = tempSampleRate > 0.0 ? currentSampleRate / tempSampleRate : 1.0;
     for(auto const& acsr : tempAcsr.getAcsrs<AcsrType::tracks>())
     {
-        auto const resultFile = acsr.get().getAttr<Track::AttrType::file>().file;
-        if(resultFile.hasFileExtension("dat"))
+        auto trackFileInfo = acsr.get().getAttr<Track::AttrType::file>();
+        if(trackFileInfo.commit.isNotEmpty())
         {
-            acsr.get().setAttr<Track::AttrType::file>(Track::FileInfo{}, NotificationType::synchronous);
+            trackFileInfo.commit.clear();
+            acsr.get().setAttr<Track::AttrType::file>(trackFileInfo, NotificationType::synchronous);
         }
         if(adaptOnSampleRate)
         {
@@ -408,6 +477,29 @@ void Document::FileBased::loadTemplate(Accessor& accessor, juce::XmlElement cons
         var->setProperty("x", viewport.getX());
         var->setProperty("y", viewport.getY());
         accessor.sendSignal(SignalType::viewport, var.release(), NotificationType::synchronous);
+    }
+}
+
+void Document::FileBased::replacePath(juce::XmlElement& element, juce::String const& oldPath, juce::String const& newPath)
+{
+    if(oldPath == newPath)
+    {
+        return;
+    }
+    for(int i = 0; i < element.getNumAttributes(); ++i)
+    {
+        auto const& currentValue = element.getAttributeValue(i);
+        if(currentValue.contains(oldPath))
+        {
+            element.setAttribute(element.getAttributeName(i), currentValue.replace(oldPath, newPath));
+        }
+    }
+    for(auto* child : element.getChildIterator())
+    {
+        if(child != nullptr)
+        {
+            replacePath(*child, oldPath, newPath);
+        }
     }
 }
 
