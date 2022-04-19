@@ -2,6 +2,7 @@
 
 #include "AnlTrackPropertyPanel.h"
 #include "AnlTrackStateButton.h"
+#include "Result/AnlTrackResultTable.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -20,7 +21,7 @@ namespace Track
         };
         // clang-format on
 
-        Thumbnail(Director& director);
+        Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr);
         ~Thumbnail() override;
 
         // juce::Component
@@ -36,9 +37,14 @@ namespace Track
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
+        Zoom::Accessor& mTimeZoomAccessor;
+        Transport::Accessor& mTransportAccessor;
 
         PropertyPanel mPropertyPanel{mDirector};
+        Result::Table mResultsTable{mDirector, mTimeZoomAccessor, mTransportAccessor};
+        Result::Table::WindowContainer mResultsWindowContainer{mResultsTable};
         Icon mPropertiesButton{Icon::Type::properties};
+        Icon mEditButton{Icon::Type::edit};
         StateButton mStateButton{mDirector};
     };
 } // namespace Track

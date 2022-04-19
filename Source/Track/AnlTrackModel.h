@@ -88,6 +88,7 @@ namespace Track
     enum class SignalType
     {
           showProperties
+        , showTable
     };
 
     using AttrContainer = Model::Container

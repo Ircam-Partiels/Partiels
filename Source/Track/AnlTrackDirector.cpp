@@ -391,6 +391,11 @@ Track::Accessor& Track::Director::getAccessor()
     return mAccessor;
 }
 
+juce::UndoManager& Track::Director::getUndoManager()
+{
+    return mUndoManager;
+}
+
 bool Track::Director::hasChanged() const
 {
     return !mAccessor.isEquivalentTo(mSavedState) || !mAccessor.getAcsr<AcsrType::valueZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::valueZoom>()) || !mAccessor.getAcsr<AcsrType::binZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::binZoom>());

@@ -3,16 +3,32 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Thumbnail::Thumbnail(Director& director)
+Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr)
 : mDirector(director)
+, mTimeZoomAccessor(timeZoomAccessor)
+, mTransportAccessor(transportAcsr)
 {
     addAndMakeVisible(mPropertiesButton);
     mPropertiesButton.setWantsKeyboardFocus(false);
+    addAndMakeVisible(mEditButton);
+    mEditButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
     mStateButton.setWantsKeyboardFocus(false);
 
-    mPropertiesButton.setTooltip(juce::translate("Show the track properties"));
+    mEditButton.setTooltip(juce::translate("Edit the track results"));
+    mEditButton.onClick = [&]()
+    {
+        auto var = std::make_unique<juce::DynamicObject>();
+        if(var != nullptr)
+        {
+            auto const center = mEditButton.getScreenBounds().getCentre();
+            var->setProperty("x", center.x);
+            var->setProperty("y", center.y - 40);
+            mAccessor.sendSignal(SignalType::showTable, var.release(), NotificationType::synchronous);
+        }
+    };
 
+    mPropertiesButton.setTooltip(juce::translate("Show the track properties"));
     mPropertiesButton.onClick = [&]()
     {
         auto var = std::make_unique<juce::DynamicObject>();
@@ -77,6 +93,13 @@ Track::Thumbnail::Thumbnail(Director& director)
                 mPropertyPanel.showAt({x, y});
             }
             break;
+            case SignalType::showTable:
+            {
+                auto const x = static_cast<int>(value.getProperty("x", 0.0));
+                auto const y = static_cast<int>(value.getProperty("y", 0.0));
+                mResultsWindowContainer.showAt({x, y});
+            }
+            break;
         }
     };
 
@@ -114,6 +137,7 @@ void Track::Thumbnail::resized()
         mStateButton.setVisible(false);
     }
     layoutButton(mPropertiesButton);
+    layoutButton(mEditButton);
 }
 
 void Track::Thumbnail::paint(juce::Graphics& g)
@@ -127,7 +151,7 @@ void Track::Thumbnail::paint(juce::Graphics& g)
 
     auto const width = getWidth();
     auto const height = getHeight();
-    auto const numElements = mStateButton.isVisible() ? 2 : 1;
+    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mEditButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
     auto const bottom = height - numElements * (width + separator);
     if(bottom <= 0)
     {
