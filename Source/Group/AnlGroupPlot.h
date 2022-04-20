@@ -44,7 +44,7 @@ namespace Group
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
-            Transport::PlayheadBar mTransportPlayheadBar;
+            Transport::SelectionBar mTransportSelectionBar;
             bool mSnapshotMode{false};
         };
 
