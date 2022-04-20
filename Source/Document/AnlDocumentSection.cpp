@@ -221,9 +221,6 @@ Document::Section::Section(Director& director)
     addAndMakeVisible(tooltipButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTimeRulerDecoration);
-    mLoopBar.addAndMakeVisible(mPlayheadBar);
-    mPlayheadBar.setInterceptsMouseClicks(false, false);
-    mLoopBar.addMouseListener(&mPlayheadBar, false);
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mTopSeparator);
     addAndMakeVisible(mViewport);
@@ -490,7 +487,6 @@ void Document::Section::resized()
         mMagnetizeButton.setBounds(tooltipButton.getBounds().translated(0, -28));
         mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
         mLoopBarDecoration.setBounds(topPart);
-        mPlayheadBar.setBounds(mLoopBar.getLocalBounds());
         mTopSeparator.setBounds(bounds.removeFromTop(1));
     }
 

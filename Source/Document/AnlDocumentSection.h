@@ -84,7 +84,6 @@ namespace Document
         Zoom::Ruler mTimeRuler;
         Decorator mTimeRulerDecoration{mTimeRuler};
         Transport::LoopBar mLoopBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
-        Transport::PlayheadBar mPlayheadBar{mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>()};
         Decorator mLoopBarDecoration{mLoopBar};
         ColouredPanel mTopSeparator;
 
