@@ -853,10 +853,14 @@ std::unique_ptr<juce::ComponentTraverser> Document::Section::createKeyboardFocus
                 {
                     if(auto childFocusTraverser = getChildFocusTraverser(*it))
                     {
-                        childFocusTraverser->getNextComponent(nullptr);
+                        return childFocusTraverser->getNextComponent(nullptr);
                     }
                     return it->getComponent();
                 }
+            }
+            if(auto childFocusTraverser = getChildFocusTraverser(*contents.begin()))
+            {
+                return childFocusTraverser->getNextComponent(nullptr);
             }
             return contents.begin()->getComponent();
         }
@@ -879,10 +883,14 @@ std::unique_ptr<juce::ComponentTraverser> Document::Section::createKeyboardFocus
                 {
                     if(auto childFocusTraverser = getChildFocusTraverser(*it))
                     {
-                        childFocusTraverser->getPreviousComponent(nullptr);
+                        return childFocusTraverser->getPreviousComponent(nullptr);
                     }
                     return it->getComponent();
                 }
+            }
+            if(auto childFocusTraverser = getChildFocusTraverser(contents.back()))
+            {
+                return childFocusTraverser->getPreviousComponent(nullptr);
             }
             return contents.back().getComponent();
         }
