@@ -23,7 +23,7 @@ namespace Application
         // clang-format off
         enum CommandIDs : int
         {
-              documentNew = 0x2001
+              documentNew = 0x3001
             , documentOpen
             , documentSave
             , documentDuplicate
