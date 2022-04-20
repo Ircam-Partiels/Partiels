@@ -240,7 +240,12 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         {
             case Zoom::AttrType::globalRange:
             {
-                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
+                auto const globalRange = Zoom::Range{0.0, mDuration};
+                zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, notification);
+                auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
+                transportAcsr.setAttr<Transport::AttrType::loopRange>(globalRange.getIntersectionWith(loopRange), notification);
+                auto const selection = transportAcsr.getAttr<Transport::AttrType::selection>();
+                transportAcsr.setAttr<Transport::AttrType::selection>(globalRange.getIntersectionWith(selection), notification);
             }
             break;
             case Zoom::AttrType::minimumLength:
