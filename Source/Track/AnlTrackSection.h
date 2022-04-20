@@ -47,7 +47,7 @@ namespace Track
         Snapshot::Overlay mSnapshotOverlay{mSnapshot};
         Decorator mSnapshotDecoration{mSnapshotOverlay};
 
-        Plot mPlot{mAccessor, mTimeZoomAccessor, mTransportAccessor};
+        Plot mPlot{mDirector, mTimeZoomAccessor, mTransportAccessor};
         Plot::Overlay mPlotOverlay{mPlot};
         Decorator mPlotDecoration{mPlotOverlay};
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnlTrackModel.h"
+#include "AnlTrackCommandTarget.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -10,7 +10,7 @@ namespace Track
     : public juce::Component
     {
     public:
-        Plot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
+        Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
         ~Plot() override;
 
         // juce::Component
@@ -18,6 +18,7 @@ namespace Track
 
         class Overlay
         : public ComponentSnapshot
+        , public CommandTarget
         , public Tooltip::BubbleClient
         , public juce::SettableTooltipClient
         {
@@ -34,6 +35,9 @@ namespace Track
             void mouseDown(juce::MouseEvent const& event) override;
             void mouseDrag(juce::MouseEvent const& event) override;
             void mouseUp(juce::MouseEvent const& event) override;
+
+            // juce::ApplicationCommandTarget
+            juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
         private:
             void updateTooltip(juce::Point<int> const& pt);
@@ -112,7 +116,8 @@ namespace Track
             juce::GlyphArrangement mGlyphArrangement;
         };
 
-        Accessor& mAccessor;
+        Director& mDirector;
+        Accessor& mAccessor{mDirector.getAccessor()};
         Zoom::Accessor& mTimeZoomAccessor;
         Transport::Accessor& mTransportAccessor;
         Accessor::Listener mListener{typeid(*this).name()};
