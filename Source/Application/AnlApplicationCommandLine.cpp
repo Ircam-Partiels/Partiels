@@ -179,11 +179,15 @@ Application::CommandLine::CommandLine()
              }
              mExecutor->onEnded = [=, this]()
              {
+                 LookAndFeel lookAndFeel;
+                 juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
                  auto const result = mExecutor->exportTo(outputDir, audioFile.getFileNameWithoutExtension() + " ", options, "");
                  if(result.failed())
                  {
+                     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
                      sendQuitSignal(1);
                  }
+                 juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
                  sendQuitSignal(0);
              };
 
