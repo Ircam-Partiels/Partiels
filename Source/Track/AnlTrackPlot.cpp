@@ -341,83 +341,110 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
     auto const& colours = accessor.getAttr<AttrType::colours>();
     auto const& unit = accessor.getAttr<AttrType::description>().output.unit;
 
-    auto constexpr epsilonPixel = 2.0f;
+    auto constexpr epsilonPixel = 1.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
     auto const clipTimeStart = Tools::pixelToSeconds(clipBounds.getX() - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(clipBounds.getRight() + epsilonPixel, timeRange, fbounds);
 
-    // Time distance corresponding to epsilon pixels
-    auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
-
-    juce::RectangleList<float> rectangles;
+    juce::RectangleList<float> ticks;
+    juce::RectangleList<float> durations;
     std::vector<std::tuple<juce::String, int, int>> labels;
     auto const showLabel = !colours.text.isTransparent();
     auto const font = g.getCurrentFont();
 
+    auto const y = fbounds.getY();
+    auto const height = fbounds.getHeight();
+
     auto const& channelResults = markers->at(channel);
     auto it = Results::findFirstAt(channelResults, clipTimeStart);
+    auto expectedEnd = Results::findFirstAt(channelResults, clipTimeEnd);
+    auto const numElements = std::distance(it, expectedEnd);
+    ticks.ensureStorageAllocated(static_cast<int>(numElements) + 1);
+    durations.ensureStorageAllocated(static_cast<int>(numElements) + 1);
+
+    juce::Rectangle<float> currentTick;
+    juce::Rectangle<float> currentDuration;
     while(it != channelResults.cend() && std::get<0>(*it) < clipTimeEnd)
     {
-        auto const start = std::get<0>(*it);
-        auto const x1 = Tools::secondsToPixel(start, timeRange, fbounds);
+        auto const position = std::get<0>(*it);
+        auto const duration = std::get<1>(*it);
+        auto const x = Tools::secondsToPixel(position, timeRange, fbounds);
+        auto const w = Tools::secondsToPixel(position + duration, timeRange, fbounds) - x;
 
-        if(showLabel && !std::get<2>(*it).empty())
+        if(!currentTick.isEmpty() && currentTick.getRight() >= x)
         {
-            auto const previousLabelLimit = labels.empty() ? x1 : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
-            if(previousLabelLimit <= x1)
+            currentTick = currentTick.getUnion({x, y, 1.0f, height});
+        }
+        else
+        {
+            if(!currentTick.isEmpty())
             {
-                auto const text = std::get<2>(*it) + unit;
-                auto const textWidth = font.getStringWidth(text) + 2;
-                auto const textX = static_cast<int>(std::round(x1)) + 2;
-                labels.push_back(std::make_tuple(text, textX, textWidth));
+                ticks.addWithoutMerging(currentTick);
+            }
+            currentTick = {x, y, 1.0f, height};
+        }
+
+        if(w >= 1.0f && !currentDuration.isEmpty() && currentDuration.getRight() >= x)
+        {
+            currentDuration = currentDuration.getUnion({x, y, w, height});
+        }
+        else
+        {
+            if(!currentDuration.isEmpty())
+            {
+                durations.addWithoutMerging(currentDuration);
+            }
+            if(w >= 1.0f)
+            {
+                currentDuration = {x, y, w, height};
+            }
+            else
+            {
+                currentDuration = {};
             }
         }
 
-        auto timeLimit = std::min(std::get<0>(*it) + std::get<1>(*it) + timeEpsilon, clipTimeEnd);
-        // Skip any adjacent result with a distance inferior to epsilon pixels
-        auto next = std::next(it);
-        while(next != channelResults.cend() && std::get<0>(*next) < timeLimit)
-        {
-            it = std::exchange(next, std::next(next));
-            timeLimit = std::min(std::get<0>(*it) + std::get<1>(*it) + timeEpsilon, clipTimeEnd);
-        }
-
-        auto const start2 = std::get<0>(*it);
-        auto const end = start2 + std::get<1>(*it);
-        auto const w = Tools::secondsToPixel(end, timeRange, fbounds) - x1;
-
         if(showLabel && !std::get<2>(*it).empty())
         {
-            auto const x2 = Tools::secondsToPixel(start2, timeRange, fbounds);
-            auto const previousLabelLimit = labels.empty() ? x2 : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
-            if(previousLabelLimit <= x2)
+            auto const previousLabelLimit = labels.empty() ? x : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
+            if(previousLabelLimit <= x)
             {
                 auto const text = std::get<2>(*it) + unit;
                 auto const textWidth = font.getStringWidth(text) + 2;
-                auto const textX = static_cast<int>(std::round(x2)) + 2;
+                auto const textX = static_cast<int>(std::round(x)) + 2;
                 labels.push_back(std::make_tuple(text, textX, textWidth));
             }
         }
-
-        rectangles.addWithoutMerging({x1, fbounds.getY(), std::max(w, 1.0f), fbounds.getHeight()});
 
         it = std::next(it);
     }
 
+    if(!currentTick.isEmpty())
+    {
+        ticks.addWithoutMerging(currentTick);
+    }
+    if(!currentDuration.isEmpty())
+    {
+        durations.addWithoutMerging(currentDuration);
+    }
+
+    g.setColour(colours.foreground.withAlpha(0.4f));
+    g.fillRectList(durations);
+
     if(!colours.shadow.isTransparent())
     {
-        rectangles.offsetAll(-2.0f, 0.0f);
+        ticks.offsetAll(-2.0f, 0.0f);
 
         g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
-        g.fillRectList(rectangles);
-        rectangles.offsetAll(1.0f, 0.0f);
+        g.fillRectList(ticks);
+        ticks.offsetAll(1.0f, 0.0f);
 
         g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
-        g.fillRectList(rectangles);
-        rectangles.offsetAll(1.0f, 0.0f);
+        g.fillRectList(ticks);
+        ticks.offsetAll(1.0f, 0.0f);
     }
     g.setColour(colours.foreground);
-    g.fillRectList(rectangles);
+    g.fillRectList(ticks);
 
     if(showLabel)
     {
