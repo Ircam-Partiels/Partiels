@@ -20,6 +20,7 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
 Document::Section::Section(Director& director)
 : mDirector(director)
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
+, mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [](double value)
              {
                  return Format::secondsToString(value, {":", ":", ":", ""});
@@ -220,6 +221,7 @@ Document::Section::Section(Director& director)
 
     addAndMakeVisible(tooltipButton);
     addAndMakeVisible(mTransportDisplay);
+    addAndMakeVisible(mTransportSelectionInfo);
     addAndMakeVisible(mTimeRulerDecoration);
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mTopSeparator);
@@ -462,14 +464,22 @@ void Document::Section::resizeHeader(juce::Rectangle<int>& bounds)
 {
     auto header = bounds.removeFromTop(40);
     mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-    header.removeFromLeft(5);
-    header = header.withRight(mTransportDisplay.getX());
-    mReaderLayoutButton.setBounds(header.removeFromLeft(24).withSizeKeepingCentre(24, 24));
-    header.removeFromLeft(4);
+
+    auto leftSize = header.withRight(mTransportDisplay.getX()).withTrimmedLeft(5);
+    leftSize = leftSize.withSizeKeepingCentre(leftSize.getWidth(), 24);
+    mReaderLayoutButton.setBounds(leftSize.removeFromLeft(24));
+    leftSize.removeFromLeft(4);
     auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
     auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
-    auto const buttonWidth = std::min(textWidth, header.getWidth());
-    mDocumentName.setBounds(header.removeFromLeft(buttonWidth).withSizeKeepingCentre(buttonWidth, 24));
+    // Improve text
+    mDocumentName.setBounds(leftSize.removeFromLeft(textWidth));
+
+    auto const scrollbarWidth = mViewport.getScrollBarThickness();
+    auto rightSize = header.withLeft(mTransportDisplay.getRight());
+    tooltipButton.setBounds(rightSize.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
+    leftSize.removeFromRight(4);
+    mTransportSelectionInfo.setVisible(rightSize.getWidth() > 164);
+    mTransportSelectionInfo.setBounds(rightSize.removeFromRight(164));
 }
 
 void Document::Section::resized()
@@ -483,8 +493,7 @@ void Document::Section::resized()
         mGridButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(18, 18));
         mExpandLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
         mResizeLayoutButton.setBounds(topPart.removeFromLeft(28).withSizeKeepingCentre(20, 20));
-        tooltipButton.setBounds(topPart.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
-        mMagnetizeButton.setBounds(tooltipButton.getBounds().translated(0, -28));
+        mMagnetizeButton.setBounds(topPart.removeFromRight(24 + scrollbarWidth).withSizeKeepingCentre(20, 20));
         mTimeRulerDecoration.setBounds(topPart.removeFromTop(14));
         mLoopBarDecoration.setBounds(topPart);
         mTopSeparator.setBounds(bounds.removeFromTop(1));

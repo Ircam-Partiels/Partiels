@@ -70,6 +70,7 @@ namespace Document
 
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         Transport::Display mTransportDisplay;
+        Transport::SelectionInfo mTransportSelectionInfo;
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
         ReaderLayoutPanel::WindowContainer mReaderLayoutWindow{mReaderLayoutPanel};
