@@ -312,6 +312,11 @@ void Application::Instance::shutdown()
     anlDebug("Application", "Done");
 }
 
+juce::ApplicationCommandTarget* Application::Instance::getNextCommandTarget()
+{
+    return mWindow != nullptr ? dynamic_cast<juce::ApplicationCommandTarget*>(mWindow->getContentComponent()) : nullptr;
+}
+
 Application::Instance& Application::Instance::get()
 {
     return *static_cast<Instance*>(JUCEApplication::getInstance());

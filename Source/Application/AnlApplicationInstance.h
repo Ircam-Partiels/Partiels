@@ -37,6 +37,9 @@ namespace Application
         void systemRequestedQuit() override;
         void shutdown() override;
 
+        // ApplicationCommandTarget
+        juce::ApplicationCommandTarget* getNextCommandTarget() override;
+
         static Instance& get();
         static juce::String getExtensionForDocumentFile();
         static juce::String getWildCardForDocumentFile();

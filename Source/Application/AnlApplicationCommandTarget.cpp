@@ -66,12 +66,10 @@ Application::CommandTarget::CommandTarget()
     Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
     Instance::get().getApplicationCommandManager().registerAllCommandsForTarget(this);
-    Instance::get().getApplicationCommandManager().setFirstCommandTarget(this);
 }
 
 Application::CommandTarget::~CommandTarget()
 {
-    Instance::get().getApplicationCommandManager().setFirstCommandTarget(nullptr);
     Instance::get().getDocumentAccessor().getAcsr<Document::AcsrType::transport>().removeListener(mTransportListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getUndoManager().removeChangeListener(this);
