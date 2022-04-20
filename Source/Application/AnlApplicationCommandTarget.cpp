@@ -664,7 +664,17 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::transportToggleLooping:
         {
             auto constexpr attr = Transport::AttrType::looping;
-            transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
+            auto const selectionRange = transportAcsr.getAttr<Transport::AttrType::selection>();
+            auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
+            if(loopRange != selectionRange)
+            {
+                transportAcsr.setAttr<Transport::AttrType::loopRange>(selectionRange, NotificationType::synchronous);
+                transportAcsr.setAttr<attr>(true, NotificationType::synchronous);
+            }
+            else
+            {
+                transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
+            }
             return true;
         }
         case CommandIDs::transportToggleStopAtLoopEnd:
