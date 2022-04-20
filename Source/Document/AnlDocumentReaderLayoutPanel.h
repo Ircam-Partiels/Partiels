@@ -42,7 +42,6 @@ namespace Document
         juce::TextButton mResetButton{juce::translate("Reset"), juce::translate("Reset to the current audio files layout of the document")};
         ColouredPanel mInfoSeparator;
         AudioFileInfoPanel mFileInfoPanel;
-        juce::TooltipWindow mTooltipWindow{this};
 
         JUCE_LEAK_DETECTOR(ReaderLayoutPanel)
     };
