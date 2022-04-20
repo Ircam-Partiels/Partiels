@@ -1,6 +1,11 @@
 
 v1.0.5
 
+- Fix: The values of the time fields should be closer to the suffixes - h, m, s, ms (#254)
+- Imp: Use time selection to update the loop range (#253)
+- Imp: Add time selection info on the header part of the application (#252)
+- Imp: Add time selection mechanism on the plots of tracks and groups (#251)
+- Imp: Remove the user interaction for shifting the loop range using the shift key (#250)
 - Fix: The text information of the results file in the track property panel should not be editable (#248)
 - Fix: Application does not correctly capture mouse events when full screen mode is restored on startup (#247)
 
