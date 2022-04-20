@@ -19,6 +19,7 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
 
 Document::Section::Section(Director& director)
 : mDirector(director)
+, mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [](double value)
              {
                  return Format::secondsToString(value, {":", ":", ":", ""});
@@ -275,12 +276,6 @@ Document::Section::Section(Director& director)
                 {
                     mReaderLayoutButton.setTypes(Icon::Type::alert);
                     mReaderLayoutButton.setTooltip(alertMessage);
-                }
-
-                if(std::get<0>(result) && std::get<0>(result)->sampleRate > 0.0)
-                {
-                    auto const maxTime = static_cast<double>(std::get<0>(result)->lengthInSamples) / std::get<0>(result)->sampleRate;
-                    mTransportDisplay.setMaxTime(maxTime);
                 }
             }
             break;

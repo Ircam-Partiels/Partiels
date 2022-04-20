@@ -69,7 +69,7 @@ namespace Document
         Accessor::Receiver mReceiver;
 
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-        Transport::Display mTransportDisplay{mAccessor.getAcsr<AcsrType::transport>()};
+        Transport::Display mTransportDisplay;
 
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
         ReaderLayoutPanel::WindowContainer mReaderLayoutWindow{mReaderLayoutPanel};
