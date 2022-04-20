@@ -922,6 +922,14 @@ void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
             {
                 return focusedComponent;
             }
+            else if(auto* parentTrackSection = focusedComponent->findParentComponentOfClass<Track::Section>())
+            {
+                return parentTrackSection;
+            }
+            else if(auto* parentGroupSection = focusedComponent->findParentComponentOfClass<Group::Section>())
+            {
+                return parentGroupSection;
+            }
             anlWeakAssert(false);
             return nullptr;
         };
