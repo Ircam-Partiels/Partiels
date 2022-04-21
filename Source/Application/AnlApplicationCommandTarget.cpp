@@ -1,5 +1,6 @@
 #include "AnlApplicationCommandTarget.h"
 #include "../Document/AnlDocumentTools.h"
+#include "../Track/AnlTrackCommandTarget.h"
 #include "../Track/AnlTrackExporter.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
@@ -236,7 +237,16 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             {
                 result.setInfo(juce::translate("Remove Track or Group"), juce::translate("Removes the selected track or group"), "Edit", 0);
             }
-            result.setActive(focusedTrack.has_value() || focusedGroup.has_value());
+            juce::ApplicationCommandInfo info(Track::CommandTarget::CommandIDs::editDeleteSelection);
+            if(Instance::get().getApplicationCommandManager().getTargetForCommand(info.commandID, info))
+            {
+                auto const isDisable = info.flags & juce::ApplicationCommandInfo::isDisabled;
+                result.setActive(isDisable && (focusedTrack.has_value() || focusedGroup.has_value()));
+            }
+            else
+            {
+                result.setActive(focusedTrack.has_value() || focusedGroup.has_value());
+            }
             result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
