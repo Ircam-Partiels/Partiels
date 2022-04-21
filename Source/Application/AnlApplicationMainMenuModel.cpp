@@ -42,6 +42,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     juce::ignoreUnused(topLevelMenuIndex);
 
     using CommandIDs = CommandTarget::CommandIDs;
+    using TrackCommandIDs = Track::CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     juce::PopupMenu menu;
     if(menuName == "File")
@@ -84,7 +85,12 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::editNewTrack);
         menu.addCommandItem(&commandManager, CommandIDs::editNewGroup);
         menu.addSeparator();
-        menu.addCommandItem(&commandManager, Track::CommandTarget::CommandIDs::editSelectAll);
+        menu.addCommandItem(&commandManager, TrackCommandIDs::editSelectAll);
+        menu.addCommandItem(&commandManager, TrackCommandIDs::editDeleteSelection);
+        menu.addCommandItem(&commandManager, TrackCommandIDs::editCopySelection);
+        menu.addCommandItem(&commandManager, TrackCommandIDs::editCutSelection);
+        menu.addCommandItem(&commandManager, TrackCommandIDs::editPasteSelection);
+        menu.addCommandItem(&commandManager, TrackCommandIDs::editDuplicateSelection);
     }
     else if(menuName == "Transport")
     {
