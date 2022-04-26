@@ -521,7 +521,12 @@ void Document::Section::paint(juce::Graphics& g)
 
 void Document::Section::updateHeights(bool force)
 {
-    if(mViewport.getHeight() <= 0 || (!mAccessor.getAttr<AttrType::autoresize>() && !force))
+    if(mViewport.getHeight() <= 0)
+    {
+        return;
+    }
+    auto const shouldResize = (!isDragAndDropActive() && mAccessor.getAttr<AttrType::autoresize>()) || force;
+    if(!shouldResize)
     {
         return;
     }
@@ -910,6 +915,12 @@ std::unique_ptr<juce::ComponentTraverser> Document::Section::createKeyboardFocus
     };
 
     return std::make_unique<FocusTraverser>(*this);
+}
+
+void Document::Section::dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details)
+{
+    juce::ignoreUnused(details);
+    updateHeights();
 }
 
 void Document::Section::globalFocusChanged(juce::Component* focusedComponent)

@@ -41,6 +41,9 @@ namespace Document
         std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     private:
+        // juce::DragAndDropContainer
+        void dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details) override;
+
         // juce::FocusChangeListener
         void globalFocusChanged(juce::Component* focusedComponent) override;
 
