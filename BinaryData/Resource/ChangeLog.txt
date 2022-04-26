@@ -1,6 +1,8 @@
 
 v1.0.5
 
+- Fix: Dragging a group should not expand it if the auto resize mode in on (#259)
+- Fix: Changing the value of a parameter by a step of 1 of a number field does not work (#258)
 - Fix: Moving keyboard focus to the next component is not working correctly when there is only one group (#257)
 - Fix: The values of the time fields should be closer to the suffixes - h, m, s, ms (#254)
 - Imp: Use time selection to update the loop range (#253)
