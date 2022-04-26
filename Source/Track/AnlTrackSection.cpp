@@ -36,8 +36,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             break;
             case AttrType::focused:
             {
-                auto const focused = mAccessor.getAttr<AttrType::focused>();
-                mThumbnailDecoration.setHighlighted(focused);
+                mThumbnailDecoration.setHighlighted(!Tools::getSelectedChannels(acsr).empty());
             }
             break;
         }
@@ -63,7 +62,6 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
-    setWantsKeyboardFocus(true);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -75,6 +73,11 @@ Track::Section::~Section()
 juce::Rectangle<int> Track::Section::getPlotBounds() const
 {
     return mPlot.getBounds();
+}
+
+juce::String Track::Section::getIdentifier() const
+{
+    return mAccessor.getAttr<AttrType::identifier>();
 }
 
 void Track::Section::setResizable(bool state)
@@ -189,20 +192,6 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
         }
         break;
     }
-}
-
-void Track::Section::focusOfChildComponentChanged(juce::Component::FocusChangeType cause)
-{
-    juce::ignoreUnused(cause);
-    juce::WeakReference<juce::Component> target(this);
-    juce::MessageManager::callAsync([=, this]
-                                    {
-                                        if(target.get() != nullptr)
-                                        {
-                                            auto const hasFocus = hasKeyboardFocus(true) || getCurrentlyFocusedComponent() == nullptr;
-                                            mAccessor.setAttr<AttrType::focused>(hasFocus, NotificationType::synchronous);
-                                        }
-                                    });
 }
 
 ANALYSE_FILE_END

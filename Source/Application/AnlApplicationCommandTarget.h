@@ -34,6 +34,7 @@ namespace Application
             
             , editUndo
             , editRedo
+            , editSelectNextItem
             , editNewGroup
             , editNewTrack
             , editRemoveItem

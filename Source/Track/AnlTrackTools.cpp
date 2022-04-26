@@ -269,6 +269,34 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& 
     return Zoom::Range(0.0, static_cast<double>(output.binCount));
 }
 
+std::set<size_t> Track::Tools::getSelectedChannels(Accessor const& acsr)
+{
+    auto const& states = acsr.getAttr<AttrType::focused>();
+    auto const maxChannels = std::min(acsr.getAttr<AttrType::channelsLayout>().size(), states.size());
+    std::set<size_t> channels;
+    for(auto index = 0_z; index < maxChannels; ++index)
+    {
+        if(states[index])
+        {
+            channels.insert(index);
+        }
+    }
+    return channels;
+}
+
+size_t Track::Tools::getChannel(Accessor const& acsr, juce::Rectangle<int> bounds, int y)
+{
+    auto const verticalRanges = getChannelVerticalRanges(acsr, std::move(bounds));
+    for(auto const& verticalRange : verticalRanges)
+    {
+        if(y < verticalRange.second.getEnd())
+        {
+            return verticalRange.first;
+        }
+    }
+    return verticalRanges.empty() ? 0_z : verticalRanges.crbegin()->first;
+}
+
 std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
 {
     auto const channelsLayout = acsr.getAttr<AttrType::channelsLayout>();

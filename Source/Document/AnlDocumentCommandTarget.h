@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Result/AnlTrackResultModifier.h"
+#include "../Track/Result/AnlTrackResultModifier.h"
+#include "AnlDocumentDirector.h"
 
 ANALYSE_FILE_BEGIN
 
-namespace Track
+namespace Document
 {
     class CommandTarget
     : public juce::ApplicationCommandTarget
@@ -13,16 +14,16 @@ namespace Track
         // clang-format off
         enum CommandIDs : int
         {
-              editSelectAll = 0x2001
-            , editDeleteSelection
-            , editCopySelection
-            , editCutSelection
-            , editPasteSelection
-            , editDuplicateSelection
+            selectAll = 0x2001,
+            editDelete,
+            editCopy,
+            editCut,
+            editPaste,
+            editDuplicate
         };
         // clang-format on
 
-        CommandTarget(Director& director, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAcsr);
+        CommandTarget(Director& director, juce::ApplicationCommandManager& commandManager);
         ~CommandTarget() override;
 
         // juce::ApplicationCommandTarget
@@ -31,18 +32,21 @@ namespace Track
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
-        using CopiedData = Result::Modifier::CopiedData;
+        std::set<size_t> getSelectedChannels(Track::Accessor const& trackAcsr) const;
+
+        using CopiedData = Track::Result::Modifier::CopiedData;
+        using MultiChannelData = std::map<size_t, CopiedData>;
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
-        Zoom::Accessor& mTimeZoomAccessor;
-        Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
-        Transport::Accessor& mTransportAccessor;
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-        CopiedData mCopiedData;
-        juce::Range<double> mCopiedSelection;
+        std::map<juce::String, MultiChannelData> mClipboardData;
+        juce::Range<double> mClipboardRange;
+
+    protected:
+        juce::ApplicationCommandManager& mCommandManager;
     };
-} // namespace Track
+} // namespace Document
 
 ANALYSE_FILE_END

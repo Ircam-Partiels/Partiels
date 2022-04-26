@@ -1,6 +1,7 @@
 #pragma once
 
-#include "AnlTrackCommandTarget.h"
+#include "AnlTrackDirector.h"
+#include "AnlTrackRuler.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -18,7 +19,6 @@ namespace Track
 
         class Overlay
         : public ComponentSnapshot
-        , public CommandTarget
         , public Tooltip::BubbleClient
         , public juce::SettableTooltipClient
         {
@@ -36,9 +36,6 @@ namespace Track
             void mouseDrag(juce::MouseEvent const& event) override;
             void mouseUp(juce::MouseEvent const& event) override;
 
-            // juce::ApplicationCommandTarget
-            juce::ApplicationCommandTarget* getNextCommandTarget() override;
-
         private:
             void updateTooltip(juce::Point<int> const& pt);
             void updateMode(juce::MouseEvent const& event);
@@ -48,7 +45,7 @@ namespace Track
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
-            Transport::SelectionBar mTransportSelectionBar;
+            SelectionBar mSelectionBar;
             bool mSnapshotMode{false};
         };
 

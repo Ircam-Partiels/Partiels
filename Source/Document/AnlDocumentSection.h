@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../Group/AnlGroupStrechableSection.h"
+#include "AnlDocumentCommandTarget.h"
 #include "AnlDocumentReaderLayoutPanel.h"
+#include "AnlDocumentSelection.h"
 #include "AnlDocumentTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -11,7 +13,7 @@ namespace Document
     class Section
     : public juce::Component
     , public juce::DragAndDropContainer
-    , private juce::FocusChangeListener
+    , public CommandTarget
     {
     public:
         // clang-format off
@@ -21,10 +23,9 @@ namespace Document
         };
         // clang-format on
 
-        Section(Director& director);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager);
         ~Section() override;
 
-        void moveKeyboardFocusTo(juce::String const& identifier);
         void showBubbleInfo(bool state);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
@@ -36,23 +37,28 @@ namespace Document
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
+        void mouseDown(juce::MouseEvent const& event) override;
+        void mouseDrag(juce::MouseEvent const& event) override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
-        std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     private:
         // juce::DragAndDropContainer
         void dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details) override;
 
-        // juce::FocusChangeListener
-        void globalFocusChanged(juce::Component* focusedComponent) override;
+        // juce::ApplicationCommandTarget
+        juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
         void updateLayout();
         void updateHeights(bool force = false);
         void updateExpandState();
+        void updateFocus();
+
         void resizeHeader(juce::Rectangle<int>& bounds);
         void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
         void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
+
+        Selection::Item getSelectionItem(juce::Component* component, juce::MouseEvent const& event) const;
 
         class Viewport
         : public juce::Viewport
@@ -92,7 +98,6 @@ namespace Document
         ColouredPanel mTopSeparator;
 
         std::map<juce::String, std::unique_ptr<Group::StrechableSection>> mGroupSections;
-        std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
         DraggableTable mDraggableTable{"Group"};
         Viewport mViewport;
         ColouredPanel mBottomSeparator;
@@ -100,9 +105,12 @@ namespace Document
         juce::TextButton mAddButton;
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
-        juce::Component* mFocusComponent{nullptr};
         ScrollHelper mScrollHelper;
+        Selection::Item mLastSelectedItem;
+
         LayoutNotifier mLayoutNotifier;
+        LayoutNotifier mExpandedNotifier;
+        LayoutNotifier mFocusNotifier;
     };
 } // namespace Document
 

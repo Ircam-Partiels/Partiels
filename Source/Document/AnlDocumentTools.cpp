@@ -3,6 +3,11 @@
 
 ANALYSE_FILE_BEGIN
 
+bool Document::Tools::hasItem(Accessor const& accessor, juce::String const& identifier)
+{
+    return hasGroupAcsr(accessor, identifier) || (hasTrackAcsr(accessor, identifier) && isTrackInGroup(accessor, identifier));
+}
+
 bool Document::Tools::hasTrackAcsr(Accessor const& accessor, juce::String const& identifier)
 {
     auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
@@ -100,7 +105,7 @@ size_t Document::Tools::getTrackPosition(Accessor const& accessor, juce::String 
 {
     auto const& groupAcsr = getGroupAcsrForTrack(accessor, identifier);
     auto const& layout = groupAcsr.getAttr<Group::AttrType::layout>();
-    auto it = std::find(layout.cbegin(), layout.cend(), identifier);
+    auto const it = std::find(layout.cbegin(), layout.cend(), identifier);
     anlStrongAssert(it != layout.cend());
     return static_cast<size_t>(std::distance(layout.cbegin(), it));
 }
@@ -108,37 +113,41 @@ size_t Document::Tools::getTrackPosition(Accessor const& accessor, juce::String 
 size_t Document::Tools::getGroupPosition(Accessor const& accessor, juce::String const& identifier)
 {
     auto const& layout = accessor.getAttr<AttrType::layout>();
-    auto it = std::find(layout.cbegin(), layout.cend(), identifier);
-    anlStrongAssert(it != layout.cend());
+    auto const it = std::find(layout.cbegin(), layout.cend(), identifier);
+    anlWeakAssert(it != layout.cend());
+    if(it != layout.cend())
+    {
+        return 0_z;
+    }
     return static_cast<size_t>(std::distance(layout.cbegin(), it));
 }
 
-std::optional<juce::String> Document::Tools::getFocusedTrack(Accessor const& accessor)
+size_t Document::Tools::getItemPosition(Accessor const& accessor, juce::String const& identifier)
 {
-    auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
-    auto trackIt = std::find_if(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
-                                {
-                                    return trackAcsr.get().template getAttr<Track::AttrType::focused>();
-                                });
-    if(trackIt == trackAcsrs.cend())
+    auto index = 0_z;
+    auto const documentLayout = accessor.getAttr<AttrType::layout>();
+    for(auto const& groupId : documentLayout)
     {
-        return std::optional<juce::String>();
+        if(hasGroupAcsr(accessor, groupId))
+        {
+            if(groupId == identifier)
+            {
+                return index;
+            }
+            ++index;
+            auto const& groupAcsr = getGroupAcsr(accessor, groupId);
+            auto const& groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
+            for(auto const& trackId : groupLayout)
+            {
+                if(trackId == identifier)
+                {
+                    return index;
+                }
+                ++index;
+            }
+        }
     }
-    return trackIt->get().getAttr<Track::AttrType::identifier>();
-}
-
-std::optional<juce::String> Document::Tools::getFocusedGroup(Accessor const& accessor)
-{
-    auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
-    auto groupIt = std::find_if(groupAcsrs.cbegin(), groupAcsrs.cend(), [&](auto const& groupAcsr)
-                                {
-                                    return groupAcsr.get().template getAttr<Group::AttrType::focused>();
-                                });
-    if(groupIt == groupAcsrs.cend())
-    {
-        return std::optional<juce::String>();
-    }
-    return groupIt->get().getAttr<Group::AttrType::identifier>();
+    return index;
 }
 
 std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& acsr)
@@ -219,10 +228,12 @@ std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor
     return std::make_unique<RangeEditor>(acsr.getAcsr<AcsrType::timeZoom>());
 }
 
-Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn)
+Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn, std::set<Group::AttrType> groupAttrs, std::set<Track::AttrType> trackAttrs)
 : mAccessor(accessor)
 , onLayoutUpdated(fn)
 , mName(name)
+, mTrackAttributes(std::move(trackAttrs))
+, mGroupAttributes(std::move(groupAttrs))
 {
     mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
@@ -234,33 +245,9 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                 auto listener = std::make_unique<Track::Accessor::SmartListener>(mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::tracks>(index), [this](Track::Accessor const& trackAcsr, Track::AttrType trackAttribute)
                                                                                  {
                                                                                      juce::ignoreUnused(trackAcsr);
-                                                                                     switch(trackAttribute)
+                                                                                     if(onLayoutUpdated != nullptr && mTrackAttributes.contains(trackAttribute))
                                                                                      {
-                                                                                         case Track::AttrType::identifier:
-                                                                                         {
-                                                                                             if(onLayoutUpdated != nullptr)
-                                                                                             {
-                                                                                                 onLayoutUpdated();
-                                                                                             }
-                                                                                         }
-                                                                                         break;
-                                                                                         case Track::AttrType::name:
-                                                                                         case Track::AttrType::file:
-                                                                                         case Track::AttrType::results:
-                                                                                         case Track::AttrType::key:
-                                                                                         case Track::AttrType::description:
-                                                                                         case Track::AttrType::state:
-                                                                                         case Track::AttrType::height:
-                                                                                         case Track::AttrType::colours:
-                                                                                         case Track::AttrType::channelsLayout:
-                                                                                         case Track::AttrType::zoomLink:
-                                                                                         case Track::AttrType::zoomAcsr:
-                                                                                         case Track::AttrType::graphics:
-                                                                                         case Track::AttrType::warnings:
-                                                                                         case Track::AttrType::processing:
-                                                                                         case Track::AttrType::focused:
-                                                                                         case Track::AttrType::grid:
-                                                                                             break;
+                                                                                         onLayoutUpdated();
                                                                                      }
                                                                                  });
                 mTrackListeners.emplace(mTrackListeners.begin() + static_cast<long>(index), std::move(listener));
@@ -272,25 +259,9 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
                 auto listener = std::make_unique<Group::Accessor::SmartListener>(mName + "::" + typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
                                                                                  {
                                                                                      juce::ignoreUnused(groupAcsr);
-                                                                                     switch(groupAttribute)
+                                                                                     if(onLayoutUpdated != nullptr && mGroupAttributes.contains(groupAttribute))
                                                                                      {
-                                                                                         case Group::AttrType::identifier:
-                                                                                         {
-                                                                                             if(onLayoutUpdated != nullptr)
-                                                                                             {
-                                                                                                 onLayoutUpdated();
-                                                                                             }
-                                                                                         }
-                                                                                         break;
-                                                                                         case Group::AttrType::name:
-                                                                                         case Group::AttrType::height:
-                                                                                         case Group::AttrType::colour:
-                                                                                         case Group::AttrType::expanded:
-                                                                                         case Group::AttrType::layout:
-                                                                                         case Group::AttrType::tracks:
-                                                                                         case Group::AttrType::focused:
-                                                                                         case Group::AttrType::zoomid:
-                                                                                             break;
+                                                                                         onLayoutUpdated();
                                                                                      }
                                                                                  });
                 mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
@@ -337,6 +308,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AttrType::grid:
             case AttrType::autoresize:
             case AttrType::samplerate:
+            case AttrType::editMode:
                 break;
             case AttrType::layout:
             {

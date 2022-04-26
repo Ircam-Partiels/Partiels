@@ -14,7 +14,7 @@ namespace Group
         StrechableSection(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~StrechableSection() override;
 
-        void moveKeyboardFocusTo(juce::String const& identifier);
+        juce::Component const& getSection(juce::String const& identifier) const;
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
         void setResizable(bool state);
 
@@ -22,7 +22,6 @@ namespace Group
 
         // juce::Component
         void resized() override;
-        std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     private:
         void updateContent();

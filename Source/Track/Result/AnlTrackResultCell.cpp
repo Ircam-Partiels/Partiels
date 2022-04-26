@@ -8,55 +8,9 @@ Track::Result::CellBase::CellBase(Director& director, Zoom::Accessor& timeZoomAc
 , mChannel(channel)
 , mIndex(index)
 {
-    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case Zoom::AttrType::globalRange:
-            {
-                update();
-            }
-            break;
-            case Zoom::AttrType::minimumLength:
-            case Zoom::AttrType::visibleRange:
-            case Zoom::AttrType::anchor:
-                break;
-        }
-    };
-
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-    {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
-        {
-            case AttrType::file:
-            case AttrType::results:
-            case AttrType::description:
-            {
-                update();
-            }
-            break;
-            case AttrType::identifier:
-            case AttrType::name:
-            case AttrType::key:
-            case AttrType::state:
-            case AttrType::height:
-            case AttrType::colours:
-            case AttrType::channelsLayout:
-            case AttrType::zoomLink:
-            case AttrType::zoomAcsr:
-            case AttrType::graphics:
-            case AttrType::warnings:
-            case AttrType::processing:
-            case AttrType::focused:
-            case AttrType::grid:
-                break;
-        }
-    };
 }
 
-bool Track::Result::CellBase::CellBase::isValid() const
+bool Track::Result::CellBase::CellBase::updateAndValidate(size_t channel)
 {
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
@@ -66,7 +20,12 @@ bool Track::Result::CellBase::CellBase::isValid() const
     }
     auto isResultValid = [&](auto const& resultPtr) -> bool
     {
-        return mChannel < resultPtr->size() && mIndex < resultPtr->at(mChannel).size();
+        if(mChannel < resultPtr->size() && mIndex < resultPtr->at(mChannel).size() && channel == mChannel)
+        {
+            update();
+            return true;
+        }
+        return false;
     };
     if(auto const markers = results.getMarkers())
     {
@@ -77,18 +36,6 @@ bool Track::Result::CellBase::CellBase::isValid() const
         return isResultValid(points);
     }
     return false;
-}
-
-void Track::Result::CellBase::attachToListener()
-{
-    mAccessor.addListener(mListener, NotificationType::synchronous);
-    mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
-}
-
-void Track::Result::CellBase::detachFromListener()
-{
-    mAccessor.removeListener(mListener);
-    mTimeZoomAccessor.removeListener(mTimeZoomListener);
 }
 
 Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index)
@@ -151,13 +98,6 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
             undoManager.perform(action.release());
         }
     };
-
-    attachToListener();
-}
-
-Track::Result::CellTime::~CellTime()
-{
-    detachFromListener();
 }
 
 void Track::Result::CellTime::resized()
@@ -280,13 +220,6 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
             undoManager.perform(action.release());
         }
     };
-
-    attachToListener();
-}
-
-Track::Result::CellDuration::~CellDuration()
-{
-    detachFromListener();
 }
 
 void Track::Result::CellDuration::resized()
@@ -470,13 +403,6 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
             undoManager.perform(action.release());
         }
     };
-
-    attachToListener();
-}
-
-Track::Result::CellValue::~CellValue()
-{
-    detachFromListener();
 }
 
 void Track::Result::CellValue::resized()

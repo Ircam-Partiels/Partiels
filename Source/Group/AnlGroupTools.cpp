@@ -76,6 +76,72 @@ std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilitySta
     return channelslayout;
 }
 
+std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
+{
+    auto const& states = accessor.getAttr<AttrType::focused>();
+    auto const maxChannels = std::min(getChannelVisibilityStates(accessor).size(), states.size());
+    std::set<size_t> channels;
+    for(auto index = 0_z; index < maxChannels; ++index)
+    {
+        if(states[index])
+        {
+            channels.insert(index);
+        }
+    }
+    return channels;
+}
+
+size_t Group::Tools::getChannel(Accessor const& accessor, juce::Rectangle<int> bounds, int y)
+{
+    auto const verticalRanges = getChannelVerticalRanges(accessor, std::move(bounds));
+    for(auto const& verticalRange : verticalRanges)
+    {
+        if(y < verticalRange.second.getEnd())
+        {
+            return verticalRange.first;
+        }
+    }
+    return verticalRanges.empty() ? 0_z : verticalRanges.crbegin()->first;
+}
+
+std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds)
+{
+    auto const channelsLayout = getChannelVisibilityStates(accessor);
+    auto const numVisibleChannels = static_cast<int>(std::count_if(channelsLayout.cbegin(), channelsLayout.cend(), [](auto const state)
+                                                                   {
+                                                                       return state != ChannelVisibilityState::hidden;
+                                                                   }));
+    if(numVisibleChannels == 0)
+    {
+        return {};
+    }
+
+    std::map<size_t, juce::Range<int>> verticalRanges;
+
+    auto fullHeight = static_cast<float>(bounds.getHeight() - (numVisibleChannels - 1));
+    auto const channelHeight = fullHeight / static_cast<float>(numVisibleChannels);
+    auto remainder = 0.0f;
+
+    auto channelCounter = 0;
+    for(auto channel = 0_z; channel < channelsLayout.size(); ++channel)
+    {
+        if(channelsLayout[channel] != ChannelVisibilityState::hidden)
+        {
+            ++channelCounter;
+            auto const currentHeight = std::min(channelHeight, fullHeight) + remainder;
+            remainder = channelHeight - std::round(currentHeight);
+            fullHeight -= std::round(currentHeight);
+            auto region = bounds.removeFromTop(static_cast<int>(std::round(currentHeight)));
+            if(channelCounter != numVisibleChannels)
+            {
+                region.removeFromBottom(1);
+            }
+            verticalRanges[channel] = region.getVerticalRange();
+        }
+    }
+    return verticalRanges;
+}
+
 Group::LayoutNotifier::LayoutNotifier(Accessor& accessor, std::function<void(void)> fn, std::set<Track::AttrType> attributes)
 : mAccessor(accessor)
 , mAttributes(std::move(attributes))

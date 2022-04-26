@@ -11,6 +11,12 @@ namespace Document
     using GridMode = Track::GridMode;
 
     // clang-format off
+    enum class EditMode
+    {
+          items
+        , frames
+    };
+    
     enum class AttrType : size_t
     {
           reader
@@ -20,6 +26,7 @@ namespace Document
         , grid
         , autoresize
         , samplerate
+        , editMode
     };
     
     enum class AcsrType : size_t
@@ -44,6 +51,7 @@ namespace Document
     , Model::Attr<AttrType::grid, GridMode, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::autoresize, bool, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::samplerate, double, Model::Flag::saveable | Model::Flag::notifying>
+    , Model::Attr<AttrType::editMode, EditMode, Model::Flag::notifying>
     >;
     
     using AcsrContainer = Model::Container
@@ -62,7 +70,7 @@ namespace Document
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
         Accessor()
-        : Accessor(AttrContainer({}, {}, {}, {}, {GridMode::partial}, {false}, {0.0}))
+        : Accessor(AttrContainer({}, {}, {}, {}, {GridMode::partial}, {false}, {0.0}, {EditMode::items}))
         {
         }
 

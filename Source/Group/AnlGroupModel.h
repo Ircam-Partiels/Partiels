@@ -7,6 +7,8 @@ ANALYSE_FILE_BEGIN
 
 namespace Group
 {
+    using FocusInfo = Track::FocusInfo;
+
     // clang-format off
     enum ChannelVisibilityState
     {
@@ -50,7 +52,7 @@ namespace Group
     , Model::Attr<AttrType::expanded, bool, Model::Flag::notifying | Model::Flag::saveable>
     , Model::Attr<AttrType::layout, std::vector<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::tracks, TrackList, Model::Flag::notifying>
-    , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::focused, FocusInfo, Model::Flag::notifying>
     , Model::Attr<AttrType::zoomid, juce::String, Model::Flag::basic>
     >;
 
@@ -66,8 +68,18 @@ namespace Group
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
+        // clang-format off
         Accessor()
-        : Accessor(AttrContainer({}, {}, {144}, {juce::Colours::transparentBlack}, {true}, {}, {}, {false}, {""}))
+        : Accessor(AttrContainer(  {}
+                                 , {}
+                                 , {144}
+                                 , {juce::Colours::transparentBlack}
+                                 , {true}
+                                 , {}
+                                 , {}
+                                 , {}
+                                 , {""}))
+        // clang-format on
         {
         }
 

@@ -157,11 +157,11 @@ Group::Plot::Overlay::Overlay(Plot& plot)
 : mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mTransportSelectionBar(mPlot.mTransportAccessor, mTimeZoomAccessor)
+, mSelectionBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
 {
     addAndMakeVisible(mPlot);
-    addAndMakeVisible(mTransportSelectionBar);
-    mTransportSelectionBar.addMouseListener(this, true);
+    addAndMakeVisible(mSelectionBar);
+    mSelectionBar.addMouseListener(this, true);
     setInterceptsMouseClicks(true, true);
 
     mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
@@ -192,9 +192,13 @@ Group::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::expanded:
             case AttrType::layout:
             case AttrType::tracks:
-            case AttrType::focused:
             case AttrType::zoomid:
                 break;
+            case AttrType::focused:
+            {
+                colourChanged();
+            }
+            break;
             case AttrType::colour:
             {
                 repaint();
@@ -217,7 +221,7 @@ void Group::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
-    mTransportSelectionBar.setBounds(bounds);
+    mSelectionBar.setBounds(bounds);
 }
 
 void Group::Plot::Overlay::paint(juce::Graphics& g)
@@ -268,13 +272,13 @@ void Group::Plot::Overlay::updateMode(juce::MouseEvent const& event)
     {
         mSnapshotMode = true;
         showCameraCursor(true);
-        mTransportSelectionBar.setInterceptsMouseClicks(false, false);
+        mSelectionBar.setInterceptsMouseClicks(false, false);
     }
     else if(!event.mods.isAltDown() && mSnapshotMode)
     {
         mSnapshotMode = false;
         showCameraCursor(false);
-        mTransportSelectionBar.setInterceptsMouseClicks(true, true);
+        mSelectionBar.setInterceptsMouseClicks(true, true);
     }
 }
 

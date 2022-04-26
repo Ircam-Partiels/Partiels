@@ -1,6 +1,7 @@
 #include "AnlApplicationCommandTarget.h"
+#include "../Document/AnlDocumentCommandTarget.h"
+#include "../Document/AnlDocumentSelection.h"
 #include "../Document/AnlDocumentTools.h"
-#include "../Track/AnlTrackCommandTarget.h"
 #include "../Track/AnlTrackExporter.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
@@ -100,6 +101,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::editUndo
         , CommandIDs::editRedo
+        , CommandIDs::editSelectNextItem
         , CommandIDs::editNewGroup
         , CommandIDs::editNewTrack
         , CommandIDs::editRemoveItem
@@ -131,6 +133,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
 {
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const& transportAcsr = documentAcsr.getAcsr<Document::AcsrType::transport>();
+    auto const isItemMode = documentAcsr.getAttr<Document::AttrType::editMode>() == Document::EditMode::items;
     switch(commandID)
     {
         case CommandIDs::documentNew:
@@ -207,6 +210,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
+        case CommandIDs::editSelectNextItem:
+        {
+            result.setInfo(juce::translate("Select Next Item"), juce::translate("Select Next Item"), "Select", 0);
+            result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::tabKey, juce::ModifierKeys::noModifiers, 0));
+            result.setActive(isItemMode);
+        }
+        break;
         case CommandIDs::editNewGroup:
         {
             result.setInfo(juce::translate("Add New Group"), juce::translate("Adds a new group"), "Edit", 0);
@@ -223,30 +233,20 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::editRemoveItem:
         {
-            auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
-            auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
-            if(focusedTrack.has_value())
+            auto selectedItems = Document::Selection::getItems(documentAcsr);
+            if(!std::get<0_z>(selectedItems).empty() && std::get<1_z>(selectedItems).empty())
             {
-                result.setInfo(juce::translate("Remove Track"), juce::translate("Removes the selected track"), "Edit", 0);
+                result.setInfo(juce::translate("Remove Group(s)"), juce::translate("Removes the selected group(s)"), "Edit", 0);
             }
-            else if(focusedGroup.has_value())
+            else if(!std::get<0_z>(selectedItems).empty() && std::get<1_z>(selectedItems).empty())
             {
-                result.setInfo(juce::translate("Remove Group"), juce::translate("Removes the selected group"), "Edit", 0);
-            }
-            else
-            {
-                result.setInfo(juce::translate("Remove Track or Group"), juce::translate("Removes the selected track or group"), "Edit", 0);
-            }
-            juce::ApplicationCommandInfo info(Track::CommandTarget::CommandIDs::editDeleteSelection);
-            if(Instance::get().getApplicationCommandManager().getTargetForCommand(info.commandID, info))
-            {
-                auto const isDisable = info.flags & juce::ApplicationCommandInfo::isDisabled;
-                result.setActive(isDisable && (focusedTrack.has_value() || focusedGroup.has_value()));
+                result.setInfo(juce::translate("Remove Track(s)"), juce::translate("Removes the selected track(s)"), "Edit", 0);
             }
             else
             {
-                result.setActive(focusedTrack.has_value() || focusedGroup.has_value());
+                result.setInfo(juce::translate("Remove Group(s) and Track(s)"), juce::translate("Removes the selected group(s) and track(s)"), "Edit", 0);
             }
+            result.setActive(isItemMode && (!std::get<0_z>(selectedItems).empty() || !std::get<1_z>(selectedItems).empty()));
             result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
@@ -509,14 +509,21 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::editUndo:
         {
-            auto& undoManager = Instance::get().getUndoManager();
-            undoManager.undo();
+            Instance::get().getUndoManager().undo();
             return true;
         }
         case CommandIDs::editRedo:
         {
-            auto& undoManager = Instance::get().getUndoManager();
-            undoManager.redo();
+            Instance::get().getUndoManager().redo();
+            return true;
+        }
+        case CommandIDs::editSelectNextItem:
+        {
+            auto const nextItem = Document::Selection::getNextItem(documentAcsr);
+            if(nextItem.has_value())
+            {
+                Document::Selection::selectItem(documentAcsr, {*nextItem}, true, false, NotificationType::synchronous);
+            }
             return true;
         }
         case CommandIDs::editNewGroup:
@@ -524,17 +531,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto& documentDir = Instance::get().getDocumentDirector();
             documentDir.startAction();
 
-            auto const index = documentAcsr.getNumAcsrs<Document::AcsrType::groups>();
-            auto const focusedId = Document::Tools::getFocusedGroup(documentAcsr);
-            auto const position = focusedId.has_value() ? Document::Tools::getGroupPosition(documentAcsr, *focusedId) + 1_z : index;
+            auto const position = Tools::getNewGroupPosition();
             auto const identifier = documentDir.addGroup(position, NotificationType::synchronous);
             if(identifier.has_value())
             {
                 documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
-                if(auto* window = Instance::get().getWindow())
-                {
-                    window->moveKeyboardFocusTo(*identifier);
-                }
+                Document::Selection::selectItem(documentAcsr, {*identifier}, true, false, NotificationType::synchronous);
             }
             else
             {
@@ -562,15 +564,19 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editRemoveItem:
         {
-            auto focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
-            if(focusedTrack.has_value())
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            if(!std::get<0_z>(selectedItems).empty() && std::get<1_z>(selectedItems).empty())
             {
-                auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, *focusedTrack);
-                auto const trackName = trackAcsr.getAttr<Track::AttrType::name>();
+                juce::StringArray names;
+                for(auto const& groupId : std::get<0_z>(selectedItems))
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupId);
+                    names.add(groupAcsr.getAttr<Group::AttrType::name>());
+                }
                 auto const options = juce::MessageBoxOptions()
                                          .withIconType(juce::AlertWindow::QuestionIcon)
-                                         .withTitle(juce::translate("Remove Track?"))
-                                         .withMessage(juce::translate("Are you sure you want to remove the TKNAME track from the project?").replace("TKNAME", trackName))
+                                         .withTitle(juce::translate("Remove Group(s)?"))
+                                         .withMessage(juce::translate("Are you sure you want to remove the group(s) \"GROUPNAMES\" from the project? This will also remove all the contained tracks!").replace("GROUPNAMES", names.joinIntoString(", ")))
                                          .withButton(juce::translate("Remove"))
                                          .withButton(juce::translate("Cancel"));
                 juce::AlertWindow::showAsync(options, [=](int windowResult)
@@ -581,27 +587,26 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  }
                                                  auto& documentDir = Instance::get().getDocumentDirector();
                                                  documentDir.startAction();
-                                                 if(documentDir.removeTrack(*focusedTrack, NotificationType::synchronous))
+                                                 for(auto const& groupId : std::get<0_z>(selectedItems))
                                                  {
-                                                     documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Track"));
+                                                     documentDir.removeGroup(groupId, NotificationType::synchronous);
                                                  }
-                                                 else
-                                                 {
-                                                     documentDir.endAction(ActionState::abort);
-                                                 }
+                                                 documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group(s)"));
                                              });
                 return true;
             }
-
-            auto focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
-            if(focusedGroup.has_value())
+            else if(std::get<0_z>(selectedItems).empty() && !std::get<1_z>(selectedItems).empty())
             {
-                auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, *focusedGroup);
-                auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
+                juce::StringArray names;
+                for(auto const& trackId : std::get<1_z>(selectedItems))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                    names.add(trackAcsr.getAttr<Track::AttrType::name>());
+                }
                 auto const options = juce::MessageBoxOptions()
                                          .withIconType(juce::AlertWindow::QuestionIcon)
-                                         .withTitle(juce::translate("Remove Group?"))
-                                         .withMessage(juce::translate("Are you sure you want to remove the GPNAME group from the project? This will also remove all the contained analyses!").replace("GPNAME", groupName))
+                                         .withTitle(juce::translate("Remove Track?"))
+                                         .withMessage(juce::translate("Are you sure you want to remove the track(s) \"TRACKNAMES\" from the project?").replace("TRACKNAMES", names.joinIntoString(", ")))
                                          .withButton(juce::translate("Remove"))
                                          .withButton(juce::translate("Cancel"));
                 juce::AlertWindow::showAsync(options, [=](int windowResult)
@@ -612,14 +617,50 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                                  }
                                                  auto& documentDir = Instance::get().getDocumentDirector();
                                                  documentDir.startAction();
-                                                 if(documentDir.removeGroup(*focusedGroup, NotificationType::synchronous))
+                                                 for(auto const& trackId : std::get<1_z>(selectedItems))
                                                  {
-                                                     documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group"));
+                                                     documentDir.removeTrack(trackId, NotificationType::synchronous);
                                                  }
-                                                 else
+                                                 documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Track(s)"));
+                                             });
+                return true;
+            }
+            else if(!std::get<0_z>(selectedItems).empty() && !std::get<1_z>(selectedItems).empty())
+            {
+                juce::StringArray groupNames, trackNames;
+                for(auto const& groupId : std::get<0_z>(selectedItems))
+                {
+                    auto const& groupAcsr = Document::Tools::getGroupAcsr(documentAcsr, groupId);
+                    groupNames.add(groupAcsr.getAttr<Group::AttrType::name>());
+                }
+                for(auto const& trackId : std::get<1_z>(selectedItems))
+                {
+                    auto const& trackAcsr = Document::Tools::getTrackAcsr(documentAcsr, trackId);
+                    trackNames.add(trackAcsr.getAttr<Track::AttrType::name>());
+                }
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::QuestionIcon)
+                                         .withTitle(juce::translate("Remove Group(s) and Track(s)?"))
+                                         .withMessage(juce::translate("Are you sure you want to remove the group(s) \"GROUPNAMES\" and the from the project and the track(s) \"TRACKNAMES\"?").replace("GROUPNAMES", groupNames.joinIntoString(", ")).replace("TRACKNAMES", trackNames.joinIntoString(", ")))
+                                         .withButton(juce::translate("Remove"))
+                                         .withButton(juce::translate("Cancel"));
+                juce::AlertWindow::showAsync(options, [=](int windowResult)
+                                             {
+                                                 if(windowResult != 1)
                                                  {
-                                                     documentDir.endAction(ActionState::abort);
+                                                     return;
                                                  }
+                                                 auto& documentDir = Instance::get().getDocumentDirector();
+                                                 documentDir.startAction();
+                                                 for(auto const& groupId : std::get<0_z>(selectedItems))
+                                                 {
+                                                     documentDir.removeGroup(groupId, NotificationType::synchronous);
+                                                 }
+                                                 for(auto const& trackId : std::get<1_z>(selectedItems))
+                                                 {
+                                                     documentDir.removeTrack(trackId, NotificationType::synchronous);
+                                                 }
+                                                 documentDir.endAction(ActionState::newTransaction, juce::translate("Remove Group(s) and Track(s)"));
                                              });
                 return true;
             }

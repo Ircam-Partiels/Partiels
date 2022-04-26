@@ -772,21 +772,18 @@ void Track::Plot::paintColumns(Accessor const& accessor, size_t channel, juce::G
 }
 
 Track::Plot::Overlay::Overlay(Plot& plot)
-: CommandTarget(plot.mDirector, plot.mTimeZoomAccessor, plot.mTransportAccessor)
-, mPlot(plot)
+: mPlot(plot)
 , mAccessor(mPlot.mAccessor)
 , mTimeZoomAccessor(mPlot.mTimeZoomAccessor)
-, mTransportSelectionBar(mPlot.mTransportAccessor, mTimeZoomAccessor)
+, mSelectionBar(mPlot.mAccessor, mTimeZoomAccessor, mPlot.mTransportAccessor)
 {
     addAndMakeVisible(mPlot);
-    addAndMakeVisible(mTransportSelectionBar);
-    mTransportSelectionBar.addMouseListener(this, true);
+    addAndMakeVisible(mSelectionBar);
+    mSelectionBar.addMouseListener(this, true);
     setInterceptsMouseClicks(true, true);
-    setWantsKeyboardFocus(true);
 
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
@@ -797,10 +794,10 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::zoomAcsr:
             case AttrType::graphics:
             case AttrType::warnings:
-            case AttrType::focused:
             case AttrType::grid:
             case AttrType::processing:
             case AttrType::results:
+            case AttrType::focused:
                 break;
             case AttrType::colours:
             {
@@ -841,25 +838,10 @@ Track::Plot::Overlay::Overlay(Plot& plot)
 
     mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
-
-    auto* commandManager = Misc::App::getApplicationCommandManager();
-    MiscWeakAssert(commandManager != nullptr);
-    if(commandManager != nullptr)
-    {
-        commandManager->registerAllCommandsForTarget(this);
-        addKeyListener(commandManager->getKeyMappings());
-    }
 }
 
 Track::Plot::Overlay::~Overlay()
 {
-    auto* commandManager = Misc::App::getApplicationCommandManager();
-    MiscWeakAssert(commandManager != nullptr);
-    if(commandManager != nullptr)
-    {
-        removeKeyListener(commandManager->getKeyMappings());
-    }
-
     mAccessor.removeListener(mListener);
     mTimeZoomAccessor.removeListener(mTimeZoomListener);
 }
@@ -868,7 +850,7 @@ void Track::Plot::Overlay::resized()
 {
     auto const bounds = getLocalBounds();
     mPlot.setBounds(bounds);
-    mTransportSelectionBar.setBounds(bounds);
+    mSelectionBar.setBounds(bounds);
 }
 
 void Track::Plot::Overlay::paint(juce::Graphics& g)
@@ -919,13 +901,13 @@ void Track::Plot::Overlay::updateMode(juce::MouseEvent const& event)
     {
         mSnapshotMode = true;
         showCameraCursor(true);
-        mTransportSelectionBar.setInterceptsMouseClicks(false, false);
+        mSelectionBar.setInterceptsMouseClicks(false, false);
     }
     else if(!event.mods.isAltDown() && mSnapshotMode)
     {
         mSnapshotMode = false;
         showCameraCursor(false);
-        mTransportSelectionBar.setInterceptsMouseClicks(true, true);
+        mSelectionBar.setInterceptsMouseClicks(true, true);
     }
 }
 
@@ -940,11 +922,6 @@ void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
     auto const tip = Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time);
     Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
-}
-
-juce::ApplicationCommandTarget* Track::Plot::Overlay::getNextCommandTarget()
-{
-    return findFirstTargetParentComponent();
 }
 
 ANALYSE_FILE_END

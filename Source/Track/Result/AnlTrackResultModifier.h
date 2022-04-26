@@ -108,7 +108,7 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionErase(Accessor& accessor, Transport::Accessor& transportAcsr, size_t const channel);
+                ActionErase(Accessor& accessor, size_t const channel, juce::Range<double> const& selection);
                 ~ActionErase() override = default;
 
                 // juce::UndoableAction
@@ -116,7 +116,6 @@ namespace Track
                 bool undo() override;
 
             private:
-                Transport::Accessor& mTransportAccessor;
                 juce::Range<double> const mSavedSelection;
                 Modifier::CopiedData const mSavedData;
             };
@@ -125,7 +124,7 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionPaste(Accessor& accessor, Transport::Accessor& transportAcsr, size_t const channel, CopiedData const& data, juce::Range<double> const& range);
+                ActionPaste(Accessor& accessor, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination);
                 ~ActionPaste() override = default;
 
                 // juce::UndoableAction
@@ -133,12 +132,26 @@ namespace Track
                 bool undo() override;
 
             private:
-                Transport::Accessor& mTransportAccessor;
-                juce::Range<double> const mSavedSelection;
                 juce::Range<double> const mDestinationSelection;
                 Modifier::CopiedData const mSavedData;
                 std::optional<size_t> const mCopyIndex;
                 Modifier::CopiedData const mCopiedData;
+            };
+
+            class FocusRestorer
+            : public juce::UndoableAction
+            {
+            public:
+                FocusRestorer(Accessor& accessor);
+                ~FocusRestorer() override = default;
+
+                // juce::UndoableAction
+                bool perform() override;
+                bool undo() override;
+
+            protected:
+                Accessor& mAccessor;
+                FocusInfo const mFocus;
             };
         } // namespace Modifier
     }     // namespace Result

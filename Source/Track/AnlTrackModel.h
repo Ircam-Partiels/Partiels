@@ -2,6 +2,7 @@
 
 #include "../Plugin/AnlPluginModel.h"
 #include "Result/AnlTrackResultModel.h"
+#include <bitset>
 #include <tinycolormap/tinycolormap.hpp>
 
 ANALYSE_FILE_BEGIN
@@ -12,6 +13,7 @@ namespace Track
     using FileInfo = Result::File;
     using Images = std::vector<std::vector<juce::Image>>;
     using ColourMap = tinycolormap::ColormapType;
+    using FocusInfo = std::bitset<static_cast<size_t>(512)>;
 
     struct ColourSet
     {
@@ -109,7 +111,7 @@ namespace Track
     , Model::Attr<AttrType::graphics, Images, Model::Flag::notifying>
     , Model::Attr<AttrType::warnings, WarningType, Model::Flag::notifying>
     , Model::Attr<AttrType::processing, std::tuple<bool, float, bool, float>, Model::Flag::notifying>
-    , Model::Attr<AttrType::focused, bool, Model::Flag::notifying>
+    , Model::Attr<AttrType::focused, FocusInfo, Model::Flag::notifying>
     , Model::Attr<AttrType::grid, GridMode, Model::Flag::notifying>
     >;
     
@@ -145,7 +147,7 @@ namespace Track
                                  , {}
                                  , {WarningType::none}
                                  , {{false, 0.0, false, 0.0}}
-                                 , {false}
+                                 , {}
                                  , {GridMode::partial}
                                  ))
         {

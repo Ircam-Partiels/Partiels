@@ -79,6 +79,7 @@ namespace Track
             Transport::Accessor& mTransportAccessor;
             Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
             Zoom::Accessor& mTimeZoomAccessor;
+            Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
 
             juce::TabbedButtonBar mTabbedButtonBar{juce::TabbedButtonBar::Orientation::TabsAtBottom};
             ColouredPanel mSeparator;

@@ -17,8 +17,9 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
     juce::Component::mouseWheelMove(e, wheel);
 }
 
-Document::Section::Section(Director& director)
-: mDirector(director)
+Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager)
+: CommandTarget(director, commandManager)
+, mDirector(director)
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [](double value)
@@ -29,6 +30,16 @@ Document::Section::Section(Director& director)
                   {
                       updateLayout();
                   })
+, mExpandedNotifier(typeid(*this).name(), mAccessor, [this]()
+                    {
+                        updateExpandState();
+                    },
+                    {Group::AttrType::expanded})
+, mFocusNotifier(typeid(*this).name(), mAccessor, [this]()
+                 {
+                     updateFocus();
+                 },
+                 {Group::AttrType::focused}, {Track::AttrType::focused})
 {
     mTimeRuler.onDoubleClick = [this]()
     {
@@ -103,9 +114,6 @@ Document::Section::Section(Director& director)
 
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
-
-    setWantsKeyboardFocus(true);
-    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
     addAndMakeVisible(mReaderLayoutButton);
     mReaderLayoutButton.setWantsKeyboardFocus(false);
@@ -339,73 +347,20 @@ Document::Section::Section(Director& director)
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::samplerate:
+            case AttrType::editMode:
                 break;
         }
     };
 
-    auto upddateHeightsAsync = [this]()
+    mListener.onAccessorInserted = [this](Accessor const& acsr, AcsrType type, size_t index)
     {
-        // Using a delay ensures that the group and track size animations are preserved.
-        // It also ensures asynchronous access to the model even if this is not the best approach.
-        juce::WeakReference<juce::Component> weakReference(this);
-        juce::Timer::callAfterDelay(350, [=, this]()
-                                    {
-                                        if(weakReference.get() == nullptr)
-                                        {
-                                            return;
-                                        }
-                                        updateHeights();
-                                    });
-    };
-
-    mListener.onAccessorInserted = [=, this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr);
+        juce::ignoreUnused(acsr, index);
         switch(type)
         {
             case AcsrType::groups:
-            {
-                auto listener = std::make_unique<Group::Accessor::SmartListener>(typeid(*this).name(), mAccessor.getAcsr<AcsrType::groups>(index), [=, this](Group::Accessor const& groupAcsr, Group::AttrType groupAttribute)
-                                                                                 {
-                                                                                     juce::ignoreUnused(groupAcsr);
-                                                                                     if(groupAttribute == Group::AttrType::expanded)
-                                                                                     {
-                                                                                         updateExpandState();
-                                                                                         upddateHeightsAsync();
-                                                                                     }
-                                                                                 });
-                mGroupListeners.emplace(mGroupListeners.begin() + static_cast<long>(index), std::move(listener));
-                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
-                upddateHeightsAsync();
-            }
-            break;
             case AcsrType::tracks:
             {
-                upddateHeightsAsync();
-            }
-            break;
-            case AcsrType::timeZoom:
-            case AcsrType::transport:
-                break;
-        }
-    };
-
-    mListener.onAccessorErased = [=, this](Accessor const& acsr, AcsrType type, size_t index)
-    {
-        juce::ignoreUnused(acsr);
-        switch(type)
-        {
-            case AcsrType::groups:
-            {
-                mGroupListeners.erase(mGroupListeners.begin() + static_cast<long>(index));
-                anlWeakAssert(mGroupListeners.size() == acsr.getNumAcsrs<AcsrType::groups>());
                 updateExpandState();
-                upddateHeightsAsync();
-            }
-            break;
-            case AcsrType::tracks:
-            {
-                upddateHeightsAsync();
             }
             break;
             case AcsrType::timeZoom:
@@ -413,6 +368,7 @@ Document::Section::Section(Director& director)
                 break;
         }
     };
+    mListener.onAccessorErased = mListener.onAccessorInserted;
 
     mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
@@ -450,12 +406,15 @@ Document::Section::Section(Director& director)
     mAccessor.getAcsr<AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
-    juce::Desktop::getInstance().addFocusChangeListener(this);
+
+    setWantsKeyboardFocus(true);
+    addKeyListener(mCommandManager.getKeyMappings());
 }
 
 Document::Section::~Section()
 {
-    juce::Desktop::getInstance().removeFocusChangeListener(this);
+    removeKeyListener(mCommandManager.getKeyMappings());
+
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
     mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
@@ -517,6 +476,86 @@ void Document::Section::resized()
 void Document::Section::paint(juce::Graphics& g)
 {
     g.fillAll(findColour(ColourIds::backgroundColourId));
+}
+
+Document::Selection::Item Document::Section::getSelectionItem(juce::Component* component, juce::MouseEvent const& event) const
+{
+    if(auto* trackSection = Utils::findComponentOfClass<Track::Section>(component))
+    {
+        auto const identifier = trackSection->getIdentifier();
+        MiscWeakAssert(Tools::hasTrackAcsr(mAccessor, identifier));
+        if(!Tools::hasTrackAcsr(mAccessor, identifier))
+        {
+            return {};
+        }
+        if(Utils::findComponentOfClass<Track::Thumbnail>(component) != nullptr)
+        {
+            return {identifier, {}};
+        }
+        auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        auto const y = trackSection == component ? event.y : event.getEventRelativeTo(trackSection).y;
+        auto const channel = Track::Tools::getChannel(trackAcsr, trackSection->getLocalBounds(), y);
+        return {identifier, channel};
+    }
+    if(auto* groupSection = Utils::findComponentOfClass<Group::Section>(component))
+    {
+        auto const identifier = groupSection->getIdentifier();
+        MiscWeakAssert(Tools::hasGroupAcsr(mAccessor, identifier));
+        if(!Tools::hasGroupAcsr(mAccessor, identifier))
+        {
+            return {};
+        }
+        if(Utils::findComponentOfClass<Group::Thumbnail>(component) != nullptr)
+        {
+            return {identifier, {}};
+        }
+        auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
+        auto const y = groupSection == component ? event.y : event.getEventRelativeTo(groupSection).y;
+        auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), y);
+        return {identifier, channel};
+    }
+    return {};
+}
+
+void Document::Section::mouseDown(juce::MouseEvent const& event)
+{
+    if(isDragAndDropActive())
+    {
+        return;
+    }
+    auto const item = getSelectionItem(event.eventComponent, event);
+    if(item.identifier.isEmpty())
+    {
+        return;
+    }
+
+    mAccessor.setAttr<AttrType::editMode>(item.channel.has_value() ? EditMode::frames : EditMode::items, NotificationType::synchronous);
+    if(event.mods.isShiftDown() && mLastSelectedItem.identifier.isNotEmpty())
+    {
+        Selection::selectItems(mAccessor, mLastSelectedItem, item, true, false, NotificationType::synchronous);
+    }
+    else
+    {
+        mLastSelectedItem = item;
+        auto const deselectAll = !event.mods.isCommandDown();
+        auto const flipSelection = event.mods.isCommandDown();
+        Selection::selectItem(mAccessor, item, deselectAll, flipSelection, NotificationType::synchronous);
+    }
+}
+
+void Document::Section::mouseDrag(juce::MouseEvent const& event)
+{
+    if(event.mods.isShiftDown() || event.mods.isCommandDown() || isDragAndDropActive() || mAccessor.getAttr<AttrType::editMode>() == EditMode::items)
+    {
+        return;
+    }
+
+    auto const item = getSelectionItem(juce::Desktop::getInstance().findComponentAt(event.getScreenPosition()), event);
+    if(item.identifier.isEmpty() || !item.channel.has_value())
+    {
+        return;
+    }
+    Selection::selectItems(mAccessor, mLastSelectedItem, item, true, false, NotificationType::synchronous);
 }
 
 void Document::Section::updateHeights(bool force)
@@ -585,6 +624,84 @@ void Document::Section::updateExpandState()
         mExpandLayoutButton.setTypes(Icon::Type::expand);
         mExpandLayoutButton.setTooltip(juce::translate("Expand all the groups"));
     }
+
+    // Using a delay ensures that the group and track size animations are preserved.
+    // It also ensures asynchronous access to the model even if this is not the best approach.
+    juce::WeakReference<juce::Component> weakReference(this);
+    juce::Timer::callAfterDelay(350, [=, this]()
+                                {
+                                    if(weakReference.get() == nullptr)
+                                    {
+                                        return;
+                                    }
+                                    updateHeights();
+                                });
+}
+
+void Document::Section::updateFocus()
+{
+    auto const closest = Selection::getClosestItem(mAccessor);
+    MiscWeakAssert(!closest.has_value() || Tools::hasItem(mAccessor, *closest));
+    if(!closest.has_value() || !Tools::hasItem(mAccessor, *closest))
+    {
+        return;
+    }
+    auto const farthest = Selection::getFarthestItem(mAccessor);
+    MiscWeakAssert(farthest.has_value() && Tools::hasItem(mAccessor, *farthest));
+    if(!farthest.has_value() || !Tools::hasItem(mAccessor, *farthest))
+    {
+        return;
+    }
+
+    auto const getGroupIdentifier = [&](juce::String const& identifier) -> juce::String
+    {
+        if(Tools::hasGroupAcsr(mAccessor, identifier))
+        {
+            return identifier;
+        }
+        if(Tools::hasTrackAcsr(mAccessor, identifier))
+        {
+            auto const& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, identifier);
+            return groupAcsr.getAttr<Group::AttrType::identifier>();
+        }
+        MiscWeakAssert(false);
+        return "";
+    };
+
+    auto const closestGroupId = getGroupIdentifier(*closest);
+    MiscWeakAssert(mGroupSections.count(closestGroupId) > 0_z);
+    if(mGroupSections.count(closestGroupId) == 0_z)
+    {
+        return;
+    }
+
+    auto const farthestGroupId = getGroupIdentifier(*farthest);
+    MiscWeakAssert(mGroupSections.count(farthestGroupId) > 0_z);
+    if(mGroupSections.count(farthestGroupId) == 0_z)
+    {
+        return;
+    }
+
+    auto const& closestSection = mGroupSections[closestGroupId]->getSection(*closest);
+    auto const closestRange = mDraggableTable.getLocalArea(&closestSection, closestSection.getLocalBounds()).getVerticalRange();
+    auto const& farthestSection = mGroupSections[closestGroupId]->getSection(*closest);
+    auto const farthestRange = mDraggableTable.getLocalArea(&farthestSection, farthestSection.getLocalBounds()).getVerticalRange();
+
+    auto const combinedRange = closestRange.getUnionWith(farthestRange);
+    auto const viewRange = mViewport.getViewArea().getVerticalRange();
+
+    if(viewRange.intersects(combinedRange))
+    {
+        return;
+    }
+    else if(viewRange.getStart() > combinedRange.getStart())
+    {
+        mViewport.setViewPosition({mViewport.getViewArea().getX(), combinedRange.getStart() - 8});
+    }
+    else if(viewRange.getEnd() < combinedRange.getEnd())
+    {
+        mViewport.setViewPosition({mViewport.getViewArea().getX(), viewRange.movedToEndAt(combinedRange.getEnd()).getStart() + 8});
+    }
 }
 
 void Document::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel)
@@ -639,34 +756,6 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
     timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
 }
 
-void Document::Section::moveKeyboardFocusTo(juce::String const& identifier)
-{
-    auto forwardToGroup = [&](juce::String const& groupIdentifier)
-    {
-        anlWeakAssert(Tools::hasGroupAcsr(mAccessor, groupIdentifier));
-        if(Tools::hasGroupAcsr(mAccessor, groupIdentifier))
-        {
-            auto it = mGroupSections.find(groupIdentifier);
-            anlWeakAssert(it != mGroupSections.end());
-            if(it != mGroupSections.end())
-            {
-                it->second.get()->moveKeyboardFocusTo(identifier);
-            }
-        }
-    };
-
-    if(Tools::hasTrackAcsr(mAccessor, identifier) && Tools::isTrackInGroup(mAccessor, identifier))
-    {
-        auto const& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, identifier);
-        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-        forwardToGroup(groupIdentifier);
-    }
-    else
-    {
-        forwardToGroup(identifier);
-    }
-}
-
 void Document::Section::showBubbleInfo(bool state)
 {
     if(state)
@@ -711,6 +800,7 @@ void Document::Section::updateLayout()
         auto groupSection = std::make_unique<Group::StrechableSection>(groupDirector, transportAcsr, timeZoomAcsr);
         if(groupSection != nullptr)
         {
+            groupSection->addMouseListener(this, true);
             groupSection->onTrackInserted = [&](juce::String const& trackIdentifier, size_t index, bool copy)
             {
                 if(copy)
@@ -797,7 +887,8 @@ void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t 
     if(mDirector.moveTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
     {
         mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
-        moveKeyboardFocusTo(trackIdentifier);
+        mLastSelectedItem = {trackIdentifier};
+        Selection::selectItem(mAccessor, mLastSelectedItem, true, false, NotificationType::synchronous);
     }
     else
     {
@@ -819,102 +910,13 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
     if(mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
     {
         mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Track"));
-        moveKeyboardFocusTo(trackIdentifier);
+        mLastSelectedItem = {trackIdentifier};
+        Selection::selectItem(mAccessor, mLastSelectedItem, true, false, NotificationType::synchronous);
     }
     else
     {
         mDirector.endAction(ActionState::abort);
     }
-}
-
-std::unique_ptr<juce::ComponentTraverser> Document::Section::createKeyboardFocusTraverser()
-{
-    class FocusTraverser
-    : public juce::KeyboardFocusTraverser
-    {
-    public:
-        FocusTraverser(Section& section)
-        : mSection(section)
-        {
-        }
-
-        ~FocusTraverser() override = default;
-
-        juce::Component* getNextComponent(juce::Component* current) override
-        {
-            auto const contents = mSection.mDraggableTable.getComponents();
-            if(contents.empty())
-            {
-                return juce::KeyboardFocusTraverser::getNextComponent(current);
-            }
-            auto it = std::find_if(contents.begin(), contents.end(), [&](auto const& content)
-                                   {
-                                       return content != nullptr && (content == current || content->isParentOf(current));
-                                   });
-            while(it != contents.end() && std::next(it) != contents.end())
-            {
-                it = std::next(it);
-                if(*it != nullptr)
-                {
-                    if(auto childFocusTraverser = getChildFocusTraverser(*it))
-                    {
-                        return childFocusTraverser->getNextComponent(nullptr);
-                    }
-                    return it->getComponent();
-                }
-            }
-            if(auto childFocusTraverser = getChildFocusTraverser(*contents.begin()))
-            {
-                return childFocusTraverser->getNextComponent(nullptr);
-            }
-            return contents.begin()->getComponent();
-        }
-
-        juce::Component* getPreviousComponent(juce::Component* current) override
-        {
-            auto const contents = mSection.mDraggableTable.getComponents();
-            if(contents.empty())
-            {
-                return juce::KeyboardFocusTraverser::getPreviousComponent(current);
-            }
-            auto it = std::find_if(contents.rbegin(), contents.rend(), [&](auto const& content)
-                                   {
-                                       return content != nullptr && (content == current || content->isParentOf(current));
-                                   });
-            while(it != contents.rend())
-            {
-                it = std::next(it);
-                if(*it != nullptr)
-                {
-                    if(auto childFocusTraverser = getChildFocusTraverser(*it))
-                    {
-                        return childFocusTraverser->getPreviousComponent(nullptr);
-                    }
-                    return it->getComponent();
-                }
-            }
-            if(auto childFocusTraverser = getChildFocusTraverser(contents.back()))
-            {
-                return childFocusTraverser->getPreviousComponent(nullptr);
-            }
-            return contents.back().getComponent();
-        }
-
-        std::unique_ptr<juce::ComponentTraverser> getChildFocusTraverser(juce::Component* component)
-        {
-            auto* child = dynamic_cast<Group::StrechableSection*>(component);
-            if(child != nullptr)
-            {
-                return child->createKeyboardFocusTraverser();
-            }
-            return nullptr;
-        }
-
-    private:
-        Section& mSection;
-    };
-
-    return std::make_unique<FocusTraverser>(*this);
 }
 
 void Document::Section::dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details)
@@ -923,54 +925,9 @@ void Document::Section::dragOperationEnded(juce::DragAndDropTarget::SourceDetail
     updateHeights();
 }
 
-void Document::Section::globalFocusChanged(juce::Component* focusedComponent)
+juce::ApplicationCommandTarget* Document::Section::getNextCommandTarget()
 {
-    if(mViewport.isParentOf(focusedComponent))
-    {
-        auto getSection = [&]() -> juce::Component*
-        {
-            if(dynamic_cast<Track::Section*>(focusedComponent) || dynamic_cast<Group::Section*>(focusedComponent))
-            {
-                return focusedComponent;
-            }
-            else if(auto* parentTrackSection = focusedComponent->findParentComponentOfClass<Track::Section>())
-            {
-                return parentTrackSection;
-            }
-            else if(auto* parentGroupSection = focusedComponent->findParentComponentOfClass<Group::Section>())
-            {
-                return parentGroupSection;
-            }
-            anlWeakAssert(false);
-            return nullptr;
-        };
-        if(auto* section = getSection())
-        {
-            // This is used to prevent false notifications
-            if(mFocusComponent == section)
-            {
-                return;
-            }
-            mFocusComponent = section;
-
-            auto const area = mViewport.getViewArea();
-            auto const relativeBounds = mDraggableTable.getLocalArea(section, section->getLocalBounds());
-            if(relativeBounds.intersects(area))
-            {
-                return;
-            }
-            auto const bottomDifference = relativeBounds.getBottom() - area.getBottom();
-            auto const topDifference = relativeBounds.getY() - area.getY();
-            if(bottomDifference > 0)
-            {
-                mViewport.setViewPosition({area.getX(), area.getY() + bottomDifference + 8});
-            }
-            else if(topDifference < 0)
-            {
-                mViewport.setViewPosition({area.getX(), area.getY() + topDifference - 8});
-            }
-        }
-    }
+    return findFirstTargetParentComponent();
 }
 
 ANALYSE_FILE_END

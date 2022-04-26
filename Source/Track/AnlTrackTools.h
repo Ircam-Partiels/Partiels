@@ -35,6 +35,8 @@ namespace Track
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getBinRange(Plugin::Description const& description);
 
+        std::set<size_t> getSelectedChannels(Accessor const& acsr);
+        size_t getChannel(Accessor const& acsr, juce::Rectangle<int> bounds, int y);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);

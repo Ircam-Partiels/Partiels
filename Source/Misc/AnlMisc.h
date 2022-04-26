@@ -13,3 +13,24 @@ namespace Anl = Misc;
 
 #define anlDebug MiscDebug
 #define anlError MiscError
+
+ANALYSE_FILE_BEGIN
+
+namespace Utils
+{
+    template <class TargetClass>
+    TargetClass* findComponentOfClass(juce::Component* component)
+    {
+        if(component == nullptr)
+        {
+            return nullptr;
+        }
+        if(auto* target = dynamic_cast<TargetClass*>(component))
+        {
+            return target;
+        }
+        return component->findParentComponentOfClass<TargetClass>();
+    }
+} // namespace Utils
+
+ANALYSE_FILE_END

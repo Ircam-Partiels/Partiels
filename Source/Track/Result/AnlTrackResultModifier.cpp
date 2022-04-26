@@ -120,7 +120,7 @@ std::optional<double> Track::Result::Modifier::getTime(Accessor const& accessor,
             return {};
         }
         auto const& channelResults = result.at(channel);
-        if(channelResults.empty())
+        if(index >= channelResults.size())
         {
             return {};
         }
@@ -428,11 +428,10 @@ Track::Result::Modifier::ActionBase::ActionBase(Accessor& accessor, size_t const
 {
 }
 
-Track::Result::Modifier::ActionErase::ActionErase(Accessor& accessor, Transport::Accessor& transportAcsr, size_t const channel)
+Track::Result::Modifier::ActionErase::ActionErase(Accessor& accessor, size_t const channel, juce::Range<double> const& selection)
 : ActionBase(accessor, channel)
-, mTransportAccessor(transportAcsr)
-, mSavedSelection(mTransportAccessor.getAttr<Transport::AttrType::selection>())
-, mSavedData(copyFrames(accessor, channel, getIndices(accessor, channel, mSavedSelection)))
+, mSavedSelection(selection)
+, mSavedData(copyFrames(accessor, channel, getIndices(accessor, channel, selection)))
 {
 }
 
@@ -440,7 +439,6 @@ bool Track::Result::Modifier::ActionErase::perform()
 {
     if(eraseFrames(mAccessor, mChannel, getIndices(mSavedData), mNewCommit))
     {
-        mTransportAccessor.setAttr<Transport::AttrType::selection>(mSavedSelection, NotificationType::synchronous);
         return true;
     }
     MiscWeakAssert(false);
@@ -451,21 +449,18 @@ bool Track::Result::Modifier::ActionErase::undo()
 {
     if(insertFrames(mAccessor, mChannel, mSavedData, mCurrentCommit))
     {
-        mTransportAccessor.setAttr<Transport::AttrType::selection>(mSavedSelection, NotificationType::synchronous);
         return true;
     }
     MiscWeakAssert(false);
     return false;
 }
 
-Track::Result::Modifier::ActionPaste::ActionPaste(Accessor& accessor, Transport::Accessor& transportAcsr, size_t const channel, CopiedData const& data, juce::Range<double> const& range)
+Track::Result::Modifier::ActionPaste::ActionPaste(Accessor& accessor, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination)
 : ActionBase(accessor, channel)
-, mTransportAccessor(transportAcsr)
-, mSavedSelection(transportAcsr.getAttr<Transport::AttrType::selection>())
-, mDestinationSelection(range.movedToStartAt(transportAcsr.getAttr<Transport::AttrType::startPlayhead>()))
+, mDestinationSelection(selection.movedToStartAt(destination))
 , mSavedData(copyFrames(accessor, channel, getIndices(accessor, channel, mDestinationSelection)))
 , mCopyIndex(getIndex(accessor, channel, mDestinationSelection.getStart()))
-, mCopiedData(duplicateFrames(data, range, mCopyIndex.has_value() ? *mCopyIndex : 0_z, mDestinationSelection.getStart()))
+, mCopiedData(duplicateFrames(data, selection, mCopyIndex.has_value() ? *mCopyIndex : 0_z, mDestinationSelection.getStart()))
 {
 }
 
@@ -475,7 +470,6 @@ bool Track::Result::Modifier::ActionPaste::perform()
     {
         if(insertFrames(mAccessor, mChannel, mCopiedData, mNewCommit))
         {
-            mTransportAccessor.setAttr<Transport::AttrType::selection>(mDestinationSelection, NotificationType::synchronous);
             return true;
         }
         else
@@ -485,7 +479,6 @@ bool Track::Result::Modifier::ActionPaste::perform()
                 MiscWeakAssert(false);
             }
         }
-        mTransportAccessor.setAttr<Transport::AttrType::selection>(mSavedSelection, NotificationType::synchronous);
     }
     return false;
 }
@@ -496,7 +489,6 @@ bool Track::Result::Modifier::ActionPaste::undo()
     {
         if(insertFrames(mAccessor, mChannel, mSavedData, mCurrentCommit))
         {
-            mTransportAccessor.setAttr<Transport::AttrType::selection>(mSavedSelection, NotificationType::synchronous);
             return true;
         }
         else
@@ -507,13 +499,29 @@ bool Track::Result::Modifier::ActionPaste::undo()
                 MiscWeakAssert(false);
             }
         }
-        mTransportAccessor.setAttr<Transport::AttrType::selection>(mDestinationSelection, NotificationType::synchronous);
     }
     else
     {
         MiscWeakAssert(false);
     }
     return false;
+}
+
+Track::Result::Modifier::FocusRestorer::FocusRestorer(Accessor& accessor)
+: mAccessor(accessor)
+, mFocus(mAccessor.getAttr<AttrType::focused>())
+{
+}
+
+bool Track::Result::Modifier::FocusRestorer::perform()
+{
+    mAccessor.setAttr<AttrType::focused>(mFocus, NotificationType::synchronous);
+    return true;
+}
+
+bool Track::Result::Modifier::FocusRestorer::undo()
+{
+    return perform();
 }
 
 ANALYSE_FILE_END

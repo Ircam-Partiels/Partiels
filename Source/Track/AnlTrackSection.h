@@ -24,6 +24,7 @@ namespace Track
         ~Section() override;
 
         juce::Rectangle<int> getPlotBounds() const;
+        juce::String getIdentifier() const;
         void setResizable(bool state);
 
         // juce::Component
@@ -31,7 +32,6 @@ namespace Track
         void paint(juce::Graphics& g) override;
         void mouseWheelMove(juce::MouseEvent const& event, juce::MouseWheelDetails const& wheel) override;
         void mouseMagnify(juce::MouseEvent const& event, float magnifyAmount) override;
-        void focusOfChildComponentChanged(juce::Component::FocusChangeType cause) override;
 
     private:
         Director& mDirector;

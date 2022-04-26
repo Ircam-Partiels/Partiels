@@ -38,6 +38,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             case AttrType::grid:
             case AttrType::autoresize:
             case AttrType::samplerate:
+            case AttrType::editMode:
                 break;
         }
     };

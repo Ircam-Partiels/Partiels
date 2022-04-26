@@ -16,7 +16,7 @@ namespace Track
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
-        void lookAndFeelChanged() override;
+        void colourChanged() override;
 
     private:
         Accessor& mAccessor;
@@ -40,6 +40,25 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
         Zoom::ScrollBar mValueScrollBar{mAccessor.getAcsr<AcsrType::valueZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
         Zoom::ScrollBar mBinScrollBar{mAccessor.getAcsr<AcsrType::binZoom>(), Zoom::ScrollBar::Orientation::vertical, true};
+    };
+
+    class SelectionBar
+    : public juce::Component
+    {
+    public:
+        SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, Transport::Accessor& transportAccessor);
+        ~SelectionBar() override;
+
+        // juce::Component
+        void resized() override;
+        void colourChanged() override;
+
+    private:
+        Accessor& mAccessor;
+        Zoom::Accessor& mTimeZoomAccessor;
+        Transport::Accessor& mTransportAccessor;
+        Accessor::Listener mListener{typeid(*this).name()};
+        std::vector<std::unique_ptr<Transport::SelectionBar>> mSelectionBars;
     };
 } // namespace Track
 

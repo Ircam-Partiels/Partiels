@@ -15,7 +15,6 @@ namespace Application
         Window();
         ~Window() override;
 
-        void moveKeyboardFocusTo(juce::String const& identifier);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
         void showDesktopScaler();
 

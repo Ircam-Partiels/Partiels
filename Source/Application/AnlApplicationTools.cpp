@@ -1,25 +1,51 @@
 #include "AnlApplicationTools.h"
+#include "../Document/AnlDocumentSelection.h"
 #include "AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
 
+size_t Application::Tools::getNewGroupPosition()
+{
+    auto const& documentAcsr = Instance::get().getDocumentAccessor();
+    auto const selectedItem = Document::Selection::getFarthestItem(documentAcsr);
+    if(!selectedItem.has_value())
+    {
+        return documentAcsr.getNumAcsrs<Document::AcsrType::groups>();
+    }
+    else if(Document::Tools::hasGroupAcsr(documentAcsr, *selectedItem))
+    {
+        return Document::Tools::getGroupPosition(documentAcsr, *selectedItem) + 1_z;
+    }
+    else if(Document::Tools::hasTrackAcsr(documentAcsr, *selectedItem))
+    {
+        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *selectedItem);
+        auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
+        return Document::Tools::getGroupPosition(documentAcsr, groupIdentifier) + 1_z;
+    }
+    return 0_z;
+}
+
 std::tuple<juce::String, size_t> Application::Tools::getNewTrackPosition()
 {
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
-    auto const focusedTrack = Document::Tools::getFocusedTrack(documentAcsr);
-    if(focusedTrack.has_value())
+    auto const selectedItem = Document::Selection::getFarthestItem(documentAcsr);
+    if(!selectedItem.has_value())
     {
-        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *focusedTrack);
+        return std::make_tuple(juce::String{}, 0_z);
+    }
+    else if(Document::Tools::hasGroupAcsr(documentAcsr, *selectedItem))
+    {
+        return std::make_tuple(*selectedItem, 0_z);
+    }
+    else if(Document::Tools::hasTrackAcsr(documentAcsr, *selectedItem))
+    {
+        auto const& groupAcsr = Document::Tools::getGroupAcsrForTrack(documentAcsr, *selectedItem);
         auto const groupIdentifier = groupAcsr.getAttr<Group::AttrType::identifier>();
-        auto const position = Document::Tools::getTrackPosition(documentAcsr, *focusedTrack);
+        auto const position = Document::Tools::getTrackPosition(documentAcsr, *selectedItem);
         return std::make_tuple(groupIdentifier, position + 1_z);
     }
-    auto const focusedGroup = Document::Tools::getFocusedGroup(documentAcsr);
-    if(focusedGroup.has_value())
-    {
-        return std::make_tuple(*focusedGroup, 0_z);
-    }
-    return std::make_tuple(juce::String(""), 0_z);
+    MiscWeakAssert(false);
+    return std::make_tuple(juce::String{}, 0_z);
 }
 
 void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> position, std::set<Plugin::Key> const& keys)
@@ -109,10 +135,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *lastTrack]()
                                     {
-                                        if(auto* window = Instance::get().getWindow())
-                                        {
-                                            window->moveKeyboardFocusTo(idtf);
-                                        }
+                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf}, true, false, NotificationType::synchronous);
                                     });
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Tracks"));
     }
@@ -193,10 +216,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *identifier]()
                                     {
-                                        if(auto* window = Instance::get().getWindow())
-                                        {
-                                            window->moveKeyboardFocusTo(idtf);
-                                        }
+                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf}, true, false, NotificationType::synchronous);
                                     });
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::InfoIcon)

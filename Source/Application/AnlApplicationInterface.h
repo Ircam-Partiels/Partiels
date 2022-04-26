@@ -17,7 +17,6 @@ namespace Application
         Interface();
         ~Interface() override;
 
-        void moveKeyboardFocusTo(juce::String const& identifier);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
         // juce::Component

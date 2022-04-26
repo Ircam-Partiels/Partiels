@@ -187,6 +187,7 @@ Application::Interface::Loader::Loader()
             case Document::AttrType::grid:
             case Document::AttrType::autoresize:
             case Document::AttrType::samplerate:
+            case Document::AttrType::editMode:
                 break;
         }
     };
@@ -326,7 +327,7 @@ void Application::Interface::Loader::applicationCommandListChanged()
 }
 
 Application::Interface::Interface()
-: mDocumentSection(Instance::get().getDocumentDirector())
+: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
 {
     mComponentListener.onComponentVisibilityChanged = [this](juce::Component& component)
     {
@@ -504,11 +505,6 @@ void Application::Interface::filesDropped(juce::StringArray const& files, int x,
         auto const position = Tools::getNewTrackPosition();
         Instance::get().importFile(position, importFile);
     }
-}
-
-void Application::Interface::moveKeyboardFocusTo(juce::String const& identifier)
-{
-    mDocumentSection.moveKeyboardFocusTo(identifier);
 }
 
 juce::Rectangle<int> Application::Interface::getPlotBounds(juce::String const& identifier) const

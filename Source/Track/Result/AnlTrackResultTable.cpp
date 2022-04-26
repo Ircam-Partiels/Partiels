@@ -65,9 +65,10 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
         {
             case AttrType::identifier:
             case AttrType::name:
-            case AttrType::file:
                 break;
+            case AttrType::file:
             case AttrType::results:
+            case AttrType::description:
             {
                 mTabbedButtonBar.removeChangeListener(this);
                 auto setNumChannels = [this](auto resultPtr)
@@ -121,11 +122,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                 mTable.updateContent();
                 resized();
                 mTabbedButtonBar.addChangeListener(this);
-            }
-            break;
-            case AttrType::description:
-            {
-                mTable.repaint();
+                selectionUpdated();
             }
             break;
             case AttrType::key:
@@ -138,7 +135,24 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::graphics:
             case AttrType::warnings:
             case AttrType::processing:
+                break;
             case AttrType::focused:
+            {
+                auto const focused = acsr.getAttr<AttrType::focused>();
+                auto const channel = getSelectedChannel();
+                if(focused.any() && (!channel.has_value() || !focused.test(*channel)))
+                {
+                    for(auto index = 0_z; index < focused.size(); ++index)
+                    {
+                        if(focused.test(index))
+                        {
+                            mTabbedButtonBar.setCurrentTabIndex(static_cast<int>(index), false);
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
             case AttrType::grid:
                 break;
         }
@@ -182,6 +196,24 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
         }
     };
 
+    mTimeZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        juce::ignoreUnused(acsr);
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            {
+                mTable.repaint();
+                mTable.updateContent();
+            }
+            break;
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::visibleRange:
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+
     addAndMakeVisible(mTable);
     addAndMakeVisible(mSeparator);
     addAndMakeVisible(mTabbedButtonBar);
@@ -204,6 +236,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
 Track::Result::Table::~Table()
 {
     mTabbedButtonBar.removeChangeListener(this);
+    mTimeZoomAccessor.removeListener(mTimeZoomListener);
     mTransportAccessor.removeListener(mTransportListener);
     mAccessor.removeListener(mListener);
 }
@@ -230,6 +263,7 @@ void Track::Result::Table::parentHierarchyChanged()
 {
     if(!isShowing())
     {
+        mTimeZoomAccessor.removeListener(mTimeZoomListener);
         mTransportAccessor.removeListener(mTransportListener);
         mAccessor.removeListener(mListener);
     }
@@ -237,6 +271,7 @@ void Track::Result::Table::parentHierarchyChanged()
     {
         mAccessor.addListener(mListener, NotificationType::synchronous);
         mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
+        mTimeZoomAccessor.addListener(mTimeZoomListener, NotificationType::synchronous);
     }
 }
 
@@ -314,14 +349,17 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
 
     if(auto* previousCell = dynamic_cast<CellBase*>(existingComponentToUpdate))
     {
-        return previousCell->isValid() ? component.release() : nullptr;
+        if(previousCell->updateAndValidate(*channel))
+        {
+            return component.release();
+        }
     }
 
     auto const frameIndex = static_cast<size_t>(rowNumber);
     if(columnId == static_cast<int>(ColumnType::time))
     {
         auto cell = std::make_unique<CellTime>(mDirector, mTimeZoomAccessor, *channel, frameIndex);
-        if(cell != nullptr && cell->isValid())
+        if(cell != nullptr && cell->updateAndValidate(*channel))
         {
             return cell.release();
         }
@@ -329,7 +367,7 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
     else if(columnId == static_cast<int>(ColumnType::duration))
     {
         auto cell = std::make_unique<CellDuration>(mDirector, mTimeZoomAccessor, *channel, frameIndex);
-        if(cell != nullptr && cell->isValid())
+        if(cell != nullptr && cell->updateAndValidate(*channel))
         {
             return cell.release();
         }
@@ -337,7 +375,7 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
     else if(columnId == static_cast<int>(ColumnType::value))
     {
         auto cell = std::make_unique<CellValue>(mDirector, mTimeZoomAccessor, *channel, frameIndex);
-        if(cell != nullptr && cell->isValid())
+        if(cell != nullptr && cell->updateAndValidate(*channel))
         {
             return cell.release();
         }
@@ -550,6 +588,15 @@ void Track::Result::Table::changeListenerCallback(juce::ChangeBroadcaster* sourc
     {
         return;
     }
+
+    auto const channel = getSelectedChannel();
+    if(channel.has_value())
+    {
+        FocusInfo info;
+        info.set(*channel);
+        mAccessor.setAttr<AttrType::focused>(info, NotificationType::synchronous);
+    }
+
     mTable.updateContent();
     mTable.repaint();
 }
@@ -634,15 +681,15 @@ bool Track::Result::Table::deleteSelection()
         return false;
     }
 
-    auto action = std::make_unique<Modifier::ActionErase>(mAccessor, mTransportAccessor, *channel);
-    if(action != nullptr)
+    auto& undoManager = mDirector.getUndoManager();
+    auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
+    auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    undoManager.beginNewTransaction(juce::translate("Erase Frame(s)"));
+    if(undoManager.perform(std::make_unique<Modifier::ActionErase>(mAccessor, *channel, selection).release()))
     {
-        mDirector.getUndoManager().beginNewTransaction(juce::translate("Erase Frames"));
-        if(mDirector.getUndoManager().perform(action.release()))
-        {
-            selectionUpdated();
-            return true;
-        }
+        undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mAccessor).release());
+        undoManager.perform(std::make_unique<Transport::Action::Restorer>(mTransportAccessor, playhead, selection).release());
+        return true;
     }
     return false;
 }
@@ -698,11 +745,16 @@ bool Track::Result::Table::pasteSelection()
     {
         return true;
     }
-    auto action = std::make_unique<Result::Modifier::ActionPaste>(mAccessor, mTransportAccessor, *channel, mCopiedData, mCopiedSelection);
-    if(action != nullptr)
+
+    auto& undoManager = mDirector.getUndoManager();
+    auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
+    auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mAccessor, *channel, mCopiedSelection, mCopiedData, playhead).release()))
     {
-        mDirector.getUndoManager().beginNewTransaction(juce::translate("Paste Frames"));
-        return mDirector.getUndoManager().perform(action.release());
+        undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mAccessor).release());
+        undoManager.perform(std::make_unique<Transport::Action::Restorer>(mTransportAccessor, playhead, selection).release());
+        return true;
     }
     return true;
 }
@@ -729,12 +781,17 @@ bool Track::Result::Table::duplicateSelection()
     {
         return true;
     }
+
+    auto& undoManager = mDirector.getUndoManager();
     mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(mCopiedSelection.getEnd(), NotificationType::synchronous);
-    auto action = std::make_unique<Result::Modifier::ActionPaste>(mAccessor, mTransportAccessor, *channel, mCopiedData, mCopiedSelection);
-    if(action != nullptr)
+    auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
+    auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    undoManager.beginNewTransaction(juce::translate("Duplicate Frame(s)"));
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mAccessor, *channel, mCopiedSelection, mCopiedData, mCopiedSelection.getEnd()).release()))
     {
-        mDirector.getUndoManager().beginNewTransaction(juce::translate("Duplicate Frames"));
-        return mDirector.getUndoManager().perform(action.release());
+        undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mAccessor).release());
+        undoManager.perform(std::make_unique<Transport::Action::Restorer>(mTransportAccessor, playhead, selection.movedToStartAt(playhead)).release());
+        return true;
     }
     return false;
 }
@@ -754,6 +811,7 @@ void Track::Result::Table::selectionUpdated()
         set.addRange({static_cast<int>(*indices.cbegin()), static_cast<int>(*indices.crbegin()) + 1});
     }
     mTable.setSelectedRows(set, juce::NotificationType::dontSendNotification);
+    mTable.repaint();
 }
 
 ANALYSE_FILE_END

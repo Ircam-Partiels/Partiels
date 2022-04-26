@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Track/AnlTrackPlot.h"
+#include "AnlGroupRuler.h"
 #include "AnlGroupTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -44,7 +45,7 @@ namespace Group
             Zoom::Accessor& mTimeZoomAccessor;
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
-            Transport::SelectionBar mTransportSelectionBar;
+            SelectionBar mSelectionBar;
             bool mSnapshotMode{false};
         };
 

@@ -163,11 +163,6 @@ void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source
     setName(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString + " - " + name + extension);
 }
 
-void Application::Window::moveKeyboardFocusTo(juce::String const& identifier)
-{
-    mInterface.moveKeyboardFocusTo(identifier);
-}
-
 juce::Rectangle<int> Application::Window::getPlotBounds(juce::String const& identifier) const
 {
     return mInterface.getPlotBounds(identifier);

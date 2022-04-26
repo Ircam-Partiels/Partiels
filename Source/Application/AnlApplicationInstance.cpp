@@ -612,11 +612,6 @@ juce::File Application::Instance::getBackupFile() const
     return juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup").withFileExtension(getExtensionForDocumentFile());
 }
 
-juce::ApplicationCommandManager* App::getApplicationCommandManager()
-{
-    return &Application::Instance::get().getApplicationCommandManager();
-}
-
 void Application::Instance::openStartupFiles()
 {
     if(!mIsPluginListReady)

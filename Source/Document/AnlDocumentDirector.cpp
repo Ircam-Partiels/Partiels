@@ -76,6 +76,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::autoresize:
+            case AttrType::editMode:
                 break;
         }
     };
@@ -324,6 +325,11 @@ Track::Director& Document::Director::getTrackDirector(juce::String const& identi
                            });
     anlStrongAssert(it != mTracks.end());
     return *it->get();
+}
+
+juce::UndoManager& Document::Director::getUndoManager()
+{
+    return mUndoManager;
 }
 
 void Document::Director::setAlertCatcher(AlertWindow::Catcher* catcher)

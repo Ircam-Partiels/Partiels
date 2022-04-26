@@ -15,18 +15,13 @@ namespace Track
             CellBase(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index);
             ~CellBase() override = default;
 
-            bool isValid() const;
+            bool updateAndValidate(size_t channel);
 
         protected:
-            void attachToListener();
-            void detachFromListener();
             virtual void update() = 0;
-
             Director& mDirector;
             Accessor& mAccessor{mDirector.getAccessor()};
-            Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor& mTimeZoomAccessor;
-            Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             size_t const mChannel;
             size_t const mIndex;
             JUCE_LEAK_DETECTOR(CellBase)
@@ -37,7 +32,7 @@ namespace Track
         {
         public:
             CellTime(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index);
-            ~CellTime() override;
+            ~CellTime() override = default;
 
             // juce::Component
             void resized() override;
@@ -57,7 +52,7 @@ namespace Track
         {
         public:
             CellDuration(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index);
-            ~CellDuration() override;
+            ~CellDuration() override = default;
 
             // juce::Component
             void resized() override;
@@ -77,7 +72,7 @@ namespace Track
         {
         public:
             CellValue(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index);
-            ~CellValue() override;
+            ~CellValue() override = default;
 
             // juce::Component
             void resized() override;

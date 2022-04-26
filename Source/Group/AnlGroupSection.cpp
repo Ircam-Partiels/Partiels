@@ -15,7 +15,6 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
-        juce::ignoreUnused(acsr);
         switch(type)
         {
             case AttrType::identifier:
@@ -27,14 +26,12 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
                 break;
             case AttrType::height:
             {
-                auto const size = mAccessor.getAttr<AttrType::height>();
-                setSize(getWidth(), size + 1);
+                setSize(getWidth(), acsr.getAttr<AttrType::height>() + 1);
             }
             break;
             case AttrType::focused:
             {
-                auto const focused = mAccessor.getAttr<AttrType::focused>();
-                mThumbnailDecoration.setHighlighted(focused);
+                mThumbnailDecoration.setHighlighted(!Tools::getSelectedChannels(acsr).empty());
             }
             break;
             case AttrType::zoomid:
@@ -63,7 +60,6 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
     addAndMakeVisible(mPlotDecoration);
     addAndMakeVisible(mResizerBar);
     setSize(80, 100);
-    setWantsKeyboardFocus(true);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -75,6 +71,11 @@ Group::Section::~Section()
 juce::Rectangle<int> Group::Section::getPlotBounds() const
 {
     return mPlot.getBounds();
+}
+
+juce::String Group::Section::getIdentifier() const
+{
+    return mAccessor.getAttr<AttrType::identifier>();
 }
 
 void Group::Section::setResizable(bool state)
@@ -235,20 +236,6 @@ void Group::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
     auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
 
     zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
-}
-
-void Group::Section::focusOfChildComponentChanged(juce::Component::FocusChangeType cause)
-{
-    juce::ignoreUnused(cause);
-    juce::WeakReference<juce::Component> target(this);
-    juce::MessageManager::callAsync([=, this]
-                                    {
-                                        if(target.get() != nullptr)
-                                        {
-                                            auto const hasFocus = hasKeyboardFocus(true) || getCurrentlyFocusedComponent() == nullptr;
-                                            mAccessor.setAttr<AttrType::focused>(hasFocus, NotificationType::synchronous);
-                                        }
-                                    });
 }
 
 void Group::Section::updateContent()

@@ -8,6 +8,7 @@ namespace Document
 {
     namespace Tools
     {
+        bool hasItem(Accessor const& accessor, juce::String const& identifier);
         bool hasTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         bool hasGroupAcsr(Accessor const& accessor, juce::String const& identifier);
         bool isTrackInGroup(Accessor const& accessor, juce::String const& identifier);
@@ -22,9 +23,7 @@ namespace Document
 
         size_t getTrackPosition(Accessor const& accessor, juce::String const& identifier);
         size_t getGroupPosition(Accessor const& accessor, juce::String const& identifier);
-
-        std::optional<juce::String> getFocusedTrack(Accessor const& accessor);
-        std::optional<juce::String> getFocusedGroup(Accessor const& accessor);
+        size_t getItemPosition(Accessor const& accessor, juce::String const& identifier);
 
         std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& acsr);
     } // namespace Tools
@@ -32,7 +31,7 @@ namespace Document
     class LayoutNotifier
     {
     public:
-        LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn = nullptr);
+        LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn = nullptr, std::set<Group::AttrType> groupAttrs = {Group::AttrType::identifier}, std::set<Track::AttrType> trackAttrs = {Track::AttrType::identifier});
         ~LayoutNotifier();
 
     private:
@@ -45,7 +44,9 @@ namespace Document
     private:
         juce::String const mName;
         std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
+        std::set<Track::AttrType> mTrackAttributes;
         std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
+        std::set<Group::AttrType> mGroupAttributes;
     };
 } // namespace Document
 

@@ -22,6 +22,7 @@ namespace Document
         Group::Director& getGroupDirector(juce::String const& identifier);
         Track::Director const& getTrackDirector(juce::String const& identifier) const override;
         Track::Director& getTrackDirector(juce::String const& identifier) override;
+        juce::UndoManager& getUndoManager();
 
         void sanitize(NotificationType const notification);
 

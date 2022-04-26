@@ -1,4 +1,5 @@
 #include "AnlApplicationMainMenuModel.h"
+#include "../Document/AnlDocumentCommandTarget.h"
 #include "AnlApplicationCommandTarget.h"
 #include "AnlApplicationInstance.h"
 
@@ -34,7 +35,7 @@ Application::MainMenuModel::~MainMenuModel()
 
 juce::StringArray Application::MainMenuModel::getMenuBarNames()
 {
-    return {"File", "Edit", "Transport", "View", "Help"};
+    return {"File", "Edit", "Frame", "Transport", "View", "Help"};
 }
 
 juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuIndex, juce::String const& menuName)
@@ -42,7 +43,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
     juce::ignoreUnused(topLevelMenuIndex);
 
     using CommandIDs = CommandTarget::CommandIDs;
-    using TrackCommandIDs = Track::CommandTarget::CommandIDs;
+    using DocumentCommandIDs = Document::CommandTarget::CommandIDs;
     auto& commandManager = Instance::get().getApplicationCommandManager();
     juce::PopupMenu menu;
     if(menuName == "File")
@@ -84,13 +85,15 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::editRemoveItem);
         menu.addCommandItem(&commandManager, CommandIDs::editNewTrack);
         menu.addCommandItem(&commandManager, CommandIDs::editNewGroup);
-        menu.addSeparator();
-        menu.addCommandItem(&commandManager, TrackCommandIDs::editSelectAll);
-        menu.addCommandItem(&commandManager, TrackCommandIDs::editDeleteSelection);
-        menu.addCommandItem(&commandManager, TrackCommandIDs::editCopySelection);
-        menu.addCommandItem(&commandManager, TrackCommandIDs::editCutSelection);
-        menu.addCommandItem(&commandManager, TrackCommandIDs::editPasteSelection);
-        menu.addCommandItem(&commandManager, TrackCommandIDs::editDuplicateSelection);
+    }
+    else if(menuName == "Frame")
+    {
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::selectAll);
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editDelete);
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editCopy);
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editCut);
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editPaste);
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editDuplicate);
     }
     else if(menuName == "Transport")
     {
