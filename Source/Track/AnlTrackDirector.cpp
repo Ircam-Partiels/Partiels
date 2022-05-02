@@ -850,8 +850,8 @@ void Track::Director::askToRestoreState(juce::String const& reason)
 
 void Track::Director::askToRemoveFile()
 {
-    auto const file = mAccessor.getAttr<AttrType::file>().file;
-    if(file == juce::File{})
+    auto const file = mAccessor.getAttr<AttrType::file>();
+    if(file.isEmpty())
     {
         return;
     }
@@ -864,7 +864,7 @@ void Track::Director::askToRemoveFile()
     auto const options = juce::MessageBoxOptions()
                              .withIconType(juce::AlertWindow::QuestionIcon)
                              .withTitle(juce::translate("Remove result files?"))
-                             .withMessage(juce::translate("The analysis results are loaded from a file or have been consolidated to a file. Do you want to remove the file (it will restart the analysis if a plugin is selected)?"))
+                             .withMessage(juce::translate("The analysis results are loaded from a file, have been modified, or consolidated to a file. Do you want to remove the file (it will restart the analysis if a plugin is selected)?"))
                              .withButton(juce::translate("Remove file"))
                              .withButton(juce::translate("Cancel"));
     juce::WeakReference<Director> weakReference(this);
@@ -874,7 +874,13 @@ void Track::Director::askToRemoveFile()
                                      {
                                          return;
                                      }
-                                     removeFile();
+                                     startAction();
+                                     auto action = createFileRestorerAction();
+                                     mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+                                     mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                     mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
+                                     endAction(ActionState::newTransaction, juce::translate("Remove track's results file"));
+                                     mUndoManager.perform(action.release());
                                  });
 }
 
@@ -927,18 +933,79 @@ void Track::Director::askToReloadFile(juce::String const& reason)
                                      }
                                      else if(result == 2)
                                      {
-                                         removeFile();
+                                         startAction();
+                                         auto action = createFileRestorerAction();
+                                         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+                                         mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                         mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
+                                         endAction(ActionState::newTransaction, juce::translate("Remove track's results file"));
+                                         mUndoManager.perform(action.release());
                                      }
                                  });
 }
 
-void Track::Director::removeFile()
+std::unique_ptr<juce::UndoableAction> Track::Director::createFileRestorerAction()
 {
-    startAction();
-    mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-    mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-    mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
-    endAction(ActionState::newTransaction, juce::translate("Remove track's results file"));
+    class FileRestorer
+    : public juce::UndoableAction
+    {
+    public:
+        FileRestorer(Accessor& accessor, juce::File const& file, bool shouldBeDeleted)
+        : mAccessor(accessor)
+        , mFile(file)
+        , mShouldBeDeleted(shouldBeDeleted)
+        {
+        }
+
+        ~FileRestorer() override
+        {
+            if(mShouldBeDeleted)
+            {
+                mFile.deleteFile();
+            }
+        }
+
+        // juce::UndoableAction
+        bool perform() override
+        {
+            return true;
+        }
+
+        bool undo() override
+        {
+            if(mFile.existsAsFile())
+            {
+                std::atomic<bool> shouldAbort{false};
+                std::atomic<float> advancement{0.0f};
+                auto const vResults = Track::Loader::loadFromFile({mFile}, shouldAbort, advancement);
+                if(auto* results = std::get_if<Results>(&vResults))
+                {
+                    mAccessor.setAttr<AttrType::results>(*results, NotificationType::synchronous);
+                    return true;
+                }
+                return true;
+            }
+            return true;
+        }
+
+    protected:
+        Accessor& mAccessor;
+        juce::File const mFile;
+        bool const mShouldBeDeleted;
+    };
+
+    auto const tempFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup");
+    auto const currentFile = mAccessor.getAttr<AttrType::file>();
+    auto const newFile = Track::Exporter::getConsolidatedFile(mAccessor, tempFolder);
+    if(currentFile.file.getFileName() != newFile.getFileName())
+    {
+        Track::Exporter::consolidateInDirectory(mAccessor, tempFolder);
+        return std::make_unique<FileRestorer>(mAccessor, newFile, true);
+    }
+    else
+    {
+        return std::make_unique<FileRestorer>(mAccessor, currentFile.file, false);
+    }
 }
 
 void Track::Director::askForFile()

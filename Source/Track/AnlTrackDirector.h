@@ -21,9 +21,6 @@ namespace Track
         Accessor& getAccessor();
         juce::UndoManager& getUndoManager();
 
-        juce::File getConsolidatedFile(juce::File const& directory) const;
-        juce::Result consolidateInDirectory(juce::File const& directory);
-
         bool hasChanged() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
@@ -56,13 +53,14 @@ namespace Track
         void askToRemoveFile();
         void askToResolveWarnings();
 
+        std::unique_ptr<juce::UndoableAction> createFileRestorerAction();
+
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);
         void runLoading();
         void runRendering();
         void askForFile();
-        void removeFile();
 
         // FileWatcher
         void fileHasBeenRemoved(juce::File const& file) override;

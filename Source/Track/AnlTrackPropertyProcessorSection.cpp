@@ -256,6 +256,7 @@ void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bo
                                          MiscWeakAssert(prepare != nullptr);
                                          if(prepare != nullptr && prepare(hasChanged))
                                          {
+                                             auto action = mDirector.createFileRestorerAction();
                                              mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
                                              mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
                                              mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
@@ -264,6 +265,7 @@ void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bo
                                              {
                                                  perform();
                                              }
+                                             mDirector.getUndoManager().perform(action.release());
                                          }
                                          updateState();
                                      });
