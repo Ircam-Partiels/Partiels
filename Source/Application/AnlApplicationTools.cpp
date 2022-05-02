@@ -111,7 +111,6 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
                 {
                     return "";
                 }
-                return "";
             };
 
             trackAcsr.setAttr<Track::AttrType::name>(getPluginName(), NotificationType::synchronous);
