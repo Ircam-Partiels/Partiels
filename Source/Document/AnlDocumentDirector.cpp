@@ -877,12 +877,15 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     auto const& errors = std::get<1>(result);
     if(reader == nullptr)
     {
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::WarningIcon)
-                                 .withTitle(juce::translate("Audio format reader cannot be loaded!"))
-                                 .withMessage(errors.joinIntoString("\n"))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
+        if(mAlertCatcher == nullptr)
+        {
+            auto const options = juce::MessageBoxOptions()
+                                     .withIconType(juce::AlertWindow::WarningIcon)
+                                     .withTitle(juce::translate("Audio format reader cannot be loaded!"))
+                                     .withMessage(errors.joinIntoString("\n"))
+                                     .withButton(juce::translate("Ok"));
+            juce::AlertWindow::showAsync(options, nullptr);
+        }
         mSampleRate.reset();
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         mDuration = 0.0;
@@ -891,7 +894,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
         return;
     }
-    else if(!errors.isEmpty())
+    else if(!errors.isEmpty() && mAlertCatcher == nullptr)
     {
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
@@ -926,12 +929,27 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
     transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range(0.0, mDuration).getIntersectionWith(loopRange), notification);
 
+    juce::StringArray files;
     for(auto const& anl : mTracks)
     {
         if(anl != nullptr)
         {
+            auto const& trackFile = anl->getAccessor().getAttr<Track::AttrType::file>();
+            if(!trackFile.isEmpty())
+            {
+                files.add(anl->getAccessor().getAttr<Track::AttrType::name>());
+            }
             anl->setAudioFormatReader(std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)), notification);
         }
+    }
+    if(!files.isEmpty() && mAlertCatcher == nullptr)
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::InfoIcon)
+                                 .withTitle(juce::translate("Audio files layout cannot be applied to all tracks!"))
+                                 .withMessage(juce::translate("The analysis results of the track(s) \"TRACKNAMES\" were modified, consolidated, or loaded from file(s). The results of these tracks won't be updated by the new audio files layout but you can detach the files using the track properties panels to trigger and update the analyses.").replace("TRACKNAMES", files.joinIntoString(", ")))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
     }
 }
 

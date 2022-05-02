@@ -25,19 +25,16 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
 : mDirector(director)
 , mPropertyResultsFile(juce::translate("Results File"), juce::translate("The path of the results file"), [this]()
                        {
-                           auto const trackFile = mAccessor.getAttr<AttrType::file>();
-                           if(trackFile.file.existsAsFile())
+                           auto const file = mAccessor.getAttr<AttrType::file>();
+                           if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
                            {
-                               if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
-                               {
-                                   mDirector.askToRemoveFile();
-                               }
-                               else
-                               {
-                                   trackFile.file.revealToUser();
-                               }
+                               mDirector.askToRemoveFile();
                            }
-                           else
+                           else if(file.file.existsAsFile())
+                           {
+                               file.file.revealToUser();
+                           }
+                           else if(file.file != juce::File{})
                            {
                                mDirector.askToReloadFile("The file cannot be found!");
                            }
@@ -107,22 +104,23 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::file:
             {
                 auto const& description = acsr.getAttr<AttrType::description>();
-                auto const resultsFile = mAccessor.getAttr<AttrType::file>().file;
-                mPropertyResultsFile.entry.setButtonText(resultsFile.getFileName());
-                mPropertyResultsFile.entry.setTooltip(resultsFile.getFullPathName());
-                auto const hasFile = Tools::hasResultFile(mAccessor);
+                auto const file = acsr.getAttr<AttrType::file>();
+                auto const fileName = file.file != juce::File{} ? file.file.getFullPathName() : "Modified";
+                mPropertyResultsFile.entry.setButtonText(fileName);
+                mPropertyResultsFile.entry.setTooltip(file.file.getFullPathName());
+                auto const hasFile = Tools::hasResultFile(acsr);
                 mPropertyResultsFileInfo.setVisible(hasFile);
                 mPropertyResultsFile.setVisible(hasFile);
-                auto const hasPlugin = Tools::hasPluginKey(mAccessor);
+                auto const hasPlugin = Tools::hasPluginKey(acsr);
                 mPropertyPreset.setVisible(hasPlugin);
 
                 mPropertyWindowType.setEnabled(hasPlugin);
                 mPropertyBlockSize.setEnabled(hasPlugin);
                 mPropertyStepSize.setEnabled(hasPlugin);
 
-                mPropertyWindowType.setVisible(Tools::supportsWindowType(mAccessor));
-                mPropertyBlockSize.setVisible(Tools::supportsBlockSize(mAccessor));
-                mPropertyStepSize.setVisible(Tools::supportsStepSize(mAccessor));
+                mPropertyWindowType.setVisible(Tools::supportsWindowType(acsr));
+                mPropertyBlockSize.setVisible(Tools::supportsBlockSize(acsr));
+                mPropertyStepSize.setVisible(Tools::supportsStepSize(acsr));
 
                 mParameterProperties.clear();
                 juce::WeakReference<juce::Component> weakReference(this);
@@ -196,7 +194,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
     addAndMakeVisible(mProgressBarAnalysis);
 
     mProgressBarAnalysis.setSize(300, 36);
-    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were consolidated or loaded from a file."), juce::NotificationType::dontSendNotification);
+    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were modified, consolidated or loaded from a file."), juce::NotificationType::dontSendNotification);
     mPropertyResultsFileInfo.setSize(300, 24);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
@@ -236,15 +234,15 @@ void Track::PropertyProcessorSection::resized()
 
 void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform)
 {
-    auto const file = mAccessor.getAttr<AttrType::file>().file;
+    auto const file = mAccessor.getAttr<AttrType::file>();
     auto const& key = mAccessor.getAttr<AttrType::key>();
     MiscWeakAssert(!key.identifier.empty() && !key.feature.empty());
-    if(file != juce::File{} && !key.identifier.empty() && !key.feature.empty())
+    if(!file.isEmpty() && !key.identifier.empty() && !key.feature.empty())
     {
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Plugin results are locked!"))
-                                 .withMessage(juce::translate("The plugin analysis results were consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
+                                 .withMessage(juce::translate("The plugin analysis results were modified, consolidated or loaded from a file. Do you want to detach the file to modify the parameters and restart the analysis?"))
                                  .withButton(juce::translate("Detach the file"))
                                  .withButton(juce::translate("Cancel changes"));
         juce::WeakReference<juce::Component> weakReference(this);

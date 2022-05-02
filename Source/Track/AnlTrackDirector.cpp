@@ -488,7 +488,7 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 
     std::swap(mAudioFormatReader, audioFormatReader);
-    if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
+    if(mAccessor.getAttr<AttrType::file>().isEmpty())
     {
         runAnalysis(notification);
     }
