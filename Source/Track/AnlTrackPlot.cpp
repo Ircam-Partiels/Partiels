@@ -483,7 +483,6 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     }
 
     auto const& valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-    anlWeakAssert(!valueRange.isEmpty());
     if(valueRange.isEmpty())
     {
         return;

@@ -226,6 +226,12 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
         return;
     }
 
+    auto const& valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
+    if(valueRange.isEmpty())
+    {
+        return;
+    }
+
     auto const& results = accessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access) || results.isEmpty())
@@ -237,7 +243,7 @@ void Track::Snapshot::paintPoints(Accessor const& accessor, size_t channel, juce
     {
         return;
     }
-    auto const y = Tools::valueToPixel(*value, accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>(), bounds.toFloat());
+    auto const y = Tools::valueToPixel(*value, valueRange, bounds.toFloat());
     auto const shadowColour = accessor.getAttr<AttrType::colours>().shadow;
     if(!shadowColour.isTransparent())
     {
