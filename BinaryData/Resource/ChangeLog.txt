@@ -1,9 +1,13 @@
 
 v1.0.5
 
+- Add: Add delete/copy/cut/paste/duplicate actions for modifying results (#261)
+- Add: Add support for multi-items (groups & tracks) selection and multichannel selection (#260)
 - Fix: Dragging a group should not expand it if the auto resize mode in on (#259)
 - Fix: Changing the value of a parameter by a step of 1 of a number field does not work (#258)
 - Fix: Moving keyboard focus to the next component is not working correctly when there is only one group (#257)
+- Fix: The labels of the markers plot are invisible when markers are continuous (#256)
+- Imp: The color of the markers' duration of the plot should be slightly transparent (#255)
 - Fix: The values of the time fields should be closer to the suffixes - h, m, s, ms (#254)
 - Imp: Use time selection to update the loop range (#253)
 - Imp: Add time selection info on the header part of the application (#252)
@@ -11,6 +15,7 @@ v1.0.5
 - Imp: Remove the user interaction for shifting the loop range using the shift key (#250)
 - Fix: The text information of the results file in the track property panel should not be editable (#248)
 - Fix: Application does not correctly capture mouse events when full screen mode is restored on startup (#247)
+- Add: Add results table window for inspecting and editing results (#199)
 
 v1.0.4
 
