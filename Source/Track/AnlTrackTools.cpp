@@ -9,7 +9,7 @@ bool Track::Tools::hasPluginKey(Accessor const& acsr)
 
 bool Track::Tools::hasResultFile(Accessor const& acsr)
 {
-    return acsr.getAttr<AttrType::file>().file != juce::File{};
+    return !acsr.getAttr<AttrType::file>().isEmpty();
 }
 
 bool Track::Tools::supportsWindowType(Accessor const& acsr)
