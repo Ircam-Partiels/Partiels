@@ -9,3 +9,5 @@
 - Add multi-feature tracks
 - Add allocation of multiple tracks with variable parameters values
 - Add support for analysis results as input of plugins
+- Improve window approach of property panel
+- Changing audio file doesn't ask to re-analyse if consolidate 
