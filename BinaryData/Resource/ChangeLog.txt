@@ -13,6 +13,7 @@ v1.0.5
 - Imp: Add time selection info on the header part of the application (#252)
 - Imp: Add time selection mechanism on the plots of tracks and groups (#251)
 - Imp: Remove the user interaction for shifting the loop range using the shift key (#250)
+- Imp: Move the playhead position to the start of the loop range when modifying the range (#249)
 - Fix: The text information of the results file in the track property panel should not be editable (#248)
 - Fix: Application does not correctly capture mouse events when full screen mode is restored on startup (#247)
 - Add: Add results table window for inspecting and editing results (#199)
