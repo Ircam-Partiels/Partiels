@@ -117,6 +117,7 @@ namespace Track
 
             bool operator==(File const& rhd) const noexcept;
             bool operator!=(File const& rhd) const noexcept;
+            bool isEmpty() const noexcept;
         };
 
         void to_json(nlohmann::json& j, File const& file);

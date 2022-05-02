@@ -802,6 +802,11 @@ bool Track::Result::File::operator!=(File const& rhd) const noexcept
     return !(*this == rhd);
 }
 
+bool Track::Result::File::isEmpty() const noexcept
+{
+    return file == juce::File{} && commit.isEmpty();
+}
+
 template <>
 void XmlParser::toXml<Track::Result::File>(juce::XmlElement& xml, juce::Identifier const& attributeName, Track::Result::File const& value)
 {
