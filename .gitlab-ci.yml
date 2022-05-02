@@ -16,8 +16,6 @@ Test::MacOS:
     - cd build
     - cmake .. -G Xcode
     - ../Scripts/macos-build.sh Debug
-    - export VAMP_PATH="$CI_PROJECT_DIR/build/Debug"
-    - echo $VAMP_PATH
     - ctest -C Debug -VV
 
 Test::Windows:
@@ -30,8 +28,6 @@ Test::Windows:
     - cd build
     - cmake .. -G "Visual Studio 17 2022" -A x64
     - cmake --build . --config Debug
-    - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Debug"
-    - echo $env:VAMP_PATH
     - ctest -C Debug -VV
 
 Test::Linux:
@@ -44,8 +40,6 @@ Test::Linux:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build .
-    - export VAMP_PATH="$CI_PROJECT_DIR/build"
-    - echo $VAMP_PATH
     - ctest -C Debug -V
 
 Build::MacOS:
@@ -59,8 +53,6 @@ Build::MacOS:
     - cd build
     - cmake .. -G Xcode
     - ../Scripts/macos-build.sh Release
-    - export VAMP_PATH="$CI_PROJECT_DIR/build/Release"
-    - echo $VAMP_PATH
     - ctest -C Release -VV
 
 Build::Windows:
@@ -74,8 +66,6 @@ Build::Windows:
     - cd build
     - cmake .. -G "Visual Studio 17 2022" -A x64
     - cmake --build . --config Release
-    - $env:VAMP_PATH="$CI_PROJECT_DIR\build\Release"
-    - echo $env:VAMP_PATH
     - ctest -C Release -VV
     - Get-Content "$CI_PROJECT_DIR\BinaryData\Resource\About.txt", "$CI_PROJECT_DIR\BinaryData\Resource\ChangeLog.txt" | Out-File "$CI_PROJECT_DIR\build\Install.txt"
     - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR/Scripts/windows-package.iss"'
@@ -96,7 +86,6 @@ Build::Linux:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build .
-    - export VAMP_PATH="$CI_PROJECT_DIR/build"
     - ctest -C Release -V
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
   artifacts:
