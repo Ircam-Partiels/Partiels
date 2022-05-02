@@ -14,12 +14,12 @@ namespace Document
         // clang-format off
         enum CommandIDs : int
         {
-            selectAll = 0x2001,
-            editDelete,
-            editCopy,
-            editCut,
-            editPaste,
-            editDuplicate
+              selectAll = 0x2001
+            , editDelete
+            , editCopy
+            , editCut
+            , editPaste
+            , editDuplicate
         };
         // clang-format on
 
