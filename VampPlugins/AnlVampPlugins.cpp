@@ -113,6 +113,126 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::getRemainingFeatures()
     return {};
 }
 
+AnlVampPlugin::NewTrack::NewTrack(float sampleRate)
+: Vamp::Plugin(sampleRate)
+{
+}
+
+bool AnlVampPlugin::NewTrack::initialise(size_t channels, size_t, size_t)
+{
+    mNumChannels = channels;
+    return true;
+}
+
+Vamp::Plugin::InputDomain AnlVampPlugin::NewTrack::getInputDomain() const
+{
+    return TimeDomain;
+}
+
+std::string AnlVampPlugin::NewTrack::getIdentifier() const
+{
+    return "partielsnewtrack";
+}
+
+std::string AnlVampPlugin::NewTrack::getName() const
+{
+    return "New Track";
+}
+
+std::string AnlVampPlugin::NewTrack::getDescription() const
+{
+    return "Add an empty track.";
+}
+std::string AnlVampPlugin::NewTrack::getMaker() const
+{
+    return "Ircam";
+}
+
+int AnlVampPlugin::NewTrack::getPluginVersion() const
+{
+    return PARTIELS_VAMP_PLUGINS_VERSION;
+}
+
+std::string AnlVampPlugin::NewTrack::getCopyright() const
+{
+    return "Copyright 2022 Ircam. All rights reserved. Plugin by Pierre Guillot.";
+}
+
+size_t AnlVampPlugin::NewTrack::getPreferredBlockSize() const
+{
+    return 256_z;
+}
+
+size_t AnlVampPlugin::NewTrack::getPreferredStepSize() const
+{
+    return 0_z;
+}
+
+Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
+{
+    OutputList list;
+    {
+        OutputDescriptor d;
+        d.identifier = "markers";
+        d.name = "Markers";
+        d.description = "Markers";
+        d.unit = "";
+        d.hasFixedBinCount = true;
+        d.binCount = 0;
+        d.hasKnownExtents = false;
+        d.isQuantized = false;
+        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+        d.hasDuration = false;
+        list.push_back(std::move(d));
+    }
+    {
+        OutputDescriptor d;
+        d.identifier = "points";
+        d.name = "Points";
+        d.description = "Points";
+        d.unit = "";
+        d.hasFixedBinCount = true;
+        d.binCount = 1;
+        d.hasKnownExtents = false;
+        d.isQuantized = false;
+        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+        d.hasDuration = false;
+        list.push_back(std::move(d));
+    }
+    return list;
+}
+
+void AnlVampPlugin::NewTrack::reset()
+{
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::process(const float* const*, Vamp::RealTime timeStamp)
+{
+    if(timeStamp == Vamp::RealTime())
+    {
+        FeatureSet featureSet;
+        featureSet[0].resize(mNumChannels);
+        for(auto& feature : featureSet[0])
+        {
+            feature.hasTimestamp = true;
+            feature.timestamp = Vamp::RealTime(0, 0);
+        }
+        featureSet[1].resize(mNumChannels);
+        for(auto& feature : featureSet[1])
+        {
+            feature.hasTimestamp = true;
+            feature.timestamp = Vamp::RealTime(0, 0);
+        }
+        return featureSet;
+    }
+    return {};
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::getRemainingFeatures()
+{
+    return {};
+}
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -130,13 +250,17 @@ extern "C"
                 static Vamp::PluginAdapter<AnlVampPlugin::Waveform> adaptater;
                 return adaptater.getDescriptor();
             }
+            case 1:
+            {
+                static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
+                return adaptater.getDescriptor();
+            }
             default:
             {
                 return nullptr;
             }
         }
     }
-
 #ifdef __cplusplus
 }
 #endif
