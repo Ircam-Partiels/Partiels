@@ -103,6 +103,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     director->setAlertCatcher(mAlertCatcher);
                     director->setPluginTable(mPluginTableContainer);
                     director->setLoaderSelector(mLoaderSelectorContainer);
+                    director->setBackupDirectory(mBackupDirectory);
                     director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
@@ -1036,6 +1037,21 @@ void Document::Director::updateMarkers(NotificationType notification)
         }
     }
     mAccessor.getAcsr<AcsrType::transport>().setAttr<Transport::AttrType::markers>(markers, notification);
+}
+
+void Document::Director::setBackupDirectory(juce::File const& directory)
+{
+    if(mBackupDirectory != directory)
+    {
+        mBackupDirectory = directory;
+        for(auto& track : mTracks)
+        {
+            if(track != nullptr)
+            {
+                track->setBackupDirectory(mBackupDirectory);
+            }
+        }
+    }
 }
 
 ANALYSE_FILE_END

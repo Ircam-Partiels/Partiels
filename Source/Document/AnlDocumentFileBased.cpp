@@ -323,44 +323,6 @@ juce::Result Document::FileBased::saveBackup(juce::File const& file)
     {
         xml->setAttribute("origin", currentFile.getFullPathName());
     }
-    auto const directory = getConsolidateDirectory(file);
-
-    auto const trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
-    for(auto const& trackAcsr : trackAcsrs)
-    {
-        auto trackFileInfo = trackAcsr.get().getAttr<Track::AttrType::file>();
-        if(trackFileInfo.commit.isNotEmpty())
-        {
-            auto const trackResult = Track::Exporter::consolidateInDirectory(trackAcsr.get(), directory);
-            if(trackResult.failed())
-            {
-                return trackResult;
-            }
-            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
-            auto findFileXml = [&]() -> juce::XmlElement*
-            {
-                for(auto* trackXml = xml->getChildByName("tracks"); trackXml != nullptr; trackXml = trackXml->getNextElementWithTagName("tracks"))
-                {
-                    MiscWeakAssert(trackXml != nullptr);
-                    if(trackXml != nullptr && trackXml->getStringAttribute("identifier") == identifier)
-                    {
-                        return trackXml->getChildByName("file");
-                    }
-                }
-                MiscWeakAssert(false);
-                return nullptr;
-            };
-
-            auto* fileXml = findFileXml();
-            MiscWeakAssert(fileXml != nullptr);
-            if(fileXml != nullptr)
-            {
-                auto const newFile = Track::Exporter::getConsolidatedFile(trackAcsr.get(), directory);
-                fileXml->setAttribute("path", newFile.getFullPathName());
-            }
-        }
-    }
-
     if(!xml->writeTo(file))
     {
         return juce::Result::fail(juce::translate("The document cannot be written to the file FLNM!").replace("FLNM", file.getFileName()));

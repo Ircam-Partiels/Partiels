@@ -47,6 +47,7 @@ namespace Document
         void setPluginTable(PluginTableContainer* table);
         using LoaderSelectorContainer = Track::Director::LoaderSelectorContainer;
         void setLoaderSelector(LoaderSelectorContainer* selector);
+        void setBackupDirectory(juce::File const& directory);
 
     private:
         // FileWatcher
@@ -72,6 +73,7 @@ namespace Document
         PluginTableContainer* mPluginTableContainer = nullptr;
         LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
+        juce::File mBackupDirectory;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)
