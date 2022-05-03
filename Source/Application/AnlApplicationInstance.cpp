@@ -599,7 +599,11 @@ void Application::Instance::changeListenerCallback(juce::ChangeBroadcaster* sour
         return;
     }
     auto const result = mDocumentFileBased->saveBackup(getBackupFile());
-    anlWeakAssert(!result.failed());
+    if(result.failed())
+    {
+        MiscDebug("Application::Instance", result.getErrorMessage());
+        MiscWeakAssert(false);
+    }
 }
 
 void Application::Instance::handleAsyncUpdate()
