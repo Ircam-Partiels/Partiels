@@ -10,6 +10,13 @@ ANALYSE_FILE_BEGIN
 
 namespace Track
 {
+    struct SafeAccessorRetriever
+    {
+        std::function<Accessor&()> getAccessorFn;
+        std::function<Zoom::Accessor&()> getTimeZoomAccessorFn;
+        std::function<Transport::Accessor&()> getTransportAccessorFn;
+    };
+
     class Director
     : private FileWatcher
     , private juce::Timer
@@ -21,9 +28,15 @@ namespace Track
         Accessor& getAccessor();
         juce::UndoManager& getUndoManager();
 
+        std::function<Accessor&()> getSafeAccessorFn();
+        std::function<Zoom::Accessor&()> getSafeTimeZoomAccessorFn();
+        std::function<Transport::Accessor&()> getSafeTransportZoomAccessorFn();
+        void setSafeAccessorRetriever(SafeAccessorRetriever const& sav);
+
         bool hasChanged() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
+        std::unique_ptr<juce::UndoableAction> createFileRestorerAction();
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
@@ -52,8 +65,6 @@ namespace Track
         void askToReloadFile(juce::String const& reason);
         void askToRemoveFile();
         void askToResolveWarnings();
-
-        std::unique_ptr<juce::UndoableAction> createFileRestorerAction();
 
     private:
         void sanitizeZooms(NotificationType const notification);
@@ -96,6 +107,7 @@ namespace Track
         PluginTableContainer* mPluginTableContainer = nullptr;
         LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
+        SafeAccessorRetriever mSafeAccessorRetriever;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)

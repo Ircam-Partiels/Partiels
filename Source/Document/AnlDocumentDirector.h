@@ -24,6 +24,11 @@ namespace Document
         Track::Director& getTrackDirector(juce::String const& identifier) override;
         juce::UndoManager& getUndoManager();
 
+        std::function<Track::Accessor&()> getSafeTrackAccessorFn(juce::String const& identifier);
+        std::function<Group::Accessor&()> getSafeGroupAccessorFn(juce::String const& identifier);
+        std::function<Zoom::Accessor&()> getSafeTimeZoomAccessorFn();
+        std::function<Transport::Accessor&()> getSafeTransportZoomAccessorFn();
+
         void sanitize(NotificationType const notification);
 
         void startAction();

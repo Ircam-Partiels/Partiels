@@ -49,8 +49,8 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
         : public Modifier::ActionBase
         {
         public:
-            Action(Accessor& accessor, size_t channel, size_t index, double currentTime, double newTime)
-            : Modifier::ActionBase(accessor, channel)
+            Action(std::function<Accessor&()> fn, size_t channel, size_t index, double currentTime, double newTime)
+            : Modifier::ActionBase(fn, channel)
             , mIndex(index)
             , mCurrentTime(currentTime)
             , mNewTime(newTime)
@@ -61,7 +61,7 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
 
             bool perform() override
             {
-                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mAccessor, mChannel, mIndex, mNewCommit, [&](auto& frame)
+                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
                                                                                      {
                                                                                          if(std::abs(std::get<0_z>(frame) - mNewTime) > std::numeric_limits<double>::epsilon())
                                                                                          {
@@ -74,7 +74,7 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
 
             bool undo() override
             {
-                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mAccessor, mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                return Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
                                                                                      {
                                                                                          if(std::abs(std::get<0_z>(frame) - mCurrentTime) > std::numeric_limits<double>::epsilon())
                                                                                          {
@@ -91,7 +91,7 @@ Track::Result::CellTime::CellTime(Director& director, Zoom::Accessor& timeZoomAc
             double const mNewTime;
         };
 
-        auto action = std::make_unique<Action>(mAccessor, mChannel, mIndex, mCurrentTime, time);
+        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentTime, time);
         if(action != nullptr)
         {
             undoManager.beginNewTransaction(juce::translate("Change Frame Time"));
@@ -169,8 +169,8 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
         : public Modifier::ActionBase
         {
         public:
-            Action(Accessor& accessor, size_t channel, size_t index, double currentDuration, double newDuration)
-            : Modifier::ActionBase(accessor, channel)
+            Action(std::function<Accessor&()> fn, size_t channel, size_t index, double currentDuration, double newDuration)
+            : Modifier::ActionBase(fn, channel)
             , mIndex(index)
             , mCurrentDuration(currentDuration)
             , mNewDuration(newDuration)
@@ -181,7 +181,7 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
 
             bool perform() override
             {
-                Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mAccessor, mChannel, mIndex, mNewCommit, [&](auto& frame)
+                Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
                                                                               {
                                                                                   if(std::abs(std::get<1_z>(frame) - mNewDuration) > std::numeric_limits<double>::epsilon())
                                                                                   {
@@ -195,7 +195,7 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
 
             bool undo() override
             {
-                Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mAccessor, mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                Modifier::updateFrame<Data::Type::marker | Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
                                                                               {
                                                                                   if(std::abs(std::get<1_z>(frame) - mCurrentDuration) > std::numeric_limits<double>::epsilon())
                                                                                   {
@@ -213,7 +213,7 @@ Track::Result::CellDuration::CellDuration(Director& director, Zoom::Accessor& ti
             double const mNewDuration;
         };
 
-        auto action = std::make_unique<Action>(mAccessor, mChannel, mIndex, mCurrentDuration, time);
+        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentDuration, time);
         if(action != nullptr)
         {
             undoManager.beginNewTransaction(juce::translate("Change Frame Duration"));
@@ -291,8 +291,8 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
         : public Modifier::ActionBase
         {
         public:
-            Action(Accessor& accessor, size_t channel, size_t index, std::string currentLabel, std::string newLabel)
-            : Modifier::ActionBase(accessor, channel)
+            Action(std::function<Accessor&()> fn, size_t channel, size_t index, std::string currentLabel, std::string newLabel)
+            : Modifier::ActionBase(fn, channel)
             , mIndex(index)
             , mCurrentLabel(currentLabel)
             , mNewLabel(newLabel)
@@ -303,7 +303,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
             bool perform() override
             {
-                Modifier::updateFrame<Data::Type::marker>(mAccessor, mChannel, mIndex, mNewCommit, [&](auto& frame)
+                Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
                                                           {
                                                               if(std::get<2_z>(frame) != mNewLabel)
                                                               {
@@ -317,7 +317,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
             bool undo() override
             {
-                Modifier::updateFrame<Data::Type::marker>(mAccessor, mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
                                                           {
                                                               if(std::get<2_z>(frame) != mCurrentLabel)
                                                               {
@@ -335,7 +335,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
             std::string const mNewLabel;
         };
 
-        auto action = std::make_unique<Action>(mAccessor, mChannel, mIndex, mCurrentLabel, mLabel.getText().toStdString());
+        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentLabel, mLabel.getText().toStdString());
         if(action != nullptr)
         {
             undoManager.beginNewTransaction(juce::translate("Change Frame Label"));
@@ -352,8 +352,8 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
         : public Modifier::ActionBase
         {
         public:
-            Action(Accessor& accessor, size_t channel, size_t index, std::optional<float> currentValue, std::optional<float> newValue)
-            : Modifier::ActionBase(accessor, channel)
+            Action(std::function<Accessor&()> fn, size_t channel, size_t index, std::optional<float> currentValue, std::optional<float> newValue)
+            : Modifier::ActionBase(fn, channel)
             , mIndex(index)
             , mCurrentValue(currentValue)
             , mNewValue(newValue)
@@ -364,7 +364,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
             bool perform() override
             {
-                Modifier::updateFrame<Data::Type::point>(mAccessor, mChannel, mIndex, mNewCommit, [&](auto& frame)
+                Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
                                                          {
                                                              if(mNewValue.has_value() != std::get<2_z>(frame).has_value() || (mNewValue.has_value() && *mNewValue != *std::get<2_z>(frame)))
                                                              {
@@ -378,7 +378,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
 
             bool undo() override
             {
-                Modifier::updateFrame<Data::Type::point>(mAccessor, mChannel, mIndex, mCurrentCommit, [&](auto& frame)
+                Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
                                                          {
                                                              if(mCurrentValue.has_value() != std::get<2_z>(frame).has_value() || (mCurrentValue.has_value() && *mCurrentValue != *std::get<2_z>(frame)))
                                                              {
@@ -396,7 +396,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
             std::optional<float> const mNewValue;
         };
 
-        auto action = std::make_unique<Action>(mAccessor, mChannel, mIndex, mCurrentValue, mNumberField.isOptional() ? std::optional<float>{} : std::optional<float>(static_cast<float>(newValue)));
+        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mCurrentValue, mNumberField.isOptional() ? std::optional<float>{} : std::optional<float>(static_cast<float>(newValue)));
         if(action != nullptr)
         {
             undoManager.beginNewTransaction(juce::translate("Change Frame Value"));

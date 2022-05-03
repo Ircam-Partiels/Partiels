@@ -94,11 +94,11 @@ namespace Track
             : public juce::UndoableAction
             {
             public:
-                ActionBase(Accessor& accessor, size_t const channel);
+                ActionBase(std::function<Accessor&()> fn, size_t const channel);
                 ~ActionBase() override = default;
 
             protected:
-                Accessor& mAccessor;
+                std::function<Accessor&()> mGetAccessorFn;
                 size_t const mChannel;
                 juce::String const mCurrentCommit;
                 juce::String const mNewCommit;
@@ -108,7 +108,7 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionErase(Accessor& accessor, size_t const channel, juce::Range<double> const& selection);
+                ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection);
                 ~ActionErase() override = default;
 
                 // juce::UndoableAction
@@ -124,7 +124,7 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionPaste(Accessor& accessor, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination);
+                ActionPaste(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination);
                 ~ActionPaste() override = default;
 
                 // juce::UndoableAction
@@ -142,7 +142,7 @@ namespace Track
             : public juce::UndoableAction
             {
             public:
-                FocusRestorer(Accessor& accessor);
+                FocusRestorer(std::function<Accessor&()> fn);
                 ~FocusRestorer() override = default;
 
                 // juce::UndoableAction
@@ -150,7 +150,7 @@ namespace Track
                 bool undo() override;
 
             protected:
-                Accessor& mAccessor;
+                std::function<Accessor&()> mGetAccessorFn;
                 FocusInfo const mFocus;
             };
         } // namespace Modifier

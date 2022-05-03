@@ -234,6 +234,11 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         std::map<juce::String, Group::FocusInfo> mGroupFocus;
     };
 
+    auto const getTransportAcsr = [this]() -> Transport::Accessor&
+    {
+        return mAccessor.getAcsr<AcsrType::transport>();
+    };
+
     using namespace Track::Result::Modifier;
     auto const performForAllTracks = [&](std::function<void(Track::Accessor & trackAcsr)> fn)
     {
@@ -267,13 +272,15 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             undoManager.beginNewTransaction(juce::translate("Delete Frame(s)"));
             performForAllTracks([&](Track::Accessor& trackAcsr)
                                 {
+                                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                                    auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
                                     for(auto const& index : getSelectedChannels(trackAcsr))
                                     {
-                                        undoManager.perform(std::make_unique<ActionErase>(trackAcsr, index, selection).release());
+                                        undoManager.perform(std::make_unique<ActionErase>(fn, index, selection).release());
                                     }
                                 });
             undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
-            undoManager.perform(std::make_unique<Transport::Action::Restorer>(transportAcsr, playhead, selection).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection).release());
             return true;
         }
         case CommandIDs::editCopy:
@@ -311,14 +318,15 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                     {
                                         return;
                                     }
+                                    auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
                                     auto const trackData = trackIt->second;
                                     for(auto const& data : trackData)
                                     {
-                                        undoManager.perform(std::make_unique<ActionPaste>(trackAcsr, data.first, mClipboardRange, data.second, playhead).release());
+                                        undoManager.perform(std::make_unique<ActionPaste>(fn, data.first, mClipboardRange, data.second, playhead).release());
                                     }
                                 });
             undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
-            undoManager.perform(std::make_unique<Transport::Action::Restorer>(transportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
             return true;
         }
         case CommandIDs::editDuplicate:

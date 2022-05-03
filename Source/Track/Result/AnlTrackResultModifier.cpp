@@ -420,24 +420,24 @@ bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const chann
     return false;
 }
 
-Track::Result::Modifier::ActionBase::ActionBase(Accessor& accessor, size_t const channel)
-: mAccessor(accessor)
+Track::Result::Modifier::ActionBase::ActionBase(std::function<Accessor&()> fn, size_t const channel)
+: mGetAccessorFn(fn)
 , mChannel(channel)
-, mCurrentCommit(accessor.getAttr<AttrType::file>().commit)
+, mCurrentCommit(mGetAccessorFn().getAttr<AttrType::file>().commit)
 , mNewCommit(juce::Uuid().toString())
 {
 }
 
-Track::Result::Modifier::ActionErase::ActionErase(Accessor& accessor, size_t const channel, juce::Range<double> const& selection)
-: ActionBase(accessor, channel)
+Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection)
+: ActionBase(fn, channel)
 , mSavedSelection(selection)
-, mSavedData(copyFrames(accessor, channel, getIndices(accessor, channel, selection)))
+, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, selection)))
 {
 }
 
 bool Track::Result::Modifier::ActionErase::perform()
 {
-    if(eraseFrames(mAccessor, mChannel, getIndices(mSavedData), mNewCommit))
+    if(eraseFrames(mGetAccessorFn(), mChannel, getIndices(mSavedData), mNewCommit))
     {
         return true;
     }
@@ -447,7 +447,7 @@ bool Track::Result::Modifier::ActionErase::perform()
 
 bool Track::Result::Modifier::ActionErase::undo()
 {
-    if(insertFrames(mAccessor, mChannel, mSavedData, mCurrentCommit))
+    if(insertFrames(mGetAccessorFn(), mChannel, mSavedData, mCurrentCommit))
     {
         return true;
     }
@@ -455,26 +455,27 @@ bool Track::Result::Modifier::ActionErase::undo()
     return false;
 }
 
-Track::Result::Modifier::ActionPaste::ActionPaste(Accessor& accessor, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination)
-: ActionBase(accessor, channel)
+Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination)
+: ActionBase(fn, channel)
 , mDestinationSelection(selection.movedToStartAt(destination))
-, mSavedData(copyFrames(accessor, channel, getIndices(accessor, channel, mDestinationSelection)))
-, mCopyIndex(getIndex(accessor, channel, mDestinationSelection.getStart()))
+, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, mDestinationSelection)))
+, mCopyIndex(getIndex(mGetAccessorFn(), channel, mDestinationSelection.getStart()))
 , mCopiedData(duplicateFrames(data, selection, mCopyIndex.has_value() ? *mCopyIndex : 0_z, mDestinationSelection.getStart()))
 {
 }
 
 bool Track::Result::Modifier::ActionPaste::perform()
 {
-    if(eraseFrames(mAccessor, mChannel, getIndices(mSavedData), mNewCommit))
+    auto& accessor = mGetAccessorFn();
+    if(eraseFrames(accessor, mChannel, getIndices(mSavedData), mNewCommit))
     {
-        if(insertFrames(mAccessor, mChannel, mCopiedData, mNewCommit))
+        if(insertFrames(accessor, mChannel, mCopiedData, mNewCommit))
         {
             return true;
         }
         else
         {
-            if(!insertFrames(mAccessor, mChannel, mSavedData, mCurrentCommit))
+            if(!insertFrames(accessor, mChannel, mSavedData, mCurrentCommit))
             {
                 MiscWeakAssert(false);
             }
@@ -485,16 +486,17 @@ bool Track::Result::Modifier::ActionPaste::perform()
 
 bool Track::Result::Modifier::ActionPaste::undo()
 {
-    if(eraseFrames(mAccessor, mChannel, getIndices(mCopiedData), mCurrentCommit))
+    auto& accessor = mGetAccessorFn();
+    if(eraseFrames(accessor, mChannel, getIndices(mCopiedData), mCurrentCommit))
     {
-        if(insertFrames(mAccessor, mChannel, mSavedData, mCurrentCommit))
+        if(insertFrames(accessor, mChannel, mSavedData, mCurrentCommit))
         {
             return true;
         }
         else
         {
             MiscWeakAssert(false);
-            if(!insertFrames(mAccessor, mChannel, mCopiedData, mNewCommit))
+            if(!insertFrames(accessor, mChannel, mCopiedData, mNewCommit))
             {
                 MiscWeakAssert(false);
             }
@@ -507,15 +509,15 @@ bool Track::Result::Modifier::ActionPaste::undo()
     return false;
 }
 
-Track::Result::Modifier::FocusRestorer::FocusRestorer(Accessor& accessor)
-: mAccessor(accessor)
-, mFocus(mAccessor.getAttr<AttrType::focused>())
+Track::Result::Modifier::FocusRestorer::FocusRestorer(std::function<Accessor&()> fn)
+: mGetAccessorFn(fn)
+, mFocus(mGetAccessorFn().getAttr<AttrType::focused>())
 {
 }
 
 bool Track::Result::Modifier::FocusRestorer::perform()
 {
-    mAccessor.setAttr<AttrType::focused>(mFocus, NotificationType::synchronous);
+    mGetAccessorFn().setAttr<AttrType::focused>(mFocus, NotificationType::synchronous);
     return true;
 }
 

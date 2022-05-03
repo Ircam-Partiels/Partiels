@@ -396,6 +396,29 @@ juce::UndoManager& Track::Director::getUndoManager()
     return mUndoManager;
 }
 
+std::function<Track::Accessor&()> Track::Director::getSafeAccessorFn()
+{
+    MiscWeakAssert(mSafeAccessorRetriever.getAccessorFn != nullptr);
+    return mSafeAccessorRetriever.getAccessorFn;
+}
+
+std::function<Zoom::Accessor&()> Track::Director::getSafeTimeZoomAccessorFn()
+{
+    MiscWeakAssert(mSafeAccessorRetriever.getTimeZoomAccessorFn != nullptr);
+    return mSafeAccessorRetriever.getTimeZoomAccessorFn;
+}
+
+std::function<Transport::Accessor&()> Track::Director::getSafeTransportZoomAccessorFn()
+{
+    MiscWeakAssert(mSafeAccessorRetriever.getTransportAccessorFn != nullptr);
+    return mSafeAccessorRetriever.getTransportAccessorFn;
+}
+
+void Track::Director::setSafeAccessorRetriever(SafeAccessorRetriever const& sav)
+{
+    mSafeAccessorRetriever = sav;
+}
+
 bool Track::Director::hasChanged() const
 {
     return !mAccessor.isEquivalentTo(mSavedState) || !mAccessor.getAcsr<AcsrType::valueZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::valueZoom>()) || !mAccessor.getAcsr<AcsrType::binZoom>().isEquivalentTo(mSavedState.getAcsr<AcsrType::binZoom>());
@@ -425,34 +448,50 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
     : public juce::UndoableAction
     {
     public:
-        Action(Accessor& accessor, Accessor const& undoAcsr)
-        : mAccessor(accessor)
+        Action(std::function<Accessor&()> fn, Accessor const& undoAcsr)
+        : mGetSafeAccessor(fn)
         {
-            mRedoAccessor.copyFrom(mAccessor, NotificationType::synchronous);
-            mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
+            MiscWeakAssert(mGetSafeAccessor != nullptr);
+            if(mGetSafeAccessor != nullptr)
+            {
+                mRedoAccessor.copyFrom(mGetSafeAccessor(), NotificationType::synchronous);
+                mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
+            }
         }
 
         ~Action() override = default;
 
         bool perform() override
         {
-            mAccessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
+            MiscWeakAssert(mGetSafeAccessor != nullptr);
+            if(mGetSafeAccessor == nullptr)
+            {
+                return true;
+            }
+            auto& accessor = mGetSafeAccessor();
+            accessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
             return true;
         }
 
         bool undo() override
         {
-            mAccessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
+            MiscWeakAssert(mGetSafeAccessor != nullptr);
+            if(mGetSafeAccessor == nullptr)
+            {
+                return true;
+            }
+            auto& accessor = mGetSafeAccessor();
+            accessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
             return true;
         }
 
     private:
-        Accessor& mAccessor;
+        std::function<Accessor&()> mGetSafeAccessor;
         Accessor mRedoAccessor;
         Accessor mUndoAccessor;
     };
 
-    auto action = std::make_unique<Action>(mAccessor, mSavedState);
+    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState);
     if(action != nullptr)
     {
         switch(state)
@@ -477,6 +516,76 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
     }
     mSavedState.copyFrom(mAccessor, NotificationType::synchronous);
     mIsPerformingAction = false;
+}
+
+std::unique_ptr<juce::UndoableAction> Track::Director::createFileRestorerAction()
+{
+    class FileRestorer
+    : public juce::UndoableAction
+    {
+    public:
+        FileRestorer(std::function<Accessor&()> fn, juce::File const& file, bool shouldBeDeleted)
+        : mGetSafeAccessor(fn)
+        , mFile(file)
+        , mShouldBeDeleted(shouldBeDeleted)
+        {
+        }
+
+        ~FileRestorer() override
+        {
+            if(mShouldBeDeleted)
+            {
+                mFile.deleteFile();
+            }
+        }
+
+        // juce::UndoableAction
+        bool perform() override
+        {
+            return true;
+        }
+
+        bool undo() override
+        {
+            if(mFile.existsAsFile())
+            {
+                MiscWeakAssert(mGetSafeAccessor != nullptr);
+                if(mGetSafeAccessor == nullptr)
+                {
+                    return true;
+                }
+                std::atomic<bool> shouldAbort{false};
+                std::atomic<float> advancement{0.0f};
+                auto const vResults = Track::Loader::loadFromFile({mFile}, shouldAbort, advancement);
+                if(auto* results = std::get_if<Results>(&vResults))
+                {
+                    auto& accessor = mGetSafeAccessor();
+                    accessor.setAttr<AttrType::results>(*results, NotificationType::synchronous);
+                    return true;
+                }
+                return true;
+            }
+            return true;
+        }
+
+    protected:
+        std::function<Accessor&()> mGetSafeAccessor;
+        juce::File const mFile;
+        bool const mShouldBeDeleted;
+    };
+
+    auto const tempFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("action");
+    auto const currentFile = mAccessor.getAttr<AttrType::file>();
+    auto const newFile = Track::Exporter::getConsolidatedFile(mAccessor, tempFolder);
+    if(currentFile.file.getFileName() != newFile.getFileName())
+    {
+        Track::Exporter::consolidateInDirectory(mAccessor, tempFolder);
+        return std::make_unique<FileRestorer>(getSafeAccessorFn(), newFile, true);
+    }
+    else
+    {
+        return std::make_unique<FileRestorer>(getSafeAccessorFn(), currentFile.file, false);
+    }
 }
 
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
@@ -942,70 +1051,6 @@ void Track::Director::askToReloadFile(juce::String const& reason)
                                          mUndoManager.perform(action.release());
                                      }
                                  });
-}
-
-std::unique_ptr<juce::UndoableAction> Track::Director::createFileRestorerAction()
-{
-    class FileRestorer
-    : public juce::UndoableAction
-    {
-    public:
-        FileRestorer(Accessor& accessor, juce::File const& file, bool shouldBeDeleted)
-        : mAccessor(accessor)
-        , mFile(file)
-        , mShouldBeDeleted(shouldBeDeleted)
-        {
-        }
-
-        ~FileRestorer() override
-        {
-            if(mShouldBeDeleted)
-            {
-                mFile.deleteFile();
-            }
-        }
-
-        // juce::UndoableAction
-        bool perform() override
-        {
-            return true;
-        }
-
-        bool undo() override
-        {
-            if(mFile.existsAsFile())
-            {
-                std::atomic<bool> shouldAbort{false};
-                std::atomic<float> advancement{0.0f};
-                auto const vResults = Track::Loader::loadFromFile({mFile}, shouldAbort, advancement);
-                if(auto* results = std::get_if<Results>(&vResults))
-                {
-                    mAccessor.setAttr<AttrType::results>(*results, NotificationType::synchronous);
-                    return true;
-                }
-                return true;
-            }
-            return true;
-        }
-
-    protected:
-        Accessor& mAccessor;
-        juce::File const mFile;
-        bool const mShouldBeDeleted;
-    };
-
-    auto const tempFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("backup");
-    auto const currentFile = mAccessor.getAttr<AttrType::file>();
-    auto const newFile = Track::Exporter::getConsolidatedFile(mAccessor, tempFolder);
-    if(currentFile.file.getFileName() != newFile.getFileName())
-    {
-        Track::Exporter::consolidateInDirectory(mAccessor, tempFolder);
-        return std::make_unique<FileRestorer>(mAccessor, newFile, true);
-    }
-    else
-    {
-        return std::make_unique<FileRestorer>(mAccessor, currentFile.file, false);
-    }
 }
 
 void Track::Director::askForFile()

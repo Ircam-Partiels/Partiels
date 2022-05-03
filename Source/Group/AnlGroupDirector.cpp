@@ -13,6 +13,13 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
         switch(attribute)
         {
             case AttrType::identifier:
+            {
+                if(onIdentifierUpdated != nullptr)
+                {
+                    onIdentifierUpdated(notification);
+                }
+            }
+            break;
             case AttrType::name:
             case AttrType::height:
             case AttrType::colour:
@@ -108,10 +115,10 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
     : public juce::UndoableAction
     {
     public:
-        Action(Accessor& accessor, Accessor const& undoAcsr)
-        : mAccessor(accessor)
+        Action(std::function<Accessor&()> sar, Accessor const& undoAcsr)
+        : mSafeAccessorRetrieverFn(std::move(sar))
         {
-            mRedoAccessor.copyFrom(mAccessor, NotificationType::synchronous);
+            mRedoAccessor.copyFrom(mSafeAccessorRetrieverFn(), NotificationType::synchronous);
             mUndoAccessor.copyFrom(undoAcsr, NotificationType::synchronous);
         }
 
@@ -119,23 +126,23 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
 
         bool perform() override
         {
-            mAccessor.copyFrom(mRedoAccessor, NotificationType::synchronous);
+            mSafeAccessorRetrieverFn().copyFrom(mRedoAccessor, NotificationType::synchronous);
             return true;
         }
 
         bool undo() override
         {
-            mAccessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
+            mSafeAccessorRetrieverFn().copyFrom(mUndoAccessor, NotificationType::synchronous);
             return true;
         }
 
     private:
-        Accessor& mAccessor;
+        std::function<Accessor&()> const mSafeAccessorRetrieverFn;
         Accessor mRedoAccessor;
         Accessor mUndoAccessor;
     };
 
-    auto action = std::make_unique<Action>(mAccessor, mSavedState);
+    auto action = std::make_unique<Action>(getSafeAccessorFn(), mSavedState);
     if(action != nullptr)
     {
         switch(state)
@@ -168,6 +175,16 @@ void Group::Director::endAction(bool includeTracks, ActionState state, juce::Str
             trackDirector.endAction(ActionState::continueTransaction);
         }
     }
+}
+
+std::function<Group::Accessor&()> Group::Director::getSafeAccessorFn()
+{
+    return mSafeAccessorRetrieverFn;
+}
+
+void Group::Director::setSafeAccessorRetriever(std::function<Accessor&()> const& sar)
+{
+    mSafeAccessorRetrieverFn = sar;
 }
 
 Track::Director const& Group::Director::getTrackDirector(juce::String const& identifier) const

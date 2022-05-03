@@ -103,7 +103,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     director->setAlertCatcher(mAlertCatcher);
                     director->setPluginTable(mPluginTableContainer);
                     director->setLoaderSelector(mLoaderSelectorContainer);
-                    director->onIdentifierUpdated = [this](NotificationType localNotification)
+                    director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
                     {
                         for(auto& group : mGroups)
                         {
@@ -112,6 +112,11 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                                 group->updateTracks(localNotification);
                             }
                         }
+                        Track::SafeAccessorRetriever sav;
+                        sav.getAccessorFn = getSafeTrackAccessorFn(ptr->getAccessor().getAttr<Track::AttrType::identifier>());
+                        sav.getTimeZoomAccessorFn = getSafeTimeZoomAccessorFn();
+                        sav.getTransportAccessorFn = getSafeTransportZoomAccessorFn();
+                        ptr->setSafeAccessorRetriever(sav);
                     };
                     director->onResultsUpdated = [this](NotificationType localNotification)
                     {
@@ -121,6 +126,12 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     {
                         updateMarkers(localNotification);
                     };
+
+                    Track::SafeAccessorRetriever sav;
+                    sav.getAccessorFn = getSafeTrackAccessorFn(trackAcsr.getAttr<Track::AttrType::identifier>());
+                    sav.getTimeZoomAccessorFn = getSafeTimeZoomAccessorFn();
+                    sav.getTransportAccessorFn = getSafeTransportZoomAccessorFn();
+                    director->setSafeAccessorRetriever(sav);
                 }
                 mTracks.insert(mTracks.begin() + static_cast<long>(index), std::move(director));
 
@@ -142,6 +153,15 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 auto& groupAcsr = groupAcsrs[index].get();
                 auto director = std::make_unique<Group::Director>(groupAcsr, *this, mUndoManager);
                 anlStrongAssert(director != nullptr);
+                if(director != nullptr)
+                {
+                    director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType n)
+                    {
+                        juce::ignoreUnused(n);
+                        ptr->setSafeAccessorRetriever(getSafeGroupAccessorFn(ptr->getAccessor().getAttr<Group::AttrType::identifier>()));
+                    };
+                    director->setSafeAccessorRetriever(getSafeGroupAccessorFn(groupAcsr.getAttr<Group::AttrType::identifier>()));
+                }
                 mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
 
                 groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
@@ -330,6 +350,40 @@ Track::Director& Document::Director::getTrackDirector(juce::String const& identi
 juce::UndoManager& Document::Director::getUndoManager()
 {
     return mUndoManager;
+}
+
+std::function<Track::Accessor&()> Document::Director::getSafeTrackAccessorFn(juce::String const& identifier)
+{
+    return [this, identifier]() -> Track::Accessor&
+    {
+        MiscWeakAssert(identifier.isNotEmpty());
+        return Tools::getTrackAcsr(mAccessor, identifier);
+    };
+}
+
+std::function<Group::Accessor&()> Document::Director::getSafeGroupAccessorFn(juce::String const& identifier)
+{
+    return [this, identifier]() -> Group::Accessor&
+    {
+        MiscWeakAssert(identifier.isNotEmpty());
+        return Tools::getGroupAcsr(mAccessor, identifier);
+    };
+}
+
+std::function<Zoom::Accessor&()> Document::Director::getSafeTimeZoomAccessorFn()
+{
+    return [this]() -> Zoom::Accessor&
+    {
+        return mAccessor.getAcsr<AcsrType::timeZoom>();
+    };
+}
+
+std::function<Transport::Accessor&()> Document::Director::getSafeTransportZoomAccessorFn()
+{
+    return [this]() -> Transport::Accessor&
+    {
+        return mAccessor.getAcsr<AcsrType::transport>();
+    };
 }
 
 void Document::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
