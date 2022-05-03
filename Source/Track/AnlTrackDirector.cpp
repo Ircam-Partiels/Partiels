@@ -56,7 +56,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                         mAccessor.setAttr<AttrType::state>(newState, NotificationType::synchronous);
                     }
                 }
-                else if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
+                else
                 {
                     runAnalysis(notification);
                 }
@@ -64,10 +64,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::state:
             {
-                if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
-                {
-                    runAnalysis(notification);
-                }
+                runAnalysis(notification);
             }
             break;
             case AttrType::description:
@@ -77,8 +74,9 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             break;
             case AttrType::file:
             {
-                auto const file = mAccessor.getAttr<AttrType::file>().file;
+                auto const file = getEffectiveFile();
                 FileWatcher::clearAllFiles();
+                saveBackup();
                 FileWatcher::addFile(file);
                 auto const& results = mAccessor.getAttr<AttrType::results>();
                 auto const access = results.getReadAccess();
@@ -359,10 +357,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         timerCallback();
     };
 
-    if(mAccessor.getAttr<AttrType::file>().file == juce::File{})
-    {
-        runAnalysis(NotificationType::synchronous);
-    }
+    runAnalysis(NotificationType::synchronous);
 }
 
 Track::Director::~Director()
@@ -518,76 +513,6 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
     mIsPerformingAction = false;
 }
 
-std::unique_ptr<juce::UndoableAction> Track::Director::createFileRestorerAction()
-{
-    class FileRestorer
-    : public juce::UndoableAction
-    {
-    public:
-        FileRestorer(std::function<Accessor&()> fn, juce::File const& file, bool shouldBeDeleted)
-        : mGetSafeAccessor(fn)
-        , mFile(file)
-        , mShouldBeDeleted(shouldBeDeleted)
-        {
-        }
-
-        ~FileRestorer() override
-        {
-            if(mShouldBeDeleted)
-            {
-                mFile.deleteFile();
-            }
-        }
-
-        // juce::UndoableAction
-        bool perform() override
-        {
-            return true;
-        }
-
-        bool undo() override
-        {
-            if(mFile.existsAsFile())
-            {
-                MiscWeakAssert(mGetSafeAccessor != nullptr);
-                if(mGetSafeAccessor == nullptr)
-                {
-                    return true;
-                }
-                std::atomic<bool> shouldAbort{false};
-                std::atomic<float> advancement{0.0f};
-                auto const vResults = Track::Loader::loadFromFile({mFile}, shouldAbort, advancement);
-                if(auto* results = std::get_if<Results>(&vResults))
-                {
-                    auto& accessor = mGetSafeAccessor();
-                    accessor.setAttr<AttrType::results>(*results, NotificationType::synchronous);
-                    return true;
-                }
-                return true;
-            }
-            return true;
-        }
-
-    protected:
-        std::function<Accessor&()> mGetSafeAccessor;
-        juce::File const mFile;
-        bool const mShouldBeDeleted;
-    };
-
-    auto const tempFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("action");
-    auto const currentFile = mAccessor.getAttr<AttrType::file>();
-    auto const newFile = Track::Exporter::getConsolidatedFile(mAccessor, tempFolder);
-    if(currentFile.file.getFileName() != newFile.getFileName())
-    {
-        Track::Exporter::consolidateInDirectory(mAccessor, tempFolder);
-        return std::make_unique<FileRestorer>(getSafeAccessorFn(), newFile, true);
-    }
-    else
-    {
-        return std::make_unique<FileRestorer>(getSafeAccessorFn(), currentFile.file, false);
-    }
-}
-
 void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification)
 {
     anlStrongAssert(audioFormatReader == nullptr || audioFormatReader != mAudioFormatReader);
@@ -597,9 +522,16 @@ void Track::Director::setAudioFormatReader(std::unique_ptr<juce::AudioFormatRead
     }
 
     std::swap(mAudioFormatReader, audioFormatReader);
-    if(mAccessor.getAttr<AttrType::file>().isEmpty())
+    runAnalysis(notification);
+}
+
+void Track::Director::setBackupDirectory(juce::File const& directory)
+{
+    if(mBackupDirectory != directory)
     {
-        runAnalysis(notification);
+        deleteBackup();
+        mBackupDirectory = directory;
+        saveBackup();
     }
 }
 
@@ -620,6 +552,10 @@ void Track::Director::setLoaderSelector(LoaderSelectorContainer* selector)
 
 void Track::Director::runAnalysis(NotificationType const notification)
 {
+    if(!mAccessor.getAttr<AttrType::file>().isEmpty())
+    {
+        return;
+    }
     mGraphics.stopRendering();
     if(mAudioFormatReader == nullptr)
     {
@@ -675,13 +611,13 @@ void Track::Director::runAnalysis(NotificationType const notification)
 void Track::Director::runLoading()
 {
     mGraphics.stopRendering();
-    auto const trackFile = mAccessor.getAttr<AttrType::file>();
-    if(trackFile.file != juce::File{})
+    auto const file = getEffectiveFile();
+    if(file != juce::File{})
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
         startTimer(50);
         timerCallback();
-        mLoader.loadAnalysis(mAccessor, trackFile);
+        mLoader.loadAnalysis(mAccessor, file);
     }
 }
 
@@ -984,12 +920,10 @@ void Track::Director::askToRemoveFile()
                                          return;
                                      }
                                      startAction();
-                                     auto action = createFileRestorerAction();
                                      mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
                                      mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
                                      mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
                                      endAction(ActionState::newTransaction, juce::translate("Remove track's results file"));
-                                     mUndoManager.perform(action.release());
                                  });
 }
 
@@ -1043,12 +977,10 @@ void Track::Director::askToReloadFile(juce::String const& reason)
                                      else if(result == 2)
                                      {
                                          startAction();
-                                         auto action = createFileRestorerAction();
                                          mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
                                          mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
                                          mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
                                          endAction(ActionState::newTransaction, juce::translate("Remove track's results file"));
-                                         mUndoManager.perform(action.release());
                                      }
                                  });
 }
@@ -1130,6 +1062,33 @@ void Track::Director::askToResolveWarnings()
         }
         break;
     }
+}
+
+void Track::Director::deleteBackup() const
+{
+    if(mBackupDirectory.exists())
+    {
+        Exporter::getConsolidatedFile(mAccessor, mBackupDirectory).deleteFile();
+    }
+}
+
+void Track::Director::saveBackup() const
+{
+    if(mBackupDirectory != juce::File{} && mAccessor.getAttr<AttrType::file>().commit.isNotEmpty())
+    {
+        mBackupDirectory.createDirectory();
+        Exporter::consolidateInDirectory(mAccessor, mBackupDirectory);
+        MiscDebug("Track::Director", "saved");
+    }
+}
+
+juce::File Track::Director::getEffectiveFile() const
+{
+    if(mAccessor.getAttr<AttrType::file>().commit.isNotEmpty() && mBackupDirectory.exists())
+    {
+        return Exporter::getConsolidatedFile(mAccessor, mBackupDirectory);
+    }
+    return mAccessor.getAttr<AttrType::file>().file;
 }
 
 ANALYSE_FILE_END

@@ -36,8 +36,9 @@ namespace Track
         bool hasChanged() const;
         void startAction();
         void endAction(ActionState state, juce::String const& name = {});
-        std::unique_ptr<juce::UndoableAction> createFileRestorerAction();
+
         void setAudioFormatReader(std::unique_ptr<juce::AudioFormatReader> audioFormatReader, NotificationType const notification);
+        void setBackupDirectory(juce::File const& directory);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
         std::function<void(NotificationType notification)> onResultsUpdated = nullptr;
@@ -72,6 +73,9 @@ namespace Track
         void runLoading();
         void runRendering();
         void askForFile();
+        void deleteBackup() const;
+        void saveBackup() const;
+        juce::File getEffectiveFile() const;
 
         // FileWatcher
         void fileHasBeenRemoved(juce::File const& file) override;
@@ -108,6 +112,7 @@ namespace Track
         LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
         std::unique_ptr<juce::FileChooser> mFileChooser;
         SafeAccessorRetriever mSafeAccessorRetriever;
+        juce::File mBackupDirectory;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)

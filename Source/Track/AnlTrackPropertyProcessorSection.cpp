@@ -256,7 +256,6 @@ void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bo
                                          MiscWeakAssert(prepare != nullptr);
                                          if(prepare != nullptr && prepare(hasChanged))
                                          {
-                                             auto action = mDirector.createFileRestorerAction();
                                              mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
                                              mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
                                              mAccessor.setAttr<AttrType::file>(FileInfo{}, NotificationType::synchronous);
@@ -265,7 +264,6 @@ void Track::PropertyProcessorSection::askToModifyProcessor(std::function<bool(bo
                                              {
                                                  perform();
                                              }
-                                             mDirector.getUndoManager().perform(action.release());
                                          }
                                          updateState();
                                      });
@@ -302,7 +300,6 @@ void Track::PropertyProcessorSection::applyParameterValue(Plugin::Parameter cons
                              state.parameters[parameter.identifier] = std::clamp(value, parameter.minValue, parameter.maxValue);
                              mAccessor.setAttr<AttrType::state>(state, NotificationType::synchronous);
                              mDirector.endAction(ActionState::newTransaction, juce::translate("Change track property"));
-                             updateState();
                          });
 }
 
@@ -410,25 +407,6 @@ void Track::PropertyProcessorSection::loadPreset()
         return;
     }
     using Flags = juce::FileBrowserComponent::FileChooserFlags;
-    auto performChanges = [=, this](juce::File const& file)
-    {
-        auto const exportResult = Exporter::fromPreset(mAccessor, file);
-        if(exportResult.failed())
-        {
-            mDirector.endAction(ActionState::abort);
-            auto const options = juce::MessageBoxOptions()
-                                     .withIconType(juce::AlertWindow::WarningIcon)
-                                     .withTitle(juce::translate("Failed to load from preset file!"))
-                                     .withMessage(exportResult.getErrorMessage())
-                                     .withButton(juce::translate("Ok"));
-            juce::AlertWindow::showAsync(options, nullptr);
-        }
-        else
-        {
-            mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's properties from preset file"));
-        }
-        updateState();
-    };
     juce::WeakReference<juce::Component> weakReference(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
                               {
@@ -450,9 +428,23 @@ void Track::PropertyProcessorSection::loadPreset()
                                                            }
                                                            return result;
                                                        },
-                                                       [=, file = results.getFirst()]()
+                                                       [=, this, file = results.getFirst()]()
                                                        {
-                                                           performChanges(file);
+                                                           auto const exportResult = Exporter::fromPreset(mAccessor, file);
+                                                           if(exportResult.failed())
+                                                           {
+                                                               mDirector.endAction(ActionState::abort);
+                                                               auto const options = juce::MessageBoxOptions()
+                                                                                        .withIconType(juce::AlertWindow::WarningIcon)
+                                                                                        .withTitle(juce::translate("Failed to load from preset file!"))
+                                                                                        .withMessage(exportResult.getErrorMessage())
+                                                                                        .withButton(juce::translate("Ok"));
+                                                               juce::AlertWindow::showAsync(options, nullptr);
+                                                           }
+                                                           else
+                                                           {
+                                                               mDirector.endAction(ActionState::newTransaction, juce::translate("Change track's properties from preset file"));
+                                                           }
                                                        });
                               });
 }
