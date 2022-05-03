@@ -1,6 +1,7 @@
 
 v1.0.5
 
+- Fix: Undo/redo mechanism crashes when restoring the state of a group or a track after deleting them (#262)
 - Add: Add delete/copy/cut/paste/duplicate actions for modifying results (#261)
 - Add: Add support for multi-items (groups & tracks) selection and multichannel selection (#260)
 - Fix: Dragging a group should not expand it if the auto resize mode in on (#259)
