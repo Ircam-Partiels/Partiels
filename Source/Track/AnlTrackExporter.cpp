@@ -570,7 +570,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
     {
-        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as binary because the being used.").replace("ANLNAME", name));
+        return juce::Result::fail(juce::translate("The results of the track ANLNAME can not be exported as binary because the results are being used.").replace("ANLNAME", name));
     }
 
     if(results.isEmpty())
