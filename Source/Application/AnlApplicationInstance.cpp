@@ -78,6 +78,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
 
     mDocumentDirector = std::make_unique<Document::Director>(*mDocumentAccessor.get(), *mAudioFormatManager.get(), *mUndoManager.get());
     AppQuitIfInvalidPointer(mDocumentDirector);
+    mDocumentDirector->setBackupDirectory(getBackupFile().getSiblingFile("Tracks"));
 
     mAudioReader = std::make_unique<AudioReader>();
     AppQuitIfInvalidPointer(mAudioReader);
@@ -287,6 +288,7 @@ void Application::Instance::shutdown()
     }
     auto backupFile = getBackupFile();
     backupFile.deleteFile();
+    backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
     mMainMenuModel.reset();
