@@ -21,6 +21,8 @@ appdmg macos-dmg-config.json "$DMG_PATH"
 xcrun rez -append "$REPO_PATH/BinaryData/Resource/macos-dmg-icon.rsrc" -o "$DMG_PATH"
 xcrun setFile -a C "$DMG_PATH"
 
+echo '\033[0;34m' "Uploading apple disk image..."
+echo '\033[0m'
 xc_out=$(xcrun altool --notarize-app --primary-bundle-id "fr.ircam.dev.partiels" --username "$APPLE_ACCOUNT" --password "@keychain:$APPLE_PASSWORD" --file "$DMG_PATH" 2>&1)
 MAX_UPLOAD_ATTEMPTS=100
 requestUUID=$(echo "$xc_out" | awk '/RequestUUID/ { print $NF; }')
