@@ -67,7 +67,6 @@ Build::Windows:
     - cmake .. -G "Visual Studio 17 2022" -A x64
     - cmake --build . --config Release
     - ctest -C Release -VV
-    - Get-Content "$CI_PROJECT_DIR\BinaryData\Resource\About.txt", "$CI_PROJECT_DIR\BinaryData\Resource\ChangeLog.txt" | Out-File "$CI_PROJECT_DIR\build\Install.txt"
     - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR/Scripts/windows-package.iss"'
     - Move-Item -Path "$CI_PROJECT_DIR/build/Partiels-install.exe" -Destination "$CI_PROJECT_DIR/Partiels-install.exe"
   artifacts:

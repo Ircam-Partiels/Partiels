@@ -1,4 +1,3 @@
-
 v1.0.5
 
 - Fix: Undo/redo mechanism crashes when restoring the state of a group or a track after deleting them (#262)

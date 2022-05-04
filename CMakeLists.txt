@@ -130,6 +130,11 @@ elseif(APPLE)
     target_compile_options(Partiels PRIVATE -fno-aligned-allocation)
 endif()
 
+file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE_BINARY_DIR}/Install.txt)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt CHANGELOG_CONTENT)
+file(APPEND ${CMAKE_BINARY_DIR}/Install.txt "\n")
+file(APPEND ${CMAKE_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
+
 enable_testing()
 
 set(TESTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Tests)
