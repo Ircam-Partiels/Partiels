@@ -35,46 +35,30 @@ juce_add_gui_app(Partiels
 juce_generate_juce_header(Partiels)
 
 set_target_properties(Partiels PROPERTIES CXX_STANDARD 20)
-
 target_misc_setup(Partiels MISC_ZOOM_ENABLED MISC_TRANSPORT_ENABLED)
 
-set(SOURCES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Source)
-set(BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
-
-SET(PartielsSources "")
-file(GLOB SOURCES_SUBDIRECTORIES_NAMES RELATIVE ${SOURCES_DIRECTORY} ${SOURCES_DIRECTORY}/* ${SOURCES_DIRECTORY}/*/*)
-
-foreach(SOURCES_SUBDIRECTORY_NAME ${SOURCES_SUBDIRECTORIES_NAMES})
-
-  if(IS_DIRECTORY "${SOURCES_DIRECTORY}/${SOURCES_SUBDIRECTORY_NAME}")
-
-    set(SUBDIRECTORY_PATH "${SOURCES_DIRECTORY}/${SOURCES_SUBDIRECTORY_NAME}")
-
-    if(APPLE)
-       file(GLOB SUBDIRECTORY_SOURCES ${SUBDIRECTORY_PATH}/*.cpp ${SUBDIRECTORY_PATH}/*.h ${SUBDIRECTORY_PATH}/*.mm)
-    else()
-       file(GLOB SUBDIRECTORY_SOURCES ${SUBDIRECTORY_PATH}/*.cpp ${SUBDIRECTORY_PATH}/*.h)
-    endif()
-
-    source_group("Source/${SOURCES_SUBDIRECTORY_NAME}" FILES ${SUBDIRECTORY_SOURCES})
-    set(PartielsSources ${PartielsSources} ${SUBDIRECTORY_SOURCES})
-
-  endif()
-
-endforeach()
+if(APPLE)
+   file(GLOB_RECURSE PartielsSources 
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp 
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h 
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.mm
+        )
+else()
+   file(GLOB_RECURSE PartielsSources 
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp 
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
+        )
+endif()
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "Source" FILES ${PartielsSources})
 
 file(GLOB GlobalSources
-    ${SOURCES_DIRECTORY}/Main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Main.cpp
     ${CMAKE_CACHEFILE_DIR}/Partiels_artefacts/JuceLibraryCode/JuceHeader.h
     )
 source_group("Source/Global" FILES ${GlobalSources})
+target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources})
 
-file(GLOB TranslationsSources ${BINARYDATA_DIRECTORY}/Translations/*.txt)
-source_group("Source/Translations" FILES ${TranslationsSources})
-
-target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources} ${MiscSource} ${TranslationsSources})
-
-set(PartielsDefinitions
+target_compile_definitions(Partiels PRIVATE
     APP_DOC_PREFIX="ptl"
     DONT_SET_USING_JUCE_NAMESPACE=1
     JUCE_MODAL_LOOPS_PERMITTED=0
@@ -92,21 +76,29 @@ set(PartielsDefinitions
     JUCE_ASIO
     MISC_SUPPORTS_SDIF=1
     )
-
-target_compile_definitions(Partiels PRIVATE ${PartielsDefinitions})
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
-
 if(WIN32)
-target_include_directories(Partiels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
+  target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/steinberg-asio-sdk)
 endif()
 
-file(GLOB TranslationsDataSources ${TranslationsSources})
+set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
+file(GLOB TranslationsDataSources 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/*.txt
+    )
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
-file(GLOB ResourceDataSources ${BINARYDATA_DIRECTORY}/Resource/About.txt ${BINARYDATA_DIRECTORY}/Resource/icon.png)
+file(GLOB ResourceDataSources 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/icon.png
+    )
 juce_add_binary_data(ResourceData HEADER_NAME "ResourceData.h" NAMESPACE ResourceData SOURCES ${ResourceDataSources})
 
-file(GLOB TestResultsDataSources ${BINARYDATA_DIRECTORY}/Tests/*.csv ${BINARYDATA_DIRECTORY}/Tests/*.json ${BINARYDATA_DIRECTORY}/Tests/*.dat ${BINARYDATA_DIRECTORY}/Tests/*.cue)
+file(GLOB TestResultsDataSources 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.json 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.dat 
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.cue
+    )
 juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
 
 target_link_libraries(Partiels PRIVATE
@@ -121,18 +113,15 @@ target_link_libraries(Partiels PRIVATE
     juce::juce_audio_devices
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags)
+    juce::juce_recommended_warning_flags
+    )
 
-if(CMAKE_GENERATOR STREQUAL Xcode)
-    if(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
-        set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "3BD2P55TR2")
-        set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
-        set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
-    endif()
-    set(VAMP_PATH_CMD "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
-    set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT ${VAMP_PATH_CMD})
+if(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "3BD2P55TR2")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Developer ID Application")
+    set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
 endif()
-
+set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
 target_enable_xcode_full_warnings(Partiels)
 
 if(WIN32)
