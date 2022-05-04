@@ -122,7 +122,24 @@ void Application::Properties::loadFromFile(PropertyType type)
             {
                 auto& acsr = Instance::get().getPluginListAccessor();
                 acsr.fromXml(*xml, "PluginList", NotificationType::synchronous);
-                PluginList::setEnvironment(acsr);
+                PluginList::Accessor copy;
+                copy.copyFrom(acsr, NotificationType::synchronous);
+                auto const getPluginPackageDirectory = []()
+                {
+                    auto const exeFile = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile);
+#if JUCE_MAC
+                    auto const pluginPackage = exeFile.getParentDirectory().getSiblingFile("PlugIns");
+                    auto const files = pluginPackage.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, "*.dylib");
+                    PluginList::removeLibrariesFromQuarantine({files.begin(), files.end()});
+                    return pluginPackage;
+#else
+                    return exeFile.getSiblingFile("PlugIns");
+#endif
+                };
+                auto searchPath = acsr.getAttr<PluginList::AttrType::searchPath>();
+                searchPath.insert(searchPath.begin(), getPluginPackageDirectory());
+                copy.setAttr<PluginList::AttrType::searchPath>(searchPath, NotificationType::synchronous);
+                PluginList::setEnvironment(copy);
             }
         }
         break;
