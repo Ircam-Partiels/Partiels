@@ -38,14 +38,14 @@ set_target_properties(Partiels PROPERTIES CXX_STANDARD 20)
 target_misc_setup(Partiels MISC_ZOOM_ENABLED MISC_TRANSPORT_ENABLED)
 
 if(APPLE)
-   file(GLOB_RECURSE PartielsSources 
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp 
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h 
+   file(GLOB_RECURSE PartielsSources
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.mm
         )
 else()
-   file(GLOB_RECURSE PartielsSources 
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp 
+   file(GLOB_RECURSE PartielsSources
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
         )
 endif()
@@ -82,21 +82,21 @@ if(WIN32)
 endif()
 
 set(PARTIELS_BINARYDATA_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData)
-file(GLOB TranslationsDataSources 
+file(GLOB TranslationsDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Translations/*.txt
     )
 juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE TranslationsData SOURCES ${TranslationsDataSources})
 
-file(GLOB ResourceDataSources 
-    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt 
+file(GLOB ResourceDataSources
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/icon.png
     )
 juce_add_binary_data(ResourceData HEADER_NAME "ResourceData.h" NAMESPACE ResourceData SOURCES ${ResourceDataSources})
 
-file(GLOB TestResultsDataSources 
-    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv 
-    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.json 
-    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.dat 
+file(GLOB TestResultsDataSources
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.json
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.dat
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.cue
     )
 juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
@@ -134,6 +134,73 @@ file(COPY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/About.txt ${CMAKE
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt CHANGELOG_CONTENT)
 file(APPEND ${CMAKE_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
+
+if(APPLE)
+    set(VAMP_PLUGIN_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/VampPlugins)
+    set(VAMP_PLUGIN_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/VampPluginsBuild)
+    file(MAKE_DIRECTORY ${VAMP_PLUGIN_BUILD_DIRECTORY})
+    execute_process(COMMAND
+        "${CMAKE_COMMAND}" ${VAMP_PLUGIN_DIRECTORY} -G${CMAKE_GENERATOR} -DIGNORE_VAMP_PLUGIN_TESTER=ON
+        WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
+        OUTPUT_VARIABLE command_output
+        ERROR_VARIABLE command_output
+        RESULT_VARIABLE result_variable
+        )
+    if(result_variable)
+        message(FATAL_ERROR "Failed to configure VampPlugins\n${command_output}")
+    endif()
+    execute_process(COMMAND
+        "${CMAKE_COMMAND}" --build . --config Release
+        WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
+        OUTPUT_VARIABLE command_output
+        ERROR_VARIABLE command_output
+        RESULT_VARIABLE result_variable)
+    if(result_variable)
+        message(FATAL_ERROR "Failed to build VampPlugins release\n${command_output}")
+    endif()
+    
+    if(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
+        execute_process(COMMAND
+            codesign --sign "Developer ID Application: INST RECHER COORD ACOUST MUSICALE (3BD2P55TR2)" -f -o runtime --timestamp -v "${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.dylib"
+            WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
+            OUTPUT_VARIABLE command_output
+            ERROR_VARIABLE command_output
+            RESULT_VARIABLE result_variable)
+        if(result_variable)
+            message(FATAL_ERROR "Failed to codesign VampPlugins release\n${command_output}")
+        endif()
+        execute_process(COMMAND
+            codesign --sign "Developer ID Application: INST RECHER COORD ACOUST MUSICALE (3BD2P55TR2)" -f -o runtime --timestamp -v "${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.cat"
+            WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
+            OUTPUT_VARIABLE command_output
+            ERROR_VARIABLE command_output
+            RESULT_VARIABLE result_variable)
+        if(result_variable)
+            message(FATAL_ERROR "Failed to codesign VampPlugins release\n${command_output}")
+        endif()
+    endif()
+    
+
+    target_sources(Partiels PRIVATE
+        VampPlugins/partiels-vamp-plugins.cat
+        ${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.dylib
+        )
+    set_source_files_properties(${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.dylib PROPERTIES
+        HEADER_FILE_ONLY TRUE
+        XCODE_FILE_ATTRIBUTES CodeSignOnCopy
+        MACOSX_PACKAGE_LOCATION "Resources")
+    set_source_files_properties(VampPlugins/partiels-vamp-plugins.cat  PROPERTIES
+        HEADER_FILE_ONLY TRUE
+        XCODE_FILE_ATTRIBUTES CodeSignOnCopy
+        MACOSX_PACKAGE_LOCATION "Resources")
+else()
+    add_dependencies(Partiels partiels-vamp-plugins)
+    add_custom_command(TARGET Partiels POST_BUILD 
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Plugins"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_FILE_DIR:Partiels>/Plugins"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "$<TARGET_FILE_DIR:Partiels>/Plugins"
+    )
+endif()
 
 enable_testing()
 
