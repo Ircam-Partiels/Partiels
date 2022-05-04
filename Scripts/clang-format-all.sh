@@ -7,3 +7,5 @@ clang-format -i -style=file */*/*.cpp */*/*.h
 cd "$ThisPath/../Dependencies/Misc/Source"
 clang-format -i -style=file *.cpp *.h
 clang-format -i -style=file */*.cpp */*.h
+cd "$ThisPath/../VampPlugins"
+clang-format -i -style=file *.cpp *.h
