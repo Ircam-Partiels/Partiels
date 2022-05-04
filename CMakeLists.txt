@@ -12,8 +12,7 @@ project(Partiels VERSION 1.0.5 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
-include(vamp.cmake)
-include(xcode-warnings.cmake)
+add_subdirectory(VampPlugins)
 include(Dependencies/Misc/Misc.cmake)
 
 juce_add_gui_app(Partiels
