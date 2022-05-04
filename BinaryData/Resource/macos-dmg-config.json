@@ -12,5 +12,8 @@
     { "x": 166, "y": 94, "type": "file", "path": "../../release/Partiels.app" },
     { "x": 392, "y": 280, "type": "file", "path": "About.txt" },
     { "x": 512, "y": 280, "type": "file", "path": "ChangeLog.txt" }
-  ]
+  ],
+  "code-sign": {
+    "signing-identity": "Developer ID Application: INST RECHER COORD ACOUST MUSICALE (3BD2P55TR2)"
+  }
 }
