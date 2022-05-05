@@ -145,7 +145,7 @@ void Track::Thumbnail::paint(juce::Graphics& g)
     auto constexpr separator = 2;
     auto constexpr rotation = -1.5707963268f;
 
-    auto const focused = !Tools::getSelectedChannels(mAccessor).empty();
+    auto const focused = Tools::isSelected(mAccessor);
     g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
 

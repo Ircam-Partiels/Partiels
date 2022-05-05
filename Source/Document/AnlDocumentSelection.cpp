@@ -115,7 +115,7 @@ std::set<juce::String> Document::Selection::getTracks(Accessor const& accessor)
     auto const trackAcsrs = accessor.getAcsrs<AcsrType::tracks>();
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(!Track::Tools::getSelectedChannels(trackAcsr.get()).empty())
+        if(Track::Tools::isSelected(trackAcsr.get()))
         {
             tracks.insert(trackAcsr.get().getAttr<Track::AttrType::identifier>());
         }

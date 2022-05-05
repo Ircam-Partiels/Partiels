@@ -36,7 +36,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             break;
             case AttrType::focused:
             {
-                mThumbnailDecoration.setHighlighted(!Tools::getSelectedChannels(acsr).empty());
+                mThumbnailDecoration.setHighlighted(Tools::isSelected(acsr));
             }
             break;
         }
