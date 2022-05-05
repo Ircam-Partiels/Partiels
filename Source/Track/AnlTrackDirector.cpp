@@ -611,8 +611,9 @@ void Track::Director::runAnalysis(NotificationType const notification)
 void Track::Director::runLoading()
 {
     mGraphics.stopRendering();
-    auto const file = getEffectiveFile();
-    if(file != juce::File{})
+    auto file = mAccessor.getAttr<AttrType::file>();
+    file.file = getEffectiveFile();
+    if(file.file != juce::File{})
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
         startTimer(50);
