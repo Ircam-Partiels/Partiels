@@ -67,6 +67,8 @@ namespace Track
         void askToRemoveFile();
         void askToResolveWarnings();
 
+        bool isFileModified() const;
+
     private:
         void sanitizeZooms(NotificationType const notification);
         void runAnalysis(NotificationType const notification);

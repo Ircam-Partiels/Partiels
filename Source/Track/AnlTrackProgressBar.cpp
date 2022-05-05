@@ -31,7 +31,6 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                 auto const includeAnalysis = mMode == Mode::analysis || mMode == Mode::both;
                 auto const includeRendering = mMode == Mode::rendering || mMode == Mode::both;
                 mMessage = Tools::getStateTootip(acsr, includeAnalysis, includeRendering);
-                mProgressBar.setTextToDisplay(mMessage);
                 if(std::get<0>(state))
                 {
                     mProgressBar.setVisible(includeAnalysis);
@@ -44,13 +43,29 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                     mProgressValue = static_cast<double>(std::get<3>(state));
                     mStateIcon.setVisible(false);
                 }
+                else if(warnings != WarningType::none)
+                {
+                    mProgressBar.setVisible(false);
+                    mStateIcon.setVisible(true);
+                    mStateIcon.setTypes(Icon::Type::alert);
+                    mStateIcon.setEnabled(true);
+                }
+                else if(mDirector.isFileModified())
+                {
+                    mProgressBar.setVisible(false);
+                    mStateIcon.setVisible(true);
+                    mStateIcon.setTypes(Icon::Type::alert);
+                    mStateIcon.setEnabled(false);
+                    mMessage = juce::translate("Analysis results have been edited!");
+                }
                 else
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    mStateIcon.setTypes(warnings == WarningType::none ? Icon::Type::verified : Icon::Type::alert);
+                    mStateIcon.setTypes(warnings != WarningType::none ? Icon::Type::alert : Icon::Type::verified);
                     mStateIcon.setEnabled(warnings != WarningType::none);
                 }
+                mProgressBar.setTextToDisplay(mMessage);
                 auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + mMessage;
                 mProgressBar.setTooltip(tooltip);
                 mStateIcon.setTooltip(tooltip);

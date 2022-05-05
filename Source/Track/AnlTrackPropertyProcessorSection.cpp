@@ -105,12 +105,11 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             {
                 auto const& description = acsr.getAttr<AttrType::description>();
                 auto const file = acsr.getAttr<AttrType::file>();
-                auto const fileName = file.file != juce::File{} ? file.file.getFullPathName() : "Modified";
+                auto const fileName = file.file.getFullPathName();
                 mPropertyResultsFile.entry.setButtonText(fileName);
                 mPropertyResultsFile.entry.setTooltip(file.file.getFullPathName());
-                auto const hasFile = Tools::hasResultFile(acsr);
-                mPropertyResultsFileInfo.setVisible(hasFile);
-                mPropertyResultsFile.setVisible(hasFile);
+                mPropertyResultsFileInfo.setVisible(file.file != juce::File{});
+                mPropertyResultsFile.setVisible(file.file != juce::File{});
                 auto const hasPlugin = Tools::hasPluginKey(acsr);
                 mPropertyPreset.setVisible(hasPlugin);
 
@@ -124,7 +123,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
 
                 mParameterProperties.clear();
                 juce::WeakReference<juce::Component> weakReference(this);
-                auto applyValue = [=, this](auto const& parameter, float value)
+                auto const applyValue = [=, this](auto const& parameter, float value)
                 {
                     if(weakReference.get() == nullptr)
                     {
@@ -194,7 +193,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
     addAndMakeVisible(mProgressBarAnalysis);
 
     mProgressBarAnalysis.setSize(300, 36);
-    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were modified, consolidated or loaded from a file."), juce::NotificationType::dontSendNotification);
+    mPropertyResultsFileInfo.setText(juce::translate("Analysis results were loaded from a file."), juce::NotificationType::dontSendNotification);
     mPropertyResultsFileInfo.setSize(300, 24);
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }

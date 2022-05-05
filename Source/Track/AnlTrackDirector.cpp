@@ -1092,4 +1092,13 @@ juce::File Track::Director::getEffectiveFile() const
     return mAccessor.getAttr<AttrType::file>().file;
 }
 
+bool Track::Director::isFileModified() const
+{
+    if(mAccessor.getAttr<AttrType::file>().commit.isEmpty())
+    {
+        return false;
+    }
+    return getEffectiveFile().getFileName() != mAccessor.getAttr<AttrType::file>().file.getFileName();
+}
+
 ANALYSE_FILE_END
