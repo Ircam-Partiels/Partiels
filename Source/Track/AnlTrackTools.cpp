@@ -269,6 +269,15 @@ std::optional<Zoom::Range> Track::Tools::getBinRange(Plugin::Description const& 
     return Zoom::Range(0.0, static_cast<double>(output.binCount));
 }
 
+bool Track::Tools::isSelected(Accessor const& acsr)
+{
+    if(acsr.getAttr<AttrType::channelsLayout>().empty())
+    {
+        return acsr.getAttr<AttrType::focused>().any();
+    }
+    return !getSelectedChannels(acsr).empty();
+}
+
 std::set<size_t> Track::Tools::getSelectedChannels(Accessor const& acsr)
 {
     auto const& states = acsr.getAttr<AttrType::focused>();

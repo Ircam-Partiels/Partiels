@@ -35,6 +35,7 @@ namespace Track
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);
         std::optional<Zoom::Range> getBinRange(Plugin::Description const& description);
 
+        bool isSelected(Accessor const& acsr);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
         size_t getChannel(Accessor const& acsr, juce::Rectangle<int> bounds, int y);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
