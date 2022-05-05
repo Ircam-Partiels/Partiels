@@ -105,8 +105,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             {
                 auto const& description = acsr.getAttr<AttrType::description>();
                 auto const file = acsr.getAttr<AttrType::file>();
-                auto const fileName = file.file.getFullPathName();
-                mPropertyResultsFile.entry.setButtonText(fileName);
+                mPropertyResultsFile.entry.setButtonText(file.file.getFileName());
                 mPropertyResultsFile.entry.setTooltip(file.file.getFullPathName());
                 mPropertyResultsFileInfo.setVisible(file.file != juce::File{});
                 mPropertyResultsFile.setVisible(file.file != juce::File{});
