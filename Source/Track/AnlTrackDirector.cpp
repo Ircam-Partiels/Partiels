@@ -476,6 +476,12 @@ void Track::Director::endAction(ActionState state, juce::String const& name)
                 return true;
             }
             auto& accessor = mGetSafeAccessor();
+            // Clears results to force reload the file
+            if(accessor.getAttr<AttrType::file>().isEmpty() && !mUndoAccessor.getAttr<AttrType::file>().isEmpty())
+            {
+                accessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                accessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+            }
             accessor.copyFrom(mUndoAccessor, NotificationType::synchronous);
             return true;
         }
