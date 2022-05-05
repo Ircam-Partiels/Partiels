@@ -15,19 +15,19 @@ bool Track::Tools::hasResultFile(Accessor const& acsr)
 bool Track::Tools::supportsWindowType(Accessor const& acsr)
 {
     auto const description = acsr.getAttr<AttrType::description>();
-    return description.inputDomain == Plugin::InputDomain::FrequencyDomain;
+    return hasPluginKey(acsr) && description.inputDomain == Plugin::InputDomain::FrequencyDomain;
 }
 
 bool Track::Tools::supportsBlockSize(Accessor const& acsr)
 {
     auto const description = acsr.getAttr<AttrType::description>();
-    return description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.blockSize == 0_z;
+    return hasPluginKey(acsr) && (description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.blockSize == 0_z);
 }
 
 bool Track::Tools::supportsStepSize(Accessor const& acsr)
 {
     auto const description = acsr.getAttr<AttrType::description>();
-    return description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.stepSize > 0_z;
+    return hasPluginKey(acsr) && (description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.stepSize > 0_z);
 }
 
 Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
