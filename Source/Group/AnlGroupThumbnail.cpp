@@ -221,7 +221,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     auto const width = getWidth() / 2;
     auto const height = getHeight();
 
-    auto const focused = !Tools::getSelectedChannels(mAccessor).empty();
+    auto const focused = Tools::isSelected(mAccessor);
     g.setColour(findColour(ColourIds::backgroundColourId).contrasting(focused ? 0.1f : 0.0f));
     g.fillRoundedRectangle(getLocalBounds().toFloat(), 2.0f);
     g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));

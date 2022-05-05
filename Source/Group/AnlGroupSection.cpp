@@ -31,7 +31,7 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
             break;
             case AttrType::focused:
             {
-                mThumbnailDecoration.setHighlighted(!Tools::getSelectedChannels(acsr).empty());
+                mThumbnailDecoration.setHighlighted(Tools::isSelected(acsr));
             }
             break;
             case AttrType::zoomid:

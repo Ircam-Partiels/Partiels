@@ -129,7 +129,7 @@ std::set<juce::String> Document::Selection::getGroups(Accessor const& accessor)
     auto const groupAcsrs = accessor.getAcsrs<AcsrType::groups>();
     for(auto const& groupAcsr : groupAcsrs)
     {
-        if(!Group::Tools::getSelectedChannels(groupAcsr.get()).empty())
+        if(Group::Tools::isSelected(groupAcsr.get()))
         {
             groups.insert(groupAcsr.get().getAttr<Group::AttrType::identifier>());
         }
