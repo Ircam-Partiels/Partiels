@@ -28,7 +28,14 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                            auto const file = mAccessor.getAttr<AttrType::file>();
                            if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
                            {
-                               mDirector.askToRemoveFile();
+                               if(!Tools::hasPluginKey(mAccessor))
+                               {
+                                   getLookAndFeel().playAlertSound();
+                               }
+                               else
+                               {
+                                   mDirector.askToRemoveFile();
+                               }
                            }
                            else if(file.file.existsAsFile())
                            {
