@@ -12,6 +12,7 @@ namespace Group
         std::optional<std::reference_wrapper<Track::Accessor>> getTrackAcsr(Accessor const& accessor, juce::String const& identifier);
         std::vector<std::reference_wrapper<Track::Accessor>> getTrackAcsrs(Accessor const& accessor);
         std::vector<ChannelVisibilityState> getChannelVisibilityStates(Accessor const& accessor);
+        bool isSelected(Accessor const& accessor);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
         size_t getChannel(Accessor const& accessor, juce::Rectangle<int> bounds, int y);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds);

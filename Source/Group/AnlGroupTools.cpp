@@ -76,6 +76,15 @@ std::vector<Group::ChannelVisibilityState> Group::Tools::getChannelVisibilitySta
     return channelslayout;
 }
 
+bool Group::Tools::isSelected(Accessor const& accessor)
+{
+    if(getChannelVisibilityStates(accessor).empty())
+    {
+        return accessor.getAttr<AttrType::focused>().any();
+    }
+    return !getSelectedChannels(accessor).empty();
+}
+
 std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
 {
     auto const& states = accessor.getAttr<AttrType::focused>();
