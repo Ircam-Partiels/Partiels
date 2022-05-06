@@ -133,17 +133,13 @@ bool PluginList::removeLibrariesFromQuarantine(std::vector<juce::File> const& fi
         auto valLength = getxattr(path.getCharPointer(), "com.apple.quarantine", nullptr, 0_z, 0_z, 0);
         if(valLength > 0)
         {
-            std::string value(static_cast<size_t>(valLength + 1), '\0');
-            valLength = getxattr(path.getCharPointer(), "com.apple.quarantine", value.data(), static_cast<size_t>(valLength), 0_z, 0);
-            anlWeakAssert(valLength >= 4);
-            if(valLength > 0 && value.substr(0_z, 4_z) != "00c1")
+            if(removexattr(path.getCharPointer(), "com.apple.quarantine", 0) == 0 || (file.setExecutePermission(true) && removexattr(path.getCharPointer(), "com.apple.quarantine", 0) == 0))
             {
-                value.replace(0_z, 4_z, "00c1");
-                value.resize(static_cast<size_t>(valLength));
-                if(setxattr(path.getCharPointer(), "com.apple.quarantine", value.data(), static_cast<size_t>(valLength), 0_z, XATTR_REPLACE) == 0)
-                {
-                    names.push_back(file.getFileNameWithoutExtension().toStdString());
-                }
+                names.push_back(file.getFileNameWithoutExtension().toStdString());
+            }
+            else
+            {
+                std::cerr << "remove from quaratine failed: " << file.getFullPathName() << "\n";
             }
         }
     }
