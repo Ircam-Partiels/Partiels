@@ -135,66 +135,13 @@ file(READ ${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/ChangeLog.txt CHANGELO
 file(APPEND ${CMAKE_BINARY_DIR}/Install.txt "\n")
 file(APPEND ${CMAKE_BINARY_DIR}/Install.txt ${CHANGELOG_CONTENT})
 
+add_dependencies(Partiels partiels-vamp-plugins)
 if(APPLE)
-    set(VAMP_PLUGIN_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/VampPlugins)
-    set(VAMP_PLUGIN_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/VampPluginsBuild)
-    file(MAKE_DIRECTORY ${VAMP_PLUGIN_BUILD_DIRECTORY})
-    execute_process(COMMAND
-        "${CMAKE_COMMAND}" ${VAMP_PLUGIN_DIRECTORY} -G${CMAKE_GENERATOR} -DIGNORE_VAMP_PLUGIN_TESTER=ON
-        WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
-        OUTPUT_VARIABLE command_output
-        ERROR_VARIABLE command_output
-        RESULT_VARIABLE result_variable
+    set_target_properties(Partiels PROPERTIES 
+        XCODE_EMBED_PLUGINS partiels-vamp-plugins
+        XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY TRUE
         )
-    if(result_variable)
-        message(FATAL_ERROR "Failed to configure VampPlugins\n${command_output}")
-    endif()
-    execute_process(COMMAND
-        "${CMAKE_COMMAND}" --build . --config Release
-        WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
-        OUTPUT_VARIABLE command_output
-        ERROR_VARIABLE command_output
-        RESULT_VARIABLE result_variable)
-    if(result_variable)
-        message(FATAL_ERROR "Failed to build VampPlugins release\n${command_output}")
-    endif()
-    
-    if(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
-        execute_process(COMMAND
-            codesign --sign "Developer ID Application: INST RECHER COORD ACOUST MUSICALE (3BD2P55TR2)" -f -o runtime --timestamp -v "${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.dylib"
-            WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
-            OUTPUT_VARIABLE command_output
-            ERROR_VARIABLE command_output
-            RESULT_VARIABLE result_variable)
-        if(result_variable)
-            message(FATAL_ERROR "Failed to codesign VampPlugins release\n${command_output}")
-        endif()
-        execute_process(COMMAND
-            codesign --sign "Developer ID Application: INST RECHER COORD ACOUST MUSICALE (3BD2P55TR2)" -f -o runtime --timestamp -v "${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.cat"
-            WORKING_DIRECTORY "${VAMP_PLUGIN_BUILD_DIRECTORY}"
-            OUTPUT_VARIABLE command_output
-            ERROR_VARIABLE command_output
-            RESULT_VARIABLE result_variable)
-        if(result_variable)
-            message(FATAL_ERROR "Failed to codesign VampPlugins release\n${command_output}")
-        endif()
-    endif()
-    
-
-    target_sources(Partiels PRIVATE
-        VampPlugins/partiels-vamp-plugins.cat
-        ${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.dylib
-        )
-    set_source_files_properties(${VAMP_PLUGIN_BUILD_DIRECTORY}/Release/partiels-vamp-plugins.dylib PROPERTIES
-        HEADER_FILE_ONLY TRUE
-        XCODE_FILE_ATTRIBUTES CodeSignOnCopy
-        MACOSX_PACKAGE_LOCATION "Resources")
-    set_source_files_properties(VampPlugins/partiels-vamp-plugins.cat  PROPERTIES
-        HEADER_FILE_ONLY TRUE
-        XCODE_FILE_ATTRIBUTES CodeSignOnCopy
-        MACOSX_PACKAGE_LOCATION "Resources")
 else()
-    add_dependencies(Partiels partiels-vamp-plugins)
     add_custom_command(TARGET Partiels POST_BUILD 
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Partiels>/Plugins"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_FILE_DIR:Partiels>/Plugins"
