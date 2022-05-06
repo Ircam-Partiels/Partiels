@@ -1,5 +1,6 @@
 v1.0.5
 
+- Add: Clicking on a track with cmd/ctrl key pressed creates a marker or a point (#266)
 - Imp: Play alert sound if the user wants to detach a file that doesn't have any plugin information (#265)
 - Fix: Block size should not be visible when importing file (#264)
 - Add: Embedded Waveform plugin (#263)
