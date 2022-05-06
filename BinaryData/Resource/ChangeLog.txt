@@ -1,5 +1,8 @@
 v1.0.5
 
+- Imp: Play alert sound if the user wants to detach a file that doesn't have any plugin information (#265)
+- Fix: Block size should not be visible when importing file (#264)
+- Add: Embedded Waveform plugin (#263)
 - Fix: Undo/redo mechanism crashes when restoring the state of a group or a track after deleting them (#262)
 - Add: Add delete/copy/cut/paste/duplicate actions for modifying results (#261)
 - Add: Add support for multi-items (groups & tracks) selection and multichannel selection (#260)
@@ -16,7 +19,8 @@ v1.0.5
 - Imp: Move the playhead position to the start of the loop range when modifying the range (#249)
 - Fix: The text information of the results file in the track property panel should not be editable (#248)
 - Fix: Application does not correctly capture mouse events when full screen mode is restored on startup (#247)
-- Add: Add results table window for inspecting and editing results (#199)
+- Add: Embedded New Track plugin to generate "empty" markers and points tracks (#228)
+- Add: Results table window for inspecting and editing results (#199)
 
 v1.0.4
 
