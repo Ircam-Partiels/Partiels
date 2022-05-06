@@ -1,5 +1,6 @@
 #include "AnlTrackPlot.h"
 #include "AnlTrackTools.h"
+#include "Result/AnlTrackResultModifier.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -878,7 +879,59 @@ void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
 void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
 {
     updateMode(event);
-    if(event.mods.isAltDown())
+    if(event.mods.isCommandDown())
+    {
+        using namespace Result;
+        using CopiedData = Modifier::CopiedData;
+
+        auto const getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
+        {
+            auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
+            for(auto const& verticalRange : verticalRanges)
+            {
+                if(verticalRange.second.contains(event.y))
+                {
+                    return std::make_tuple(verticalRange.first, verticalRange.second);
+                }
+            }
+            return {};
+        };
+        auto const channel = getChannel();
+        if(!channel.has_value())
+        {
+            return;
+        }
+
+        auto const addAction = [&](CopiedData const& data)
+        {
+            auto& director = mPlot.mDirector;
+            auto& undoManager = director.getUndoManager();
+            undoManager.beginNewTransaction(juce::translate("Add Frame"));
+            auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+            undoManager.perform(std::make_unique<Modifier::ActionPaste>(director.getSafeAccessorFn(), std::get<0_z>(*channel), juce::Range<double>{}, data, time).release());
+        };
+
+        switch(Tools::getDisplayType(mAccessor))
+        {
+            case Tools::DisplayType::markers:
+            {
+                addAction(std::map<size_t, Data::Marker>{std::make_pair(0_z, Data::Marker{0.0, 0.0, ""})});
+            }
+            break;
+            case Tools::DisplayType::points:
+            {
+                auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                auto const top = static_cast<float>(std::get<1_z>(*channel).getStart());
+                auto const bottom = static_cast<float>(std::get<1_z>(*channel).getEnd());
+                auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom});
+                addAction(std::map<size_t, Data::Point>{std::make_pair(0_z, Data::Point{0.0, 0.0, value})});
+            }
+            case Tools::DisplayType::columns:
+                break;
+        }
+    }
+    else if(event.mods.isAltDown())
     {
         takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colours>().background);
     }
@@ -896,17 +949,17 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
 
 void Track::Plot::Overlay::updateMode(juce::MouseEvent const& event)
 {
-    if(event.mods.isAltDown() && !mSnapshotMode)
+    auto const isCommandOrAltDown = event.mods.isCommandDown() || event.mods.isAltDown();
+    mSelectionBar.setInterceptsMouseClicks(!isCommandOrAltDown, !isCommandOrAltDown);
+    if(!event.mods.isCommandDown() && event.mods.isAltDown() && !mSnapshotMode)
     {
         mSnapshotMode = true;
         showCameraCursor(true);
-        mSelectionBar.setInterceptsMouseClicks(false, false);
     }
     else if(!event.mods.isAltDown() && mSnapshotMode)
     {
         mSnapshotMode = false;
         showCameraCursor(false);
-        mSelectionBar.setInterceptsMouseClicks(true, true);
     }
 }
 
