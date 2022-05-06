@@ -79,6 +79,11 @@ float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRa
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
 }
 
+float Track::Tools::pixelToValue(float position, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
+{
+    return (static_cast<float>(bounds.getHeight()) - position) / bounds.getHeight() * static_cast<float>(valueRange.getLength()) + static_cast<float>(valueRange.getStart());
+}
+
 float Track::Tools::secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds)
 {
     return static_cast<float>((seconds - timeRange.getStart()) / timeRange.getLength()) * bounds.getWidth() + bounds.getX();

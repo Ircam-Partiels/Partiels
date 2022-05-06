@@ -25,6 +25,7 @@ namespace Track
         DisplayType getDisplayType(Accessor const& acsr);
 
         float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
+        float pixelToValue(float position, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
         float secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
         double pixelToSeconds(float position, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);
 
