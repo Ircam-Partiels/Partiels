@@ -82,9 +82,7 @@ Application::AudioSettings::AudioSettings()
                                     return;
                                 }
 
-                                auto const bufferSizes = currentDevice->getAvailableBufferSizes();
-                                auto const it = std::lower_bound(bufferSizes.begin(), bufferSizes.end(), bufferSize);
-                                if(it == bufferSizes.end())
+                                if(!currentDevice->getAvailableBufferSizes().contains(bufferSize))
                                 {
                                     Properties::askToRestoreDefaultAudioSettings(juce::translate("Buffer size BUFFERSIZE is not supported by the audio device.").replace("BUFFERSIZE", juce::String(bufferSize)));
                                     return;
