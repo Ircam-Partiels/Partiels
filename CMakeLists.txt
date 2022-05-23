@@ -27,7 +27,7 @@ juce_add_gui_app(Partiels
     NEEDS_CURL                          FALSE
     NEEDS_WEB_BROWSER                   FALSE
     NEEDS_STORE_KIT                     FALSE
-    HARDENED_RUNTIME_ENABLED            true
+    HARDENED_RUNTIME_ENABLED            TRUE
     HARDENED_RUNTIME_OPTIONS            "com.apple.security.cs.disable-library-validation"
     PLIST_TO_MERGE                      "<plist><dict><key>LSApplicationCategoryType</key><string>public.app-category.music</string></dict></plist>"
     )
