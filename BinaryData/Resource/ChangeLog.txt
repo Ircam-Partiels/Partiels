@@ -1,3 +1,7 @@
+v1.0.6
+
+- Fix: Multi-channel mapping is not valid with plugins that support variable number of channels (#272)
+
 v1.0.5
 
 - Add: Clicking on a track with the cmd/ctrl key pressed creates a marker or a point (#266)
