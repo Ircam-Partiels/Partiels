@@ -8,7 +8,7 @@ set(SDIF_TESTS OFF CACHE BOOL "" FORCE)
 set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 
-project(Partiels VERSION 1.0.5 LANGUAGES C CXX)
+project(Partiels VERSION 1.0.6 LANGUAGES C CXX)
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
