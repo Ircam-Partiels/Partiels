@@ -11,60 +11,15 @@ namespace
         {
             return results.cend();
         }
-        if(results.size() == 1_z)
-        {
-            return results.cbegin();
-        }
-        auto const startTime = std::get<0_z>(*results.cbegin());
-        auto const endTime = std::get<0_z>(*results.crbegin()) + std::get<1_z>(*results.crbegin());
-        auto const timeLength = endTime - startTime;
-        if(timeLength <= 0.0)
-        {
-            return results.cbegin();
-        }
-
-        auto const timeRatioPosition = std::max(std::min((time - startTime) / timeLength, 1.0), 0.0);
-        auto const expectedIndex = static_cast<long>(std::ceil(timeRatioPosition * static_cast<double>(results.size() - 1_z)));
-
-        auto const expectedIt = std::next(results.cbegin(), expectedIndex);
-        anlWeakAssert(expectedIt != results.cend());
-        if(expectedIt == results.cend())
-        {
-            return results.cend();
-        }
-        auto const position = std::get<0>(*expectedIt);
-        if(position >= time && position + std::get<1>(*expectedIt) <= time)
-        {
-            return expectedIt;
-        }
-        else if(position >= time)
-        {
-            auto const it = std::find_if(std::make_reverse_iterator(expectedIt), results.crend(), [&](auto const& result)
+        auto const it = std::upper_bound(results.cbegin(), results.cend(), time, [](auto const& t, auto const& result)
                                          {
-                                             return std::get<0>(result) <= time;
+                                             return t < std::get<0_z>(result);
                                          });
-            if(it == results.crend())
-            {
-                return results.cbegin();
-            }
-            return std::next(it).base();
-        }
-        else
+        if(it == results.cbegin())
         {
-            auto const it = std::find_if(expectedIt, results.cend(), [&](auto const& result)
-                                         {
-                                             return std::get<0>(result) >= time;
-                                         });
-            if(it == results.cend())
-            {
-                return std::prev(it);
-            }
-            if(std::get<0>(*it) > time && it != results.cbegin())
-            {
-                return std::prev(it);
-            }
             return it;
         }
+        return std::prev(it);
     }
 
     template <typename T>
