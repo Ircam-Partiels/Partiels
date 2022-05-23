@@ -235,7 +235,7 @@ bool Plugin::Processor::performNextAudioBlock(std::vector<std::vector<Result>>& 
                 results[index].emplace_back(std::move(that));
             }
         }
-        block += mPlugins[index]->getMinChannelCount();
+        block += mPlugins[index]->getMaxChannelCount();
     }
     return true;
 }
