@@ -686,22 +686,22 @@ std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<P
         return {};
     }
     auto const second = std::next(first);
-    auto const end = std::get<0>(*first) + std::get<1>(*first);
+    auto const end = std::get<0_z>(*first) + std::get<1_z>(*first);
     if(second == channelResults.cend() || time < end || !std::get<2>(*second).has_value())
     {
-        return std::get<2>(*first);
+        return std::get<2_z>(*first);
     }
     auto const next = std::get<0>(*second);
     if((next - end) < std::numeric_limits<double>::epsilon() || !std::get<2>(*first).has_value())
     {
-        return std::get<2>(*second);
+        return std::get<2_z>(*second);
     }
     auto const ratio = std::max(std::min((time - end) / (next - end), 1.0), 0.0);
     if(std::isnan(ratio) || !std::isfinite(ratio)) // Extra check in case (next - end) < std::numeric_limits<double>::epsilon()
     {
         return std::get<2>(*second);
     }
-    return (1.0 - ratio) * *std::get<2>(*first) + ratio * *std::get<2>(*second);
+    return (1.0 - ratio) * *std::get<2_z>(*first) + ratio * *std::get<2_z>(*second);
 }
 
 std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<Columns> const> results, size_t channel, double time, size_t bin)
