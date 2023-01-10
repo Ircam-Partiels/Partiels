@@ -51,9 +51,9 @@ Track::Ruler::Ruler(Accessor& accessor)
                     anlWeakAssert(ruler != nullptr);
                     if(ruler != nullptr)
                     {
-                        ruler->onMouseDown = [&, rulerPtr = ruler.get()]()
+                        ruler->onMouseDown = [&, rulerPtr = ruler.get()](juce::MouseEvent const& event)
                         {
-                            if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
+                            if(event.mods.isCtrlDown())
                             {
                                 auto rangeEditor = mDisplayType == Tools::DisplayType::points ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
                                 if(rangeEditor == nullptr)
@@ -69,7 +69,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                             }
                             return true;
                         };
-                        ruler->onDoubleClick = [&]()
+                        ruler->onDoubleClick = [&]([[maybe_unused]] juce::MouseEvent const& event)
                         {
                             auto const& range = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
                             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);

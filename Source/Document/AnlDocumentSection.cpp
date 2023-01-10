@@ -41,14 +41,14 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                  },
                  {Group::AttrType::focused}, {Track::AttrType::focused})
 {
-    mTimeRuler.onDoubleClick = [this]()
+    mTimeRuler.onDoubleClick = [this]([[maybe_unused]] juce::MouseEvent const& event)
     {
         auto& acsr = mAccessor.getAcsr<AcsrType::timeZoom>();
         acsr.setAttr<Zoom::AttrType::visibleRange>(acsr.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
     };
-    mTimeRuler.onMouseDown = [this]()
+    mTimeRuler.onMouseDown = [this](juce::MouseEvent const& event)
     {
-        if(juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isCtrlDown())
+        if(event.mods.isCtrlDown())
         {
             auto timeRangeEditor = Tools::createTimeRangeEditor(mAccessor);
             if(timeRangeEditor == nullptr)
