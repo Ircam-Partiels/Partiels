@@ -4,9 +4,23 @@
 
 ANALYSE_FILE_BEGIN
 
+Group::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPanel)
+: FloatingWindowContainer(juce::translate("Properties"), mViewport, true)
+, mPropertyPanel(propertyPanel)
+, mTooltip(&mPropertyPanel)
+{
+    mViewport.setSize(mPropertyPanel.getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
+    mViewport.setScrollBarsShown(true, false, true, false);
+    mViewport.setViewedComponent(&mPropertyPanel, false);
+    mFloatingWindow.setResizable(true, false);
+    mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMinimumHeight(120);
+    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
+}
+
 Group::PropertyPanel::PropertyPanel(Director& director)
-: FloatingWindowContainer("Properties", mViewport)
-, mDirector(director)
+: mDirector(director)
 
 , mPropertyName(juce::translate("Group Name"), juce::translate("The name of the group"), [this](juce::String text)
                 {
@@ -57,15 +71,16 @@ Group::PropertyPanel::PropertyPanel(Director& director)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
-        auto constexpr silent = juce::NotificationType::dontSendNotification;
         switch(attribute)
         {
             case AttrType::identifier:
             case AttrType::name:
             {
-                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), silent);
-                mFloatingWindow.setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
+                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                if(auto* window = findParentComponentOfClass<WindowContainer>())
+                {
+                    window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
+                }
             }
             break;
             case AttrType::colour:
@@ -107,21 +122,11 @@ Group::PropertyPanel::PropertyPanel(Director& director)
     mGraphicalsSection.setComponents({mPropertyGraphicalsSection});
 
     setSize(300, 400);
-    mViewport.setSize(getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
-    mViewport.setScrollBarsShown(true, false, true, false);
-    mViewport.setViewedComponent(this, false);
-    mFloatingWindow.setResizable(true, false);
-    mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
-    mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
-    mBoundsConstrainer.setMinimumHeight(120);
-    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
-
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
 Group::PropertyPanel::~PropertyPanel()
 {
-    mFloatingWindow.clearContentComponent();
     mComponentListener.detachFrom(mGraphicalsSection);
     mComponentListener.detachFrom(mProcessorsSection);
     mAccessor.removeListener(mListener);

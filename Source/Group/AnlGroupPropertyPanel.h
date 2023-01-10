@@ -8,7 +8,7 @@ ANALYSE_FILE_BEGIN
 namespace Group
 {
     class PropertyPanel
-    : public FloatingWindowContainer
+    : public juce::Component
     , public juce::DragAndDropContainer
     {
     public:
@@ -17,6 +17,18 @@ namespace Group
 
         // juce::Component
         void resized() override;
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(PropertyPanel& propertyPanel);
+
+        private:
+            PropertyPanel& mPropertyPanel;
+            juce::Viewport mViewport;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         void updateContent();
@@ -38,7 +50,6 @@ namespace Group
         ConcertinaTable mGraphicalsSection{juce::translate("GRAPHICALS"), true,
                                            juce::translate("The graphicals' parameters of the group")};
 
-        juce::Viewport mViewport;
         LayoutNotifier mLayoutNotifier;
     };
 } // namespace Group

@@ -38,6 +38,7 @@ namespace Group
         Accessor::Receiver mReceiver;
 
         PropertyPanel mPropertyPanel{mDirector};
+        PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
         Icon mPropertiesButton{Icon::Type::properties};
         Icon mEditButton{Icon::Type::edit};
         StateButton mStateButton{mDirector};
