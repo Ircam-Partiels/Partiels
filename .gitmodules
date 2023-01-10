@@ -1,6 +1,6 @@
 [submodule "JUCE"]
 	path = JUCE
-	url = https://github.com/WeAreROLI/JUCE.git
+	url = ../JUCE.git
 [submodule "vamp-plugin-sdk"]
 	path = vamp-plugin-sdk
 	url = ../vamp-plugin-sdk.git
