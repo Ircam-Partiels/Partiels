@@ -2,6 +2,7 @@
 stages:
   - test
   - build
+  - format
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -91,3 +92,15 @@ Build::Linux:
     paths:
       - $CI_PROJECT_DIR/Partiels/
     expire_in: 1 week
+
+Format:
+  stage: format
+  tags:
+    - osx
+  needs: []
+  before_script:
+    - brew install clang-format
+  script:
+    - find Source -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
+    - find Dependencies/Misc/Source -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
+    - find VampPlugins -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
