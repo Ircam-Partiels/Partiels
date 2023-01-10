@@ -887,7 +887,7 @@ void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t 
     if(mDirector.moveTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
     {
         mDirector.endAction(ActionState::newTransaction, juce::translate("Move Track"));
-        mLastSelectedItem = {trackIdentifier};
+        mLastSelectedItem = {trackIdentifier, {}};
         Selection::selectItem(mAccessor, mLastSelectedItem, true, false, NotificationType::synchronous);
     }
     else
@@ -910,7 +910,7 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
     if(mDirector.copyTrack(groupIdentifier, index, trackIdentifier, NotificationType::synchronous))
     {
         mDirector.endAction(ActionState::newTransaction, juce::translate("Copy Track"));
-        mLastSelectedItem = {trackIdentifier};
+        mLastSelectedItem = {trackIdentifier, {}};
         Selection::selectItem(mAccessor, mLastSelectedItem, true, false, NotificationType::synchronous);
     }
     else

@@ -522,7 +522,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             auto const nextItem = Document::Selection::getNextItem(documentAcsr);
             if(nextItem.has_value())
             {
-                Document::Selection::selectItem(documentAcsr, {*nextItem}, true, false, NotificationType::synchronous);
+                Document::Selection::selectItem(documentAcsr, {*nextItem, {}}, true, false, NotificationType::synchronous);
             }
             return true;
         }
@@ -536,7 +536,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(identifier.has_value())
             {
                 documentDir.endAction(ActionState::newTransaction, juce::translate("New Group"));
-                Document::Selection::selectItem(documentAcsr, {*identifier}, true, false, NotificationType::synchronous);
+                Document::Selection::selectItem(documentAcsr, {*identifier, {}}, true, false, NotificationType::synchronous);
             }
             else
             {

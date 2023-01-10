@@ -134,7 +134,7 @@ void Application::Tools::addPluginTracks(std::tuple<juce::String, size_t> positi
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *lastTrack]()
                                     {
-                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf}, true, false, NotificationType::synchronous);
+                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf, {}}, true, false, NotificationType::synchronous);
                                     });
         documentDir.endAction(ActionState::newTransaction, juce::translate("New Tracks"));
     }
@@ -215,7 +215,7 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
         // If the group is not expanded, we have to wait a few ms before the new track becomes fully visible
         juce::Timer::callAfterDelay(500, [idtf = *identifier]()
                                     {
-                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf}, true, false, NotificationType::synchronous);
+                                        Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf, {}}, true, false, NotificationType::synchronous);
                                     });
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::InfoIcon)
