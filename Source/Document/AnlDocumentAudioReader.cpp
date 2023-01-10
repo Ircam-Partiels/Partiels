@@ -41,7 +41,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
 
         ~AudioFormatReader() override = default;
 
-        bool readSamples(int** destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override
+        bool readSamples(int* const* destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override
         {
             auto constexpr scaleFactor = 1.0f / static_cast<float>(0x7fffffff);
 
@@ -62,9 +62,9 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                     while(remaininSamples > 0)
                     {
                         mBuffer.clear();
-                        auto** internalBuffer = mBuffer.getArrayOfWritePointers();
+                        auto* const* internalBuffer = mBuffer.getArrayOfWritePointers();
                         auto const bufferSize = std::min(remaininSamples, mBuffer.getNumSamples());
-                        if(!reader->readSamples(reinterpret_cast<int**>(internalBuffer), usedNumChannels, 0, startSample, bufferSize))
+                        if(!reader->readSamples(reinterpret_cast<int* const*>(internalBuffer), usedNumChannels, 0, startSample, bufferSize))
                         {
                             return false;
                         }

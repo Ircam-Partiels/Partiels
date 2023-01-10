@@ -43,7 +43,6 @@ void Track::Loader::loadAnalysis(Accessor const& accessor, FileInfo const& fileI
                                          return {};
                                      }
                                      juce::Thread::setCurrentThreadName("Track::Loader::Process");
-                                     juce::Thread::setCurrentThreadPriority(10);
                                      auto results = loadFromFile(fileInfo, mShouldAbort, mAdvancement);
                                      triggerAsyncUpdate();
                                      return results;

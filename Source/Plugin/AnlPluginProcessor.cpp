@@ -48,7 +48,7 @@ juce::int64 Plugin::Processor::CircularReader::getPosition() const
 
 float const** Plugin::Processor::CircularReader::getNextBlock()
 {
-    auto** inputPointers = mBuffer.getArrayOfWritePointers();
+    auto* const* inputPointers = mBuffer.getArrayOfWritePointers();
     auto const numChannels = mBuffer.getNumChannels();
 
     auto const offset = static_cast<juce::int64>(std::round(static_cast<double>(mBlocksize) / 2.0));
@@ -407,7 +407,7 @@ public:
 
             ~Reader() override = default;
 
-            bool readSamples(int** destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override
+            bool readSamples(int* const* destChannels, int numDestChannels, int startOffsetInDestBuffer, juce::int64 startSampleInFile, int numSamples) override
             {
                 for(int channelIndex = 0; channelIndex < numDestChannels; ++channelIndex)
                 {

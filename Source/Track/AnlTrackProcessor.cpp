@@ -55,7 +55,6 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                   {
                                       anlDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
-                                      juce::Thread::setCurrentThreadPriority(10);
 
                                       auto expected = ProcessState::available;
                                       if(!mAnalysisState.compare_exchange_weak(expected, ProcessState::running))

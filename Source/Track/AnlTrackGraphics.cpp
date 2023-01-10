@@ -89,7 +89,6 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     mRenderingProcess = std::thread([=, this]()
                                     {
                                         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
-                                        juce::Thread::setCurrentThreadPriority(10);
                                         auto expected = ProcessState::available;
                                         if(!mRenderingState.compare_exchange_weak(expected, ProcessState::running))
                                         {
