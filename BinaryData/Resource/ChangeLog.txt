@@ -1,5 +1,7 @@
 v1.0.6
 
+- Fix: Clicking and dragging with the command/control modifier doesn't display the zoom range properly (#279)
+- Fix: Clicking with the control modifier on the zoom rulers resets the zoom to an unwanted range (#278)
 - Fix: Multi-channel mapping is not valid with plugins that support variable number of channels (#272)
 - Fix: Fix selection of multiple tracks and groups while dragging the mouse (#270)
  
