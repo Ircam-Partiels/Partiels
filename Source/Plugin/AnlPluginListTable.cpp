@@ -49,12 +49,12 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mSearchField.setPopupMenuEnabled(false);
     mSearchField.setCaretVisible(true);
     mSearchField.setJustification(juce::Justification::centredLeft);
-    lookAndFeelChanged();
+
     mSearchField.onTextChange = [this]()
     {
         updateContent();
     };
-    mSearchField.setEscapeAndReturnKeysConsumed(true);
+    mSearchField.setEscapeAndReturnKeysConsumed(false);
     mSearchField.onEscapeKey = [this]()
     {
         mSearchField.setText("");
@@ -67,7 +67,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     };
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
-    setSize(820, 600);
 
     mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
     {
@@ -119,6 +118,9 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     };
     mReceiver.onSignal(mAccessor, SignalType::rescan, {});
     mAccessor.addReceiver(mReceiver);
+
+    setWantsKeyboardFocus(true);
+    setSize(820, 600);
 }
 
 PluginList::Table::~Table()
@@ -137,7 +139,7 @@ void PluginList::Table::resized()
     mPluginTable.setBounds(bounds);
 }
 
-void PluginList::Table::lookAndFeelChanged()
+void PluginList::Table::colourChanged()
 {
     auto const text = mSearchField.getText();
     mSearchField.clear();
@@ -147,12 +149,22 @@ void PluginList::Table::lookAndFeelChanged()
 
 void PluginList::Table::parentHierarchyChanged()
 {
-    lookAndFeelChanged();
+    colourChanged();
 }
 
 void PluginList::Table::visibilityChanged()
 {
-    lookAndFeelChanged();
+    colourChanged();
+}
+
+bool PluginList::Table::keyPressed(juce::KeyPress const& key)
+{
+    if(key == juce::KeyPress('f', juce::ModifierKeys::commandModifier, 0))
+    {
+        mSearchField.grabKeyboardFocus();
+        return true;
+    }
+    return false;
 }
 
 void PluginList::Table::updateContent()

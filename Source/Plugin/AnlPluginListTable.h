@@ -17,9 +17,10 @@ namespace PluginList
 
         // juce::Component
         void resized() override;
-        void lookAndFeelChanged() override;
+        void colourChanged() override;
         void parentHierarchyChanged() override;
         void visibilityChanged() override;
+        bool keyPressed(juce::KeyPress const& key) override;
 
         std::function<void(std::set<Plugin::Key> keys)> onPluginSelected = nullptr;
         void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;

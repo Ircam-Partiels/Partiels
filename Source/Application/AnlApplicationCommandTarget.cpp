@@ -560,6 +560,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 Tools::addPluginTracks(position, keys);
             };
             mPluginListTableWindow.show(true);
+            mPluginListTable.grabKeyboardFocus();
             return true;
         }
         case CommandIDs::editRemoveItem:
