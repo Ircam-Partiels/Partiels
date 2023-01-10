@@ -41,6 +41,7 @@ namespace Track
         Transport::Accessor& mTransportAccessor;
 
         PropertyPanel mPropertyPanel{mDirector};
+        PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
         Result::Table mResultsTable{mDirector, mTimeZoomAccessor, mTransportAccessor};
         Result::Table::WindowContainer mResultsWindowContainer{mResultsTable};
         Icon mPropertiesButton{Icon::Type::properties};

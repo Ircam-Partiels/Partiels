@@ -11,7 +11,7 @@ ANALYSE_FILE_BEGIN
 namespace Track
 {
     class PropertyPanel
-    : public FloatingWindowContainer
+    : public juce::Component
     , public juce::DragAndDropContainer
     {
     public:
@@ -20,6 +20,18 @@ namespace Track
 
         // juce::Component
         void resized() override;
+
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(PropertyPanel& propertyPanel);
+
+        private:
+            PropertyPanel& mPropertyPanel;
+            juce::Viewport mViewport;
+            juce::TooltipWindow mTooltip;
+        };
 
     private:
         Director& mDirector;
@@ -40,8 +52,6 @@ namespace Track
         PropertyPluginSection mPropertyPluginSection{mDirector};
         ConcertinaTable mPluginSection{juce::translate("PLUGIN"), true,
                                        juce::translate("The plugin information")};
-
-        juce::Viewport mViewport;
     };
 } // namespace Track
 

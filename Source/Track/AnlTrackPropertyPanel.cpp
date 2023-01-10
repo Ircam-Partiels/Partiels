@@ -4,9 +4,23 @@
 
 ANALYSE_FILE_BEGIN
 
+Track::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPanel)
+: FloatingWindowContainer(juce::translate("Properties"), mViewport, true)
+, mPropertyPanel(propertyPanel)
+, mTooltip(&mPropertyPanel)
+{
+    mViewport.setSize(mPropertyPanel.getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
+    mViewport.setScrollBarsShown(true, false, true, false);
+    mViewport.setViewedComponent(&mPropertyPanel, false);
+    mFloatingWindow.setResizable(true, false);
+    mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
+    mBoundsConstrainer.setMinimumHeight(120);
+    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
+}
+
 Track::PropertyPanel::PropertyPanel(Director& director)
-: FloatingWindowContainer("Properties", mViewport)
-, mDirector(director)
+: mDirector(director)
 , mPropertyName("Name", "The name of the track", [&](juce::String text)
                 {
                     mDirector.startAction();
@@ -16,13 +30,15 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        auto constexpr silent = juce::NotificationType::dontSendNotification;
         switch(attribute)
         {
             case AttrType::name:
             {
-                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), silent);
-                mFloatingWindow.setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
+                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                if(auto* window = findParentComponentOfClass<WindowContainer>())
+                {
+                    window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
+                }
             }
             break;
             case AttrType::key:
@@ -67,14 +83,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
     addAndMakeVisible(mPluginSection);
 
     setSize(300, 400);
-    mViewport.setSize(getWidth() + mViewport.getVerticalScrollBar().getWidth() + 2, 400);
-    mViewport.setScrollBarsShown(true, false, true, false);
-    mViewport.setViewedComponent(this, false);
-    mFloatingWindow.setResizable(true, false);
-    mBoundsConstrainer.setMinimumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
-    mBoundsConstrainer.setMaximumWidth(mViewport.getWidth() + mFloatingWindow.getBorderThickness().getTopAndBottom());
-    mBoundsConstrainer.setMinimumHeight(120);
-    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
 
     // This avoids to move the focus to the first component
     // (the name property) when recreating properties.
@@ -84,7 +92,6 @@ Track::PropertyPanel::PropertyPanel(Director& director)
 
 Track::PropertyPanel::~PropertyPanel()
 {
-    mFloatingWindow.clearContentComponent();
     mComponentListener.detachFrom(mProcessorSection);
     mComponentListener.detachFrom(mGraphicalSection);
     mComponentListener.detachFrom(mPluginSection);
