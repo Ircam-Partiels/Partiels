@@ -72,7 +72,7 @@ namespace Application
         {
             if constexpr(type == AttrType::recentlyOpenedFilesList)
             {
-                auto sanitize = [](std::vector<juce::File> const& files)
+                auto const sanitize = [](std::vector<juce::File> const& files)
                 {
                     std::set<juce::File> duplicates;
                     std::vector<juce::File> copy;
