@@ -29,6 +29,7 @@ namespace Application
         , exportOptions
         , adaptationToSampleRate
         , autoLoadConvertedFile
+        , routingMatrix
     };
 
     using AttrContainer = Model::Container
@@ -41,6 +42,7 @@ namespace Application
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Flag::basic>
     , Model::Attr<AttrType::adaptationToSampleRate, bool, Flag::basic>
     , Model::Attr<AttrType::autoLoadConvertedFile, bool, Flag::basic>
+    , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Flag::basic>
     >;
     // clang-format on
 
@@ -62,6 +64,7 @@ namespace Application
             , {}
             , {false}
             , {true}
+            , {{}}
         }))
         {
         }
