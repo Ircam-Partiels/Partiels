@@ -70,6 +70,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             case AttrType::autoresize:
             case AttrType::editMode:
             case AttrType::samplerate:
+            case AttrType::channels:
                 break;
         }
     };

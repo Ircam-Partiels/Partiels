@@ -308,6 +308,7 @@ Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& acce
             case AttrType::grid:
             case AttrType::autoresize:
             case AttrType::samplerate:
+            case AttrType::channels:
             case AttrType::editMode:
                 break;
             case AttrType::layout:

@@ -347,6 +347,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::samplerate:
+            case AttrType::channels:
             case AttrType::editMode:
                 break;
         }

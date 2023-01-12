@@ -184,6 +184,7 @@ Application::ConverterPanel::ConverterPanel()
             case Document::AttrType::grid:
             case Document::AttrType::autoresize:
             case Document::AttrType::samplerate:
+            case Document::AttrType::channels:
             case Document::AttrType::editMode:
                 break;
         }
