@@ -914,6 +914,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     if(channels.empty())
     {
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
+        mAccessor.setAttr<AttrType::channels>(0_z, notification);
         transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range{}, notification);
@@ -935,6 +936,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
             juce::AlertWindow::showAsync(options, nullptr);
         }
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
+        mAccessor.setAttr<AttrType::channels>(0_z, notification);
         mDuration = 0.0;
         zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
         zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(Zoom::epsilon(), notification);
@@ -952,7 +954,7 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     }
 
     mAccessor.setAttr<AttrType::samplerate>(reader->sampleRate, notification);
-
+    mAccessor.setAttr<AttrType::channels>(static_cast<size_t>(reader->numChannels), notification);
     mDuration = reader->sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / reader->sampleRate : 0.0;
     auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, mDuration}, notification);
