@@ -26,6 +26,7 @@ namespace Document
         , grid
         , autoresize
         , samplerate
+        , channels
         , editMode
     };
     
@@ -51,6 +52,7 @@ namespace Document
     , Model::Attr<AttrType::grid, GridMode, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::autoresize, bool, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::samplerate, double, Model::Flag::saveable | Model::Flag::notifying>
+    , Model::Attr<AttrType::channels, size_t, Model::Flag::saveable | Model::Flag::notifying>
     , Model::Attr<AttrType::editMode, EditMode, Model::Flag::notifying>
     >;
     
@@ -69,10 +71,21 @@ namespace Document
     public:
         using Model::Accessor<Accessor, AttrContainer, AcsrContainer>::Accessor;
 
+        // clang-format off
         Accessor()
-        : Accessor(AttrContainer({}, {}, {}, {}, {GridMode::partial}, {false}, {0.0}, {EditMode::items}))
+        : Accessor(AttrContainer(  {}
+                                 , {}
+                                 , {}
+                                 , {}
+                                 , {GridMode::partial}
+                                 , {false}
+                                 , {0.0}
+                                 , {0_z}
+                                 , {EditMode::items}
+                                 ))
         {
         }
+        // clang-format on
 
         template <acsr_enum_type type>
         size_t getAcsrPosition(typename std::tuple_element<static_cast<size_t>(type), acsr_container_type>::type::accessor_type const& other) const
