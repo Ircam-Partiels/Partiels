@@ -33,6 +33,10 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
             }
             break;
             case AttrType::layout:
+            {
+                mAudioFileLayoutTable.onLayoutChanged();
+            }
+            break;
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::grid:
