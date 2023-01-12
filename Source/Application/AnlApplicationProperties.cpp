@@ -44,8 +44,8 @@ Application::Properties::~Properties()
 
 void Application::Properties::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    anlStrongAssert(source == &Instance::get().getAudioDeviceManager());
-    if(source == &Instance::get().getAudioDeviceManager())
+    anlWeakAssert(source == std::addressof(Instance::get().getAudioDeviceManager()));
+    if(source == std::addressof(Instance::get().getAudioDeviceManager()))
     {
         saveToFile(PropertyType::AudioSetup);
     }
