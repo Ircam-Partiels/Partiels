@@ -3,6 +3,19 @@
 
 ANALYSE_FILE_BEGIN
 
+Application::AudioSettings::PropertyChannelRouting::PropertyChannelRouting(std::function<void(size_t row, size_t column)> fn)
+: PropertyComponent<BooleanMatrixSelector>("Channels Routing", "Define the output channels rounting", {})
+{
+    entry.onClick = std::move(fn);
+}
+
+void Application::AudioSettings::PropertyChannelRouting::resized()
+{
+    auto bounds = getLocalBounds();
+    title.setBounds(bounds.removeFromTop(24));
+    entry.setBounds(bounds);
+}
+
 Application::AudioSettings::AudioSettings()
 : mPropertyDriver(juce::translate("Driver"), juce::translate("The current audio device driver"), "", {}, [&](size_t index)
                   {
@@ -95,6 +108,16 @@ Application::AudioSettings::AudioSettings()
                                     Properties::askToRestoreDefaultAudioSettings(error);
                                 }
                             })
+, mPropertyChannelRouting([](size_t row, size_t column)
+                          {
+                              auto& accessor = Instance::get().getApplicationAccessor();
+                              auto routing = accessor.getAttr<AttrType::routingMatrix>();
+                              if(row < routing.size() && column < routing.at(row).size())
+                              {
+                                  routing[row][column] = !routing.at(row).at(column);
+                              }
+                              accessor.setAttr<AttrType::routingMatrix>(routing, NotificationType::synchronous);
+                          })
 , mPropertyDriverPanel(juce::translate("Audio Device Panel..."), juce::translate("Show audio device panel"), []()
                        {
 #if JUCE_MAC
@@ -122,22 +145,88 @@ Application::AudioSettings::AudioSettings()
 #else
     addAndMakeVisible(mPropertyBufferSizeNumber);
 #endif
+    addAndMakeVisible(mPropertyChannelRouting);
     addAndMakeVisible(mPropertyDriverPanel);
 
     setSize(300, 200);
+
+    mListener.onAttrChanged = [this](Accessor const& accessor, AttrType attr)
+    {
+        switch(attr)
+        {
+            case AttrType::windowState:
+            case AttrType::recentlyOpenedFilesList:
+            case AttrType::currentDocumentFile:
+            case AttrType::colourMode:
+            case AttrType::showInfoBubble:
+            case AttrType::exportOptions:
+            case AttrType::adaptationToSampleRate:
+            case AttrType::desktopGlobalScaleFactor:
+            case AttrType::autoLoadConvertedFile:
+                break;
+            case AttrType::routingMatrix:
+            {
+                auto& entry = mPropertyChannelRouting.entry;
+                auto const size = entry.getSize();
+                auto const& routing = accessor.getAttr<AttrType::routingMatrix>();
+                for(auto input = 0_z; input < routing.size(); ++input)
+                {
+                    if(input < std::get<0_z>(size))
+                    {
+                        auto const& row = routing.at(input);
+                        for(auto output = 0_z; output < row.size(); ++output)
+                        {
+                            if(output < std::get<1_z>(size))
+                            {
+                                entry.setCellState(input, output, row.at(output), juce::NotificationType::dontSendNotification);
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+        }
+    };
+
+    mDocumentListener.onAttrChanged = [this]([[maybe_unused]] Document::Accessor const& accessor, Document::AttrType attr)
+    {
+        switch(attr)
+        {
+            case Document::AttrType::reader:
+            {
+                changeListenerCallback(&Instance::get().getAudioDeviceManager());
+            }
+            break;
+            case Document::AttrType::layout:
+            case Document::AttrType::viewport:
+            case Document::AttrType::path:
+            case Document::AttrType::grid:
+            case Document::AttrType::autoresize:
+            case Document::AttrType::samplerate:
+            case Document::AttrType::channels:
+            case Document::AttrType::editMode:
+                break;
+        }
+    };
+
     Instance::get().getAudioDeviceManager().addChangeListener(this);
-    changeListenerCallback(&Instance::get().getAudioDeviceManager());
+    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
 }
 
 Application::AudioSettings::~AudioSettings()
 {
+    Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
+    Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getAudioDeviceManager().removeChangeListener(this);
 }
 
 void Application::AudioSettings::resized()
 {
+    auto const routingHeight = std::min(mPropertyChannelRouting.entry.getOptimalHeight() + 24, 120);
+    mPropertyChannelRouting.setSize(getWidth(), routingHeight);
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto setBounds = [&](juce::Component& component)
+    auto const setBounds = [&](juce::Component& component)
     {
         if(component.isVisible())
         {
@@ -149,6 +238,7 @@ void Application::AudioSettings::resized()
     setBounds(mPropertySampleRate);
     setBounds(mPropertyBufferSize);
     setBounds(mPropertyBufferSizeNumber);
+    setBounds(mPropertyChannelRouting);
     setBounds(mPropertyDriverPanel);
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
@@ -250,6 +340,68 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
 #ifndef JUCE_MAC
         mPropertyDriverPanel.setVisible(currentAudioDevice->hasControlPanel());
 #endif
+        auto const setup = deviceManager.getAudioDeviceSetup();
+        auto const documentChannels = Instance::get().getDocumentAccessor().getAttr<Document::AttrType::channels>();
+        auto const numInputs = documentChannels > 0_z ? documentChannels : 2_z;
+        auto const numOutputs = static_cast<size_t>(std::max(setup.outputChannels.countNumberOfSetBits(), 0));
+
+        MiscDebug("Application::AudioSettings", "Inputs: " + juce::String(numInputs) + " Outputs: " + juce::String(numOutputs));
+        mPropertyChannelRouting.entry.setSize(numInputs, numOutputs);
+        mPropertyDriverPanel.setEnabled(numInputs > 0_z && numOutputs > 0_z);
+
+        auto& accessor = Instance::get().getApplicationAccessor();
+        auto routing = accessor.getAttr<AttrType::routingMatrix>();
+
+        if(numInputs > 0_z && numOutputs > 0_z && (routing.size() != numInputs || routing.at(0_z).size() != numOutputs))
+        {
+            if(routing.size() == 1_z && routing.at(0_z).size() > 1_z)
+            {
+                std::fill(routing[0_z].begin() + 1l, routing[0_z].end(), false);
+            }
+            routing.resize(numInputs);
+            if(numInputs == 1_z)
+            {
+                routing[0_z].resize(numOutputs, false);
+                routing[0_z][0_z] = true;
+                if(numOutputs > 1_z)
+                {
+                    routing[0_z][1_z] = true;
+                }
+            }
+            else
+            {
+                for(auto input = 0_z; input < routing.size(); ++input)
+                {
+                    auto& ouputs = routing[input];
+                    auto const active = (ouputs.size() < numOutputs && input < numOutputs && std::count(ouputs.cbegin(), ouputs.cend(), true) == 0l) || (input < ouputs.size() && ouputs.at(input));
+                    ouputs.resize(numOutputs, false);
+                    ouputs[input] = active;
+                }
+            }
+            accessor.setAttr<AttrType::routingMatrix>(routing, NotificationType::synchronous);
+        }
+
+        auto& entry = mPropertyChannelRouting.entry;
+        auto const size = entry.getSize();
+        for(auto input = 0_z; input < routing.size(); ++input)
+        {
+            if(input < std::get<0_z>(size))
+            {
+                auto const& row = routing.at(input);
+                for(auto output = 0_z; output < row.size(); ++output)
+                {
+                    if(output < std::get<1_z>(size))
+                    {
+                        entry.setCellState(input, output, row.at(output), juce::NotificationType::dontSendNotification);
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        mPropertyDriverPanel.entry.setSize(2_z, 2_z);
+        mPropertyDriverPanel.setEnabled(false);
     }
     resized();
 }
