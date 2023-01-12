@@ -68,6 +68,7 @@ Application::Exporter::Exporter()
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
             case AttrType::desktopGlobalScaleFactor:
+            case AttrType::routingMatrix:
                 break;
             case AttrType::exportOptions:
             {

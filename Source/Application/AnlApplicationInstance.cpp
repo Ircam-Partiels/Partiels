@@ -111,6 +111,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::routingMatrix:
                 break;
             case AttrType::desktopGlobalScaleFactor:
             {

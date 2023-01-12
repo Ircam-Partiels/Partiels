@@ -35,6 +35,7 @@ Application::CommandTarget::CommandTarget()
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
             case AttrType::desktopGlobalScaleFactor:
+            case AttrType::routingMatrix:
                 break;
         }
     };

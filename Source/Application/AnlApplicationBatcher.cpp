@@ -74,6 +74,7 @@ Application::Batcher::Batcher()
             case AttrType::showInfoBubble:
             case AttrType::autoLoadConvertedFile:
             case AttrType::desktopGlobalScaleFactor:
+            case AttrType::routingMatrix:
                 break;
             case AttrType::exportOptions:
             {

@@ -24,6 +24,7 @@ Application::Window::DesktopScaler::DesktopScaler()
             case AttrType::autoLoadConvertedFile:
             case AttrType::adaptationToSampleRate:
             case AttrType::exportOptions:
+            case AttrType::routingMatrix:
                 break;
             case AttrType::desktopGlobalScaleFactor:
             {
