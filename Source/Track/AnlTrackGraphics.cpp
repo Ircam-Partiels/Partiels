@@ -88,6 +88,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
     mChrono.start();
     mRenderingProcess = std::thread([=, this]()
                                     {
+                                        mAdvancement.store(0.0f);
                                         juce::Thread::setCurrentThreadName("Track::Graphics::Process");
                                         auto expected = ProcessState::available;
                                         if(!mRenderingState.compare_exchange_weak(expected, ProcessState::running))
@@ -102,7 +103,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                             colours[i] = juce::Colour::fromFloatRGBA(static_cast<float>(color.r()), static_cast<float>(color.g()), static_cast<float>(color.b()), 1.0f).getPixelARGB();
                                         }
 
-                                        auto createImage = [&](size_t index, int imageWidth, int imageHeight, float& advancement, std::function<bool(void)> predicate) -> juce::Image
+                                        auto const createImage = [&](size_t index, int imageWidth, int imageHeight, float& advancement, std::function<bool(void)> predicate) -> juce::Image
                                         {
                                             advancement = 0.0f;
                                             auto const& channel = columns->at(index);
@@ -191,12 +192,13 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                         auto const dimension = std::max(width, height);
                                         if(dimension > maxImageSize)
                                         {
-                                            float advancement = 0.0f;
+                                            float adv = 0.0f;
+                                            auto const advRatio = 0.05f / static_cast<float>(numChannels);
                                             for(size_t channel = 0; channel < numChannels; ++channel)
                                             {
-                                                auto image = createImage(channel, std::min(maxImageSize, width), std::min(maxImageSize, height), advancement, [&]()
+                                                auto image = createImage(channel, std::min(maxImageSize, width), std::min(maxImageSize, height), adv, [&]()
                                                                          {
-                                                                             mAdvancement.store(0.05f * (static_cast<float>(channel) + advancement) / static_cast<float>(numChannels));
+                                                                             mAdvancement.store((static_cast<float>(channel) + adv) * advRatio);
                                                                              return mRenderingState.load() != ProcessState::aborted;
                                                                          });
 
@@ -208,32 +210,39 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                     triggerAsyncUpdate();
                                                 }
 
-                                                mAdvancement.store(0.05f * (static_cast<float>(channel) / static_cast<float>(numChannels)));
+                                                mAdvancement.store(static_cast<float>(channel + 1.0f) * advRatio);
                                             }
                                             mAdvancement.store(0.05f);
                                         }
 
                                         std::vector<juce::Image> tempImages;
-                                        auto const currentAdvancement = mAdvancement.load();
-                                        float advancement = 0.0f;
-                                        for(size_t channel = 0; channel < numChannels; ++channel)
                                         {
-                                            auto image = createImage(channel, width, height, advancement, [&]()
-                                                                     {
-                                                                         mAdvancement.store(currentAdvancement + (static_cast<float>(channel) + 0.98f - currentAdvancement) * advancement / static_cast<float>(numChannels));
-                                                                         return mRenderingState.load() != ProcessState::aborted;
-                                                                     });
+                                            auto const currentAdv = mAdvancement.load();
+                                            auto const advRatio = (0.92f - currentAdv) / static_cast<float>(numChannels);
+                                            float adv = 0.0f;
+                                            for(size_t channel = 0; channel < numChannels; ++channel)
+                                            {
+                                                auto image = createImage(channel, width, height, adv, [&]()
+                                                                         {
+                                                                             mAdvancement.store(currentAdv + (static_cast<float>(channel) + adv) * advRatio);
+                                                                             return mRenderingState.load() != ProcessState::aborted;
+                                                                         });
 
-                                            tempImages.push_back(image);
-                                            mAdvancement.store(0.98f * (static_cast<float>(channel) / static_cast<float>(numChannels)));
+                                                tempImages.push_back(image);
+                                                mAdvancement.store(currentAdv + static_cast<float>(channel + 1.0f) * advRatio);
+                                            }
+                                            mAdvancement.store(0.92f);
                                         }
-                                        mAdvancement.store(0.98f);
 
+                                        auto const currentAdv = mAdvancement.load();
+                                        auto const advRatio = (1.0f - currentAdv) / static_cast<float>(numChannels);
+                                        auto const numRescales = static_cast<int>(std::log2(std::max(dimension - std::min(maxImageSize, dimension), 1)));
                                         for(size_t channel = 0; channel < numChannels; ++channel)
                                         {
                                             auto const& image = tempImages[channel];
                                             if(image.isValid())
                                             {
+                                                int rescaleIndex = 0;
                                                 for(int i = maxImageSize; i < dimension; i *= 2)
                                                 {
                                                     auto const rescaledImage = image.rescaled(std::min(i, image.getWidth()), std::min(i, image.getHeight()));
@@ -248,13 +257,15 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                     }
                                                     imageLock.unlock();
                                                     triggerAsyncUpdate();
-                                                    mAdvancement.store(std::min(mAdvancement.load() + 0.005f, 0.99f));
+                                                    auto const adv = static_cast<float>(++rescaleIndex) / static_cast<float>(numRescales);
+                                                    mAdvancement.store(currentAdv + (static_cast<float>(channel) + adv) * advRatio);
                                                 }
 
                                                 std::unique_lock<std::mutex> imageLock(mMutex);
                                                 mImages[channel].push_back(image);
                                                 imageLock.unlock();
                                             }
+                                            mAdvancement.store(currentAdv + (static_cast<float>(channel) + 1.0f) * advRatio);
                                         }
 
                                         mAdvancement.store(1.0f);
