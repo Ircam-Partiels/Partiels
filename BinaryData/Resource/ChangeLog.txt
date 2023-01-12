@@ -2,9 +2,11 @@ v1.0.6
 
 - Fix: Clicking and dragging with the command/control modifier doesn't display the zoom range properly (#279)
 - Fix: Clicking with the control modifier on the zoom rulers resets the zoom to an unwanted range (#278)
+- Add: Audio channel routing system in the audio settings panel (#277)
 - Fix: Multi-channel mapping is not valid with plugins that support variable number of channels (#272)
 - Fix: Fix selection of multiple tracks and groups while dragging the mouse (#270)
 - Add: The shortcut Ctrl + F or Cmd + F on the New Track Window gives focus to the search entry (#267)
+- Fix: Graphical rendering advancement increases and decreases inconsistently (#242)
  
 v1.0.5
 
