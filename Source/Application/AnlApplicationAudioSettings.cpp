@@ -156,8 +156,8 @@ void Application::AudioSettings::resized()
 void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     auto& deviceManager = Instance::get().getAudioDeviceManager();
-    anlStrongAssert(source == &deviceManager);
-    if(source != &deviceManager)
+    anlWeakAssert(source == std::addressof(deviceManager));
+    if(source != std::addressof(deviceManager))
     {
         return;
     }
