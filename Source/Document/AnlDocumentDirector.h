@@ -67,7 +67,6 @@ namespace Document
 
         std::vector<std::unique_ptr<Group::Director>> mGroups;
         std::vector<std::unique_ptr<Track::Director>> mTracks;
-        std::optional<double> mSampleRate;
         double mDuration = 0.0;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
         PluginTableContainer* mPluginTableContainer = nullptr;

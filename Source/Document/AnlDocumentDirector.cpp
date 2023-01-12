@@ -64,19 +64,12 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
             }
             break;
-            case AttrType::samplerate:
-            {
-                if(mSampleRate.has_value())
-                {
-                    mAccessor.setAttr<AttrType::samplerate>(*mSampleRate, notification);
-                }
-            }
-            break;
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::path:
             case AttrType::autoresize:
             case AttrType::editMode:
+            case AttrType::samplerate:
                 break;
         }
     };
@@ -919,7 +912,6 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
     auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
     if(channels.empty())
     {
-        mSampleRate.reset();
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
@@ -941,7 +933,6 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
                                      .withButton(juce::translate("Ok"));
             juce::AlertWindow::showAsync(options, nullptr);
         }
-        mSampleRate.reset();
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         mDuration = 0.0;
         zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
@@ -959,7 +950,6 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
         juce::AlertWindow::showAsync(options, nullptr);
     }
 
-    mSampleRate = reader->sampleRate;
     mAccessor.setAttr<AttrType::samplerate>(reader->sampleRate, notification);
 
     mDuration = reader->sampleRate > 0.0 ? static_cast<double>(reader->lengthInSamples) / reader->sampleRate : 0.0;
