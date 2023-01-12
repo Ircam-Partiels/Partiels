@@ -5,6 +5,7 @@ ANALYSE_FILE_BEGIN
 std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document::createAudioFormatReader(Accessor const& accessor, juce::AudioFormatManager& audioFormatManager)
 {
     using ReaderLayout = std::tuple<std::unique_ptr<juce::AudioFormatReader>, int>;
+    using ChannelLayout = AudioFileLayout::ChannelLayout;
 
     class AudioFormatReader
     : public juce::AudioFormatReader
@@ -28,7 +29,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                     bitsPerSample = std::max(reader->bitsPerSample, bitsPerSample);
                     lengthInSamples = std::max(reader->lengthInSamples, lengthInSamples);
                     maxChannels = std::max(static_cast<int>(reader->numChannels), maxChannels);
-                    numChannels += std::get<1>(channel) == -2 ? reader->numChannels : 1u;
+                    numChannels += std::get<1>(channel) == ChannelLayout::all ? reader->numChannels : 1u;
                 }
                 else
                 {
@@ -77,7 +78,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                             auto* outputBuffer = reinterpret_cast<float*>(destChannels[channelIndex] + outputOffset);
                             juce::FloatVectorOperations::copy(outputBuffer, internalBuffer[static_cast<size_t>(layout)], bufferSize);
                         }
-                        else if(layout == -1) // mono
+                        else if(layout == ChannelLayout::mono)
                         {
                             if(!reader->usesFloatingPointData)
                             {
@@ -95,7 +96,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                             }
                             juce::FloatVectorOperations::multiply(outputBuffer, 1.0f / static_cast<float>(usedNumChannels), bufferSize);
                         }
-                        else if(layout == -2) // all
+                        else if(layout == ChannelLayout::all)
                         {
                             for(size_t channelToCopy = 0_z; channelToCopy < static_cast<size_t>(usedNumChannels); ++channelToCopy)
                             {
@@ -117,7 +118,7 @@ std::tuple<std::unique_ptr<juce::AudioFormatReader>, juce::StringArray> Document
                         outputOffset += bufferSize;
                         remaininSamples -= bufferSize;
                     }
-                    channelIndex += layout == -2 ? usedNumChannels : 1;
+                    channelIndex += layout == ChannelLayout::all ? usedNumChannels : 1;
                 }
                 else
                 {
