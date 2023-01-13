@@ -924,7 +924,7 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                 auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                 auto const top = static_cast<float>(std::get<1_z>(*channel).getStart());
                 auto const bottom = static_cast<float>(std::get<1_z>(*channel).getEnd());
-                auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom});
+                auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
                 addAction(std::map<size_t, Data::Point>{std::make_pair(0_z, Data::Point{0.0, 0.0, value})});
             }
             case Tools::DisplayType::columns:
