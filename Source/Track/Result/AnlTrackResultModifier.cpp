@@ -371,18 +371,28 @@ bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const chann
         {
             return false;
         }
-        auto& channelFrames = results[channel];
-        auto changed = false;
-        for(auto it = indices.crbegin(); it != indices.crend(); ++it)
+
+        std::vector<juce::Range<size_t>> ranges;
+        for(auto const& index : indices)
         {
-            auto const index = *it;
-            if(index < channelFrames.size())
+            if(ranges.empty() || ranges.back().getEnd() + 1_z < index)
             {
-                channelFrames.erase(channelFrames.begin() + static_cast<long>(index));
-                changed = true;
+                ranges.push_back({index, index});
+            }
+            else
+            {
+                ranges.back() = ranges.back().getUnionWith(index);
             }
         }
-        return changed;
+
+        auto& channelFrames = results[channel];
+        for(auto it = ranges.crbegin(); it != ranges.crend(); ++it)
+        {
+            auto const start = static_cast<long>(std::min(it->getStart(), channelFrames.size()));
+            auto const end = static_cast<long>(std::min(it->getEnd() + 1_z, channelFrames.size()));
+            channelFrames.erase(channelFrames.begin() + start, channelFrames.begin() + end);
+        }
+        return !ranges.empty();
     };
 
     auto const getAccessAndParse = [&](auto& results)
