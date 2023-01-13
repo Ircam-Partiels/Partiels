@@ -535,11 +535,11 @@ void Document::Section::mouseDown(juce::MouseEvent const& event)
     {
         Selection::selectItems(mAccessor, mLastSelectedItem, item, true, false, NotificationType::synchronous);
     }
-    else
+    else if(!event.mods.isCommandDown())
     {
         mLastSelectedItem = item;
-        auto const deselectAll = !event.mods.isCommandDown();
-        auto const flipSelection = event.mods.isCommandDown();
+        auto const deselectAll = !event.mods.isAltDown();
+        auto const flipSelection = event.mods.isAltDown();
         Selection::selectItem(mAccessor, item, deselectAll, flipSelection, NotificationType::synchronous);
     }
 }
