@@ -3,6 +3,7 @@ stages:
   - test
   - build
   - format
+  - doc
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -103,3 +104,18 @@ Format:
     - find Source -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
     - find Dependencies/Misc/Source -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
     - find VampPlugins -iname *.h -o -iname *.cpp | xargs clang-format --Werror --dry-run --verbose -style=file
+
+Doc:
+  stage: doc
+  tags:
+    - osx
+  needs: []
+  before_script:
+    - npm install mdpdf -g
+  script:
+    - mdpdf Docs/Partiels-Manual.md
+    - mv Docs/Partiels-Manual.pdf ./Partiels-Manual.pdf
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/Partiels-Manual.pdf
+    expire_in: 1 week
