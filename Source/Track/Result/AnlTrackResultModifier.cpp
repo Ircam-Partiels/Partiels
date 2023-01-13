@@ -76,7 +76,7 @@ juce::Range<double> Track::Result::Modifier::getTimeRange(CopiedData const& data
 
 Track::Result::Modifier::CopiedData Track::Result::Modifier::duplicateFrames(CopiedData const& data, juce::Range<double> const& range, size_t destinationIndex, double destinationTime)
 {
-    auto copyFrames = [&](auto const& results) -> CopiedData
+    auto const copyFrames = [&](auto const& results) -> CopiedData
     {
         if(results.empty())
         {
@@ -460,7 +460,7 @@ Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn,
 , mDestinationSelection(selection.movedToStartAt(destination))
 , mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, mDestinationSelection)))
 , mCopyIndex(getIndex(mGetAccessorFn(), channel, mDestinationSelection.getStart()))
-, mCopiedData(duplicateFrames(data, selection, mCopyIndex.has_value() ? *mCopyIndex : 0_z, mDestinationSelection.getStart()))
+, mCopiedData(duplicateFrames(data, selection, mCopyIndex.value_or(0_z), mDestinationSelection.getStart()))
 {
 }
 
