@@ -295,18 +295,48 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
         {
             return false;
         }
-        auto& channelFrames = results[channel];
-        for(auto it = newData.cbegin(); it != newData.cend(); ++it)
+
+        std::vector<juce::Range<size_t>> ranges;
+        for(auto const& pair : newData)
         {
-            auto constexpr maxTime = std::numeric_limits<double>::max();
-            auto const index = it->first;
-            auto const previousTime = index > 0_z && index - 1_z < channelFrames.size() ? std::get<0_z>(channelFrames[index - 1_z]) + std::get<1_z>(channelFrames[index - 1_z]) : 0.0;
-            auto const nextTime = index < channelFrames.size() ? std::get<0_z>(channelFrames[index]) : maxTime;
-            MiscWeakAssert(nextTime >= previousTime);
-            auto value = it->second;
-            std::get<0_z>(value) = std::clamp(std::get<0_z>(value), previousTime, std::max(nextTime, previousTime));
-            std::get<1_z>(value) = std::min(std::get<1_z>(value), nextTime - std::get<0_z>(value));
-            channelFrames.insert(channelFrames.begin() + static_cast<long>(index), value);
+            if(ranges.empty() || ranges.back().getEnd() + 1_z < pair.first)
+            {
+                ranges.push_back({pair.first, pair.first});
+            }
+            else
+            {
+                ranges.back() = ranges.back().getUnionWith(pair.first);
+            }
+        }
+
+        auto& channelFrames = results[channel];
+        channelFrames.reserve(channelFrames.size() + newData.size());
+        for(auto const& range : ranges)
+        {
+            auto const start = range.getStart();
+            auto const end = range.getEnd() + 1_z;
+
+            auto const size = end - start;
+            auto const insertIt = channelFrames.begin() + static_cast<long>(start);
+            if(insertIt != channelFrames.end() && insertIt != channelFrames.begin())
+            {
+                auto const previousIt = std::prev(insertIt);
+                auto const maxDuration = std::get<0_z>(newData.at(start)) - std::get<0_z>(*previousIt);
+                MiscWeakAssert(maxDuration > 0.0);
+                std::get<1_z>(*previousIt) = std::min(std::get<1_z>(*previousIt), maxDuration);
+            }
+            auto outputIt = channelFrames.insert(insertIt, size, {});
+            for(auto index = start; index < end; ++index, ++outputIt)
+            {
+                *outputIt = newData.at(index);
+            }
+            if(outputIt != channelFrames.end())
+            {
+                auto const previousIt = std::prev(outputIt);
+                auto const maxDuration = std::get<0_z>(*outputIt) - std::get<0_z>(*previousIt);
+                MiscWeakAssert(maxDuration > 0.0);
+                std::get<1_z>(*previousIt) = std::min(std::get<1_z>(*previousIt), maxDuration);
+            }
         }
         return true;
     };
