@@ -67,9 +67,8 @@ Build::Windows:
     - cd build
     - cmake .. -G "Visual Studio 17 2022" -A x64
     - cmake --build . --config Release
+    - move-item -path ".\Partiels-install.exe" -destination "..\"
     - ctest -C Release -VV
-    - '& "C:/Program Files (x86)/Inno Setup 6/iscc.exe" "$CI_PROJECT_DIR/Scripts/windows-package.iss"'
-    - Move-Item -Path "$CI_PROJECT_DIR/build/Partiels-install.exe" -Destination "$CI_PROJECT_DIR/Partiels-install.exe"
   artifacts:
     paths:
       - $CI_PROJECT_DIR/Partiels-install.exe

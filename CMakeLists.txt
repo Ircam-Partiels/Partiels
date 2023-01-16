@@ -9,6 +9,7 @@ set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 
 project(Partiels VERSION 1.0.6 LANGUAGES C CXX)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(JUCE)
 add_subdirectory(Dependencies/sdif)
@@ -147,6 +148,27 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:partiels-vamp-plugins>" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:partiels-vamp-plugins>/partiels-vamp-plugins.cat" "$<TARGET_FILE_DIR:Partiels>/PlugIns"
     )
+endif()
+
+if(WIN32)
+    find_program(ISCC_EXE "iscc" HINTS "C:/Program Files (x86)/Inno Setup 6")
+    if(ISCC_EXE)
+        add_custom_target(PartielsPackage ALL ${ISCC_EXE} /DMyDir="${CMAKE_CURRENT_BINARY_DIR}" /DMyConfig="$<IF:$<CONFIG:Debug>,Debug,Release>" /O${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/windows-package.iss)
+        add_dependencies(PartielsPackage Partiels)
+    else()
+        message(WARNING "PartielsPackage cannot be generated because ISCC.exe is not found")
+    endif()
+
+    find_program(SIGNTOOL_EXE "signtool" HINTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64")
+    if(SIGNTOOL_EXE)
+        add_custom_target(PartielsSign ALL
+        COMMAND ${SIGNTOOL_EXE} sign /f ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Partiels-Code-Signing-Certificate-Sectigo.pfx /p "ASAP" /fd SHA256 /td SHA256 /tr http://timestamp.sectigo.com ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
+        COMMAND ${SIGNTOOL_EXE}  verify /pa ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
+        )
+        add_dependencies(PartielsSign PartielsPackage)
+    else()
+        message(WARNING "PartielsSign cannot be signed because signtool.exe is not found")
+    endif()
 endif()
 
 enable_testing()

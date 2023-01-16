@@ -2,10 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Partiels"
+#define MyVersionFileHandle FileOpen(MyDir + "\version.txt")
+#define MyAppVersionName FileRead(MyVersionFileHandle)
 #define MyAppPublisher "Ircam"
 #define MyAppURL "www.ircam.fr"
 #define MyAppExeName "Partiels.exe"
-#define MyAppVersionName  GetVersionNumbersString("..\build\Partiels_artefacts\Release\Partiels.exe")
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -20,12 +21,13 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf64}\{#MyAppName}
 DisableProgramGroupPage=yes
 DisableDirPage=no
-OutputDir=..\build
+OutputDir={#MyDir}
 OutputBaseFilename={#MyAppName}-install
-InfoBeforeFile=..\build\Install.txt
+InfoBeforeFile={#MyDir}\Install.txt
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+WizardImageFile={#MyDir}\..\BinaryData\Resource\Ircam-logo-noir-RS.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -34,11 +36,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\build\Partiels_artefacts\Release\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\Partiels_artefacts\Release\PlugIns\partiels-vamp-plugins.dll"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
-Source: "..\build\Partiels_artefacts\Release\PlugIns\partiels-vamp-plugins.cat"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
-Source: "..\BinaryData\Resource\About.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\Partiels.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\PlugIns\partiels-vamp-plugins.dll"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
+Source: "{#MyDir}\Partiels_artefacts\{#MyConfig}\PlugIns\partiels-vamp-plugins.cat"; DestDir: "{app}\PlugIns"; Flags: ignoreversion
+Source: "{#MyDir}\..\BinaryData\Resource\About.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyDir}\..\BinaryData\Resource\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
