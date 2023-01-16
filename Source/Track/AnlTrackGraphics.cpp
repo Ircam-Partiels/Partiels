@@ -210,7 +210,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                     triggerAsyncUpdate();
                                                 }
 
-                                                mAdvancement.store(static_cast<float>(channel + 1.0f) * advRatio);
+                                                mAdvancement.store(static_cast<float>(channel + 1_z) * advRatio);
                                             }
                                             mAdvancement.store(0.05f);
                                         }
@@ -229,7 +229,7 @@ void Track::Graphics::runRendering(Accessor const& accessor)
                                                                          });
 
                                                 tempImages.push_back(image);
-                                                mAdvancement.store(currentAdv + static_cast<float>(channel + 1.0f) * advRatio);
+                                                mAdvancement.store(currentAdv + static_cast<float>(channel + 1_z) * advRatio);
                                             }
                                             mAdvancement.store(0.92f);
                                         }
