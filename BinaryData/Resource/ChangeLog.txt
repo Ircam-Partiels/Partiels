@@ -1,8 +1,11 @@
 v1.0.6
 
+- Fix: The value of new points is not consistent except on the first channel (#282)
+- Imp: Speed up the delete/copy/paste actions when performed on a large amount of data (#281)
+- Imp: The shortcut Ctrl + Q or Cmd + Q quit the application even if a modal floating window is on the screen (#280)
 - Fix: Clicking and dragging with the command/control modifier doesn't display the zoom range properly (#279)
 - Fix: Clicking with the control modifier on the zoom rulers resets the zoom to an unwanted range (#278)
-- Add: Audio channel routing system in the audio settings panel (#277)
+- Add: Add an audio channel routing system to the sound card accessible in the audio settings panel (#277)
 - Fix: Multi-channel mapping is not valid with plugins that support variable number of channels (#272)
 - Fix: Fix selection of multiple tracks and groups while dragging the mouse (#270)
 - Add: The shortcut Ctrl + F or Cmd + F on the New Track Window gives focus to the search entry (#267)
