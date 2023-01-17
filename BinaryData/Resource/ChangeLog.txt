@@ -1,5 +1,6 @@
 v1.0.6
 
+- Add: Signing certificate on Windows installer (#287)
 - Fix: The value of new points is not consistent except on the first channel (#282)
 - Imp: Speed up the delete/copy/paste actions when performed on a large amount of data (#281)
 - Imp: The shortcut Ctrl + Q or Cmd + Q quit the application even if a modal floating window is on the screen (#280)
