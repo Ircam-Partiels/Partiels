@@ -115,10 +115,6 @@ size_t Document::Tools::getGroupPosition(Accessor const& accessor, juce::String 
     auto const& layout = accessor.getAttr<AttrType::layout>();
     auto const it = std::find(layout.cbegin(), layout.cend(), identifier);
     anlWeakAssert(it != layout.cend());
-    if(it != layout.cend())
-    {
-        return 0_z;
-    }
     return static_cast<size_t>(std::distance(layout.cbegin(), it));
 }
 
