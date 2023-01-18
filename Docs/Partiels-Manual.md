@@ -10,29 +10,35 @@
 
 ## Table of contents
 
-1. [Introduction](#introduction)
-  * [System requirements](#system-requirements)
-  * [Vamp plug-ins](#vamp-plug-ins)
-2. [Overview](#overview)
-3. [Create and open documents](#create-and-open-documents)
-4. [Add new plugin tracks](#add-new-plugin-tracks)
-5. Import new result tracks - To do
-6. Organize the tracks by groups - To do
+1. [Introduction](#1-introduction)
+  * [System requirements](#11-system-requirements)
+  * [Vamp plug-ins](#12-vamp-plug-ins)
+2. [Overview](#2-overview)
+3. [Create and open documents](#3-create-and-open-documents)
+4. [Add new plugin tracks](#4-add-new-plugin-tracks)
+5. [Import new result tracks](#5-import-new-result-tracks)
+6. [Organize the tracks by groups](#6-organize-the-tracks-by-groups)
+  * [Edition](#61-edition)
+  * [Layout](#62-layout)
 7. Export results and images - To do
-8. [Track properties](#track-properties)
-  * [Processor](#processor)
-  * [Graphical](#graphical)
-  * [Plugin](#plugin)
+7. Save and consolidate documents - To do
+8. [Track properties](#8-track-properties)
+  * [Processor](#81-processor)
+  * [Graphical](#82-graphical)
+  * [Plugin](#83-plugin)
 9. Group properties - To do
-10. [Audio files layout](#audio-files-layout)
-11. [Audio settings](#audio-settings)
+10. [Audio files layout](#10-audio-files-layout)
+  * [Audio files information](#101-audio-files-information)
+  * [Audio files configuration](#102-audio-files-configuration)
+  * [Audio files recovery](#103-audio-files-recovery)
+11. [Audio settings](#11-audio-settings)
 12. Plugins management - To do
 13. Command-line interface - To do
-14. [Credits](#credits)
+14. [Credits](#14-credits)
 
 <div style="page-break-after: always;"></div>
 
-## Introduction
+## 1. Introduction
 
 **Partiels** is an application for the **analysis of digital audio files** intended for *researchers* in signal processing, *musicologists*, *composers*, and *sound designers*. It offers a dynamic and ergonomic interface in order to **explore the content and the characteristics of sounds**.
 
@@ -53,13 +59,13 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 - Consolidating documents (useful to share documents/analysis with other users across different platforms)  
 - Audio playback with loop  
 
-### System Requirements
+### 1.1. System Requirements
 
 - MacOS 10.13 and higher (64bit - Universal Intel/Silicon)
 - Linux (64 bit)
 - Windows 10 and 11 (64 bit).
 
-### Vamp Plug-ins
+### 1.2. Vamp Plug-ins
 
 [Vamp](https://www.vamp-plugins.org/) is an audio processing plug-in system for plug-ins that extract descriptive information from audio data developed at the Centre for Digital Music, Queen Mary, University of London.*
 
@@ -71,11 +77,11 @@ Alongside Partiels, a set of analyses present in the AudioSculpt 3 application a
 
 <div style="page-break-after: always;"></div>
 
-## Overview
+## 2. Overview
 
 <p align="center"><img src="Images/section-0.1-v1.0.6.jpg" alt="Example" width="1250"/></p>
 
-## Create and open documents
+## 3. Create and open documents
 
 When you open Partials for the first time or create a new document via the main menu `File → New...` or with the keyboard shortcut `⌘ Cmd + N` (Mac) or `Ctrl + N` (Linux/Windows), the application presents the interface for starting a new document. 
 
@@ -91,13 +97,13 @@ If you use a Partiels document as a template, all the analyses in this document 
 
 If you add a new track with an analysis plugin, you can refer to the [next section](#add-new-plugin-tracks) of this manual.
 
-## Add new plugin tracks
+## 4. Add new plugin tracks
 
 When you click on the button to add analysis tracks via the interface for starting a new document, the window for adding analysis plugins is displayed. If you are already working on a document, you can bring up this window to add new tracks via the main menu `Edit → Add New Track`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or by using the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface. 
 
 All plug-ins installed on your computer are listed in the interface. You can organize the plug-ins by name, feature, maker, category or version in ascending or descending alphabetical order by clicking on the corresponding entry in the interface header (**P1**).
 
-<p align="center"><img src="Images/section-add-new-plugin-tracks.1-v1.0.6.jpg" alt="Example" width="416"/></p>
+<p align="center"><img src="Images/section-add-new-plugin-tracks.1-v1.0.6.png" alt="Example" width="416"/></p>
 
 You can also search for specific plug-ins by clicking on the text filter entry (**P2**) or by using the keyboard shortcut `⌘ Cmd + F` (Mac) or `Ctrl + F` (Linux/Windows), then typing the keyword corresponding to the plug-ins you wish to display (e.g. *tempo* or *spectrogram* for the feature or *ircam* for the manufacturer).
 
@@ -105,7 +111,67 @@ You can select one or more plug-ins and then press the `Return ⏎` key (or you 
 
 If you want to modify the analysis and graphical properties of a track, please refer to the [Track properties](#track-properties) section.
 
-## Track properties
+## 5. Import new result tracks
+
+A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + Shift + I` (Linux/Windows). Once your file is selected, the `Load File...` window appears, allowing you to set the unit and range of the imported values. 
+
+<p align="center">
+<img src="images/selection-import-new-result tracks.1-v1.0.6.png" width="348"/>
+</p>
+
+If you are importing a JSON file containing an extra description of the analysis used to calculate the analysis, the default unit and range of values will be taken from that data.
+
+<p align="center">
+<img src="images/selection-import-new-result tracks.2-v1.0.6.png" width="348"/>
+</p>
+
+If you are importing an SDIF file, you will be able to define the frame code, matrix code, row and column to import.
+
+If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+
+## 6. Organize the tracks by groups
+
+The analyses of a document are represented by tracks. These analysis tracks are organized in groups. Each group can contain several tracks, allowing the analysis representations to be superimposed. In a group, the tracks are superimposed from bottom to top. 
+
+<p align="center">
+<img src="images/section-organize-the-tracks-by-groups.1-v1.0.6.png" width="416"/>
+</p>
+
+It is therefore often preferable to place matrix type analyses, such as a sonogram, at the bottom and point or marker type analyses, such as spectral centroid or transient detection, on top. Thus the lines and markers will be displayed above the matrices.
+
+## 6.1. Edition
+
+Move tracks and groups by clicking on the track or group header to select it and then dragging the item to the desired location. In this way you can reorder tracks within a group, move a track within another group and reorder groups between themselves. 
+
+<p align="center">
+<img src="images/section-organize-the-tracks-by-groups.2-v1.0.6.png" width="416"/>
+</p>
+
+Use the keyboard modifier `Ctrl` during the move action of the selected track or group to duplicate it and move the copy of the item to the desired location.
+
+> Selecting a track or a group with the keyboard modifier `Ctrl` without moving it allows you to quickly create a copy of the item that will be placed just above it. Then you can modify the analysis parameters of the copy to compare the results, for example.
+
+Select a group or track by clicking on the item's header (or multiple tracks in a group by using the keyboard modifier `⇧ Shift`), then use the keyboard shortcuts `⌦ Delete` or `⌫ Backspace` to delete it.
+
+Use the main menu `Edit → Add New Group`, the keyboard shortcuts `⌘ Cmd + G` (Mac) or `Ctrl + G` (Linux/Windows), or the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface to create a new group that will be inserted after the last selected item.
+
+## 6.2. Layout
+
+Use the button (**K1**) on the header of a group to expand the group and show all the tracks of the group (eg. *Group 2*) or conversely, to shrink the group and hide all the tracks of the group (eg. *Group 1*). Use the button (**K2**) to expand or shrink all the groups in the document.
+
+<p align="center">
+<img src="images/section-organize-the-tracks-by-groups.3-v1.0.6.png" width="416"/>
+</p>
+
+The height of tracks and groups is variable and depends on two modes, manual (default) or automatic. Click on the button (**K3**) to activate or deactivate the automatic or manual mode. 
+
+In automatic mode, the height of the tracks and groups will always be adapted according to the organization of the groups and tracks in the document and the height of the main window. 
+
+In manual mode, the height of tracks and groups is free, click and drag on the bottom border of tracks and groups to resize them (**K4**). 
+
+> In manual mode, you can still optimize the height of tracks and groups to the height of the main window by clicking the button (**K3**) with the keyboard modifier `⇧ Shift`.
+
+## 8. Track properties
 
 The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#overview) - **K3**).
 
@@ -115,11 +181,11 @@ The track properties panel allows you to access information about a track and to
 
 The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, plugin.  
 
-### Processor
+### 8.1. Processor
 
 The processor section allows you to modify all the properties that control the analysis engine or the loading of the results file of the track. Thus, the properties are related to the result file, the plugin parameters and the track state.
 
-#### File
+#### 8.1.1. File
 
 The results file information is displayed if the analysis results have been loaded from a file. Note that, if the analysis results were loaded from a JSON file containing plugin information or a file resulting from the consolidated track, the processor's parameters can still be accessible and used to update the analysis results.
 
@@ -131,7 +197,7 @@ The results file information is displayed if the analysis results have been load
 
 - The results file can be detached from the track (only if the track contains plugin information) by clicking on the text button with the `shift` keys pressed. In this case, the track will use the plugin information to run the analysis and produce new results.
 
-#### Parameters 
+#### 8.1.2. Parameters 
 
 Depending on the characteristics of the plugin, the section allows accessing the default plugin parameters. If the plugin expects frequency domain input signal, the section gives access to the window type, the block size and the step size in order to transform the time domain signal into a frequency domain signal with a Fast Fourier Transform. Otherwise, if the plugin expects time domain input signal, the section gives access to the block type if the plugin doesn't have a preferred block size, the step size if the plugin doesn't have a preferred step size or doesn't expect the step size to  be equal to the block size.
 
@@ -153,7 +219,7 @@ The section allows accessing the plugin-specific parameters that are used to per
 
 The preset menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters in a file on your operating system and load this file to restore the state (the file can be used in any other track that used the same plugin).
 
-#### State
+#### 8.1.3. State
 
 The current state of the plugin is displayed at the bottom of the section informing if the analysis or loading succeeded or failed and if the results have been edited.
 
@@ -163,11 +229,11 @@ The current state of the plugin is displayed at the bottom of the section inform
 
 If the analysis or loading failed, clicking on the warning icon prompts a dialog window offering to solve the problem when possible (by loading another plugin or another file if it is not found or by restoring the default state of the plugin if its initialization failed).
 
-### Graphical
+### 8.2. Graphical
 
 The graphical section allows modifying all the properties that control the rendering of the analysis results of the track. The properties depend on the type of analysis results: markers (e.g. beat detection), points (e.g. energy estimation), or columns (e.g. spectrogram).
 
-#### Colors
+#### 8.2.1. Colors
 
 A color can be modified using the color selector that is prompted by clicking on the colored button. You can drag and drop a colored button on another one, to copy the color from one property to another. The color map can be modified using the dropdown menu. 
 
@@ -182,7 +248,7 @@ A color can be modified using the color selector that is prompted by clicking on
 - Text Color: The color used to render the labels of the markers or the points values.
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
 
-#### Ranges
+#### 8.2.2. Ranges
 
 The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axe for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
 
@@ -203,15 +269,15 @@ The value range of the points and the columns results can be adapted to optimize
   - Power Base: The power base used to compute the tick distribution.
   - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.
   
-#### Channels
+#### 8.2.3. Channels
 
 The channel button allows to show or hide channels of the analysis results. This channels layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section).
 
-### Plugin
+### 8.3. Plugin
 
 The graphical section displays information about the plugin such as the name, the feature, the maker, the version, the  markers, the category and the description and the copyright.
 
-## Audio files layout
+## 10. Audio files layout
 
 The audio files layout panel allows you to access information about the audio files of the document, reveal the audio files in the operating system's file browser, and rearrange the files configuration of the audio reader. You can display the audio files layout panel by clicking on the corresponding button in the main interface ([Overview](#overview) - **K4**).
 
@@ -219,13 +285,15 @@ The audio files layout panel allows you to access information about the audio fi
 <img src="images/section-audio-files-layout.1-v1.0.5.png" width="383"/>
 </p>  
 
-### Audio files information
+### 10.1. Audio files information
 
 Select an audio file by clicking on its name in section (**S1**) to display its information (format, sample rate, bits, length in samples, duration in seconds, number of channels, metadata, etc.) in section (**S2**) of the panel. The audio file can be revealed in the operating system's file browser by clicking on the text button on top of section (**S2**).
 
-### Audio files configuration
+### 10.2. Audio files configuration
 
-The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated.
+The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated. 
+
+> If you need a different channel routing for audio playback than for audio analysis (to mute some channels for example), you can use the routing matrix of the [audio settings](#audio-settings).  
 
 An item of the audio files layout in section (**S1**) is defined by an index, an audio file and a channel configuration. Each item corresponds to a channel of the audio files layout. So different audio files can be assigned to the different channels of the audio files layout using for each a specific channel layout. 
 
@@ -253,7 +321,7 @@ An item of the audio files layout in section (**S1**) is defined by an index, an
 
 - Reset changes: If the audio files layout differs from the one currently used by the document, click the `Reset` text button in section (**S3**) to restore the audio files layout of the document. 
 
-### Audio files recovery
+### 10.3. Audio files recovery
 
 If audio files cannot be found (files have been moved or deleted for example), the item names corresponding to the missing files are greyed out and a warning appears at the bottom of the (**S1**) section. 
 
@@ -263,7 +331,7 @@ If audio files cannot be found (files have been moved or deleted for example), t
 
 Click on an item's name to display a dialog window asking you to recover the missing audio file using the operating system's file browser. 
 
-## Audio settings
+## 11. Audio settings
 
 The audio settings window allows you to control device management and channels routing for audio playback. These settings have no effect on the analysis or graphics rendering. The audio settings window can be displayed via the main menu `Partials → Audio Settings...` (Mac) or `Help → Audio Settings...` on (Linux/Windows) or with the keyboard shortcut `⌘ Cmd + ,` (Mac) or `⌘ Cmd + P` (Linux/Windows).
 
@@ -283,7 +351,7 @@ When changed, the audio settings are saved automatically on the computer and res
 - Window: *C:\\Users\\"username"\\AppData\\Roaming\\Ircam\\Partiels.audio.settings*
 - Linux: *~/Ircam/Partiels.audio.settings*
 
-## Credits
+## 14. Credits
 
 **Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
 **Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
