@@ -1,5 +1,6 @@
 v1.0.6
 
+- Fix: The graphic layout of groups and tracks is not correctly updated when adding a new group (#296)
 - Fix: Using the shift modifier key when clicking on the auto resize button should disable the auto resize mode (#295)
 - Fix: The position of the new groups is not consistent with the last selected item (#294)
 - Fix: The dropdown menus for the SDIF entries in the Import Files window should not be enabled if the choice is unique (#293)
