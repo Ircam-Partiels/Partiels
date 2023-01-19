@@ -50,7 +50,7 @@ namespace Document
         juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
         void updateLayout();
-        void updateHeights(bool force = false);
+        void updateHeights();
         void updateExpandState();
         void updateFocus();
 

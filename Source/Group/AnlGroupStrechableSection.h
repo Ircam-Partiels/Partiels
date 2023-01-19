@@ -9,21 +9,28 @@ namespace Group
 {
     class StrechableSection
     : public juce::Component
+    , private juce::ChangeListener
     {
     public:
         StrechableSection(Director& director, Transport::Accessor& transportAcsr, Zoom::Accessor& timeZoomAcsr);
         ~StrechableSection() override;
 
+        bool isResizing() const;
         juce::Component const& getSection(juce::String const& identifier) const;
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
         void setResizable(bool state);
 
+        std::function<void(void)> onResizingStarted = nullptr;
+        std::function<void(void)> onResizingEnded = nullptr;
         std::function<void(juce::String const& identifier, size_t index, bool copy)> onTrackInserted = nullptr;
 
         // juce::Component
         void resized() override;
 
     private:
+        // juce::ChangeListener
+        void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
         void updateContent();
 
         Director& mDirector;

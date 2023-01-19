@@ -158,7 +158,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     {
         if(mResizeLayoutButton.getModifierKeys().isShiftDown())
         {
-            updateHeights(true);
+            updateHeights();
             mAccessor.setAttr<AttrType::autoresize>(false, NotificationType::synchronous);
         }
         else
@@ -318,19 +318,6 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                         groupSection.second->setResizable(!autoresize);
                     }
                 }
-                if(autoresize)
-                {
-                    // It ensures asynchronous access to the model even if this is not the best approach.
-                    juce::WeakReference<juce::Component> weakReference(this);
-                    juce::MessageManager::callAsync([=, this]()
-                                                    {
-                                                        if(weakReference.get() == nullptr)
-                                                        {
-                                                            return;
-                                                        }
-                                                        updateHeights();
-                                                    });
-                }
                 mResizeLayoutButton.setToggleState(autoresize, juce::NotificationType::dontSendNotification);
             }
             break;
@@ -387,6 +374,13 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                 mReaderLayoutWindow.show();
             }
             break;
+            case SignalType::updateSize:
+            {
+                if(mAccessor.getAttr<AttrType::autoresize>() && !isDragAndDropActive())
+                {
+                    updateHeights();
+                }
+            }
         }
     };
 
@@ -470,7 +464,10 @@ void Document::Section::resized()
 
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
-    updateHeights();
+    if(mAccessor.getAttr<AttrType::autoresize>() && !isDragAndDropActive())
+    {
+        updateHeights();
+    }
 }
 
 void Document::Section::paint(juce::Graphics& g)
@@ -558,18 +555,18 @@ void Document::Section::mouseDrag(juce::MouseEvent const& event)
     Selection::selectItems(mAccessor, mLastSelectedItem, item, true, false, NotificationType::synchronous);
 }
 
-void Document::Section::updateHeights(bool force)
+void Document::Section::updateHeights()
 {
-    if(mViewport.getHeight() <= 0)
-    {
-        return;
-    }
-    auto const shouldResize = (!isDragAndDropActive() && mAccessor.getAttr<AttrType::autoresize>()) || force;
-    if(!shouldResize)
+    if(isDragAndDropActive())
     {
         return;
     }
     auto height = mViewport.getHeight();
+    if(height <= 0)
+    {
+        return;
+    }
+
     auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     auto const numElements = std::accumulate(groupAcsrs.cbegin(), groupAcsrs.cend(), 0_z, [this](auto v, auto const groupAcsr)
                                              {
@@ -609,7 +606,7 @@ void Document::Section::updateHeights(bool force)
 
 void Document::Section::updateExpandState()
 {
-    auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
+    auto const groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
     mExpandLayoutButton.setEnabled(!groupAcsrs.empty());
     if(std::any_of(groupAcsrs.cbegin(), groupAcsrs.cend(), [](auto const groupAcsr)
                    {
@@ -624,18 +621,6 @@ void Document::Section::updateExpandState()
         mExpandLayoutButton.setTypes(Icon::Type::expand);
         mExpandLayoutButton.setTooltip(juce::translate("Expand all the groups"));
     }
-
-    // Using a delay ensures that the group and track size animations are preserved.
-    // It also ensures asynchronous access to the model even if this is not the best approach.
-    juce::WeakReference<juce::Component> weakReference(this);
-    juce::Timer::callAfterDelay(350, [=, this]()
-                                {
-                                    if(weakReference.get() == nullptr)
-                                    {
-                                        return;
-                                    }
-                                    updateHeights();
-                                });
 }
 
 void Document::Section::updateFocus()
@@ -793,7 +778,7 @@ juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identi
 
 void Document::Section::updateLayout()
 {
-    auto createGroupSection = [&](Group::Director& groupDirector)
+    auto const createGroupSection = [&](Group::Director& groupDirector)
     {
         auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
         auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
@@ -811,6 +796,27 @@ void Document::Section::updateLayout()
                 {
                     moveTrackToGroup(groupDirector, index, trackIdentifier);
                 }
+            };
+            groupSection->onResizingEnded = [this]()
+            {
+                juce::Timer::callAfterDelay(50, [this, weakReference = juce::WeakReference<juce::Component>(this)]
+                                            {
+                                                if(weakReference.get() == nullptr)
+                                                {
+                                                    return;
+                                                }
+                                                if(!mAccessor.getAttr<AttrType::autoresize>() || isDragAndDropActive())
+                                                {
+                                                    return;
+                                                }
+                                                if(std::none_of(mGroupSections.cbegin(), mGroupSections.cend(), [](auto const& pair)
+                                                                {
+                                                                    return pair.second != nullptr && pair.second->isResizing();
+                                                                }))
+                                                {
+                                                    updateHeights();
+                                                }
+                                            });
             };
         }
         return groupSection;
@@ -871,6 +877,8 @@ void Document::Section::updateLayout()
     mDraggableTable.setComponents(components);
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
     mDraggableTable.setBounds(0, 0, mViewport.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
+
+    updateExpandState();
 }
 
 void Document::Section::moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier)
@@ -919,10 +927,12 @@ void Document::Section::copyTrackToGroup(Group::Director& groupDirector, size_t 
     }
 }
 
-void Document::Section::dragOperationEnded(juce::DragAndDropTarget::SourceDetails const& details)
+void Document::Section::dragOperationEnded([[maybe_unused]] juce::DragAndDropTarget::SourceDetails const& details)
 {
-    juce::ignoreUnused(details);
-    updateHeights();
+    if(mAccessor.getAttr<AttrType::autoresize>())
+    {
+        updateHeights();
+    }
 }
 
 juce::ApplicationCommandTarget* Document::Section::getNextCommandTarget()

@@ -65,9 +65,16 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             }
             break;
             case AttrType::layout:
+            case AttrType::autoresize:
+            {
+                if(mAccessor.getAttr<AttrType::autoresize>())
+                {
+                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
+                }
+            }
+            break;
             case AttrType::viewport:
             case AttrType::path:
-            case AttrType::autoresize:
             case AttrType::editMode:
             case AttrType::samplerate:
             case AttrType::channels:
@@ -135,6 +142,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
+                if(mAccessor.getAttr<AttrType::autoresize>())
+                {
+                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
+                }
             }
             break;
             case AcsrType::groups:
@@ -160,6 +171,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
 
                 groupAcsr.setAttr<Group::AttrType::tracks>(mAccessor.getAcsrs<AcsrType::tracks>(), notification);
+                if(mAccessor.getAttr<AttrType::autoresize>())
+                {
+                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
+                }
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
@@ -188,6 +203,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     groupAcsr.get().setAttr<Group::AttrType::tracks>(trackAcsrs, notification);
                 }
                 updateMarkers(notification);
+                if(mAccessor.getAttr<AttrType::autoresize>())
+                {
+                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
+                }
             }
             break;
             case AcsrType::groups:
@@ -198,6 +217,10 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     return;
                 }
                 mGroups.erase(mGroups.begin() + static_cast<long>(index));
+                if(mAccessor.getAttr<AttrType::autoresize>())
+                {
+                    mAccessor.sendSignal(SignalType::updateSize, {}, notification);
+                }
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:

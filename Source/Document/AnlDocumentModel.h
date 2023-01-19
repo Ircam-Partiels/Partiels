@@ -42,6 +42,7 @@ namespace Document
     {
           viewport
         , showReaderPanel
+        , updateSize
     };
     
     using AttrContainer = Model::Container

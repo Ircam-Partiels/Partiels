@@ -11,6 +11,9 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
                       updateContent();
                   })
 {
+    mConcertinaTable.setComponents({mDraggableTable});
+    mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
+
     mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
     {
         juce::ignoreUnused(acsr);
@@ -61,21 +64,22 @@ Group::StrechableSection::StrechableSection(Director& director, Transport::Acces
         }
     };
 
-    mComponentListener.onComponentResized = [&](juce::Component& component)
+    mComponentListener.onComponentResized = [&]([[maybe_unused]] juce::Component& component)
     {
-        juce::ignoreUnused(component);
         auto const height = mSection.getHeight() + mConcertinaTable.getHeight();
         setSize(getWidth(), height);
     };
 
     mComponentListener.attachTo(mSection);
     mComponentListener.attachTo(mConcertinaTable);
-    mConcertinaTable.setComponents({mDraggableTable});
-    mConcertinaTable.setOpen(mAccessor.getAttr<AttrType::expanded>(), false);
 
     addAndMakeVisible(mSection);
     addAndMakeVisible(mConcertinaTable);
+    mConcertinaTable.addChangeListener(this);
     mAccessor.addListener(mListener, NotificationType::synchronous);
+
+    auto const height = mSection.getHeight() + mConcertinaTable.getHeight();
+    setSize(200, height);
 }
 
 Group::StrechableSection::~StrechableSection()
@@ -84,6 +88,7 @@ Group::StrechableSection::~StrechableSection()
     mComponentListener.detachFrom(mConcertinaTable);
     mComponentListener.detachFrom(mSection);
     mAccessor.removeListener(mListener);
+    mConcertinaTable.removeChangeListener(this);
 }
 
 void Group::StrechableSection::resized()
@@ -91,6 +96,30 @@ void Group::StrechableSection::resized()
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mSection.setBounds(bounds.removeFromTop(mSection.getHeight()));
     mConcertinaTable.setBounds(bounds.removeFromTop(mConcertinaTable.getHeight()));
+}
+
+void Group::StrechableSection::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
+{
+    MiscWeakAssert(source == std::addressof(mConcertinaTable));
+    if(mConcertinaTable.isAnimating())
+    {
+        if(onResizingStarted != nullptr)
+        {
+            onResizingStarted();
+        }
+    }
+    else
+    {
+        if(onResizingEnded != nullptr)
+        {
+            onResizingEnded();
+        }
+    }
+}
+
+bool Group::StrechableSection::isResizing() const
+{
+    return mConcertinaTable.isAnimating();
 }
 
 juce::Component const& Group::StrechableSection::getSection(juce::String const& identifier) const
