@@ -156,15 +156,14 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mResizeLayoutButton.setTooltip(juce::translate("Optimize the height of groups and tracks to fit the height of the document"));
     mResizeLayoutButton.onClick = [this]()
     {
-        auto const isShiftDown = juce::Desktop::getInstance().getMainMouseSource().getCurrentModifiers().isShiftDown();
-        auto const autoresize = mAccessor.getAttr<AttrType::autoresize>();
-        if(isShiftDown && !autoresize)
+        if(mResizeLayoutButton.getModifierKeys().isShiftDown())
         {
             updateHeights(true);
-            mResizeLayoutButton.setToggleState(false, juce::NotificationType::dontSendNotification);
+            mAccessor.setAttr<AttrType::autoresize>(false, NotificationType::synchronous);
         }
-        else if(!isShiftDown)
+        else
         {
+            auto const autoresize = mAccessor.getAttr<AttrType::autoresize>();
             mAccessor.setAttr<AttrType::autoresize>(!autoresize, NotificationType::synchronous);
         }
     };
