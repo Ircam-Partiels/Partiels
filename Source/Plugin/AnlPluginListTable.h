@@ -25,6 +25,14 @@ namespace PluginList
         std::function<void(std::set<Plugin::Key> keys)> onPluginSelected = nullptr;
         void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;
 
+        class WindowContainer
+        : public FloatingWindowContainer
+        {
+        public:
+            WindowContainer(Table& table);
+            ~WindowContainer() override = default;
+        };
+
     private:
         void updateContent();
 

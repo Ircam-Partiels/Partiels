@@ -3,6 +3,14 @@
 
 ANALYSE_FILE_BEGIN
 
+PluginList::Table::WindowContainer::WindowContainer(Table& table)
+: FloatingWindowContainer(juce::translate("Add Plugins..."), table, true)
+{
+    mFloatingWindow.setResizable(false, false);
+    mBoundsConstrainer.setSizeLimits(820, 600, 820, 600);
+    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
+}
+
 PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
 , mScanner(scanner)
