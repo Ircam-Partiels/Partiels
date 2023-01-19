@@ -10,7 +10,6 @@ ANALYSE_FILE_BEGIN
 
 Application::CommandTarget::CommandTarget()
 : mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
-, mPluginListTableWindow(juce::translate("Add Plugins..."), mPluginListTable)
 , mPluginListSearchPath(Instance::get().getPluginListAccessor())
 , mSdifConverterWindow(juce::translate("SDIF Converter"), mSdifConverter)
 , mAudioSettingsWindow(juce::translate("Audio Settings"), mAudioSettings)
