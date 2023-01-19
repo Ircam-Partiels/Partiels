@@ -2,6 +2,7 @@ v1.0.6
 
 - Fix: Using the shift modifier key when clicking on the auto resize button should disable the auto resize mode (#295)
 - Fix: The position of the new groups is not consistent with the last selected item (#294)
+- Fix: The dropdown menus for the SDIF entries in the Import Files window should not be enabled if the choice is unique (#293)
 - Fix: The size of the New Track window is not properly updated when the global graphic scale changes (#292)
 - Add: User manual (#288) 
 - Add: Signing certificate on Windows installer (#287)
