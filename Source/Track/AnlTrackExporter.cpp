@@ -74,7 +74,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    auto getImage = [&]()
+    auto const getImage = [&]()
     {
         if(!lock.tryEnter())
         {

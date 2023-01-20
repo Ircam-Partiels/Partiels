@@ -688,7 +688,7 @@ void Track::Plot::paintColumns(Accessor const& accessor, size_t channel, juce::G
         return;
     }
 
-    auto renderImage = [&](juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
+    auto const renderImage = [&](juce::Image const& image, Zoom::Accessor const& xZoomAcsr, Zoom::Accessor const& yZoomAcsr)
     {
         if(!image.isValid())
         {
@@ -749,7 +749,7 @@ void Track::Plot::paintColumns(Accessor const& accessor, size_t channel, juce::G
         Tools::paintClippedImage(g, image, {xRange.getStart(), yRange.getStart(), xRange.getLength(), yRange.getLength()});
     };
 
-    auto getZoomRatio = [](Zoom::Accessor const& acsr)
+    auto const getZoomRatio = [](Zoom::Accessor const& acsr)
     {
         return acsr.getAttr<Zoom::AttrType::globalRange>().getLength() / acsr.getAttr<Zoom::AttrType::visibleRange>().getLength();
     };
