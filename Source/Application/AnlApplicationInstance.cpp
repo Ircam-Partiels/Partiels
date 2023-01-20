@@ -122,6 +122,7 @@ void Application::Instance::initialise(juce::String const& commandLine)
                 {
                     mWindow->restoreWindowStateFromString(windowState);
                 }
+                mMainMenuModel->menuItemsChanged();
             }
             break;
             case AttrType::colourMode:

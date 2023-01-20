@@ -120,13 +120,18 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
                                    });
         }
         menu.addSubMenu(juce::translate("Theme"), colourModeMenu);
-        menu.addItem(juce::translate("Global Scale"), []()
-                     {
-                         if(auto* window = Instance::get().getWindow())
-                         {
-                             window->showDesktopScaler();
-                         }
-                     });
+        juce::PopupMenu scaleMenu;
+        auto const currentScale = Instance::get().getApplicationAccessor().getAttr<AttrType::desktopGlobalScaleFactor>();
+        for(auto i = 0; i <= 4; ++i)
+        {
+            auto const scale = 1.0f + static_cast<float>(i) / 4.0f;
+            auto const difference = std::abs(currentScale - scale);
+            scaleMenu.addItem(juce::String(static_cast<int>(std::round(scale * 100.0f))) + "%", difference >= 0.01f, difference < 0.01f, [=]()
+                              {
+                                  Instance::get().getApplicationAccessor().setAttr<AttrType::desktopGlobalScaleFactor>(scale, NotificationType::synchronous);
+                              });
+        }
+        menu.addSubMenu(juce::translate("Scale"), scaleMenu);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewZoomIn);
         menu.addCommandItem(&commandManager, CommandIDs::viewZoomOut);
