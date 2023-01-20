@@ -998,6 +998,10 @@ juce::Result Document::Exporter::consolidateAudioFiles(Accessor& accessor, juce:
         {
             if(reader[i].file.exists() && reader[i].file != newAudioFile)
             {
+                if(!directory.createDirectory())
+                {
+                    result = juce::Result::fail(juce::translate("Cannot create DIRNAME").replace("DIRNAME", directory.getFullPathName()));
+                }
                 if(reader[i].file.copyFileTo(newAudioFile))
                 {
                     createdFiles.insert(newAudioFile);
