@@ -567,14 +567,14 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             }
             auto const size = options.useAutoSize ? getSizeFor(trackIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
             auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-            auto& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
+            auto const& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
             return Track::Exporter::toImage(trackAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
-        auto exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
+        auto const exportGroup = [&](juce::String const& groupIdentifier, juce::File const& groupFile)
         {
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
@@ -594,14 +594,14 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             }
             auto const size = options.useAutoSize ? getSizeFor(groupIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
             auto& groupAcsr = Tools::getGroupAcsr(accessor, groupIdentifier);
-            auto& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
+            auto const& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
             return Group::Exporter::toImage(groupAcsr, timeZoomAcsr, fileUsed, std::get<0>(size), std::get<1>(size), shouldAbort);
         };
 
-        auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
+        auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
         {
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
@@ -649,7 +649,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             return juce::Result::ok();
         };
 
-        auto exportDocumentGroups = [&](juce::File const& documentFolder)
+        auto const exportDocumentGroups = [&](juce::File const& documentFolder)
         {
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
@@ -740,7 +740,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         return juce::Result::fail("Invalid format");
     }
 
-    auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
+    auto const exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
     {
         juce::MessageManager::Lock lock;
         if(!lock.tryEnter())
@@ -788,7 +788,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
         return juce::Result::fail("Unsupported format");
     };
 
-    auto exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
+    auto const exportGroupTracks = [&](juce::String const& groupIdentifier, juce::File const& groupFolder)
     {
         juce::MessageManager::Lock lock;
         if(!lock.tryEnter())
