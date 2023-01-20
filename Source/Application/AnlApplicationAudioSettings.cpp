@@ -400,7 +400,8 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
     }
     else
     {
-        mPropertyDriverPanel.entry.setSize(2_z, 2_z);
+        mPropertyChannelRouting.entry.setSize(2_z, 2_z);
+        mPropertyChannelRouting.setEnabled(false);
         mPropertyDriverPanel.setEnabled(false);
     }
     resized();
