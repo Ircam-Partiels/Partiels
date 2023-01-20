@@ -8,7 +8,7 @@ namespace Group
 {
     namespace Exporter
     {
-        juce::Result toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort);
+        juce::Result toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort);
     } // namespace Exporter
 } // namespace Group
 

@@ -3,7 +3,7 @@
 
 ANALYSE_FILE_BEGIN
 
-juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
+juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -30,14 +30,16 @@ juce::Result Group::Exporter::toImage(Accessor& accessor, Zoom::Accessor& timeZo
         return juce::Result::fail(juce::translate("The export of the group ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
     }
 
-    auto getImage = [&]()
+    auto const getImage = [&]()
     {
         if(!lock.tryEnter())
         {
             return juce::Image{};
         }
         Transport::Accessor transportAccessor;
-        Plot plot(accessor, transportAccessor, timeZoomAccessor);
+        Zoom::Accessor tempTimeZoomAcsr;
+        tempTimeZoomAcsr.copyFrom(timeZoomAccessor, NotificationType::synchronous);
+        Plot plot(accessor, transportAccessor, tempTimeZoomAcsr);
         plot.setSize(width, height);
         return plot.createComponentSnapshot({0, 0, width, height});
     };
