@@ -146,7 +146,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                             options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
                             setOptions(options, juce::NotificationType::sendNotificationSync);
                         })
-, mPropertyIncludeDescription("Include Extra Description", "Ignore the extra description of the track in the results", [this](bool state)
+, mPropertyIncludeDescription("Include Extra Description", "Include the extra description of the track in the results", [this](bool state)
                               {
                                   auto options = mOptions;
                                   options.includeDescription = state;
