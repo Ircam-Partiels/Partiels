@@ -29,7 +29,7 @@ Application::Exporter::WindowContainer::~WindowContainer()
 }
 
 Application::Exporter::Exporter()
-: mExporterPanel(Instance::get().getDocumentAccessor(), Instance::getSizeFor)
+: mExporterPanel(Instance::get().getDocumentAccessor(), true, Instance::getSizeFor)
 , mPropertyExport("Export", "Export the results", [this]()
                   {
                       if(mProcess.valid())
@@ -117,6 +117,7 @@ void Application::Exporter::exportToFile()
     auto const& options = acsr.getAttr<AttrType::exportOptions>();
     auto const& documentAcsr = Instance::get().getDocumentAccessor();
     auto const identifier = mExporterPanel.getSelectedIdentifier();
+    auto const timeRange = mExporterPanel.getTimeRange();
     auto const useDirectory = identifier.isEmpty() || (Document::Tools::hasGroupAcsr(documentAcsr, identifier) && (!options.useGroupOverview || options.useTextFormat()));
 
     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Export as FORMATNAME").replace("FORMATNAME", options.getFormatName()), juce::File{}, useDirectory ? "" : options.getFormatWilcard());
@@ -150,7 +151,7 @@ void Application::Exporter::exportToFile()
                                   mProcess = std::async([=, this, file = results.getFirst()]() -> ProcessResult
                                                         {
                                                             juce::Thread::setCurrentThreadName("Exporter");
-                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, "", identifier, options, mShoulAbort, Instance::getSizeFor);
+                                                            auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, "", identifier, options, mShoulAbort, Instance::getSizeFor);
                                                             triggerAsyncUpdate();
                                                             if(result.failed())
                                                             {

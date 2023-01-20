@@ -127,7 +127,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -138,6 +138,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
 
+    if(timeRange.isEmpty())
+    {
+        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+    }
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
     {
@@ -165,13 +169,13 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     }
 
     auto state = false;
-    auto addLine = [&]()
+    auto const addLine = [&]()
     {
         state = false;
         stream << '\n';
     };
 
-    auto addColumn = [&](auto const& text)
+    auto const addColumn = [&](auto const& text)
     {
         if(state)
         {
@@ -187,12 +191,12 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     auto const columns = results.getColumns();
     if(markers != nullptr)
     {
-        auto escapeString = [](juce::String const& s)
+        auto const escapeString = [](juce::String const& s)
         {
             return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted();
         };
 
-        auto addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
+        auto const addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
             if(includeHeader)
             {
@@ -201,12 +205,19 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
                 addColumn("LABEL");
                 addLine();
             }
-            for(auto const& marker : channelMarkers)
+            auto it = Results::findFirstAt(channelMarkers, timeRange.getStart());
+            if(it != channelMarkers.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
-                addColumn(std::get<0>(marker));
-                addColumn(std::get<1>(marker));
-                addColumn(escapeString(std::get<2>(marker)));
+                ++it;
+            }
+            while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                addColumn(std::get<0_z>(*it));
+                addColumn(std::get<1_z>(*it));
+                addColumn(escapeString(std::get<2_z>(*it)));
                 addLine();
+                ++it;
             }
         };
 
@@ -223,7 +234,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     }
     else if(points != nullptr)
     {
-        auto addChannel = [&](std::vector<Results::Point> const& channelPoints)
+        auto const addChannel = [&](std::vector<Results::Point> const& channelPoints)
         {
             if(includeHeader)
             {
@@ -232,15 +243,22 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
                 addColumn("VALUE");
                 addLine();
             }
-            for(auto const& point : channelPoints)
+            auto it = Results::findFirstAt(channelPoints, timeRange.getStart());
+            if(it != channelPoints.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
-                addColumn(std::get<0>(point));
-                addColumn(std::get<1>(point));
-                if(std::get<2>(point).has_value())
+                ++it;
+            }
+            while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                addColumn(std::get<0_z>(*it));
+                addColumn(std::get<1_z>(*it));
+                if(std::get<2_z>(*it).has_value())
                 {
-                    addColumn(*std::get<2>(point));
+                    addColumn(std::get<2_z>(*it).value());
                 }
                 addLine();
+                ++it;
             }
         };
 
@@ -257,7 +275,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     }
     else if(columns != nullptr)
     {
-        auto addChannel = [&](std::vector<Results::Column> const& channelColumns)
+        auto const addChannel = [&](std::vector<Results::Column> const& channelColumns)
         {
             auto const numBins = std::accumulate(channelColumns.cbegin(), channelColumns.cend(), 0_z, [](auto const s, auto const& channelColumn)
                                                  {
@@ -275,15 +293,22 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
                 addLine();
             }
 
-            for(auto const& column : channelColumns)
+            auto it = Results::findFirstAt(channelColumns, timeRange.getStart());
+            if(it != channelColumns.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
-                addColumn(std::get<0>(column));
-                addColumn(std::get<1>(column));
-                for(auto const& value : std::get<2>(column))
+                ++it;
+            }
+            while(it != channelColumns.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                addColumn(std::get<0_z>(*it));
+                addColumn(std::get<1_z>(*it));
+                for(auto const& value : std::get<2_z>(*it))
                 {
                     addColumn(value);
                 }
                 addLine();
+                ++it;
             }
         };
 
@@ -316,7 +341,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, juce::File const& 
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -328,6 +353,10 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     auto const description = includeDescription ? accessor.toJson() : nlohmann::json::object();
     lock.exit();
 
+    if(timeRange.isEmpty())
+    {
+        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+    }
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
     {
@@ -364,19 +393,26 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
             }
 
             nlohmann::json cjson;
-            for(auto const& result : channelResults)
+            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
+                ++it;
+            }
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                 nlohmann::json vjson;
-                vjson["time"] = std::get<0>(result);
-                if(std::get<1>(result) > 0.0)
+                vjson["time"] = std::get<0_z>(*it);
+                if(std::get<1_z>(*it) > 0.0)
                 {
-                    vjson["duration"] = std::get<1>(result);
+                    vjson["duration"] = std::get<1_z>(*it);
                 }
-                if(!std::get<2>(result).empty())
+                if(!std::get<2_z>(*it).empty())
                 {
-                    vjson["label"] = std::get<2>(result);
+                    vjson["label"] = std::get<2_z>(*it);
                 }
                 cjson.emplace_back(std::move(vjson));
+                ++it;
             }
             json.emplace_back(std::move(cjson));
         }
@@ -391,19 +427,26 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
             }
 
             nlohmann::json cjson;
-            for(auto const& result : channelResults)
+            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
+                ++it;
+            }
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                 nlohmann::json vjson;
-                vjson["time"] = std::get<0>(result);
-                if(std::get<1>(result) > 0.0)
+                vjson["time"] = std::get<0_z>(*it);
+                if(std::get<1_z>(*it) > 0.0)
                 {
-                    vjson["duration"] = std::get<1>(result);
+                    vjson["duration"] = std::get<1_z>(*it);
                 }
-                if(std::get<2>(result).has_value())
+                if(std::get<2_z>(*it).has_value())
                 {
-                    vjson["value"] = *std::get<2>(result);
+                    vjson["value"] = std::get<2_z>(*it).value();
                 }
                 cjson.emplace_back(std::move(vjson));
+                ++it;
             }
             json.emplace_back(std::move(cjson));
         }
@@ -413,21 +456,28 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
         for(auto const& channelResults : *columns)
         {
             nlohmann::json cjson;
-            for(auto const& result : channelResults)
+            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
+                ++it;
+            }
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                 if(shouldAbort)
                 {
                     return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
                 }
 
                 nlohmann::json vjson;
-                vjson["time"] = std::get<0>(result);
-                if(std::get<1>(result) > 0.0)
+                vjson["time"] = std::get<0_z>(*it);
+                if(std::get<1_z>(*it) > 0.0)
                 {
-                    vjson["duration"] = std::get<1>(result);
+                    vjson["duration"] = std::get<1_z>(*it);
                 }
-                vjson["values"] = std::get<2>(result);
+                vjson["values"] = std::get<2_z>(*it);
                 cjson.emplace_back(std::move(vjson));
+                ++it;
             }
             json.emplace_back(std::move(cjson));
         }
@@ -458,7 +508,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, juce::File const&
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -469,6 +519,10 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& 
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
 
+    if(timeRange.isEmpty())
+    {
+        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+    }
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
     {
@@ -505,7 +559,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& 
         return std::to_string(v10) + std::to_string(value - (v10 * 10));
     };
 
-    auto timeToString = [&](double time)
+    auto const timeToString = [&](double time)
     {
         auto const minutes = std::floor(time / 60.0);
         auto const seconds = std::floor(time - (minutes * 60.0));
@@ -513,23 +567,32 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& 
         return to2Digits(static_cast<int>(minutes)) + ":" + to2Digits(static_cast<int>(seconds)) + ":" + to2Digits(static_cast<int>(frames));
     };
 
-    for(size_t channelIndex = 0_z; channelIndex < markers->size(); ++channelIndex)
+    for(auto channelIndex = 0_z; channelIndex < markers->size(); ++channelIndex)
     {
+        if(shouldAbort)
+        {
+            return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        }
+
         auto const& channelResults = markers->at(channelIndex);
         stream << "TITLE CHANNEL_" << to2Digits(static_cast<int>(channelIndex)) << "\n";
-        for(size_t frameIndex = 0_z; frameIndex < channelResults.size(); ++frameIndex)
+        auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+        if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
         {
-            if(shouldAbort)
-            {
-                return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
-            }
-            auto const& frameResult = channelResults.at(frameIndex);
+            ++it;
+        }
+        auto frameIndex = std::distance(channelResults.cbegin(), it);
+        while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+        {
+            MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
             stream << "  "
                    << "TRACK " << to2Digits(static_cast<int>(frameIndex)) << " AUDIO \n";
             stream << "    "
-                   << "TITLE \"" << std::get<2>(frameResult) << "\"\n";
+                   << "TITLE \"" << std::get<2_z>(*it) << "\"\n";
             stream << "    "
-                   << "INDEX 01 " << timeToString(std::get<0>(frameResult)) << "\n";
+                   << "INDEX 01 " << timeToString(std::get<0_z>(*it)) << "\n";
+            ++it;
+            ++frameIndex;
         }
     }
 
@@ -556,7 +619,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, juce::File const& 
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -567,6 +630,10 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
 
+    if(timeRange.isEmpty())
+    {
+        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+    }
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
     {
@@ -605,13 +672,20 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
 
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            for(auto const& result : channelResults)
+            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
-                stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
-                stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
-                auto const length = static_cast<uint64_t>(std::get<2>(result).size());
+                ++it;
+            }
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
+                stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
+                auto const length = static_cast<uint64_t>(std::get<2_z>(*it).size());
                 stream.write(reinterpret_cast<char const*>(&length), sizeof(length));
-                stream.write(std::get<2>(result).c_str(), static_cast<long>(sizeof(char) * std::get<2>(result).size()));
+                stream.write(std::get<2_z>(*it).c_str(), static_cast<long>(sizeof(char) * std::get<2_z>(*it).size()));
+                ++it;
             }
         }
     }
@@ -627,17 +701,24 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
 
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            for(auto const& result : channelResults)
+            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
-                stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
-                stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
-                auto const hasValue = std::get<2>(result).has_value();
+                ++it;
+            }
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
+                stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
+                auto const hasValue = std::get<2_z>(*it).has_value();
                 stream.write(reinterpret_cast<char const*>(&hasValue), sizeof(hasValue));
                 if(hasValue)
                 {
-                    auto const value = *std::get<2>(result);
+                    auto const& value = std::get<2_z>(*it).value();
                     stream.write(reinterpret_cast<char const*>(&value), sizeof(value));
                 }
+                ++it;
             }
         }
     }
@@ -648,18 +729,25 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
         {
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            for(auto const& result : channelResults)
+            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
             {
+                ++it;
+            }
+            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+            {
+                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
                 if(shouldAbort)
                 {
                     return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
                 }
 
-                stream.write(reinterpret_cast<char const*>(&std::get<0>(result)), sizeof(std::get<0>(result)));
-                stream.write(reinterpret_cast<char const*>(&std::get<1>(result)), sizeof(std::get<1>(result)));
-                auto const numBins = static_cast<uint64_t>(std::get<2>(result).size());
+                stream.write(reinterpret_cast<char const*>(&std::get<0_z>(*it)), sizeof(std::get<0_z>(*it)));
+                stream.write(reinterpret_cast<char const*>(&std::get<1_z>(*it)), sizeof(std::get<1_z>(*it)));
+                auto const numBins = static_cast<uint64_t>(std::get<2_z>(*it).size());
                 stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
-                stream.write(reinterpret_cast<char const*>(std::get<2>(result).data()), static_cast<long>(sizeof(*std::get<2>(result).data()) * numBins));
+                stream.write(reinterpret_cast<char const*>(std::get<2_z>(*it).data()), static_cast<long>(sizeof(*std::get<2_z>(*it).data()) * numBins));
+                ++it;
             }
         }
     }
@@ -681,7 +769,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toSdif(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort)
 {
     juce::MessageManager::Lock lock;
     if(!lock.tryEnter())
@@ -692,6 +780,10 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const&
     auto const name = accessor.getAttr<AttrType::name>();
     lock.exit();
 
+    if(timeRange.isEmpty())
+    {
+        timeRange = {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()};
+    }
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access))
     {
@@ -707,7 +799,7 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const&
 
     if(auto const markers = results.getMarkers())
     {
-        auto const result = SdifConverter::write(temp.getFile(), frameId, matrixId, columnName, *markers.get(), [&]()
+        auto const result = SdifConverter::write(temp.getFile(), timeRange, frameId, matrixId, columnName, *markers.get(), [&]()
                                                  {
                                                      return shouldAbort == false;
                                                  });
@@ -718,7 +810,7 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const&
     }
     else if(auto const points = results.getPoints())
     {
-        auto const result = SdifConverter::write(temp.getFile(), frameId, matrixId, columnName, *points.get(), [&]()
+        auto const result = SdifConverter::write(temp.getFile(), timeRange, frameId, matrixId, columnName, *points.get(), [&]()
                                                  {
                                                      return shouldAbort == false;
                                                  });
@@ -729,7 +821,7 @@ juce::Result Track::Exporter::toSdif(Accessor const& accessor, juce::File const&
     }
     else if(auto const columns = results.getColumns())
     {
-        auto const result = SdifConverter::write(temp.getFile(), frameId, matrixId, columnName, *columns.get(), [&]()
+        auto const result = SdifConverter::write(temp.getFile(), timeRange, frameId, matrixId, columnName, *columns.get(), [&]()
                                                  {
                                                      return shouldAbort == false;
                                                  });
@@ -777,7 +869,7 @@ juce::Result Track::Exporter::consolidateInDirectory(Accessor const& accessor, j
     else
     {
         std::atomic<bool> shouldAbort = false;
-        return toBinary(accessor, newFile, shouldAbort);
+        return toBinary(accessor, {}, newFile, shouldAbort);
     }
 }
 

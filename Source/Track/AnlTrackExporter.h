@@ -12,11 +12,11 @@ namespace Track
 
         juce::Result toPreset(Accessor const& accessor, juce::File const& file);
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort);
-        juce::Result toJson(Accessor const& accessor, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort);
-        juce::Result toCue(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort);
-        juce::Result toBinary(Accessor const& accessor, juce::File const& file, std::atomic<bool> const& shouldAbort);
-        juce::Result toSdif(Accessor const& accessor, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort);
+        juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort);
+        juce::Result toCue(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort);
+        juce::Result toBinary(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, std::atomic<bool> const& shouldAbort);
+        juce::Result toSdif(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<juce::String> columnName, std::atomic<bool> const& shouldAbort);
 
         juce::File getConsolidatedFile(Accessor const& accessor, juce::File const& directory);
         juce::Result consolidateInDirectory(Accessor const& accessor, juce::File const& directory);
