@@ -5,6 +5,7 @@ v1.0.6
 - Fix: The position of the new groups is not consistent with the last selected item (#294)
 - Fix: The dropdown menus for the SDIF entries in the Import Files window should not be enabled if the choice is unique (#293)
 - Fix: The size of the New Track window is not properly updated when the global graphic scale changes (#292)
+- Imp: Replace the floating view scale window with a dropdown menu with five options (#291)
 - Add: User manual (#288) 
 - Add: Signing certificate on Windows installer (#287)
 - Fix: The value of new points is not consistent except on the first channel (#282)
