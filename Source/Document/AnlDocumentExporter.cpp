@@ -19,7 +19,8 @@ bool Document::Exporter::Options::operator==(Options const& rhd) const noexcept
            includeDescription == rhd.includeDescription &&
            sdifFrameSignature == rhd.sdifFrameSignature &&
            sdifMatrixSignature == rhd.sdifMatrixSignature &&
-           sdifColumnName == rhd.sdifColumnName;
+           sdifColumnName == rhd.sdifColumnName &&
+           timePreset == rhd.timePreset;
 }
 
 bool Document::Exporter::Options::operator!=(Options const& rhd) const noexcept
@@ -96,14 +97,31 @@ bool Document::Exporter::Options::isValid() const
     return format != Format::sdif || (sdifFrameSignature.length() == 4 && !sdifFrameSignature.contains("?") && sdifMatrixSignature.length() == 4 && !sdifMatrixSignature.contains("?"));
 }
 
-Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
+Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSizeFn getSizeFor)
 : mAccessor(accessor)
 , mGetSizeForFn(getSizeFor)
-, mPropertyItem("Item", "The item to export", "", std::vector<std::string>{""}, [this](size_t index)
+, mPropertyItem("Item", "The item to export", "", std::vector<std::string>{""}, [this]([[maybe_unused]] size_t index)
                 {
-                    juce::ignoreUnused(index);
                     sanitizeProperties(true);
                 })
+, mPropertyTimePreset("Time Preset", "The preset of the time range to export", "", std::vector<std::string>{"Global", "Visible", "Selection", "Manual"}, [this](size_t index)
+                      {
+                          auto options = mOptions;
+                          options.timePreset = magic_enum::enum_value<Document::Exporter::Options::TimePreset>(index);
+                          setOptions(options, juce::NotificationType::sendNotificationSync);
+                      })
+, mPropertyTimeStart(juce::translate("Time Start"), juce::translate("The start time of the time range to export"), [this](double time)
+                     {
+                         setTimeRange(getTimeRange().withStart(time), true, juce::NotificationType::sendNotificationSync);
+                     })
+, mPropertyTimeEnd(juce::translate("Time End"), juce::translate("The end time of the time range to export"), [this](double time)
+                   {
+                       setTimeRange(getTimeRange().withEnd(time), true, juce::NotificationType::sendNotificationSync);
+                   })
+, mPropertyTimeLength(juce::translate("Time Length"), juce::translate("The time length of the time range to export"), [this](double time)
+                      {
+                          setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
+                      })
 , mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON", "CUE", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
@@ -192,6 +210,13 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
                           })
 {
     addAndMakeVisible(mPropertyItem);
+    if(showTimeRange)
+    {
+        addAndMakeVisible(mPropertyTimePreset);
+        addAndMakeVisible(mPropertyTimeStart);
+        addAndMakeVisible(mPropertyTimeEnd);
+        addAndMakeVisible(mPropertyTimeLength);
+    }
     addAndMakeVisible(mPropertyFormat);
     addAndMakeVisible(mPropertyGroupMode);
     if(mGetSizeForFn != nullptr)
@@ -292,7 +317,48 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
         }
     };
 
+    mTimeZoomListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::visibleRange:
+            {
+                updateTimePreset(true, juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+
+    mTransportZoomListener.onAttrChanged = [this]([[maybe_unused]] Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Transport::AttrType::playback:
+            case Transport::AttrType::startPlayhead:
+            case Transport::AttrType::runningPlayhead:
+            case Transport::AttrType::looping:
+            case Transport::AttrType::loopRange:
+            case Transport::AttrType::stopAtLoopEnd:
+            case Transport::AttrType::autoScroll:
+            case Transport::AttrType::gain:
+            case Transport::AttrType::markers:
+            case Transport::AttrType::magnetize:
+                break;
+            case Transport::AttrType::selection:
+            {
+                updateTimePreset(true, juce::NotificationType::dontSendNotification);
+            }
+            break;
+        }
+    };
+
     mAccessor.addListener(mListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::timeZoom>().addListener(mTimeZoomListener, NotificationType::synchronous);
+    mAccessor.getAcsr<AcsrType::transport>().addListener(mTransportZoomListener, NotificationType::synchronous);
     mOptions.format = Options::Format::sdif;
     setOptions({}, juce::NotificationType::dontSendNotification);
 }
@@ -300,13 +366,15 @@ Document::Exporter::Panel::Panel(Accessor& accessor, GetSizeFn getSizeFor)
 Document::Exporter::Panel::~Panel()
 {
     mTrackListeners.clear();
+    mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportZoomListener);
+    mAccessor.getAcsr<AcsrType::timeZoom>().removeListener(mTimeZoomListener);
     mAccessor.removeListener(mListener);
 }
 
 void Document::Exporter::Panel::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto setBounds = [&](juce::Component& component)
+    auto const setBounds = [&](juce::Component& component)
     {
         if(component.isVisible())
         {
@@ -314,6 +382,10 @@ void Document::Exporter::Panel::resized()
         }
     };
     setBounds(mPropertyItem);
+    setBounds(mPropertyTimePreset);
+    setBounds(mPropertyTimeStart);
+    setBounds(mPropertyTimeEnd);
+    setBounds(mPropertyTimeLength);
     setBounds(mPropertyFormat);
     setBounds(mPropertyGroupMode);
     setBounds(mPropertyAutoSizeMode);
@@ -508,6 +580,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifColName.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertyIgnoreGrids.setVisible(options.useTextFormat());
+    updateTimePreset(false, silent);
     sanitizeProperties(false);
     resized();
 
@@ -525,6 +598,86 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     }
 }
 
+void Document::Exporter::Panel::updateTimePreset(bool updateModel, juce::NotificationType notification)
+{
+    using TimePreset = Document::Exporter::Options::TimePreset;
+    auto const& timeAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    auto const globalTimeRange = timeAcsr.getAttr<Zoom::AttrType::globalRange>();
+    auto const visibleTimeRange = timeAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const selectionTimeRange = mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::selection>();
+
+    mPropertyTimeStart.entry.setRange(globalTimeRange, notification);
+    mPropertyTimeEnd.entry.setRange(globalTimeRange, notification);
+    mPropertyTimeLength.entry.setRange({0.0, globalTimeRange.getLength()}, notification);
+
+    auto& timePresetEntry = mPropertyTimePreset.entry;
+    timePresetEntry.setItemEnabled(timePresetEntry.getItemId(static_cast<int>(TimePreset::global)), !globalTimeRange.isEmpty());
+    timePresetEntry.setItemEnabled(timePresetEntry.getItemId(static_cast<int>(TimePreset::visible)), !visibleTimeRange.isEmpty() && globalTimeRange != visibleTimeRange);
+    timePresetEntry.setItemEnabled(timePresetEntry.getItemId(static_cast<int>(TimePreset::selection)), !selectionTimeRange.isEmpty() && globalTimeRange != selectionTimeRange && visibleTimeRange != selectionTimeRange);
+    timePresetEntry.setItemEnabled(timePresetEntry.getItemId(static_cast<int>(TimePreset::manual)), false);
+    mPropertyTimePreset.entry.setSelectedItemIndex(static_cast<int>(mOptions.timePreset), notification);
+
+    switch(mOptions.timePreset)
+    {
+        case Document::Exporter::Options::TimePreset::global:
+        {
+            setTimeRange(globalTimeRange, updateModel, notification);
+        }
+        break;
+        case Options::TimePreset::visible:
+        {
+            setTimeRange(visibleTimeRange, updateModel, notification);
+        }
+        break;
+        case Options::TimePreset::selection:
+        {
+            setTimeRange(selectionTimeRange, updateModel, notification);
+        }
+        break;
+        case Options::TimePreset::manual:
+        {
+            setTimeRange(getTimeRange(), updateModel, notification);
+        }
+        break;
+    }
+}
+
+void Document::Exporter::Panel::setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification)
+{
+    auto const& timeAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
+    auto const globalTimeRange = timeAcsr.getAttr<Zoom::AttrType::globalRange>();
+    auto const visibleTimeRange = timeAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const selectionTimeRange = mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::selection>();
+
+    mPropertyTimeStart.entry.setTime(range.getStart(), notification);
+    mPropertyTimeEnd.entry.setTime(range.getEnd(), notification);
+    mPropertyTimeLength.entry.setTime(range.getLength(), notification);
+
+    auto options = mOptions;
+    if(!globalTimeRange.isEmpty() && (range == globalTimeRange || range.isEmpty()))
+    {
+        options.timePreset = Document::Exporter::Options::TimePreset::global;
+    }
+    else if(!visibleTimeRange.isEmpty() && range == visibleTimeRange)
+    {
+        options.timePreset = Document::Exporter::Options::TimePreset::visible;
+    }
+    else if(!selectionTimeRange.isEmpty() && range == selectionTimeRange)
+    {
+        options.timePreset = Document::Exporter::Options::TimePreset::selection;
+    }
+    else
+    {
+        options.timePreset = Document::Exporter::Options::TimePreset::manual;
+    }
+    setOptions(options, updateModel ? juce::NotificationType::sendNotificationSync : juce::NotificationType::dontSendNotification);
+}
+
+juce::Range<double> Document::Exporter::Panel::getTimeRange() const
+{
+    return {mPropertyTimeStart.entry.getTime(), mPropertyTimeEnd.entry.getTime()};
+}
+
 void Document::Exporter::Panel::handleAsyncUpdate()
 {
     if(onOptionsChanged != nullptr)
@@ -533,7 +686,7 @@ void Document::Exporter::Panel::handleAsyncUpdate()
     }
 }
 
-juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
+juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const file, juce::Range<double> const& timeRange, juce::String const filePrefix, juce::String const& identifier, Options const& options, std::atomic<bool> const& shouldAbort, GetSizeFn getSizeFor)
 {
     if(file == juce::File())
     {
@@ -546,7 +699,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
 
     if(options.useImageFormat())
     {
-        auto exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
+        auto const exportTrack = [&](juce::String const& trackIdentifier, juce::File const& trackFile)
         {
             juce::MessageManager::Lock lock;
             if(!lock.tryEnter())
@@ -567,7 +720,12 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             }
             auto const size = options.useAutoSize ? getSizeFor(trackIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
             auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-            auto const& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
+            Zoom::Accessor timeZoomAcsr;
+            timeZoomAcsr.copyFrom(accessor.getAcsr<AcsrType::timeZoom>(), NotificationType::synchronous);
+            if(!timeRange.isEmpty())
+            {
+                timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(timeRange, NotificationType::synchronous);
+            }
             auto const fileUsed = trackFile.isDirectory() ? trackFile.getNonexistentChildFile(filePrefix + trackAcsr.getAttr<Track::AttrType::name>(), "." + options.getFormatExtension()) : trackFile.getSiblingFile(filePrefix + trackFile.getFileName());
             lock.exit();
 
@@ -594,7 +752,12 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             }
             auto const size = options.useAutoSize ? getSizeFor(groupIdentifier) : std::make_pair(options.imageWidth, options.imageHeight);
             auto& groupAcsr = Tools::getGroupAcsr(accessor, groupIdentifier);
-            auto const& timeZoomAcsr = accessor.getAcsr<AcsrType::timeZoom>();
+            Zoom::Accessor timeZoomAcsr;
+            timeZoomAcsr.copyFrom(accessor.getAcsr<AcsrType::timeZoom>(), NotificationType::synchronous);
+            if(!timeRange.isEmpty())
+            {
+                timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(timeRange, NotificationType::synchronous);
+            }
             auto const fileUsed = groupFile.isDirectory() ? groupFile.getNonexistentChildFile(filePrefix + groupAcsr.getAttr<Group::AttrType::name>(), "." + options.getFormatExtension()) : groupFile.getSiblingFile(filePrefix + groupFile.getFileName());
             lock.exit();
 
@@ -772,17 +935,17 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, fileUsed, options.includeDescription, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, timeRange, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
-                return Track::Exporter::toCue(trackAcsr, fileUsed, shouldAbort);
+                return Track::Exporter::toCue(trackAcsr, timeRange, fileUsed, shouldAbort);
             case Options::Format::sdif:
             {
                 auto const frameId = SdifConverter::getSignature(options.sdifFrameSignature);
                 auto const matrixId = SdifConverter::getSignature(options.sdifMatrixSignature);
                 auto const columnName = options.sdifColumnName.isEmpty() ? std::optional<juce::String>{} : options.sdifColumnName;
-                return Track::Exporter::toSdif(trackAcsr, fileUsed, frameId, matrixId, columnName, shouldAbort);
+                return Track::Exporter::toSdif(trackAcsr, timeRange, fileUsed, frameId, matrixId, columnName, shouldAbort);
             }
         }
         return juce::Result::fail("Unsupported format");

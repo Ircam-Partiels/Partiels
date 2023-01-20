@@ -33,6 +33,14 @@ namespace Document
                 , slash
                 , colon
             };
+            
+            enum class TimePreset
+            {
+                  global
+                , visible
+                , selection
+                , manual
+            };
             // clang-format on
 
             Format format{Format::jpeg};
@@ -47,6 +55,7 @@ namespace Document
             juce::String sdifFrameSignature{"????"};
             juce::String sdifMatrixSignature{"????"};
             juce::String sdifColumnName;
+            TimePreset timePreset{TimePreset::global};
 
             bool operator==(Options const& rhd) const noexcept;
             bool operator!=(Options const& rhd) const noexcept;
@@ -68,7 +77,7 @@ namespace Document
         , private juce::AsyncUpdater
         {
         public:
-            Panel(Accessor& accessor, GetSizeFn getSizeFor);
+            Panel(Accessor& accessor, bool showTimeRange, GetSizeFn getSizeFor);
             ~Panel() override;
 
             // juce::Component
@@ -76,6 +85,7 @@ namespace Document
 
             void setOptions(Options const& options, juce::NotificationType notification);
             Options const& getOptions() const;
+            juce::Range<double> getTimeRange() const;
             juce::String getSelectedIdentifier() const;
 
             std::function<void(void)> onOptionsChanged = nullptr;
@@ -83,6 +93,8 @@ namespace Document
         private:
             void updateItems();
             void sanitizeProperties(bool updateModel);
+            void updateTimePreset(bool updateModel, juce::NotificationType notification);
+            void setTimeRange(juce::Range<double> const& range, bool updateModel, juce::NotificationType notification);
 
             // juce::AsyncUpdater
             void handleAsyncUpdate() override;
@@ -92,6 +104,10 @@ namespace Document
             Options mOptions;
 
             PropertyList mPropertyItem;
+            PropertyList mPropertyTimePreset;
+            Misc::PropertyHMSmsField mPropertyTimeStart;
+            Misc::PropertyHMSmsField mPropertyTimeEnd;
+            Misc::PropertyHMSmsField mPropertyTimeLength;
             PropertyList mPropertyFormat;
             PropertyToggle mPropertyGroupMode;
             PropertyToggle mPropertyAutoSizeMode;
@@ -106,6 +122,8 @@ namespace Document
             PropertyToggle mPropertyIgnoreGrids;
 
             Accessor::Listener mListener{typeid(*this).name()};
+            Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
+            Transport::Accessor::Listener mTransportZoomListener{typeid(*this).name()};
             std::vector<std::unique_ptr<Track::Accessor::SmartListener>> mTrackListeners;
             std::vector<std::unique_ptr<Group::Accessor::SmartListener>> mGroupListeners;
             LayoutNotifier mDocumentLayoutNotifier;
