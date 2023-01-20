@@ -76,6 +76,7 @@ target_compile_definitions(Partiels PRIVATE
     JUCE_DIRECTSOUND
     JUCE_ASIO
     MISC_SUPPORTS_SDIF=1
+    MISC_IGNORE_MODEL_ACCESS_MESSAGE_MANAGER_WEAK_ASSERT=1
     )
 target_include_directories(Partiels PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Dependencies)
 if(WIN32)
