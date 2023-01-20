@@ -16,7 +16,6 @@ namespace Application
         ~Window() override;
 
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
-        void showDesktopScaler();
 
         // juce::DocumentWindow
         void closeButtonPressed() override;
@@ -32,24 +31,8 @@ namespace Application
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
-        class DesktopScaler
-        : public juce::Component
-        {
-        public:
-            DesktopScaler();
-            ~DesktopScaler() override;
-            void resized() override;
-
-        private:
-            PropertyNumber mNumber;
-            juce::Slider mSlider;
-            Accessor::Listener mListener{typeid(*this).name()};
-        };
-
         juce::ComponentBoundsConstrainer mBoundsConstrainer;
         Interface mInterface;
-        DesktopScaler mDesktopScaler;
-        FloatingWindowContainer mDesktopScalerWindow;
     };
 } // namespace Application
 
