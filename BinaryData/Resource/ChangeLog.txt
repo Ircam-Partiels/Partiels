@@ -14,9 +14,11 @@ v1.0.6
 - Fix: Clicking and dragging with the command/control modifier doesn't display the zoom range properly (#279)
 - Fix: Clicking with the control modifier on the zoom rulers resets the zoom to an unwanted range (#278)
 - Add: Add an audio channel routing system to the sound card accessible in the audio settings panel (#277)
+- Fix: Audio files cannot be copied when consolidating documents (#273)
 - Fix: Multi-channel mapping is not valid with plugins that support variable number of channels (#272)
 - Fix: Toggle track and group selection requires the option/alt key modifier instead of the command/control key modifier (#271)
 - Fix: Fix selection of multiple tracks and groups while dragging the mouse (#270)
+- Add: Time range options when exporting results with presets based on global, visible and selection time ranges (#269)
 - Add: The shortcut Ctrl + F or Cmd + F on the New Track Window gives focus to the search entry (#267)
 - Fix: Graphical rendering advancement increases and decreases inconsistently (#242)
  
