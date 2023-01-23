@@ -47,6 +47,7 @@ namespace Track
         Icon mPropertiesButton{Icon::Type::properties};
         Icon mEditButton{Icon::Type::edit};
         StateButton mStateButton{mDirector};
+        juce::File mTempFile;
     };
 } // namespace Track
 

@@ -1,5 +1,6 @@
 #include "AnlTrackThumbnail.h"
 #include "AnlTrackSection.h"
+#include "AnlTrackExporter.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -172,6 +173,7 @@ void Track::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
     beginDragAutoRepeat(5);
     setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
+    mTempFile = juce::File();
 }
 
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
@@ -180,14 +182,40 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
     {
         return;
     }
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
-    auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
-    auto* parent = findParentComponentOfClass<Section>();
-    anlWeakAssert(dragContainer != nullptr && parent != nullptr);
-    if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
+    if(event.mods.isAltDown())
     {
-        auto const p = -event.getMouseDownPosition();
-        dragContainer->startDragging(DraggableTable::createDescription(event, "Track", mAccessor.getAttr<AttrType::identifier>(), parent->getHeight()), parent, juce::ScaledImage{}, true, &p, &event.source);
+        if(mTempFile == juce::File())
+        {
+            std::atomic<bool> abort{false};
+            auto parent = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory).getChildFile("Copy");
+            if(parent.createDirectory())
+            {
+                auto target = parent.getChildFile(mAccessor.getAttr<AttrType::identifier>()).withFileExtension(".json");
+                auto const result = Exporter::toJson(mAccessor, {}, target, false, abort);
+                if(result.ok())
+                {
+                    mTempFile = target;
+                    MiscDebug("Track::Thumbnail", mTempFile.getFullPathName());
+                }
+            }
+        }
+        
+        if(mTempFile.existsAsFile())
+        {
+            juce::DragAndDropContainer::performExternalDragDropOfFiles({mTempFile.getFullPathName()}, true, findParentComponentOfClass<Section>());
+        }
+    }
+    else
+    {
+        setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
+        auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
+        auto* parent = findParentComponentOfClass<Section>();
+        anlWeakAssert(dragContainer != nullptr && parent != nullptr);
+        if(dragContainer != nullptr && !dragContainer->isDragAndDropActive() && parent != nullptr)
+        {
+            auto const p = -event.getMouseDownPosition();
+            dragContainer->startDragging(DraggableTable::createDescription(event, "Track", mAccessor.getAttr<AttrType::identifier>(), parent->getHeight()), parent, juce::ScaledImage{}, true, &p, &event.source);
+        }
     }
 }
 
