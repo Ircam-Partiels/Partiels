@@ -35,10 +35,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::name:
             {
                 mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
-                if(auto* window = findParentComponentOfClass<WindowContainer>())
-                {
-                    window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
-                }
+                parentHierarchyChanged();
             }
             break;
             case AttrType::key:
@@ -114,6 +111,14 @@ void Track::PropertyPanel::resized()
     setBounds(mGraphicalSection);
     setBounds(mPluginSection);
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
+}
+
+void Track::PropertyPanel::parentHierarchyChanged()
+{
+    if(auto* window = findParentComponentOfClass<juce::DialogWindow>())
+    {
+        window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", mAccessor.getAttr<AttrType::name>().toUpperCase()));
+    }
 }
 
 ANALYSE_FILE_END

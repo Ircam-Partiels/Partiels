@@ -20,6 +20,7 @@ namespace Track
 
         // juce::Component
         void resized() override;
+        void parentHierarchyChanged() override;
 
         class WindowContainer
         : public FloatingWindowContainer
