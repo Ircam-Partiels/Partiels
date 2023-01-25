@@ -23,6 +23,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::focused:
             case AttrType::graphics:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::grid:
                 break;
             case AttrType::description:
@@ -161,6 +162,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::state:
             case AttrType::height:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::graphics:
@@ -218,6 +220,7 @@ Track::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
             case AttrType::processing:
             case AttrType::graphics:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::grid:
             case AttrType::description:
             case AttrType::results:

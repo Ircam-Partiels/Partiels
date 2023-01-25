@@ -34,6 +34,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
             case Track::AttrType::results:
             case Track::AttrType::graphics:
             case Track::AttrType::colours:
+            case Track::AttrType::font:
             case Track::AttrType::channelsLayout:
             {
                 repaint();

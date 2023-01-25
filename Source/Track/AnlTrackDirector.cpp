@@ -159,6 +159,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::processing:
             case AttrType::focused:
             case AttrType::grid:
+            case AttrType::font:
                 break;
         }
     };

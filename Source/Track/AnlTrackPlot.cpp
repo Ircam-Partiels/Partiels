@@ -795,6 +795,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::graphics:
+            case AttrType::font:
             case AttrType::warnings:
             case AttrType::grid:
             case AttrType::processing:

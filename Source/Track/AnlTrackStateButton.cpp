@@ -43,6 +43,7 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:

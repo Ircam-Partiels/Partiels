@@ -179,6 +179,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             case AttrType::processing:
             case AttrType::warnings:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::channelsLayout:
             case AttrType::identifier:
             case AttrType::height:

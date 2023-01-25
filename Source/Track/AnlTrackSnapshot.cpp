@@ -31,6 +31,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::channelsLayout:
             {
                 repaint();
@@ -370,6 +371,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             case AttrType::results:
                 break;
             case AttrType::colours:
+            case AttrType::font:
             {
                 repaint();
             }
