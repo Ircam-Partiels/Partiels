@@ -143,6 +143,7 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::colours:
+            case AttrType::font:
             case AttrType::channelsLayout:
             {
                 repaint();
@@ -280,6 +281,7 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
 
 void Track::Plot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const colour)
 {
+    g.setFont(accessor.getAttr<AttrType::font>());
     switch(Tools::getDisplayType(accessor))
     {
         case Tools::DisplayType::markers:
