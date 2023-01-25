@@ -23,10 +23,14 @@ namespace Group
         void setBackgroundColour(juce::Colour const& colour);
         void setTextColour(juce::Colour const& colour);
         void setShadowColour(juce::Colour const& colour);
+        void setFontName(juce::String const& name);
+        void setFontStyle(juce::String const& style);
+        void setFontSize(float size);
         void showChannelLayout();
         void updateContent();
         void updateColourMap();
         void updateColours();
+        void updateFont();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -36,6 +40,9 @@ namespace Group
         PropertyColourButton mPropertyBackgroundColour;
         PropertyColourButton mPropertyTextColour;
         PropertyColourButton mPropertyShadowColour;
+        PropertyList mPropertyFontName;
+        PropertyList mPropertyFontStyle;
+        PropertyList mPropertyFontSize;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
 
