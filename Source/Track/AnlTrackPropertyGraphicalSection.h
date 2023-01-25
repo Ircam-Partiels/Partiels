@@ -45,6 +45,9 @@ namespace Track
         PropertyColourButton mPropertyBackgroundColour;
         PropertyColourButton mPropertyTextColour;
         PropertyColourButton mPropertyShadowColour;
+        PropertyList mPropertyFontName;
+        PropertyList mPropertyFontStyle;
+        PropertyList mPropertyFontSize;
         PropertyList mPropertyValueRangeMode;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;

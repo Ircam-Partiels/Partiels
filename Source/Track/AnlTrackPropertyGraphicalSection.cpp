@@ -13,6 +13,27 @@ static std::vector<std::string> getColourMapNames()
     return names;
 }
 
+static std::vector<std::string> getFontNames()
+{
+    static auto typefaceNames = juce::Font::findAllTypefaceNames();
+    std::vector<std::string> names;
+    for(auto const& name : typefaceNames)
+    {
+        names.push_back(name.toStdString());
+    }
+    return names;
+}
+
+static std::vector<std::string> getFontSizes()
+{
+    std::vector<std::string> names;
+    for(auto size = 8; size <= 20; size += 2)
+    {
+        names.push_back(std::to_string(size));
+    }
+    return names;
+}
+
 Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
 : mDirector(director)
 , mZoomGridPropertyWindow(juce::translate("Grid Properties"), mZoomGridPropertyPanel)
@@ -106,6 +127,35 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
       {
           mDirector.endAction(ActionState::newTransaction, juce::translate("Change track shadow color"));
       })
+, mPropertyFontName(juce::translate("Font Name"), juce::translate("The name of the font for the graphical renderer."), "", getFontNames(), [&]([[maybe_unused]] size_t index)
+                    {
+                        mDirector.startAction();
+                        auto const name = mPropertyFontName.entry.getText();
+                        auto const font = mAccessor.getAttr<AttrType::font>();
+                        auto newFont = juce::Font(name, font.getHeight(), juce::Font::FontStyleFlags::plain);
+                        if(newFont.getAvailableStyles().contains(font.getTypefaceStyle()))
+                        {
+                            newFont.setTypefaceStyle(font.getTypefaceStyle());
+                        }
+                        mAccessor.setAttr<AttrType::font>(newFont, NotificationType::synchronous);
+                        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font name"));
+                    })
+, mPropertyFontStyle(juce::translate("Font Style"), juce::translate("The style of the font for the graphical renderer."), "", {}, [&]([[maybe_unused]] size_t index)
+                     {
+                         mDirector.startAction();
+                         auto const style = mPropertyFontStyle.entry.getText();
+                         auto const font = mAccessor.getAttr<AttrType::font>().withTypefaceStyle(style);
+                         mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
+                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font style"));
+                     })
+, mPropertyFontSize(juce::translate("Font Size"), juce::translate("The size of the font for the graphical renderer."), "", getFontSizes(), [&]([[maybe_unused]] size_t index)
+                    {
+                        mDirector.startAction();
+                        auto const size = mPropertyFontSize.entry.getText().getFloatValue();
+                        auto const font = mAccessor.getAttr<AttrType::font>().withHeight(size);
+                        mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
+                        mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font size"));
+                    })
 , mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
                           {
                               switch(index)
@@ -189,6 +239,9 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyTextColour.setVisible(true);
                         mPropertyBackgroundColour.setVisible(true);
                         mPropertyShadowColour.setVisible(true);
+                        mPropertyFontName.setVisible(true);
+                        mPropertyFontStyle.setVisible(true);
+                        mPropertyFontSize.setVisible(true);
                         mPropertyChannelLayout.setVisible(numChannels > 1_z);
                     }
                     break;
@@ -202,6 +255,9 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyTextColour.setVisible(true);
                         mPropertyBackgroundColour.setVisible(true);
                         mPropertyShadowColour.setVisible(true);
+                        mPropertyFontName.setVisible(true);
+                        mPropertyFontStyle.setVisible(true);
+                        mPropertyFontSize.setVisible(true);
                         mPropertyValueRangeMode.setVisible(true);
                         mPropertyValueRangeMin.setVisible(true);
                         mPropertyValueRangeMax.setVisible(true);
@@ -241,6 +297,28 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 mPropertyTextColour.entry.setCurrentColour(colours.text, juce::NotificationType::dontSendNotification);
                 mPropertyShadowColour.entry.setCurrentColour(colours.shadow, juce::NotificationType::dontSendNotification);
                 mPropertyColourMap.entry.setSelectedItemIndex(static_cast<int>(colours.map), juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case AttrType::font:
+            {
+                auto const font = acsr.getAttr<AttrType::font>();
+                mPropertyFontName.entry.setText(font.getTypefaceName(), juce::NotificationType::dontSendNotification);
+                mPropertyFontName.entry.setEnabled(mPropertyFontName.entry.getNumItems() > 1);
+
+                mPropertyFontStyle.entry.clear(juce::NotificationType::dontSendNotification);
+                mPropertyFontStyle.entry.addItemList(font.getAvailableStyles(), 1);
+                mPropertyFontStyle.entry.setText(font.getTypefaceStyle(), juce::NotificationType::dontSendNotification);
+                mPropertyFontStyle.entry.setEnabled(mPropertyFontStyle.entry.getNumItems() > 1);
+
+                auto const roundedHeight = std::round(font.getHeight());
+                if(std::abs(font.getHeight() - roundedHeight) < 0.1f)
+                {
+                    mPropertyFontSize.entry.setText(juce::String(static_cast<int>(roundedHeight)), juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mPropertyFontSize.entry.setText(juce::String(font.getHeight(), 1), juce::NotificationType::dontSendNotification);
+                }
             }
             break;
             case AttrType::zoomLink:
@@ -335,11 +413,17 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
 
     mPropertyNumBins.entry.setEnabled(false);
     mProgressBarRendering.setSize(300, 36);
+    mPropertyFontSize.entry.setEditableText(true);
+    mPropertyFontSize.entry.getProperties().set("isNumber", true);
+    NumberField::Label::storeProperties(mPropertyFontSize.entry.getProperties(), {4.0, 200.0}, 0.1, 1, "");
     addAndMakeVisible(mPropertyColourMap);
     addAndMakeVisible(mPropertyForegroundColour);
     addAndMakeVisible(mPropertyTextColour);
     addAndMakeVisible(mPropertyBackgroundColour);
     addAndMakeVisible(mPropertyShadowColour);
+    addAndMakeVisible(mPropertyFontName);
+    addAndMakeVisible(mPropertyFontStyle);
+    addAndMakeVisible(mPropertyFontSize);
     addAndMakeVisible(mPropertyValueRangeMode);
     addAndMakeVisible(mPropertyValueRangeMin);
     addAndMakeVisible(mPropertyValueRangeMax);
@@ -366,7 +450,7 @@ Track::PropertyGraphicalSection::~PropertyGraphicalSection()
 void Track::PropertyGraphicalSection::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto setBounds = [&](juce::Component& component)
+    auto const setBounds = [&](juce::Component& component)
     {
         if(component.isVisible())
         {
@@ -378,6 +462,9 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyTextColour);
     setBounds(mPropertyBackgroundColour);
     setBounds(mPropertyShadowColour);
+    setBounds(mPropertyFontName);
+    setBounds(mPropertyFontStyle);
+    setBounds(mPropertyFontSize);
     setBounds(mPropertyValueRangeMode);
     setBounds(mPropertyValueRangeMin);
     setBounds(mPropertyValueRangeMax);
