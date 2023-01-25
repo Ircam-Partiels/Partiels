@@ -76,11 +76,8 @@ Group::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::identifier:
             case AttrType::name:
             {
-                mPropertyName.entry.setText(acsr.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
-                if(auto* window = findParentComponentOfClass<WindowContainer>())
-                {
-                    window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", acsr.getAttr<AttrType::name>().toUpperCase()));
-                }
+                mPropertyName.entry.setText(mAccessor.getAttr<AttrType::name>(), juce::NotificationType::dontSendNotification);
+                parentHierarchyChanged();
             }
             break;
             case AttrType::colour:
@@ -189,6 +186,14 @@ void Group::PropertyPanel::updateContent()
                                            });
     mPropertyBackgroundColour.setVisible(!layout.empty() && hasNoColumns);
     resized();
+}
+
+void Group::PropertyPanel::parentHierarchyChanged()
+{
+    if(auto* window = findParentComponentOfClass<juce::DialogWindow>())
+    {
+        window->setName(juce::translate("ANLNAME PROPERTIES").replace("ANLNAME", mAccessor.getAttr<AttrType::name>().toUpperCase()));
+    }
 }
 
 ANALYSE_FILE_END
