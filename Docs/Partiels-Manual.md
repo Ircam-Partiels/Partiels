@@ -189,7 +189,7 @@ In manual mode, the height of tracks and groups is free, click and drag on the b
 The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#overview) - **K3**).
 
 <p align="center">
-<img src="images/section-track-properties.1-v1.0.5.png" width="232"/>
+<img src="images/section-track-properties.1-v1.0.5.png" width="242"/>
 </p>
 
 The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, plugin.  
@@ -261,7 +261,19 @@ A color can be modified using the color selector that is prompted by clicking on
 - Text Color: The color used to render the labels of the markers or the points values.
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
 
-#### 8.2.2. Ranges
+#### 8.2.2. Font
+
+The font properties are only available for marker or point type analyses. By default, the font *Nunito Sans* with a size of 14 and a regular style is used. You can change the font according to the ones available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if some characters are not supported.
+
+<p align="center">
+<img src="images/section-track-properties.6.c-v1.0.5.png" width="196"/>
+</p>
+
+- Font Name: The name of the font used to render the labels of the markers or the  values of the points.
+- Font Style: The style of the font used to render the labels of the markers or the  values of the points. The list of available styles depends on the font family (name).
+- Font Size: The size of the font used to render the labels of the markers or the  values of the points. You can click on the text to define textually a size that would not be accessible in the list.
+
+#### 8.2.3. Ranges
 
 The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axe for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
 
