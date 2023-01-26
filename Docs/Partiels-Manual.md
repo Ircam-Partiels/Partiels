@@ -8,11 +8,15 @@
 <img src="Images/overview.png" alt="Example" width="1840"/>
 </p>
 
+<div style="page-break-after: always;"></div>
+
 ## Table of contents
 
 * [1. Introduction](#1-introduction)
-  * [1.1. System requirements](#11-system-requirements)
-  * [1.2. Vamp plug-ins](#12-vamp-plug-ins)
+  * [1.1. Features](#12-system-requirements)
+  * [1.2. System requirements](#12-system-requirements)
+  * [1.3. Third-party](#13-third-party)
+  * [1.4. Credits](#14-credits)
 * [2. Overview](#2-overview)
 * [3. Manage documents](#3-manage-documents)
   * [3.1. Create and open](#31-create-and-open)
@@ -24,11 +28,14 @@
 * [5. Organize the tracks by groups](#5-organize-the-tracks-by-groups)
   * [5.1. Edition](#51-edition)
   * [5.2. Layout](#52-layout)
-* 7. Transport and zoom
 * [6. Export analyses](#6-export-analyses)
   * [6.1. General options](#61-general-options)
   * [6.2. Specific options](#62-specific-options)
   * [6.3. Batch processing](#63-batch-processing)
+* [7. View, navigation, and transport](#7-view-navigation-and-transport)
+  * [7.1. View](#71-view)
+  * [7.2. Zoom](#72-navigation)
+  * [7.3. Transport](#73-transport)
 * [8. Track properties](#8-track-properties)
   * [8.1. Processor](#81-processor)
   * [8.2. Graphical](#82-graphical)
@@ -39,18 +46,19 @@
   * [10.2. Audio files configuration](#102-audio-files-configuration)
   * [10.3. Audio files recovery](#103-audio-files-recovery)
 * [11. Audio settings](#11-audio-settings)
-* [14. Credits](#14-credits)
+* [12. Plug-ins settings](#12-plug-ins-settings)
+* [13. Command-line tools](#13-command-line-tools)
 
-Other ToDo:
-- Result Edition
-- Plugins management
-- Command-line interface
+To Do:
+- Edit analysis results
 
 <div style="page-break-after: always;"></div>
 
 ## 1. Introduction
 
-**Partiels** is an application for the **analysis of digital audio files** intended for *researchers* in signal processing, *musicologists*, *composers*, and *sound designers*. It offers a dynamic and ergonomic interface in order to **explore the content and the characteristics of sounds**.
+**[Partiels](https://forum.ircam.fr/projects/detail/partiels/)** is an application for the **analysis of digital audio files** intended for *researchers* in signal processing, *musicologists*, *composers*, and *sound designers*. It offers a dynamic and ergonomic interface in order to **explore the content and the characteristics of sounds**.
+
+### 1.1. Features
 
 Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, **loading** data files, **editing**, **organizing** and **visualizing** the analyses inside groups, and **exporting** the results as images or text files (in order to be used in other applications such as *Max*, *Pure Data*, *Open Music*, etc.).
 
@@ -69,15 +77,13 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 - Consolidating documents (useful to share documents/analysis with other users across different platforms)  
 - Audio playback with loop  
 
-### 1.1. System Requirements
+### 1.2. System Requirements
 
 - MacOS 10.13 and higher (64bit - Universal Intel/Silicon)
 - Linux (64 bit)
 - Windows 10 and 11 (64 bit).
 
-### 1.2. Vamp Plug-ins
-
-[Vamp](https://www.vamp-plugins.org/) is an audio processing plug-in system for plug-ins that extract descriptive information from audio data developed at the Centre for Digital Music, Queen Mary, University of London.*
+### 1.3. Third-party
 
 Alongside Partiels, a set of analyses present in the AudioSculpt 3 application and based on the audio engines developed by the Ircam Analysis-Synthesis team are ported as Vamp plug-ins: 
 - [SuperVP](https://forum.ircam.fr/projects/detail/supervp-vamp-plugin/)
@@ -85,25 +91,38 @@ Alongside Partiels, a set of analyses present in the AudioSculpt 3 application a
 - [IrcamDescriptor](https://forum.ircam.fr/projects/detail/ircamdescriptor-vamp-plugin/) 
 - [PM2](https://forum.ircam.fr/projects/detail/pm2-vamp-plugin/)
 
+You will find a large number of analysis plug-ins on the [Vamp plug-in](https://www.vamp-plugins.org/) website.
+
+### 1.4. Credits
+
+**Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
+**Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
+
 <div style="page-break-after: always;"></div>
 
 ## 2. Overview
 
-<p align="center"><img src="Images/section-0.1-v1.0.6.jpg" alt="Example" width="1250"/></p>
+Partiels has a main graphical interface to view, navigate and edit the different analyses of a document. The actions and interaction modes are presented in detail in the different sections of this manual.  
+
+<p align="center"><img src="Images/section-overview.1-v1.0.6.png" alt="Example" width="1250"/></p>
+
+To begin the analysis and exploration of the sound, you must create or load a document as presented in the following section. 
+
+<div style="page-break-after: always;"></div>
 
 ## 3. Manage documents
 
-A document is the main item you work on in Partials. It contains a set of analysis tracks organized by groups. You can create, edit, save and load documents.
+A document is the main item you work on in Partiels. It contains a set of analysis tracks organized by groups. You can create, edit, save and load documents.
 
 ### 3.1. Create and open
 
-When you open Partials for the first time or create a new document via the main menu `File → New...` or with the keyboard shortcut `⌘ Cmd + N` (Mac) or `Ctrl + N` (Linux/Windows), the application presents the interface for starting a new document. 
+When you open Partiels for the first time or create a new document via the main menu `File → New...` or with the keyboard shortcut `⌘ Cmd + N` (Mac) or `Ctrl + N` (Linux/Windows), the application presents the interface for starting a new document. 
 
 <p align="center"><img src="Images/section-manage-documents.1-v1.0.6.png" alt="Example" width="412"/></p>
 
 You are prompted to load one or more audio files or pre-existing Partiels document file. The application supports audio file extensions *.aac*, *.aiff*, *.aif*, *.flac*, *.m4a*, *.mp3*, *.ogg*, *.wav* and *.wma*. A Partiels document file has the extension *.ptldoc*. You can use the file browser window by clicking on the `Load` button (**A1**) or drag the files directly into the interface (**A1**). You can also load a Partiels document file via the main menu `File → Open...` or with the keyboard shortcut `⌘ Cmd + O` (Mac) or `Ctrl + O` (Linux/Windows). And you can select one of the recently used Partiels documents from the list on the right (**A2**) or via the main menu `File → Open Recent`.
 
-If you have loaded one or more audio files, a second interface prompts you to add a new analysis track by clicking on the `Add Track` button (**A3**) to display the analysis plugin loading window. Alternatively, you can also use a pre-existing Partial document as a template. Click on the `Load Template` button (**A4**) to display the file browser window or select one of the recently used Partiels documents from the list on the right (**A2**).
+If you have loaded one or more audio files, a second interface prompts you to add a new analysis track by clicking on the `Add Track` button (**A3**) to display the analysis plugin loading window. Alternatively, you can also use a pre-existing Partiels document as a template. Click on the `Load Template` button (**A4**) to display the file browser window or select one of the recently used Partiels documents from the list on the right (**A2**).
 
 <p align="center"><img src="Images/section-manage-documents.2-v1.0.6.png" alt="Example" width="412"/></p>
 
@@ -119,11 +138,15 @@ A document file is a text file describing its contents, such as audio files, ana
 
 If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation copies all the audio files into a folder next to the document and replaces the absolute paths with relative ones. This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plug-ins are no longer available.
 
+You can reveal the current document file in the file browser of your operating system by clicking on the corresponding [text button](#2-overview) (**K5**) of the main interface.
+
 ### 3.3. Edition and backup
 
-Partials allows you to control many elements of a document by adding tracks, organizing groups, changing the audio configuration, etc. All changes made to a document can be undone or redone over and over again using the action history. To undo an action, you can use the main menu `Edit → Undo` or with the keyboard shortcut `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows).  To redo an action, you can use the main menu `Edit → Redo` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows). 
+Partiels allows you to control many elements of a document by adding tracks, organizing groups, changing the audio configuration, etc. All changes made to a document can be undone or redone over and over again using the action history. To undo an action, you can use the main menu `Edit → Undo` or with the keyboard shortcut `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows).  To redo an action, you can use the main menu `Edit → Redo` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows). 
 
-With each action, Partials temporarily saves the current state of the document and if for some (unlikely) reason the application crashes. Upon reopening, Partiels will allow you to restore the document you were working on just before the crash.  
+With each action, Partiels temporarily saves the current state of the document and if for some (unlikely) reason the application crashes. Upon reopening, Partiels will allow you to restore the document you were working on just before the crash.  
+
+<div style="page-break-after: always;"></div>
 
 ## 4. Create new tracks
 
@@ -139,9 +162,11 @@ Tracks can be created in two ways, from the analysis of a Vamp plug-in or from a
 
 ### 4.1. Analysis tracks
 
-When you click on the button to add analysis tracks via the interface for starting a new document, the window for adding analysis plugins is displayed. If you are already working on a document, you can bring up this window to add new tracks via the main menu `Edit → Add New Track`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or by using the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface. 
+When you click on the button to add analysis tracks via the interface for starting a new document, the window for adding analysis plugins is displayed. If you are already working on a document, you can bring up this window to add new tracks via the main menu `Edit → Add New Track`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or by using the drop-down menu of the `+` button ([Overview](#2-overview) - **K1**) on the main interface. 
 
 All plug-ins installed on your computer are listed in the interface. You can organize the plug-ins by name, feature, maker, category or version in ascending or descending alphabetical order by clicking on the corresponding entry in the interface header (**P1**).
+
+> For further information about the plug-in management, please refer to the [Plug-in settings](#12-plug-ins-settings) section.
 
 <p align="center"><img src="Images/section-add-new-plugin-tracks.1-v1.0.6.png" alt="Example" width="416"/></p>
 
@@ -156,18 +181,20 @@ If you want to modify the analysis and graphical properties of a track, please r
 A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + Shift + I` (Linux/Windows). Once your file is selected, the `Load File...` window appears, allowing you to set the unit and range of the imported values. 
 
 <p align="center">
-<img src="images/selection-import-new-result tracks.1-v1.0.6.png" width="348"/>
+<img src="images/selection-import-new-result tracks.1-v1.0.6.png" width="232"/>
 </p>
 
 If you are importing a JSON file containing an extra description of the analysis used to calculate the analysis, the default unit and range of values will be taken from that data. In addition, the extra descriptions are saved so that the original analysis can be re-run if necessary.
 
 <p align="center">
-<img src="images/selection-import-new-result tracks.2-v1.0.6.png" width="348"/>
+<img src="images/selection-import-new-result tracks.2-v1.0.6.png" width="232"/>
 </p>
 
 If you are importing an SDIF file, you will be able to define the frame code, matrix code, row and column to import.
 
 If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
+
+<div style="page-break-after: always;"></div>
 
 ## 5. Organize the tracks by groups
 
@@ -193,7 +220,7 @@ Use the keyboard modifier `Ctrl` during the move action of the selected track or
 
 Select a group or track by clicking on the item's header (or multiple tracks in a group by using the keyboard modifier `⇧ Shift`), then use the keyboard shortcuts `⌦ Delete` or `⌫ Backspace` to delete it.
 
-Use the main menu `Edit → Add New Group`, the keyboard shortcuts `⌘ Cmd + G` (Mac) or `Ctrl + G` (Linux/Windows), or the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface to create a new group that will be inserted after the last selected item.
+Use the main menu `Edit → Add New Group`, the keyboard shortcuts `⌘ Cmd + G` (Mac) or `Ctrl + G` (Linux/Windows), or the drop-down menu of the `+` button ([Overview](#2-overview) - **K1**) on the main interface to create a new group that will be inserted after the last selected item.
 
 ### 5.2. Layout
 
@@ -210,6 +237,12 @@ In automatic mode, the height of the tracks and groups will always be adapted ac
 In manual mode, the height of tracks and groups is free, click and drag on the bottom border of tracks and groups to resize them (**K4**). 
 
 > In manual mode, you can still optimize the height of tracks and groups to the height of the main window by clicking the button (**K3**) with the keyboard modifier `⇧ Shift`.
+
+If the overall cumulative height of groups and tracks exceeds the height of the interface, some groups and tracks may be partially hidden. Use the vertical scroll mouse or the scroll bar at the right of the interface to move the view and display the groups and tracks.
+
+Use the `⇥ Tab` key to move the selection to the next visible track or group. 
+
+<div style="page-break-after: always;"></div>
 
 ## 6. Export analyses
 
@@ -279,31 +312,117 @@ This window top section (**B1**) allows you to select audio files and configure 
 
 - Add items: Click on the `+` button to select one or several files using the file browser window or drag and drop one or several audio files or a folder from the operating system's file browser. A new item is created for each audio file. 
 
-- Delete items: Select one or several items (with the `ctrl` or `shift` keys) by clicking on the name part of the item and press the `delete ⌫` key to remove items from the audio files layout.
+- Delete items: Select one or several items (with the `Ctrl` or `⇧ Shift` keys) by clicking on the name part of the item and press the `Delete ⌫` key to remove items from the audio files layout.
 
 - Move an item: Click on the `#` index part of the item, drag the item to a new position above or below and drop the item to reorder the audio file configuration and update the indices.
 <p align="center">
 <img src="images/section-export-analyses.6.a-v1.0.5.png" width="243"/>
 </p>
 
-- Copy an item: Click on the `#` index part of the item with the `ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+- Copy an item: Click on the `#` index part of the item with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
 
 - Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*all* analyses all channels separetily, *mono* sums all channels into one channel).  
 <p align="center">
 <img src="images/section-export-analyses.6.b-v1.0.6.png" width="243"/>
 </p>
 
-- Undo changes: Use the undo key command `ctrl or ⌘ + Z` and  to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+- Undo changes: Use the undo key command `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows) to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
-- Redo changes: Use the redo key commands `ctrl or ⌘ + Y` or `ctrl or ⌘ + shift ⇧+ Z` to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+- Redo changes: Use the redo key commands `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
 `Adapt to Sample Rate` (**B2**) enables the adaptation of the *block size* and *step size* analysis parameters if the sample rate used in the current document differs from that of the audio files.
 
 Once you have selected the desired configuration, click on the `Process` button (**B3**), you will be prompted to select a folder (the name of the files will be generated automatically with the name of the audio files, the groups and the tracks).
 
+<div style="page-break-after: always;"></div>
+
+## 7. View, navigation, and transport
+
+This section covers aspects related to viewing, navigation and audio playback in the application.
+
+Change the general theme of the application, by default the automatic mode adapts to the theme changes (light and dark) of your operating system via the menu `View → Theme`.
+
+Change the global scale of the application via the menu `View → Scale` to enlarge the global view of the application.
+
+Toggle the magnetize option by clicking on the button `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. If the magnetize option is enabled the position moves to the closest markers of all the tracks of the document. 
+
+### 7.1. View
+
+Each track and group offers two representations of the analysis results. The main representation shows the results over time ([Overview](#2-overview) **V2**) as vertical lines for the markers, points (connected in segments) for the values and images for the matrices. The secondary display shows an instantaneous value of the results at the time of the playhead ([Overview](#2-overview) **V1**).
+
+- Activate the info bubble window with the `Info Bubble` button ([Overview](#2-overview) **K7**), via the main menu `View → Info Bubble` or the keyboard shorcut `⌘ Cmd + I` (Mac) or `Ctrl + I` (Linux/Windows) to display the values of the analysis results when you hover the mouse over these representations.
+
+- Modify the display of track and group grids with the `Grid` button ([Overview](#2-overview) **K8**): hidden, ticks, full.
+
+### 7.2. Navigation
+
+Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axes corresponding to the value or frequencie ranges.
+
+Click and drag on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
+
+#### 7.1.1 Horizontal axis  
+
+The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control the time zoom. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
+
+- Click and drag up and down on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom in and out of the time range.
+- Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom on the entire time range.
+- Click with `⇧ Shift` and drag to the left and right on the horizontal ruler ([Overview](#2-overview) **Z1**) to shift the time range backwards and forwards. 
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the horizontal ruler ([Overview](#2-overview) **Z1**)to select a time range to zoom to.
+- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows)n the horizontal ruler ([Overview](#2-overview) **Z1**) to show a floating window that allows to textually specify the zoom range . 
+- Click on the horizontal bar ([Overview](#2-overview) **Z2**) to shift the time range backwards and forwards.
+- Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to reset the time zoom to the global time range.
+- Scroll vertically with `⇧ Shift` (or scroll horizontally) using the mouse-wheel to shift the time range backwards and forwards.
+- Scroll vertically using the mouse-wheel to zoom in and out of the time range.
+- Use the pitch-zoom to zoom in and out of the time range.
+- Zoom in with the keyboard shortcut `⌘ Cmd + =` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Zoom In`.
+- Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Zoom Out`.
+
+#### 7.1.2 Horizontal axis
+
+The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value or frequency zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
+
+- Click and drag left and right on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom in and out of the value or frequency range. 
+- Double-click on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom on the entire value or frequency range.
+- Click with `⇧ Shift` and drag left and right on the vertical ruler ([Overview](#2-overview) **Z3**) to shift the value or frequency range backwards and forwards.
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the vertical ruler ([Overview](#2-overview) **Z3**) to select a value or frequency range to zoom to.
+- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows)n the frequency ruler  ([Overview](#2-overview) **Z3**) to show a floating window that allows to textually specify the zoom range . 
+- Click on the vertical bar ([Overview](#2-overview) **Z4**) to shift the value or frequency range backwards and forwards.
+- Scroll vertically or horizontally with `Ctrl` using the mouse-wheel to zoom in and out of the value or frequency range.
+- Scroll vertically with `Ctrl` and `⇧ Shift` using the mouse-wheel to shift the value or frequency range backwards and forwards.
+- Use the pitch-zoom with `Ctrl` to zoom in and out of the value or frequency range.
+
+### 7.2. Transport
+
+Partiels provides basic audio playback capabilities to allow listening to audio files while viewing analysis results. Audio playback can be controlled with the transport interface ([Overview](#2-overview) **T**) in the center of the main interface header.
+
+<p align="center">
+<img src="images/section-navigation-zoom-and-transport.1-v1.0.6.png" alt="AudioTransport" width="280"/>
+</p>
+
+The actions to move the start position of the playback head and control the playback loop depend on the magnetize option that sticks the positions to the markers of the analysis tracks.
+
+- Toogle the audio playback: Click the playback button (**T1**), use the main menu `Transport → Toggle Playback` or the space bar `⎵` to start or stop audio playback at the playhead's starting position. 
+- Toogle the audio loop: Click on the loop button (**T2**), use the main menu `Transport → Toggle Loop` or the keyboard shortcut `⌘ Cmd + L` (Mac) or `Ctrl + L` to enable or disable the audio loop.
+- Control the loop range: Use the loop bar (**T4**) to control le loop range, if the the magnetize option is enabled, the positions move to the closest markers.
+  - Click on the borders of the existing loop range without any keyboard modifier and dragging to resize the starting or the ending of the loop range.
+  - Click and drag anywhere else without any keyboard modifier to select a new loop range.
+  - Click and drag with `⇧ Shift` on the loop range to shift the loop range over the time.
+  - Double click on the loop bar to select the range between the two closest markers.
+- Stop the playback automatically at the end of the loop: Use the main menu `Transport → Toggle Stop Playback at Loop End` to enable or disable the option.
+- Rewind playhead: Click the rewind button (**T3**), use the main menu `Transport → Rewind Playhead` or the keyboard shortcut `⌘ Cmd + W` (Mac) or `Ctrl + W` to move the playhead to the beginning of the audio files or the beginning of the play loop if the loop is enabled.  
+- Move playhead backward: Use the main menu `Transport → Move the Playhead Backward` or the keyboard shortcut `⌘ + ←` (Mac) or `Ctrl + ←` to move the playhead to the previous marker when the magnetize option is enabled.  
+- Move playhead forward: Use the main menu `Transport → Move the Playhead Forward` or the keyboard shortcut `⌘ + →` (Mac) or `Ctrl + →` to move the playhead to the next marker when the magnetize option is enabled.  
+- Set playhead position: Use the time entry (**T6**) when the the playback is stopped to define the start playhead position. When the playback is started, the time entry displays the running playhead position. Click on an analysis to move the start playhead position at the corresponding time position, if the magnetize option is enabled, the position moves to the closest marker. 
+- Control the volume: Cick and drag the volume slider (**T7**) to control the volume of the audio output.
+
+
+> Refer to these sections to configure the [audio files layout](#10-audio-files-layout) and the [audio settings](#11-audio-settings).
+
+<div style="page-break-after: always;"></div>
+
 ## 8. Track properties
 
-The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#overview) - **K3**).
+The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**).
 
 <p align="center">
 <img src="images/section-track-properties.1-v1.0.5.png" width="242"/>
@@ -419,12 +538,14 @@ The channel button allows to show or hide channels of the analysis results. This
 
 The graphical section displays information about the plugin such as the name, the feature, the maker, the version, the  markers, the category and the description and the copyright.
 
+<div style="page-break-after: always;"></div>
+
 ## 10. Audio files layout
 
-The audio files layout panel allows you to access information about the audio files of the document, reveal the audio files in the operating system's file browser, and rearrange the files configuration of the audio reader. You can display the audio files layout panel by clicking on the corresponding button in the main interface ([Overview](#overview) - **K4**).
+The audio files layout panel allows you to access information about the audio files of the document, reveal the audio files in the operating system's file browser, and rearrange the files configuration of the audio reader. You can display the audio files layout panel by clicking on the corresponding button in the main interface ([Overview](#2-overview) - **K4**).
 
 <p align="center">
-<img src="images/section-audio-files-layout.1-v1.0.5.png" width="383"/>
+<img src="images/section-audio-files-layout.1-v1.0.5.png" width="255"/>
 </p>  
 
 ### 10.1. Audio files information
@@ -441,23 +562,23 @@ An item of the audio files layout in section (**S1**) is defined by an index, an
 
 - Add items: Click on the `+` button to select one or several files using the file browser window or drag and drop one or several from the operating system's file browser. A new item is created for each channel of a new file,  (so adding a stereo audio file, creates two new items assigned to channels one and two of the audio file). ⚠️ Using audio files with different sample rates is not supported and may lead to invalid analysis results and poor audio playback, the app will warn you to avoid such issues.
 
-- Delete items: Select one or several items (with the `ctrl` or `shift` keys) by clicking on the name part of the item and press the `delete ⌫` key to remove items from the audio files layout.
+- Delete items: Select one or several items (with the `Ctrl` or `⇧ Shift` keys) by clicking on the name part of the item and press the `Delete ⌫` key to remove items from the audio files layout.
 
 - Move an item: Click on the `#` index part of the item, drag the item to a new position above or below and drop the item to reorder the audio file configuration and update the indices.
 <p align="center">
 <img src="images/section-audio-files-layout.2-v1.0.5.png" width="243"/>
 </p>
 
-- Copy an item: Click on the `#` index part of the item with the `ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+- Copy an item: Click on the `#` index part of the item with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
 
 - Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*mono* sums all channels into one channel).  
 <p align="center">
 <img src="images/section-audio-files-layout.3-v1.0.5.png" width="243"/>
 </p>
 
-- Undo changes: Use the undo key command `ctrl or ⌘ + Z` and  to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+- Undo changes: Use the undo key command `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows) to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
-- Redo changes: Use the redo key commands `ctrl or ⌘ + Y` or `ctrl or ⌘ + shift ⇧+ Z` to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+- Redo changes: Use the redo key commands `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
 
 - Apply changes: If the audio files layout differs from the one currently used by the document, click the `Apply` text button in section (**S3**) to apply the new audio files layout to the document. Note that when the changes are applied to the document, the undo/redo mechanism can be used in the document to restore the previous state of the audio files layout.
 
@@ -473,12 +594,14 @@ If audio files cannot be found (files have been moved or deleted for example), t
 
 Click on an item's name to display a dialog window asking you to recover the missing audio file using the operating system's file browser. 
 
+<div style="page-break-after: always;"></div>
+
 ## 11. Audio settings
 
-The audio settings window allows you to control device management and channels routing for audio playback. These settings have no effect on the analysis or graphics rendering. The audio settings window can be displayed via the main menu `Partials → Audio Settings...` (Mac) or `Help → Audio Settings...` on (Linux/Windows) or with the keyboard shortcut `⌘ Cmd + ,` (Mac) or `⌘ Cmd + P` (Linux/Windows).
+The audio settings window allows you to control device management and channels routing for audio playback. These settings have no effect on the analysis or graphics rendering. The audio settings window can be displayed via the main menu `Partiels → Audio Settings...` (Mac) or `Help → Audio Settings...` on (Linux/Windows) or with the keyboard shortcut `⌘ Cmd + ,` (Mac) or `⌘ Cmd + P` (Linux/Windows).
 
 <p align="center">
-<img src="images/section-audio-settings.1-v1.0.6.png" width="348"/>
+<img src="images/section-audio-settings.1-v1.0.6.png" width="255"/>
 </p>
 
 - Driver (**A1**): The dropdown menu allows to select the audio driver from those available on the computer (typically, CoreAudio on Mac, WASAPI, DirectSound, and ASIO on Windows, ALSA, and Jack on Linux).  
@@ -493,7 +616,102 @@ When changed, the audio settings are saved automatically on the computer and res
 - Window: *C:\\Users\\"username"\\AppData\\Roaming\\Ircam\\Partiels.audio.settings*
 - Linux: *~/Ircam/Partiels.audio.settings*
 
-## 14. Credits
+<div style="page-break-after: always;"></div>
 
-**Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
-**Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
+## 12. Plug-ins settings
+
+The application uses [Vamp plug-in technology](https://www.vamp-plugins.org/), an audio processing plug-in system that extract descriptive information from audio data developed at the Centre for Digital Music, Queen Mary, University of London. 
+
+At startup, the application scans for the Vamp plug-ins installed on your machine. You can control the folders in which the application should look using the Plugin Settings window that can be displayed via the main menu `Partiels → Plugins Settings...` (Mac) or `Help → Plugins Settings...` on (Linux/Windows). 
+
+<p align="center">
+<img src="images/section-plug-in-settings.1-v1.0.6.png" width="302"/>
+</p>
+
+In the upper section of the Plugin Settings window, each item in the list corresponds to a folder. The order of the item corresponds to the order in which the application explores the folders.
+
+- Add items: Click on the `+` button (**P1**) to select a folder using the file browser window or drag and drop a folder from the operating system's file browser.
+
+- Delete items: Select one or several items (**I2**) (with the `Ctrl` or `⇧ Shift` keys) by clicking on the name part of the item and press the `Delete ⌫` key to remove items from the audio files layout.
+
+- Move an item: Click on the index part of the item (**I1**), drag the item to a new position above or below and drop the item to reorder the audio file configuration and update the indices.
+
+- Copy an item: Click on the index part of the item (**I1**) with the `Ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+
+- Modify the folder: Click on the `Change` button (**I3**) to display a file browser window and select another folder.
+
+- Reveal the folder: Click on the `Folder` button (**I4**) to reveal the folder in   operating system's file browser.
+
+- Undo changes: Use the undo key command `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows) to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+
+- Redo changes: Use the redo key commands `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+
+- Apply changes: Click on the `Apply` button (**P2**) to save the changes. If you modify the folders, you will be asked to restart the application to scan for plug-ins.
+
+- Reset changes: Click on the `Reset` button (**P3**) to reset the settings to the saved state.
+
+- Reset to default: Click on the `Default` button (**P4**) to reset the settings to the default state.
+
+- Use environment variable: Enable or disable the use of the `VAMP_PATH` environment variable to define the extra folders. On MacOS, the option is accessible by clicking on the `Option` button (**P5**). On Windows and Linux, a toggle button replaces the button.
+
+- Quarantine management: Control the quarantine management when plug-ins are not notarized. Either it "Keep the default system mechanism", the system will probably suggest you to delete the plug-ins in question. Or it "Attemp to open quarantined libraries", the application will try to override the quarantine, you will have to restart the application to take into account the change. Or it "Ignore quarantined libraries", the application will ignore the plug-ins.
+
+<div style="page-break-after: always;"></div>
+
+## 13. Command-line tools
+
+The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
+
+```
+Usage:
+ Partiels --help|-h              Prints the list of commands
+ Partiels --version|-v           Prints the current version number
+ Partiels [file(s)]              Loads the document or creates a new document with the audio files specified as arguments.
+ Partiels --new|-n [options]     Creates a new document with a template and an audio file.
+	--input|-i <audiofile> Defines the path to the audio file to analyze (required).
+	--template|-t <templatefile> Defines the path to the template file (required).
+	--output|-o <outputfile> Defines the path of the output file (required).
+	--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
+	
+ Partiels --export|-e [options]  Analyzes an audio file and exports the results.
+	--input|-i <audiofile> Defines the path to the audio file to analyze (required).
+	--template|-t <templatefile> Defines the path to the template file (required).
+	--output|-o <outputdirectory> Defines the path of the output folder (required).
+	--format|-f <formatname> Defines the export format (jpeg, png, csv, json, cue or sdif) (required).
+	--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).
+	--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).
+	--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).
+	--groups Exports the images of group and not the image of the tracks (optional with the jpeg and png formats).
+	--nogrids Ignores the export of the grid tracks (optional with the csv, json or cue formats).
+	--header Includes header row before the data rows (optional with the csv format).
+	--separator <character> Defines the separator character between columns (optional with the csv format, default is ',').
+	--description Includes the plugin description (optional with the json format).
+	--frame <framesignature> Defines the 4 characters frame signaturer (required with the sdif format).
+	--matrix <matrixsignature> Defines the 4 characters matrix signaturer (required with the sdif format).
+	--colname <string> Defines the name of the column (optional with the sdif format).
+	
+ Partiels --sdif2json [options]  Converts a SDIF file to a JSON file.
+	--input|-i <sdiffile> Defines the path to the input SDIF file to convert (required).
+	--output|-o <jsonfile> Defines the path of the output JSON file (required).
+	--frame|-f <framesignature> The 4 characters frame signature (required).
+	--matrix|-m <matrixsignature> The 4 characters matrix signature (required).
+	--row|-r <rowindex> The index of the row (optional - all rows if not defined).
+	--column|-c <columindex> The index of the column (optional - all columns if not defined).
+	--unit <unit> The unit of the results (optional).
+	--min <value> The minimum possible value of the results (required if max defined).
+	--max <value> The maximum possible value of the results (required if max defined).
+	
+ Partiels --json2sdif [options]  Converts a JSON file to a SDIF file.
+	--input|-i <jsonfile> Defines the path to the input JSON file to convert (required).
+	--output|-o <sdiffile> Defines the path of the output SDIF file (required).
+	--frame|-f <framesignature> The 4 characters frame signature (required).
+	--matrix|-m <matrixsignature> The 4 characters matrix signature (required).
+
+````
+
+It is recommended to add the path to the executable in the paths of your command line tool environment. 
+
+<div style="page-break-after: always;"></div>
+
+*[Partiels](https://forum.ircam.fr/projects/detail/partiels/) Manual by Pierre Guillot*  
+*[www.ircam.fr]("www.ircam.fr)*
