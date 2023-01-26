@@ -187,14 +187,19 @@ juce::Result Document::FileBased::consolidate()
         return juce::Result::fail("The document file doesn't exist!");
     }
 
-    auto const saveResult = saveDocument(file);
-    if(saveResult.failed())
+    auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+    if(std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [&](auto const& trackAcsr)
+                   {
+                       auto const& processing = trackAcsr.get().template getAttr<Track::AttrType::processing>();
+                       return std::get<0>(processing) || std::get<2>(processing);
+                   }))
     {
-        return saveResult;
+        return juce::Result::fail("The analysis is running!");
     }
 
     mDirector.startAction();
-
+    AlertWindow::Catcher catcher;
+    mDirector.setAlertCatcher(&catcher);
     auto const directory = getConsolidateDirectory(file);
 
     auto const audioResult = Exporter::consolidateAudioFiles(mAccessor, directory);
@@ -203,9 +208,9 @@ juce::Result Document::FileBased::consolidate()
         mDirector.endAction(ActionState::abort);
         return audioResult;
     }
+    mDirector.setAlertCatcher(nullptr);
 
     // Create a commmit for all tracks to for consolidation
-    auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
     for(auto& trackAcsr : trackAcsrs)
     {
         auto trackFileInfo = trackAcsr.get().getAttr<Track::AttrType::file>();
@@ -233,7 +238,8 @@ juce::Result Document::FileBased::consolidate()
     {
         return trackClearResult;
     }
-    return juce::Result::ok();
+
+    return saveDocument(file);
 }
 
 juce::Result Document::FileBased::loadTemplate(juce::File const& file, bool adaptOnSampleRate)
