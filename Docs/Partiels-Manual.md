@@ -18,25 +18,33 @@
 * [4. Create new tracks](#4-create-new-tracks)
   * [4.1. Analysis tracks](#41-analysis-tracks)
   * [4.2. File tracks](#42-file-tracks)
-* [6. Organize the tracks by groups](#6-organize-the-tracks-by-groups)
-  * [6.1. Edition](#61-edition)
-  * [6.2. Layout](#62-layout)
-* Export results and images - To do
-* Save and consolidate documents - To do
+* [5. Organize the tracks by groups](#5-organize-the-tracks-by-groups)
+  * [5.1. Edition](#51-edition)
+  * [5.2. Layout](#52-layout)
+* [6. Export analyses](#6-export-analyses)
+  * [6.1. General options](#61-general-options)
+  * [6.2. Specific options](#62-specific-options)
+  * [6.3. Batch processing](#63-batch-processing)
+* 7. Save and consolidate documents - To do
 * [8. Track properties](#8-track-properties)
   * [8.1. Processor](#81-processor)
   * [8.2. Graphical](#82-graphical)
   * [8.3. Plugin](#83-plugin)
-* Group properties - To do
+* 9. Group properties - To do
 * [10. Audio files layout](#10-audio-files-layout)
   * [10.1. Audio files information](#101-audio-files-information)
   * [10.2. Audio files configuration](#102-audio-files-configuration)
   * [10.3. Audio files recovery](#103-audio-files-recovery)
 * [11. Audio settings](#11-audio-settings)
-* Plugins management - To do
-* Command-line interface - To do
 * [14. Credits](#14-credits)
 
+ToDo:
+- Save and consolidate documents
+- Batch
+- Transport
+- Zoom
+- Plugins management - To do
+- Command-line interface - To do
 <div style="page-break-after: always;"></div>
 
 ## 1. Introduction
@@ -142,7 +150,7 @@ If you are importing an SDIF file, you will be able to define the frame code, ma
 
 If you are working on a new blank document, a default group is automatically created in which your new tracks appear. If you are working on a document that already contains groups and tracks, the new tracks are inserted after the last selected track or in the last selected group.
 
-## 6. Organize the tracks by groups
+## 5. Organize the tracks by groups
 
 The analyses of a document are represented by tracks. These analysis tracks are organized in groups. Each group can contain several tracks, allowing the analysis representations to be superimposed. In a group, the tracks are superimposed from bottom to top. 
 
@@ -152,7 +160,7 @@ The analyses of a document are represented by tracks. These analysis tracks are 
 
 It is therefore often preferable to place matrix type analyses, such as a sonogram, at the bottom and point or marker type analyses, such as spectral centroid or transient detection, on top. Thus the lines and markers will be displayed above the matrices.
 
-## 6.1. Edition
+## 5.1. Edition
 
 Move tracks and groups by clicking on the track or group header to select it and then dragging the item to the desired location. In this way you can reorder tracks within a group, move a track within another group and reorder groups between themselves. 
 
@@ -168,7 +176,7 @@ Select a group or track by clicking on the item's header (or multiple tracks in 
 
 Use the main menu `Edit → Add New Group`, the keyboard shortcuts `⌘ Cmd + G` (Mac) or `Ctrl + G` (Linux/Windows), or the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface to create a new group that will be inserted after the last selected item.
 
-## 6.2. Layout
+## 5.2. Layout
 
 Use the button (**K1**) on the header of a group to expand the group and show all the tracks of the group (e.g., *Group 2*) or conversely, to shrink the group and hide all the tracks of the group (e.g., *Group 1*). Use the button (**K2**) to expand or shrink all the groups in the document.
 
@@ -183,6 +191,64 @@ In automatic mode, the height of the tracks and groups will always be adapted ac
 In manual mode, the height of tracks and groups is free, click and drag on the bottom border of tracks and groups to resize them (**K4**). 
 
 > In manual mode, you can still optimize the height of tracks and groups to the height of the main window by clicking the button (**K3**) with the keyboard modifier `⇧ Shift`.
+
+## 6. Export analyses
+
+The results of the analyses of a document can be exported in different formats, as an image, text or binary file. You can display the export window via the main menu `File → Export...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + E` (Mac) or `Ctrl + Shift + E` (Linux/Windows). This window allows you to select the analysis(es) to be exported, define the time range, the format and the options for this format. 
+
+<p align="center">
+<img src="images/section-export-analyses.1-v1.0.6.png" width="232"/>
+</p>
+
+Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
+
+## 6.1. General options
+
+The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Specific options](#62-specific-options)). 
+
+<p align="center">
+<img src="images/section-export-analyses.2-v1.0.6.png" width="210"/>
+</p>
+
+The four time range options (**E2**) allow you to define the time range to be exported. 
+
+The `Time Preset` drop-down menu allows you to select one of three presets: *Global* to export the entire time range of the document, *Visible* to export the time range visible on the screen, and *Selection* to export the time range corresponding to the current selection. 
+
+<p align="center">
+<img src="images/section-export-analyses.3-v1.0.6.png" width="186"/>
+</p>
+
+You can also define the time range with the text entries `Time Start`, `Time End`, and `Time Length`, the preset then automatically switches to *Manual* mode. 
+
+<p align="center">
+<img src="images/section-export-analyses.4-v1.0.6.png" width="202"/>
+</p>
+
+The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV* or *CUE* or a binary format *SDIF*. For each format, you can set specific options (**E4**).
+
+## 6.2. Specific options
+
+Exporting to an image format (*JPEG* or *PNG*) offers four options:
+- `Preserve Group Overlay` enables preservation of the group overlay display if you are exporting the entire document or a group (so this option is not available when exporting a single track). Each group will be exported as an image including all its tracks. If the option is disabled, each track will be exported separately.
+- `Preserve Visible Size` enables the preservation of the current sizes of tracks and groups as they are currently visible in the document. If the option is active, it is not possible to manually set the width and height of the images.
+- `Image Width` defines the width of images in pixels.
+- `Image Height` defines the height of images in pixels.
+
+`Ignore Matrix Tracks`: The text and binary formats offer an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
+
+Export to CSV offers two options:
+- `Include Header Row` actives l'écriture d'une ligne d'en-tête comprennant les titres des colonnes (par ex. *time*, *duration*, *label*).
+- `Column Separator` allows to define the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). This can facilitate the parsing of files in other applications. 
+
+Export to JSON offers one option:
+- `Include Extra Description` enables writing a JSON object after the results containing all the properties of the audio processor for analysis and graphical rendering of the track. This allows to automatically optimize the display of the analysis but also to restart the analysis if needed.
+
+Export to SDIF offers three options:
+- `Frame Signature` defines the frame signature to encode the results in the SDIF file. 
+- `Matrix Signature` defines the matrix signature to encode the results in the SDIF file. 
+- `Column Name` defines the name of the column to encode the results in the SDIF file.
+
+## 6.3. Batch processing
 
 ## 8. Track properties
 
