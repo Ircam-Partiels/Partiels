@@ -40,7 +40,6 @@
 
 ToDo:
 - Save and consolidate documents
-- Batch
 - Transport
 - Zoom
 - Plugins management - To do
@@ -249,6 +248,38 @@ Export to SDIF offers three options:
 - `Column Name` defines the name of the column to encode the results in the SDIF file.
 
 ## 6.3. Batch processing
+
+You can use the current document as a template to generate results for other audio files using the batch processing system. To do this, open the batch window via the main menu `File → Batch...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + B` (Mac) or `Ctrl + Shift + B` (Linux/Windows). 
+
+<p align="center">
+<img src="images/section-export-analyses.5-v1.0.6.png" width="202"/>
+</p>
+
+This window top section (**B1**) allows you to select audio files and configure their channels layout.
+
+- Add items: Click on the `+` button to select one or several files using the file browser window or drag and drop one or several audio files or a folder from the operating system's file browser. A new item is created for each audio file. 
+
+- Delete items: Select one or several items (with the `ctrl` or `shift` keys) by clicking on the name part of the item and press the `delete ⌫` key to remove items from the audio files layout.
+
+- Move an item: Click on the `#` index part of the item, drag the item to a new position above or below and drop the item to reorder the audio file configuration and update the indices.
+<p align="center">
+<img src="images/section-export-analyses.6.a-v1.0.5.png" width="243"/>
+</p>
+
+- Copy an item: Click on the `#` index part of the item with the `ctrl` key pressed to duplicate an item, then drag and drop to insert the new item the desired position.
+
+- Modify an item's channels: Click on the channel drop-down menu and select the desired configuration (*all* analyses all channels separetily, *mono* sums all channels into one channel).  
+<p align="center">
+<img src="images/section-export-analyses.6.b-v1.0.6.png" width="243"/>
+</p>
+
+- Undo changes: Use the undo key command `ctrl or ⌘ + Z` and  to restore previous states. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+
+- Redo changes: Use the redo key commands `ctrl or ⌘ + Y` or `ctrl or ⌘ + shift ⇧+ Z` to reapply changes. Note the undo/redo mechanism is relative to this panel only (until the changes are applied to the document).
+
+`Adapt to Sample Rate` (**B2**) enables the adaptation of the *block size* and *step size* analysis parameters if the sample rate used in the current document differs from that of the audio files.
+
+Once you have selected the desired configuration, click on the `Process` button (**B3**), you will be prompted to select a folder (the name of the files will be generated automatically with the name of the audio files, the groups and the tracks).
 
 ## 8. Track properties
 
