@@ -117,7 +117,7 @@ A track contains and displays data from a sound analysis. This data can be of th
 
 Tracks can be created in two ways, from the analysis of a Vamp plug-in or from a result file.
 
-## 4.1. Analysis tracks
+### 4.1. Analysis tracks
 
 When you click on the button to add analysis tracks via the interface for starting a new document, the window for adding analysis plugins is displayed. If you are already working on a document, you can bring up this window to add new tracks via the main menu `Edit → Add New Track`, the keyboard shortcut `⌘ Cmd + T` (Mac) or `Ctrl + T` (Linux/Windows), or by using the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface. 
 
@@ -131,7 +131,7 @@ You can select one or more plug-ins and then press the `Return ⏎` key (or you 
 
 If you want to modify the analysis and graphical properties of a track, please refer to the [Track properties](#track-properties) section.
 
-## 4.2. File tracks
+### 4.2. File tracks
 
 A new track can be created by importing pre-calculated results from a file. This file can be generated from another Partiels document to avoid recalculating the analyses or from another application. The supported formats are JSON (*.json*), CSV (*.csv*), CUE (*.cue*) and SDIF (*.sdif*). You can bring up the file browser to select a file via the main menu `File → Import...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + I` (Mac) or `Ctrl + Shift + I` (Linux/Windows). Once your file is selected, the `Load File...` window appears, allowing you to set the unit and range of the imported values. 
 
@@ -159,7 +159,7 @@ The analyses of a document are represented by tracks. These analysis tracks are 
 
 It is therefore often preferable to place matrix type analyses, such as a sonogram, at the bottom and point or marker type analyses, such as spectral centroid or transient detection, on top. Thus the lines and markers will be displayed above the matrices.
 
-## 5.1. Edition
+### 5.1. Edition
 
 Move tracks and groups by clicking on the track or group header to select it and then dragging the item to the desired location. In this way you can reorder tracks within a group, move a track within another group and reorder groups between themselves. 
 
@@ -175,7 +175,7 @@ Select a group or track by clicking on the item's header (or multiple tracks in 
 
 Use the main menu `Edit → Add New Group`, the keyboard shortcuts `⌘ Cmd + G` (Mac) or `Ctrl + G` (Linux/Windows), or the drop-down menu of the `+` button ([Overview](#overview) - **K1**) on the main interface to create a new group that will be inserted after the last selected item.
 
-## 5.2. Layout
+### 5.2. Layout
 
 Use the button (**K1**) on the header of a group to expand the group and show all the tracks of the group (e.g., *Group 2*) or conversely, to shrink the group and hide all the tracks of the group (e.g., *Group 1*). Use the button (**K2**) to expand or shrink all the groups in the document.
 
@@ -201,7 +201,7 @@ The results of the analyses of a document can be exported in different formats, 
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
 
-## 6.1. General options
+### 6.1. General options
 
 The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Specific options](#62-specific-options)). 
 
@@ -225,7 +225,7 @@ You can also define the time range with the text entries `Time Start`, `Time End
 
 The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV* or *CUE* or a binary format *SDIF*. For each format, you can set specific options (**E4**).
 
-## 6.2. Specific options
+### 6.2. Specific options
 
 Exporting to an image format (*JPEG* or *PNG*) offers four options:
 - `Preserve Group Overlay` enables preservation of the group overlay display if you are exporting the entire document or a group (so this option is not available when exporting a single track). Each group will be exported as an image including all its tracks. If the option is disabled, each track will be exported separately.
@@ -247,7 +247,7 @@ Export to SDIF offers three options:
 - `Matrix Signature` defines the matrix signature to encode the results in the SDIF file. 
 - `Column Name` defines the name of the column to encode the results in the SDIF file.
 
-## 6.3. Batch processing
+### 6.3. Batch processing
 
 You can use the current document as a template to generate results for other audio files using the batch processing system. To do this, open the batch window via the main menu `File → Batch...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + B` (Mac) or `Ctrl + Shift + B` (Linux/Windows). 
 
