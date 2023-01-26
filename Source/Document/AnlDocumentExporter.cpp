@@ -134,7 +134,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                          options.useGroupOverview = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyAutoSizeMode("Preserve Size", "Preserve the current size of the track or the group", [this](bool state)
+, mPropertyAutoSizeMode("Preserve Visible Size", "Preserve the current visible size of the track or the group", [this](bool state)
                         {
                             auto options = mOptions;
                             options.useAutoSize = state;
@@ -152,7 +152,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertyRawHeader("Header Row", "Include header row before the data rows", [this](bool state)
+, mPropertyRawHeader("Include Header Row", "Include header row before the data rows", [this](bool state)
                      {
                          auto options = mOptions;
                          options.includeHeaderRaw = state;
@@ -170,7 +170,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                                   options.includeDescription = state;
                                   setOptions(options, juce::NotificationType::sendNotificationSync);
                               })
-, mPropertySdifFrame("Frame", "Define the frame signature to encode the results in the SDIF file", [this](juce::String text)
+, mPropertySdifFrame("Frame Signature", "Define the frame signature to encode the results in the SDIF file", [this](juce::String text)
                      {
                          while(text.length() < 4)
                          {
@@ -181,7 +181,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                          options.sdifFrameSignature = text;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertySdifMatrix("Matrix", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String text)
+, mPropertySdifMatrix("Matrix Signature", "Define the matrix signature to encode the results in the SDIF file", [this](juce::String text)
                       {
                           while(text.length() < 4)
                           {
@@ -198,7 +198,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                            options.sdifColumnName = text;
                            setOptions(options, juce::NotificationType::sendNotificationSync);
                        })
-, mPropertyIgnoreGrids("Ignore Grid Tracks", "Ignore tracks with grid results (sonagrams)", [this](bool state)
+, mPropertyIgnoreGrids("Ignore Matrix Tracks", "Ignore tracks with matrix results (such as a spectrogram)", [this](bool state)
                        {
                            auto options = mOptions;
                            options.ignoreGridResults = state;
