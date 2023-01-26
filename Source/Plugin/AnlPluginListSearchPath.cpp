@@ -106,7 +106,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
                          updateButtonsStates();
                      });
         juce::PopupMenu submenu;
-        auto addModeItem = [&](juce::String const& name, QuarantineMode mode)
+        auto const addModeItem = [&](juce::String const& name, QuarantineMode mode)
         {
             submenu.addItem(name, mQuarantineMode != mode, mQuarantineMode == mode, [=, this]()
                             {
@@ -121,7 +121,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
         addModeItem(juce::translate("Keep the default system mechanism"), QuarantineMode::system);
         addModeItem(juce::translate("Attemp to open quarantined libraries"), QuarantineMode::force);
         addModeItem(juce::translate("Ignore quarantined libraries"), QuarantineMode::ignore);
-        menu.addSubMenu(juce::translate("Quarantine Management"), submenu);
+        menu.addSubMenu(juce::translate("Quarantine management"), submenu);
         menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mOptionButton));
     };
 #else
