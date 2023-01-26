@@ -404,6 +404,7 @@ void Application::Instance::newDocument()
                                                            {
                                                                return;
                                                            }
+                                                           mUndoManager->clearUndoHistory();
                                                            mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
                                                            mDocumentFileBased->setFile({});
                                                        });
@@ -423,6 +424,7 @@ void Application::Instance::openDocumentFile(juce::File const& file)
                                                            {
                                                                return;
                                                            }
+                                                           mUndoManager->clearUndoHistory();
                                                            mDocumentFileBased->loadFrom(file, true);
                                                        });
 }
@@ -455,6 +457,7 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
                                                                {
                                                                    return;
                                                                }
+                                                               mUndoManager->clearUndoHistory();
                                                                mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
                                                                mDocumentAccessor->setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
                                                                mDocumentFileBased->setFile({});
