@@ -14,18 +14,21 @@
   * [1.1. System requirements](#11-system-requirements)
   * [1.2. Vamp plug-ins](#12-vamp-plug-ins)
 * [2. Overview](#2-overview)
-* [3. Create and open documents](#3-create-and-open-documents)
+* [3. Manage documents](#3-manage-documents)
+  * [3.1. Create and open](#31-create-and-open)
+  * [3.2. Save and consolidate](#32-save-and-consolidate)
+  * [3.3. Edition and backup](#33-edition-and-backup)
 * [4. Create new tracks](#4-create-new-tracks)
   * [4.1. Analysis tracks](#41-analysis-tracks)
   * [4.2. File tracks](#42-file-tracks)
 * [5. Organize the tracks by groups](#5-organize-the-tracks-by-groups)
   * [5.1. Edition](#51-edition)
   * [5.2. Layout](#52-layout)
+* 7. Transport and zoom
 * [6. Export analyses](#6-export-analyses)
   * [6.1. General options](#61-general-options)
   * [6.2. Specific options](#62-specific-options)
   * [6.3. Batch processing](#63-batch-processing)
-* 7. Save and consolidate documents - To do
 * [8. Track properties](#8-track-properties)
   * [8.1. Processor](#81-processor)
   * [8.2. Graphical](#82-graphical)
@@ -38,12 +41,11 @@
 * [11. Audio settings](#11-audio-settings)
 * [14. Credits](#14-credits)
 
-ToDo:
-- Save and consolidate documents
-- Transport
-- Zoom
-- Plugins management - To do
-- Command-line interface - To do
+Other ToDo:
+- Result Edition
+- Plugins management
+- Command-line interface
+
 <div style="page-break-after: always;"></div>
 
 ## 1. Introduction
@@ -89,21 +91,39 @@ Alongside Partiels, a set of analyses present in the AudioSculpt 3 application a
 
 <p align="center"><img src="Images/section-0.1-v1.0.6.jpg" alt="Example" width="1250"/></p>
 
-## 3. Create and open documents
+## 3. Manage documents
+
+A document is the main item you work on in Partials. It contains a set of analysis tracks organized by groups. You can create, edit, save and load documents.
+
+### 3.1. Create and open
 
 When you open Partials for the first time or create a new document via the main menu `File → New...` or with the keyboard shortcut `⌘ Cmd + N` (Mac) or `Ctrl + N` (Linux/Windows), the application presents the interface for starting a new document. 
 
-<p align="center"><img src="Images/section-create-and-open-documents.1-v1.0.6.png" alt="Example" width="412"/></p>
+<p align="center"><img src="Images/section-manage-documents.1-v1.0.6.png" alt="Example" width="412"/></p>
 
 You are prompted to load one or more audio files or pre-existing Partiels document file. The application supports audio file extensions *.aac*, *.aiff*, *.aif*, *.flac*, *.m4a*, *.mp3*, *.ogg*, *.wav* and *.wma*. A Partiels document file has the extension *.ptldoc*. You can use the file browser window by clicking on the `Load` button (**A1**) or drag the files directly into the interface (**A1**). You can also load a Partiels document file via the main menu `File → Open...` or with the keyboard shortcut `⌘ Cmd + O` (Mac) or `Ctrl + O` (Linux/Windows). And you can select one of the recently used Partiels documents from the list on the right (**A2**) or via the main menu `File → Open Recent`.
 
 If you have loaded one or more audio files, a second interface prompts you to add a new analysis track by clicking on the `Add Track` button (**A3**) to display the analysis plugin loading window. Alternatively, you can also use a pre-existing Partial document as a template. Click on the `Load Template` button (**A4**) to display the file browser window or select one of the recently used Partiels documents from the list on the right (**A2**).
 
-<p align="center"><img src="Images/section-create-and-open-documents.2-v1.0.6.png" alt="Example" width="412"/></p>
+<p align="center"><img src="Images/section-manage-documents.2-v1.0.6.png" alt="Example" width="412"/></p>
 
 If you use a Partiels document as a template, all the analyses in this document will be applied to the audio files you have selected. The *block size* and *step size* analysis parameters can be adapted automatically by activating the corresponding toggle button (**A6**) if the sample rate used in the initial document differs from that of your audio files.
 
-If you add a new track with an analysis plugin, you can refer to the [next section](#add-new-plugin-tracks) of this manual.
+If you add a new track with an analysis plugin, you can refer to the [corresponding section](#add-new-plugin-tracks) of this manual.
+
+### 3.2. Save and consolidate
+
+A document can be saved as a file with the extension *.ptldoc* on your system via the main menu `File → Save...` or with the keyboard shortcut `⌘ Cmd + S` (Mac) or `Ctrl + S` (Linux/Windows). You can also create a copy of the existing document (e.g. if you want to keep a version of the original document) via the main menu `File → Duplicate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + S` (Mac) or `Ctrl + ⇧ Shift + S` (Linux/Windows). 
+
+A document file is a text file describing its contents, such as audio files, analysis tracks, organization by groups. Audio files and analysis files used in a document are not embedded directly in the text file but saved as absolute paths to the files. If you delete or move these files on your system, the application will not be able to load the data and run the analyses properly and will prompt you to find or replace them. 
+
+If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation copies all the audio files into a folder next to the document and replaces the absolute paths with relative ones. This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plug-ins are no longer available.
+
+### 3.3. Edition and backup
+
+Partials allows you to control many elements of a document by adding tracks, organizing groups, changing the audio configuration, etc. All changes made to a document can be undone or redone over and over again using the action history. To undo an action, you can use the main menu `Edit → Undo` or with the keyboard shortcut `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows).  To redo an action, you can use the main menu `Edit → Redo` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows). 
+
+With each action, Partials temporarily saves the current state of the document and if for some (unlikely) reason the application crashes. Upon reopening, Partiels will allow you to restore the document you were working on just before the crash.  
 
 ## 4. Create new tracks
 
