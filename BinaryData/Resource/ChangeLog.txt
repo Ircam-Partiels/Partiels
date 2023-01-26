@@ -1,5 +1,6 @@
 v1.0.6
 
+- Fix: Executing an undo action after creating or opening a document crashes the application because the undo history must be cleared (#301)
 - Imp: Labels and tooltips of export and batch windows (#300)
 - Add: Add font options (name, style and size) to graphical properties of the tracks (#299)
 - Fix: The graphic layout of groups and tracks is not correctly updated when adding a new group (#296)
