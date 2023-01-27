@@ -1,5 +1,6 @@
 v1.0.6
 
+- Fix: Moving the focus to the next element with the tab key does not work correctly when a group is collapsed or the focus is not on the headers (#305)
 - Fix: Consolidating document should not be possible if an analysis because the results are not accessible (#303)
 - Fix: Consolidating document marks the document as modified so it needs to be saved again (#302)
 - Fix: Executing an undo action after creating or opening a document crashes the application because the undo history must be cleared (#301)
