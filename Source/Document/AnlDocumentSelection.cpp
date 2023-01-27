@@ -163,7 +163,7 @@ std::tuple<std::set<juce::String>, std::set<juce::String>> Document::Selection::
     return std::make_tuple(std::move(selectedGroups), std::move(selectedTracks));
 }
 
-std::optional<juce::String> Document::Selection::getClosestItem(Accessor const& accessor)
+std::optional<juce::String> Document::Selection::getClosestItem(Accessor const& accessor, bool ignoreCollapsedTracks)
 {
     auto const selectedGroups = getGroups(accessor);
     auto const selectedTracks = getTracks(accessor);
@@ -173,12 +173,15 @@ std::optional<juce::String> Document::Selection::getClosestItem(Accessor const& 
         if(Tools::hasGroupAcsr(accessor, groupId))
         {
             auto const& groupAcsr = Tools::getGroupAcsr(accessor, groupId);
-            auto const groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
-            for(auto const& trackId : groupLayout)
+            if(!ignoreCollapsedTracks || groupAcsr.getAttr<Group::AttrType::expanded>())
             {
-                if(selectedTracks.contains(trackId))
+                auto const groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
+                for(auto const& trackId : groupLayout)
                 {
-                    return trackId;
+                    if(selectedTracks.contains(trackId))
+                    {
+                        return trackId;
+                    }
                 }
             }
             if(selectedGroups.contains(groupId))
@@ -190,7 +193,7 @@ std::optional<juce::String> Document::Selection::getClosestItem(Accessor const& 
     return {};
 }
 
-std::optional<juce::String> Document::Selection::getFarthestItem(Accessor const& accessor)
+std::optional<juce::String> Document::Selection::getFarthestItem(Accessor const& accessor, bool ignoreCollapsedTracks)
 {
     auto const selectedGroups = getGroups(accessor);
     auto const selectedTracks = getTracks(accessor);
@@ -201,13 +204,16 @@ std::optional<juce::String> Document::Selection::getFarthestItem(Accessor const&
         if(Tools::hasGroupAcsr(accessor, groupId))
         {
             auto const& groupAcsr = Tools::getGroupAcsr(accessor, groupId);
-            auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
-            std::reverse(groupLayout.begin(), groupLayout.end());
-            for(auto const& trackId : groupLayout)
+            if(!ignoreCollapsedTracks || groupAcsr.getAttr<Group::AttrType::expanded>())
             {
-                if(selectedTracks.contains(trackId))
+                auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
+                std::reverse(groupLayout.begin(), groupLayout.end());
+                for(auto const& trackId : groupLayout)
                 {
-                    return trackId;
+                    if(selectedTracks.contains(trackId))
+                    {
+                        return trackId;
+                    }
                 }
             }
             if(selectedGroups.contains(groupId))
@@ -219,7 +225,7 @@ std::optional<juce::String> Document::Selection::getFarthestItem(Accessor const&
     return {};
 }
 
-std::optional<juce::String> Document::Selection::getNextItem(Accessor const& accessor)
+std::optional<juce::String> Document::Selection::getNextItem(Accessor const& accessor, bool ignoreCollapsedTracks)
 {
     auto const selectedGroups = getGroups(accessor);
     auto const selectedTracks = getTracks(accessor);
@@ -235,15 +241,18 @@ std::optional<juce::String> Document::Selection::getNextItem(Accessor const& acc
         if(Tools::hasGroupAcsr(accessor, groupId))
         {
             auto const& groupAcsr = Tools::getGroupAcsr(accessor, groupId);
-            auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
-            std::reverse(groupLayout.begin(), groupLayout.end());
-            for(auto const& trackId : groupLayout)
+            if(!ignoreCollapsedTracks || groupAcsr.getAttr<Group::AttrType::expanded>())
             {
-                if(selectedTracks.contains(trackId))
+                auto groupLayout = groupAcsr.getAttr<Group::AttrType::layout>();
+                std::reverse(groupLayout.begin(), groupLayout.end());
+                for(auto const& trackId : groupLayout)
                 {
-                    return identifier;
+                    if(selectedTracks.contains(trackId))
+                    {
+                        return identifier;
+                    }
+                    identifier = trackId;
                 }
-                identifier = trackId;
             }
             if(selectedGroups.contains(groupId))
             {

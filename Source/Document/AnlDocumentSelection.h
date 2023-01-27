@@ -21,9 +21,9 @@ namespace Document
         std::set<juce::String> getTracks(Accessor const& accessor);
         std::set<juce::String> getGroups(Accessor const& accessor);
         std::tuple<std::set<juce::String>, std::set<juce::String>> getItems(Accessor const& accessor);
-        std::optional<juce::String> getClosestItem(Accessor const& accessor);
-        std::optional<juce::String> getFarthestItem(Accessor const& accessor);
-        std::optional<juce::String> getNextItem(Accessor const& accessor);
+        std::optional<juce::String> getClosestItem(Accessor const& accessor, bool ignoreCollapsedTracks = false);
+        std::optional<juce::String> getFarthestItem(Accessor const& accessor, bool ignoreCollapsedTracks = false);
+        std::optional<juce::String> getNextItem(Accessor const& accessor, bool ignoreCollapsedTracks = false);
     } // namespace Selection
 } // namespace Document
 

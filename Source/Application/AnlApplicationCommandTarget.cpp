@@ -214,7 +214,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         {
             result.setInfo(juce::translate("Select Next Item"), juce::translate("Select Next Item"), "Select", 0);
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::tabKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(isItemMode);
+            result.setActive(true);
         }
         break;
         case CommandIDs::editNewGroup:
@@ -519,7 +519,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editSelectNextItem:
         {
-            auto const nextItem = Document::Selection::getNextItem(documentAcsr);
+            auto const nextItem = Document::Selection::getNextItem(documentAcsr, true);
             if(nextItem.has_value())
             {
                 Document::Selection::selectItem(documentAcsr, {*nextItem, {}}, true, false, NotificationType::synchronous);
