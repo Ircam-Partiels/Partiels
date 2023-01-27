@@ -164,7 +164,7 @@ if(WIN32)
     if(SIGNTOOL_EXE)
         add_custom_target(PartielsSign ALL
         COMMAND ${SIGNTOOL_EXE} sign /f ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Partiels-Code-Signing-Certificate-Sectigo.pfx /p "ASAP" /fd SHA256 /td SHA256 /tr http://timestamp.sectigo.com ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
-        COMMAND ${SIGNTOOL_EXE}  verify /pa ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
+        COMMAND ${SIGNTOOL_EXE} verify /pa ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
         )
         add_dependencies(PartielsSign PartielsPackage)
     else()
