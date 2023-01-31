@@ -24,6 +24,7 @@ namespace Application
         static void sendQuitSignal(int value);
 
         std::unique_ptr<Document::Executor> mExecutor;
+        bool mShouldWait{false};
     };
 } // namespace Application
 

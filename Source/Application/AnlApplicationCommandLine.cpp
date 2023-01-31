@@ -182,6 +182,7 @@ Application::CommandLine::CommandLine()
                  LookAndFeel lookAndFeel;
                  juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
                  auto const result = mExecutor->exportTo(outputDir, audioFile.getFileNameWithoutExtension() + " ", options, "");
+                 mShouldWait = false;
                  if(result.failed())
                  {
                      juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
@@ -191,6 +192,7 @@ Application::CommandLine::CommandLine()
                  sendQuitSignal(0);
              };
 
+             mShouldWait = true;
              auto result = mExecutor->load(audioFile, templateFile, adaptToSampleRate);
              if(result.failed())
              {
@@ -309,7 +311,7 @@ Application::CommandLine::~CommandLine()
 
 bool Application::CommandLine::isRunning() const
 {
-    return mExecutor != nullptr && mExecutor->isRunning();
+    return mShouldWait || (mExecutor != nullptr && mExecutor->isRunning());
 }
 
 void Application::CommandLine::sendQuitSignal(int value)
