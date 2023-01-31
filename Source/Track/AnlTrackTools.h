@@ -43,7 +43,7 @@ namespace Track
 
         bool isSelected(Accessor const& acsr);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
-        size_t getChannel(Accessor const& acsr, juce::Rectangle<int> bounds, int y);
+        std::optional<size_t> getChannel(Accessor const& acsr, juce::Rectangle<int> const& bounds, juce::Point<int> const& point);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);

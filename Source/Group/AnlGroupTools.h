@@ -14,7 +14,7 @@ namespace Group
         std::vector<ChannelVisibilityState> getChannelVisibilityStates(Accessor const& accessor);
         bool isSelected(Accessor const& accessor);
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
-        size_t getChannel(Accessor const& accessor, juce::Rectangle<int> bounds, int y);
+        std::optional<size_t> getChannel(Accessor const& accessor, juce::Rectangle<int> const& bounds, juce::Point<int> const& point);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds);
 
         bool canZoomIn(Accessor const& accessor);

@@ -101,17 +101,18 @@ std::set<size_t> Group::Tools::getSelectedChannels(Accessor const& accessor)
     return channels;
 }
 
-size_t Group::Tools::getChannel(Accessor const& accessor, juce::Rectangle<int> bounds, int y)
+std::optional<size_t> Group::Tools::getChannel(Accessor const& accessor, juce::Rectangle<int> const& bounds, juce::Point<int> const& point)
 {
-    auto const verticalRanges = getChannelVerticalRanges(accessor, std::move(bounds));
-    for(auto const& verticalRange : verticalRanges)
+    if(point.x <= 48)
     {
-        if(y < verticalRange.second.getEnd())
-        {
-            return verticalRange.first;
-        }
+        return {};
     }
-    return verticalRanges.empty() ? 0_z : verticalRanges.crbegin()->first;
+    auto const verticalRanges = getChannelVerticalRanges(accessor, bounds);
+    auto const it = std::find_if(verticalRanges.cbegin(), verticalRanges.cend(), [&](auto const& pair)
+                                 {
+                                     return point.y < pair.second.getEnd();
+                                 });
+    return it != verticalRanges.cend() ? it->first : std::optional<size_t>{};
 }
 
 std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds)

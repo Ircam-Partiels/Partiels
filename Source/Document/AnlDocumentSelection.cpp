@@ -79,36 +79,38 @@ void Document::Selection::selectItems(Accessor& accessor, Item begin, Item end, 
         }
     };
 
-    for(auto& groupAcsr : accessor.getAcsrs<AcsrType::groups>())
+    for(auto const& groupIdentifier : accessor.getAttr<AttrType::layout>())
     {
-        auto const& groupIdentifier = groupAcsr.get().getAttr<Group::AttrType::identifier>();
-        auto groupStates = groupAcsr.get().getAttr<Group::AttrType::focused>();
-
-        auto const groupNumChannels = std::max(Group::Tools::getChannelVisibilityStates(groupAcsr.get()).size(), 1_z);
-        auto const groupMinChannels = std::min(groupNumChannels, groupStates.size());
-
-        for(auto channelIndex = 0_z; channelIndex < groupMinChannels; ++channelIndex)
+        MiscWeakAssert(Tools::hasGroupAcsr(accessor, groupIdentifier));
+        if(Tools::hasGroupAcsr(accessor, groupIdentifier))
         {
-            updateState(groupStates, groupIdentifier, channelIndex, groupMinChannels - 1_z);
-        }
-        groupAcsr.get().setAttr<Group::AttrType::focused>(groupStates, notification);
+            auto& groupAcsr = Tools::getGroupAcsr(accessor, groupIdentifier);
+            auto groupStates = groupAcsr.getAttr<Group::AttrType::focused>();
 
-        auto const& groupLayout = groupAcsr.get().getAttr<Group::AttrType::layout>();
-        for(auto it = groupLayout.cbegin(); it != groupLayout.cend(); ++it)
-        {
-            auto const& trackIdentifier = *it;
-            auto const trackAcsr = Group::Tools::getTrackAcsr(groupAcsr.get(), trackIdentifier);
-            if(trackAcsr.has_value())
+            auto const groupNumChannels = std::max(Group::Tools::getChannelVisibilityStates(groupAcsr).size(), 1_z);
+            auto const groupMinChannels = std::min(groupNumChannels, groupStates.size());
+
+            for(auto channelIndex = 0_z; channelIndex < groupMinChannels; ++channelIndex)
             {
-                auto trackStates = trackAcsr->get().getAttr<Track::AttrType::focused>();
+                updateState(groupStates, groupIdentifier, channelIndex, groupMinChannels - 1_z);
+            }
+            groupAcsr.setAttr<Group::AttrType::focused>(groupStates, notification);
 
-                auto const trackNumChannels = std::max(trackAcsr->get().getAttr<Track::AttrType::channelsLayout>().size(), 1_z);
-                auto const trackMinChannels = std::min(trackNumChannels, trackStates.size());
-                for(auto channelIndex = 0_z; channelIndex < trackMinChannels; ++channelIndex)
+            for(auto const& trackIdentifier : groupAcsr.getAttr<Group::AttrType::layout>())
+            {
+                auto const trackAcsr = Group::Tools::getTrackAcsr(groupAcsr, trackIdentifier);
+                if(trackAcsr.has_value())
                 {
-                    updateState(trackStates, trackIdentifier, channelIndex, trackMinChannels - 1_z);
+                    auto trackStates = trackAcsr->get().getAttr<Track::AttrType::focused>();
+
+                    auto const trackNumChannels = std::max(trackAcsr->get().getAttr<Track::AttrType::channelsLayout>().size(), 1_z);
+                    auto const trackMinChannels = std::min(trackNumChannels, trackStates.size());
+                    for(auto channelIndex = 0_z; channelIndex < trackMinChannels; ++channelIndex)
+                    {
+                        updateState(trackStates, trackIdentifier, channelIndex, trackMinChannels - 1_z);
+                    }
+                    trackAcsr->get().setAttr<Track::AttrType::focused>(trackStates, notification);
                 }
-                trackAcsr->get().setAttr<Track::AttrType::focused>(trackStates, notification);
             }
         }
     }

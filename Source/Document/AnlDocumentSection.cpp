@@ -485,13 +485,9 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
         {
             return {};
         }
-        if(Utils::findComponentOfClass<Track::Thumbnail>(component) != nullptr)
-        {
-            return {identifier, {}};
-        }
         auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
-        auto const y = trackSection == component ? event.y : event.getEventRelativeTo(trackSection).y;
-        auto const channel = Track::Tools::getChannel(trackAcsr, trackSection->getLocalBounds(), y);
+        auto const point = trackSection == component ? event.position.toInt() : event.getEventRelativeTo(trackSection).position.toInt();
+        auto const channel = Track::Tools::getChannel(trackAcsr, trackSection->getLocalBounds(), point);
         return {identifier, channel};
     }
     if(auto* groupSection = Utils::findComponentOfClass<Group::Section>(component))
@@ -502,13 +498,9 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
         {
             return {};
         }
-        if(Utils::findComponentOfClass<Group::Thumbnail>(component) != nullptr)
-        {
-            return {identifier, {}};
-        }
         auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
-        auto const y = groupSection == component ? event.y : event.getEventRelativeTo(groupSection).y;
-        auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), y);
+        auto const point = groupSection == component ? event.position.toInt() : event.getEventRelativeTo(groupSection).position.toInt();
+        auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), point);
         return {identifier, channel};
     }
     return {};
@@ -546,7 +538,6 @@ void Document::Section::mouseDrag(juce::MouseEvent const& event)
     {
         return;
     }
-
     auto const item = getSelectionItem(juce::Desktop::getInstance().findComponentAt(event.getScreenPosition()), event);
     if(item.identifier.isEmpty() || !item.channel.has_value())
     {
