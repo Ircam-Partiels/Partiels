@@ -135,6 +135,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewTimeZoomIn);
         menu.addCommandItem(&commandManager, CommandIDs::viewTimeZoomOut);
+        menu.addCommandItem(&commandManager, CommandIDs::viewVerticalZoomIn);
+        menu.addCommandItem(&commandManager, CommandIDs::viewVerticalZoomOut);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::viewInfoBubble);
     }
