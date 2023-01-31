@@ -16,6 +16,11 @@ namespace Group
         std::set<size_t> getSelectedChannels(Accessor const& acsr);
         size_t getChannel(Accessor const& accessor, juce::Rectangle<int> bounds, int y);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& accessor, juce::Rectangle<int> bounds);
+
+        bool canZoomIn(Accessor const& accessor);
+        bool canZoomOut(Accessor const& accessor);
+        void zoomIn(Accessor& accessor, double ratio, NotificationType notification);
+        void zoomOut(Accessor& accessor, double ratio, NotificationType notification);
     } // namespace Tools
 
     class LayoutNotifier
