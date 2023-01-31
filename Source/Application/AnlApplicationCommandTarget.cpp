@@ -319,7 +319,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::viewZoomIn:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-            result.setInfo(juce::translate("Zoom In"), juce::translate("Opens the manual in a web browser"), "View", 0);
+            result.setInfo(juce::translate("Time Zoom In"), juce::translate("Zooms in on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
         }
@@ -327,7 +327,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::viewZoomOut:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
-            result.setInfo(juce::translate("Zoom Out"), juce::translate("Opens the manual in a web browser"), "View", 0);
+            result.setInfo(juce::translate("Time Zoom Out"), juce::translate("Zooms out on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() < zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getLength());
         }
