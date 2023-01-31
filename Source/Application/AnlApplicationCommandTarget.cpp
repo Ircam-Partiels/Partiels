@@ -115,8 +115,8 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::transportMovePlayHeadBackward
         , CommandIDs::transportMovePlayHeadForward
         
-        , CommandIDs::viewZoomIn
-        , CommandIDs::viewZoomOut
+        , CommandIDs::viewTimeZoomIn
+        , CommandIDs::viewTimeZoomOut
         , CommandIDs::viewInfoBubble
         
         , CommandIDs::helpOpenAudioSettings
@@ -316,7 +316,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         }
         break;
 
-        case CommandIDs::viewZoomIn:
+        case CommandIDs::viewTimeZoomIn:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Time Zoom In"), juce::translate("Zooms in on the time range"), "View", 0);
@@ -324,7 +324,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(zoomAcsr.getAttr<Zoom::AttrType::visibleRange>().getLength() > zoomAcsr.getAttr<Zoom::AttrType::minimumLength>());
         }
         break;
-        case CommandIDs::viewZoomOut:
+        case CommandIDs::viewTimeZoomOut:
         {
             auto const& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             result.setInfo(juce::translate("Time Zoom Out"), juce::translate("Zooms out on the time range"), "View", 0);
@@ -758,7 +758,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             return true;
         }
 
-        case CommandIDs::viewZoomIn:
+        case CommandIDs::viewTimeZoomIn:
         {
             auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -766,7 +766,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range.expanded(grange.getLength() / -100.0), NotificationType::synchronous);
             return true;
         }
-        case CommandIDs::viewZoomOut:
+        case CommandIDs::viewTimeZoomOut:
         {
             auto& zoomAcsr = documentAcsr.getAcsr<Document::AcsrType::timeZoom>();
             auto const range = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();

@@ -48,8 +48,8 @@ namespace Application
             , transportMovePlayHeadBackward
             , transportMovePlayHeadForward
             
-            , viewZoomIn
-            , viewZoomOut
+            , viewTimeZoomIn
+            , viewTimeZoomOut
             , viewInfoBubble
             
             , helpOpenAudioSettings
