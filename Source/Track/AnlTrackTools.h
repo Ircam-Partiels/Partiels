@@ -24,6 +24,11 @@ namespace Track
         bool supportsStepSize(Accessor const& acsr);
         DisplayType getDisplayType(Accessor const& acsr);
 
+        bool canZoomIn(Accessor const& accessor);
+        bool canZoomOut(Accessor const& accessor);
+        void zoomIn(Accessor& accessor, double ratio, NotificationType notification);
+        void zoomOut(Accessor& accessor, double ratio, NotificationType notification);
+
         float valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
         float pixelToValue(float position, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds);
         float secondsToPixel(double seconds, juce::Range<double> const& timeRange, juce::Rectangle<float> const& bounds);

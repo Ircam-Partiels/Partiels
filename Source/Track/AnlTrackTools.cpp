@@ -74,6 +74,60 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
     return DisplayType::points;
 }
 
+bool Track::Tools::canZoomIn(Accessor const& accessor)
+{
+    switch(getDisplayType(accessor))
+    {
+        case DisplayType::markers:
+            return false;
+        case DisplayType::points:
+            return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::valueZoom>());
+        case Track::Tools::DisplayType::columns:
+            return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::binZoom>());
+    };
+    return false;
+}
+
+bool Track::Tools::canZoomOut(Accessor const& accessor)
+{
+    switch(getDisplayType(accessor))
+    {
+        case DisplayType::markers:
+            return false;
+        case DisplayType::points:
+            return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::valueZoom>());
+        case Track::Tools::DisplayType::columns:
+            return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::binZoom>());
+    };
+    return false;
+}
+
+void Track::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
+{
+    switch(getDisplayType(accessor))
+    {
+        case DisplayType::markers:
+            break;
+        case DisplayType::points:
+            return Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
+        case Track::Tools::DisplayType::columns:
+            return Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
+    };
+}
+
+void Track::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
+{
+    switch(getDisplayType(accessor))
+    {
+        case DisplayType::markers:
+            break;
+        case DisplayType::points:
+            return Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
+        case Track::Tools::DisplayType::columns:
+            return Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
+    };
+}
+
 float Track::Tools::valueToPixel(float value, juce::Range<double> const& valueRange, juce::Rectangle<float> const& bounds)
 {
     return (1.0f - static_cast<float>((static_cast<double>(value) - valueRange.getStart()) / valueRange.getLength())) * bounds.getHeight() + bounds.getY();
