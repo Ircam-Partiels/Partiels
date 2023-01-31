@@ -185,7 +185,7 @@ Application::CommandLine::CommandLine()
                  if(result.failed())
                  {
                      juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
-                     sendQuitSignal(1);
+                     fail(result.getErrorMessage());
                  }
                  juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
                  sendQuitSignal(0);
