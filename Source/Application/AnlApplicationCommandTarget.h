@@ -50,6 +50,8 @@ namespace Application
             
             , viewTimeZoomIn
             , viewTimeZoomOut
+            , viewVerticalZoomIn
+            , viewVerticalZoomOut
             , viewInfoBubble
             
             , helpOpenAudioSettings

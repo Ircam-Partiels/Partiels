@@ -117,6 +117,8 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         
         , CommandIDs::viewTimeZoomIn
         , CommandIDs::viewTimeZoomOut
+        , CommandIDs::viewVerticalZoomIn
+        , CommandIDs::viewVerticalZoomOut
         , CommandIDs::viewInfoBubble
         
         , CommandIDs::helpOpenAudioSettings
@@ -330,6 +332,38 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setInfo(juce::translate("Time Zoom Out"), juce::translate("Zooms out on the time range"), "View", 0);
             result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier, 0));
             result.setActive(Zoom::Tools::canZoomOut(zoomAcsr));
+        }
+        break;
+        case CommandIDs::viewVerticalZoomIn:
+        {
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            auto const canZoom = std::any_of(std::get<0_z>(selectedItems).cbegin(), std::get<0_z>(selectedItems).cend(), [&](auto const& groupId)
+                                             {
+                                                 return Group::Tools::canZoomIn(Document::Tools::getGroupAcsr(documentAcsr, groupId));
+                                             }) ||
+                                 std::any_of(std::get<1_z>(selectedItems).cbegin(), std::get<1_z>(selectedItems).cend(), [&](auto const& trackId)
+                                             {
+                                                 return Track::Tools::canZoomIn(Document::Tools::getTrackAcsr(documentAcsr, trackId));
+                                             });
+            result.setInfo(juce::translate("Vertical Zoom In"), juce::translate("Zooms in on the vertical range"), "View", 0);
+            result.defaultKeypresses.add(juce::KeyPress('+', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(canZoom);
+        }
+        break;
+        case CommandIDs::viewVerticalZoomOut:
+        {
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            auto const canZoom = std::any_of(std::get<0_z>(selectedItems).cbegin(), std::get<0_z>(selectedItems).cend(), [&](auto const& groupId)
+                                             {
+                                                 return Group::Tools::canZoomOut(Document::Tools::getGroupAcsr(documentAcsr, groupId));
+                                             }) ||
+                                 std::any_of(std::get<1_z>(selectedItems).cbegin(), std::get<1_z>(selectedItems).cend(), [&](auto const& trackId)
+                                             {
+                                                 return Track::Tools::canZoomOut(Document::Tools::getTrackAcsr(documentAcsr, trackId));
+                                             });
+            result.setInfo(juce::translate("Vertical Zoom Out"), juce::translate("Zooms out on the vertical range"), "View", 0);
+            result.defaultKeypresses.add(juce::KeyPress('-', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier, 0));
+            result.setActive(canZoom);
         }
         break;
         case CommandIDs::viewInfoBubble:
@@ -766,6 +800,32 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::viewTimeZoomOut:
         {
             Zoom::Tools::zoomOut(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.01, NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::viewVerticalZoomIn:
+        {
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            for(auto& groupId : std::get<0_z>(selectedItems))
+            {
+                Group::Tools::zoomIn(Document::Tools::getGroupAcsr(documentAcsr, groupId), 0.01, NotificationType::synchronous);
+            }
+            for(auto& trackId : std::get<1_z>(selectedItems))
+            {
+                Track::Tools::zoomIn(Document::Tools::getTrackAcsr(documentAcsr, trackId), 0.01, NotificationType::synchronous);
+            }
+            return true;
+        }
+        case CommandIDs::viewVerticalZoomOut:
+        {
+            auto const selectedItems = Document::Selection::getItems(documentAcsr);
+            for(auto& groupId : std::get<0_z>(selectedItems))
+            {
+                Group::Tools::zoomOut(Document::Tools::getGroupAcsr(documentAcsr, groupId), 0.01, NotificationType::synchronous);
+            }
+            for(auto& trackId : std::get<1_z>(selectedItems))
+            {
+                Track::Tools::zoomOut(Document::Tools::getTrackAcsr(documentAcsr, trackId), 0.01, NotificationType::synchronous);
+            }
             return true;
         }
         case CommandIDs::viewInfoBubble:
