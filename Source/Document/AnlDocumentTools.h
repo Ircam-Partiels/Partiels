@@ -25,7 +25,7 @@ namespace Document
         size_t getGroupPosition(Accessor const& accessor, juce::String const& identifier);
         size_t getItemPosition(Accessor const& accessor, juce::String const& identifier);
 
-        std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& acsr);
+        std::unique_ptr<juce::Component> createTimeRangeEditor(Accessor& accessor);
     } // namespace Tools
 
     class LayoutNotifier

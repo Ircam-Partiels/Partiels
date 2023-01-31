@@ -146,14 +146,14 @@ size_t Document::Tools::getItemPosition(Accessor const& accessor, juce::String c
     return index;
 }
 
-std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& acsr)
+std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor& accessor)
 {
     class RangeEditor
     : public juce::Component
     {
     public:
-        RangeEditor(Zoom::Accessor& accessor)
-        : mAccessor(accessor)
+        RangeEditor(Zoom::Accessor& zoomAccessor)
+        : mAccessor(zoomAccessor)
         , mName("Name", "Time")
         , mPropertyStart("Start", "The start time of the visible range", [&](double time)
                          {
@@ -221,7 +221,7 @@ std::unique_ptr<juce::Component> Document::Tools::createTimeRangeEditor(Accessor
         PropertyHMSmsField mPropertyEnd;
     };
 
-    return std::make_unique<RangeEditor>(acsr.getAcsr<AcsrType::timeZoom>());
+    return std::make_unique<RangeEditor>(accessor.getAcsr<AcsrType::timeZoom>());
 }
 
 Document::LayoutNotifier::LayoutNotifier(juce::String const name, Accessor& accessor, std::function<void(void)> fn, std::set<Group::AttrType> groupAttrs, std::set<Track::AttrType> trackAttrs)
