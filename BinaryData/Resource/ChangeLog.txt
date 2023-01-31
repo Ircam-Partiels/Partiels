@@ -1,3 +1,5 @@
+v1.0.7
+
 v1.0.6
 
 - Fix: Moving the focus to the next element with the tab key does not work correctly when a group is collapsed or the focus is not on the headers (#305)

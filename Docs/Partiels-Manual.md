@@ -1,7 +1,7 @@
 <h1 align="center">Partiels Manual</h1>
 
 <p align="center">
-<i>Version 1.0.6 for Windows, Mac & Linux</i><br>
+<i>Version 1.0.7 for Windows, Mac & Linux</i><br>
 <i>Manual by Pierre Guillot</i><br>
 <a href="www.ircam.fr">www.ircam.fr</a><br><br>
 
