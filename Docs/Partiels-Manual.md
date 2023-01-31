@@ -374,10 +374,10 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 - Scroll vertically with `⇧ Shift` (or scroll horizontally) using the mouse-wheel to shift the time range backwards and forwards.
 - Scroll vertically using the mouse-wheel to zoom in and out of the time range.
 - Use the pitch-zoom to zoom in and out of the time range.
-- Zoom in with the keyboard shortcut `⌘ Cmd + =` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Zoom In`.
-- Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Zoom Out`.
+- Zoom in with the keyboard shortcut `⌘ Cmd + +` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Time Zoom In`.
+- Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Time Zoom Out`.
 
-#### 7.1.2 Horizontal axis
+#### 7.1.2 Vertical axis
 
 The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value or frequency zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
@@ -390,6 +390,8 @@ The interface of each point or matrix track contains a vertical ruler for each c
 - Scroll vertically or horizontally with `Ctrl` using the mouse-wheel to zoom in and out of the value or frequency range.
 - Scroll vertically with `Ctrl` and `⇧ Shift` using the mouse-wheel to shift the value or frequency range backwards and forwards.
 - Use the pitch-zoom with `Ctrl` to zoom in and out of the value or frequency range.
+- Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
+- Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
 
 ### 7.2. Transport
 
