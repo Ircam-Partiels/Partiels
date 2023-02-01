@@ -720,8 +720,7 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
     auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
     auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
 
-    auto const& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
-    auto const anchor = transportAcsr.getAttr<Transport::AttrType::playback>() ? transportAcsr.getAttr<Transport::AttrType::runningPlayhead>() : transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
+    auto const anchor = Zoom::Tools::getScaledValueFromWidth(timeZoomAcsr, *this, event.getEventRelativeTo(this).x);
 
     auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
     auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
