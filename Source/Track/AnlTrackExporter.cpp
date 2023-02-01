@@ -89,54 +89,42 @@ juce::Result Track::Exporter::toPreset(Accessor const& accessor, juce::File cons
     return juce::Result::ok();
 }
 
+juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, int width, int height)
+{
+    juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
+    juce::Graphics g(image);
+    g.fillAll(accessor.getAttr<AttrType::colours>().background);
+    Plot::paint(accessor, timeZoomAccessor, g, {0, 0, image.getWidth(), image.getHeight()}, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Decorator::ColourIds::normalBorderColourId));
+    return image;
+}
+
 juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort)
 {
-    juce::MessageManager::Lock lock;
-    if(!lock.tryEnter())
-    {
-        return juce::Result::fail("Invalid threaded access to model");
-    }
     auto const name = accessor.getAttr<AttrType::name>();
-    lock.exit();
+    auto constexpr format = "image";
 
     if(width <= 0 || height <= 0)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because image size is not valid.").replace("ANLNAME", accessor.getAttr<AttrType::name>()));
+        return failed(name, format, "the size is invalid");
     }
-    juce::TemporaryFile temp(file);
 
+    juce::TemporaryFile temp(file);
     auto* imageFormat = juce::ImageFileFormat::findImageFormatForFileExtension(temp.getFile());
     if(imageFormat == nullptr)
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the format of the file FLNAME is not supported.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return failed(name, format, "the format is not supported");
     }
 
     if(shouldAbort)
     {
-        return aborted(name, "image");
+        return aborted(name, format);
     }
 
-    auto const getImage = [&]()
-    {
-        if(!lock.tryEnter())
-        {
-            return juce::Image{};
-        }
-        auto const& laf = juce::Desktop::getInstance().getDefaultLookAndFeel();
-        auto const colour = laf.findColour(Decorator::ColourIds::normalBorderColourId);
-
-        juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
-        juce::Graphics g(image);
-        g.fillAll(accessor.getAttr<AttrType::colours>().background);
-        Plot::paint(accessor, timeZoomAccessor, g, {0, 0, width, height}, colour);
-        return image;
-    };
-
-    auto const image = getImage();
+    auto const image = toImage(accessor, timeZoomAccessor, width, height);
 
     if(shouldAbort)
     {
-        return aborted(name, "image");
+        return aborted(name, format);
     }
 
     if(image.isValid())
@@ -144,27 +132,27 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
         juce::FileOutputStream stream(temp.getFile());
         if(!stream.openedOk())
         {
-            return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be opened.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            return failed(name, format, ErrorType::streamAccessFailure);
         }
 
         if(!imageFormat->writeImageToStream(image, stream))
         {
-            return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the output stream of the file FLNAME cannot be written.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+            return failed(name, format, ErrorType::streamWritingFailure);
         }
     }
     else
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be exported as image because the image cannot be created.").replace("ANLNAME", name));
+        return failed(name, format, "the image cannot be created");
     }
 
     if(shouldAbort)
     {
-        return juce::Result::fail(juce::translate("The export of the track ANLNAME to the file FLNAME has been aborted.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return aborted(name, format);
     }
 
     if(!temp.overwriteTargetFileWithTemporary())
     {
-        return juce::Result::fail(juce::translate("The track ANLNAME can not be written to the file FLNAME. Ensure you have the right access to this file.").replace("ANLNAME", name).replace("FLNAME", file.getFullPathName()));
+        return failed(name, format, ErrorType::fileAccessFailure, file);
     }
     return juce::Result::ok();
 }
