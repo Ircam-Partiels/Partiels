@@ -89,6 +89,8 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editCut);
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editPaste);
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editDuplicate);
+        menu.addSeparator();
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editSystemCopy);
     }
     else if(menuName == "Transport")
     {
