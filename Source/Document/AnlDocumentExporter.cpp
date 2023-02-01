@@ -937,7 +937,7 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::csv:
                 return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
             case Options::Format::json:
-                return Track::Exporter::toJson(trackAcsr, timeRange, fileUsed, options.includeDescription, shouldAbort);
+                return Track::Exporter::toJson(trackAcsr, timeRange, {}, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:
                 return Track::Exporter::toCue(trackAcsr, timeRange, fileUsed, shouldAbort);
             case Options::Format::sdif:

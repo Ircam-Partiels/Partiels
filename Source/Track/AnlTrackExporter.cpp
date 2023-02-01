@@ -398,7 +398,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "JSON";
@@ -444,101 +444,113 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     auto const columns = results.getColumns();
     if(markers != nullptr)
     {
-        for(auto const& channelResults : *markers)
+        for(auto channelIndex = 0_z; channelIndex < markers->size(); ++channelIndex)
         {
-            if(shouldAbort)
+            if(channels.empty() || channels.count(channelIndex) > 0_z)
             {
-                return aborted(name, format);
-            }
-
-            nlohmann::json cjson;
-            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
-            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-            {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                nlohmann::json vjson;
-                vjson["time"] = std::get<0_z>(*it);
-                if(std::get<1_z>(*it) > 0.0)
-                {
-                    vjson["duration"] = std::get<1_z>(*it);
-                }
-                if(!std::get<2_z>(*it).empty())
-                {
-                    vjson["label"] = std::get<2_z>(*it);
-                }
-                cjson.emplace_back(std::move(vjson));
-                ++it;
-            }
-            json.emplace_back(std::move(cjson));
-        }
-    }
-    else if(points != nullptr)
-    {
-        for(auto const& channelResults : *points)
-        {
-            if(shouldAbort)
-            {
-                return aborted(name, format);
-            }
-
-            nlohmann::json cjson;
-            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
-            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-            {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                nlohmann::json vjson;
-                vjson["time"] = std::get<0_z>(*it);
-                if(std::get<1_z>(*it) > 0.0)
-                {
-                    vjson["duration"] = std::get<1_z>(*it);
-                }
-                if(std::get<2_z>(*it).has_value())
-                {
-                    vjson["value"] = std::get<2_z>(*it).value();
-                }
-                cjson.emplace_back(std::move(vjson));
-                ++it;
-            }
-            json.emplace_back(std::move(cjson));
-        }
-    }
-    else if(columns != nullptr)
-    {
-        for(auto const& channelResults : *columns)
-        {
-            nlohmann::json cjson;
-            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
-            while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
-            {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                auto const& channelResults = markers->at(channelIndex);
                 if(shouldAbort)
                 {
                     return aborted(name, format);
                 }
 
-                nlohmann::json vjson;
-                vjson["time"] = std::get<0_z>(*it);
-                if(std::get<1_z>(*it) > 0.0)
+                nlohmann::json cjson;
+                auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+                if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
                 {
-                    vjson["duration"] = std::get<1_z>(*it);
+                    ++it;
                 }
-                vjson["values"] = std::get<2_z>(*it);
-                cjson.emplace_back(std::move(vjson));
-                ++it;
+                while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+                {
+                    MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                    nlohmann::json vjson;
+                    vjson["time"] = std::get<0_z>(*it);
+                    if(std::get<1_z>(*it) > 0.0)
+                    {
+                        vjson["duration"] = std::get<1_z>(*it);
+                    }
+                    if(!std::get<2_z>(*it).empty())
+                    {
+                        vjson["label"] = std::get<2_z>(*it);
+                    }
+                    cjson.emplace_back(std::move(vjson));
+                    ++it;
+                }
+                json.emplace_back(std::move(cjson));
             }
-            json.emplace_back(std::move(cjson));
+        }
+    }
+    else if(points != nullptr)
+    {
+        for(auto channelIndex = 0_z; channelIndex < points->size(); ++channelIndex)
+        {
+            if(channels.empty() || channels.count(channelIndex) > 0_z)
+            {
+                auto const& channelResults = points->at(channelIndex);
+                if(shouldAbort)
+                {
+                    return aborted(name, format);
+                }
+
+                nlohmann::json cjson;
+                auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+                if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
+                {
+                    ++it;
+                }
+                while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+                {
+                    MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                    nlohmann::json vjson;
+                    vjson["time"] = std::get<0_z>(*it);
+                    if(std::get<1_z>(*it) > 0.0)
+                    {
+                        vjson["duration"] = std::get<1_z>(*it);
+                    }
+                    if(std::get<2_z>(*it).has_value())
+                    {
+                        vjson["value"] = std::get<2_z>(*it).value();
+                    }
+                    cjson.emplace_back(std::move(vjson));
+                    ++it;
+                }
+                json.emplace_back(std::move(cjson));
+            }
+        }
+    }
+    else if(columns != nullptr)
+    {
+        for(auto channelIndex = 0_z; channelIndex < columns->size(); ++channelIndex)
+        {
+            if(channels.empty() || channels.count(channelIndex) > 0_z)
+            {
+                auto const& channelResults = columns->at(channelIndex);
+                nlohmann::json cjson;
+                auto it = Results::findFirstAt(channelResults, timeRange.getStart());
+                if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
+                {
+                    ++it;
+                }
+                while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
+                {
+                    MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
+                    if(shouldAbort)
+                    {
+                        return aborted(name, format);
+                    }
+
+                    nlohmann::json vjson;
+                    vjson["time"] = std::get<0_z>(*it);
+                    if(std::get<1_z>(*it) > 0.0)
+                    {
+                        vjson["duration"] = std::get<1_z>(*it);
+                    }
+                    vjson["values"] = std::get<2_z>(*it);
+                    cjson.emplace_back(std::move(vjson));
+                    ++it;
+                }
+                json.emplace_back(std::move(cjson));
+            }
         }
     }
 
@@ -556,7 +568,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "JSON";
@@ -567,7 +579,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toJson(accessor, timeRange, stream, includeDescription, shouldAbort);
+    auto const result = toJson(accessor, timeRange, channels, stream, includeDescription, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -581,10 +593,10 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeDescription, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::String& string, bool includeDescription, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toJson(accessor, timeRange, stream, includeDescription, shouldAbort);
+    auto const result = toJson(accessor, timeRange, channels, stream, includeDescription, shouldAbort);
     if(result.failed())
     {
         return result;
