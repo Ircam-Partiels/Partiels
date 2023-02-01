@@ -1,5 +1,6 @@
 #include "AnlDocumentCommandTarget.h"
 #include "../Group/AnlGroupTools.h"
+#include "../Track/AnlTrackExporter.h"
 #include "../Track/AnlTrackTools.h"
 #include "AnlDocumentTools.h"
 
@@ -77,6 +78,7 @@ void Document::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& comma
         , CommandIDs::editCut
         , CommandIDs::editPaste
         , CommandIDs::editDuplicate
+        , CommandIDs::editSystemCopy
     });
     // clang-format on
 }
@@ -179,6 +181,13 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         {
             result.setInfo(juce::translate("Duplicate Frame(s)"), juce::translate("Duplicate Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('d', juce::ModifierKeys::commandModifier, 0));
+            result.setActive(isModeActive && !isSelectionEmpty());
+        }
+        break;
+        case CommandIDs::editSystemCopy:
+        {
+            result.setInfo(juce::translate("Copy Frame(s) to System Clipboard"), juce::translate("Copy Frame(s) to System Clipboard"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::altModifier, 0));
             result.setActive(isModeActive && !isSelectionEmpty());
         }
         break;
@@ -334,6 +343,26 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             perform({CommandIDs::editCopy});
             transportAcsr.setAttr<Transport::AttrType::startPlayhead>(mClipboardRange.getEnd(), NotificationType::synchronous);
             perform({CommandIDs::editPaste});
+            return true;
+        }
+        case CommandIDs::editSystemCopy:
+        {
+            auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+            for(auto const& trackAcsr : trackAcsrs)
+            {
+                if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+                {
+                    std::atomic<bool> shouldAbort{false};
+                    auto const selectedChannels = getSelectedChannels(trackAcsr);
+                    if(!selectedChannels.empty())
+                    {
+                        juce::String clipboardResults;
+                        Track::Exporter::toJson(trackAcsr.get(), selection, selectedChannels, clipboardResults, false, shouldAbort);
+                        juce::SystemClipboard::copyTextToClipboard(clipboardResults);
+                        return true;
+                    }
+                }
+            }
             return true;
         }
     }
