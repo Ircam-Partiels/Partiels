@@ -1,5 +1,7 @@
 v1.0.7
 
+- Fix: Zooming horizontally with the mouse wheel or trackpad scrolling must use the mouse position as a reference and not the play-head position (#310)
+- Add: Allow simultaneous zoom and translation by clicking and dragging on the zoom rulers - exclusive zoom requires the Alt keyboard modifier (#309)
 - Fix: Parsing markers in CSV format does not support labels starting with a numeric character (#308)
 - Imp: The time selection should be reset at mouse click (#307)
 - Fix: Resizing tracks and groups manually can change the selection by selecting the following item (#306)
