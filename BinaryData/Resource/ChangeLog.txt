@@ -1,5 +1,6 @@
 v1.0.7
 
+- Fix: Parsing markers in CSV format does not support labels starting with a numeric character (#308)
 - Imp: The time selection should be reset at mouse click (#307)
 - Fix: Resizing tracks and groups manually can change the selection by selecting the following item (#306)
 - Add: Menu entries and keyboard shortcuts to zoom vertically on selected tracks and groups (#304)
