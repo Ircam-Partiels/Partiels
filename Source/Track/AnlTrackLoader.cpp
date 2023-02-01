@@ -704,7 +704,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 result.timestamp = Vamp::RealTime::fromSeconds(std::stod(time));
                 result.hasDuration = true;
                 result.duration = Vamp::RealTime::fromSeconds(std::stod(duration));
-                if(!value.empty() && !std::isdigit(static_cast<int>(value[0])))
+
+                if(!value.empty() && value.find_first_not_of("0123456789.") != std::string::npos)
                 {
                     result.label = unescapeString(value).toStdString();
                 }
