@@ -184,7 +184,9 @@ A new track can be created by importing pre-calculated results from a file. This
 <img src="images/selection-import-new-result tracks.1-v1.0.6.png" width="232"/>
 </p>
 
-If you are importing a JSON file containing an extra description of the analysis used to calculate the analysis, the default unit and range of values will be taken from that data. In addition, the extra descriptions are saved so that the original analysis can be re-run if necessary.
+When importing markers in CSV format, it is recommended to escape the labels (with single or double quotes for example) to ensure that the numerical values of the labels are considered as text.
+
+When importing  a JSON file containing an extra description of the analysis used to calculate the analysis, the default unit and range of values will be taken from that data. In addition, the extra descriptions are saved so that the original analysis can be re-run if necessary.
 
 <p align="center">
 <img src="images/selection-import-new-result tracks.2-v1.0.6.png" width="232"/>
