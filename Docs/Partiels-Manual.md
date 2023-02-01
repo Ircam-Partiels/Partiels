@@ -366,11 +366,12 @@ Click and drag on a track or a group to select a time range. If the magnetize op
 
 The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control the time zoom. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
-- Click and drag up and down on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom in and out of the time range.
-- Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom on the entire time range.
+- Click and drag on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom in and out and to shift the time range backwards and forwards.
 - Click with `⇧ Shift` and drag to the left and right on the horizontal ruler ([Overview](#2-overview) **Z1**) to shift the time range backwards and forwards. 
+- Click with `Alt` and drag up and down on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom out and in of the time range.
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the horizontal ruler ([Overview](#2-overview) **Z1**)to select a time range to zoom to.
-- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows)n the horizontal ruler ([Overview](#2-overview) **Z1**) to show a floating window that allows to textually specify the zoom range . 
+- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) on the horizontal ruler ([Overview](#2-overview) **Z1**) to show a floating window that allows to textually specify the zoom range. 
+- Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to zoom on the entire time range.
 - Click on the horizontal bar ([Overview](#2-overview) **Z2**) to shift the time range backwards and forwards.
 - Double-click on the horizontal ruler ([Overview](#2-overview) **Z1**) to reset the time zoom to the global time range.
 - Scroll vertically with `⇧ Shift` (or scroll horizontally) using the mouse-wheel to shift the time range backwards and forwards.
@@ -383,11 +384,12 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 
 The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value or frequency zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
-- Click and drag left and right on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom in and out of the value or frequency range. 
-- Double-click on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom on the entire value or frequency range.
-- Click with `⇧ Shift` and drag left and right on the vertical ruler ([Overview](#2-overview) **Z3**) to shift the value or frequency range backwards and forwards.
+-- Click and drag on the vertical ruler ([Overview](#2-overview) **Z1**) to zoom in and out and to shift the value or frequency range backwards and forwards.
+- Click with `⇧ Shift` and drag up and down on the vertical ruler ([Overview](#2-overview) **Z3**) to shift the value or frequency range backwards and forwards.
+- Click with `Alt` and drag left and right on the vertical ruler ([Overview](#2-overview) **Z1**) to zoom out and in of the value or frequency range.
 - Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) and drag on the vertical ruler ([Overview](#2-overview) **Z3**) to select a value or frequency range to zoom to.
-- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows)n the frequency ruler  ([Overview](#2-overview) **Z3**) to show a floating window that allows to textually specify the zoom range . 
+- Click with `⎇ Option` (Mac) or `Alt` (Linux/Windows) on the vertical ruler  ([Overview](#2-overview) **Z3**) to show a floating window that allows to textually specify the zoom range. 
+- Double-click on the vertical ruler ([Overview](#2-overview) **Z3**) to zoom on the entire value or frequency range.
 - Click on the vertical bar ([Overview](#2-overview) **Z4**) to shift the value or frequency range backwards and forwards.
 - Scroll vertically or horizontally with `Ctrl` using the mouse-wheel to zoom in and out of the value or frequency range.
 - Scroll vertically with `Ctrl` and `⇧ Shift` using the mouse-wheel to shift the value or frequency range backwards and forwards.
