@@ -91,21 +91,21 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                 if(static_cast<bool>(access))
                 {
                     auto& header = mTable.getHeader();
-                    switch(Tools::getDisplayType(acsr))
+                    switch(Tools::getFrameType(acsr))
                     {
-                        case Tools::DisplayType::markers:
+                        case Track::FrameType::label:
                         {
                             header.setColumnName(static_cast<int>(ColumnType::value), "Label");
                             setNumChannels(results.getMarkers());
                         }
                         break;
-                        case Tools::DisplayType::points:
+                        case Track::FrameType::value:
                         {
                             header.setColumnName(static_cast<int>(ColumnType::value), "Value");
                             setNumChannels(results.getPoints());
                         }
                         break;
-                        case Tools::DisplayType::columns:
+                        case Track::FrameType::vector:
                         {
                             header.setColumnName(static_cast<int>(ColumnType::value), "Values");
                             setNumChannels(results.getColumns());
@@ -297,17 +297,17 @@ int Track::Result::Table::getNumRows()
         auto const size = *channel < resultPtr->size() ? resultPtr->at(*channel).size() : 0_z;
         return size < maxSize ? static_cast<int>(size) : maxSize;
     };
-    switch(Tools::getDisplayType(mAccessor))
+    switch(Tools::getFrameType(mAccessor))
     {
-        case Tools::DisplayType::markers:
+        case Track::FrameType::label:
         {
             return getNumColumns(results.getMarkers());
         }
-        case Tools::DisplayType::points:
+        case Track::FrameType::value:
         {
             return getNumColumns(results.getPoints());
         }
-        case Tools::DisplayType::columns:
+        case Track::FrameType::vector:
         {
             return getNumColumns(results.getColumns());
         }
@@ -672,7 +672,7 @@ std::optional<size_t> Track::Result::Table::getPlayheadRow() const
 
 bool Track::Result::Table::deleteSelection()
 {
-    if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns)
+    if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
     {
         return false;
     }
@@ -698,7 +698,7 @@ bool Track::Result::Table::deleteSelection()
 
 bool Track::Result::Table::copySelection()
 {
-    if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns)
+    if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
     {
         return false;
     }
@@ -731,7 +731,7 @@ bool Track::Result::Table::cutSelection()
 
 bool Track::Result::Table::pasteSelection()
 {
-    if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns)
+    if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
     {
         return false;
     }
@@ -763,7 +763,7 @@ bool Track::Result::Table::pasteSelection()
 
 bool Track::Result::Table::duplicateSelection()
 {
-    if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns)
+    if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
     {
         return false;
     }

@@ -30,7 +30,7 @@ bool Track::Tools::supportsStepSize(Accessor const& acsr)
     return hasPluginKey(acsr) && (description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.stepSize > 0_z);
 }
 
-Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
+Track::FrameType Track::Tools::getFrameType(Accessor const& acsr)
 {
     auto const& results = acsr.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
@@ -38,15 +38,15 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
     {
         if(results.getMarkers() != nullptr)
         {
-            return DisplayType::markers;
+            return FrameType::label;
         }
         if(results.getPoints() != nullptr)
         {
-            return DisplayType::points;
+            return FrameType::value;
         }
         if(results.getColumns() != nullptr)
         {
-            return DisplayType::columns;
+            return FrameType::vector;
         }
     }
     auto const& output = acsr.getAttr<AttrType::description>().output;
@@ -56,33 +56,33 @@ Track::Tools::DisplayType Track::Tools::getDisplayType(Accessor const& acsr)
         {
             case 0:
             {
-                return DisplayType::markers;
+                return FrameType::label;
             }
             break;
             case 1:
             {
-                return DisplayType::points;
+                return FrameType::value;
             }
             break;
             default:
             {
-                return DisplayType::columns;
+                return FrameType::vector;
             }
             break;
         }
     }
-    return DisplayType::points;
+    return FrameType::value;
 }
 
 bool Track::Tools::canZoomIn(Accessor const& accessor)
 {
-    switch(getDisplayType(accessor))
+    switch(getFrameType(accessor))
     {
-        case DisplayType::markers:
+        case FrameType::label:
             return false;
-        case DisplayType::points:
+        case FrameType::value:
             return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::valueZoom>());
-        case Track::Tools::DisplayType::columns:
+        case Track::FrameType::vector:
             return Zoom::Tools::canZoomIn(accessor.getAcsr<AcsrType::binZoom>());
     };
     return false;
@@ -90,13 +90,13 @@ bool Track::Tools::canZoomIn(Accessor const& accessor)
 
 bool Track::Tools::canZoomOut(Accessor const& accessor)
 {
-    switch(getDisplayType(accessor))
+    switch(getFrameType(accessor))
     {
-        case DisplayType::markers:
+        case FrameType::label:
             return false;
-        case DisplayType::points:
+        case FrameType::value:
             return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::valueZoom>());
-        case Track::Tools::DisplayType::columns:
+        case Track::FrameType::vector:
             return Zoom::Tools::canZoomOut(accessor.getAcsr<AcsrType::binZoom>());
     };
     return false;
@@ -104,26 +104,26 @@ bool Track::Tools::canZoomOut(Accessor const& accessor)
 
 void Track::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
 {
-    switch(getDisplayType(accessor))
+    switch(getFrameType(accessor))
     {
-        case DisplayType::markers:
+        case FrameType::label:
             break;
-        case DisplayType::points:
+        case FrameType::value:
             return Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
-        case Track::Tools::DisplayType::columns:
+        case Track::FrameType::vector:
             return Zoom::Tools::zoomIn(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
     };
 }
 
 void Track::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
 {
-    switch(getDisplayType(accessor))
+    switch(getFrameType(accessor))
     {
-        case DisplayType::markers:
+        case FrameType::label:
             break;
-        case DisplayType::points:
+        case FrameType::value:
             return Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::valueZoom>(), ratio, notification);
-        case Track::Tools::DisplayType::columns:
+        case Track::FrameType::vector:
             return Zoom::Tools::zoomOut(accessor.getAcsr<AcsrType::binZoom>(), ratio, notification);
     };
 }

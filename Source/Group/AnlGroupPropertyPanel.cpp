@@ -182,7 +182,7 @@ void Group::PropertyPanel::updateContent()
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     auto const hasNoColumns = std::none_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcrs)
                                            {
-                                               return Track::Tools::getDisplayType(trackAcrs.get()) == Track::Tools::DisplayType::columns;
+                                               return Track::Tools::getFrameType(trackAcrs.get()) == Track::FrameType::vector;
                                            });
     mPropertyBackgroundColour.setVisible(!layout.empty() && hasNoColumns);
     resized();

@@ -177,18 +177,18 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         }
 
         auto& sharedZoom = mSharedZoomAccessor->get();
-        switch(Tools::getDisplayType(mAccessor))
+        switch(Tools::getFrameType(mAccessor))
         {
-            case Tools::DisplayType::markers:
+            case Track::FrameType::label:
                 break;
-            case Tools::DisplayType::points:
+            case Track::FrameType::value:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                 auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
                 sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
             }
             break;
-            case Tools::DisplayType::columns:
+            case Track::FrameType::vector:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
                 auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
@@ -227,7 +227,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     mValueRangeMode = ValueRangeMode::custom;
                 }
 
-                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points)
+                if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -236,7 +236,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case Zoom::AttrType::visibleRange:
             {
                 runRendering();
-                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::points)
+                if(Tools::getFrameType(mAccessor) == Track::FrameType::value)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -257,7 +257,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns)
+                if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
                 {
                     updateLinkedZoom(notification);
                 }
@@ -281,18 +281,18 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case Zoom::AttrType::globalRange:
             case Zoom::AttrType::visibleRange:
             {
-                switch(Tools::getDisplayType(mAccessor))
+                switch(Tools::getFrameType(mAccessor))
                 {
-                    case Tools::DisplayType::markers:
+                    case Track::FrameType::label:
                         break;
-                    case Tools::DisplayType::points:
+                    case Track::FrameType::value:
                     {
                         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                         auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
                         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
                     }
                     break;
-                    case Tools::DisplayType::columns:
+                    case Track::FrameType::vector:
                     {
                         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
                         auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());

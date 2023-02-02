@@ -120,11 +120,11 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
     else
     {
         auto const delta = mScrollHelper.getModifierKeys().isShiftDown() ? wheel.deltaY : wheel.deltaX;
-        switch(Tools::getDisplayType(mAccessor))
+        switch(Tools::getFrameType(mAccessor))
         {
-            case Tools::DisplayType::markers:
+            case Track::FrameType::label:
                 break;
-            case Tools::DisplayType::points:
+            case Track::FrameType::value:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                 auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -132,7 +132,7 @@ void Track::Section::mouseWheelMove(juce::MouseEvent const& event, juce::MouseWh
                 zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange - offset, NotificationType::synchronous);
             }
             break;
-            case Tools::DisplayType::columns:
+            case Track::FrameType::vector:
             {
                 auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
                 auto const visibleRange = zoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -152,11 +152,11 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
         return;
     }
 
-    switch(Tools::getDisplayType(mAccessor))
+    switch(Tools::getFrameType(mAccessor))
     {
-        case Tools::DisplayType::markers:
+        case Track::FrameType::label:
             break;
-        case Tools::DisplayType::points:
+        case Track::FrameType::value:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
@@ -174,7 +174,7 @@ void Track::Section::mouseMagnify(juce::MouseEvent const& event, float magnifyAm
             zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
         }
         break;
-        case Tools::DisplayType::columns:
+        case Track::FrameType::vector:
         {
             auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
             auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();

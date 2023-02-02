@@ -964,11 +964,11 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             return juce::Result::fail("Track is invalid");
         }
         auto& trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
-        if(identifier != trackIdentifier && options.ignoreGridResults && Track::Tools::getDisplayType(trackAcsr) == Track::Tools::DisplayType::columns)
+        if(identifier != trackIdentifier && options.ignoreGridResults && Track::Tools::getFrameType(trackAcsr) == Track::FrameType::vector)
         {
             return juce::Result::ok();
         }
-        if(identifier != trackIdentifier && options.format == Options::Format::cue && Track::Tools::getDisplayType(trackAcsr) != Track::Tools::DisplayType::markers)
+        if(identifier != trackIdentifier && options.format == Options::Format::cue && Track::Tools::getFrameType(trackAcsr) != Track::FrameType::label)
         {
             return juce::Result::ok();
         }

@@ -95,7 +95,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         for(auto const& trackAcsr : trackAcsrs)
         {
-            if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+            if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
                 auto const selectedChannels = getSelectedChannels(trackAcsr.get());
                 for(auto const& channel : selectedChannels)
@@ -115,7 +115,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         for(auto const& trackAcsr : trackAcsrs)
         {
-            if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+            if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
                 auto const trackId = trackAcsr.get().getAttr<Track::AttrType::identifier>();
                 auto const trackIt = mClipboardData.find(trackId);
@@ -255,7 +255,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         for(auto const& trackAcsr : trackAcsrs)
         {
-            if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+            if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
                 fn(trackAcsr.get());
             }
@@ -357,7 +357,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
             for(auto const& trackAcsr : trackAcsrs)
             {
-                if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+                if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
                 {
                     std::atomic<bool> shouldAbort{false};
                     auto const selectedChannels = getSelectedChannels(trackAcsr);

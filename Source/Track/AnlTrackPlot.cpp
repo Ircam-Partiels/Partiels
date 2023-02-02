@@ -211,20 +211,20 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
 
     auto getStringify = [&]() -> std::function<juce::String(double)>
     {
-        switch(Tools::getDisplayType(accessor))
+        switch(Tools::getFrameType(accessor))
         {
-            case Tools::DisplayType::markers:
+            case Track::FrameType::label:
             {
                 return nullptr;
             }
-            case Tools::DisplayType::points:
+            case Track::FrameType::value:
             {
                 return [unit = accessor.getAttr<AttrType::description>().output.unit](double value)
                 {
                     return Format::valueToString(value, 4) + unit;
                 };
             }
-            case Tools::DisplayType::columns:
+            case Track::FrameType::vector:
             {
                 return [&](double value)
                 {
@@ -248,16 +248,16 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
         Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, stringify, justificationHorizontal);
     };
 
-    switch(Tools::getDisplayType(accessor))
+    switch(Tools::getFrameType(accessor))
     {
-        case Tools::DisplayType::markers:
+        case Track::FrameType::label:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
                                  {
                                  });
         }
         break;
-        case Tools::DisplayType::points:
+        case Track::FrameType::value:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
                                  {
@@ -265,7 +265,7 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
                                  });
         }
         break;
-        case Tools::DisplayType::columns:
+        case Track::FrameType::vector:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
                                  {
@@ -282,9 +282,9 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
 void Track::Plot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const colour)
 {
     g.setFont(accessor.getAttr<AttrType::font>());
-    switch(Tools::getDisplayType(accessor))
+    switch(Tools::getFrameType(accessor))
     {
-        case Tools::DisplayType::markers:
+        case Track::FrameType::label:
         {
             paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
@@ -293,7 +293,7 @@ void Track::Plot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoom
                                  });
         }
         break;
-        case Tools::DisplayType::points:
+        case Track::FrameType::value:
         {
             paintGrid(accessor, timeZoomAcsr, g, bounds, colour);
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
@@ -302,7 +302,7 @@ void Track::Plot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoom
                                  });
         }
         break;
-        case Tools::DisplayType::columns:
+        case Track::FrameType::vector:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
                                  {
@@ -914,14 +914,14 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
             undoManager.perform(std::make_unique<Modifier::ActionPaste>(director.getSafeAccessorFn(), std::get<0_z>(*channel), juce::Range<double>{}, data, time).release());
         };
 
-        switch(Tools::getDisplayType(mAccessor))
+        switch(Tools::getFrameType(mAccessor))
         {
-            case Tools::DisplayType::markers:
+            case Track::FrameType::label:
             {
                 addAction(std::map<size_t, Data::Marker>{std::make_pair(0_z, Data::Marker{0.0, 0.0, ""})});
             }
             break;
-            case Tools::DisplayType::points:
+            case Track::FrameType::value:
             {
                 auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                 auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
@@ -930,7 +930,7 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                 auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
                 addAction(std::map<size_t, Data::Point>{std::make_pair(0_z, Data::Point{0.0, 0.0, value})});
             }
-            case Tools::DisplayType::columns:
+            case Track::FrameType::vector:
                 break;
         }
     }

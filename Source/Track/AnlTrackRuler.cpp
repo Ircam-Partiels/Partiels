@@ -30,13 +30,13 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::results:
             case AttrType::channelsLayout:
             {
-                auto const displayType = Tools::getDisplayType(mAccessor);
-                if(mDisplayType != displayType)
+                auto const FrameType = Tools::getFrameType(mAccessor);
+                if(mFrameType != FrameType)
                 {
                     mRulers.clear();
-                    mDisplayType = displayType;
+                    mFrameType = FrameType;
                 }
-                if(mDisplayType == Tools::DisplayType::markers)
+                if(mFrameType == Track::FrameType::label)
                 {
                     return;
                 }
@@ -45,7 +45,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                 {
                     mRulers.pop_back();
                 }
-                auto& zoomAcsr = mDisplayType == Tools::DisplayType::points ? mAccessor.getAcsr<AcsrType::valueZoom>() : mAccessor.getAcsr<AcsrType::binZoom>();
+                auto& zoomAcsr = mFrameType == Track::FrameType::value ? mAccessor.getAcsr<AcsrType::valueZoom>() : mAccessor.getAcsr<AcsrType::binZoom>();
                 while(channelsLayout.size() > mRulers.size())
                 {
                     auto ruler = std::make_unique<Zoom::Ruler>(zoomAcsr, Zoom::Ruler::Orientation::vertical);
@@ -56,7 +56,7 @@ Track::Ruler::Ruler(Accessor& accessor)
                         {
                             if(event.mods.isCtrlDown())
                             {
-                                auto rangeEditor = mDisplayType == Tools::DisplayType::points ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
+                                auto rangeEditor = mFrameType == Track::FrameType::value ? Tools::createValueRangeEditor(mAccessor) : Tools::createBinRangeEditor(mAccessor);
                                 if(rangeEditor == nullptr)
                                 {
                                     return false;
@@ -96,7 +96,7 @@ Track::Ruler::~Ruler()
 
 void Track::Ruler::resized()
 {
-    if(mDisplayType == Tools::DisplayType::markers)
+    if(mFrameType == Track::FrameType::label)
     {
         return;
     }
@@ -175,9 +175,9 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::description:
             case AttrType::results:
             {
-                auto const displayType = Tools::getDisplayType(acsr);
-                mValueScrollBar.setVisible(displayType == Tools::DisplayType::points);
-                mBinScrollBar.setVisible(displayType == Tools::DisplayType::columns);
+                auto const FrameType = Tools::getFrameType(acsr);
+                mValueScrollBar.setVisible(FrameType == Track::FrameType::value);
+                mBinScrollBar.setVisible(FrameType == Track::FrameType::vector);
             }
             break;
         }

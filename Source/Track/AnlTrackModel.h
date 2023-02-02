@@ -9,6 +9,15 @@ ANALYSE_FILE_BEGIN
 
 namespace Track
 {
+    // clang-format off
+    enum class FrameType
+    {
+          label
+        , value
+        , vector
+    };
+    // clang-format on
+
     using Results = Result::Data;
     using FileInfo = Result::File;
     using Images = std::vector<std::vector<juce::Image>>;

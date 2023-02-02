@@ -231,9 +231,9 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 }
                 auto const& channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
                 auto const numChannels = channelsLayout.size();
-                switch(Tools::getDisplayType(acsr))
+                switch(Tools::getFrameType(acsr))
                 {
-                    case Tools::DisplayType::markers:
+                    case Track::FrameType::label:
                     {
                         mPropertyForegroundColour.setVisible(true);
                         mPropertyTextColour.setVisible(true);
@@ -245,7 +245,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyChannelLayout.setVisible(numChannels > 1_z);
                     }
                     break;
-                    case Tools::DisplayType::points:
+                    case Track::FrameType::value:
                     {
                         auto const& output = acsr.getAttr<AttrType::description>().output;
                         mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
@@ -266,7 +266,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyChannelLayout.setVisible(numChannels > 1_z);
                     }
                     break;
-                    case Tools::DisplayType::columns:
+                    case Track::FrameType::vector:
                     {
                         auto const& output = acsr.getAttr<AttrType::description>().output;
                         mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
@@ -479,7 +479,7 @@ void Track::PropertyGraphicalSection::resized()
 
 Zoom::Accessor& Track::PropertyGraphicalSection::getCurrentZoomAcsr()
 {
-    return Tools::getDisplayType(mAccessor) == Tools::DisplayType::columns ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
+    return Tools::getFrameType(mAccessor) == Track::FrameType::vector ? mAccessor.getAcsr<AcsrType::binZoom>() : mAccessor.getAcsr<AcsrType::valueZoom>();
 }
 
 void Track::PropertyGraphicalSection::setColourMap(ColourMap const& colourMap)

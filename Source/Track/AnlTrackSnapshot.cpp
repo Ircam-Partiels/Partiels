@@ -51,7 +51,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
                 break;
             case Zoom::AttrType::visibleRange:
             {
-                if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                if(Tools::getFrameType(mAccessor) != Track::FrameType::label)
                 {
                     repaint();
                 }
@@ -75,7 +75,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             {
                 if(!acsr.getAttr<Transport::AttrType::playback>())
                 {
-                    if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                    if(Tools::getFrameType(mAccessor) != Track::FrameType::label)
                     {
                         repaint();
                     }
@@ -86,7 +86,7 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             {
                 if(acsr.getAttr<Transport::AttrType::playback>())
                 {
-                    if(Tools::getDisplayType(mAccessor) != Tools::DisplayType::markers)
+                    if(Tools::getFrameType(mAccessor) != Track::FrameType::label)
                     {
                         repaint();
                     }
@@ -147,16 +147,16 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
         Zoom::Grid::paintVertical(g, zoomAcsr.getAcsr<Zoom::AcsrType::grid>(), zoomAcsr.getAttr<Zoom::AttrType::visibleRange>(), region, nullptr, justificationHorizontal);
     };
 
-    switch(Tools::getDisplayType(accessor))
+    switch(Tools::getFrameType(accessor))
     {
-        case Tools::DisplayType::markers:
+        case Track::FrameType::label:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
                                  {
                                  });
         }
         break;
-        case Tools::DisplayType::points:
+        case Track::FrameType::value:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
                                  {
@@ -164,7 +164,7 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
                                  });
         }
         break;
-        case Tools::DisplayType::columns:
+        case Track::FrameType::vector:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
                                  {
@@ -177,9 +177,9 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
 
 void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& timeZoomAcsr, double time, juce::Graphics& g, juce::Rectangle<int> bounds, juce::Colour const colour)
 {
-    switch(Tools::getDisplayType(accessor))
+    switch(Tools::getFrameType(accessor))
     {
-        case Tools::DisplayType::markers:
+        case Track::FrameType::label:
         {
             paintGrid(accessor, g, bounds, colour);
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
@@ -187,7 +187,7 @@ void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& time
                                  });
         }
         break;
-        case Tools::DisplayType::points:
+        case Track::FrameType::value:
         {
             paintGrid(accessor, g, bounds, colour);
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
@@ -196,7 +196,7 @@ void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& time
                                  });
         }
         break;
-        case Tools::DisplayType::columns:
+        case Track::FrameType::vector:
         {
             Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
                                  {
@@ -463,7 +463,7 @@ void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 
 void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
 {
-    if(Tools::getDisplayType(mAccessor) == Tools::DisplayType::markers)
+    if(Tools::getFrameType(mAccessor) == Track::FrameType::label)
     {
         Tooltip::BubbleClient::setTooltip("");
         return;

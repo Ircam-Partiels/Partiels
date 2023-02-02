@@ -196,7 +196,7 @@ void Group::PropertyGraphicalsSection::setColourMap(Track::ColourMap const& colo
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -214,7 +214,7 @@ void Group::PropertyGraphicalsSection::setForegroundColour(juce::Colour const& c
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -232,7 +232,7 @@ void Group::PropertyGraphicalsSection::setBackgroundColour(juce::Colour const& c
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -250,7 +250,7 @@ void Group::PropertyGraphicalsSection::setTextColour(juce::Colour const& colour)
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -268,7 +268,7 @@ void Group::PropertyGraphicalsSection::setShadowColour(juce::Colour const& colou
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -286,7 +286,7 @@ void Group::PropertyGraphicalsSection::setFontName(juce::String const& name)
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -310,7 +310,7 @@ void Group::PropertyGraphicalsSection::setFontStyle(juce::String const& style)
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -332,7 +332,7 @@ void Group::PropertyGraphicalsSection::setFontSize(float size)
 {
     auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
                                                 {
-                                                    return Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns;
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector;
                                                 });
     if(trackAcsrs.empty())
     {
@@ -478,7 +478,7 @@ void Group::PropertyGraphicalsSection::updateColourMap()
     std::set<Track::ColourMap> colourMaps;
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(Track::Tools::getDisplayType(trackAcsr.get()) == Track::Tools::DisplayType::columns)
+        if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::vector)
         {
             auto const colourMap = trackAcsr.get().getAttr<Track::AttrType::colours>().map;
             colourMaps.insert(colourMap);
@@ -507,7 +507,7 @@ void Group::PropertyGraphicalsSection::updateColours()
     std::set<juce::uint32> shadowColours;
     for(auto const& trackAcsr : trackAcsrs)
     {
-        if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
         {
             auto const& colours = trackAcsr.get().getAttr<Track::AttrType::colours>();
             foregroundColours.insert(colours.foreground.getARGB());
@@ -571,7 +571,7 @@ void Group::PropertyGraphicalsSection::updateFont()
     std::optional<juce::Font> currentFont;
     for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
     {
-        if(Track::Tools::getDisplayType(trackAcsr.get()) != Track::Tools::DisplayType::columns)
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
         {
             auto const font = trackAcsr.get().getAttr<Track::AttrType::font>();
             if(!currentFont.has_value())
