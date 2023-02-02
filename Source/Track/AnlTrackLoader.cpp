@@ -10,6 +10,75 @@
 
 ANALYSE_FILE_BEGIN
 
+namespace
+{
+    template <class T>
+    class StopableStreamIterator
+    {
+    public:
+        typedef char value_type ANL_ATTR_UNUSED;
+        typedef ptrdiff_t difference_type ANL_ATTR_UNUSED;
+        typedef const char* pointer ANL_ATTR_UNUSED;
+        typedef const char& reference ANL_ATTR_UNUSED;
+        typedef std::input_iterator_tag iterator_category ANL_ATTR_UNUSED;
+
+        StopableStreamIterator(T const& s)
+        : shouldAbort(s)
+        {
+        }
+
+        StopableStreamIterator(std::istream& i, T const& s)
+        : iterator(i)
+        , shouldAbort(s)
+        {
+        }
+
+        StopableStreamIterator(StopableStreamIterator const& x)
+        : iterator(x.iterator)
+        , shouldAbort(x.shouldAbort)
+        {
+        }
+
+        ~StopableStreamIterator() = default;
+
+        inline const char& operator*() const
+        {
+            return iterator.operator*();
+        }
+
+        inline const char* operator->() const
+        {
+            return iterator.operator->();
+        }
+
+        inline StopableStreamIterator& operator++()
+        {
+            iterator.operator++();
+            return *this;
+        }
+
+        inline StopableStreamIterator& operator++(int v)
+        {
+            iterator.operator++(v);
+            return *this;
+        }
+
+        inline bool operator==(StopableStreamIterator const& rhs) const
+        {
+            return shouldAbort ? true : iterator == rhs.iterator;
+        }
+
+        inline bool operator!=(StopableStreamIterator const& rhs) const
+        {
+            return shouldAbort ? false : iterator != rhs.iterator;
+        }
+
+    private:
+        std::istream_iterator<char, char, std::char_traits<char>, ptrdiff_t> iterator;
+        T const& shouldAbort;
+    };
+} // namespace
+
 Track::Loader::~Loader()
 {
     std::unique_lock<std::mutex> lock(mLoadingMutex);
@@ -169,73 +238,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(FileInfo 
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    class ThreadedStreamIterator
-    {
-    public:
-        typedef char value_type ANL_ATTR_UNUSED;
-        typedef ptrdiff_t difference_type ANL_ATTR_UNUSED;
-        typedef const char* pointer ANL_ATTR_UNUSED;
-        typedef const char& reference ANL_ATTR_UNUSED;
-        typedef std::input_iterator_tag iterator_category ANL_ATTR_UNUSED;
-
-        ThreadedStreamIterator(std::atomic<bool> const& s)
-        : shouldAbort(s)
-        {
-        }
-
-        ThreadedStreamIterator(std::istream& i, std::atomic<bool> const& s)
-        : iterator(i)
-        , shouldAbort(s)
-        {
-        }
-
-        ThreadedStreamIterator(ThreadedStreamIterator const& x)
-        : iterator(x.iterator)
-        , shouldAbort(x.shouldAbort)
-        {
-        }
-
-        ~ThreadedStreamIterator() = default;
-
-        inline const char& operator*() const
-        {
-            return iterator.operator*();
-        }
-
-        inline const char* operator->() const
-        {
-            return iterator.operator->();
-        }
-
-        inline ThreadedStreamIterator& operator++()
-        {
-            iterator.operator++();
-            return *this;
-        }
-
-        inline ThreadedStreamIterator& operator++(int v)
-        {
-            iterator.operator++(v);
-            return *this;
-        }
-
-        inline bool operator==(ThreadedStreamIterator const& rhs) const
-        {
-            return shouldAbort ? true : iterator == rhs.iterator;
-        }
-
-        inline bool operator!=(ThreadedStreamIterator const& rhs) const
-        {
-            return shouldAbort ? false : iterator != rhs.iterator;
-        }
-
-    private:
-        std::istream_iterator<char, char, std::char_traits<char>, ptrdiff_t> iterator;
-        std::atomic<bool> const& shouldAbort;
-    };
-
-    ThreadedStreamIterator const itStart(stream, shouldAbort);
-    ThreadedStreamIterator const itEnd(shouldAbort);
+    StopableStreamIterator<std::atomic<bool>> const itStart(stream, shouldAbort);
+    StopableStreamIterator<std::atomic<bool>> const itEnd(shouldAbort);
     nlohmann::basic_json container;
     try
     {
