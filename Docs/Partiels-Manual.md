@@ -40,7 +40,7 @@
   * [8.1. Processor](#81-processor)
   * [8.2. Graphical](#82-graphical)
   * [8.3. Plugin](#83-plugin)
-* 9. Group properties - To do
+* [9. Group properties](#9-group-properties)
 * [10. Audio files layout](#10-audio-files-layout)
   * [10.1. Audio files information](#101-audio-files-information)
   * [10.2. Audio files configuration](#102-audio-files-configuration)
@@ -545,6 +545,21 @@ The channel button allows to show or hide channels of the analysis results. This
 The graphical section displays information about the plugin such as the name, the feature, the maker, the version, the  markers, the category and the description and the copyright.
 
 <div style="page-break-after: always;"></div>
+
+## 9. Group properties
+
+The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel via the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**).
+
+<p align="center">
+<img src="images/section-group-properties.1-v1.0.7.png" width="242"/>
+</p>
+
+The first entries correpond to exclusive properties of the group :
+- Name: The property defined the name of the group as it appears on the group header or when exporting results. By default, a group is named "Group" followed by its index of creation.
+- Background Color: The property defines the background color used to render the overlay of the tracks. By default, the color is transparent.
+- Zoom Reference: This property defines which track is used as a reference for the vertical zoom of the group. As tracks can have different vertical zoom ranges or none (when tracks contain markers), it is necessary to define which one is used for zooming and the grid when rendering the tracks overlay.  By default, the group uses the frontmost track, but you can select another track if it does not meet your needs.
+
+The following sections Processor and Graphical contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
 ## 10. Audio files layout
 
