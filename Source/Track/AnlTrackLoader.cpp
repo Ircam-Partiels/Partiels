@@ -85,10 +85,8 @@ Track::Loader::~Loader()
     abortLoading();
 }
 
-void Track::Loader::loadAnalysis(Accessor const& accessor, FileInfo const& fileInfo)
+void Track::Loader::loadAnalysis(FileInfo const& fileInfo)
 {
-    auto const name = accessor.getAttr<AttrType::name>();
-
     std::unique_lock<std::mutex> lock(mLoadingMutex, std::try_to_lock);
     anlStrongAssert(lock.owns_lock());
     if(!lock.owns_lock())

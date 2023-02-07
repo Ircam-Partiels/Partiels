@@ -13,7 +13,7 @@ namespace Track
         Loader() = default;
         ~Loader() override;
 
-        void loadAnalysis(Accessor const& accessor, FileInfo const& fileInfo);
+        void loadAnalysis(FileInfo const& fileInfo);
 
         std::function<void(Results const& results)> onLoadingSucceeded = nullptr;
         std::function<void(juce::String const& message)> onLoadingFailed = nullptr;

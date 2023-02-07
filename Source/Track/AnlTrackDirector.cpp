@@ -625,7 +625,7 @@ void Track::Director::runLoading()
         mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
         startTimer(50);
         timerCallback();
-        mLoader.loadAnalysis(mAccessor, file);
+        mLoader.loadAnalysis(file);
     }
 }
 
