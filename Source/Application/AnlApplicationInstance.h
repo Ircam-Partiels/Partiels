@@ -54,6 +54,9 @@ namespace Application
         void openFiles(std::vector<juce::File> const& files);
         void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
+        AuthorizationProcessor& getAuthorizationProcessor();
+        FloatingWindowContainer& getAuthorizationWindow();
+
         Accessor& getApplicationAccessor();
         Window* getWindow();
         FileLoaderSelectorContainer* getFileLoaderSelectorContainer();
@@ -84,6 +87,8 @@ namespace Application
         void openStartupFiles();
         void checkPluginsQuarantine();
 
+        AuthorizationProcessor mAuthorizationProcessor;
+
         std::unique_ptr<juce::ApplicationCommandManager> mApplicationCommandManager;
         std::unique_ptr<juce::AudioFormatManager> mAudioFormatManager;
         std::unique_ptr<juce::AudioDeviceManager> mAudioDeviceManager;
@@ -101,6 +106,9 @@ namespace Application
         std::unique_ptr<LookAndFeel> mLookAndFeel;
         std::unique_ptr<Properties> mProperties;
         std::unique_ptr<Document::FileBased> mDocumentFileBased;
+
+        std::unique_ptr<AuthorizationPanel> mAuthorizationPanel;
+        std::unique_ptr<FloatingWindowContainer> mAuthorizationWindow;
 
         struct FileLoader
         {
