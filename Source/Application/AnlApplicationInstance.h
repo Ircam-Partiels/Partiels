@@ -72,6 +72,8 @@ namespace Application
         juce::AudioDeviceManager& getAudioDeviceManager();
         juce::UndoManager& getUndoManager();
 
+        void checkForNewVersion(bool useActiveVersionOnly, bool warnIfUpToDate);
+
     private:
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
@@ -121,6 +123,7 @@ namespace Application
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;
         std::unique_ptr<CommandLine> mCommandLine;
+        std::unique_ptr<Downloader> mDownloader;
 
         std::atomic<bool> mIsPluginListReady{true};
         juce::File mPreviousFile{};

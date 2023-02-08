@@ -106,6 +106,9 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mMainMenuModel = std::make_unique<MainMenuModel>(*mWindow.get());
     AppQuitIfInvalidPointer(mMainMenuModel);
 
+    mDownloader = std::make_unique<Downloader>();
+    AppQuitIfInvalidPointer(mDownloader);
+
     checkPluginsQuarantine();
 
     mApplicationListener->onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -302,6 +305,7 @@ void Application::Instance::shutdown()
     backupFile.getSiblingFile("Tracks").deleteRecursively();
     Document::FileBased::getConsolidateDirectory(backupFile).deleteRecursively();
 
+    mDownloader.reset();
     mMainMenuModel.reset();
     mWindow.reset();
     mDocumentFileBased.reset();
@@ -681,6 +685,11 @@ void Application::Instance::openStartupFiles()
         anlDebug("Application", "Opening new file(s)...");
         openFiles(commandFiles);
         mStartupFilesAreLoaded = true;
+
+        if(mApplicationAccessor->getAttr<AttrType::autoUpdate>())
+        {
+            checkForNewVersion(false, false);
+        }
         return;
     }
 
@@ -721,6 +730,10 @@ void Application::Instance::openStartupFiles()
                                              }
                                              mDocumentFileBased->addChangeListener(this);
                                          }
+                                         if(mApplicationAccessor->getAttr<AttrType::autoUpdate>())
+                                         {
+                                             checkForNewVersion(false, false);
+                                         }
                                      });
     }
     else
@@ -730,6 +743,10 @@ void Application::Instance::openStartupFiles()
         {
             anlDebug("Application", "Reopening last document...");
             openDocumentFile(previousFile);
+        }
+        if(mApplicationAccessor->getAttr<AttrType::autoUpdate>())
+        {
+            checkForNewVersion(false, false);
         }
     }
     mStartupFilesAreLoaded = true;
@@ -778,6 +795,86 @@ void Application::Instance::checkPluginsQuarantine()
                                      });
     }
 #endif
+}
+
+void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool warnIfUpToDate)
+{
+    MiscWeakAssert(mApplicationAccessor != nullptr);
+    if(mApplicationAccessor == nullptr)
+    {
+        return;
+    }
+
+    MiscWeakAssert(mDownloader != nullptr);
+    if(mDownloader == nullptr)
+    {
+        return;
+    }
+
+    auto constexpr urlAddress = "https://git.forum.ircam.fr/api/v4/projects/451/repository/tags";
+    auto constexpr privateToken = "PRIVATE-TOKEN: glpat-HQjqfzhoxsMDxTtsK25G";
+    mDownloader->launch({urlAddress}, {privateToken}, [=, this](juce::String content)
+                        {
+                            auto const currentVersion = Version::fromString(ProjectInfo::versionString);
+                            auto const checkVersion = Version::fromString(mApplicationAccessor->getAttr<AttrType::lastVersion>());
+                            auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
+
+                            auto upstreamVersion = usedVersion;
+                            auto const json = nlohmann::json::parse(content.toStdString());
+
+                            for(auto index = 0_z; index < json.size(); ++index)
+                            {
+                                auto const& tag = json.at(index);
+                                auto const name = tag.find("name");
+                                MiscWeakAssert(name != tag.cend() && name->is_string());
+                                if(name != tag.cend() && name->is_string())
+                                {
+                                    upstreamVersion = std::max(upstreamVersion, Version::fromString(juce::String(std::string(name.value()))));
+                                }
+                            }
+
+                            if(upstreamVersion > usedVersion)
+                            {
+                                auto options = juce::MessageBoxOptions()
+                                                   .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
+                                                   .withTitle(juce::translate("A new version is available!").replace("PRODUCT", ProjectInfo::projectName))
+                                                   .withMessage(juce::translate("PRODUCT VERSION has been published on the COMPAGNY website.").replace("PRODUCT", ProjectInfo::projectName).replace("VERSION", upstreamVersion.toString()).replace("COMPAGNY", ProjectInfo::companyName))
+                                                   .withButton(juce::translate("Proceed to download page"));
+                                if(warnIfUpToDate)
+                                {
+                                    options = options.withButton(juce::translate("Close the window"));
+                                }
+                                else
+                                {
+                                    options = options.withButton(juce::translate("Ignore this version")).withButton(juce::translate("Remind me later"));
+                                }
+
+                                juce::AlertWindow::showAsync(options, [=, this](int result)
+                                                             {
+                                                                 if(result != 0)
+                                                                 {
+                                                                     mApplicationAccessor->setAttr<AttrType::lastVersion>(upstreamVersion.toString(), NotificationType::synchronous);
+                                                                 }
+                                                                 if(result == 1)
+                                                                 {
+                                                                     juce::Timer::callAfterDelay(20, []()
+                                                                                                 {
+                                                                                                     juce::URL("https://forum.ircam.fr/projects/detail/partiels/").launchInDefaultBrowser();
+                                                                                                 });
+                                                                 }
+                                                             });
+                            }
+                            else if(warnIfUpToDate)
+                            {
+                                auto const options = juce::MessageBoxOptions()
+                                                         .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)
+                                                         .withTitle(juce::translate("The version is up to date!"))
+                                                         .withMessage(juce::translate("PRODUCT VERSION is the latest version available on the COMPAGNY website.").replace("PRODUCT", ProjectInfo::projectName).replace("VERSION", currentVersion.toString()).replace("COMPAGNY", ProjectInfo::companyName))
+                                                         .withButton(juce::translate("Ok"));
+
+                                juce::AlertWindow::showAsync(options, nullptr);
+                            }
+                        });
 }
 
 void Application::Instance::darkModeSettingChanged()
