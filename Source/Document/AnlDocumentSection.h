@@ -23,13 +23,14 @@ namespace Document
         };
         // clang-format on
 
-        Section(Director& director, juce::ApplicationCommandManager& commandManager);
+        Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor);
         ~Section() override;
 
         void showBubbleInfo(bool state);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
         Icon tooltipButton{Icon::Type::comment};
+        AuthorizationButton authorizationButton;
         std::function<void(void)> onSaveButtonClicked = nullptr;
         std::function<void(void)> onNewTrackButtonClicked = nullptr;
         std::function<void(void)> onNewGroupButtonClicked = nullptr;
@@ -111,6 +112,7 @@ namespace Document
         LayoutNotifier mLayoutNotifier;
         LayoutNotifier mExpandedNotifier;
         LayoutNotifier mFocusNotifier;
+        ComponentListener mComponentListener;
     };
 } // namespace Document
 

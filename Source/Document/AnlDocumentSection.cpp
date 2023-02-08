@@ -17,8 +17,9 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
     juce::Component::mouseWheelMove(e, wheel);
 }
 
-Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager)
+Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
 : CommandTarget(director, commandManager)
+, authorizationButton(authorizationProcessor)
 , mDirector(director)
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
@@ -226,6 +227,13 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
         menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mAddButton));
     };
 
+    mComponentListener.onComponentVisibilityChanged = [this](juce::Component&)
+    {
+        resized();
+    };
+    mComponentListener.attachTo(authorizationButton);
+
+    addChildComponent(authorizationButton);
     addAndMakeVisible(tooltipButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTransportSelectionInfo);
@@ -408,7 +416,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 Document::Section::~Section()
 {
     removeKeyListener(mCommandManager.getKeyMappings());
-
+    mComponentListener.detachFrom(authorizationButton);
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
     mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
@@ -421,6 +429,12 @@ void Document::Section::resizeHeader(juce::Rectangle<int>& bounds)
 
     auto leftSize = header.withRight(mTransportDisplay.getX()).withTrimmedLeft(5);
     leftSize = leftSize.withSizeKeepingCentre(leftSize.getWidth(), 24);
+    if(authorizationButton.isVisible())
+    {
+        authorizationButton.setBounds(leftSize.removeFromLeft(52));
+        leftSize.removeFromLeft(4);
+    }
+
     mReaderLayoutButton.setBounds(leftSize.removeFromLeft(24));
     leftSize.removeFromLeft(4);
     auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
