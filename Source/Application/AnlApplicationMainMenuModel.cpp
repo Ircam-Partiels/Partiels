@@ -148,6 +148,10 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
 #endif
         menu.addSeparator();
+        menu.addCommandItem(&commandManager, CommandIDs::helpAutoUpdate);
+        menu.addCommandItem(&commandManager, CommandIDs::helpCheckForUpdate);
+
+        menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpSdifConverter);
     }
     else

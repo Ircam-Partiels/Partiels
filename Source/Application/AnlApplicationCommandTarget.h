@@ -60,6 +60,8 @@ namespace Application
             , helpOpenProjectPage
             , helpAuthorize
             , helpSdifConverter
+            , helpAutoUpdate
+            , helpCheckForUpdate
         };
         // clang-format on
 

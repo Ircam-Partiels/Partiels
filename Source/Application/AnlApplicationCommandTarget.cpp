@@ -127,6 +127,8 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenProjectPage
         , CommandIDs::helpAuthorize
         , CommandIDs::helpSdifConverter
+        , CommandIDs::helpAutoUpdate
+        , CommandIDs::helpCheckForUpdate
     });
     // clang-format on
     Instance::get().getAllCommands(commands);
@@ -417,6 +419,19 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         case CommandIDs::helpSdifConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
+            result.setActive(true);
+        }
+        break;
+        case CommandIDs::helpAutoUpdate:
+        {
+            result.setInfo(juce::translate("Automatic Check for New Version"), juce::translate("Toggles the automatic check for a new version"), "Help", 0);
+            result.setActive(true);
+            result.setTicked(Instance::get().getApplicationAccessor().getAttr<AttrType::autoUpdate>());
+        }
+        break;
+        case CommandIDs::helpCheckForUpdate:
+        {
+            result.setInfo(juce::translate("Check for New Version"), juce::translate("Checks for a new version"), "Help", 0);
             result.setActive(true);
         }
         break;
@@ -888,6 +903,17 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::helpSdifConverter:
         {
             mSdifConverterWindow.show();
+            return true;
+        }
+        case CommandIDs::helpAutoUpdate:
+        {
+            auto const state = Instance::get().getApplicationAccessor().getAttr<AttrType::autoUpdate>();
+            Instance::get().getApplicationAccessor().setAttr<AttrType::autoUpdate>(!state, NotificationType::synchronous);
+            return true;
+        }
+        case CommandIDs::helpCheckForUpdate:
+        {
+            Instance::get().checkForNewVersion(true, true);
             return true;
         }
     }
