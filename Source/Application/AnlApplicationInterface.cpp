@@ -330,7 +330,7 @@ void Application::Interface::Loader::applicationCommandListChanged()
 }
 
 Application::Interface::Interface()
-: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager())
+: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getAuthorizationProcessor())
 {
     mComponentListener.onComponentVisibilityChanged = [this](juce::Component& component)
     {
@@ -348,6 +348,11 @@ Application::Interface::Interface()
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
     mComponentListener.attachTo(mLoader);
+
+    mDocumentSection.authorizationButton.onClick = []()
+    {
+        Instance::get().getAuthorizationWindow().show();
+    };
 
     mDocumentSection.tooltipButton.setClickingTogglesState(true);
     mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::viewInfoBubble));
@@ -404,8 +409,7 @@ Application::Interface::~Interface()
 void Application::Interface::resized()
 {
     auto bounds = getLocalBounds();
-    auto bottom = bounds.removeFromBottom(22);
-    mToolTipDisplay.setBounds(bottom);
+    mToolTipDisplay.setBounds(bounds.removeFromBottom(22));
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
     mDocumentSection.setBounds(bounds);
     auto const loaderBounds = bounds.withSizeKeepingCentre(800, 600);
