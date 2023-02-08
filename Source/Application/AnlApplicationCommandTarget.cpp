@@ -125,6 +125,7 @@ void Application::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& co
         , CommandIDs::helpOpenPluginSettings
         , CommandIDs::helpOpenAbout
         , CommandIDs::helpOpenProjectPage
+        , CommandIDs::helpAuthorize
         , CommandIDs::helpSdifConverter
     });
     // clang-format on
@@ -406,6 +407,13 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
             result.setActive(true);
         }
         break;
+        case CommandIDs::helpAuthorize:
+        {
+            auto const isAuthorized = Instance::get().getAuthorizationProcessor().isAuthorized();
+            result.setInfo(isAuthorized ? juce::translate("Authorized") : juce::translate("Authorize"), juce::translate("Authorize the application"), "Help", 0);
+            result.setActive(!isAuthorized);
+        }
+        break;
         case CommandIDs::helpSdifConverter:
         {
             result.setInfo(juce::translate("SDIF Converter..."), juce::translate("Shows the SDIF converter panel"), "Help", 0);
@@ -512,6 +520,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::documentExport:
         {
+            if(!Instance::get().getAuthorizationProcessor().isAuthorized())
+            {
+                Instance::get().getAuthorizationWindow().show();
+                return true;
+            }
             mExporterWindow.show(true);
             return true;
         }
@@ -537,6 +550,11 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentBatch:
         {
+            if(!Instance::get().getAuthorizationProcessor().isAuthorized())
+            {
+                Instance::get().getAuthorizationWindow().show();
+                return true;
+            }
             mBatcherWindow.show(true);
             return true;
         }
@@ -856,6 +874,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
             if(url.isWellFormed())
             {
                 url.launchInDefaultBrowser();
+            }
+            return true;
+        }
+        case CommandIDs::helpAuthorize:
+        {
+            if(!Instance::get().getAuthorizationProcessor().isAuthorized())
+            {
+                Instance::get().getAuthorizationWindow().show();
             }
             return true;
         }

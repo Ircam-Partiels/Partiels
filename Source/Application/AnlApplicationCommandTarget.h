@@ -58,6 +58,7 @@ namespace Application
             , helpOpenPluginSettings
             , helpOpenAbout
             , helpOpenProjectPage
+            , helpAuthorize
             , helpSdifConverter
         };
         // clang-format on
