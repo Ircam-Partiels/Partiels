@@ -163,6 +163,8 @@ Application::AudioSettings::AudioSettings()
             case AttrType::adaptationToSampleRate:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::autoLoadConvertedFile:
+            case AttrType::autoUpdate:
+            case AttrType::lastVersion:
                 break;
             case AttrType::routingMatrix:
             {

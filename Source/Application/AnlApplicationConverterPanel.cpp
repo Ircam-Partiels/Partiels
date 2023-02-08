@@ -160,6 +160,8 @@ Application::ConverterPanel::ConverterPanel()
             case AttrType::adaptationToSampleRate:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
+            case AttrType::autoUpdate:
+            case AttrType::lastVersion:
                 break;
             case AttrType::autoLoadConvertedFile:
             {

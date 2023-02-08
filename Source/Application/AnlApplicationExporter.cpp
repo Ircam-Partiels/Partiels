@@ -69,6 +69,8 @@ Application::Exporter::Exporter()
             case AttrType::autoLoadConvertedFile:
             case AttrType::desktopGlobalScaleFactor:
             case AttrType::routingMatrix:
+            case AttrType::autoUpdate:
+            case AttrType::lastVersion:
                 break;
             case AttrType::exportOptions:
             {
