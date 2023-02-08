@@ -5,20 +5,14 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
+Application::MainMenuModel::MainMenuModel([[maybe_unused]] juce::DocumentWindow& window)
+#ifndef JUCE_MAC
 : mWindow(window)
+#endif
 {
-    auto& commandManager = Instance::get().getApplicationCommandManager();
-    setApplicationCommandManagerToWatch(&commandManager);
-#if JUCE_MAC
-    juce::ignoreUnused(mWindow);
-    juce::PopupMenu extraAppleMenuItems;
-    using CommandIDs = CommandTarget::CommandIDs;
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
-    extraAppleMenuItems.addSeparator();
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
-    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
-    juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
+    setApplicationCommandManagerToWatch(std::addressof(Instance::get().getApplicationCommandManager()));
+#ifdef JUCE_MAC
+    updateAppleMenuItems();
 #else
     mWindow.setMenuBar(this);
 #endif
@@ -26,7 +20,7 @@ Application::MainMenuModel::MainMenuModel(juce::DocumentWindow& window)
 
 Application::MainMenuModel::~MainMenuModel()
 {
-#if JUCE_MAC
+#ifdef JUCE_MAC
     juce::MenuBarModel::setMacMainMenu(nullptr, nullptr);
 #else
     mWindow.setMenuBar(nullptr);
@@ -76,6 +70,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, CommandIDs::documentImport);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::documentBatch);
+        menu.addSeparator();
     }
     else if(menuName == "Edit")
     {
@@ -147,6 +142,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
 #endif
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenProjectPage);
 #ifndef JUCE_MAC
+        menu.addCommandItem(&commandManager, CommandIDs::helpAuthorize);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
         menu.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
@@ -165,5 +161,20 @@ void Application::MainMenuModel::menuItemSelected(int menuItemID, int topLevelMe
 {
     juce::ignoreUnused(menuItemID, topLevelMenuIndex);
 }
+
+#ifdef JUCE_MAC
+void Application::MainMenuModel::updateAppleMenuItems()
+{
+    juce::PopupMenu extraAppleMenuItems;
+    using CommandIDs = CommandTarget::CommandIDs;
+    auto& commandManager = Instance::get().getApplicationCommandManager();
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAbout);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpAuthorize);
+    extraAppleMenuItems.addSeparator();
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenAudioSettings);
+    extraAppleMenuItems.addCommandItem(&commandManager, CommandIDs::helpOpenPluginSettings);
+    juce::MenuBarModel::setMacMainMenu(this, &extraAppleMenuItems);
+}
+#endif
 
 ANALYSE_FILE_END
