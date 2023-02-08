@@ -27,6 +27,7 @@ Application::Window::Window()
     setUsingNativeTitleBar(true);
     addKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
     Instance::get().getDocumentFileBased().addChangeListener(this);
+    Instance::get().getAuthorizationProcessor().addChangeListener(this);
     auto const state = Instance::get().getApplicationAccessor().getAttr<AttrType::windowState>();
 #ifdef JUCE_MAC
     // This is a fix to properly restore fullscreen window state on macOS
@@ -54,6 +55,7 @@ Application::Window::Window()
 Application::Window::~Window()
 {
     handleAsyncUpdate();
+    Instance::get().getAuthorizationProcessor().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
     removeKeyListener(Instance::get().getApplicationCommandManager().getKeyMappings());
 }
@@ -92,14 +94,15 @@ void Application::Window::handleAsyncUpdate()
     Instance::get().getApplicationAccessor().setAttr<AttrType::windowState>(getWindowStateAsString(), NotificationType::synchronous);
 }
 
-void Application::Window::changeListenerCallback(juce::ChangeBroadcaster* source)
+void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
-    juce::ignoreUnused(source);
-    anlStrongAssert(source == &Instance::get().getDocumentFileBased());
+    MiscWeakAssert(source == std::addressof(Instance::get().getDocumentFileBased()) || source == std::addressof(Instance::get().getAuthorizationProcessor()));
+    auto const appName = Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString;
+    auto const separator = Instance::get().getAuthorizationProcessor().isAuthorized() ? " - " : " [DEMO] - ";
     auto const file = Instance::get().getDocumentFileBased().getFile();
-    auto const name = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
-    auto const extension = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved() ? "*" : "";
-    setName(Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString + " - " + name + extension);
+    auto const fileName = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";
+    auto const fileExtension = file.existsAsFile() && Instance::get().getDocumentFileBased().hasChangedSinceSaved() ? "*" : "";
+    setName(appName + separator + fileName + fileExtension);
 }
 
 juce::Rectangle<int> Application::Window::getPlotBounds(juce::String const& identifier) const
