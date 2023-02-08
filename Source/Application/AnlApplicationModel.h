@@ -30,6 +30,8 @@ namespace Application
         , adaptationToSampleRate
         , autoLoadConvertedFile
         , routingMatrix
+        , autoUpdate
+        , lastVersion
     };
 
     using AttrContainer = Model::Container
@@ -43,6 +45,8 @@ namespace Application
     , Model::Attr<AttrType::adaptationToSampleRate, bool, Flag::basic>
     , Model::Attr<AttrType::autoLoadConvertedFile, bool, Flag::basic>
     , Model::Attr<AttrType::routingMatrix, std::vector<std::vector<bool>>, Flag::basic>
+    , Model::Attr<AttrType::autoUpdate, bool, Flag::basic>
+    , Model::Attr<AttrType::lastVersion, juce::String, Flag::basic>
     >;
     // clang-format on
 
@@ -65,6 +69,8 @@ namespace Application
             , {false}
             , {true}
             , {{}}
+            , {true}
+            , {ProjectInfo::versionString}
         }))
         {
         }
