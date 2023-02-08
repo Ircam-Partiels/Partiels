@@ -7,14 +7,22 @@ set(SDIF_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDIF_TESTS OFF CACHE BOOL "" FORCE)
 set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
+set(IFP_CLI ON CACHE STRING "" FORCE)
+set(IFP_TEST OFF CACHE STRING "" FORCE)
 
 project(Partiels VERSION 1.0.7 LANGUAGES C CXX)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(JUCE)
-add_subdirectory(Dependencies/sdif)
 add_subdirectory(VampPlugins)
+add_subdirectory(Dependencies/sdif)
+add_subdirectory(Dependencies/ifp)
 include(Dependencies/Misc/Misc.cmake)
+
+set_target_properties(ifp_static PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+if(MSVC)
+  target_link_options(ifp_static PRIVATE "/NODEFAULTLIB:MSVCRT$<$<CONFIG:Debug>:D>")
+endif()
 
 juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
@@ -61,6 +69,7 @@ target_sources(Partiels PRIVATE ${GlobalSources} ${PartielsSources})
 
 target_compile_definitions(Partiels PRIVATE
     APP_DOC_PREFIX="ptl"
+    MISC_IFP_SUPPORT=1
     DONT_SET_USING_JUCE_NAMESPACE=1
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
@@ -106,6 +115,7 @@ juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE T
 target_link_libraries(Partiels PRIVATE
     vamp
     sdif
+    ifp_static
     MiscData
     TranslationsData
     ResourceData
@@ -124,6 +134,7 @@ if(DEFINED ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER})
     set_target_properties(Partiels PROPERTIES XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "$ENV{PARTIELS_PROVISIONING_PROFILE_SPECIFIER}")
 endif()
 set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "VAMP_PATH=\$VAMP_PATH:/Library/Audio/Plug-Ins/Vamp:$HOME/Library/Audio/Plug-Ins/Vamp:${CMAKE_CURRENT_BINARY_DIR}/Debug:${CMAKE_CURRENT_BINARY_DIR}/Release")
+set_target_properties(Partiels PROPERTIES XCODE_SCHEME_ENVIRONMENT "IRCAM_FORUM_PROTECTION_PATH=${CMAKE_CURRENT_BINARY_DIR}/ifp")
 target_enable_xcode_full_warnings(Partiels)
 
 if(WIN32)
