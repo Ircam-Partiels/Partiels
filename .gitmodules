@@ -10,3 +10,6 @@
 [submodule "Dependencies/Misc"]
 	path = Dependencies/Misc
 	url = ../misc.git
+[submodule "Dependencies/ifp"]
+	path = Dependencies/ifp
+	url = ../ifp.git
