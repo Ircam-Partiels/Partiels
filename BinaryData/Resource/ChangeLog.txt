@@ -1,5 +1,7 @@
 v1.0.7
 
+- Add: Demo mode that can be used without a premium license with a limitation preventing the export of analysis results (#312)
+- Add: Allow to check for a new update on the Ircam Forum - and add an option for an automatic for a new update check at startup (#311)
 - Fix: Zooming horizontally with the mouse wheel or trackpad scrolling must use the mouse position as a reference and not the play-head position (#310)
 - Add: Allow simultaneous zoom and translation by clicking and dragging on the zoom rulers - exclusive zoom requires the Alt keyboard modifier (#309)
 - Fix: Parsing markers in CSV format does not support labels starting with a numeric character (#308)
