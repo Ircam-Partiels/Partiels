@@ -17,7 +17,8 @@
   * [1.2. System requirements](#12-system-requirements)
   * [1.3. Third-party](#13-third-party)
   * [1.4. Authorization](#14-authorization)
-  * [1.5. Credits](#15-credits)
+  * [1.5. Updates](#15-updates)
+  * [1.6. Credits](#16-credits)
 * [2. Overview](#2-overview)
 * [3. Manage documents](#3-manage-documents)
   * [3.1. Create and open](#31-create-and-open)
@@ -118,7 +119,15 @@ If the Partiels and the Ircam Vamp are not authorized, the application runs in d
 
 **Tip**: The IRCAM Forum Premium webpage to subscribe to the IRCAM Forum Premium membership and the IRCAM Shop webpage to download an authorization key can be accessed via the corresponding buttons in the authorization window. 
 
-### 1.5. Credits
+### 1.5. Updates
+
+At startup, Partiels checks for the release of a new version on the Ircam forum. If a new version has been released, you can either go to the Partiels website to download it, ignore this version (you will not be notified of the release of a new version), or ask to be reminded at the next startup.
+
+If you don't want Partiels to check for a new release on startup, you can toggle the option via the main menu `Help → Automatic Check for New Version`. 
+
+You can manually check for a new version release on the Ircam Forum via the main menu `Help → Check for New Version`
+
+### 1.6. Credits
 
 **Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
 **Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
