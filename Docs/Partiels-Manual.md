@@ -16,7 +16,8 @@
   * [1.1. Features](#12-system-requirements)
   * [1.2. System requirements](#12-system-requirements)
   * [1.3. Third-party](#13-third-party)
-  * [1.4. Credits](#14-credits)
+  * [1.4. Authorization](#14-authorization)
+  * [1.5. Credits](#15-credits)
 * [2. Overview](#2-overview)
 * [3. Manage documents](#3-manage-documents)
   * [3.1. Create and open](#31-create-and-open)
@@ -93,7 +94,31 @@ Alongside Partiels, a set of analyses present in the AudioSculpt 3 application a
 
 You will find a large number of analysis plug-ins on the [Vamp plug-in](https://www.vamp-plugins.org/) website.
 
-### 1.4. Credits
+### 1.4. Authorization
+
+Partiels and the Ircam Vamp plug-ins are part of the [IRCAM Forum Premium](https://forum.ircam.fr/about/offres-dabonnement/) technologies bundle offering many tools, plug-ins, and applications to analyze, synthesize, and transform the sound. The free membership allows you to use the demo version Partiels with the Ircam Vamp plug-ins. 
+
+To use the Partiels and the Ircam Vamp plug-ins without limitation, you must subscribe to the [IRCAM Forum Premium](https://forum.ircam.fr/about/offres-dabonnement/), download an authorization key from the [IRCAM Shop]("https://1.shop.ircam.fr/fr/index.php?controller=subscription"), and authorize the plugins using this authorization key.
+
+</n>
+<p align="center">
+<img src="images/section-introduction.1-v1.0.7.png" alt="Example" width="197"/>
+</p>
+</n>
+
+Open the authorization window from the interface by clicking on the `Authorize` entry via the main menu `Partiels → Authorize` (Mac) or `Help → Authorize` (Linux/Windows) or the `Demo` warning button. Click on the authorize button and select the file *Ircam_Authorization_Key.txt* downloaded from the IRCAM Shop (or drop directly the file into the window).
+
+<p align="center">
+<img src="images/section-introduction.2-v1.0.7.png" alt="Example" width="312"/>
+</p>
+
+Once the authorization key is validated (the process might take a few seconds), Partiels and the Ircam Vamp plug-ins can be used without limitation, the `Demo` buttons disappear, and `Authorize` entry of the the main menu is disabled.
+
+If the Partiels and the Ircam Vamp are not authorized, the application runs in demo mode. There is no time limitation for the demo but you cannot export analysis results.
+
+**Tip**: The IRCAM Forum Premium webpage to subscribe to the IRCAM Forum Premium membership and the IRCAM Shop webpage to download an authorization key can be accessed via the corresponding buttons in the authorization window. 
+
+### 1.5. Credits
 
 **Partiels** is designed and developed by Pierre Guillot at [IRCAM](https://www.ircam.fr/) IMR Department.  
 **Vamp** is designed and developed at the Centre for Digital Music, Queen Mary, University of London.
