@@ -30,7 +30,7 @@ namespace Document
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
         Icon tooltipButton{Icon::Type::comment};
-        AuthorizationButton authorizationButton;
+
         std::function<void(void)> onSaveButtonClicked = nullptr;
         std::function<void(void)> onNewTrackButtonClicked = nullptr;
         std::function<void(void)> onNewGroupButtonClicked = nullptr;
@@ -85,6 +85,7 @@ namespace Document
         ReaderLayoutPanel mReaderLayoutPanel{mDirector};
         ReaderLayoutPanel::WindowContainer mReaderLayoutWindow{mReaderLayoutPanel};
 
+        AuthorizationButton mAuthorizationButton;
         Icon mReaderLayoutButton{Icon::Type::music};
         juce::TextButton mDocumentName;
         Icon mGridButton{Icon::Type::gridOff};

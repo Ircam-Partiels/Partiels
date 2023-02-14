@@ -4,6 +4,14 @@
 
 ANALYSE_FILE_BEGIN
 
+void Application::Instance::AuthorizationProcessor::showAuthorizationPanel()
+{
+    if(auto* window = Instance::get().mAuthorizationWindow.get())
+    {
+        window->show();
+    }
+}
+
 #define AppQuitIfInvalidPointer(ptr)                    \
     if(ptr == nullptr)                                  \
     {                                                   \
@@ -558,11 +566,6 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
 AuthorizationProcessor& Application::Instance::getAuthorizationProcessor()
 {
     return mAuthorizationProcessor;
-}
-
-FloatingWindowContainer& Application::Instance::getAuthorizationWindow()
-{
-    return *mAuthorizationWindow.get();
 }
 
 Application::Accessor& Application::Instance::getApplicationAccessor()

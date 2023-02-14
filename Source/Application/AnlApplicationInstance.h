@@ -55,7 +55,6 @@ namespace Application
         void importFile(std::tuple<juce::String, size_t> const position, juce::File const& file);
 
         AuthorizationProcessor& getAuthorizationProcessor();
-        FloatingWindowContainer& getAuthorizationWindow();
 
         Accessor& getApplicationAccessor();
         Window* getWindow();
@@ -88,6 +87,17 @@ namespace Application
         juce::File getBackupFile() const;
         void openStartupFiles();
         void checkPluginsQuarantine();
+
+        class AuthorizationProcessor
+        : public Misc::AuthorizationProcessor
+        {
+        public:
+            using Misc::AuthorizationProcessor::AuthorizationProcessor;
+            ~AuthorizationProcessor() override = default;
+
+            // Misc::AuthorizationProcessor
+            void showAuthorizationPanel() override;
+        };
 
         AuthorizationProcessor mAuthorizationProcessor;
 

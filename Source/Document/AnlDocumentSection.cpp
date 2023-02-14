@@ -18,11 +18,11 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
 }
 
 Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
-: CommandTarget(director, commandManager)
-, authorizationButton(authorizationProcessor)
+: CommandTarget(director, commandManager, authorizationProcessor)
 , mDirector(director)
 , mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
 , mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
+, mAuthorizationButton(authorizationProcessor)
 , mTimeRuler(mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::Ruler::Orientation::horizontal, [](double value)
              {
                  return Format::secondsToString(value, {":", ":", ":", ""});
@@ -231,9 +231,9 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     {
         resized();
     };
-    mComponentListener.attachTo(authorizationButton);
+    mComponentListener.attachTo(mAuthorizationButton);
+    addChildComponent(mAuthorizationButton);
 
-    addChildComponent(authorizationButton);
     addAndMakeVisible(tooltipButton);
     addAndMakeVisible(mTransportDisplay);
     addAndMakeVisible(mTransportSelectionInfo);
@@ -416,7 +416,7 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
 Document::Section::~Section()
 {
     removeKeyListener(mCommandManager.getKeyMappings());
-    mComponentListener.detachFrom(authorizationButton);
+    mComponentListener.detachFrom(mAuthorizationButton);
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
     mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
@@ -429,9 +429,9 @@ void Document::Section::resizeHeader(juce::Rectangle<int>& bounds)
 
     auto leftSize = header.withRight(mTransportDisplay.getX()).withTrimmedLeft(5);
     leftSize = leftSize.withSizeKeepingCentre(leftSize.getWidth(), 24);
-    if(authorizationButton.isVisible())
+    if(mAuthorizationButton.isVisible())
     {
-        authorizationButton.setBounds(leftSize.removeFromLeft(52));
+        mAuthorizationButton.setBounds(leftSize.removeFromLeft(52));
         leftSize.removeFromLeft(4);
     }
 

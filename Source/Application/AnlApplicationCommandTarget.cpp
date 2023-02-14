@@ -539,7 +539,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             if(!Instance::get().getAuthorizationProcessor().isAuthorized())
             {
-                Instance::get().getAuthorizationWindow().show();
+                Instance::get().getAuthorizationProcessor().showAuthorizationPanel();
+                juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
                 return true;
             }
             mExporterWindow.show(true);
@@ -569,7 +570,8 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             if(!Instance::get().getAuthorizationProcessor().isAuthorized())
             {
-                Instance::get().getAuthorizationWindow().show();
+                Instance::get().getAuthorizationProcessor().showAuthorizationPanel();
+                juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
                 return true;
             }
             mBatcherWindow.show(true);
@@ -898,7 +900,7 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         {
             if(!Instance::get().getAuthorizationProcessor().isAuthorized())
             {
-                Instance::get().getAuthorizationWindow().show();
+                Instance::get().getAuthorizationProcessor().showAuthorizationPanel();
             }
             return true;
         }

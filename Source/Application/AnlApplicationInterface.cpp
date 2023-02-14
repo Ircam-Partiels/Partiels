@@ -353,11 +353,6 @@ Application::Interface::Interface()
     addAndMakeVisible(mToolTipDisplay);
     mComponentListener.attachTo(mLoader);
 
-    mDocumentSection.authorizationButton.onClick = []()
-    {
-        Instance::get().getAuthorizationWindow().show();
-    };
-
     mDocumentSection.tooltipButton.setClickingTogglesState(true);
     mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::viewInfoBubble));
     mDocumentSection.tooltipButton.onClick = []()
