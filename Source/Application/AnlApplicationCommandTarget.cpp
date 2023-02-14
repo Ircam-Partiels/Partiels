@@ -780,7 +780,31 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         case CommandIDs::transportTogglePlayback:
         {
             auto constexpr attr = Transport::AttrType::playback;
-            transportAcsr.setAttr<attr>(!transportAcsr.getAttr<attr>(), NotificationType::synchronous);
+            auto const state = !transportAcsr.getAttr<attr>();
+            auto const& deviceManager = Instance::get().getAudioDeviceManager();
+            if(state && deviceManager.getCurrentAudioDevice() == nullptr)
+            {
+                auto const options = juce::MessageBoxOptions()
+                                         .withIconType(juce::AlertWindow::WarningIcon)
+                                         .withTitle(juce::translate("Audio device not set!"))
+                                         .withMessage(juce::translate("Audio playback cannot be started because the output audio device is not set. Do you want to open the audio settings panel to select the output audio device?"))
+                                         .withButton(juce::translate("Open"))
+                                         .withButton(juce::translate("Ignore"));
+                juce::WeakReference<CommandTarget> weakReference(this);
+                juce::AlertWindow::showAsync(options, [=, this](int result)
+                                             {
+                                                 if(weakReference.get() == nullptr)
+                                                 {
+                                                     return;
+                                                 }
+                                                 if(result == 1)
+                                                 {
+                                                     mAudioSettingsWindow.show();
+                                                 }
+                                             });
+                return true;
+            }
+            transportAcsr.setAttr<attr>(state, NotificationType::synchronous);
             return true;
         }
         case CommandIDs::transportToggleLooping:
