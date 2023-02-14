@@ -279,7 +279,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
         {
             case Zoom::AttrType::globalRange:
             {
-                auto const globalRange = Zoom::Range{0.0, mDuration};
+                auto const globalRange = Zoom::Range{0.0, mDuration > 0.0 ? mDuration : 1.0};
                 zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, notification);
                 auto const loopRange = transportAcsr.getAttr<Transport::AttrType::loopRange>();
                 transportAcsr.setAttr<Transport::AttrType::loopRange>(globalRange.getIntersectionWith(loopRange), notification);
@@ -934,16 +934,20 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
 {
     auto const channels = mAccessor.getAttr<AttrType::reader>();
     auto& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
+    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     if(channels.empty())
     {
         mAccessor.setAttr<AttrType::samplerate>(0.0, notification);
         mAccessor.setAttr<AttrType::channels>(0_z, notification);
+        mDuration = 0.0;
+        zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
+        zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(Zoom::epsilon(), notification);
+        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
         transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
         transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range{}, notification);
         return;
     }
-    auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     auto const result = createAudioFormatReader(mAccessor, mAudioFormatManager);
     auto const& reader = std::get<0>(result);
     auto const& errors = std::get<1>(result);
@@ -964,6 +968,9 @@ void Document::Director::initializeAudioReaders(NotificationType notification)
         zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{0.0, 1.0}, notification);
         zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(Zoom::epsilon(), notification);
         zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{0.0, 1.0}, notification);
+        transportAcsr.setAttr<Transport::AttrType::startPlayhead>(0.0, notification);
+        transportAcsr.setAttr<Transport::AttrType::runningPlayhead>(0.0, notification);
+        transportAcsr.setAttr<Transport::AttrType::loopRange>(Zoom::Range{}, notification);
         return;
     }
     else if(!errors.isEmpty() && mAlertCatcher == nullptr)
