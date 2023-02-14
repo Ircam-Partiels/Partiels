@@ -8,6 +8,7 @@ v1.0.7
 - Imp: The time selection should be reset at mouse click (#307)
 - Fix: Resizing tracks and groups manually can change the selection by selecting the following item (#306)
 - Add: Menu entries and keyboard shortcuts to zoom vertically on selected tracks and groups (#304)
+- Add: Drop-down menu with presets for images' size when exporting results or for batch processing (#297)
 - Add: Action to copy the analysis results of the selection to the system clipboard using the shortcut Opt + C or Alt + C or using the menu Frame (#268)
 
 v1.0.6
