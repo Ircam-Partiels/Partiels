@@ -32,8 +32,9 @@
   * [5.2. Layout](#52-layout)
 * [6. Export analyses](#6-export-analyses)
   * [6.1. General options](#61-general-options)
-  * [6.2. Specific options](#62-specific-options)
-  * [6.3. Batch processing](#63-batch-processing)
+  * [6.2. Image options](#62-images-options)
+  * [6.3. Text and binary options](#63-text-and-binary-options)
+  * [6.4. Batch processing](#64-batch-processing)
 * [7. View, navigation, and transport](#7-view-navigation-and-transport)
   * [7.1. View](#71-view)
   * [7.2. Zoom](#72-navigation)
@@ -285,7 +286,7 @@ Use the `⇥ Tab` key to move the selection to the next visible track or group.
 The results of the analyses of a document can be exported in different formats, as an image, text or binary file. You can display the export window via the main menu `File → Export...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + E` (Mac) or `Ctrl + Shift + E` (Linux/Windows). This window allows you to select the analysis(es) to be exported, define the time range, the format and the options for this format. 
 
 <p align="center">
-<img src="images/section-export-analyses.1-v1.0.6.png" width="232"/>
+<img src="images/section-export-analyses.1-v1.0.7.png" width="232"/>
 </p>
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
@@ -314,18 +315,26 @@ You can also define the time range with the text entries `Time Start`, `Time End
 
 The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV* or *CUE* or a binary format *SDIF*. For each format, you can set specific options (**E4**).
 
-### 6.2. Specific options
+### 6.2. Images options
 
-Exporting to an image format (*JPEG* or *PNG*) offers four options:
-- `Preserve Group Overlay` enables preservation of the group overlay display if you are exporting the entire document or a group (so this option is not available when exporting a single track). Each group will be exported as an image including all its tracks. If the option is disabled, each track will be exported separately.
-- `Preserve Visible Size` enables the preservation of the current sizes of tracks and groups as they are currently visible in the document. If the option is active, it is not possible to manually set the width and height of the images.
-- `Image Width` defines the width of images in pixels.
-- `Image Height` defines the height of images in pixels.
+Exporting to an image format (*JPEG* or *PNG*) offers two rendering options:
 
-`Ignore Matrix Tracks`: The text and binary formats offer an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
+The `Preserve Group Overlay` button toggles the preservation of the group overlay display if you are exporting the entire document or a group (so this option is not available when exporting a single track). Each group will be exported as an image including all its tracks. If the option is disabled, each track will be exported separately.
+
+<p align="center">
+<img src="images/section-export-analyses.4.a-v1.0.7.png" width="198"/>
+</p>
+
+The `Image Size` dropdown menu offers presets to control the size of the image. If the *Current Size(s)* item is selected, the export mechanism uses the current visible sizes of the tracks and groups. The *Manual* item is selected if the width and height of the image are defined manually and don't match one of the presets.
+
+The `Image Width` and `Image Height` number fields can be used to manually define the width and the height of the images in pixels.
+
+### 6.3. Text and binary options
+
+The `Ignore Matrix Tracks` button offers an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
 
 Export to CSV offers two options:
-- `Include Header Row` actives l'écriture d'une ligne d'en-tête comprennant les titres des colonnes (par ex. *time*, *duration*, *label*).
+- `Include Header Row` enables the writing of a header line including the titles of the columns (e.g. *time*, *duration*, *label*).
 - `Column Separator` allows to define the separator character between each column (*Comma*, *Space*, *Tab*, *Pipe*, *Slash*, *Colon*). This can facilitate the parsing of files in other applications. 
 
 Export to JSON offers one option:
@@ -336,12 +345,12 @@ Export to SDIF offers three options:
 - `Matrix Signature` defines the matrix signature to encode the results in the SDIF file. 
 - `Column Name` defines the name of the column to encode the results in the SDIF file.
 
-### 6.3. Batch processing
+### 6.4. Batch processing
 
 You can use the current document as a template to generate results for other audio files using the batch processing system. To do this, open the batch window via the main menu `File → Batch...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + B` (Mac) or `Ctrl + Shift + B` (Linux/Windows). 
 
 <p align="center">
-<img src="images/section-export-analyses.5-v1.0.6.png" width="202"/>
+<img src="images/section-export-analyses.5-v1.0.7.png" width="232"/>
 </p>
 
 This window top section (**B1**) allows you to select audio files and configure their channels layout.
@@ -503,7 +512,7 @@ Depending on the characteristics of the plugin, the section allows accessing the
 The section allows accessing the plugin-specific parameters that are used to perform the analysis. Depending on their specifications, the values of the parameters can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been edited, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking you if you want to proceed (you can still undo the operation to retrieve the previous analysis results). 
 
 <p align="center">
-<img src="images/section-track-properties.4-v1.0.5.png" width="196"/>
+<img src="images/section-track-properties.4-v1.0.7.png" width="196"/>
 </p>
 
 The preset menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters in a file on your operating system and load this file to restore the state (the file can be used in any other track that used the same plugin).
