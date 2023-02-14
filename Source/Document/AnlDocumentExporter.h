@@ -110,7 +110,7 @@ namespace Document
             Misc::PropertyHMSmsField mPropertyTimeLength;
             PropertyList mPropertyFormat;
             PropertyToggle mPropertyGroupMode;
-            PropertyToggle mPropertyAutoSizeMode;
+            PropertyList mPropertySizePreset;
             PropertyNumber mPropertyWidth;
             PropertyNumber mPropertyHeight;
             PropertyToggle mPropertyRawHeader;

@@ -97,6 +97,12 @@ bool Document::Exporter::Options::isValid() const
     return format != Format::sdif || (sdifFrameSignature.length() == 4 && !sdifFrameSignature.contains("?") && sdifMatrixSignature.length() == 4 && !sdifMatrixSignature.contains("?"));
 }
 
+static std::vector<std::tuple<std::string, int, int>> const& getImageSizePresets()
+{
+    static std::vector<std::tuple<std::string, int, int>> const presets{{"Wide Ultra Extended Graphics Array", 1920, 1200}, {"A3 (300ppi)", 4960, 3508}, {"A4 (300ppi)", 3508, 2480}, {"A5 (300ppi)", 2480, 1748}, {"A6 (300ppi)", 1748, 1240}, {"A7 (300ppi)", 1240, 874}, {"HD (720p)", 1280, 720}, {"Full HD (1080p)", 1920, 1080}, {"4K UHD", 3840, 2160}};
+    return presets;
+}
+
 Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSizeFn getSizeFor)
 : mAccessor(accessor)
 , mGetSizeForFn(getSizeFor)
@@ -134,21 +140,33 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                          options.useGroupOverview = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyAutoSizeMode("Preserve Visible Size", "Preserve the current visible size of the track or the group", [this](bool state)
-                        {
-                            auto options = mOptions;
-                            options.useAutoSize = state;
-                            setOptions(options, juce::NotificationType::sendNotificationSync);
-                        })
-, mPropertyWidth("Image Width", "Set the width of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertySizePreset("Image Size", "Select the size preset of the image", "", std::vector<std::string>{}, [this](size_t index)
+                      {
+                          auto options = mOptions;
+                          options.useAutoSize = mGetSizeForFn != nullptr && index == 0_z;
+                          if(mGetSizeForFn != nullptr && !options.useAutoSize)
+                          {
+                              index--;
+                          }
+                          if(!options.useAutoSize && index < getImageSizePresets().size())
+                          {
+                              auto const& presets = getImageSizePresets();
+                              options.imageWidth = std::get<1_z>(presets[index]);
+                              options.imageHeight = std::get<2_z>(presets[index]);
+                          }
+                          setOptions(options, juce::NotificationType::sendNotificationSync);
+                      })
+, mPropertyWidth("Image Width", "Set the width of the image", "pixels", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                  {
                      auto options = mOptions;
+                     options.useAutoSize = false;
                      options.imageWidth = std::max(static_cast<int>(std::round(value)), 1);
                      setOptions(options, juce::NotificationType::sendNotificationSync);
                  })
-, mPropertyHeight("Image Height", "Set the height of the image", "pixel", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
+, mPropertyHeight("Image Height", "Set the height of the image", "pixels", juce::Range<float>{1.0f, 100000000}, 1.0f, [this](float value)
                   {
                       auto options = mOptions;
+                      options.useAutoSize = false;
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
@@ -219,10 +237,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     }
     addAndMakeVisible(mPropertyFormat);
     addAndMakeVisible(mPropertyGroupMode);
-    if(mGetSizeForFn != nullptr)
-    {
-        addAndMakeVisible(mPropertyAutoSizeMode);
-    }
+    addAndMakeVisible(mPropertySizePreset);
     addAndMakeVisible(mPropertyWidth);
     addAndMakeVisible(mPropertyHeight);
     addChildComponent(mPropertyRawHeader);
@@ -233,6 +248,18 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     addChildComponent(mPropertySdifColName);
     addChildComponent(mPropertyIgnoreGrids);
     setSize(300, 200);
+
+    mPropertySizePreset.entry.clear(juce::NotificationType::dontSendNotification);
+    if(mGetSizeForFn != nullptr)
+    {
+        mPropertySizePreset.entry.addItem(juce::translate("Current Size(s)"), mPropertySizePreset.entry.getNumItems() + 1);
+    }
+    for(auto const& preset : getImageSizePresets())
+    {
+        mPropertySizePreset.entry.addItem(juce::translate(std::get<0_z>(preset)), mPropertySizePreset.entry.getNumItems() + 1);
+    }
+    mPropertySizePreset.entry.addItem(juce::translate("Manual"), mPropertySizePreset.entry.getNumItems() + 1);
+    mPropertySizePreset.entry.setItemEnabled(mPropertySizePreset.entry.getNumItems(), false);
 
     mPropertySdifFrame.entry.onEditorShow = [this]()
     {
@@ -388,7 +415,7 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertyTimeLength);
     setBounds(mPropertyFormat);
     setBounds(mPropertyGroupMode);
-    setBounds(mPropertyAutoSizeMode);
+    setBounds(mPropertySizePreset);
     setBounds(mPropertyWidth);
     setBounds(mPropertyHeight);
     setBounds(mPropertyRawHeader);
@@ -527,10 +554,7 @@ void Document::Exporter::Panel::sanitizeProperties(bool updateModel)
         }
     }
 
-    auto const autoSize = mOptions.useAutoSize;
-    mPropertyWidth.setEnabled(!autoSize || mGetSizeForFn == nullptr);
-    mPropertyHeight.setEnabled(!autoSize || mGetSizeForFn == nullptr);
-    if(mGetSizeForFn != nullptr && updateModel && autoSize && !itemIsDocument)
+    if(mGetSizeForFn != nullptr && updateModel && mOptions.useAutoSize && !itemIsDocument)
     {
         auto const size = mGetSizeForFn(identifier);
         auto options = mOptions;
@@ -558,9 +582,32 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     auto constexpr silent = juce::NotificationType::dontSendNotification;
     mPropertyFormat.entry.setSelectedItemIndex(static_cast<int>(options.format), silent);
     mPropertyGroupMode.entry.setToggleState(options.useGroupOverview, silent);
-    mPropertyAutoSizeMode.entry.setToggleState(options.useAutoSize, silent);
     mPropertyWidth.entry.setValue(static_cast<double>(options.imageWidth), silent);
     mPropertyHeight.entry.setValue(static_cast<double>(options.imageHeight), silent);
+    if(options.useAutoSize && mGetSizeForFn != nullptr)
+    {
+        mPropertySizePreset.entry.setSelectedItemIndex(0, silent);
+        mPropertyWidth.entry.setText(juce::translate("Automatic"), silent);
+        mPropertyHeight.entry.setText(juce::translate("Automatic"), silent);
+    }
+    else
+    {
+        auto const& presets = getImageSizePresets();
+        auto presetIt = std::find_if(presets.cbegin(), presets.cend(), [&](auto const& preset)
+                                     {
+                                         return options.imageWidth == std::get<1_z>(preset) && options.imageHeight == std::get<2_z>(preset);
+                                     });
+        if(presetIt != presets.cend())
+        {
+            auto const index = static_cast<int>(std::distance(presets.cbegin(), presetIt)) + (mGetSizeForFn != nullptr ? 1 : 0);
+            mPropertySizePreset.entry.setSelectedItemIndex(index, silent);
+        }
+        else
+        {
+            mPropertySizePreset.entry.setSelectedItemIndex(mPropertySizePreset.entry.getNumItems() - 1, silent);
+        }
+    }
+
     mPropertyRawHeader.entry.setToggleState(options.includeHeaderRaw, silent);
     mPropertyRawSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
@@ -570,7 +617,7 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySdifColName.entry.setText(options.sdifColumnName, silent);
 
     mPropertyGroupMode.setVisible(options.useImageFormat());
-    mPropertyAutoSizeMode.setVisible(mGetSizeForFn != nullptr && options.useImageFormat());
+    mPropertySizePreset.setVisible(options.useImageFormat());
     mPropertyWidth.setVisible(options.useImageFormat());
     mPropertyHeight.setVisible(options.useImageFormat());
     mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
