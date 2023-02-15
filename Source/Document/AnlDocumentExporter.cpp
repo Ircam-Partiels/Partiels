@@ -170,18 +170,18 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                       options.imageHeight = std::max(static_cast<int>(std::round(value)), 1);
                       setOptions(options, juce::NotificationType::sendNotificationSync);
                   })
-, mPropertyRawHeader("Include Header Row", "Include header row before the data rows", [this](bool state)
+, mPropertyRowHeader("Include Header Row", "Include header row before the data rows", [this](bool state)
                      {
                          auto options = mOptions;
                          options.includeHeaderRaw = state;
                          setOptions(options, juce::NotificationType::sendNotificationSync);
                      })
-, mPropertyRawSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [this](size_t index)
-                        {
-                            auto options = mOptions;
-                            options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
-                            setOptions(options, juce::NotificationType::sendNotificationSync);
-                        })
+, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, [this](size_t index)
+                           {
+                               auto options = mOptions;
+                               options.columnSeparator = magic_enum::enum_value<Document::Exporter::Options::ColumnSeparator>(index);
+                               setOptions(options, juce::NotificationType::sendNotificationSync);
+                           })
 , mPropertyIncludeDescription("Include Extra Description", "Include the extra description of the track in the results", [this](bool state)
                               {
                                   auto options = mOptions;
@@ -240,8 +240,8 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
     addAndMakeVisible(mPropertySizePreset);
     addAndMakeVisible(mPropertyWidth);
     addAndMakeVisible(mPropertyHeight);
-    addChildComponent(mPropertyRawHeader);
-    addChildComponent(mPropertyRawSeparator);
+    addChildComponent(mPropertyRowHeader);
+    addChildComponent(mPropertyColumnSeparator);
     addChildComponent(mPropertyIncludeDescription);
     addChildComponent(mPropertySdifFrame);
     addChildComponent(mPropertySdifMatrix);
@@ -418,8 +418,8 @@ void Document::Exporter::Panel::resized()
     setBounds(mPropertySizePreset);
     setBounds(mPropertyWidth);
     setBounds(mPropertyHeight);
-    setBounds(mPropertyRawHeader);
-    setBounds(mPropertyRawSeparator);
+    setBounds(mPropertyRowHeader);
+    setBounds(mPropertyColumnSeparator);
     setBounds(mPropertyIncludeDescription);
     setBounds(mPropertySdifFrame);
     setBounds(mPropertySdifMatrix);
@@ -608,8 +608,8 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
         }
     }
 
-    mPropertyRawHeader.entry.setToggleState(options.includeHeaderRaw, silent);
-    mPropertyRawSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
+    mPropertyRowHeader.entry.setToggleState(options.includeHeaderRaw, silent);
+    mPropertyColumnSeparator.entry.setSelectedItemIndex(static_cast<int>(options.columnSeparator), silent);
     mPropertyIgnoreGrids.entry.setToggleState(options.ignoreGridResults, silent);
     mPropertyIncludeDescription.entry.setToggleState(options.includeDescription, silent);
     mPropertySdifFrame.entry.setText(options.sdifFrameSignature, silent);
@@ -620,8 +620,8 @@ void Document::Exporter::Panel::setOptions(Options const& options, juce::Notific
     mPropertySizePreset.setVisible(options.useImageFormat());
     mPropertyWidth.setVisible(options.useImageFormat());
     mPropertyHeight.setVisible(options.useImageFormat());
-    mPropertyRawHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
-    mPropertyRawSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyRowHeader.setVisible(options.format == Document::Exporter::Options::Format::csv);
+    mPropertyColumnSeparator.setVisible(options.format == Document::Exporter::Options::Format::csv);
     mPropertyIncludeDescription.setVisible(options.format == Document::Exporter::Options::Format::json);
     mPropertySdifFrame.setVisible(options.format == Document::Exporter::Options::Format::sdif);
     mPropertySdifMatrix.setVisible(options.format == Document::Exporter::Options::Format::sdif);

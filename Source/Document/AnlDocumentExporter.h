@@ -113,8 +113,8 @@ namespace Document
             PropertyList mPropertySizePreset;
             PropertyNumber mPropertyWidth;
             PropertyNumber mPropertyHeight;
-            PropertyToggle mPropertyRawHeader;
-            PropertyList mPropertyRawSeparator;
+            PropertyToggle mPropertyRowHeader;
+            PropertyList mPropertyColumnSeparator;
             PropertyToggle mPropertyIncludeDescription;
             PropertyText mPropertySdifFrame;
             PropertyText mPropertySdifMatrix;
