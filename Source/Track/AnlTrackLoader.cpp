@@ -645,15 +645,15 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
 {
     std::vector<std::vector<Plugin::Result>> pluginResults;
 
-    auto trimString = [](std::string const& s)
+    auto const trimString = [](std::string const& s)
     {
-        auto ltrim = [](std::string const& sr)
+        auto const ltrim = [](std::string const& sr)
         {
             auto const start = sr.find_first_not_of(" \n\r\t\f\v");
             return (start == std::string::npos) ? "" : sr.substr(start);
         };
 
-        auto rtrim = [](std::string const& sr)
+        auto const rtrim = [](std::string const& sr)
         {
             auto const end = sr.find_last_not_of(" \n\r\t\f\v");
             return (end == std::string::npos) ? "" : sr.substr(0, end + 1);
@@ -662,7 +662,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
         return rtrim(ltrim(s));
     };
 
-    auto unescapeString = [](juce::String const& s)
+    auto const unescapeString = [](juce::String const& s)
     {
         return s.replace("\\\"", "\"").replace("\\\'", "\'").replace("\\t", "\t").replace("\\r", "\r").replace("\\n", "\n").unquoted();
     };
