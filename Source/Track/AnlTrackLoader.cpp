@@ -638,7 +638,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo c
     {
         return {juce::translate("The input stream of cannot be opened")};
     }
-    return loadFromCsv(stream, ',', shouldAbort, advancement);
+    auto const separator = fileInfo.args.getValue("separator", ",").toStdString();
+    return loadFromCsv(stream, separator.empty() ? ',' : separator.at(0_z), shouldAbort, advancement);
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -712,7 +713,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 else if(!value.empty())
                 {
                     result.values.push_back(std::stof(value));
-                    while(getline(linestream, value, ','))
+                    while(getline(linestream, value, separator))
                     {
                         result.values.push_back(std::stof(value));
                     }
@@ -871,6 +872,9 @@ Track::Loader::ArgumentSelector::WindowContainer::WindowContainer(ArgumentSelect
 
 Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
 : mPropertyName("File", "The file to import", nullptr)
+, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, []([[maybe_unused]] size_t index)
+                           {
+                           })
 , mPropertyUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
                 {
                     mPropertyMinValue.entry.setTextValueSuffix(text);
@@ -893,9 +897,11 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
 {
     mPropertyName.entry.setEnabled(false);
     addAndMakeVisible(mPropertyName);
+    addAndMakeVisible(mPropertyColumnSeparator);
     addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyMinValue);
     addAndMakeVisible(mPropertyMaxValue);
+    mPropertyColumnSeparator.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
     mSdifPanel.onUpdated = [this]()
     {
         auto const format = mSdifPanel.getFromSdifFormat();
@@ -911,7 +917,7 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
 void Track::Loader::ArgumentSelector::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
-    auto setBounds = [&](juce::Component& component)
+    auto const setBounds = [&](juce::Component& component)
     {
         if(component.isVisible())
         {
@@ -919,6 +925,7 @@ void Track::Loader::ArgumentSelector::resized()
         }
     };
     setBounds(mPropertyName);
+    setBounds(mPropertyColumnSeparator);
     setBounds(mPropertyUnit);
     setBounds(mPropertyMinValue);
     setBounds(mPropertyMaxValue);
@@ -950,6 +957,8 @@ void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
     auto const isFileValid = wildcardFilter.isFileSuitable(file) && static_cast<bool>(stream);
 
     mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
+    mPropertyColumnSeparator.setEnabled(isFileValid);
+    mPropertyColumnSeparator.setVisible(file.hasFileExtension("csv"));
     mPropertyUnit.setEnabled(isFileValid);
     mPropertyMinValue.setEnabled(isFileValid);
     mPropertyMaxValue.setEnabled(isFileValid);
@@ -997,6 +1006,14 @@ void Track::Loader::ArgumentSelector::loadButtonClicked()
     if(!range.isEmpty())
     {
         mFileInfo.extra["range"] = range;
+    }
+
+    if(mPropertyColumnSeparator.isVisible())
+    {
+        static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
+        auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
+        auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
+        mFileInfo.args.set("separator", juce::String(separator));
     }
 
     if(mSdifPanel.isVisible())
