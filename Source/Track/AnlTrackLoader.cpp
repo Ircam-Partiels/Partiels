@@ -670,7 +670,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
 
     auto addNewChannel = true;
     std::string line;
-    while(getline(stream, line, '\n'))
+    while(std::getline(stream, line, '\n'))
     {
         if(shouldAbort)
         {
@@ -690,9 +690,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
             }
             std::string time, duration, value;
             std::istringstream linestream(line);
-            getline(linestream, time, separator);
-            getline(linestream, duration, separator);
-            getline(linestream, value, separator);
+            std::getline(linestream, time, separator);
+            std::getline(linestream, duration, separator);
+            std::getline(linestream, value, separator);
             if(time.empty() || duration.empty())
             {
                 return {juce::translate("Parsing error")};
