@@ -1,5 +1,6 @@
 v1.0.7
 
+- Imp: Allow specifying the column separator when importing files in CSV format (#317)
 - Imp: Warn the user if the output audio device is not defined when starting audio playback (#315)
 - Fix: The document duration is not well updated after creating a new document (#314)
 - Add: Demo mode that can be used without a premium license with a limitation preventing the export of analysis results (#312)
