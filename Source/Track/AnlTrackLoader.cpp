@@ -638,10 +638,10 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo c
     {
         return {juce::translate("The input stream of cannot be opened")};
     }
-    return loadFromCsv(stream, shouldAbort, advancement);
+    return loadFromCsv(stream, ',', shouldAbort, advancement);
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     std::vector<std::vector<Plugin::Result>> pluginResults;
 
@@ -689,9 +689,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
             }
             std::string time, duration, value;
             std::istringstream linestream(line);
-            getline(linestream, time, ',');
-            getline(linestream, duration, ',');
-            getline(linestream, value, ',');
+            getline(linestream, time, separator);
+            getline(linestream, duration, separator);
+            getline(linestream, value, separator);
             if(time.empty() || duration.empty())
             {
                 return {juce::translate("Parsing error")};
@@ -1160,7 +1160,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            expectEquals(loadFromCsv(stream, shouldAbort, advancement).index(), 1_z);
+            expectEquals(loadFromCsv(stream, ',', shouldAbort, advancement).index(), 1_z);
         }
 
         beginTest("load cue markers");
@@ -1178,25 +1178,61 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            expectEquals(loadFromCsv(stream, shouldAbort, advancement).index(), 1_z);
+            expectEquals(loadFromCsv(stream, ',', shouldAbort, advancement).index(), 1_z);
         }
 
-        beginTest("load csv markers");
+        beginTest("load csv markers with comma separator");
         {
             auto const result = std::string(TestResultsData::Markers_csv);
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, ',', shouldAbort, advancement));
         }
 
-        beginTest("load csv points");
+        beginTest("load csv markers with tab separator");
+        {
+            auto const result = std::string(TestResultsData::MarkersTab_csv);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromCsv(stream, '\t', shouldAbort, advancement));
+        }
+
+        beginTest("load csv markers with tab separator");
+        {
+            auto const result = std::string(TestResultsData::MarkersSpace_csv);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromCsv(stream, ' ', shouldAbort, advancement));
+        }
+
+        beginTest("load csv points with comma separator");
         {
             auto const result = std::string(TestResultsData::Points_csv);
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, ',', shouldAbort, advancement));
+        }
+
+        beginTest("load csv points with tab separator");
+        {
+            auto const result = std::string(TestResultsData::PointsTab_csv);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromCsv(stream, '\t', shouldAbort, advancement));
+        }
+
+        beginTest("load csv points with space separator");
+        {
+            auto const result = std::string(TestResultsData::PointsSpace_csv);
+            std::istringstream stream(result);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkPoints(loadFromCsv(stream, ' ', shouldAbort, advancement));
         }
 
         beginTest("load json error");
