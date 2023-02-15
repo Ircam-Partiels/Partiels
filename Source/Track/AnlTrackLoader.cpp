@@ -1177,7 +1177,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            expectEquals(loadFromCsv(stream, ',', shouldAbort, advancement).index(), 1_z);
+            expectEquals(loadFromCue(stream, shouldAbort, advancement).index(), 1_z);
         }
 
         beginTest("load cue markers");
