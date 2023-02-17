@@ -145,6 +145,10 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                         setFontSize(mPropertyFontSize.entry.getText().getFloatValue());
                         mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's font size"));
                     })
+, mPropertyUnit(juce::translate("Unit"), juce::translate("The unit of the values for the graphical renderers of the tracks of the group."), [&](juce::String text)
+                {
+                    setUnit(text);
+                })
 , mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visible state of the channels."), [this]()
                          {
                              showChannelLayout();
@@ -153,7 +157,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::results})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::results})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
@@ -167,6 +171,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyFontName);
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
+    addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyChannelLayout);
 }
 
@@ -188,6 +193,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyFontName);
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
+    setBounds(mPropertyUnit);
     setBounds(mPropertyChannelLayout);
     setSize(getWidth(), bounds.getY());
 }
@@ -347,6 +353,64 @@ void Group::PropertyGraphicalsSection::setFontSize(float size)
     updateFont();
 }
 
+void Group::PropertyGraphicalsSection::setUnit(juce::String const& unit)
+{
+    auto const trackAcsrs = copy_with_erased_if(Tools::getTrackAcsrs(mAccessor), [](auto const& trackAcsr)
+                                                {
+                                                    return Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::label;
+                                                });
+    if(trackAcsrs.empty())
+    {
+        return;
+    }
+
+    auto const hasPluginUnit = std::any_of(trackAcsrs.cbegin(), trackAcsrs.cend(), [](auto const& trackAcsr)
+                                           {
+                                               return !trackAcsr.get().template getAttr<Track::AttrType::description>().output.unit.empty();
+                                           });
+
+    if(unit.isEmpty() && hasPluginUnit)
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::QuestionIcon)
+                                 .withTitle("Would you like to reset the unit to default?")
+                                 .withMessage("The specified unit is empty. Would you like remove the unit or to reset the unit to default using the one provided by the plugin(s)?")
+                                 .withButton(juce::translate("Remove the unit"))
+                                 .withButton(juce::translate("Reset the unit to default"));
+        juce::WeakReference<juce::Component> weakReference(this);
+        juce::AlertWindow::showAsync(options, [=, this](int result)
+                                     {
+                                         mDirector.startAction(true);
+                                         if(result == 1)
+                                         {
+                                             for(auto& trackAcsr : trackAcsrs)
+                                             {
+                                                 trackAcsr.get().setAttr<Track::AttrType::unit>(juce::String(), NotificationType::synchronous);
+                                             }
+                                         }
+                                         else
+                                         {
+                                             for(auto& trackAcsr : trackAcsrs)
+                                             {
+                                                 trackAcsr.get().setAttr<Track::AttrType::unit>(std::optional<juce::String>{}, NotificationType::synchronous);
+                                             }
+                                         }
+                                         updateUnit();
+                                         mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change unit of the values name"));
+                                     });
+    }
+    else
+    {
+        mDirector.startAction(true);
+        for(auto& trackAcsr : trackAcsrs)
+        {
+            trackAcsr.get().setAttr<Track::AttrType::unit>(unit, NotificationType::synchronous);
+        }
+        updateUnit();
+        mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change unit of the values name"));
+    }
+}
+
 void Group::PropertyGraphicalsSection::showChannelLayout()
 {
     auto const channelslayout = Tools::getChannelVisibilityStates(mAccessor);
@@ -462,6 +526,7 @@ void Group::PropertyGraphicalsSection::updateContent()
     updateColourMap();
     updateColours();
     updateFont();
+    updateUnit();
     auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
     auto const numChannels = std::accumulate(trackAcsrs.cbegin(), trackAcsrs.cend(), 0_z, [](auto n, auto const& trackAcsr)
                                              {
@@ -633,6 +698,52 @@ void Group::PropertyGraphicalsSection::updateFont()
     {
         mPropertyFontSize.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
     }
+    resized();
+}
+
+void Group::PropertyGraphicalsSection::updateUnit()
+{
+    juce::StringArray trackNames;
+    std::set<juce::String> units;
+    for(auto const& trackAcsr : Tools::getTrackAcsrs(mAccessor))
+    {
+        if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::label)
+        {
+            units.insert(Track::Tools::getUnit(trackAcsr.get()));
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+        }
+    }
+
+    mPropertyUnit.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The unit used by the graphical renderers of the tracks of the group."));
+    mPropertyUnit.setVisible(!units.empty());
+    if(units.size() == 1_z)
+    {
+        mPropertyUnit.entry.setText(*units.cbegin(), juce::NotificationType::dontSendNotification);
+        mPropertyUnit.entry.onEditorShow = nullptr;
+    }
+    else if(units.size() > 1_z)
+    {
+        mPropertyUnit.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+        juce::WeakReference<juce::Component> weakReference(this);
+        mPropertyUnit.entry.onEditorShow = [=, this, first = *units.cbegin()]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+            if(auto* editor = mPropertyUnit.entry.getCurrentTextEditor())
+            {
+                auto const font = mPropertyUnit.entry.getFont();
+                editor->setFont(font);
+                editor->setIndents(0, static_cast<int>(std::floor(font.getDescent())) - 1);
+                editor->setBorder(mPropertyUnit.entry.getBorderSize());
+                editor->setJustification(mPropertyUnit.entry.getJustificationType());
+                editor->setText(first, false);
+                editor->selectAll();
+            }
+        };
+    }
+    resized();
 }
 
 ANALYSE_FILE_END

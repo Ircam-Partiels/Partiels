@@ -26,11 +26,13 @@ namespace Group
         void setFontName(juce::String const& name);
         void setFontStyle(juce::String const& style);
         void setFontSize(float size);
+        void setUnit(juce::String const& unit);
         void showChannelLayout();
         void updateContent();
         void updateColourMap();
         void updateColours();
         void updateFont();
+        void updateUnit();
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
@@ -43,6 +45,7 @@ namespace Group
         PropertyList mPropertyFontName;
         PropertyList mPropertyFontStyle;
         PropertyList mPropertyFontSize;
+        PropertyText mPropertyUnit;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
 

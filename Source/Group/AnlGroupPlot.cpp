@@ -38,6 +38,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case Track::AttrType::graphics:
             case Track::AttrType::colours:
             case Track::AttrType::font:
+            case Track::AttrType::unit:
             case Track::AttrType::channelsLayout:
             {
                 repaint();
