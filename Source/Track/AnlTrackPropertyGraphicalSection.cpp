@@ -597,14 +597,14 @@ void Track::PropertyGraphicalSection::setResultValueRange()
 void Track::PropertyGraphicalSection::setValueRangeMin(double value)
 {
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), value + 1.0);
+    auto const end = std::max(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getEnd(), value);
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{value, end}, NotificationType::synchronous);
 }
 
 void Track::PropertyGraphicalSection::setValueRangeMax(double value)
 {
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-    auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), value - 1.0);
+    auto const start = std::min(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().getStart(), value);
     zoomAcsr.setAttr<Zoom::AttrType::globalRange>(Zoom::Range{start, value}, NotificationType::synchronous);
 }
 
