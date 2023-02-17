@@ -27,7 +27,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             {
                 if(mAccessor.getAttr<AttrType::description>() == Plugin::Description{})
                 {
-                    auto getDescription = [&]()
+                    auto const getDescription = [&]()
                     {
                         try
                         {
@@ -160,6 +160,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::focused:
             case AttrType::grid:
             case AttrType::font:
+            case AttrType::unit:
                 break;
         }
     };

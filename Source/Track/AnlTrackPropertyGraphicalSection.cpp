@@ -156,6 +156,10 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mAccessor.setAttr<AttrType::font>(font, NotificationType::synchronous);
                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change track font size"));
                     })
+, mPropertyUnit("Unit", "The unit of the values", [&](juce::String text)
+                {
+                    setUnit(text);
+                })
 , mPropertyValueRangeMode(juce::translate("Value Range Mode"), juce::translate("The mode of the value range."), "", std::vector<std::string>{"Default", "Results", "Manual"}, [&](size_t index)
                           {
                               switch(index)
@@ -220,6 +224,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::description:
             case AttrType::results:
             case AttrType::channelsLayout:
+            case AttrType::unit:
             {
                 for(auto* child : getChildren())
                 {
@@ -229,7 +234,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         child->setVisible(false);
                     }
                 }
-                auto const& channelsLayout = mAccessor.getAttr<AttrType::channelsLayout>();
+                auto const& channelsLayout = acsr.getAttr<AttrType::channelsLayout>();
                 auto const numChannels = channelsLayout.size();
                 switch(Tools::getFrameType(acsr))
                 {
@@ -247,9 +252,10 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     break;
                     case Track::FrameType::value:
                     {
-                        auto const& output = acsr.getAttr<AttrType::description>().output;
-                        mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
-                        mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
+                        auto const& unit = Tools::getUnit(acsr);
+                        mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
+                        mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
+                        mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
                         mPropertyRangeLink.title.setText(juce::translate("Value Range Link"), juce::NotificationType::dontSendNotification);
                         mPropertyForegroundColour.setVisible(true);
                         mPropertyTextColour.setVisible(true);
@@ -258,6 +264,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyFontName.setVisible(true);
                         mPropertyFontStyle.setVisible(true);
                         mPropertyFontSize.setVisible(true);
+                        mPropertyUnit.setVisible(true);
                         mPropertyValueRangeMode.setVisible(true);
                         mPropertyValueRangeMin.setVisible(true);
                         mPropertyValueRangeMax.setVisible(true);
@@ -268,11 +275,13 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     break;
                     case Track::FrameType::vector:
                     {
-                        auto const& output = acsr.getAttr<AttrType::description>().output;
-                        mPropertyValueRangeMin.entry.setTextValueSuffix(output.unit);
-                        mPropertyValueRangeMax.entry.setTextValueSuffix(output.unit);
+                        auto const& unit = Tools::getUnit(acsr);
+                        mPropertyValueRangeMin.entry.setTextValueSuffix(unit);
+                        mPropertyValueRangeMax.entry.setTextValueSuffix(unit);
+                        mPropertyUnit.entry.setText(unit.isEmpty() ? " " : unit, juce::NotificationType::dontSendNotification);
                         mPropertyRangeLink.title.setText(juce::translate("Bin Range Link"), juce::NotificationType::dontSendNotification);
                         mPropertyColourMap.setVisible(true);
+                        mPropertyUnit.setVisible(true);
                         mPropertyValueRangeMode.setVisible(true);
                         mPropertyValueRangeMin.setVisible(true);
                         mPropertyValueRangeMax.setVisible(true);
@@ -424,6 +433,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyFontName);
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
+    addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyValueRangeMode);
     addAndMakeVisible(mPropertyValueRangeMin);
     addAndMakeVisible(mPropertyValueRangeMax);
@@ -465,6 +475,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyFontName);
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
+    setBounds(mPropertyUnit);
     setBounds(mPropertyValueRangeMode);
     setBounds(mPropertyValueRangeMin);
     setBounds(mPropertyValueRangeMax);
@@ -515,6 +526,39 @@ void Track::PropertyGraphicalSection::setShadowColour(juce::Colour const& colour
     auto colours = mAccessor.getAttr<AttrType::colours>();
     colours.shadow = colour;
     mAccessor.setAttr<AttrType::colours>(colours, NotificationType::synchronous);
+}
+
+void Track::PropertyGraphicalSection::setUnit(juce::String const& unit)
+{
+    if(unit.isEmpty() && !mAccessor.getAttr<AttrType::description>().output.unit.empty())
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::QuestionIcon)
+                                 .withTitle("Would you like to reset the unit to default?")
+                                 .withMessage("The specified unit is empty. Would you like remove the unit or to reset the unit to default using the one provided by the plugin?")
+                                 .withButton(juce::translate("Remove the unit"))
+                                 .withButton(juce::translate("Reset the unit to default"));
+        juce::WeakReference<juce::Component> weakReference(this);
+        juce::AlertWindow::showAsync(options, [=, this](int result)
+                                     {
+                                         mDirector.startAction();
+                                         if(result == 1)
+                                         {
+                                             mAccessor.setAttr<AttrType::unit>(juce::String(), NotificationType::synchronous);
+                                         }
+                                         else
+                                         {
+                                             mAccessor.setAttr<AttrType::unit>(std::optional<juce::String>(), NotificationType::synchronous);
+                                         }
+                                         mDirector.endAction(ActionState::newTransaction, juce::translate("Change unit of the values name"));
+                                     });
+    }
+    else
+    {
+        mDirector.startAction();
+        mAccessor.setAttr<AttrType::unit>(unit, NotificationType::synchronous);
+        mDirector.endAction(ActionState::newTransaction, juce::translate("Change unit of the values name"));
+    }
 }
 
 void Track::PropertyGraphicalSection::setPluginValueRange()

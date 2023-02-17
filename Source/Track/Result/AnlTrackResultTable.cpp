@@ -33,6 +33,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::unit:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
@@ -70,6 +71,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::file:
             case AttrType::results:
             case AttrType::description:
+            case AttrType::unit:
             {
                 mTabbedButtonBar.removeChangeListener(this);
                 auto setNumChannels = [this](auto resultPtr)
@@ -473,11 +475,10 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
             break;
             case static_cast<int>(ColumnType::value):
             {
-                auto const unit = mAccessor.getAttr<AttrType::description>().output.unit;
                 auto const& value = std::get<2_z>(points->at(*channel).at(frameIndex));
                 if(value.has_value())
                 {
-                    drawText(Format::valueToString(*value, 4) + unit);
+                    drawText(Format::valueToString(*value, 4) + Tools::getUnit(mAccessor));
                 }
                 else
                 {

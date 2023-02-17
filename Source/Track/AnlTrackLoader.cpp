@@ -877,11 +877,6 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
 , mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, []([[maybe_unused]] size_t index)
                            {
                            })
-, mPropertyUnit("Unit", "Define the unit of the results", [&](juce::String const& text)
-                {
-                    mPropertyMinValue.entry.setTextValueSuffix(text);
-                    mPropertyMaxValue.entry.setTextValueSuffix(text);
-                })
 , mPropertyMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
                     {
                         auto const max = std::max(static_cast<float>(mPropertyMaxValue.entry.getValue()), value);
@@ -900,7 +895,6 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
     mPropertyName.entry.setEnabled(false);
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mPropertyColumnSeparator);
-    addAndMakeVisible(mPropertyUnit);
     addAndMakeVisible(mPropertyMinValue);
     addAndMakeVisible(mPropertyMaxValue);
     mPropertyColumnSeparator.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
@@ -928,7 +922,6 @@ void Track::Loader::ArgumentSelector::resized()
     };
     setBounds(mPropertyName);
     setBounds(mPropertyColumnSeparator);
-    setBounds(mPropertyUnit);
     setBounds(mPropertyMinValue);
     setBounds(mPropertyMaxValue);
     setBounds(mSdifPanel);
@@ -941,7 +934,6 @@ void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
     mFileInfo.file = file;
     mFileInfo.args.clear();
     mFileInfo.extra = {};
-    mPropertyUnit.entry.setText("", juce::NotificationType::dontSendNotification);
 
     juce::WildcardFileFilter wildcardFilter(getWildCardForAllFormats(), "*", "");
     auto const streamFlag = file.hasFileExtension("dat") ? std::ios::in | std::ios::binary : std::ios::in;
@@ -961,7 +953,6 @@ void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
     mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
     mPropertyColumnSeparator.setEnabled(isFileValid);
     mPropertyColumnSeparator.setVisible(file.hasFileExtension("csv"));
-    mPropertyUnit.setEnabled(isFileValid);
     mPropertyMinValue.setEnabled(isFileValid);
     mPropertyMaxValue.setEnabled(isFileValid);
     mSdifPanel.setEnabled(isFileValid);
@@ -978,7 +969,6 @@ void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
             temp.fromJson(json.at("track"), NotificationType::synchronous);
             auto const& valueZoomAcsr = temp.getAcsr<AcsrType::valueZoom>();
             auto const globalRange = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            mPropertyUnit.entry.setText(temp.getAttr<AttrType::description>().output.unit, juce::NotificationType::sendNotificationSync);
             mPropertyMinValue.entry.setValue(globalRange.getStart(), juce::NotificationType::sendNotificationSync);
             mPropertyMaxValue.entry.setValue(globalRange.getEnd(), juce::NotificationType::sendNotificationSync);
 
@@ -999,11 +989,6 @@ void Track::Loader::ArgumentSelector::loadButtonClicked()
         return;
     }
 
-    auto const unit = mPropertyUnit.entry.getText();
-    if(!unit.isEmpty())
-    {
-        mFileInfo.extra["unit"] = unit;
-    }
     juce::Range<double> const range{mPropertyMinValue.entry.getValue(), mPropertyMaxValue.entry.getValue()};
     if(!range.isEmpty())
     {
@@ -1044,12 +1029,6 @@ void Track::Loader::ArgumentSelector::apply(Accessor& accessor, FileInfo const& 
     if(fileInfo.extra.count("track") > 0_z)
     {
         accessor.fromJson(fileInfo.extra.at("track"), notification);
-    }
-    if(fileInfo.extra.count("unit") > 0_z)
-    {
-        auto description = accessor.getAttr<AttrType::description>();
-        description.output.unit = fileInfo.extra.at("unit").get<std::string>();
-        accessor.setAttr<AttrType::description>(description, notification);
     }
     if(fileInfo.extra.count("range") > 0_z)
     {

@@ -18,7 +18,6 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::key:
             case AttrType::file:
             case AttrType::name:
-            case AttrType::description:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:
@@ -27,11 +26,13 @@ Track::Snapshot::Snapshot(Accessor& accessor, Zoom::Accessor& timeZoomAccessor, 
             case AttrType::zoomAcsr:
             case AttrType::focused:
                 break;
+            case AttrType::description:
             case AttrType::grid:
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::unit:
             case AttrType::channelsLayout:
             {
                 repaint();
@@ -383,6 +384,7 @@ Track::Snapshot::Overlay::Overlay(Snapshot& snapshot)
             break;
             case AttrType::file:
             case AttrType::description:
+            case AttrType::unit:
             case AttrType::name:
             {
                 juce::SettableTooltipClient::setTooltip(Tools::getInfoTooltip(acsr));

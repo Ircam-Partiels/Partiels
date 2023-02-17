@@ -148,6 +148,11 @@ double Track::Tools::pixelToSeconds(float position, juce::Range<double> const& t
     return static_cast<double>(position - bounds.getX()) / static_cast<double>(bounds.getWidth()) * timeRange.getLength() + timeRange.getStart();
 }
 
+juce::String Track::Tools::getUnit(Accessor const& acsr)
+{
+    return acsr.getAttr<AttrType::unit>().value_or(juce::String(acsr.getAttr<AttrType::description>().output.unit));
+}
+
 juce::String Track::Tools::getInfoTooltip(Accessor const& acsr)
 {
     auto const& name = acsr.getAttr<AttrType::name>();
@@ -202,7 +207,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         auto const value = Results::getValue(markers, std::get<0>(*channel), time);
         if(value.has_value())
         {
-            return *value + accessor.getAttr<AttrType::description>().output.unit;
+            return juce::String(value.value()) + getUnit(accessor);
         }
         return "-";
     }
@@ -211,7 +216,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         auto const value = Results::getValue(points, std::get<0>(*channel), time);
         if(value.has_value())
         {
-            return Format::valueToString(*value, 4) + accessor.getAttr<AttrType::description>().output.unit;
+            return Format::valueToString(value.value(), 4) + getUnit(accessor);
         }
         return "-";
     }
@@ -242,7 +247,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         if(value.has_value())
         {
             auto const& output = accessor.getAttr<AttrType::description>().output;
-            auto getBinName = [&]()
+            auto const getBinName = [&]()
             {
                 if(*binIndex >= output.binNames.size() || output.binNames[*binIndex].empty())
                 {
@@ -250,7 +255,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
                 }
                 return "[" + juce::String(*binIndex) + " - " + output.binNames[*binIndex] + "]";
             };
-            return Format::valueToString(*value, 4) + output.unit + " " + getBinName();
+            return Format::valueToString(*value, 4) + getUnit(accessor) + " " + getBinName();
         }
         return "-";
     }
@@ -626,10 +631,7 @@ std::unique_ptr<juce::Component> Track::Tools::createValueRangeEditor(Accessor& 
         PropertyNumber mPropertyEnd;
     };
 
-    auto& zoomAcsr = acsr.getAcsr<AcsrType::valueZoom>();
-    auto const name = acsr.getAttr<AttrType::name>();
-    auto const unit = acsr.getAttr<AttrType::description>().output.unit;
-    return std::make_unique<RangeEditor>(zoomAcsr, name, unit);
+    return std::make_unique<RangeEditor>(acsr.getAcsr<AcsrType::valueZoom>(), acsr.getAttr<AttrType::name>(), getUnit(acsr));
 }
 
 std::unique_ptr<juce::Component> Track::Tools::createBinRangeEditor(Accessor& acsr)

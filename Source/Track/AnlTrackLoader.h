@@ -62,7 +62,6 @@ namespace Track
             FileInfo mFileInfo;
             PropertyText mPropertyName;
             PropertyList mPropertyColumnSeparator;
-            PropertyText mPropertyUnit;
             PropertyNumber mPropertyMinValue;
             PropertyNumber mPropertyMaxValue;
             PropertyTextButton mLoadButton;

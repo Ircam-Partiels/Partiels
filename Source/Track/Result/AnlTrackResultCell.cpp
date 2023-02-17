@@ -1,4 +1,5 @@
 #include "AnlTrackResultCell.h"
+#include "../AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -461,7 +462,7 @@ void Track::Result::CellValue::update()
         mLabel.setVisible(false);
         mNumberField.setVisible(true);
         mNumberField.setNumDecimalsDisplayed(4);
-        mNumberField.setTextValueSuffix(mAccessor.getAttr<AttrType::description>().output.unit);
+        mNumberField.setTextValueSuffix(Track::Tools::getUnit(mAccessor));
         if(mChannel >= points->size())
         {
             mNumberField.setEnabled(false);

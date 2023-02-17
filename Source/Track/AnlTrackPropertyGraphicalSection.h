@@ -23,6 +23,7 @@ namespace Track
         void setBackgroundColour(juce::Colour const& colour);
         void setTextColour(juce::Colour const& colour);
         void setShadowColour(juce::Colour const& colour);
+        void setUnit(juce::String const& unit);
         void setPluginValueRange();
         void setResultValueRange();
         void setValueRangeMin(double value);
@@ -48,6 +49,7 @@ namespace Track
         PropertyList mPropertyFontName;
         PropertyList mPropertyFontStyle;
         PropertyList mPropertyFontSize;
+        PropertyText mPropertyUnit;
         PropertyList mPropertyValueRangeMode;
         PropertyNumber mPropertyValueRangeMin;
         PropertyNumber mPropertyValueRangeMax;

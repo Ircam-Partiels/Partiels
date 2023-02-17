@@ -81,6 +81,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             case AttrType::height:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::unit:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:

@@ -74,6 +74,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::height:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::unit:
             case AttrType::channelsLayout:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:

@@ -130,7 +130,6 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::file:
             case AttrType::name:
             case AttrType::key:
-            case AttrType::description:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:
@@ -139,11 +138,13 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::processing:
             case AttrType::focused:
                 break;
+            case AttrType::description:
             case AttrType::grid:
             case AttrType::results:
             case AttrType::graphics:
             case AttrType::colours:
             case AttrType::font:
+            case AttrType::unit:
             case AttrType::channelsLayout:
             {
                 repaint();
@@ -209,7 +210,7 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
     auto const justificationHorizontal = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::left | Zoom::Grid::Justification::right) : Justification(Justification::horizontallyCentred);
     auto const justificationVertical = accessor.getAttr<AttrType::grid>() == GridMode::partial ? Justification(Zoom::Grid::Justification::top | Zoom::Grid::Justification::bottom) : Justification(Justification::verticallyCentred);
 
-    auto getStringify = [&]() -> std::function<juce::String(double)>
+    auto const getStringify = [&]() -> std::function<juce::String(double)>
     {
         switch(Tools::getFrameType(accessor))
         {
@@ -219,7 +220,7 @@ void Track::Plot::paintGrid(Accessor const& accessor, Zoom::Accessor const& time
             }
             case Track::FrameType::value:
             {
-                return [unit = accessor.getAttr<AttrType::description>().output.unit](double value)
+                return [unit = Tools::getUnit(accessor)](double value)
                 {
                     return Format::valueToString(value, 4) + unit;
                 };
@@ -342,7 +343,7 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
 
     auto const fbounds = bounds.toFloat();
     auto const& colours = accessor.getAttr<AttrType::colours>();
-    auto const& unit = accessor.getAttr<AttrType::description>().output.unit;
+    auto const& unit = Tools::getUnit(accessor);
 
     auto constexpr epsilonPixel = 1.0f;
     auto const clipBounds = g.getClipBounds().toFloat();
@@ -412,7 +413,7 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
             auto const previousLabelLimit = labels.empty() ? x : static_cast<float>(std::get<1>(labels.back()) + std::get<2>(labels.back()));
             if(previousLabelLimit <= x)
             {
-                auto const text = std::get<2>(*it) + unit;
+                auto const text = juce::String(std::get<2>(*it)) + unit;
                 auto const textWidth = font.getStringWidth(text) + 2;
                 auto const textX = static_cast<int>(std::round(x)) + 2;
                 labels.push_back(std::make_tuple(text, textX, textWidth));
@@ -493,7 +494,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
 
     auto const fbounds = bounds.toFloat();
     auto const& colours = accessor.getAttr<AttrType::colours>();
-    auto const& unit = accessor.getAttr<AttrType::description>().output.unit;
+    auto const& unit = Tools::getUnit(accessor);
 
     auto const font = g.getCurrentFont();
 
@@ -815,6 +816,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::file:
             case AttrType::description:
             case AttrType::name:
+            case AttrType::unit:
             {
                 juce::SettableTooltipClient::setTooltip(Tools::getInfoTooltip(acsr));
             }
