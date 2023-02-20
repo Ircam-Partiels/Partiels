@@ -877,16 +877,6 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
 , mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, []([[maybe_unused]] size_t index)
                            {
                            })
-, mPropertyMinValue("Value Range Min.", "Define the minimum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
-                    {
-                        auto const max = std::max(static_cast<float>(mPropertyMaxValue.entry.getValue()), value);
-                        mPropertyMaxValue.entry.setValue(max, juce::NotificationType::dontSendNotification);
-                    })
-, mPropertyMaxValue("Value Range Max.", "Define the maximum value of the results.", "", {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max()}, 0.0f, [&](float value)
-                    {
-                        auto const min = std::min(static_cast<float>(mPropertyMinValue.entry.getValue()), value);
-                        mPropertyMinValue.entry.setValue(min, juce::NotificationType::dontSendNotification);
-                    })
 , mLoadButton("Load", "Load the file with the arguments", [this]()
               {
                   loadButtonClicked();
@@ -895,8 +885,6 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
     mPropertyName.entry.setEnabled(false);
     addAndMakeVisible(mPropertyName);
     addAndMakeVisible(mPropertyColumnSeparator);
-    addAndMakeVisible(mPropertyMinValue);
-    addAndMakeVisible(mPropertyMaxValue);
     mPropertyColumnSeparator.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
     mSdifPanel.onUpdated = [this]()
     {
@@ -922,8 +910,6 @@ void Track::Loader::ArgumentSelector::resized()
     };
     setBounds(mPropertyName);
     setBounds(mPropertyColumnSeparator);
-    setBounds(mPropertyMinValue);
-    setBounds(mPropertyMaxValue);
     setBounds(mSdifPanel);
     setBounds(mLoadButton);
     setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
@@ -953,8 +939,6 @@ void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
     mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
     mPropertyColumnSeparator.setEnabled(isFileValid);
     mPropertyColumnSeparator.setVisible(file.hasFileExtension("csv"));
-    mPropertyMinValue.setEnabled(isFileValid);
-    mPropertyMaxValue.setEnabled(isFileValid);
     mSdifPanel.setEnabled(isFileValid);
     mSdifPanel.setVisible(file.hasFileExtension("sdif"));
     mSdifPanel.setFile(file);
@@ -965,13 +949,6 @@ void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
         auto json = nlohmann::sax_parse_json_object(stream, "track", 1_z);
         if(json.count("track") > 0_z)
         {
-            Accessor temp;
-            temp.fromJson(json.at("track"), NotificationType::synchronous);
-            auto const& valueZoomAcsr = temp.getAcsr<AcsrType::valueZoom>();
-            auto const globalRange = valueZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-            mPropertyMinValue.entry.setValue(globalRange.getStart(), juce::NotificationType::sendNotificationSync);
-            mPropertyMaxValue.entry.setValue(globalRange.getEnd(), juce::NotificationType::sendNotificationSync);
-
             json["track"].erase("identifier");
             json["track"].erase("file");
             mFileInfo.extra = std::move(json);
@@ -987,12 +964,6 @@ void Track::Loader::ArgumentSelector::loadButtonClicked()
     if(!juce::MessageManager::getInstance()->isThisTheMessageThread())
     {
         return;
-    }
-
-    juce::Range<double> const range{mPropertyMinValue.entry.getValue(), mPropertyMaxValue.entry.getValue()};
-    if(!range.isEmpty())
-    {
-        mFileInfo.extra["range"] = range;
     }
 
     if(mPropertyColumnSeparator.isVisible())

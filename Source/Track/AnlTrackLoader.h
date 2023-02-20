@@ -62,8 +62,6 @@ namespace Track
             FileInfo mFileInfo;
             PropertyText mPropertyName;
             PropertyList mPropertyColumnSeparator;
-            PropertyNumber mPropertyMinValue;
-            PropertyNumber mPropertyMaxValue;
             PropertyTextButton mLoadButton;
             SdifConverter::Panel mSdifPanel;
         };
