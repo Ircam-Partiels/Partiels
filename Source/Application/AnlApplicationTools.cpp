@@ -217,12 +217,6 @@ void Application::Tools::addFileTrack(std::tuple<juce::String, size_t> position,
                                     {
                                         Document::Selection::selectItem(Instance::get().getDocumentAccessor(), {idtf, {}}, true, false, NotificationType::synchronous);
                                     });
-        auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::InfoIcon)
-                                 .withTitle(juce::translate("Track imported!"))
-                                 .withMessage(juce::translate("The new track has been imported from the file FLNAME into the document.").replace("FLNAME", file.getFullPathName()))
-                                 .withButton(juce::translate("Ok"));
-        juce::AlertWindow::showAsync(options, nullptr);
     }
     else
     {
