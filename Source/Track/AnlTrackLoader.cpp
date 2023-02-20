@@ -872,15 +872,10 @@ Track::Loader::ArgumentSelector::WindowContainer::WindowContainer(ArgumentSelect
 {
 }
 
-Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
+Track::Loader::ArgumentSelector::ArgumentSelector()
 : mPropertyName("File", "The file to import", nullptr)
-, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, []([[maybe_unused]] size_t index)
-                           {
-                           })
-, mLoadButton("Load", "Load the file with the arguments", [this]()
-              {
-                  loadButtonClicked();
-              })
+, mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, nullptr)
+, mLoadButton("Load", "Load the file with the arguments", nullptr)
 {
     mPropertyName.entry.setEnabled(false);
     addAndMakeVisible(mPropertyName);
@@ -895,7 +890,6 @@ Track::Loader::ArgumentSelector::ArgumentSelector(juce::File const& file)
     mLoadButton.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
     addAndMakeVisible(mLoadButton);
     setSize(300, 100);
-    setFile(file);
 }
 
 void Track::Loader::ArgumentSelector::resized()
@@ -912,101 +906,120 @@ void Track::Loader::ArgumentSelector::resized()
     setBounds(mPropertyColumnSeparator);
     setBounds(mSdifPanel);
     setBounds(mLoadButton);
-    setSize(getWidth(), std::max(bounds.getY(), 120) + 2);
+    setSize(getWidth(), bounds.getY() + 2);
 }
 
-void Track::Loader::ArgumentSelector::setFile(juce::File const& file)
+bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::function<void(FileInfo)> callback)
 {
-    mFileInfo.file = file;
-    mFileInfo.args.clear();
-    mFileInfo.extra = {};
+    if(callback == nullptr)
+    {
+        return false;
+    }
 
     juce::WildcardFileFilter wildcardFilter(getWildCardForAllFormats(), "*", "");
-    auto const streamFlag = file.hasFileExtension("dat") ? std::ios::in | std::ios::binary : std::ios::in;
-    auto stream = std::ifstream(file.getFullPathName().toStdString(), streamFlag);
-    if(file != juce::File() && !stream)
+    if(!wildcardFilter.isFileSuitable(file))
     {
         auto const options = juce::MessageBoxOptions()
-                                 .withIconType(juce::AlertWindow::InfoIcon)
+                                 .withIconType(juce::AlertWindow::WarningIcon)
+                                 .withTitle(juce::translate("Invalid file!"))
+                                 .withMessage(juce::translate("The format of the file 'FLNAME' is not supported.").replace("FLNAME", file.getFullPathName()))
+                                 .withButton(juce::translate("Ok"));
+        juce::AlertWindow::showAsync(options, nullptr);
+        return false;
+    }
+
+    auto const streamFlag = file.hasFileExtension("dat") ? std::ios::in | std::ios::binary : std::ios::in;
+    auto stream = std::ifstream(file.getFullPathName().toStdString(), streamFlag);
+    if(!stream)
+    {
+        auto const options = juce::MessageBoxOptions()
+                                 .withIconType(juce::AlertWindow::WarningIcon)
                                  .withTitle(juce::translate("Invalid file!"))
                                  .withMessage(juce::translate("The input stream of the file 'FLNAME' cannot be opened.").replace("FLNAME", file.getFullPathName()))
                                  .withButton(juce::translate("Ok"));
         juce::AlertWindow::showAsync(options, nullptr);
+        return false;
     }
 
-    auto const isFileValid = wildcardFilter.isFileSuitable(file) && static_cast<bool>(stream);
-
     mPropertyName.entry.setText(file.getFileName(), juce::NotificationType::dontSendNotification);
-    mPropertyColumnSeparator.setEnabled(isFileValid);
-    mPropertyColumnSeparator.setVisible(file.hasFileExtension("csv"));
-    mSdifPanel.setEnabled(isFileValid);
-    mSdifPanel.setVisible(file.hasFileExtension("sdif"));
-    mSdifPanel.setFile(file);
-    mLoadButton.setEnabled(isFileValid);
 
-    if(isFileValid && file.hasFileExtension("json"))
+    if(file.hasFileExtension("sdif"))
     {
+        mPropertyColumnSeparator.setVisible(false);
+        mSdifPanel.setVisible(true);
+        mSdifPanel.setFile(file);
+        juce::WeakReference<juce::Component> weakReference(this);
+        mLoadButton.entry.onClick = [=, this]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+
+            FileInfo fileInfo;
+            fileInfo.file = file;
+            auto const format = mSdifPanel.getFromSdifFormat();
+            fileInfo.args.set("frame", SdifConverter::getString(std::get<0_z>(format)));
+            fileInfo.args.set("matrix", SdifConverter::getString(std::get<1_z>(format)));
+            if(std::get<2_z>(format).has_value())
+            {
+                fileInfo.args.set("row", juce::String(*std::get<2_z>(format)));
+            }
+            if(std::get<3_z>(format).has_value())
+            {
+                fileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
+            }
+            callback(fileInfo);
+        };
+        resized();
+        return true;
+    }
+
+    if(file.hasFileExtension("csv"))
+    {
+        mPropertyColumnSeparator.setVisible(true);
+        mSdifPanel.setVisible(false);
+        mLoadButton.setEnabled(true);
+        juce::WeakReference<juce::Component> weakReference(this);
+        mLoadButton.entry.onClick = [=, this]()
+        {
+            if(weakReference.get() == nullptr)
+            {
+                return;
+            }
+
+            FileInfo fileInfo;
+            fileInfo.file = file;
+            static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
+            auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
+            auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
+            fileInfo.args.set("separator", juce::String(separator));
+            callback(fileInfo);
+        };
+        resized();
+        return true;
+    }
+
+    if(file.hasFileExtension("json"))
+    {
+        FileInfo fileInfo;
+        fileInfo.file = file;
         auto json = nlohmann::sax_parse_json_object(stream, "track", 1_z);
         if(json.count("track") > 0_z)
         {
             json["track"].erase("identifier");
             json["track"].erase("file");
-            mFileInfo.extra = std::move(json);
+            fileInfo.extra = std::move(json["track"]);
         }
+        callback(fileInfo);
+        return false;
     }
 
-    resized();
-}
+    FileInfo fileInfo;
+    fileInfo.file = file;
+    callback(fileInfo);
 
-void Track::Loader::ArgumentSelector::loadButtonClicked()
-{
-    anlWeakAssert(juce::MessageManager::getInstance()->isThisTheMessageThread());
-    if(!juce::MessageManager::getInstance()->isThisTheMessageThread())
-    {
-        return;
-    }
-
-    if(mPropertyColumnSeparator.isVisible())
-    {
-        static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
-        auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
-        auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
-        mFileInfo.args.set("separator", juce::String(separator));
-    }
-
-    if(mSdifPanel.isVisible())
-    {
-        auto const format = mSdifPanel.getFromSdifFormat();
-        mFileInfo.args.set("frame", SdifConverter::getString(std::get<0_z>(format)));
-        mFileInfo.args.set("matrix", SdifConverter::getString(std::get<1_z>(format)));
-        if(std::get<2_z>(format).has_value())
-        {
-            mFileInfo.args.set("row", juce::String(*std::get<2_z>(format)));
-        }
-        if(std::get<3_z>(format).has_value())
-        {
-            mFileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
-        }
-    }
-
-    if(onLoad != nullptr)
-    {
-        onLoad(mFileInfo);
-    }
-}
-
-void Track::Loader::ArgumentSelector::apply(Accessor& accessor, FileInfo const& fileInfo, NotificationType const notification)
-{
-    if(fileInfo.extra.count("track") > 0_z)
-    {
-        accessor.fromJson(fileInfo.extra.at("track"), notification);
-    }
-    if(fileInfo.extra.count("range") > 0_z)
-    {
-        auto& valueZoomAcsr = accessor.getAcsr<AcsrType::valueZoom>();
-        auto const range = fileInfo.extra.at("range").get<juce::Range<double>>();
-        valueZoomAcsr.setAttr<Zoom::AttrType::globalRange>(range, notification);
-    }
+    return false;
 }
 
 class Track::Loader::UnitTest

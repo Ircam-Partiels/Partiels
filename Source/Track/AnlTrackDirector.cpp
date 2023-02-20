@@ -324,7 +324,10 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
     mLoader.onLoadingSucceeded = [&](Results const& results)
     {
         auto const fileInfo = mAccessor.getAttr<AttrType::file>();
-        Loader::ArgumentSelector::apply(mAccessor, fileInfo, NotificationType::synchronous);
+        if(!fileInfo.extra.is_null())
+        {
+            mAccessor.fromJson(fileInfo.extra, NotificationType::synchronous);
+        }
         mAccessor.setAttr<AttrType::results>(results, NotificationType::synchronous);
         runRendering();
     };
@@ -1019,28 +1022,29 @@ void Track::Director::askForFile()
                                   {
                                       return;
                                   }
-                                  mLoaderSelectorContainer->selector.onLoad = [=, this](Track::FileInfo fileInfo)
+                                  if(mLoaderSelectorContainer->selector.setFile(results.getFirst(), [=, this](Track::FileInfo fileInfo)
+                                                                                {
+                                                                                    if(safePointer.get() == nullptr)
+                                                                                    {
+                                                                                        return;
+                                                                                    }
+                                                                                    mLoaderSelectorContainer->window.hide();
+                                                                                    auto isPerformingAction = mIsPerformingAction;
+                                                                                    if(!isPerformingAction)
+                                                                                    {
+                                                                                        startAction();
+                                                                                    }
+                                                                                    mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                                                                    mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+                                                                                    mAccessor.setAttr<AttrType::file>(fileInfo, NotificationType::synchronous);
+                                                                                    if(!isPerformingAction)
+                                                                                    {
+                                                                                        endAction(ActionState::newTransaction, juce::translate("Change results file"));
+                                                                                    }
+                                                                                }))
                                   {
-                                      if(safePointer.get() == nullptr)
-                                      {
-                                          return;
-                                      }
-                                      mLoaderSelectorContainer->window.hide();
-                                      auto isPerformingAction = mIsPerformingAction;
-                                      if(!isPerformingAction)
-                                      {
-                                          startAction();
-                                      }
-                                      mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-                                      mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-                                      mAccessor.setAttr<AttrType::file>(fileInfo, NotificationType::synchronous);
-                                      if(!isPerformingAction)
-                                      {
-                                          endAction(ActionState::newTransaction, juce::translate("Change results file"));
-                                      }
-                                  };
-                                  mLoaderSelectorContainer->selector.setFile(results.getFirst());
-                                  mLoaderSelectorContainer->window.show(true);
+                                      mLoaderSelectorContainer->window.show(true);
+                                  }
                               });
 }
 

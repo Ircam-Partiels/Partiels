@@ -542,25 +542,26 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
         return;
     }
     juce::WeakReference<Instance> weakReference(this);
-    mFileLoader->selector.onLoad = [=, this](Track::FileInfo fileInfo)
+    if(mFileLoader->selector.setFile(file, [=, this](Track::FileInfo fileInfo)
+                                     {
+                                         if(weakReference.get() == nullptr)
+                                         {
+                                             return;
+                                         }
+                                         Tools::addFileTrack(position, fileInfo);
+                                         mFileLoader->window.hide();
+                                     }))
     {
-        if(weakReference.get() == nullptr)
-        {
-            return;
-        }
-        Tools::addFileTrack(position, fileInfo);
-        mFileLoader->window.hide();
-    };
-    mFileLoader->selector.setFile(file);
-    mFileLoader->window.show(true);
-    juce::MessageManager::callAsync([=, this]()
-                                    {
-                                        if(weakReference.get() == nullptr)
+        mFileLoader->window.show(true);
+        juce::MessageManager::callAsync([=, this]()
                                         {
-                                            return;
-                                        }
-                                        mFileLoader->window.toFront(true);
-                                    });
+                                            if(weakReference.get() == nullptr)
+                                            {
+                                                return;
+                                            }
+                                            mFileLoader->window.toFront(true);
+                                        });
+    }
 }
 
 AuthorizationProcessor& Application::Instance::getAuthorizationProcessor()

@@ -34,16 +34,13 @@ namespace Track
         : public juce::Component
         {
         public:
-            ArgumentSelector(juce::File const& file = juce::File());
+            ArgumentSelector();
             ~ArgumentSelector() override = default;
 
             // juce::Component
             void resized() override;
 
-            void setFile(juce::File const& file);
-            std::function<void(FileInfo)> onLoad = nullptr;
-
-            static void apply(Accessor& accessor, FileInfo const& fileInfo, NotificationType const notification);
+            bool setFile(juce::File const& file, std::function<void(FileInfo)> callback);
 
             class WindowContainer
             : public FloatingWindowContainer
@@ -57,13 +54,10 @@ namespace Track
             };
 
         private:
-            void loadButtonClicked();
-
-            FileInfo mFileInfo;
             PropertyText mPropertyName;
             PropertyList mPropertyColumnSeparator;
-            PropertyTextButton mLoadButton;
             SdifConverter::Panel mSdifPanel;
+            PropertyTextButton mLoadButton;
         };
 
     private:
