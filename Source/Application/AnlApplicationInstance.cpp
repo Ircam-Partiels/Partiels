@@ -817,25 +817,48 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
         return;
     }
 
-    auto constexpr urlAddress = "https://git.forum.ircam.fr/api/v4/projects/451/repository/tags";
-    auto constexpr privateToken = "PRIVATE-TOKEN: glpat-HQjqfzhoxsMDxTtsK25G";
-    mDownloader->launch({urlAddress}, {privateToken}, [=, this](juce::String content)
+    auto constexpr urlAddress = "https://forum.ircam.fr/api/projects/401/?format=json";
+    mDownloader->launch({urlAddress}, {}, [=, this](juce::String content)
                         {
                             auto const currentVersion = Version::fromString(ProjectInfo::versionString);
                             auto const checkVersion = Version::fromString(mApplicationAccessor->getAttr<AttrType::lastVersion>());
                             auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
 
                             auto upstreamVersion = usedVersion;
-                            auto const json = nlohmann::json::parse(content.toStdString());
-
-                            for(auto index = 0_z; index < json.size(); ++index)
+                            nlohmann::json json;
+                            try
                             {
-                                auto const& tag = json.at(index);
-                                auto const name = tag.find("name");
-                                MiscWeakAssert(name != tag.cend() && name->is_string());
-                                if(name != tag.cend() && name->is_string())
+                                json = nlohmann::json::parse(content.toStdString());
+                            }
+                            catch(...)
+                            {
+                                return;
+                            }
+                            if(!json.is_object())
+                            {
+                                return;
+                            }
+                            auto const& releases = json.find("releases");
+                            if(releases == json.cend() || !releases->is_array())
+                            {
+                                return;
+                            }
+
+                            for(auto index = 0_z; index < releases->size(); ++index)
+                            {
+                                auto const& release = releases->at(index);
+
+                                auto const& is_tagged = release.find("is_tagged");
+                                MiscWeakAssert(is_tagged != release.cend() && is_tagged->is_boolean());
+                                auto const latest = is_tagged != release.cend() && is_tagged->is_boolean() && is_tagged->get<bool>();
+
+                                auto const& version_number = release.find("version_number");
+                                MiscWeakAssert(version_number != release.cend());
+                                auto const version = (version_number != release.cend() && version_number->is_string()) ? version_number->get<std::string>() : std::optional<std::string>();
+
+                                if(latest && version.has_value())
                                 {
-                                    upstreamVersion = std::max(upstreamVersion, Version::fromString(juce::String(std::string(name.value()))));
+                                    upstreamVersion = std::max(upstreamVersion, Version::fromString(juce::String(version_number->get<std::string>())));
                                 }
                             }
 
