@@ -449,10 +449,23 @@ void Track::Result::CellValue::update()
         mCurrentLabel = label;
         if(label.empty())
         {
+            juce::WeakReference<juce::Component> weakReference(this);
+            mLabel.onEditorShow = [=, this]()
+            {
+                if(weakReference.get() == nullptr)
+                {
+                    return;
+                }
+                if(auto* editor = mLabel.getCurrentTextEditor())
+                {
+                    editor->setText("", false);
+                }
+            };
             mLabel.setText(" - ", juce::NotificationType::dontSendNotification);
         }
         else
         {
+            mLabel.onEditorShow = nullptr;
             mLabel.setText(label, juce::NotificationType::dontSendNotification);
         }
         return;
