@@ -171,7 +171,7 @@ A document can be saved as a file with the extension *.ptldoc* on your system vi
 
 A document file is a text file describing its contents, such as audio files, analysis tracks, organization by groups. Audio files and analysis files used in a document are not embedded directly in the text file but saved as absolute paths to the files. If you delete or move these files on your system, the application will not be able to load the data and run the analyses properly and will prompt you to find or replace them. 
 
-If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation copies all the audio files into a folder next to the document and replaces the absolute paths with relative ones. This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plug-ins are no longer available.
+If you want to ensure the consistency and permanence of a document or if you want to share it with other users, you can consolidate it via the main menu `File → Consolidate...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + C` (Mac) or `Ctrl + ⇧ Shift + C` (Linux/Windows). This operation creates a folder with the name of the document followed by *ConsolidatedFiles*. It copies all the audio files into this folder next to the document and replaces the absolute paths of the document file with relative ones. All the results are also saved as binary files. You can then move and share the document with its attached folder, the analysis results can be loaded even if the analysis plug-ins are no longer available.
 
 You can reveal the current document file in the file browser of your operating system by clicking on the corresponding [text button](#2-overview) (**K5**) of the main interface.
 
@@ -244,7 +244,7 @@ The analyses of a document are represented by tracks. These analysis tracks are 
 <img src="images/section-organize-the-tracks-by-groups.1-v1.0.6.png" width="416"/>
 </p>
 
-It is therefore often preferable to place matrix type analyses, such as a sonogram, at the bottom and point or marker type analyses, such as spectral centroid or transient detection, on top. Thus the lines and markers will be displayed above the matrices.
+It is therefore often preferable to place matrix type analyses, such as a sonogram, at the bottom and point or marker type analyses, such as spectral centroid or transient detection, on top. Thus the lines and markers will be displayed over the matrices.
 
 ### 5.1. Edition
 
@@ -296,7 +296,7 @@ Once you have selected the desired configuration, click on the `Export` button (
 
 ### 6.1. General options
 
-The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Specific options](#62-specific-options)). 
+The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Text and binary options](#63-text-and-binary-options)). 
 
 <p align="center">
 <img src="images/section-export-analyses.2-v1.0.6.png" width="210"/>
@@ -404,11 +404,11 @@ Each track and group offers two representations of the analysis results. The mai
 
 ### 7.2. Navigation
 
-Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axes corresponding to the value or frequencie ranges.
+Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axiss corresponding to the value or frequencie ranges.
 
 Click and drag on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
 
-#### 7.1.1 Horizontal axis  
+#### 7.2.1 Horizontal axis  
 
 The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control the time zoom. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
@@ -426,7 +426,7 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 - Zoom in with the keyboard shortcut `⌘ Cmd + +` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Time Zoom Out`.
 
-#### 7.1.2 Vertical axis
+#### 7.2.2 Vertical axis
 
 The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value or frequency zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
@@ -443,7 +443,7 @@ The interface of each point or matrix track contains a vertical ruler for each c
 - Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
 
-### 7.2. Transport
+### 7.3. Transport
 
 Partiels provides basic audio playback capabilities to allow listening to audio files while viewing analysis results. Audio playback can be controlled with the transport interface ([Overview](#2-overview) **T**) in the center of the main interface header.
 
@@ -563,26 +563,26 @@ The font properties are only available for marker or point type analyses. By def
 
 #### 8.2.3. Ranges
 
-The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axe for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
+The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axis for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
 
 <p align="center">
 <img src="images/section-track-properties.7-v1.0.5.png" width="196"/>
 </p>
 
 - Value Range Mode: Select the value range mode: default (if available), results, manual (selected automatically when the range doesn't match one of the two other mode)
-- Value Range Min.: The minimum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axes for the points rendering or the color mapping for the column rendering).
-- Value Range Max.: The maximum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axes for the points rendering or the color mapping for the column rendering).
-- Value Range Link: If the visible value range of the points corresponding to the vertical axe is linked to the the vertical axe of the group containing the track.  
+- Value Range Min.: The minimum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
+- Value Range Max.: The maximum possible value for the results (the value differs from the visible value that corresponds to the zoom on the vertical axis for the points rendering or the color mapping for the column rendering).
+- Value Range Link: If the visible value range of the points corresponding to the vertical axis is linked to the the vertical axis of the group containing the track.  
 - Value Range: The visible value range for the column rendering (the range controls the color mapping).
 - Num. Bins: The maximum number of bins (of values) by column (the value is fixed). 
-- Bin Range Link: If the visible bin range of the columns corresponding to the vertical axe is linked to the the vertical axe of the group containing the track. 
+- Bin Range Link: If the visible bin range of the columns corresponding to the vertical axis is linked to the the vertical axis of the group containing the track. 
 - Grid: Prompt a dialog window to control the grid properties of the track
   - Tick Reference Value: The reference value from which the ticks are distributed.
   - Main Tick Interval: The number of small ticks between main ticks. 
   - Power Base: The power base used to compute the tick distribution.
   - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.
   
-#### 8.2.3. Channels
+#### 8.2.4. Channels
 
 The channel button allows to show or hide channels of the analysis results. This channels layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section).
 
@@ -680,7 +680,7 @@ The audio settings window allows you to control device management and channels r
 
 When changed, the audio settings are saved automatically on the computer and restored when reopening the application. The audio settings can be deleted manually to restore the default configuration when reopening the application. The audio settings are located:
 - Mac: *~/Library/Application Support/Ircam/Partiels.audio.settings*
-- Window: *C:\\Users\\"username"\\AppData\\Roaming\\Ircam\\Partiels.audio.settings*
+- Windows: *C:\\Users\\"username"\\AppData\\Roaming\\Ircam\\Partiels.audio.settings*
 - Linux: *~/Ircam/Partiels.audio.settings*
 
 <div style="page-break-after: always;"></div>
