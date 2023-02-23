@@ -13,3 +13,6 @@
 [submodule "Dependencies/ifp"]
 	path = Dependencies/ifp
 	url = ../ifp.git
+[submodule "Dependencies/ircam-vamp-extension"]
+	path = Dependencies/ircam-vamp-extension
+	url = ../ircam-vamp-extension.git
