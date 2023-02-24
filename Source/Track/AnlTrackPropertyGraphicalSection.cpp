@@ -205,7 +205,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
                     mZoomGridPropertyWindow.show();
                 })
-, mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range."), [&](bool value)
+, mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range"), [&](bool value)
                      {
                          mDirector.startAction();
                          mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
@@ -216,6 +216,12 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                          {
                              showChannelLayout();
                          })
+, mPropertyShowInGroup(juce::translate("Show in the group overlay view"), juce::translate("Toogle the visibility of the track in the group overlay view"), [&](bool state)
+                       {
+                           mDirector.startAction();
+                           mAccessor.setAttr<AttrType::showInGroup>(state, NotificationType::synchronous);
+                           mDirector.endAction(ActionState::newTransaction, juce::translate("Change the visibility of the track in the group overlay view"));
+                       })
 {
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
@@ -248,6 +254,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyFontStyle.setVisible(true);
                         mPropertyFontSize.setVisible(true);
                         mPropertyChannelLayout.setVisible(numChannels > 1_z);
+                        mPropertyShowInGroup.setVisible(true);
                     }
                     break;
                     case Track::FrameType::value:
@@ -271,6 +278,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyRangeLink.setVisible(true);
                         mPropertyGrid.setVisible(true);
                         mPropertyChannelLayout.setVisible(numChannels > 1_z);
+                        mPropertyShowInGroup.setVisible(true);
                     }
                     break;
                     case Track::FrameType::vector:
@@ -291,6 +299,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                         mPropertyGrid.setVisible(true);
                         mPropertyChannelLayout.setVisible(numChannels > 1_z);
                         mProgressBarRendering.setVisible(true);
+                        mPropertyShowInGroup.setVisible(true);
                     }
                     break;
                 }
@@ -333,6 +342,11 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             case AttrType::zoomLink:
             {
                 mPropertyRangeLink.entry.setToggleState(acsr.getAttr<AttrType::zoomLink>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case AttrType::showInGroup:
+            {
+                mPropertyShowInGroup.entry.setToggleState(acsr.getAttr<AttrType::showInGroup>(), juce::NotificationType::dontSendNotification);
             }
             break;
             case AttrType::name:
@@ -442,6 +456,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
     addAndMakeVisible(mPropertyRangeLink);
     addAndMakeVisible(mPropertyGrid);
     addAndMakeVisible(mPropertyChannelLayout);
+    addAndMakeVisible(mPropertyShowInGroup);
     addAndMakeVisible(mProgressBarRendering);
     setSize(300, 400);
 
@@ -482,6 +497,7 @@ void Track::PropertyGraphicalSection::resized()
     setBounds(mPropertyValueRange);
     setBounds(mPropertyNumBins);
     setBounds(mPropertyRangeLink);
+    setBounds(mPropertyShowInGroup);
     setBounds(mPropertyGrid);
     setBounds(mPropertyChannelLayout);
     setBounds(mProgressBarRendering);

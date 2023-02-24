@@ -58,6 +58,7 @@ namespace Track
         PropertyToggle mPropertyRangeLink;
         PropertyNumber mPropertyNumBins;
         PropertyTextButton mPropertyChannelLayout;
+        PropertyToggle mPropertyShowInGroup;
         ProgressBar mProgressBarRendering{mDirector, ProgressBar::Mode::rendering};
 
         bool mChannelLayoutActionStarted{false};
