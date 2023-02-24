@@ -149,15 +149,19 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
                 {
                     setUnit(text);
                 })
-, mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visible state of the channels."), [this]()
+, mPropertyChannelLayout(juce::translate("Channel Layout"), juce::translate("The visibility of the channels of the tracks of the group."), [this]()
                          {
                              showChannelLayout();
                          })
+, mPropertyShowInGroup(juce::translate("Track Layout"), juce::translate("The visibility of the tracks in the group overlay view."), [this]()
+                       {
+                           showVisibilityInGroup();
+                       })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
                   },
-                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::results})
+                  {Track::AttrType::identifier, Track::AttrType::name, Track::AttrType::colours, Track::AttrType::font, Track::AttrType::unit, Track::AttrType::description, Track::AttrType::channelsLayout, Track::AttrType::showInGroup, Track::AttrType::results})
 {
     mPropertyFontSize.entry.setEditableText(true);
     mPropertyFontSize.entry.getProperties().set("isNumber", true);
@@ -172,6 +176,7 @@ Group::PropertyGraphicalsSection::PropertyGraphicalsSection(Director& director)
     addAndMakeVisible(mPropertyFontStyle);
     addAndMakeVisible(mPropertyFontSize);
     addAndMakeVisible(mPropertyUnit);
+    addAndMakeVisible(mPropertyShowInGroup);
     addAndMakeVisible(mPropertyChannelLayout);
 }
 
@@ -194,6 +199,7 @@ void Group::PropertyGraphicalsSection::resized()
     setBounds(mPropertyFontStyle);
     setBounds(mPropertyFontSize);
     setBounds(mPropertyUnit);
+    setBounds(mPropertyShowInGroup);
     setBounds(mPropertyChannelLayout);
     setSize(getWidth(), bounds.getY());
 }
@@ -516,7 +522,45 @@ void Group::PropertyGraphicalsSection::showChannelLayout()
                        {
                            if(safePointer.get() != nullptr && menuResult == 0 && std::exchange(mChannelLayoutActionStarted, false))
                            {
-                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group channels layout"));
+                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change The visibility of the channels of the tracks of the group"));
+                           }
+                       });
+}
+
+void Group::PropertyGraphicalsSection::showVisibilityInGroup()
+{
+    juce::PopupMenu menu;
+    juce::WeakReference<juce::Component> weakReference(this);
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        auto const name = trackAcsr.get().getAttr<Track::AttrType::name>();
+        auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+        auto const visible = trackAcsr.get().getAttr<Track::AttrType::showInGroup>();
+        menu.addItem(juce::translate("Show \"TRACKNAME\"").replace("TRACKNAME", name), true, visible, [=, this]()
+                     {
+                         if(weakReference.get() == nullptr)
+                         {
+                             return;
+                         }
+                         auto localTrackAcsr = Group::Tools::getTrackAcsr(mAccessor, identifier);
+                         if(localTrackAcsr.has_value())
+                         {
+                             localTrackAcsr.value().get().setAttr<Track::AttrType::showInGroup>(!visible, NotificationType::synchronous);
+                         }
+                         showVisibilityInGroup();
+                     });
+    }
+
+    if(!std::exchange(mShowInGroupActionStarted, true))
+    {
+        mDirector.startAction(true);
+    }
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mPropertyShowInGroup.entry), [=, this](int menuResult)
+                       {
+                           if(weakReference.get() != nullptr && menuResult == 0 && std::exchange(mShowInGroupActionStarted, false))
+                           {
+                               mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change the visibility of the tracks in the group overlay view"));
                            }
                        });
 }

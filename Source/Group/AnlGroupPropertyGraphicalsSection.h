@@ -27,6 +27,7 @@ namespace Group
         void setFontStyle(juce::String const& style);
         void setFontSize(float size);
         void setUnit(juce::String const& unit);
+        void showVisibilityInGroup();
         void showChannelLayout();
         void updateContent();
         void updateColourMap();
@@ -48,6 +49,8 @@ namespace Group
         PropertyText mPropertyUnit;
         PropertyTextButton mPropertyChannelLayout;
         bool mChannelLayoutActionStarted{false};
+        PropertyTextButton mPropertyShowInGroup;
+        bool mShowInGroupActionStarted{false};
 
         LayoutNotifier mLayoutNotifier;
     };
