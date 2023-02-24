@@ -205,7 +205,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                     mZoomGridPropertyPanel.setGrid(getCurrentZoomAcsr().getAcsr<Zoom::AcsrType::grid>());
                     mZoomGridPropertyWindow.show();
                 })
-, mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range"), [&](bool value)
+, mPropertyRangeLink(juce::translate("Value Range Link"), juce::translate("Toggle the link with the group for zoom range."), [&](bool value)
                      {
                          mDirector.startAction();
                          mAccessor.setAttr<AttrType::zoomLink>(value, NotificationType::synchronous);
@@ -216,7 +216,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                          {
                              showChannelLayout();
                          })
-, mPropertyShowInGroup(juce::translate("Show in the group overlay view"), juce::translate("Toogle the visibility of the track in the group overlay view"), [&](bool state)
+, mPropertyShowInGroup(juce::translate("Show in the group overlay view"), juce::translate("Toggle the visibility of the track in the group overlay view."), [&](bool state)
                        {
                            mDirector.startAction();
                            mAccessor.setAttr<AttrType::showInGroup>(state, NotificationType::synchronous);
