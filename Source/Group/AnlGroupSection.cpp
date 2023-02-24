@@ -11,7 +11,8 @@ Group::Section::Section(Director& director, Transport::Accessor& transportAcsr, 
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
-                  })
+                  },
+                  {Track::AttrType::identifier, Track::AttrType::showInGroup})
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType type)
     {
@@ -250,16 +251,26 @@ void Group::Section::updateContent()
     }
     else
     {
-        auto getZoomAcsrInfo = [&]() -> std::tuple<std::optional<std::reference_wrapper<Track::Accessor>>, juce::String>
+        auto const getZoomAcsrInfo = [&]() -> std::tuple<std::optional<std::reference_wrapper<Track::Accessor>>, juce::String>
         {
-            auto selectedTrack = Tools::getTrackAcsr(mAccessor, mAccessor.getAttr<AttrType::zoomid>());
-            if(selectedTrack.has_value())
+            auto const selectedTrackAcsr = Tools::getTrackAcsr(mAccessor, mAccessor.getAttr<AttrType::zoomid>());
+            if(selectedTrackAcsr.has_value() && selectedTrackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
             {
-                return {selectedTrack, mAccessor.getAttr<AttrType::zoomid>()};
+                return {selectedTrackAcsr, mAccessor.getAttr<AttrType::zoomid>()};
             }
-            return {Tools::getTrackAcsr(mAccessor, layout.front()), layout.front()};
+
+            for(auto const& trackIdentifier : layout)
+            {
+                auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackIdentifier);
+                if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
+                {
+                    return {trackAcsr, trackAcsr.value().get().getAttr<Track::AttrType::identifier>()};
+                }
+            }
+            return {std::optional<std::reference_wrapper<Track::Accessor>>{}, ""};
         };
-        auto trackAcsrInfo = getZoomAcsrInfo();
+
+        auto const trackAcsrInfo = getZoomAcsrInfo();
         if(!std::get<0>(trackAcsrInfo).has_value())
         {
             mScrollBar.reset();
