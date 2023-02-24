@@ -477,7 +477,7 @@ The actions to move the start position of the playback head and control the play
 The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**).
 
 <p align="center">
-<img src="images/section-track-properties.1-v1.0.5.png" width="242"/>
+<img src="images/section-track-properties.1-v1.0.8.png" width="242"/>
 </p>
 
 The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, plugin.  
@@ -515,7 +515,7 @@ Depending on the characteristics of the plugin, the section allows accessing the
 The section allows accessing the plugin-specific parameters that are used to perform the analysis. Depending on their specifications, the values of the parameters can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been edited, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking you if you want to proceed (you can still undo the operation to retrieve the previous analysis results). 
 
 <p align="center">
-<img src="images/section-track-properties.4-v1.0.7.png" width="196"/>
+<img src="images/section-track-properties.4-v1.0.5.png" width="196"/>
 </p>
 
 The preset menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters in a file on your operating system and load this file to restore the state (the file can be used in any other track that used the same plugin).
@@ -581,10 +581,12 @@ The value range of the points and the columns results can be adapted to optimize
   - Main Tick Interval: The number of small ticks between main ticks. 
   - Power Base: The power base used to compute the tick distribution.
   - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.
-  
-#### 8.2.4. Channels
 
-The channel button allows to show or hide channels of the analysis results. This channels layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section).
+#### 8.2.4. Visibility 
+
+- Show in the group overlay view: The toggle button allows to show or hide the track in the group overlay view. This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
+
+- Channel Layout: The channel layout button allows to show or hide channels of the analysis results. This channel layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section). This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
 
 ### 8.3. Plugin
 
@@ -597,7 +599,7 @@ The graphical section displays information about the plugin such as the name, th
 The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel via the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**).
 
 <p align="center">
-<img src="images/section-group-properties.1-v1.0.7.png" width="242"/>
+<img src="images/section-group-properties.1-v1.0.8.png" width="242"/>
 </p>
 
 The first entries correpond to exclusive properties of the group :
