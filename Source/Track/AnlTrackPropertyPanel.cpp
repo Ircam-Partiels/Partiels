@@ -50,6 +50,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::font:
             case AttrType::unit:
             case AttrType::channelsLayout:
+            case AttrType::showInGroup:
             case AttrType::identifier:
             case AttrType::height:
             case AttrType::zoomAcsr:

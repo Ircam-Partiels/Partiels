@@ -26,6 +26,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::font:
             case AttrType::unit:
             case AttrType::grid:
+            case AttrType::showInGroup:
                 break;
             case AttrType::description:
             case AttrType::results:
@@ -173,6 +174,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::zoomAcsr:
             case AttrType::grid:
             case AttrType::focused:
+            case AttrType::showInGroup:
                 break;
             case AttrType::description:
             case AttrType::results:
@@ -227,6 +229,7 @@ Track::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
             case AttrType::grid:
             case AttrType::description:
             case AttrType::results:
+            case AttrType::showInGroup:
                 break;
             case AttrType::focused:
             {

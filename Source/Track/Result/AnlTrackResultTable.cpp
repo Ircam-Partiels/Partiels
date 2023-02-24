@@ -35,6 +35,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::font:
             case AttrType::unit:
             case AttrType::channelsLayout:
+            case AttrType::showInGroup:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::graphics:
@@ -134,6 +135,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::colours:
             case AttrType::font:
             case AttrType::channelsLayout:
+            case AttrType::showInGroup:
             case AttrType::zoomLink:
             case AttrType::zoomAcsr:
             case AttrType::graphics:

@@ -161,6 +161,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::grid:
             case AttrType::font:
             case AttrType::unit:
+            case AttrType::showInGroup:
                 break;
         }
     };

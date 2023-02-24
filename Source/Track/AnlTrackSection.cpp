@@ -24,6 +24,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::font:
             case AttrType::unit:
             case AttrType::channelsLayout:
+            case AttrType::showInGroup:
             case AttrType::zoomLink:
             case AttrType::graphics:
             case AttrType::warnings:

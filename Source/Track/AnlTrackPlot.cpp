@@ -137,6 +137,7 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::warnings:
             case AttrType::processing:
             case AttrType::focused:
+            case AttrType::showInGroup:
                 break;
             case AttrType::description:
             case AttrType::grid:
@@ -802,6 +803,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
             case AttrType::processing:
             case AttrType::results:
             case AttrType::focused:
+            case AttrType::showInGroup:
                 break;
             case AttrType::colours:
             {
