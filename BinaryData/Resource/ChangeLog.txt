@@ -1,3 +1,9 @@
+v1.0.8
+
+- Fix: The CSV format must use a fixed format for float numbers to avoid exponents (#320)
+- Imp: Allow to hide some tracks in the group overlay view (#319)
+- Fix: If a label is empty, the text displayed in the table is "-" but the editor text should be empty (#318)
+
 v1.0.7
 
 - Imp: Allow specifying the column separator when importing files in CSV format (#317)
