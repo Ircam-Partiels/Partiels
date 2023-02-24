@@ -190,6 +190,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         return aborted(name, format);
     }
 
+    stream << std::fixed;
     stream << std::setprecision(10);
 
     auto state = false;
