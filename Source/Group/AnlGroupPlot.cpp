@@ -40,6 +40,7 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
             case Track::AttrType::font:
             case Track::AttrType::unit:
             case Track::AttrType::channelsLayout:
+            case Track::AttrType::showInGroup:
             {
                 repaint();
             }
@@ -122,11 +123,11 @@ void Group::Plot::paint(juce::Graphics& g)
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
-        if(trackAcsr.has_value())
+        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
             auto const isSelected = (!hasZoomTrack && it == std::prev(layout.crend())) || zoomid == *it;
             auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
-            Track::Plot::paint(*trackAcsr, mTimeZoomAccessor, g, bounds, colour);
+            Track::Plot::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, colour);
         }
     }
 }
