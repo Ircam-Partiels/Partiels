@@ -82,6 +82,7 @@ namespace Track
         , font
         , unit
         , channelsLayout
+        , showInGroup
         , zoomLink
         , zoomAcsr
         
@@ -118,6 +119,7 @@ namespace Track
     , Model::Attr<AttrType::font, juce::Font, Model::Flag::basic>
     , Model::Attr<AttrType::unit, std::optional<juce::String>, Model::Flag::basic>
     , Model::Attr<AttrType::channelsLayout, std::vector<bool>, Model::Flag::basic>
+    , Model::Attr<AttrType::showInGroup, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomLink, bool, Model::Flag::basic>
     , Model::Attr<AttrType::zoomAcsr, std::optional<std::reference_wrapper<Zoom::Accessor>>, Model::Flag::notifying>
     
@@ -156,6 +158,7 @@ namespace Track
                                  , {juce::Font("Nunito Sans", 14.0f, juce::Font::plain)}
                                  , {}
                                  , {std::vector<bool>{}}
+                                 , {true}
                                  , {true}
                                  , {}
                                  
