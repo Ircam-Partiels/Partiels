@@ -246,7 +246,7 @@ void Group::Section::updateContent()
         mScrollBar.reset();
         mDecoratorRuler.reset();
         mRuler.reset();
-        mGridIdentier.clear();
+        mGridIdentifier.clear();
     }
     else
     {
@@ -265,9 +265,9 @@ void Group::Section::updateContent()
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
-            mGridIdentier.clear();
+            mGridIdentifier.clear();
         }
-        else if(mGridIdentier != std::get<1>(trackAcsrInfo))
+        else if(mGridIdentifier != std::get<1>(trackAcsrInfo))
         {
             mRuler = std::make_unique<Track::Ruler>(*std::get<0>(trackAcsrInfo));
             if(mRuler != nullptr)
@@ -280,7 +280,7 @@ void Group::Section::updateContent()
             {
                 addAndMakeVisible(mScrollBar.get());
             }
-            mGridIdentier = std::get<1>(trackAcsrInfo);
+            mGridIdentifier = std::get<1>(trackAcsrInfo);
         }
     }
 
