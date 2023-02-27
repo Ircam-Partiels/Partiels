@@ -404,7 +404,7 @@ Each track and group offers two representations of the analysis results. The mai
 
 ### 7.2. Navigation
 
-Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axiss corresponding to the value or frequencie ranges.
+Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axis corresponding to the value or frequency ranges.
 
 Click and drag on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
 
