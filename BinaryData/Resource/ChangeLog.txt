@@ -1,5 +1,6 @@
 v1.0.8
 
+- FIx: It is impossible to restart the analysis of edited tracks without changing one of the parameters (#322)
 - Fix: The CSV format must use a fixed format for float numbers to avoid exponents (#320)
 - Imp: Allow to hide some tracks in the group overlay view (#319)
 - Fix: If a label is empty, the text displayed in the table is "-" but the editor text should be empty (#318)
