@@ -13,7 +13,14 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
     addMouseListener(&mStateIcon, false);
     mStateIcon.onClick = [this]()
     {
-        mDirector.askToResolveWarnings();
+        if(mDirector.isFileModified())
+        {
+            mDirector.askToRemoveFile();
+        }
+        else
+        {
+            mDirector.askToResolveWarnings();
+        }
     };
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -55,7 +62,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
                     mStateIcon.setTypes(Icon::Type::alert);
-                    mStateIcon.setEnabled(false);
+                    mStateIcon.setEnabled(true);
                     mMessage = juce::translate("Analysis results have been edited!");
                 }
                 else
