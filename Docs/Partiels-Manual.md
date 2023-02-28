@@ -530,6 +530,8 @@ The current state of the plugin is displayed at the bottom of the section inform
 
 If the analysis or loading failed, clicking on the warning icon prompts a dialog window offering to solve the problem when possible (by loading another plugin or another file if it is not found or by restoring the default state of the plugin if its initialization failed).
 
+If the analysis results have been edited, clicking on the warning icon prompts a dialog window offering to cancel the changes and relaunch the analysis.
+
 ### 8.2. Graphical
 
 The graphical section allows modifying all the properties that control the rendering of the analysis results of the track. The properties depend on the type of analysis results: markers (e.g. beat detection), points (e.g. energy estimation), or columns (e.g. spectrogram).
