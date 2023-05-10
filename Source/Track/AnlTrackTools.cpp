@@ -183,7 +183,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         return "-";
     }
 
-    auto getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
+    auto const getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
     {
         auto const verticalRanges = getChannelVerticalRanges(accessor, component.getLocalBounds());
         for(auto const& verticalRange : verticalRanges)
@@ -204,7 +204,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
 
     if(auto const markers = results.getMarkers())
     {
-        auto const value = Results::getValue(markers, std::get<0>(*channel), time);
+        auto const value = Results::getValue(markers, std::get<0>(channel.value()), time);
         if(value.has_value())
         {
             return juce::String(value.value()) + getUnit(accessor);
@@ -213,7 +213,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
     }
     if(auto const points = results.getPoints())
     {
-        auto const value = Results::getValue(points, std::get<0>(*channel), time);
+        auto const value = Results::getValue(points, std::get<0>(channel.value()), time);
         if(value.has_value())
         {
             return Format::valueToString(value.value(), 4) + getUnit(accessor);
@@ -225,8 +225,8 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         auto getBinIndex = [&]() -> std::optional<size_t>
         {
             auto const binVisibleRange = accessor.getAcsr<AcsrType::binZoom>().getAttr<Zoom::AttrType::visibleRange>();
-            auto const start = std::get<1>(*channel).getStart();
-            auto const length = std::get<1>(*channel).getLength();
+            auto const start = std::get<1>(channel.value()).getStart();
+            auto const length = std::get<1>(channel.value()).getLength();
             if(length <= 0 || binVisibleRange.isEmpty())
             {
                 return {};
@@ -243,7 +243,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
             return "-";
         }
 
-        auto const value = Results::getValue(columns, std::get<0>(*channel), time, *binIndex);
+        auto const value = Results::getValue(columns, std::get<0>(channel.value()), time, *binIndex);
         if(value.has_value())
         {
             auto const& output = accessor.getAttr<AttrType::description>().output;
