@@ -451,12 +451,12 @@ void Track::Snapshot::Overlay::paint(juce::Graphics& g)
 
 void Track::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    updateTooltip({event.x, event.y});
+    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
 }
 
 void Track::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    updateTooltip({event.x, event.y});
+    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
 }
 
 void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
