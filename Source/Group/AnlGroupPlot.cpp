@@ -234,13 +234,13 @@ void Group::Plot::Overlay::paint(juce::Graphics& g)
 
 void Group::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    updateTooltip({event.x, event.y});
+    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
     updateMode(event);
 }
 
 void Group::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    updateTooltip({event.x, event.y});
+    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
     updateMode(event);
 }
 

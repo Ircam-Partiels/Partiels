@@ -275,12 +275,12 @@ void Group::Snapshot::Overlay::paint(juce::Graphics& g)
 
 void Group::Snapshot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    updateTooltip({event.x, event.y});
+    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
 }
 
 void Group::Snapshot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    updateTooltip({event.x, event.y});
+    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
 }
 
 void Group::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
