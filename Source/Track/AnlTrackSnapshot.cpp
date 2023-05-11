@@ -479,7 +479,7 @@ void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
     }
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    auto const tip = Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time);
+    auto const tip = Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time, true);
     Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 

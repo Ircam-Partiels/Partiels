@@ -306,7 +306,7 @@ void Group::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
         if(trackAcsr.has_value())
         {
             auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
-            auto const tip = Track::Tools::getValueTootip(trackAcsr->get(), mSnapshot.mTimeZoomAccessor, *this, pt.y, time);
+            auto const tip = Track::Tools::getValueTootip(trackAcsr->get(), mSnapshot.mTimeZoomAccessor, *this, pt.y, time, true);
             tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
         }
     }

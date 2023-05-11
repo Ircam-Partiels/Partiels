@@ -27,7 +27,7 @@ namespace Track
 
         juce::String getUnit(Accessor const& acsr);
         juce::String getInfoTooltip(Accessor const& acsr);
-        juce::String getValueTootip(Accessor const& acsr, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time);
+        juce::String getValueTootip(Accessor const& acsr, Zoom::Accessor const& timeZoomAcsr, juce::Component const& component, int y, double time, bool includeMouseInfo);
         juce::String getStateTootip(Accessor const& acsr, bool includeAnalysisState = true, bool includeRenderingState = true);
 
         std::optional<Zoom::Range> getValueRange(Plugin::Description const& description);

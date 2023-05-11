@@ -979,7 +979,7 @@ void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
     }
 
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
-    auto const tip = Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time);
+    auto const tip = Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time, true);
     Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
 }
 
