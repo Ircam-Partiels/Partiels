@@ -501,7 +501,11 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
         }
         auto const& trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
         auto const point = trackSection == component ? event.position.toInt() : event.getEventRelativeTo(trackSection).position.toInt();
-        auto const channel = Track::Tools::getChannel(trackAcsr, trackSection->getLocalBounds(), point);
+        if(point.x <= 48)
+        {
+            return {identifier, {}};
+        }
+        auto const channel = Track::Tools::getChannel(trackAcsr, trackSection->getLocalBounds(), point.y, true);
         return {identifier, channel};
     }
     if(auto* groupSection = Utils::findComponentOfClass<Group::Section>(component))
@@ -514,7 +518,11 @@ Document::Selection::Item Document::Section::getSelectionItem(juce::Component* c
         }
         auto const& groupAcsr = Tools::getGroupAcsr(mAccessor, identifier);
         auto const point = groupSection == component ? event.position.toInt() : event.getEventRelativeTo(groupSection).position.toInt();
-        auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), point);
+        if(point.x <= 48)
+        {
+            return {identifier, {}};
+        }
+        auto const channel = Group::Tools::getChannel(groupAcsr, groupSection->getLocalBounds(), point.y, true);
         return {identifier, channel};
     }
     return {};

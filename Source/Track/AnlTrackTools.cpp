@@ -357,16 +357,12 @@ std::set<size_t> Track::Tools::getSelectedChannels(Accessor const& acsr)
     return channels;
 }
 
-std::optional<size_t> Track::Tools::getChannel(Accessor const& acsr, juce::Rectangle<int> const& bounds, juce::Point<int> const& point)
+std::optional<size_t> Track::Tools::getChannel(Accessor const& acsr, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator)
 {
-    if(point.x <= 48)
-    {
-        return {};
-    }
     auto const verticalRanges = getChannelVerticalRanges(acsr, std::move(bounds));
     auto const it = std::find_if(verticalRanges.cbegin(), verticalRanges.cend(), [&](auto const& pair)
                                  {
-                                     return point.y < pair.second.getEnd();
+                                     return ignoreSeparator ? y < pair.second.getEnd() : pair.second.contains(y);
                                  });
     return it != verticalRanges.cend() ? it->first : std::optional<size_t>{};
 }
