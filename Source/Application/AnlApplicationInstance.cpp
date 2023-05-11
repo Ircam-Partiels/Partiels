@@ -28,7 +28,11 @@ juce::String const Application::Instance::getApplicationName()
 
 juce::String const Application::Instance::getApplicationVersion()
 {
+#if PARTIELS_DEV_VERSION > 0
+    return ProjectInfo::versionString + juce::String("-dev") + juce::String(PARTIELS_DEV_VERSION);
+#else
     return ProjectInfo::versionString;
+#endif
 }
 
 bool Application::Instance::moreThanOneInstanceAllowed()
@@ -803,6 +807,48 @@ void Application::Instance::checkPluginsQuarantine()
 #endif
 }
 
+Misc::Version Application::Instance::parseVersion(juce::String const& content)
+{
+    nlohmann::json json;
+    try
+    {
+        json = nlohmann::json::parse(content.toStdString());
+    }
+    catch(...)
+    {
+        return {};
+    }
+    if(!json.is_object())
+    {
+        return {};
+    }
+    auto const& releases = json.find("releases");
+    if(releases == json.cend() || !releases->is_array())
+    {
+        return {};
+    }
+
+    Misc::Version version;
+    for(auto index = 0_z; index < releases->size(); ++index)
+    {
+        auto const& release = releases->at(index);
+
+        auto const& is_tagged = release.find("is_tagged");
+        MiscWeakAssert(is_tagged != release.cend() && is_tagged->is_boolean());
+        auto const latest = is_tagged != release.cend() && is_tagged->is_boolean() && is_tagged->get<bool>();
+
+        auto const& version_number = release.find("version_number");
+        MiscWeakAssert(version_number != release.cend());
+        auto const version_string = (version_number != release.cend() && version_number->is_string()) ? version_number->get<std::string>() : std::optional<std::string>();
+
+        if(latest && version_string.has_value())
+        {
+            version = std::max(version, Misc::Version::fromString(juce::String(version_string.value())));
+        }
+    }
+    return version;
+}
+
 void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool warnIfUpToDate)
 {
     MiscWeakAssert(mApplicationAccessor != nullptr);
@@ -823,46 +869,8 @@ void Application::Instance::checkForNewVersion(bool useActiveVersionOnly, bool w
                             auto const currentVersion = Version::fromString(ProjectInfo::versionString);
                             auto const checkVersion = Version::fromString(mApplicationAccessor->getAttr<AttrType::lastVersion>());
                             auto const usedVersion = useActiveVersionOnly ? currentVersion : std::max(checkVersion, currentVersion);
-
-                            auto upstreamVersion = usedVersion;
-                            nlohmann::json json;
-                            try
-                            {
-                                json = nlohmann::json::parse(content.toStdString());
-                            }
-                            catch(...)
-                            {
-                                return;
-                            }
-                            if(!json.is_object())
-                            {
-                                return;
-                            }
-                            auto const& releases = json.find("releases");
-                            if(releases == json.cend() || !releases->is_array())
-                            {
-                                return;
-                            }
-
-                            for(auto index = 0_z; index < releases->size(); ++index)
-                            {
-                                auto const& release = releases->at(index);
-
-                                auto const& is_tagged = release.find("is_tagged");
-                                MiscWeakAssert(is_tagged != release.cend() && is_tagged->is_boolean());
-                                auto const latest = is_tagged != release.cend() && is_tagged->is_boolean() && is_tagged->get<bool>();
-
-                                auto const& version_number = release.find("version_number");
-                                MiscWeakAssert(version_number != release.cend());
-                                auto const version = (version_number != release.cend() && version_number->is_string()) ? version_number->get<std::string>() : std::optional<std::string>();
-
-                                if(latest && version.has_value())
-                                {
-                                    upstreamVersion = std::max(upstreamVersion, Version::fromString(juce::String(version_number->get<std::string>())));
-                                }
-                            }
-
-                            if(upstreamVersion > usedVersion)
+                            auto const upstreamVersion = parseVersion(content);
+                            if(upstreamVersion > usedVersion || (PARTIELS_DEV_VERSION > 0 && upstreamVersion.tie() >= usedVersion.tie()))
                             {
                                 auto options = juce::MessageBoxOptions()
                                                    .withIconType(juce::AlertWindow::AlertIconType::InfoIcon)

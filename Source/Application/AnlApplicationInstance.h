@@ -87,6 +87,7 @@ namespace Application
         juce::File getBackupFile() const;
         void openStartupFiles();
         void checkPluginsQuarantine();
+        static Misc::Version parseVersion(juce::String const& content);
 
         class AuthorizationProcessor
         : public Misc::AuthorizationProcessor

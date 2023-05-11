@@ -5,7 +5,7 @@ ANALYSE_FILE_BEGIN
 
 Application::Window::Window()
 // clang-format off
-: juce::DocumentWindow(  Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString
+: juce::DocumentWindow(  Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion()
                        , juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId)
                        , juce::DocumentWindow::allButtons
 #ifdef JUCE_MAC
@@ -97,7 +97,7 @@ void Application::Window::handleAsyncUpdate()
 void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBroadcaster* source)
 {
     MiscWeakAssert(source == std::addressof(Instance::get().getDocumentFileBased()) || source == std::addressof(Instance::get().getAuthorizationProcessor()));
-    auto const appName = Instance::get().getApplicationName() + " - v" + ProjectInfo::versionString;
+    auto const appName = Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion();
     auto const separator = Instance::get().getAuthorizationProcessor().isAuthorized() ? " - " : " [DEMO] - ";
     auto const file = Instance::get().getDocumentFileBased().getFile();
     auto const fileName = file.existsAsFile() ? file.getFileNameWithoutExtension() : "Unsaved Project";

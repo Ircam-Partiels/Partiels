@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Application::About::WindowContainer::WindowContainer(About& about)
-: FloatingWindowContainer(juce::translate("About Partiels - v") + juce::String(ProjectInfo::versionString), about)
+: FloatingWindowContainer(juce::translate("About ") + Instance::get().getApplicationName() + " - v" + Instance::get().getApplicationVersion(), about)
 , mAbout(about)
 , mTooltip(&mAbout)
 {
