@@ -183,20 +183,7 @@ juce::String Track::Tools::getValueTootip(Accessor const& accessor, Zoom::Access
         return "-";
     }
 
-    auto const getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
-    {
-        auto const verticalRanges = getChannelVerticalRanges(accessor, component.getLocalBounds());
-        for(auto const& verticalRange : verticalRanges)
-        {
-            if(verticalRange.second.contains(y))
-            {
-                return std::make_tuple(verticalRange.first, verticalRange.second);
-            }
-        }
-        return {};
-    };
-
-    auto const channel = getChannel();
+    auto const channel = getChannelVerticalRange(accessor, component.getLocalBounds(), y, false);
     if(!channel.has_value())
     {
         return "-";
@@ -365,6 +352,19 @@ std::optional<size_t> Track::Tools::getChannel(Accessor const& acsr, juce::Recta
                                      return ignoreSeparator ? y < pair.second.getEnd() : pair.second.contains(y);
                                  });
     return it != verticalRanges.cend() ? it->first : std::optional<size_t>{};
+}
+
+std::optional<std::tuple<size_t, juce::Range<int>>> Track::Tools::getChannelVerticalRange(Accessor const& acsr, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator)
+{
+    auto const verticalRanges = getChannelVerticalRanges(acsr, bounds);
+    for(auto const& verticalRange : verticalRanges)
+    {
+        if((ignoreSeparator && y < verticalRange.second.getEnd()) || (!ignoreSeparator && verticalRange.second.contains(y)))
+        {
+            return std::make_tuple(verticalRange.first, verticalRange.second);
+        }
+    }
+    return {};
 }
 
 std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds)
