@@ -1,4 +1,4 @@
-v1.0.8
+v1.0.8-dev3
 
 - Imp: Add the information of the value under the mouse in the tooltips for the points type analysis (#328)
 - Fix: Authorization is revoked and cannot be updated if the MAC address of the machine has changed (#327)
