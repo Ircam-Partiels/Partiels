@@ -4,6 +4,7 @@ v1.0.8-dev3
 - Fix: Authorization is revoked and cannot be updated if the MAC address of the machine has changed (#327)
 - Imp: Authorization support when updating OS (#326)
 - Fix: Values with exponents are converted to labels when loaded in CSV format (#325)
+- Fix: Tooltips for tracks and groups always show channel 1 even on other channels (#324)
 - Fix: It is impossible to restart the analysis of edited tracks without changing one of the parameters (#322)
 - Fix: The CSV format must use a fixed format for float numbers to avoid exponents (#320)
 - Imp: Allow to hide some tracks in the group overlay view (#319)
