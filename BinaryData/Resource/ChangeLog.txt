@@ -1,6 +1,6 @@
 v1.0.8
 
-- Imp:  Add the information of the value under the mouse in the tooltips for the points type analysis (#328)
+- Imp: Add the information of the value under the mouse in the tooltips for the points type analysis (#328)
 - Fix: Authorization is revoked and cannot be updated if the MAC address of the machine has changed (#327)
 - Imp: Authorization support when updating OS (#326)
 - Fix: Values with exponents are converted to labels when loaded in CSV format (#325)
