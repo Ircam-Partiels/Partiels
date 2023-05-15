@@ -1,5 +1,7 @@
 v1.1.0-dev1
 
+- Add: Ircam Vamp Extension (IVE) support
+
 v1.0.8
 
 - Imp: Add the information of the value under the mouse in the tooltips for the points type analysis (#328)
