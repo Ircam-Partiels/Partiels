@@ -10,6 +10,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 set(IFP_CLI ON CACHE STRING "" FORCE)
 set(IFP_TEST OFF CACHE STRING "" FORCE)
 set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
+set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
 set(PARTIELS_DEV_VERSION 1)
 project(Partiels VERSION 1.1.0 LANGUAGES C CXX)
@@ -178,7 +179,7 @@ if(WIN32)
     find_program(SIGNTOOL_EXE "signtool" HINTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x64")
     if(SIGNTOOL_EXE)
         add_custom_target(PartielsSign ALL
-        COMMAND ${SIGNTOOL_EXE} sign /f ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Partiels-Code-Signing-Certificate-Sectigo.pfx /p "ASAP" /fd SHA256 /td SHA256 /tr http://timestamp.sectigo.com ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
+        COMMAND ${SIGNTOOL_EXE} sign /f ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Partiels-Code-Signing-Certificate-Sectigo.pfx /p "ASAP" /fd SHA256 /td SHA256 /tr ${TIMESTAMP_SERVER_URL} ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
         COMMAND ${SIGNTOOL_EXE} verify /pa ${CMAKE_CURRENT_BINARY_DIR}/Partiels-install.exe
         )
         add_dependencies(PartielsSign PartielsPackage)

@@ -28,7 +28,7 @@ Test::Windows:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
-    - cmake .. -G "Visual Studio 17 2022" -A x64
+    - cmake .. -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
     - cmake --build . --config Debug
     - ctest -C Debug -VV
 
@@ -66,7 +66,7 @@ Build::Windows:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
-    - cmake .. -G "Visual Studio 17 2022" -A x64
+    - cmake .. -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
     - cmake --build . --config Release
     - move-item -path ".\Partiels-install.exe" -destination "..\"
     - ctest -C Release -VV
