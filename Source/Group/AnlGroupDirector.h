@@ -28,6 +28,8 @@ namespace Group
         Track::Director& getTrackDirector(juce::String const& identifier) override;
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
+        std::function<void(NotificationType notification)> onNameUpdated = nullptr;
+        std::function<void(NotificationType notification)> onLayoutUpdated = nullptr;
 
     private:
         Accessor& mAccessor;

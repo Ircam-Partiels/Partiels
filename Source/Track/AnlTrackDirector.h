@@ -2,6 +2,7 @@
 
 #include "../Plugin/AnlPluginListTable.h"
 #include "AnlTrackGraphics.h"
+#include "AnlTrackHierarchyManager.h"
 #include "AnlTrackLoader.h"
 #include "AnlTrackModel.h"
 #include "AnlTrackProcessor.h"
@@ -22,11 +23,12 @@ namespace Track
     , private juce::Timer
     {
     public:
-        Director(Accessor& accessor, juce::UndoManager& undoManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
+        Director(Accessor& accessor, juce::UndoManager& undoManager, HierarchyManager& hierarchyManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader);
         ~Director() override;
 
         Accessor& getAccessor();
         juce::UndoManager& getUndoManager();
+        HierarchyManager& getHierarchyManager();
 
         std::function<Accessor&()> getSafeAccessorFn();
         std::function<Zoom::Accessor&()> getSafeTimeZoomAccessorFn();
@@ -41,6 +43,8 @@ namespace Track
         void setBackupDirectory(juce::File const& directory);
 
         std::function<void(NotificationType notification)> onIdentifierUpdated = nullptr;
+        std::function<void(NotificationType notification)> onNameUpdated = nullptr;
+        std::function<void(NotificationType notification)> onInputUpdated = nullptr;
         std::function<void(NotificationType notification)> onResultsUpdated = nullptr;
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
 
@@ -99,6 +103,7 @@ namespace Track
 
         Accessor& mAccessor;
         juce::UndoManager& mUndoManager;
+        HierarchyManager& mHierarchyManager;
         Accessor mSavedState;
         bool mIsPerformingAction{false};
         std::unique_ptr<juce::AudioFormatReader> mAudioFormatReader;
@@ -115,6 +120,7 @@ namespace Track
         std::unique_ptr<juce::FileChooser> mFileChooser;
         SafeAccessorRetriever mSafeAccessorRetriever;
         juce::File mBackupDirectory;
+        HierarchyManager::Listener mHierarchyListener;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Director)
         JUCE_DECLARE_WEAK_REFERENCEABLE(Director)

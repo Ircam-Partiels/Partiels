@@ -141,6 +141,7 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
     j["defaultState"] = description.defaultState;
     j["parameters"] = description.parameters;
     j["output"] = description.output;
+    j["input"] = description.input;
     j["programs"] = description.programs;
 }
 
@@ -155,6 +156,7 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.defaultState = j.value("defaultState", description.defaultState);
     description.parameters = j.value("parameters", description.parameters);
     description.output = j.value("output", description.output);
+    description.input = j.value("input", description.output);
     description.programs = j.value("programs", description.programs);
 }
 
@@ -310,6 +312,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
         toXml(*child, "defaultState", value.defaultState);
         toXml(*child, "parameters", value.parameters);
         toXml(*child, "output", value.output);
+        toXml(*child, "input", value.input);
         toXml(*child, "programs", value.programs);
         xml.addChildElement(child.release());
     }
@@ -335,6 +338,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
+    value.input = fromXml(*child, "input", defaultValue.input);
     value.programs = fromXml(*child, "programs", defaultValue.programs);
     return value;
 }

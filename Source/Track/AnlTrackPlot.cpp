@@ -130,6 +130,7 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
             case AttrType::file:
             case AttrType::name:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:
@@ -792,6 +793,7 @@ Track::Plot::Overlay::Overlay(Plot& plot)
         {
             case AttrType::identifier:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:

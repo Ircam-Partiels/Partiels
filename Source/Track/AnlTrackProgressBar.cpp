@@ -81,6 +81,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
             }
             break;
             case AttrType::key:
+            case AttrType::input:
             case AttrType::description:
             case AttrType::state:
             case AttrType::graphics:

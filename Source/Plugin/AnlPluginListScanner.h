@@ -15,8 +15,8 @@ namespace PluginList
         static Plugin::Description loadDescription(Plugin::Key const& key, double sampleRate);
 
     private:
-        Vamp::Plugin* loadPlugin(std::string const& key, float sampleRate);
-        static Plugin::Description loadDescription(Vamp::Plugin& plugin, Plugin::Key const& key);
+        Ive::PluginWrapper* loadPlugin(std::string const& key, float sampleRate);
+        static Plugin::Description loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key);
 
         using entry_t = std::tuple<std::string, float>;
         struct entry_comp
@@ -28,7 +28,7 @@ namespace PluginList
         };
 
         std::mutex mMutex;
-        std::map<entry_t, std::unique_ptr<Vamp::Plugin>, entry_comp> mPlugins;
+        std::map<entry_t, std::unique_ptr<Ive::PluginWrapper>, entry_comp> mPlugins;
     };
 } // namespace PluginList
 

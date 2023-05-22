@@ -19,6 +19,7 @@ namespace Track
     private:
         void askToModifyProcessor(std::function<bool(bool)> prepare, std::function<void(void)> perform);
         void applyParameterValue(Plugin::Parameter const& parameter, float value);
+        void setInputTrack(juce::String const& identifier);
         void setWindowType(Plugin::WindowType const& windowType);
         void setBlockSize(size_t const blockSize);
         void setStepSize(size_t const stepSize);
@@ -31,12 +32,14 @@ namespace Track
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
+        HierarchyManager::Listener mHierarchyListener;
 
         PropertyTextButton mPropertyResultsFile;
         juce::Label mPropertyResultsFileInfo;
         PropertyList mPropertyWindowType;
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
+        PropertyList mPropertyInputTrack;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};

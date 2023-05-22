@@ -6,9 +6,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
+Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, HierarchyManager& hierarchyManager, std::unique_ptr<juce::AudioFormatReader> audioFormatReader)
 : mAccessor(accessor)
 , mUndoManager(undoManager)
+, mHierarchyManager(hierarchyManager)
 , mAudioFormatReader(std::move(audioFormatReader))
 {
     accessor.onAttrUpdated = [this](AttrType attr, NotificationType notification)
@@ -18,6 +19,14 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             case AttrType::identifier:
             {
                 if(onIdentifierUpdated != nullptr)
+                {
+                    onIdentifierUpdated(notification);
+                }
+            }
+            break;
+            case AttrType::name:
+            {
+                if(onNameUpdated != nullptr)
                 {
                     onIdentifierUpdated(notification);
                 }
@@ -43,7 +52,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                     auto const description = getDescription();
                     if(description != Plugin::Description{})
                     {
-                        mAccessor.setAttr<AttrType::description>(description, NotificationType::synchronous);
+                        mAccessor.setAttr<AttrType::description>(description, notification);
                         auto newState = description.defaultState;
                         if(newState.blockSize == 0_z)
                         {
@@ -53,13 +62,22 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
                         {
                             newState.stepSize = newState.blockSize;
                         }
-                        mAccessor.setAttr<AttrType::state>(newState, NotificationType::synchronous);
+                        mAccessor.setAttr<AttrType::state>(newState, notification);
                     }
                 }
                 else
                 {
                     runAnalysis(notification);
                 }
+            }
+            break;
+            case AttrType::input:
+            {
+                if(onInputUpdated != nullptr)
+                {
+                    onInputUpdated(notification);
+                }
+                runAnalysis(notification);
             }
             break;
             case AttrType::state:
@@ -124,7 +142,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
             }
             break;
             case AttrType::graphics:
-            case AttrType::name:
             case AttrType::height:
                 break;
             case AttrType::colours:
@@ -363,11 +380,34 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, st
         timerCallback();
     };
 
+    mHierarchyListener.onResultsChanged = [this]([[maybe_unused]] HierarchyManager const& manager, juce::String const& identifier)
+    {
+        if(mAccessor.getAttr<AttrType::input>() == identifier)
+        {
+            runAnalysis(NotificationType::synchronous);
+        }
+    };
+    mHierarchyListener.onHierarchyChanged = [this]([[maybe_unused]] HierarchyManager const& manager)
+    {
+        auto const input = mAccessor.getAttr<AttrType::input>();
+        if(input.isNotEmpty() && !mHierarchyManager.hasAccessor(input))
+        {
+            auto const results = mAccessor.getAttr<AttrType::results>();
+            auto const access = results.getReadAccess();
+            if(!static_cast<bool>(access) || !results.isEmpty())
+            {
+                runAnalysis(NotificationType::synchronous);
+            }
+        }
+    };
+    mHierarchyManager.addHierarchyListener(mHierarchyListener, NotificationType::synchronous);
+
     runAnalysis(NotificationType::synchronous);
 }
 
 Track::Director::~Director()
 {
+    mHierarchyManager.removeHierarchyListener(mHierarchyListener);
     setPluginTable(nullptr);
     setLoaderSelector(nullptr);
     if(mSharedZoomAccessor.has_value())
@@ -395,6 +435,11 @@ Track::Accessor& Track::Director::getAccessor()
 juce::UndoManager& Track::Director::getUndoManager()
 {
     return mUndoManager;
+}
+
+Track::HierarchyManager& Track::Director::getHierarchyManager()
+{
+    return mHierarchyManager;
 }
 
 std::function<Track::Accessor&()> Track::Director::getSafeAccessorFn()
@@ -588,9 +633,16 @@ void Track::Director::runAnalysis(NotificationType const notification)
         mAccessor.setAttr<AttrType::description>(description, notification);
     }
 
+    auto const input = mAccessor.getAttr<AttrType::input>();
+    if(input.isNotEmpty() && !mHierarchyManager.hasAccessor(input))
+    {
+        return;
+    }
+
+    auto inputResults = input.isNotEmpty() ? mHierarchyManager.getAccessor(input).getAttr<AttrType::results>() : Results{};
     try
     {
-        if(mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get()))
+        if(mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults))
         {
             anlDebug("Track", "analysis launched");
             mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);

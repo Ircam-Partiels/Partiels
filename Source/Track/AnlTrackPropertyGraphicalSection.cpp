@@ -351,6 +351,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
             break;
             case AttrType::name:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::file:
             case AttrType::state:
             case AttrType::graphics:

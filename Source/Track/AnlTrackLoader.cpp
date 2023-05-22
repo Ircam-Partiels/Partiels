@@ -321,7 +321,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
     Plugin::Output output;
     output.hasFixedBinCount = false;
     advancement.store(0.9f);
-    auto results = Tools::getResults(output, pluginResults, shouldAbort);
+    auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
     return {std::move(results)};
 }
@@ -728,7 +728,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
     Plugin::Output output;
     output.hasFixedBinCount = false;
     advancement.store(0.9f);
-    auto results = Tools::getResults(output, pluginResults, shouldAbort);
+    auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
     return {std::move(results)};
 }
@@ -855,7 +855,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
     Plugin::Output output;
     output.hasFixedBinCount = false;
     advancement.store(0.9f);
-    auto results = Tools::getResults(output, pluginResults, shouldAbort);
+    auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
     return {std::move(results)};
 }

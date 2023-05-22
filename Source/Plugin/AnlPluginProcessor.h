@@ -28,9 +28,11 @@ namespace Plugin
         ~Processor() = default;
 
         bool prepareToAnalyze(std::vector<std::vector<Result>>& results);
+        bool setPrecomputingResults(std::vector<std::vector<Result>> const& results);
         bool performNextAudioBlock(std::vector<std::vector<Result>>& results);
         float getAdvancement() const;
 
+        Input getInput() const;
         Output getOutput() const;
 
     private:
@@ -57,9 +59,9 @@ namespace Plugin
             std::vector<float const*> mOutputBuffer;
         };
 
-        Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Vamp::Plugin>> plugins, size_t const feature, State const& state);
+        Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, size_t const feature, State const& state);
 
-        std::vector<std::unique_ptr<Vamp::Plugin>> mPlugins;
+        std::vector<std::unique_ptr<Ive::PluginWrapper>> mPlugins;
         CircularReader mCircularReader;
         size_t const mFeature;
         State const mState;

@@ -14,6 +14,7 @@ Track::Ruler::Ruler(Accessor& accessor)
             case AttrType::name:
             case AttrType::file:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:
@@ -161,6 +162,7 @@ Track::ScrollBar::ScrollBar(Accessor& accessor)
             case AttrType::name:
             case AttrType::file:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::state:
             case AttrType::height:
             case AttrType::colours:
@@ -216,6 +218,7 @@ Track::SelectionBar::SelectionBar(Accessor& accessor, Zoom::Accessor& timeZoomAc
             case AttrType::name:
             case AttrType::file:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::state:
             case AttrType::height:
             case AttrType::zoomLink:

@@ -39,6 +39,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             }
             break;
             case AttrType::key:
+            case AttrType::input:
             case AttrType::description:
             case AttrType::file:
             case AttrType::results:

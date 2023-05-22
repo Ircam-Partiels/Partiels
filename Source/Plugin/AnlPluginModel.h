@@ -60,6 +60,8 @@ namespace Plugin
         }
     };
 
+    using Input = Output;
+
     void to_json(nlohmann::json& j, Output const& output);
     void from_json(nlohmann::json const& j, Output& output);
 
@@ -127,6 +129,7 @@ namespace Plugin
         State defaultState;                      //!< The default state of the plugin
         std::vector<Parameter> parameters{};     //!< The parameters of the plugin
         Output output{};                         //!< The output of the plugin
+        Input input{};                           //!< The input of the plugin
         std::map<std::string, State> programs{}; //!< The program of the plugin
 
         inline bool operator==(Description const& rhd) const noexcept
@@ -140,6 +143,7 @@ namespace Plugin
                    defaultState == rhd.defaultState &&
                    parameters == rhd.parameters &&
                    output == rhd.output &&
+                   input == rhd.input &&
                    programs == rhd.programs;
         }
 
@@ -154,31 +158,23 @@ namespace Plugin
 
     //! @brief The result a plugin
     //! @details The type of data returned by a plugin.
-    struct Result
-    : public Vamp::Plugin::Feature
+    using Result = Vamp::Plugin::Feature;
+
+    inline bool operator==(Result const& lhd, Result const& rhd) noexcept
     {
-        using Vamp::Plugin::Feature::Feature;
-        Result(Feature const& feature)
-        : Vamp::Plugin::Feature(feature)
-        {
-        }
+        return lhd.hasTimestamp == rhd.hasTimestamp &&
+               lhd.timestamp == rhd.timestamp &&
+               lhd.hasDuration == rhd.hasDuration &&
+               lhd.duration == rhd.duration &&
+               lhd.values.size() == rhd.values.size() &&
+               std::equal(lhd.values.cbegin(), lhd.values.cend(), rhd.values.cbegin()) &&
+               lhd.label == rhd.label;
+    }
 
-        inline bool operator==(Result const& rhd) const noexcept
-        {
-            return hasTimestamp == rhd.hasTimestamp &&
-                   timestamp == rhd.timestamp &&
-                   hasDuration == rhd.hasDuration &&
-                   duration == rhd.duration &&
-                   values.size() == rhd.values.size() &&
-                   std::equal(values.cbegin(), values.cend(), rhd.values.cbegin()) &&
-                   label == rhd.label;
-        }
-
-        inline bool operator!=(Result const& rhd) const noexcept
-        {
-            return !(*this == rhd);
-        }
-    };
+    inline bool operator!=(Result const& lhd, Result const& rhd) noexcept
+    {
+        return !(lhd == rhd);
+    }
 } // namespace Plugin
 
 namespace XmlParser

@@ -28,6 +28,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             case AttrType::file:
             case AttrType::results:
             case AttrType::key:
+            case AttrType::input:
             case AttrType::description:
             case AttrType::state:
             case AttrType::height:
@@ -130,6 +131,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             }
             break;
             case AttrType::key:
+            case AttrType::input:
             case AttrType::state:
             case AttrType::height:
             case AttrType::colours:

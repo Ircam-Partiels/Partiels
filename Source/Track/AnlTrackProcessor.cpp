@@ -16,7 +16,7 @@ void Track::Processor::stopAnalysis()
     abortAnalysis();
 }
 
-bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader)
+bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input)
 {
     auto state = accessor.getAttr<AttrType::state>();
 
@@ -51,7 +51,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
     }
 
     mChrono.start();
-    mAnalysisProcess = std::async([this, processor = std::move(processor)]() -> Results
+    mAnalysisProcess = std::async([this, processor = std::move(processor), input = std::move(input)]() -> Results
                                   {
                                       anlDebug("Track", "Processor thread launched");
                                       juce::Thread::setCurrentThreadName("Track::Processor::Process");
@@ -71,6 +71,13 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                           triggerAsyncUpdate();
                                           return {};
                                       }
+                                      auto const inputs = Tools::convert(processor->getInput(), input);
+                                      if(!processor->setPrecomputingResults(inputs))
+                                      {
+                                          mAnalysisState.compare_exchange_weak(expected, ProcessState::aborted);
+                                          triggerAsyncUpdate();
+                                          return {};
+                                      }
                                       anlDebug("Track", "Processor prepared");
 
                                       while(mAnalysisState.load() != ProcessState::aborted && processor->performNextAudioBlock(pluginResults))
@@ -80,7 +87,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
 
                                       anlDebug("Track", "Processor performed");
 
-                                      auto const results = Tools::getResults(processor->getOutput(), pluginResults, mShouldAbort);
+                                      auto const results = Tools::convert(processor->getOutput(), pluginResults, mShouldAbort);
                                       mAdvancement.store(1.0f);
 
                                       anlDebug("Track", "Results performed");

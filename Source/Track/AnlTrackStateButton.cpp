@@ -35,6 +35,7 @@ Track::StateButton::StateButton(Director& director)
             }
             break;
             case AttrType::key:
+            case AttrType::input:
             case AttrType::description:
             case AttrType::state:
             case AttrType::file:

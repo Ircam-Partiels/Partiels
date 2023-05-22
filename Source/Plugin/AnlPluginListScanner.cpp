@@ -2,7 +2,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
+Ive::PluginWrapper* PluginList::Scanner::loadPlugin(std::string const& key, float sampleRate)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
     anlStrongAssert(pluginLoader != nullptr);
@@ -31,14 +31,19 @@ Vamp::Plugin* PluginList::Scanner::loadPlugin(std::string const& key, float samp
         throw std::runtime_error("plugin key cannot be found");
     }
 
-    auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
+    auto* plugin = pluginLoader->loadPlugin(key, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE);
     if(plugin == nullptr)
     {
         throw std::runtime_error("plugin allocation failed");
     }
+    auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key);
+    if(wrapper == nullptr)
+    {
+        throw std::runtime_error("plugin allocation failed");
+    }
 
-    auto* pointer = plugin.get();
-    mPlugins[entry] = std::move(plugin);
+    auto* pointer = wrapper.get();
+    mPlugins[entry] = std::move(wrapper);
     return pointer;
 }
 
@@ -114,16 +119,20 @@ Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key,
     {
         return {};
     }
-
-    auto plugin = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE));
+    auto* plugin = pluginLoader->loadPlugin(key.identifier, static_cast<float>(sampleRate), Vamp::HostExt::PluginLoader::ADAPT_ALL_SAFE);
     if(plugin == nullptr)
     {
         return {};
     }
-    return loadDescription(*plugin.get(), key);
+    auto wrapper = std::make_unique<Ive::PluginWrapper>(plugin, key.identifier);
+    if(wrapper == nullptr)
+    {
+        return {};
+    }
+    return loadDescription(*wrapper.get(), key);
 }
 
-Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, Plugin::Key const& key)
+Plugin::Description PluginList::Scanner::loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key)
 {
     auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
     anlStrongAssert(pluginLoader != nullptr);
@@ -133,57 +142,64 @@ Plugin::Description PluginList::Scanner::loadDescription(Vamp::Plugin& plugin, P
     }
 
     auto const outputs = plugin.getOutputDescriptors();
-    for(size_t feature = 0; feature < outputs.size(); ++feature)
+    auto const outputIt = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
+                                       {
+                                           return output.identifier == key.feature;
+                                       });
+    if(outputIt == outputs.cend())
     {
-        if(outputs[feature].identifier == key.feature)
-        {
-            Plugin::Description description;
-            description.name = plugin.getName();
-            description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
-            if(auto* wrapper = dynamic_cast<Vamp::HostExt::PluginWrapper*>(const_cast<Vamp::Plugin*>(&plugin)))
-            {
-                if(auto* inputDomainAdapter = wrapper->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-                {
-                    description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
-                    description.defaultState.windowType = inputDomainAdapter->getWindowType();
-                }
-            }
-
-            description.maker = plugin.getMaker();
-            description.version = static_cast<unsigned int>(plugin.getPluginVersion());
-            auto const categories = pluginLoader->getPluginCategory(key.identifier);
-            description.category = categories.empty() ? "" : categories.front();
-            description.details = plugin.getDescription();
-            if(!description.details.isEmpty())
-            {
-                description.details += "\n";
-            }
-            description.details += juce::String(plugin.getCopyright());
-            auto const parameters = plugin.getParameterDescriptors();
-            description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-
-            auto initializeState = [&](Plugin::State& state, bool defaultValues)
-            {
-                state.blockSize = plugin.getPreferredBlockSize();
-                state.stepSize = plugin.getPreferredStepSize();
-                for(auto const& parameter : parameters)
-                {
-                    state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
-                }
-            };
-            initializeState(description.defaultState, true);
-            auto const programNames = plugin.getPrograms();
-            for(auto const& programName : programNames)
-            {
-                plugin.selectProgram(programName);
-                initializeState(description.programs[programName], false);
-            }
-
-            description.output = outputs[feature];
-            return description;
-        }
+        return {};
     }
-    return {};
+    Plugin::Description description;
+    description.name = plugin.getName();
+    description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
+    if(auto* inputDomainAdapter = plugin.getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
+    {
+        description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
+        description.defaultState.windowType = inputDomainAdapter->getWindowType();
+    }
+
+    description.maker = plugin.getMaker();
+    description.version = static_cast<unsigned int>(plugin.getPluginVersion());
+    auto const categories = pluginLoader->getPluginCategory(key.identifier);
+    description.category = categories.empty() ? "" : categories.front();
+    description.details = plugin.getDescription();
+    if(!description.details.isEmpty())
+    {
+        description.details += "\n";
+    }
+    description.details += juce::String(plugin.getCopyright());
+    auto const parameters = plugin.getParameterDescriptors();
+    description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
+
+    auto initializeState = [&](Plugin::State& state, bool defaultValues)
+    {
+        state.blockSize = plugin.getPreferredBlockSize();
+        state.stepSize = plugin.getPreferredStepSize();
+        for(auto const& parameter : parameters)
+        {
+            state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
+        }
+    };
+    initializeState(description.defaultState, true);
+    auto const programNames = plugin.getPrograms();
+    for(auto const& programName : programNames)
+    {
+        plugin.selectProgram(programName);
+        initializeState(description.programs[programName], false);
+    }
+
+    description.output = *outputIt;
+    auto const inputs = plugin.getInputDescriptors();
+    auto const inputIt = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const& input)
+                                      {
+                                          return input.identifier == key.feature;
+                                      });
+    if(inputIt != inputs.cend())
+    {
+        description.input = *inputIt;
+    }
+    return description;
 }
 
 ANALYSE_FILE_END

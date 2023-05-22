@@ -3,7 +3,7 @@
 #include "../Group/AnlGroupDirector.h"
 #include "../Plugin/AnlPluginListTable.h"
 #include "../Track/AnlTrackDirector.h"
-#include "AnlDocumentModel.h"
+#include "AnlDocumentHierarchyManager.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -61,6 +61,7 @@ namespace Document
         void updateMarkers(NotificationType notification);
 
         Accessor& mAccessor;
+        HierarchyManager mHierarchyManager{mAccessor};
         juce::AudioFormatManager& mAudioFormatManager;
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;

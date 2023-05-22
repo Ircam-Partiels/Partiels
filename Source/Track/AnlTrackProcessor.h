@@ -13,7 +13,7 @@ namespace Track
         Processor() = default;
         ~Processor() override;
 
-        bool runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader);
+        bool runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input);
         void stopAnalysis();
         bool isRunning() const;
         float getAdvancement() const;

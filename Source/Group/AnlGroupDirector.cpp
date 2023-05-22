@@ -21,6 +21,13 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
             }
             break;
             case AttrType::name:
+            {
+                if(onNameUpdated != nullptr)
+                {
+                    onNameUpdated(notification);
+                }
+            }
+            break;
             case AttrType::height:
             case AttrType::colour:
             case AttrType::expanded:
@@ -28,6 +35,14 @@ Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDi
             case AttrType::zoomid:
                 break;
             case AttrType::layout:
+            {
+                if(onLayoutUpdated != nullptr)
+                {
+                    onLayoutUpdated(notification);
+                }
+                updateTracks(notification);
+            }
+            break;
             case AttrType::tracks:
             {
                 updateTracks(notification);

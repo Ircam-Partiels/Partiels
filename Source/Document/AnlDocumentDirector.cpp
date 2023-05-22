@@ -65,6 +65,9 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
             }
             break;
             case AttrType::layout:
+            {
+                mHierarchyManager.notifyHierarchyChanged(notification);
+            }
             case AttrType::autoresize:
             {
                 if(mAccessor.getAttr<AttrType::autoresize>())
@@ -97,7 +100,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 }
                 auto& trackAcsr = trackAcsrs[index].get();
                 trackAcsr.setAttr<Track::AttrType::grid>(mAccessor.getAttr<AttrType::grid>(), notification);
-                auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
+                auto director = std::make_unique<Track::Director>(trackAcsr, mUndoManager, mHierarchyManager, std::get<0>(createAudioFormatReader(mAccessor, mAudioFormatManager)));
                 anlStrongAssert(director != nullptr);
                 if(director != nullptr)
                 {
@@ -119,10 +122,21 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                         sav.getTimeZoomAccessorFn = getSafeTimeZoomAccessorFn();
                         sav.getTransportAccessorFn = getSafeTransportZoomAccessorFn();
                         ptr->setSafeAccessorRetriever(sav);
+                        mHierarchyManager.notifyHierarchyChanged(localNotification);
                     };
-                    director->onResultsUpdated = [this](NotificationType localNotification)
+                    director->onNameUpdated = [this](NotificationType localNotification)
+                    {
+                        mHierarchyManager.notifyHierarchyChanged(localNotification);
+                    };
+                    director->onInputUpdated = [this](NotificationType localNotification)
+                    {
+                        mHierarchyManager.notifyHierarchyChanged(localNotification);
+                    };
+                    director->onResultsUpdated = [this, ptr = director.get()](NotificationType localNotification)
                     {
                         updateMarkers(localNotification);
+                        mHierarchyManager.notifyHierarchyChanged(localNotification);
+                        mHierarchyManager.notifyResultsChanged(ptr->getAccessor().getAttr<Track::AttrType::identifier>(), localNotification);
                     };
                     director->onChannelsLayoutUpdated = [this](NotificationType localNotification)
                     {
@@ -146,6 +160,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
+                mHierarchyManager.notifyHierarchyChanged(notification);
             }
             break;
             case AcsrType::groups:
@@ -166,6 +181,14 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                         juce::ignoreUnused(n);
                         ptr->setSafeAccessorRetriever(getSafeGroupAccessorFn(ptr->getAccessor().getAttr<Group::AttrType::identifier>()));
                     };
+                    director->onNameUpdated = [this](NotificationType n)
+                    {
+                        mHierarchyManager.notifyHierarchyChanged(n);
+                    };
+                    director->onLayoutUpdated = [this](NotificationType n)
+                    {
+                        mHierarchyManager.notifyHierarchyChanged(n);
+                    };
                     director->setSafeAccessorRetriever(getSafeGroupAccessorFn(groupAcsr.getAttr<Group::AttrType::identifier>()));
                 }
                 mGroups.insert(mGroups.begin() + static_cast<long>(index), std::move(director));
@@ -175,6 +198,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
+                mHierarchyManager.notifyHierarchyChanged(notification);
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
@@ -207,6 +231,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
+                mHierarchyManager.notifyHierarchyChanged(notification);
             }
             break;
             case AcsrType::groups:
@@ -221,6 +246,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
+                mHierarchyManager.notifyHierarchyChanged(notification);
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:

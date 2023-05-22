@@ -13,6 +13,7 @@ namespace Track
         bool supportsWindowType(Accessor const& acsr);
         bool supportsBlockSize(Accessor const& acsr);
         bool supportsStepSize(Accessor const& acsr);
+        FrameType getFrameType(Plugin::Output const& output);
         FrameType getFrameType(Accessor const& acsr);
 
         bool canZoomIn(Accessor const& accessor);
@@ -41,7 +42,8 @@ namespace Track
         void paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t)> fn);
         void paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds);
 
-        Results getResults(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort);
+        Results convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort);
+        std::vector<std::vector<Plugin::Result>> convert(Plugin::Input const& input, Results const& results);
 
         std::unique_ptr<juce::Component> createValueRangeEditor(Accessor& acsr);
         std::unique_ptr<juce::Component> createBinRangeEditor(Accessor& acsr);
