@@ -1,5 +1,4 @@
 #include "AnlPluginProcessor.h"
-#include <vamp-hostsdk/PluginLoader.h>
 
 ANALYSE_FILE_BEGIN
 

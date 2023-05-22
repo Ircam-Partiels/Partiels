@@ -1,6 +1,4 @@
 #include "AnlPluginListModel.h"
-#include <vamp-hostsdk/PluginHostAdapter.h>
-#include <vamp-hostsdk/PluginLoader.h>
 
 ANALYSE_FILE_BEGIN
 

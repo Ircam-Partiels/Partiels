@@ -9,16 +9,18 @@ set(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON CACHE BOOL "" FORCE)
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 set(IFP_CLI ON CACHE STRING "" FORCE)
 set(IFP_TEST OFF CACHE STRING "" FORCE)
+set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 
 set(PARTIELS_DEV_VERSION 1)
 project(Partiels VERSION 1.1.0 LANGUAGES C CXX)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(JUCE)
-add_subdirectory(VampPlugins)
+add_subdirectory(Dependencies/ircam-vamp-extension)
 add_subdirectory(Dependencies/sdif)
 add_subdirectory(Dependencies/ifp)
 include(Dependencies/Misc/Misc.cmake)
+add_subdirectory(VampPlugins)
 
 set_target_properties(ifp_static PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 if(MSVC)
@@ -115,7 +117,7 @@ file(GLOB TestResultsDataSources
 juce_add_binary_data(TestResultsData HEADER_NAME "TestResultsData.h" NAMESPACE TestResultsData SOURCES ${TestResultsDataSources})
 
 target_link_libraries(Partiels PRIVATE
-    vamp
+    ive_host_static
     sdif
     ifp_static
     MiscData
@@ -193,13 +195,10 @@ set(VAMP_EXAMPLES_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vamp-plugin-sdk/examples
 file(GLOB VAMP_EXAMPLE_PLUGINS_SOURCES ${VAMP_EXAMPLES_DIRECTORY}/*h  ${VAMP_EXAMPLES_DIRECTORY}/*cpp ${VAMP_EXAMPLES_DIRECTORY}/*c)
 source_group("Vamp/Examples" FILES ${VAMP_EXAMPLE_PLUGINS_SOURCES})
 add_library(vamp-example-plugins SHARED ${VAMP_EXAMPLE_PLUGINS_SOURCES})
-target_link_libraries(vamp-example-plugins PRIVATE vamp-plugin)
-set_target_properties(vamp-example-plugins PROPERTIES PREFIX "")
-set_target_properties(vamp-example-plugins PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-set_target_properties(vamp-example-plugins PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/Release)
-if(WIN32)
-    set_target_properties(vamp-example-plugins PROPERTIES LINK_FLAGS "/export:vampGetPluginDescriptor")
-    target_compile_options(vamp-example-plugins PRIVATE /wd4244 /wd4267 /wd4996)
+vamp_prepare_plugin_target(vamp-example-plugins)
+if(UNIX)
+    target_compile_options(vamp-example-plugins PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(vamp-example-plugins PRIVATE -Wno-shorten-64-to-32)
 endif()
 
 add_test(NAME UnitTests COMMAND Partiels --unit-tests)
