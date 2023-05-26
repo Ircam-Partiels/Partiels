@@ -209,29 +209,25 @@ void AnlVampPlugin::NewTrack::reset()
 
 Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::process(const float* const*, Vamp::RealTime timeStamp)
 {
-    if(timeStamp == Vamp::RealTime())
-    {
-        FeatureSet featureSet;
-        featureSet[0].resize(mNumChannels);
-        for(auto& feature : featureSet[0])
-        {
-            feature.hasTimestamp = true;
-            feature.timestamp = Vamp::RealTime(0, 0);
-        }
-        featureSet[1].resize(mNumChannels);
-        for(auto& feature : featureSet[1])
-        {
-            feature.hasTimestamp = true;
-            feature.timestamp = Vamp::RealTime(0, 0);
-        }
-        return featureSet;
-    }
     return {};
 }
 
 Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::getRemainingFeatures()
 {
-    return {};
+    FeatureSet featureSet;
+    featureSet[0].resize(mNumChannels);
+    for(auto& feature : featureSet[0])
+    {
+        feature.hasTimestamp = true;
+        feature.timestamp = Vamp::RealTime();
+    }
+    featureSet[1].resize(mNumChannels);
+    for(auto& feature : featureSet[1])
+    {
+        feature.hasTimestamp = true;
+        feature.timestamp = Vamp::RealTime();
+    }
+    return featureSet;
 }
 
 AnlVampPlugin::Dummy::Dummy(float sampleRate)
