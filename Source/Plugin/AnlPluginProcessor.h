@@ -9,20 +9,6 @@ namespace Plugin
     class Processor
     {
     public:
-        class LoadingError
-        : public std::runtime_error
-        {
-        public:
-            LoadingError(char const* message);
-        };
-
-        class ParametersError
-        : public std::runtime_error
-        {
-        public:
-            ParametersError(char const* message);
-        };
-
         static std::unique_ptr<Processor> create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader);
 
         ~Processor() = default;

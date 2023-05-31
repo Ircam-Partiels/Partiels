@@ -1,5 +1,6 @@
 #include "AnlTrackDirector.h"
 #include "../Plugin/AnlPluginProcessor.h"
+#include "../Plugin/AnlPluginTools.h"
 #include "AnlTrackExporter.h"
 #include "AnlTrackProcessor.h"
 #include "AnlTrackTools.h"
@@ -650,12 +651,12 @@ void Track::Director::runAnalysis(NotificationType const notification)
             timerCallback();
         }
     }
-    catch(Plugin::Processor::LoadingError& e)
+    catch(Plugin::LoadingError& e)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::library, notification);
         askToReloadPlugin(e.what());
     }
-    catch(Plugin::Processor::ParametersError& e)
+    catch(Plugin::ParametersError& e)
     {
         mAccessor.setAttr<AttrType::warnings>(WarningType::state, notification);
         askToRestoreState(e.what());

@@ -2,6 +2,16 @@
 
 ANALYSE_FILE_BEGIN
 
+Plugin::LoadingError::LoadingError(char const* message)
+: std::runtime_error(message)
+{
+}
+
+Plugin::ParametersError::ParametersError(char const* message)
+: std::runtime_error(message)
+{
+}
+
 std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& parameter, std::function<void(Parameter const& parameter, float value)> applyChange)
 {
     auto const name = juce::String(Format::withFirstCharUpperCase(parameter.name));
@@ -37,6 +47,108 @@ std::unique_ptr<juce::Component> Plugin::Tools::createProperty(Parameter const& 
                                                 }
                                                 applyChange(parameter, value);
                                             });
+}
+
+std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createPluginWrappers(Key const& key, State const& state, size_t numReaderChannels, double readerSampleRate)
+{
+    using namespace Vamp::HostExt;
+    auto* pluginLoader = PluginLoader::getInstance();
+    anlStrongAssert(pluginLoader != nullptr);
+    if(pluginLoader == nullptr)
+    {
+        throw std::runtime_error("plugin loader is not available");
+    }
+
+    anlStrongAssert(!key.identifier.empty());
+    if(key.identifier.empty())
+    {
+        throw LoadingError("plugin key is not defined.");
+    }
+    anlStrongAssert(!key.feature.empty());
+    if(key.feature.empty())
+    {
+        throw LoadingError("plugin feature is not defined.");
+    }
+    anlStrongAssert(state.blockSize > 0);
+    if(state.blockSize == 0)
+    {
+        throw ParametersError("plugin block size is invalid");
+    }
+    anlStrongAssert(state.stepSize > 0);
+    if(state.stepSize == 0)
+    {
+        throw ParametersError("plugin step size is invalid");
+    }
+
+    std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins;
+    auto const addAndInitializeInstance = [&](std::unique_ptr<Ive::PluginWrapper>& plugin, size_t numChannels)
+    {
+        MiscWeakAssert(plugin != nullptr);
+        if(plugin == nullptr)
+        {
+            throw ParametersError("plugin invalid");
+        }
+        if(auto* adapter = plugin->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
+        {
+            adapter->setWindowType(state.windowType);
+        }
+
+        auto const descriptors = plugin->getParameterDescriptors();
+        for(auto const& parameter : state.parameters)
+        {
+            if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
+                           {
+                               return descriptor.identifier == parameter.first;
+                           }))
+            {
+                plugin->setParameter(parameter.first, parameter.second);
+            }
+            else
+            {
+                throw ParametersError("plugin parameter is invalid");
+            }
+        }
+
+        if(!plugin->initialise(numChannels, state.stepSize, state.blockSize))
+        {
+            throw ParametersError("plugin initialization failed");
+        }
+        plugins.push_back(std::move(plugin));
+    };
+
+    auto const sampleRate = static_cast<float>(readerSampleRate);
+    auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
+    if(instance == nullptr)
+    {
+        throw LoadingError("plugin library couldn't be loaded");
+    }
+    auto wrapper = std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
+    if(wrapper == nullptr)
+    {
+        throw LoadingError("plugin library couldn't be loaded");
+    }
+
+    auto const maxChannels = wrapper->getMaxChannelCount();
+    while(wrapper != nullptr)
+    {
+        auto const numChannels = std::min(maxChannels, numReaderChannels);
+        numReaderChannels -= numChannels;
+        addAndInitializeInstance(wrapper, numChannels);
+        if(numReaderChannels > 0_z)
+        {
+            instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
+            if(instance == nullptr)
+            {
+                throw LoadingError("plugin library couldn't be loaded");
+            }
+            wrapper = std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
+            if(wrapper == nullptr)
+            {
+                throw LoadingError("plugin library couldn't be loaded");
+            }
+        }
+    }
+    return plugins;
 }
 
 ANALYSE_FILE_END

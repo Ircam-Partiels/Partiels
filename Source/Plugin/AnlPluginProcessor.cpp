@@ -1,16 +1,7 @@
 #include "AnlPluginProcessor.h"
+#include "AnlPluginTools.h"
 
 ANALYSE_FILE_BEGIN
-
-Plugin::Processor::LoadingError::LoadingError(char const* message)
-: std::runtime_error(message)
-{
-}
-
-Plugin::Processor::ParametersError::ParametersError(char const* message)
-: std::runtime_error(message)
-{
-}
 
 Plugin::Processor::CircularReader::CircularReader(juce::AudioFormatReader& audioFormatReader, size_t blockSize, size_t stepSize)
 : mBlocksize(static_cast<int>(blockSize))
@@ -309,85 +300,12 @@ Plugin::Output Plugin::Processor::getOutput() const
 
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
 {
-    using namespace Vamp::HostExt;
-    auto* pluginLoader = PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
-    if(pluginLoader == nullptr)
+    auto plugins = Tools::createPluginWrappers(key, state, static_cast<size_t>(audioFormatReader.numChannels), audioFormatReader.sampleRate);
+    if(plugins.empty())
     {
-        throw std::runtime_error("plugin loader is not available");
+        return nullptr;
     }
-
-    anlStrongAssert(!key.identifier.empty());
-    if(key.identifier.empty())
-    {
-        throw LoadingError("plugin key is not defined.");
-    }
-    anlStrongAssert(!key.feature.empty());
-    if(key.feature.empty())
-    {
-        throw LoadingError("plugin feature is not defined.");
-    }
-    anlStrongAssert(state.blockSize > 0);
-    if(state.blockSize == 0)
-    {
-        throw ParametersError("plugin block size is invalid");
-    }
-    anlStrongAssert(state.stepSize > 0);
-    if(state.stepSize == 0)
-    {
-        throw ParametersError("plugin step size is invalid");
-    }
-
-    std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins;
-    auto addAndInitializeInstance = [&](std::unique_ptr<Ive::PluginWrapper>& plugin, size_t numChannels) -> bool
-    {
-        MiscWeakAssert(plugin != nullptr);
-        if(plugin == nullptr)
-        {
-            return false;
-        }
-        if(auto* adapter = plugin->getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-        {
-            adapter->setWindowType(state.windowType);
-        }
-
-        auto const descriptors = plugin->getParameterDescriptors();
-        for(auto const& parameter : state.parameters)
-        {
-            if(std::any_of(descriptors.cbegin(), descriptors.cend(), [&](auto const& descriptor)
-                           {
-                               return descriptor.identifier == parameter.first;
-                           }))
-            {
-                plugin->setParameter(parameter.first, parameter.second);
-            }
-            else
-            {
-                throw ParametersError("plugin parameter is invalid");
-            }
-        }
-
-        if(!plugin->initialise(numChannels, state.stepSize, state.blockSize))
-        {
-            throw ParametersError("plugin initialization failed");
-        }
-        plugins.push_back(std::move(plugin));
-        return true;
-    };
-
-    auto const sampleRate = static_cast<float>(audioFormatReader.sampleRate);
-    auto instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
-    if(instance == nullptr)
-    {
-        throw LoadingError("plugin library couldn't be loaded");
-    }
-    auto wrapper = std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
-    if(wrapper == nullptr)
-    {
-        throw LoadingError("plugin library couldn't be loaded");
-    }
-
-    auto const outputs = wrapper->getOutputDescriptors();
+    auto const outputs = plugins.at(0_z)->getOutputDescriptors();
     auto const feature = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
                                       {
                                           return output.identifier == key.feature;
@@ -397,38 +315,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         throw LoadingError("plugin feature is invalid");
     }
     auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
-
-    auto const maxChannels = wrapper->getMaxChannelCount();
-    auto numReaderChannels = static_cast<size_t>(audioFormatReader.numChannels);
-    while(wrapper != nullptr)
-    {
-        auto const numChannels = std::min(maxChannels, numReaderChannels);
-        numReaderChannels -= numChannels;
-        if(!addAndInitializeInstance(wrapper, numChannels))
-        {
-            return nullptr;
-        }
-        if(numReaderChannels > 0_z)
-        {
-            instance = std::unique_ptr<Vamp::Plugin>(pluginLoader->loadPlugin(key.identifier, sampleRate, PluginLoader::ADAPT_INPUT_DOMAIN));
-            if(instance == nullptr)
-            {
-                throw LoadingError("plugin library couldn't be loaded");
-            }
-            wrapper = std::make_unique<Ive::PluginWrapper>(instance.release(), key.identifier);
-            if(wrapper == nullptr)
-            {
-                throw LoadingError("plugin library couldn't be loaded");
-            }
-        }
-    }
-
-    auto processor = std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), featureIndex, state));
-    if(processor == nullptr)
-    {
-        throw std::runtime_error("allocation failed");
-    }
-    return processor;
+    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), featureIndex, state));
 }
 
 class Plugin::Processor::CircularReaderUnitTest
