@@ -30,35 +30,15 @@ namespace
 
     static std::optional<Zoom::Range> getValueRange(std::vector<Track::Result::Data::Points> const& results)
     {
-        auto const cmpPoints = [](auto const& lhs, auto const& rhs)
+        auto const accumChannel = [](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
         {
-            if(!std::get<2>(rhs).has_value())
+            auto const accumPoint = [](auto const& channelRange, auto const& point) -> std::optional<Zoom::Range>
             {
-                return false;
-            }
-            if(!std::get<2>(lhs).has_value())
-            {
-                return true;
-            }
-            return *std::get<2>(lhs) < *std::get<2>(rhs);
+                return std::get<2>(point).has_value() ? (channelRange.has_value() ? channelRange->getUnionWith(std::get<2>(point).value()) : Zoom::Range::emptyRange(std::get<2>(point).value())) : channelRange;
+            };
+            auto const channelRange = std::accumulate(channel.cbegin(), channel.cend(), std::optional<Zoom::Range>{}, accumPoint);
+            return channelRange.has_value() ? (range.has_value() ? range->getUnionWith(channelRange.value()) : channelRange) : range;
         };
-
-        auto const accumChannel = [&](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
-        {
-            auto const [min, max] = std::minmax_element(channel.cbegin(), channel.cend(), cmpPoints);
-            if(min == channel.cend() || max == channel.cend() || !std::get<2>(*min).has_value() || !std::get<2>(*max).has_value())
-            {
-                return range;
-            }
-            anlWeakAssert(isvalid(*std::get<2>(*min)) && isvalid(*std::get<2>(*max)));
-            if(!isvalid(*std::get<2>(*min)) || !isvalid(*std::get<2>(*max)))
-            {
-                return range;
-            }
-            Zoom::Range const newRange{*std::get<2>(*min), *std::get<2>(*max)};
-            return range.has_value() ? range->getUnionWith(newRange) : newRange;
-        };
-
         return std::accumulate(results.cbegin(), results.cend(), std::optional<Zoom::Range>{}, accumChannel);
     }
 
