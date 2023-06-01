@@ -1,6 +1,7 @@
 v1.1.0-dev1
 
-- Add: Ircam Vamp Extension (IVE) support
+- Fix: The value range of point track may be invalid and uneditable (#330)
+- Add: Ircam Vamp Extension (IVE) support (#329)
 
 v1.0.8
 
