@@ -22,12 +22,6 @@ namespace
         return std::prev(it);
     }
 
-    template <typename T>
-    inline bool isvalid(T const& value)
-    {
-        return std::isfinite(value) && !std::isnan(value);
-    }
-
     static std::optional<Zoom::Range> getValueRange(std::vector<Track::Result::Data::Points> const& results)
     {
         auto const accumChannel = [](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
@@ -44,29 +38,20 @@ namespace
 
     static std::optional<Zoom::Range> getValueRange(std::vector<Track::Result::Data::Columns> const& results)
     {
-        auto const accumColumns = [&](auto const& range, auto const& column) -> std::optional<Zoom::Range>
+        auto const accumChannels = [](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
         {
-            auto const& values = std::get<2>(column);
-            auto const [min, max] = std::minmax_element(values.cbegin(), values.cend());
-            if(min == values.cend() || max == values.cend())
+            auto const accumColumns = [](auto const& channelRange, auto const& column) -> std::optional<Zoom::Range>
             {
-                return range;
-            }
-            anlWeakAssert(isvalid(*min) && isvalid(*max));
-            if(!isvalid(*min) || !isvalid(*max))
-            {
-                return range;
-            }
-            Zoom::Range const newRange{*min, *max};
-            return range.has_value() ? newRange.getUnionWith(*range) : newRange;
-        };
-
-        auto const accumChannels = [&](auto const& range, auto const& channel) -> std::optional<Zoom::Range>
-        {
+                if(std::get<2>(column).empty())
+                {
+                    return channelRange;
+                }
+                auto const [min, max] = std::minmax_element(std::get<2>(column).cbegin(), std::get<2>(column).cend());
+                return channelRange.has_value() ? channelRange->getUnionWith({*min, *max}) : Zoom::Range{*min, *max};
+            };
             auto const newRange = std::accumulate(channel.cbegin(), channel.cend(), range, accumColumns);
             return range.has_value() ? (newRange.has_value() ? newRange->getUnionWith(*range) : range) : newRange;
         };
-
         return std::accumulate(results.cbegin(), results.cend(), std::optional<Zoom::Range>{}, accumChannels);
     }
 
