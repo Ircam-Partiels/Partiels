@@ -1,4 +1,5 @@
 #include "AnlVampPlugins.h"
+#include <IvePluginAdapter.hpp>
 #include <algorithm>
 #include <vamp-sdk/PluginAdapter.h>
 
@@ -233,6 +234,113 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::getRemainingFeatures()
     return {};
 }
 
+AnlVampPlugin::Dummy::Dummy(float sampleRate)
+: Vamp::Plugin(sampleRate)
+{
+}
+
+bool AnlVampPlugin::Dummy::initialise(size_t, size_t, size_t)
+{
+    return true;
+}
+
+Vamp::Plugin::InputDomain AnlVampPlugin::Dummy::getInputDomain() const
+{
+    return TimeDomain;
+}
+
+std::string AnlVampPlugin::Dummy::getIdentifier() const
+{
+    return "partielsdummy";
+}
+
+std::string AnlVampPlugin::Dummy::getName() const
+{
+    return "Dummy";
+}
+
+std::string AnlVampPlugin::Dummy::getDescription() const
+{
+    return "Copy an analysis.";
+}
+std::string AnlVampPlugin::Dummy::getMaker() const
+{
+    return "Ircam";
+}
+
+int AnlVampPlugin::Dummy::getPluginVersion() const
+{
+    return PARTIELS_VAMP_PLUGINS_VERSION;
+}
+
+std::string AnlVampPlugin::Dummy::getCopyright() const
+{
+    return "Copyright 2023 Ircam. All rights reserved. Plugin by Pierre Guillot.";
+}
+
+size_t AnlVampPlugin::Dummy::getPreferredBlockSize() const
+{
+    return 256_z;
+}
+
+size_t AnlVampPlugin::Dummy::getPreferredStepSize() const
+{
+    return 0_z;
+}
+
+Vamp::Plugin::OutputList AnlVampPlugin::Dummy::getOutputDescriptors() const
+{
+    OutputList list;
+    {
+        OutputDescriptor d;
+        d.identifier = "markers";
+        d.name = "Markers";
+        d.description = "Markers";
+        d.unit = "";
+        d.hasFixedBinCount = true;
+        d.binCount = 0;
+        d.hasKnownExtents = false;
+        d.isQuantized = false;
+        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+        d.hasDuration = false;
+        list.push_back(std::move(d));
+    }
+    return list;
+}
+
+Ive::PluginExtension::InputList AnlVampPlugin::Dummy::getInputDescriptors() const
+{
+    return getOutputDescriptors();
+}
+
+void AnlVampPlugin::Dummy::reset()
+{
+    mFeatureSet.clear();
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::Dummy::process(const float* const*, Vamp::RealTime timeStamp)
+{
+    return {};
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::Dummy::getRemainingFeatures()
+{
+    return mFeatureSet;
+}
+
+void AnlVampPlugin::Dummy::setPreComputingFeatures(FeatureSet const& fs)
+{
+    auto const it = fs.find(0);
+    if(it != fs.cend())
+    {
+        mFeatureSet[0] = it->second;
+    }
+    else
+    {
+        mFeatureSet.clear();
+    }
+}
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -254,6 +362,33 @@ extern "C"
             {
                 static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
                 return adaptater.getDescriptor();
+            }
+            case 2:
+            {
+                static Vamp::PluginAdapter<AnlVampPlugin::Dummy> adaptater;
+                return adaptater.getDescriptor();
+            }
+            default:
+            {
+                return nullptr;
+            }
+        }
+    }
+
+    IVE_EXTERN IvePluginDescriptor const* iveGetPluginDescriptor(unsigned int version, unsigned int index)
+    {
+#if NDEBUG
+        return nullptr;
+#endif
+        if(version < 2)
+        {
+            return nullptr;
+        }
+        switch(index)
+        {
+            case 0:
+            {
+                return Ive::PluginAdapter::getDescriptor<AnlVampPlugin::Dummy>();
             }
             default:
             {

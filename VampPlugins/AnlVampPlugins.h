@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vamp-sdk/Plugin.h>
+#include <IvePluginAdapter.hpp>
 
 namespace AnlVampPlugin
 {
@@ -66,5 +66,40 @@ namespace AnlVampPlugin
 
     private:
         size_t mNumChannels{0_z};
+    };
+
+    class Dummy
+    : public Vamp::Plugin
+    , public Ive::PluginExtension
+    {
+    public:
+        Dummy(float sampleRate);
+        ~Dummy() override = default;
+
+        bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
+
+        InputDomain getInputDomain() const override;
+        std::string getIdentifier() const override;
+        std::string getName() const override;
+        std::string getDescription() const override;
+        std::string getMaker() const override;
+        int getPluginVersion() const override;
+        std::string getCopyright() const override;
+
+        size_t getPreferredBlockSize() const override;
+        size_t getPreferredStepSize() const override;
+
+        OutputList getOutputDescriptors() const override;
+
+        void reset() override;
+        FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
+        FeatureSet getRemainingFeatures() override;
+
+        // Ive::PluginExtension
+        InputList getInputDescriptors() const override;
+        void setPreComputingFeatures(FeatureSet const& fs) override;
+
+    private:
+        FeatureSet mFeatureSet;
     };
 } // namespace AnlVampPlugin
