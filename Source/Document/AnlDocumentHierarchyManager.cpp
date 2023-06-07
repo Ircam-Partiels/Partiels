@@ -10,9 +10,9 @@ Document::HierarchyManager::HierarchyManager(Accessor& accessor)
 {
 }
 
-std::map<juce::String, juce::String> Document::HierarchyManager::getAvailableTracksFor(juce::String const& current, Track::FrameType const frameType) const
+std::vector<Document::HierarchyManager::TrackInfo> Document::HierarchyManager::getAvailableTracksFor(juce::String const& current, Track::FrameType const frameType) const
 {
-    std::map<juce::String, juce::String> tracks;
+    std::vector<TrackInfo> tracks;
     auto const groupLayout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& groupIdentifier : groupLayout)
     {
@@ -27,7 +27,7 @@ std::map<juce::String, juce::String> Document::HierarchyManager::getAvailableTra
                 {
                     auto const trackName = trackAcsr.get().getAttr<Track::AttrType::name>();
                     auto const groupName = groupAcsr.getAttr<Group::AttrType::name>();
-                    tracks[identifier] = groupName + " - " + trackName;
+                    tracks.push_back({identifier, groupName, trackName});
                 }
             }
         }

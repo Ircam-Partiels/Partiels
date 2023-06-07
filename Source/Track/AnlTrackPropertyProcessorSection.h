@@ -40,6 +40,7 @@ namespace Track
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
         PropertyList mPropertyInputTrack;
+        std::map<int, juce::String> mPropertyInputTrackList;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
         PropertyList mPropertyPreset;
         ProgressBar mProgressBarAnalysis{mDirector, ProgressBar::Mode::analysis};

@@ -11,11 +11,13 @@ namespace Document
     : public Track::HierarchyManager
     {
     public:
+        using TrackInfo = Track::HierarchyManager::TrackInfo;
+
         HierarchyManager(Accessor& accessor);
         ~HierarchyManager() override = default;
 
         // Track::HierarchyManager
-        std::map<juce::String, juce::String> getAvailableTracksFor(juce::String const& current, Track::FrameType const frameType) const override;
+        std::vector<TrackInfo> getAvailableTracksFor(juce::String const& current, Track::FrameType const frameType) const override;
         bool isTrackValidFor(juce::String const& current, Track::FrameType const frameType, juce::String const& identifier) const override;
         bool hasAccessor(juce::String const& identifier) const override;
         Track::Accessor const& getAccessor(juce::String const& identifier) const override;

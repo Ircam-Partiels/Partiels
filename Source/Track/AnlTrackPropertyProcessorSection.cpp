@@ -64,26 +64,19 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
                     })
 , mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used to prepare the preprocessing."), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
                       {
-                          auto const description = mAccessor.getAttr<AttrType::description>();
-                          auto const& hierarchyManager = mDirector.getHierarchyManager();
-                          auto const otherTracks = hierarchyManager.getAvailableTracksFor(mAccessor.getAttr<AttrType::identifier>(), Tools::getFrameType(description.input));
-                          auto const selection = mPropertyInputTrack.entry.getText();
-                          if(selection == juce::translate("Undefined"))
+                          auto const listId = mPropertyInputTrack.entry.getSelectedId();
+                          if(listId == 1)
                           {
                               setInputTrack({});
                           }
                           else
                           {
-                              auto const it = std::find_if(otherTracks.cbegin(), otherTracks.cend(), [selection](auto const pair)
-                                                           {
-                                                               return pair.second == selection;
-                                                           });
-                              if(it != otherTracks.cend())
+                              auto it = mPropertyInputTrackList.find(listId);
+                              if(it != mPropertyInputTrackList.cend())
                               {
-                                  setInputTrack(it->first);
+                                  setInputTrack(it->second);
                               }
                           }
-
                           updateState();
                       })
 , mPropertyPreset("Preset", "The preset of the track", "", std::vector<std::string>{"Factory", "Custom", "Load...", "Save..."}, [&](size_t index)
@@ -585,31 +578,38 @@ void Track::PropertyProcessorSection::updateState()
     if(mPropertyInputTrack.entry.isVisible())
     {
         auto const& hierarchyManager = mDirector.getHierarchyManager();
-        auto const otherTracks = hierarchyManager.getAvailableTracksFor(mAccessor.getAttr<AttrType::identifier>(), Tools::getFrameType(description.input));
+        auto otherTracks = hierarchyManager.getAvailableTracksFor(mAccessor.getAttr<AttrType::identifier>(), Tools::getFrameType(description.input));
         mPropertyInputTrack.entry.clear(silent);
-        for(auto const& track : otherTracks)
+        mPropertyInputTrackList.clear();
+        auto listId = 1;
+        mPropertyInputTrack.entry.setEnabled(!otherTracks.empty());
+        mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Not found"));
+        mPropertyInputTrack.entry.addItem(juce::translate("Undefined"), listId++);
+        for(auto trackIt = otherTracks.crbegin(); trackIt != otherTracks.crend(); ++trackIt)
         {
-            mPropertyInputTrack.entry.addItem(track.second, mPropertyInputTrack.entry.getNumItems() + 1);
+            if(!trackIt->group.isEmpty() && !trackIt->group.isEmpty())
+            {
+                mPropertyInputTrackList[listId] = trackIt->identifier;
+                mPropertyInputTrack.entry.addItem(trackIt->group + ": " + trackIt->name, listId++);
+            }
         }
-        mPropertyInputTrack.entry.addItem(juce::translate("Undefined"), mPropertyInputTrack.entry.getNumItems() + 1);
+
         auto const& input = mAccessor.getAttr<AttrType::input>();
         if(input.isEmpty())
         {
-            mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Undefined"));
+            mPropertyInputTrack.entry.setSelectedId(1, silent);
         }
         else
         {
-            auto const it = otherTracks.find(input);
-            if(it == otherTracks.cend())
+            auto const it = std::find_if(mPropertyInputTrackList.cbegin(), mPropertyInputTrackList.cend(), [&](auto const& pait)
+                                         {
+                                             return pait.second == input;
+                                         });
+            if(it != mPropertyInputTrackList.cend())
             {
-                mPropertyInputTrack.entry.setText(juce::translate("Not found"), silent);
-            }
-            else
-            {
-                mPropertyInputTrack.entry.setText(it->second, silent);
+                mPropertyInputTrack.entry.setSelectedId(it->first, silent);
             }
         }
-        mPropertyInputTrack.entry.setEnabled(!otherTracks.empty());
     }
 
     auto const state = mAccessor.getAttr<AttrType::state>();

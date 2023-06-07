@@ -12,7 +12,14 @@ namespace Track
         HierarchyManager() = default;
         virtual ~HierarchyManager() = default;
 
-        virtual std::map<juce::String, juce::String> getAvailableTracksFor(juce::String const& current, FrameType const frameType) const = 0;
+        struct TrackInfo
+        {
+            juce::String identifier;
+            juce::String group;
+            juce::String name;
+        };
+
+        virtual std::vector<TrackInfo> getAvailableTracksFor(juce::String const& current, FrameType const frameType) const = 0;
         virtual bool isTrackValidFor(juce::String const& current, Track::FrameType const frameType, juce::String const& identifier) const = 0;
         virtual bool hasAccessor(juce::String const& identifier) const = 0;
         virtual Accessor const& getAccessor(juce::String const& identifier) const = 0;
