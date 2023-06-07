@@ -359,11 +359,13 @@ extern "C"
                 static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
                 return adaptater.getDescriptor();
             }
+#if NDEBUG
             case 2:
             {
                 static Vamp::PluginAdapter<AnlVampPlugin::Dummy> adaptater;
                 return adaptater.getDescriptor();
             }
+#endif
             default:
             {
                 return nullptr;
