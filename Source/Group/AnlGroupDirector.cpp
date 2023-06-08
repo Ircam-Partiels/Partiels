@@ -3,9 +3,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDirector, juce::UndoManager& undoManager)
+Group::Director::Director(Accessor& accessor, Track::MultiDirector& trackMultiDirector, HierarchyManager& hierarchyManager, juce::UndoManager& undoManager)
 : mAccessor(accessor)
 , mTrackMultiDirector(trackMultiDirector)
+, mHierarchyManager(hierarchyManager)
 , mUndoManager(undoManager)
 {
     mAccessor.onAttrUpdated = [&](AttrType attribute, NotificationType notification)
@@ -62,6 +63,11 @@ Group::Director::~Director()
 Group::Accessor& Group::Director::getAccessor()
 {
     return mAccessor;
+}
+
+Track::HierarchyManager& Group::Director::getHierarchyManager()
+{
+    return mHierarchyManager;
 }
 
 void Group::Director::updateTracks(NotificationType notification)

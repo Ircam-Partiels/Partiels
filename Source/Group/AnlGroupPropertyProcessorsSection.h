@@ -23,11 +23,13 @@ namespace Group
         void setWindowType(Plugin::WindowType const& windowType);
         void setBlockSize(size_t const blockSize);
         void setStepSize(size_t const stepSize);
+        void setInputTrack(juce::String const& identifier);
 
         void updateContent();
         void updateWindowType();
         void updateBlockSize();
         void updateStepSize();
+        void updateInputTrack();
         void updateParameters();
         void updateState();
 
@@ -37,6 +39,8 @@ namespace Group
         PropertyList mPropertyWindowType;
         PropertyList mPropertyBlockSize;
         PropertyList mPropertyStepSize;
+        PropertyList mPropertyInputTrack;
+        std::map<int, juce::String> mPropertyInputTrackList;
         std::map<std::string, std::unique_ptr<juce::Component>> mParameterProperties;
 
         LayoutNotifier mLayoutNotifier;

@@ -172,7 +172,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     return;
                 }
                 auto& groupAcsr = groupAcsrs[index].get();
-                auto director = std::make_unique<Group::Director>(groupAcsr, *this, mUndoManager);
+                auto director = std::make_unique<Group::Director>(groupAcsr, *this, mHierarchyManager, mUndoManager);
                 anlStrongAssert(director != nullptr);
                 if(director != nullptr)
                 {

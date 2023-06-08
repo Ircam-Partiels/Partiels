@@ -11,10 +11,12 @@ namespace Group
     : public Track::MultiDirector
     {
     public:
-        Director(Accessor& accessor, Track::MultiDirector& trackMultiDirector, juce::UndoManager& undoManager);
+        using HierarchyManager = Track::HierarchyManager;
+        Director(Accessor& accessor, Track::MultiDirector& trackMultiDirector, HierarchyManager& hierarchyManager, juce::UndoManager& undoManager);
         ~Director() override;
 
         Accessor& getAccessor();
+        HierarchyManager& getHierarchyManager();
 
         void updateTracks(NotificationType notification);
 
@@ -34,6 +36,7 @@ namespace Group
     private:
         Accessor& mAccessor;
         Track::MultiDirector& mTrackMultiDirector;
+        HierarchyManager& mHierarchyManager;
         juce::UndoManager& mUndoManager;
         Accessor mSavedState;
         std::function<Accessor&()> mSafeAccessorRetrieverFn = nullptr;

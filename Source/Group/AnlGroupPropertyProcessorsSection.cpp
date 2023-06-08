@@ -36,6 +36,26 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
                         juce::ignoreUnused(index);
                         setStepSize(static_cast<size_t>(mPropertyStepSize.entry.getText().getIntValue()));
                     })
+, mPropertyInputTrack(juce::translate("Input Track"), juce::translate("The input track used by the tracks of the group."), "", std::vector<std::string>{}, [&]([[maybe_unused]] size_t index)
+                      {
+                          auto const listId = mPropertyInputTrack.entry.getSelectedId();
+                          if(listId == 1)
+                          {
+                              setInputTrack({});
+                          }
+                          else
+                          {
+                              auto it = mPropertyInputTrackList.find(listId);
+                              if(it != mPropertyInputTrackList.cend())
+                              {
+                                  setInputTrack(it->second);
+                              }
+                              else
+                              {
+                                  updateInputTrack();
+                              }
+                          }
+                      })
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateContent();
@@ -55,6 +75,7 @@ Group::PropertyProcessorsSection::PropertyProcessorsSection(Director& director)
     addAndMakeVisible(mPropertyWindowType);
     addAndMakeVisible(mPropertyBlockSize);
     addAndMakeVisible(mPropertyStepSize);
+    addAndMakeVisible(mPropertyInputTrack);
 }
 
 void Group::PropertyProcessorsSection::resized()
@@ -67,6 +88,7 @@ void Group::PropertyProcessorsSection::resized()
             component.setBounds(bounds.removeFromTop(component.getHeight()));
         }
     };
+    setBounds(mPropertyInputTrack);
     setBounds(mPropertyWindowType);
     setBounds(mPropertyBlockSize);
     setBounds(mPropertyStepSize);
@@ -288,11 +310,53 @@ void Group::PropertyProcessorsSection::setStepSize(size_t const stepSize)
                           });
 }
 
+void Group::PropertyProcessorsSection::setInputTrack(juce::String const& identifier)
+{
+    auto const supportsInputTrack = [=, this](Track::Accessor const& acsr)
+    {
+        if(!Track::Tools::supportsInputTrack(acsr))
+        {
+            return false;
+        }
+        auto const& hierarchyManager = mDirector.getHierarchyManager();
+        auto const& input = acsr.getAttr<Track::AttrType::description>().input;
+        return identifier.isEmpty() || hierarchyManager.isTrackValidFor(acsr.getAttr<Track::AttrType::identifier>(), Track::Tools::getFrameType(input), identifier);
+    };
+
+    askToModifyProcessors([this](bool result)
+                          {
+                              if(result)
+                              {
+                                  mDirector.startAction(true);
+                              }
+                              else
+                              {
+                                  updateInputTrack();
+                              }
+                              return result;
+                          },
+                          [=, this]()
+                          {
+                              auto trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+                              for(auto& trackAcsr : trackAcsrs)
+                              {
+                                  if(supportsInputTrack(trackAcsr.get()))
+                                  {
+                                      trackAcsr.get().setAttr<Track::AttrType::input>(identifier, NotificationType::synchronous);
+                                  }
+                              }
+                              mDirector.endAction(true, ActionState::newTransaction, juce::translate("Change group's input track"));
+                              updateInputTrack();
+                          },
+                          supportsInputTrack);
+}
+
 void Group::PropertyProcessorsSection::updateContent()
 {
     updateWindowType();
     updateBlockSize();
     updateStepSize();
+    updateInputTrack();
     updateParameters();
     updateState();
     resized();
@@ -412,6 +476,87 @@ void Group::PropertyProcessorsSection::updateStepSize()
                                                   return Track::Tools::supportsBlockSize(trackAcsr.get()) || trackAcsr.get().template getAttr<Track::AttrType::description>().inputDomain == Plugin::InputDomain::TimeDomain;
                                               });
     mPropertyBlockSize.entry.setEditableText(isTimeDomainOnly);
+}
+
+void Group::PropertyProcessorsSection::updateInputTrack()
+{
+    juce::StringArray trackNames;
+    std::set<juce::String> inputs;
+    std::set<juce::String> identifiers;
+    std::vector<Track::HierarchyManager::TrackInfo> otherTracks;
+
+    auto const& hierarchyManager = mDirector.getHierarchyManager();
+    auto const trackAcsrs = Tools::getTrackAcsrs(mAccessor);
+    for(auto const& trackAcsr : trackAcsrs)
+    {
+        if(Track::Tools::supportsInputTrack(trackAcsr.get()))
+        {
+            auto const identifier = trackAcsr.get().getAttr<Track::AttrType::identifier>();
+            identifiers.insert(identifier);
+            inputs.insert(trackAcsr.get().getAttr<Track::AttrType::input>());
+            trackNames.add(trackAcsr.get().getAttr<Track::AttrType::name>());
+            auto const& input = trackAcsr.get().getAttr<Track::AttrType::description>().input;
+            auto const inputTracks = hierarchyManager.getAvailableTracksFor(identifier, Track::Tools::getFrameType(input));
+            if(otherTracks.empty())
+            {
+                otherTracks = inputTracks;
+            }
+            else
+            {
+                std::erase_if(otherTracks, [&](Track::HierarchyManager::TrackInfo const& info)
+                              {
+                                  return std::none_of(inputTracks.cbegin(), inputTracks.cend(), [&](Track::HierarchyManager::TrackInfo const& itrack)
+                                                      {
+                                                          return itrack.identifier == info.identifier;
+                                                      });
+                              });
+            }
+        }
+    }
+    mPropertyInputTrack.setVisible(!inputs.empty());
+    if(inputs.empty())
+    {
+        return;
+    }
+
+    mPropertyInputTrack.setTooltip("Track(s): " + trackNames.joinIntoString(", ") + " - " + juce::translate("The input tracks used by the tracks of the group."));
+    mPropertyInputTrack.entry.clear(juce::NotificationType::dontSendNotification);
+    mPropertyInputTrackList.clear();
+    auto listId = 1;
+    mPropertyInputTrack.entry.setEnabled(!otherTracks.empty());
+    mPropertyInputTrack.entry.setTextWhenNothingSelected(juce::translate("Not found"));
+    mPropertyInputTrack.entry.addItem(juce::translate("Undefined"), listId++);
+    for(auto trackIt = otherTracks.crbegin(); trackIt != otherTracks.crend(); ++trackIt)
+    {
+        if(!trackIt->group.isEmpty() && !trackIt->group.isEmpty())
+        {
+            mPropertyInputTrackList[listId] = trackIt->identifier;
+            mPropertyInputTrack.entry.addItem(trackIt->group + ": " + trackIt->name, listId++);
+        }
+    }
+
+    if(inputs.size() == 1_z)
+    {
+        if(inputs.cbegin()->isEmpty())
+        {
+            mPropertyInputTrack.entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            auto const it = std::find_if(mPropertyInputTrackList.cbegin(), mPropertyInputTrackList.cend(), [&](auto const& pait)
+                                         {
+                                             return pait.second == *inputs.cbegin();
+                                         });
+            if(it != mPropertyInputTrackList.cend())
+            {
+                mPropertyInputTrack.entry.setSelectedId(it->first, juce::NotificationType::dontSendNotification);
+            }
+        }
+    }
+    else
+    {
+        mPropertyStepSize.entry.setText(juce::translate("Multiple Values"), juce::NotificationType::dontSendNotification);
+    }
 }
 
 void Group::PropertyProcessorsSection::updateParameters()
