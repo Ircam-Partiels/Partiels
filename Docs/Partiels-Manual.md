@@ -512,6 +512,12 @@ Depending on the characteristics of the plugin, the section allows accessing the
 
 - Step Size: The step size of the FFT in order to transform the time domain signal into a frequency domain signal if the plugin expects frequency domain signal or the size between each block of samples if the plugin expects time domain input signal. 
 
+<p align="center">
+<img src="images/section-track-properties.3.b-v1.1.0.png" width="232"/>
+</p>
+
+- Input Track: The input track property allows you to use another document analysis track as input to the current analysis track. To do this, the analysis plugin must allow it, and the input data type must correspond to the data type expected by the plugin. Changing the input track or modifying the results of this track automatically triggers a re-analysis of the current track.
+
 The section allows accessing the plugin-specific parameters that are used to perform the analysis. Depending on their specifications, the values of the parameters can be controlled by a toggle button (on/off), a number field (integer or floating-point values), or a dropdown menu (list of items). Modifying the parameters triggers the analysis and produces new results. If the track is loaded from a file or if the analysis results have been edited, the application displays a dialog window warning you that the file will be detached from the track before performing the analysis and asking you if you want to proceed (you can still undo the operation to retrieve the previous analysis results). 
 
 <p align="center">
