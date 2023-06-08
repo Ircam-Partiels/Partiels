@@ -1,5 +1,6 @@
 v1.1.0-dev2
 
+- Fix: Hidden tracks in the group overview must not be visible in the group tooltips (#332)
 - Fix: The value range of point track may be invalid and uneditable (#330)
 - Add: Ircam Vamp Extension (IVE) support (#329)
 
