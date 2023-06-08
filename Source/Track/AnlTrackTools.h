@@ -13,6 +13,7 @@ namespace Track
         bool supportsWindowType(Accessor const& acsr);
         bool supportsBlockSize(Accessor const& acsr);
         bool supportsStepSize(Accessor const& acsr);
+        bool supportsInputTrack(Accessor const& acsr);
         FrameType getFrameType(Plugin::Output const& output);
         FrameType getFrameType(Accessor const& acsr);
 

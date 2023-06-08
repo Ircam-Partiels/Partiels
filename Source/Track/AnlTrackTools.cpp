@@ -30,6 +30,11 @@ bool Track::Tools::supportsStepSize(Accessor const& acsr)
     return hasPluginKey(acsr) && (description.inputDomain == Plugin::InputDomain::FrequencyDomain || description.defaultState.stepSize > 0_z);
 }
 
+bool Track::Tools::supportsInputTrack(Accessor const& acsr)
+{
+    return hasPluginKey(acsr) && !acsr.getAttr<AttrType::description>().input.identifier.empty();
+}
+
 Track::FrameType Track::Tools::getFrameType(Plugin::Output const& output)
 {
     if(output.hasFixedBinCount)
