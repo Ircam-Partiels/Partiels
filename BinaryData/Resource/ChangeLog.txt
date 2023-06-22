@@ -1,5 +1,4 @@
-v1.1.0-dev3
-
+v1.1.0
 - Add: Input track support (IVE) to the harmonic analysis of the PM2 vamp plugin
 - Add: Input track support (IVE) to the Voiced/Unvoiced analysis of the SuperVP vamp plugin
 
