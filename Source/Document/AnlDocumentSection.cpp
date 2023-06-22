@@ -384,9 +384,17 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
             break;
             case SignalType::updateSize:
             {
-                if(mAccessor.getAttr<AttrType::autoresize>() && !isDragAndDropActive())
+                if(mAccessor.getAttr<AttrType::autoresize>())
                 {
-                    updateHeights();
+                    juce::WeakReference<juce::Component> weakReference(this);
+                    juce::MessageManager::callAsync([=, this]
+                                                    {
+                                                        if(weakReference == nullptr)
+                                                        {
+                                                            return;
+                                                        }
+                                                        updateHeights();
+                                                    });
                 }
             }
         }
@@ -478,7 +486,7 @@ void Document::Section::resized()
 
     mViewport.setBounds(bounds);
     mDraggableTable.setBounds(0, 0, bounds.getWidth() - scrollbarWidth, mDraggableTable.getHeight());
-    if(mAccessor.getAttr<AttrType::autoresize>() && !isDragAndDropActive())
+    if(mAccessor.getAttr<AttrType::autoresize>())
     {
         updateHeights();
     }
@@ -817,7 +825,7 @@ void Document::Section::updateLayout()
                                                 {
                                                     return;
                                                 }
-                                                if(!mAccessor.getAttr<AttrType::autoresize>() || isDragAndDropActive())
+                                                if(!mAccessor.getAttr<AttrType::autoresize>())
                                                 {
                                                     return;
                                                 }
