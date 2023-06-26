@@ -33,8 +33,6 @@ namespace Document
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
-        std::set<size_t> getSelectedChannels(Track::Accessor const& trackAcsr) const;
-
         using CopiedData = Track::Result::Modifier::CopiedData;
         using MultiChannelData = std::map<size_t, CopiedData>;
 

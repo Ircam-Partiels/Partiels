@@ -97,7 +97,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         {
             if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
             {
-                auto const selectedChannels = getSelectedChannels(trackAcsr.get());
+                auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
                 for(auto const& channel : selectedChannels)
                 {
                     if(!Track::Result::Modifier::getIndices(trackAcsr.get(), channel, selection).empty())
@@ -121,7 +121,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 auto const trackIt = mClipboardData.find(trackId);
                 if(trackIt != mClipboardData.cend())
                 {
-                    auto const selectedChannels = getSelectedChannels(trackAcsr.get());
+                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
                     for(auto const& channel : selectedChannels)
                     {
                         auto const channelIt = trackIt->second.find(channel);
@@ -284,7 +284,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                                     auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
-                                    for(auto const& index : getSelectedChannels(trackAcsr))
+                                    for(auto const& index : Track::Tools::getSelectedChannels(trackAcsr))
                                     {
                                         undoManager.perform(std::make_unique<ActionErase>(fn, index, selection).release());
                                     }
@@ -300,7 +300,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             performForAllTracks([&](Track::Accessor& trackAcsr)
                                 {
                                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
-                                    auto const selectedChannels = getSelectedChannels(trackAcsr);
+                                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
                                     auto& trackData = mClipboardData[trackId];
                                     for(auto const& index : selectedChannels)
                                     {
@@ -360,7 +360,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                 if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
                 {
                     std::atomic<bool> shouldAbort{false};
-                    auto const selectedChannels = getSelectedChannels(trackAcsr);
+                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
                     if(!selectedChannels.empty())
                     {
                         juce::String clipboardResults;
@@ -374,29 +374,6 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
         }
     }
     return false;
-}
-
-std::set<size_t> Document::CommandTarget::getSelectedChannels(Track::Accessor const& trackAcsr) const
-{
-    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
-    auto const numChannels = trackAcsr.getAttr<Track::AttrType::channelsLayout>().size();
-    auto trackChannels = Track::Tools::getSelectedChannels(trackAcsr);
-
-    auto const& groupAcsr = Tools::getGroupAcsrForTrack(mAccessor, trackId);
-    auto const groupChannels = Group::Tools::getSelectedChannels(groupAcsr);
-    for(auto const& groupChannel : groupChannels)
-    {
-        if(numChannels == 1_z)
-        {
-            trackChannels.insert(0_z);
-            return trackChannels;
-        }
-        if(groupChannel < numChannels)
-        {
-            trackChannels.insert(groupChannel);
-        }
-    }
-    return trackChannels;
 }
 
 ANALYSE_FILE_END
