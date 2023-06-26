@@ -22,11 +22,19 @@ Group::Thumbnail::Thumbnail(Director& director)
 
     mExpandButton.onClick = [&]()
     {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
 
     mEditButton.onClick = [&]()
     {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
         juce::PopupMenu menu;
         juce::WeakReference<juce::Component> safePointer(this);
         auto const layout = mAccessor.getAttr<AttrType::layout>();
@@ -61,6 +69,10 @@ Group::Thumbnail::Thumbnail(Director& director)
 
     mPropertiesButton.onClick = [this]()
     {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
         juce::PopupMenu menu;
         juce::WeakReference<juce::Component> safePointer(this);
         menu.addItem(juce::translate("Group properties"), [=, this]()
