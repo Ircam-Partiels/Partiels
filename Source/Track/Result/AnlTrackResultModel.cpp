@@ -631,7 +631,7 @@ std::optional<std::string> Track::Result::Data::getValue(std::shared_ptr<std::ve
     }
     auto const& channelResults = results->at(channel);
     auto const it = findFirstAt(channelResults, time);
-    if(it != channelResults.cend())
+    if(it != channelResults.cend() && std::get<0>(*it) <= time)
     {
         return std::get<2>(*it);
     }
@@ -646,7 +646,7 @@ std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<P
     }
     auto const& channelResults = results->at(channel);
     auto const first = findFirstAt(channelResults, time);
-    if(first == channelResults.cend())
+    if(first == channelResults.cend() || std::get<0>(*first) > time)
     {
         return {};
     }
@@ -677,7 +677,7 @@ std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<C
     }
     auto const& channelResults = results->at(channel);
     auto const it = findFirstAt(channelResults, time);
-    if(it == channelResults.cend() || std::get<2>(*it).empty())
+    if(it == channelResults.cend() || std::get<0>(*it) > time || std::get<2>(*it).empty())
     {
         return {};
     }
