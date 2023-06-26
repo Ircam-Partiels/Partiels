@@ -139,6 +139,7 @@ void Track::Thumbnail::resized()
         }
     };
 
+    bounds.removeFromTop(bounds.getWidth());
     if(mStateButton.isProcessingOrRendering() || mStateButton.hasWarning())
     {
         layoutButton(mStateButton);
@@ -163,7 +164,7 @@ void Track::Thumbnail::paint(juce::Graphics& g)
     auto const width = getWidth();
     auto const height = getHeight();
     auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mEditButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
-    auto const bottom = height - numElements * (width + separator);
+    auto const bottom = height - numElements * (width + separator) - (numElements > 0 ? 0 : separator);
     if(bottom <= 0)
     {
         return;
