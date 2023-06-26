@@ -200,12 +200,12 @@ void Group::Thumbnail::resized()
     auto bounds = getLocalBounds();
 
     auto leftBounds = bounds.removeFromLeft(getWidth() / 2 - separator / 2);
-    auto layoutButton = [&](juce::Rectangle<int>& lBounds, juce::Component& component)
+    auto const layoutButton = [&](juce::Rectangle<int>& localBounds, juce::Component& component)
     {
-        component.setVisible(lBounds.getHeight() >= lBounds.getWidth());
+        component.setVisible(localBounds.getHeight() >= localBounds.getWidth());
         if(component.isVisible())
         {
-            component.setBounds(lBounds.removeFromBottom(lBounds.getWidth()).reduced(separator));
+            component.setBounds(localBounds.removeFromBottom(localBounds.getWidth()).reduced(separator));
         }
     };
 
