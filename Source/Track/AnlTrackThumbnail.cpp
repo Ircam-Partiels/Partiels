@@ -19,6 +19,10 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
     mEditButton.setTooltip(juce::translate("Edit the track results"));
     mEditButton.onClick = [&]()
     {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
         auto var = std::make_unique<juce::DynamicObject>();
         if(var != nullptr)
         {
@@ -32,6 +36,10 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
     mPropertiesButton.setTooltip(juce::translate("Show the track properties"));
     mPropertiesButton.onClick = [&]()
     {
+        if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+        {
+            return;
+        }
         auto var = std::make_unique<juce::DynamicObject>();
         if(var != nullptr)
         {
