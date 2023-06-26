@@ -9,10 +9,11 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
 , mTransportAccessor(transportAcsr)
 {
     addAndMakeVisible(mPropertiesButton);
-    mPropertiesButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mEditButton);
-    mEditButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
+
+    mPropertiesButton.setWantsKeyboardFocus(false);
+    mEditButton.setWantsKeyboardFocus(false);
     mStateButton.setWantsKeyboardFocus(false);
 
     mEditButton.setTooltip(juce::translate("Edit the track results"));
@@ -43,7 +44,6 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
 
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::file:
@@ -85,9 +85,8 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
         }
     };
 
-    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    mReceiver.onSignal = [&]([[maybe_unused]] Accessor const& acsr, SignalType signal, juce::var value)
     {
-        juce::ignoreUnused(acsr);
         switch(signal)
         {
             case SignalType::showProperties:
@@ -123,7 +122,7 @@ void Track::Thumbnail::resized()
     auto bounds = getLocalBounds();
     auto constexpr separator = 2;
 
-    auto layoutButton = [&](juce::Component& component)
+    auto const layoutButton = [&](juce::Component& component)
     {
         component.setVisible(bounds.getHeight() >= bounds.getWidth());
         if(component.isVisible())
@@ -173,17 +172,17 @@ void Track::Thumbnail::mouseMove(juce::MouseEvent const& event)
 
 void Track::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
+    mouseMove(event);
     beginDragAutoRepeat(5);
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
 }
 
 void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
+    mouseMove(event);
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(200))
     {
         return;
     }
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* parent = findParentComponentOfClass<Section>();
     anlWeakAssert(dragContainer != nullptr && parent != nullptr);
@@ -196,7 +195,7 @@ void Track::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 
 void Track::Thumbnail::mouseUp(juce::MouseEvent const& event)
 {
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
+    mouseMove(event);
 }
 
 ANALYSE_FILE_END
