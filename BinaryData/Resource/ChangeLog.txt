@@ -1,4 +1,11 @@
+v1.1.1-test1
+
+- Imp: Make track or group names disappear last when their size is reduced (#335)
+- Fix: Track/group header buttons should be disabled when the shift key is pressed (#334)
+- Fix: Automatic resizing of tracks and groups doesn't work properly when a new track is added (#331)
+
 v1.1.0
+
 - Add: Input track support (IVE) to the harmonic analysis of the PM2 vamp plugin
 - Add: Input track support (IVE) to the Voiced/Unvoiced analysis of the SuperVP vamp plugin
 
