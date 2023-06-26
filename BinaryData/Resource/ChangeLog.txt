@@ -1,5 +1,6 @@
 v1.1.1-test1
 
+- Fix: The application crashes when a document is opened if its number of tracks is less than that of the loaded document (#336)
 - Imp: Make track or group names disappear last when their size is reduced (#335)
 - Fix: Track/group header buttons should be disabled when the shift key is pressed (#334)
 - Fix: Automatic resizing of tracks and groups doesn't work properly when a new track is added (#331)
