@@ -208,7 +208,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
 
     mAccessor.onAccessorErased = [&](AcsrType type, size_t index, NotificationType notification)
     {
-        juce::ignoreUnused(notification);
         switch(type)
         {
             case AcsrType::tracks:
@@ -218,8 +217,6 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     return;
                 }
-                mTracks.erase(mTracks.begin() + static_cast<long>(index));
-
                 auto trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
                 auto groupAcsrs = mAccessor.getAcsrs<AcsrType::groups>();
                 for(auto& groupAcsr : groupAcsrs)
@@ -232,6 +229,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
                 mHierarchyManager.notifyHierarchyChanged(notification);
+                mTracks.erase(mTracks.begin() + static_cast<long>(index));
             }
             break;
             case AcsrType::groups:
@@ -241,12 +239,12 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 {
                     return;
                 }
-                mGroups.erase(mGroups.begin() + static_cast<long>(index));
                 if(mAccessor.getAttr<AttrType::autoresize>())
                 {
                     mAccessor.sendSignal(SignalType::updateSize, {}, notification);
                 }
                 mHierarchyManager.notifyHierarchyChanged(notification);
+                mGroups.erase(mGroups.begin() + static_cast<long>(index));
             }
             case AcsrType::transport:
             case AcsrType::timeZoom:
