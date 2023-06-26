@@ -7,12 +7,13 @@ Group::Thumbnail::Thumbnail(Director& director)
 : mDirector(director)
 {
     addAndMakeVisible(mPropertiesButton);
-    mPropertiesButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mEditButton);
-    mEditButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mStateButton);
-    mStateButton.setWantsKeyboardFocus(false);
     addAndMakeVisible(mExpandButton);
+
+    mPropertiesButton.setWantsKeyboardFocus(false);
+    mEditButton.setWantsKeyboardFocus(false);
+    mStateButton.setWantsKeyboardFocus(false);
     mExpandButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Show group or track properties"));
@@ -108,7 +109,6 @@ Group::Thumbnail::Thumbnail(Director& director)
 
     mListener.onAttrChanged = [&](Group::Accessor const& acsr, AttrType const attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
@@ -119,8 +119,8 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::layout:
             case AttrType::tracks:
             {
-                mExpandButton.setEnabled(!mAccessor.getAttr<AttrType::layout>().empty());
-                mEditButton.setEnabled(!mAccessor.getAttr<AttrType::layout>().empty());
+                mExpandButton.setEnabled(!acsr.getAttr<AttrType::layout>().empty());
+                mEditButton.setEnabled(!acsr.getAttr<AttrType::layout>().empty());
             }
             break;
             case AttrType::focused:
@@ -136,7 +136,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             break;
             case AttrType::expanded:
             {
-                if(mAccessor.getAttr<AttrType::expanded>())
+                if(acsr.getAttr<AttrType::expanded>())
                 {
                     mExpandButton.setTypes(Icon::Type::shrink);
                     mExpandButton.setTooltip(juce::translate("Shrink the tracks"));
@@ -151,9 +151,8 @@ Group::Thumbnail::Thumbnail(Director& director)
         }
     };
 
-    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    mReceiver.onSignal = [&]([[maybe_unused]] Accessor const& acsr, SignalType signal, juce::var value)
     {
-        juce::ignoreUnused(acsr);
         switch(signal)
         {
             case SignalType::showProperties:
@@ -245,17 +244,17 @@ void Group::Thumbnail::mouseMove(juce::MouseEvent const& event)
 
 void Group::Thumbnail::mouseDown(juce::MouseEvent const& event)
 {
+    mouseMove(event);
     beginDragAutoRepeat(5);
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
 }
 
 void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 {
+    mouseMove(event);
     if((event.eventTime - event.mouseDownTime).inMilliseconds() < static_cast<juce::int64>(200))
     {
         return;
     }
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
     auto* dragContainer = juce::DragAndDropContainer::findParentDragContainerFor(this);
     auto* section = findParentComponentOfClass<Section>();
     auto* parent = findParentComponentOfClass<StrechableSection>();
@@ -286,7 +285,7 @@ void Group::Thumbnail::mouseDrag(juce::MouseEvent const& event)
 
 void Group::Thumbnail::mouseUp(juce::MouseEvent const& event)
 {
-    setMouseCursor(event.mods.isCtrlDown() ? juce::MouseCursor::CopyingCursor : juce::MouseCursor::DraggingHandCursor);
+    mouseMove(event);
 }
 
 ANALYSE_FILE_END
