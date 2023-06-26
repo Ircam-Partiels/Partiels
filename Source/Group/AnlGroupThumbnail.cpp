@@ -209,6 +209,7 @@ void Group::Thumbnail::resized()
         }
     };
 
+    leftBounds.removeFromTop(leftBounds.getWidth());
     if(mStateButton.hasWarning() || mStateButton.isProcessingOrRendering())
     {
         layoutButton(leftBounds, mStateButton);
@@ -239,7 +240,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(height - separator * 2));
 
     auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mEditButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
-    auto const bottom = height - numElements * (width + separator);
+    auto const bottom = height - numElements * (width + separator) - (numElements > 0 ? 0 : separator);
     if(bottom <= 0)
     {
         return;
