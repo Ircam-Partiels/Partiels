@@ -100,7 +100,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
                 for(auto const& channel : selectedChannels)
                 {
-                    if(!Track::Result::Modifier::getIndices(trackAcsr.get(), channel, selection).empty())
+                    if(Track::Result::Modifier::containFrames(trackAcsr.get(), channel, selection))
                     {
                         return false;
                     }
@@ -125,7 +125,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                     for(auto const& channel : selectedChannels)
                     {
                         auto const channelIt = trackIt->second.find(channel);
-                        if(channelIt != trackIt->second.cend() && !Track::Result::Modifier::getIndices(channelIt->second).empty())
+                        if(channelIt != trackIt->second.cend() && !Track::Result::Modifier::isEmpty(channelIt->second))
                         {
                             return false;
                         }
@@ -304,8 +304,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                     auto& trackData = mClipboardData[trackId];
                                     for(auto const& index : selectedChannels)
                                     {
-                                        auto const indices = getIndices(trackAcsr, index, selection);
-                                        trackData[index] = copyFrames(trackAcsr, index, indices);
+                                        trackData[index] = copyFrames(trackAcsr, index, selection);
                                     }
                                 });
             return true;

@@ -102,19 +102,7 @@ namespace Track
             friend class Access;
         };
 
-        struct File
-        {
-            juce::File file;
-            juce::StringPairArray args; // saved values (mainly for parsing SDIF)
-            nlohmann::json extra;       // parsed values (mainly for restoring track attributes from JSON)
-            juce::String commit;        // unique identifier that is used for versioning
-
-            File(juce::File const& f = {}, juce::StringPairArray const& a = {}, nlohmann::json const& e = {}, juce::String const& c = {});
-
-            bool operator==(File const& rhd) const noexcept;
-            bool operator!=(File const& rhd) const noexcept;
-            bool isEmpty() const noexcept;
-        };
+        using ChannelData = std::variant<std::vector<Data::Marker>, std::vector<Data::Point>, std::vector<Data::Column>>;
 
         template <class T>
         concept data = std::is_same_v<T, Data::Marker> || std::is_same_v<T, Data::Point> || std::is_same_v<T, Data::Column>;
@@ -132,6 +120,20 @@ namespace Track
         {
             return time < std::get<0_z>(value);
         }
+
+        struct File
+        {
+            juce::File file;
+            juce::StringPairArray args; // saved values (mainly for parsing SDIF)
+            nlohmann::json extra;       // parsed values (mainly for restoring track attributes from JSON)
+            juce::String commit;        // unique identifier that is used for versioning
+
+            File(juce::File const& f = {}, juce::StringPairArray const& a = {}, nlohmann::json const& e = {}, juce::String const& c = {});
+
+            bool operator==(File const& rhd) const noexcept;
+            bool operator!=(File const& rhd) const noexcept;
+            bool isEmpty() const noexcept;
+        };
 
         void to_json(nlohmann::json& j, File const& file);
         void from_json(nlohmann::json const& j, File& file);

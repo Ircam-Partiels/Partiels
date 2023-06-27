@@ -33,8 +33,8 @@ namespace Document
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
     private:
-        using CopiedData = Track::Result::Modifier::CopiedData;
-        using MultiChannelData = std::map<size_t, CopiedData>;
+        using ChannelData = Track::Result::ChannelData;
+        using MultiChannelData = std::map<size_t, ChannelData>;
 
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};

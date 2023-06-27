@@ -15,37 +15,7 @@ namespace
     }
 } // namespace
 
-std::set<size_t> Track::Result::Modifier::getIndices(CopiedData const& data)
-{
-    auto const generateIndices = [&](auto const& results)
-    {
-        std::set<size_t> indices;
-        for(auto const& result : results)
-        {
-            indices.insert(result.first);
-        }
-        return indices;
-    };
-
-    if(auto const* markersData = std::get_if<std::map<size_t, Data::Marker>>(&data))
-    {
-        return generateIndices(*markersData);
-    }
-    else if(auto const* pointsData = std::get_if<std::map<size_t, Data::Point>>(&data))
-    {
-        return generateIndices(*pointsData);
-    }
-    else if(auto const* columnsData = std::get_if<std::map<size_t, Data::Column>>(&data))
-    {
-        return generateIndices(*columnsData);
-    }
-    else
-    {
-        return {};
-    }
-}
-
-juce::Range<double> Track::Result::Modifier::getTimeRange(CopiedData const& data)
+juce::Range<double> Track::Result::Modifier::getTimeRange(ChannelData const& data)
 {
     auto const getRange = [&](auto const& results) -> juce::Range<double>
     {
@@ -53,18 +23,18 @@ juce::Range<double> Track::Result::Modifier::getTimeRange(CopiedData const& data
         {
             return {};
         }
-        return {std::get<0_z>(results.cbegin()->second), std::get<0_z>(results.crbegin()->second)};
+        return {std::get<0_z>(results.front()), std::get<0_z>(results.back())};
     };
 
-    if(auto const* markersData = std::get_if<std::map<size_t, Data::Marker>>(&data))
+    if(auto const* markersData = std::get_if<std::vector<Data::Marker>>(&data))
     {
         return getRange(*markersData);
     }
-    else if(auto const* pointsData = std::get_if<std::map<size_t, Data::Point>>(&data))
+    else if(auto const* pointsData = std::get_if<std::vector<Data::Point>>(&data))
     {
         return getRange(*pointsData);
     }
-    else if(auto const* columnsData = std::get_if<std::map<size_t, Data::Column>>(&data))
+    else if(auto const* columnsData = std::get_if<std::vector<Data::Column>>(&data))
     {
         return getRange(*columnsData);
     }
@@ -72,43 +42,6 @@ juce::Range<double> Track::Result::Modifier::getTimeRange(CopiedData const& data
     {
         return {};
     }
-}
-
-Track::Result::Modifier::CopiedData Track::Result::Modifier::duplicateFrames(CopiedData const& data, double const originalTime, size_t destinationIndex, double destinationTime)
-{
-    auto const copyFrames = [&](auto const& results) -> CopiedData
-    {
-        if(results.empty())
-        {
-            return {};
-        }
-        using result_type = typename std::remove_const<typename std::remove_reference<decltype(results)>::type>::type;
-        auto const indexDifference = static_cast<long>(destinationIndex) - static_cast<long>(results.cbegin()->first);
-        auto const timeDifference = destinationTime - originalTime;
-        result_type map;
-        for(auto const& pair : results)
-        {
-            auto frame = pair.second;
-            std::get<0_z>(frame) += timeDifference;
-            auto const index = static_cast<size_t>(static_cast<long>(pair.first) + indexDifference);
-            map[index] = std::move(frame);
-        }
-        return map;
-    };
-
-    if(auto const* markersData = std::get_if<std::map<size_t, Data::Marker>>(&data))
-    {
-        return copyFrames(*markersData);
-    }
-    else if(auto const* pointsData = std::get_if<std::map<size_t, Data::Point>>(&data))
-    {
-        return copyFrames(*pointsData);
-    }
-    else if(auto const* columnsData = std::get_if<std::map<size_t, Data::Column>>(&data))
-    {
-        return copyFrames(*columnsData);
-    }
-    return {};
 }
 
 std::optional<double> Track::Result::Modifier::getTime(Accessor const& accessor, size_t const channel, size_t const index)
@@ -149,174 +82,160 @@ std::optional<double> Track::Result::Modifier::getTime(Accessor const& accessor,
     return {};
 }
 
-std::optional<size_t> Track::Result::Modifier::getIndex(Accessor const& accessor, size_t const channel, double time)
+bool Track::Result::Modifier::isEmpty(ChannelData const& data)
 {
-    auto const findIndex = [&](auto const& results) -> std::optional<size_t>
+    auto const doIsEmpty = [&](auto const& results) -> bool
     {
-        auto const& channelFrames = results.at(channel);
-        using result_type = typename std::remove_const<typename std::remove_reference<decltype(channelFrames)>::type>::type;
-        using data_type = typename result_type::value_type;
-        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), time, Result::lower_cmp<data_type>);
-        return static_cast<size_t>(std::distance(channelFrames.cbegin(), start));
+        return results.empty();
     };
 
-    auto const& results = accessor.getAttr<AttrType::results>();
-    auto const access = results.getReadAccess();
-    if(!static_cast<bool>(access))
+    if(auto const* markersData = std::get_if<std::vector<Data::Marker>>(&data))
     {
-        showAccessWarning();
-        return {};
+        return doIsEmpty(*markersData);
     }
-    if(auto markers = results.getMarkers())
+    else if(auto const* pointsData = std::get_if<std::vector<Data::Point>>(&data))
     {
-        return findIndex(*markers);
+        return doIsEmpty(*pointsData);
     }
-    if(auto points = results.getPoints())
+    else if(auto const* columnsData = std::get_if<std::vector<Data::Column>>(&data))
     {
-        return findIndex(*points);
+        return doIsEmpty(*columnsData);
     }
-    if(auto columns = results.getColumns())
-    {
-        return findIndex(*columns);
-    }
-    return {};
+    return true;
 }
 
-std::set<size_t> Track::Result::Modifier::getIndices(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
+bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
 {
-    auto const generateIndices = [&](auto const& results) -> std::set<size_t>
+    auto const doContain = [&](auto const& results)
     {
-        auto const& channelFrames = results.at(channel);
-        using result_type = typename std::remove_const<typename std::remove_reference<decltype(channelFrames)>::type>::type;
-        using data_type = typename result_type::value_type;
-        auto start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
-        std::set<size_t> indices;
-        auto position = static_cast<size_t>(std::distance(channelFrames.cbegin(), start));
-        while(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
-        {
-            indices.insert(position++);
-            start = std::next(start);
-        }
-        return indices;
-    };
-
-    auto const& results = accessor.getAttr<AttrType::results>();
-    auto const access = results.getReadAccess();
-    if(!static_cast<bool>(access))
-    {
-        showAccessWarning();
-        return {};
-    }
-    if(auto markers = results.getMarkers())
-    {
-        return generateIndices(*markers);
-    }
-    if(auto points = results.getPoints())
-    {
-        return generateIndices(*points);
-    }
-    if(auto columns = results.getColumns())
-    {
-        return generateIndices(*columns);
-    }
-    return {};
-}
-
-Track::Result::Modifier::CopiedData Track::Result::Modifier::copyFrames(Accessor const& accessor, size_t const channel, std::set<size_t> const& indices)
-{
-    auto const getData = [&](auto& results)
-    {
-        using result_type = typename std::remove_reference<decltype(results)>::type::value_type;
-        using data_type = typename result_type::value_type;
-        std::map<size_t, data_type> map;
-        if(channel >= results.size())
-        {
-            return map;
-        }
-        auto const& channelFrames = results[channel];
-        for(auto it = indices.cbegin(); it != indices.cend(); ++it)
-        {
-            if(*it < channelFrames.size())
-            {
-                map[*it] = channelFrames[*it];
-            }
-        }
-        return map;
-    };
-
-    auto const& results = accessor.getAttr<AttrType::results>();
-    auto const access = results.getReadAccess();
-    if(!static_cast<bool>(access))
-    {
-        showAccessWarning();
-        return {};
-    }
-    if(auto markers = results.getMarkers())
-    {
-        return getData(*markers);
-    }
-    if(auto points = results.getPoints())
-    {
-        return getData(*points);
-    }
-    if(auto columns = results.getColumns())
-    {
-        return getData(*columns);
-    }
-    return {};
-}
-
-bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const channel, CopiedData const& data, juce::String const& commit)
-{
-    auto const applyChange = [&](auto& results, auto const& newData)
-    {
+        using result_type = typename std::remove_const<typename std::remove_reference<decltype(results)>::type>::type;
+        using data_type = typename result_type::value_type::value_type;
+        std::vector<data_type> copy;
         if(channel >= results.size())
         {
             return false;
         }
-
-        std::vector<juce::Range<size_t>> ranges;
-        for(auto const& pair : newData)
+        auto const& channelFrames = results.at(channel);
+        auto start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
+        if(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
         {
-            if(ranges.empty() || ranges.back().getEnd() + 1_z < pair.first)
-            {
-                ranges.push_back({pair.first, pair.first});
-            }
-            else
-            {
-                ranges.back() = ranges.back().getUnionWith(pair.first);
-            }
+            return true;
         }
+        return false;
+    };
 
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        showAccessWarning();
+        return {};
+    }
+    if(auto markers = results.getMarkers())
+    {
+        return doContain(*markers);
+    }
+    if(auto points = results.getPoints())
+    {
+        return doContain(*points);
+    }
+    if(auto columns = results.getColumns())
+    {
+        return doContain(*columns);
+    }
+    return {};
+}
+
+Track::Result::ChannelData Track::Result::Modifier::copyFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
+{
+    auto const doCopy = [&](auto const& results)
+    {
+        using result_type = typename std::remove_const<typename std::remove_reference<decltype(results)>::type>::type;
+        using data_type = typename result_type::value_type::value_type;
+        std::vector<data_type> copy;
+        if(channel >= results.size())
+        {
+            return copy;
+        }
+        auto const& channelFrames = results.at(channel);
+        auto start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
+        auto const end = std::upper_bound(start, channelFrames.cend(), range.getEnd(), Result::upper_cmp<data_type>);
+        copy.reserve(static_cast<size_t>(std::distance(start, end)));
+        while(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
+        {
+            copy.push_back(*start++);
+        }
+        return copy;
+    };
+
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        showAccessWarning();
+        return {};
+    }
+    if(auto markers = results.getMarkers())
+    {
+        return doCopy(*markers);
+    }
+    if(auto points = results.getPoints())
+    {
+        return doCopy(*points);
+    }
+    if(auto columns = results.getColumns())
+    {
+        return doCopy(*columns);
+    }
+    return {};
+}
+
+Track::Result::ChannelData Track::Result::Modifier::duplicateFrames(ChannelData const& data, double const destinationTime)
+{
+    auto const doDuplicate = [&](auto const& results) -> ChannelData
+    {
+        if(results.empty())
+        {
+            return {};
+        }
+        auto const timeDifference = destinationTime - std::get<0_z>(results.front());
+        auto copy = results;
+        for(auto& frame : copy)
+        {
+            std::get<0_z>(frame) += timeDifference;
+        }
+        return copy;
+    };
+
+    if(auto const* markersData = std::get_if<std::vector<Data::Marker>>(&data))
+    {
+        return doDuplicate(*markersData);
+    }
+    else if(auto const* pointsData = std::get_if<std::vector<Data::Point>>(&data))
+    {
+        return doDuplicate(*pointsData);
+    }
+    else if(auto const* columnsData = std::get_if<std::vector<Data::Column>>(&data))
+    {
+        return doDuplicate(*columnsData);
+    }
+    return {};
+}
+
+bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, juce::String const& commit)
+{
+    auto const doErase = [&](auto& results)
+    {
+        using result_type = typename std::remove_reference<decltype(results)>::type;
+        using data_type = typename result_type::value_type::value_type;
+        if(channel >= results.size())
+        {
+            return false;
+        }
         auto& channelFrames = results[channel];
-        channelFrames.reserve(channelFrames.size() + newData.size());
-        for(auto const& range : ranges)
-        {
-            auto const start = range.getStart();
-            auto const end = range.getEnd() + 1_z;
-
-            auto const size = end - start;
-            auto const insertIt = channelFrames.begin() + static_cast<long>(start);
-            if(insertIt != channelFrames.end() && insertIt != channelFrames.begin())
-            {
-                auto const previousIt = std::prev(insertIt);
-                auto const maxDuration = std::get<0_z>(newData.at(start)) - std::get<0_z>(*previousIt);
-                MiscWeakAssert(maxDuration >= 0.0);
-                std::get<1_z>(*previousIt) = std::min(std::get<1_z>(*previousIt), maxDuration);
-            }
-            auto outputIt = channelFrames.insert(insertIt, size, {});
-            for(auto index = start; index < end; ++index, ++outputIt)
-            {
-                *outputIt = newData.at(index);
-            }
-            if(outputIt != channelFrames.end())
-            {
-                auto const previousIt = std::prev(outputIt);
-                auto const maxDuration = std::get<0_z>(*outputIt) - std::get<0_z>(*previousIt);
-                MiscWeakAssert(maxDuration >= 0.0);
-                std::get<1_z>(*previousIt) = std::min(std::get<1_z>(*previousIt), maxDuration);
-            }
-        }
+        auto const start = std::lower_bound(channelFrames.begin(), channelFrames.end(), range.getStart(), Result::lower_cmp<data_type>);
+        auto const end = std::upper_bound(start, channelFrames.end(), range.getEnd(), Result::upper_cmp<data_type>);
+        channelFrames.erase(start, end);
         return true;
     };
 
@@ -330,27 +249,15 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
         }
         if(auto markers = results.getMarkers())
         {
-            if(auto const* markersData = std::get_if<std::map<size_t, Data::Marker>>(&data))
-            {
-                return applyChange(*markers, *markersData);
-            }
-            return false;
+            return doErase(*markers);
         }
         if(auto points = results.getPoints())
         {
-            if(auto const* pointsData = std::get_if<std::map<size_t, Data::Point>>(&data))
-            {
-                return applyChange(*points, *pointsData);
-            }
-            return false;
+            return doErase(*points);
         }
         if(auto columns = results.getColumns())
         {
-            if(auto const* columnsData = std::get_if<std::map<size_t, Data::Column>>(&data))
-            {
-                return applyChange(*columns, *columnsData);
-            }
-            return false;
+            return doErase(*columns);
         }
         return false;
     };
@@ -367,41 +274,40 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
     return false;
 }
 
-bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const channel, std::set<size_t> const& indices, juce::String const& commit)
+bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, juce::String const& commit)
 {
-    if(indices.empty())
+    auto const range = getTimeRange(data);
+    auto const doInsert = [&](auto& results, auto const& newData)
     {
-        return true;
-    }
-
-    auto const applyChange = [&](auto& results)
-    {
+        if(newData.empty())
+        {
+            return true;
+        }
+        using result_type = typename std::remove_reference<decltype(results)>::type;
+        using data_type = typename result_type::value_type::value_type;
         if(channel >= results.size())
         {
             return false;
         }
-
-        std::vector<juce::Range<size_t>> ranges;
-        for(auto const& index : indices)
-        {
-            if(ranges.empty() || ranges.back().getEnd() + 1_z < index)
-            {
-                ranges.push_back({index, index});
-            }
-            else
-            {
-                ranges.back() = ranges.back().getUnionWith(index);
-            }
-        }
-
         auto& channelFrames = results[channel];
-        for(auto it = ranges.crbegin(); it != ranges.crend(); ++it)
+        // ensure the frames where the data is copied is empty
+        auto start = std::lower_bound(channelFrames.begin(), channelFrames.end(), range.getStart(), Result::lower_cmp<data_type>);
+        auto const end = std::upper_bound(start, channelFrames.end(), range.getEnd(), Result::upper_cmp<data_type>);
+        start = channelFrames.erase(start, end);
+        // inserts the new frames
+        auto const it = channelFrames.insert(start, newData.cbegin(), newData.cend());
+        // sanitize the duration of the frame before
+        auto const sanitizeDuration = [&](auto const iterator)
         {
-            auto const start = static_cast<long>(std::min(it->getStart(), channelFrames.size()));
-            auto const end = static_cast<long>(std::min(it->getEnd() + 1_z, channelFrames.size()));
-            channelFrames.erase(channelFrames.begin() + start, channelFrames.begin() + end);
-        }
-        return !ranges.empty();
+            if(iterator != channelFrames.begin())
+            {
+                auto previous = std::prev(iterator);
+                std::get<1_z>(*previous) = std::min(std::get<1_z>(*previous), std::get<0_z>(*iterator) - std::get<0_z>(*previous));
+            }
+        };
+        sanitizeDuration(it);
+        sanitizeDuration(std::next(it, static_cast<long>(newData.size())));
+        return true;
     };
 
     auto const getAccessAndParse = [&](auto& results)
@@ -414,15 +320,27 @@ bool Track::Result::Modifier::eraseFrames(Accessor& accessor, size_t const chann
         }
         if(auto markers = results.getMarkers())
         {
-            return applyChange(*markers);
+            if(auto const* markersData = std::get_if<std::vector<Data::Marker>>(&data))
+            {
+                return doInsert(*markers, *markersData);
+            }
+            return false;
         }
         if(auto points = results.getPoints())
         {
-            return applyChange(*points);
+            if(auto const* pointsData = std::get_if<std::vector<Data::Point>>(&data))
+            {
+                return doInsert(*points, *pointsData);
+            }
+            return false;
         }
         if(auto columns = results.getColumns())
         {
-            return applyChange(*columns);
+            if(auto const* columnsData = std::get_if<std::vector<Data::Column>>(&data))
+            {
+                return doInsert(*columns, *columnsData);
+            }
+            return false;
         }
         return false;
     };
@@ -447,21 +365,15 @@ Track::Result::Modifier::ActionBase::ActionBase(std::function<Accessor&()> fn, s
 {
 }
 
-Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, std::set<size_t> const& indices)
-: ActionBase(fn, channel)
-, mSavedData(copyFrames(mGetAccessorFn(), channel, indices))
-{
-}
-
 Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection)
 : ActionBase(fn, channel)
-, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, selection)))
+, mSavedData(copyFrames(mGetAccessorFn(), channel, selection))
 {
 }
 
 bool Track::Result::Modifier::ActionErase::perform()
 {
-    if(eraseFrames(mGetAccessorFn(), mChannel, getIndices(mSavedData), mNewCommit))
+    if(eraseFrames(mGetAccessorFn(), mChannel, getTimeRange(mSavedData), mNewCommit))
     {
         return true;
     }
@@ -479,46 +391,28 @@ bool Track::Result::Modifier::ActionErase::undo()
     return false;
 }
 
-Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, double origin, CopiedData const& data, double destination)
+Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, ChannelData const& data, double destination)
 : ActionBase(fn, channel)
-, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, getTimeRange(data).movedToStartAt(destination))))
-, mCopyIndex(getIndex(mGetAccessorFn(), channel, destination))
-, mCopiedData(duplicateFrames(data, origin, mCopyIndex.value_or(0_z), destination))
-{
-}
-
-Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, CopiedData const& data, double destination)
-: ActionBase(fn, channel)
-, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, getTimeRange(data).movedToStartAt(destination))))
-, mCopyIndex(getIndex(mGetAccessorFn(), channel, destination))
-, mCopiedData(duplicateFrames(data, getTimeRange(data).getStart(), mCopyIndex.value_or(0_z), destination))
+, mSavedData(copyFrames(mGetAccessorFn(), channel, getTimeRange(data).movedToStartAt(destination)))
+, mChannelData(duplicateFrames(data, destination))
 {
 }
 
 bool Track::Result::Modifier::ActionPaste::perform()
 {
     auto& accessor = mGetAccessorFn();
-    if(eraseFrames(accessor, mChannel, getIndices(mSavedData), mNewCommit))
+    if(insertFrames(accessor, mChannel, mChannelData, mNewCommit))
     {
-        if(insertFrames(accessor, mChannel, mCopiedData, mNewCommit))
-        {
-            return true;
-        }
-        else
-        {
-            if(!insertFrames(accessor, mChannel, mSavedData, mCurrentCommit))
-            {
-                MiscWeakAssert(false);
-            }
-        }
+        return true;
     }
+    MiscWeakAssert(false);
     return false;
 }
 
 bool Track::Result::Modifier::ActionPaste::undo()
 {
     auto& accessor = mGetAccessorFn();
-    if(eraseFrames(accessor, mChannel, getIndices(mCopiedData), mCurrentCommit))
+    if(eraseFrames(accessor, mChannel, getTimeRange(mChannelData), mCurrentCommit))
     {
         if(insertFrames(accessor, mChannel, mSavedData, mCurrentCommit))
         {
@@ -527,7 +421,7 @@ bool Track::Result::Modifier::ActionPaste::undo()
         else
         {
             MiscWeakAssert(false);
-            if(!insertFrames(accessor, mChannel, mCopiedData, mNewCommit))
+            if(!insertFrames(accessor, mChannel, mChannelData, mNewCommit))
             {
                 MiscWeakAssert(false);
             }

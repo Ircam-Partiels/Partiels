@@ -10,18 +10,15 @@ namespace Track
     {
         namespace Modifier
         {
-            using CopiedData = std::variant<std::map<size_t, Data::Marker>, std::map<size_t, Data::Point>, std::map<size_t, Data::Column>>;
-
-            std::set<size_t> getIndices(CopiedData const& data);
-            juce::Range<double> getTimeRange(CopiedData const& data);
-            CopiedData duplicateFrames(CopiedData const& data, double const originalTime, size_t destinationIndex, double destinationTime);
-
+            juce::Range<double> getTimeRange(ChannelData const& data);
             std::optional<double> getTime(Accessor const& accessor, size_t const channel, size_t index);
-            std::optional<size_t> getIndex(Accessor const& accessor, size_t const channel, double time);
-            std::set<size_t> getIndices(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
-            CopiedData copyFrames(Accessor const& accessor, size_t const channel, std::set<size_t> const& indices);
-            bool insertFrames(Accessor& accessor, size_t const channel, CopiedData const& data, juce::String const& commit);
-            bool eraseFrames(Accessor& accessor, size_t const channel, std::set<size_t> const& indices, juce::String const& commit);
+
+            bool isEmpty(ChannelData const& data);
+            bool containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
+            ChannelData copyFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
+            ChannelData duplicateFrames(ChannelData const& data, double const destinationTime);
+            bool eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, juce::String const& commit);
+            bool insertFrames(Accessor& accessor, size_t const channel, ChannelData const& data, juce::String const& commit);
 
             template <int D, typename T>
             bool updateFrame(Accessor& accessor, size_t const channel, size_t const index, juce::String const& commit, T const fn)
@@ -108,7 +105,6 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionErase(std::function<Accessor&()> fn, size_t const channel, std::set<size_t> const& indices);
                 ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection);
                 ~ActionErase() override = default;
 
@@ -117,15 +113,14 @@ namespace Track
                 bool undo() override;
 
             private:
-                Modifier::CopiedData const mSavedData;
+                ChannelData const mSavedData;
             };
 
             class ActionPaste
             : public ActionBase
             {
             public:
-                ActionPaste(std::function<Accessor&()> fn, size_t const channel, double origin, CopiedData const& data, double destination);
-                ActionPaste(std::function<Accessor&()> fn, size_t const channel, CopiedData const& data, double destination);
+                ActionPaste(std::function<Accessor&()> fn, size_t const channel, ChannelData const& data, double destination);
                 ~ActionPaste() override = default;
 
                 // juce::UndoableAction
@@ -133,9 +128,8 @@ namespace Track
                 bool undo() override;
 
             private:
-                Modifier::CopiedData const mSavedData;
-                std::optional<size_t> const mCopyIndex;
-                Modifier::CopiedData const mCopiedData;
+                ChannelData const mSavedData;
+                ChannelData const mChannelData;
             };
 
             class FocusRestorer

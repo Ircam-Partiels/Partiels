@@ -562,12 +562,12 @@ void Track::Result::Table::selectedRowsChanged(int lastRowSelected)
     }
 
     auto const range = mTable.getSelectedRows().getTotalRange();
-    auto const selectionStart = Modifier::getTime(mAccessor, *channel, static_cast<size_t>(range.getStart()));
+    auto const selectionStart = Modifier::getTime(mAccessor, channel.value(), static_cast<size_t>(range.getStart()));
     if(selectionStart.has_value())
     {
-        auto const selectionEnd = Modifier::getTime(mAccessor, *channel, static_cast<size_t>(range.getEnd()));
+        auto const selectionEnd = Modifier::getTime(mAccessor, channel.value(), static_cast<size_t>(std::max(range.getStart(), range.getEnd() - 1)));
         auto const globalRange = mTimeZoomAccessor.getAttr<Zoom::AttrType::globalRange>();
-        juce::Range<double> const selection{*selectionStart, selectionEnd.has_value() ? *selectionEnd : globalRange.getEnd()};
+        juce::Range<double> const selection{*selectionStart, selectionEnd.has_value() ? selectionEnd.value() + std::numeric_limits<double>::epsilon() : globalRange.getEnd()};
         mTransportAccessor.setAttr<Transport::AttrType::selection>(selection, NotificationType::synchronous);
     }
 
@@ -672,7 +672,46 @@ std::optional<size_t> Track::Result::Table::getPlayheadRow() const
     }
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    return Modifier::getIndex(mAccessor, *channel, time);
+    auto const doGetIndex = [&](auto const& results) -> std::optional<size_t>
+    {
+        if(channel.value() >= results.size())
+        {
+            return {};
+        }
+        auto const& channelFrames = results.at(channel.value());
+        if(channelFrames.empty())
+        {
+            return {};
+        }
+        using result_type = typename std::remove_const<typename std::remove_reference<decltype(channelFrames)>::type>::type;
+        using data_type = typename result_type::value_type;
+        auto const start = std::prev(std::upper_bound(std::next(channelFrames.cbegin()), channelFrames.cend(), time, Result::upper_cmp<data_type>));
+        if(start == channelFrames.cend())
+        {
+            return {};
+        }
+        return static_cast<size_t>(std::distance(channelFrames.cbegin(), start));
+    };
+
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return {};
+    }
+    if(auto markers = results.getMarkers())
+    {
+        return doGetIndex(*markers);
+    }
+    if(auto points = results.getPoints())
+    {
+        return doGetIndex(*points);
+    }
+    if(auto columns = results.getColumns())
+    {
+        return doGetIndex(*columns);
+    }
+    return {};
 }
 
 bool Track::Result::Table::deleteSelection()
@@ -715,13 +754,12 @@ bool Track::Result::Table::copySelection()
     }
 
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
-    auto const indices = Modifier::getIndices(mAccessor, *channel, selection);
-    if(indices.empty())
+    auto copy = Modifier::copyFrames(mAccessor, channel.value(), selection);
+    if(Modifier::isEmpty(copy))
     {
         return false;
     }
-    mCopiedData = Modifier::copyFrames(mAccessor, *channel, indices);
-    mCopiedSelection = selection;
+    mChannelData = std::move(copy);
     return true;
 }
 
@@ -747,17 +785,16 @@ bool Track::Result::Table::pasteSelection()
         return false;
     }
 
-    auto const indices = Result::Modifier::getIndices(mCopiedData);
-    if(indices.empty())
+    if(Modifier::isEmpty(mChannelData))
     {
-        return true;
+        return false;
     }
 
     auto& undoManager = mDirector.getUndoManager();
     auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
     undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mCopiedData, playhead).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mChannelData, playhead).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection).release());
@@ -783,18 +820,19 @@ bool Track::Result::Table::duplicateSelection()
     {
         return false;
     }
-    auto const indices = Result::Modifier::getIndices(mCopiedData);
-    if(indices.empty())
+
+    if(Modifier::isEmpty(mChannelData))
     {
-        return true;
+        return false;
     }
 
     auto& undoManager = mDirector.getUndoManager();
-    mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(mCopiedSelection.getEnd(), NotificationType::synchronous);
+    auto const copyRange = Modifier::getTimeRange(mChannelData);
+    mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(copyRange.getEnd(), NotificationType::synchronous);
     auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
     undoManager.beginNewTransaction(juce::translate("Duplicate Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mCopiedData, mCopiedSelection.getEnd()).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), channel.value(), mChannelData, copyRange.getEnd()).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection.movedToStartAt(playhead)).release());
@@ -810,13 +848,55 @@ void Track::Result::Table::selectionUpdated()
     {
         return;
     }
-    auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
-    auto const indices = Modifier::getIndices(mAccessor, *channel, selection);
+
     juce::SparseSet<int> set;
-    if(!indices.empty())
+    auto const fillSet = [&]()
     {
-        set.addRange({static_cast<int>(*indices.cbegin()), static_cast<int>(*indices.crbegin()) + 1});
-    }
+        auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+        auto const doFillSet = [&](auto const& results)
+        {
+            if(channel.value() >= results.size())
+            {
+                return;
+            }
+            auto const& channelFrames = results.at(channel.value());
+            if(channelFrames.empty())
+            {
+                return;
+            }
+            using result_type = typename std::remove_const<typename std::remove_reference<decltype(channelFrames)>::type>::type;
+            using data_type = typename result_type::value_type;
+            auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), selection.getStart(), Result::lower_cmp<data_type>);
+            if(start == channelFrames.cend() || std::get<0_z>(*start) > selection.getEnd())
+            {
+                return;
+            }
+            auto const end = std::prev(std::upper_bound(std::next(start), channelFrames.cend(), selection.getEnd(), Result::upper_cmp<data_type>));
+            auto const first = std::distance(channelFrames.cbegin(), start);
+            auto const last = first + std::distance(start, end);
+            set.addRange({static_cast<int>(first), static_cast<int>(last) + 1});
+        };
+
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        auto const access = results.getReadAccess();
+        if(!static_cast<bool>(access))
+        {
+            return;
+        }
+        if(auto markers = results.getMarkers())
+        {
+            doFillSet(*markers);
+        }
+        if(auto points = results.getPoints())
+        {
+            doFillSet(*points);
+        }
+        if(auto columns = results.getColumns())
+        {
+            doFillSet(*columns);
+        }
+    };
+    fillSet();
     mTable.setSelectedRows(set, juce::NotificationType::dontSendNotification);
     mTable.repaint();
 }

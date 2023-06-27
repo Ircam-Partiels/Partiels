@@ -84,8 +84,7 @@ namespace Track
             juce::TabbedButtonBar mTabbedButtonBar{juce::TabbedButtonBar::Orientation::TabsAtBottom};
             ColouredPanel mSeparator;
             juce::TableListBox mTable;
-            Modifier::CopiedData mCopiedData;
-            juce::Range<double> mCopiedSelection;
+            ChannelData mChannelData;
             std::optional<size_t> mPreviousPlayheadRow;
 
             JUCE_LEAK_DETECTOR(Table)
