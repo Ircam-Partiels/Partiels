@@ -780,23 +780,35 @@ public:
     void runTest() override
     {
         using namespace Track::Result;
-        beginTest("findFirstAt");
+        // clang-format off
+        Data::Markers markers
         {
-            // clang-format off
-            Data::Markers markers
-            {
-                  {8.015293423, 0.0, "John"}
-                , {8.421642629, 0.0, "Jimi"}
-                , {8.816381858, 0.0, "James"}
-            };
-            // clang-format on
-            expect(Data::findFirstAt(markers, 0.0) == markers.cbegin());
-            expect(Data::findFirstAt(markers, 8.015293423) == markers.cbegin());
-            expect(Data::findFirstAt(markers, 8.1) == markers.cbegin());
-            expect(Data::findFirstAt(markers, 8.421642629) == std::next(markers.cbegin(), 1l));
-            expect(Data::findFirstAt(markers, 8.5) == std::next(markers.cbegin(), 1l));
-            expect(Data::findFirstAt(markers, 8.816381858) == std::next(markers.cbegin(), 2l));
-            expect(Data::findFirstAt(markers, 8.9) == std::next(markers.cbegin(), 2l));
+              {8.015293423, 0.0, "John"}
+            , {8.421642629, 0.0, "Jimi"}
+            , {8.816381858, 0.0, "James"}
+        };
+        // clang-format on
+
+        beginTest("lower_bounds");
+        {
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 0.0, lower_cmp<Data::Marker>) == markers.cbegin());
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 8.015293423, lower_cmp<Data::Marker>) == markers.cbegin());
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 8.1, lower_cmp<Data::Marker>) == std::next(markers.cbegin(), 1l));
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 8.421642629, lower_cmp<Data::Marker>) == std::next(markers.cbegin(), 1l));
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 8.5, lower_cmp<Data::Marker>) == std::next(markers.cbegin(), 2l));
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 8.816381858, lower_cmp<Data::Marker>) == std::next(markers.cbegin(), 2l));
+            expect(std::lower_bound(markers.cbegin(), markers.cend(), 8.9, lower_cmp<Data::Marker>) == markers.cend());
+        }
+
+        beginTest("upper_bounds");
+        {
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 0.0, upper_cmp<Data::Marker>) == markers.cbegin());
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 8.015293423, upper_cmp<Data::Marker>) == std::next(markers.cbegin(), 1l));
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 8.1, upper_cmp<Data::Marker>) == std::next(markers.cbegin(), 1l));
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 8.421642629, upper_cmp<Data::Marker>) == std::next(markers.cbegin(), 2l));
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 8.5, upper_cmp<Data::Marker>) == std::next(markers.cbegin(), 2l));
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 8.816381858, upper_cmp<Data::Marker>) == markers.cend());
+            expect(std::upper_bound(markers.cbegin(), markers.cend(), 8.9, upper_cmp<Data::Marker>) == markers.cend());
         }
     }
 };
