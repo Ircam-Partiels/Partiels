@@ -7,19 +7,10 @@ namespace
     template <typename T>
     typename T::const_iterator findFirstIteratorAt(T const& results, double time)
     {
-        if(results.empty())
-        {
-            return results.cend();
-        }
-        auto const it = std::upper_bound(results.cbegin(), results.cend(), time, [](auto const& t, auto const& result)
-                                         {
-                                             return t < std::get<0_z>(result);
-                                         });
-        if(it == results.cbegin())
-        {
-            return it;
-        }
-        return std::prev(it);
+        return std::lower_bound(results.cbegin(), results.cend(), time, [](auto const& result, auto const& t)
+                                {
+                                    return std::get<0_z>(result) < t;
+                                });
     }
 
     static std::optional<Zoom::Range> getValueRange(std::vector<Track::Result::Data::Points> const& results)
