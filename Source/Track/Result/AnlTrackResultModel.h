@@ -89,10 +89,6 @@ namespace Track
 
             bool matchWithEpsilon(Data const& other, double timeEpsilon, float valueEpsilon) const;
 
-            static Markers::const_iterator findFirstAt(Markers const& results, double time);
-            static Points::const_iterator findFirstAt(Points const& results, double time);
-            static Columns::const_iterator findFirstAt(Columns const& results, double time);
-
             static std::optional<std::string> getValue(std::shared_ptr<const std::vector<Markers>> results, size_t channel, double time);
             static std::optional<float> getValue(std::shared_ptr<const std::vector<Points>> results, size_t channel, double time);
             static std::optional<float> getValue(std::shared_ptr<const std::vector<Columns>> results, size_t channel, double time, size_t bin);

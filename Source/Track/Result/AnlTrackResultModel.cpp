@@ -683,21 +683,6 @@ std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<C
     return column[bin];
 }
 
-Track::Result::Data::Markers::const_iterator Track::Result::Data::findFirstAt(Markers const& results, double time)
-{
-    return std::lower_bound(results.cbegin(), results.cend(), time, lower_cmp<Marker>);
-}
-
-Track::Result::Data::Points::const_iterator Track::Result::Data::findFirstAt(Points const& results, double time)
-{
-    return std::lower_bound(results.cbegin(), results.cend(), time, lower_cmp<Point>);
-}
-
-Track::Result::Data::Columns::const_iterator Track::Result::Data::findFirstAt(Columns const& results, double time)
-{
-    return std::lower_bound(results.cbegin(), results.cend(), time, lower_cmp<Column>);
-}
-
 Track::Result::File::File(juce::File const& f, juce::StringPairArray const& a, nlohmann::json const& e, juce::String const& c)
 : file(f)
 , args(a)
