@@ -186,28 +186,13 @@ std::set<size_t> Track::Result::Modifier::getIndices(Accessor const& accessor, s
 {
     auto const generateIndices = [&](auto const& results) -> std::set<size_t>
     {
-        if(channel >= results.size())
-        {
-            return {};
-        }
-        auto& channelFrames = results.at(channel);
-        auto start = Result::Data::findFirstAt(channelFrames, range.getStart());
-        if(start != channelFrames.cend() && std::get<0_z>(*start) < range.getStart())
-        {
-            start = std::next(start);
-        }
-        if(start == channelFrames.cend())
-        {
-            return {};
-        }
+        auto const& channelFrames = results.at(channel);
+        using result_type = typename std::remove_const<typename std::remove_reference<decltype(channelFrames)>::type>::type;
+        using data_type = typename result_type::value_type;
+        auto start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
         std::set<size_t> indices;
         auto position = static_cast<size_t>(std::distance(channelFrames.cbegin(), start));
-        auto end = Result::Data::findFirstAt(channelFrames, range.getEnd());
-        if(end != channelFrames.cend() && std::get<0_z>(*end) < range.getEnd())
-        {
-            end = std::next(end);
-        }
-        while(start != end)
+        while(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
         {
             indices.insert(position++);
             start = std::next(start);
