@@ -120,6 +120,23 @@ namespace Track
             bool isEmpty() const noexcept;
         };
 
+        template <class T>
+        concept data = std::is_same_v<T, Data::Marker> || std::is_same_v<T, Data::Point> || std::is_same_v<T, Data::Column>;
+
+        template <typename T>
+            requires data<T>
+        static bool lower_cmp(T const& value, double const time)
+        {
+            return std::get<0_z>(value) < time;
+        }
+
+        template <typename T>
+            requires data<T>
+        static bool upper_cmp(double const time, T const& value)
+        {
+            return time < std::get<0_z>(value);
+        }
+
         void to_json(nlohmann::json& j, File const& file);
         void from_json(nlohmann::json const& j, File& file);
     } // namespace Result
