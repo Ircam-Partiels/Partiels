@@ -12,9 +12,8 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
                       updateContent();
                   })
 {
-    mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
+    mTrackListener.onAttrChanged = [this]([[maybe_unused]] Track::Accessor const& acsr, Track::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Track::AttrType::identifier:
@@ -46,9 +45,8 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
         }
     };
 
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
@@ -65,7 +63,6 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
 
     mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Transport::AttrType::startPlayhead:
@@ -97,15 +94,13 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
         }
     };
 
-    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    mGridListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Grid::Accessor const& acsr, [[maybe_unused]] Zoom::Grid::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         repaint();
     };
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
