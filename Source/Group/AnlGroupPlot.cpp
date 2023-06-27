@@ -15,9 +15,8 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
     juce::ignoreUnused(mAccessor);
     juce::ignoreUnused(mTransportAccessor);
 
-    mTrackListener.onAttrChanged = [this](Track::Accessor const& acsr, Track::AttrType attribute)
+    mTrackListener.onAttrChanged = [this]([[maybe_unused]] Track::Accessor const& acsr, Track::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Track::AttrType::identifier:
@@ -49,9 +48,8 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
         }
     };
 
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
@@ -66,9 +64,8 @@ Group::Plot::Plot(Accessor& accessor, Transport::Accessor& transportAcsr, Zoom::
         }
     };
 
-    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    mGridListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Grid::Accessor const& acsr, [[maybe_unused]] Zoom::Grid::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         repaint();
     };
 
