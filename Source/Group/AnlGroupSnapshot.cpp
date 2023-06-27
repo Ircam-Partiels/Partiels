@@ -32,6 +32,7 @@ Group::Snapshot::Snapshot(Accessor& accessor, Transport::Accessor& transportAcsr
                 break;
             case Track::AttrType::grid:
             case Track::AttrType::results:
+            case Track::AttrType::edit:
             case Track::AttrType::graphics:
             case Track::AttrType::colours:
             case Track::AttrType::font:

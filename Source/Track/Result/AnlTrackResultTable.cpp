@@ -27,6 +27,7 @@ Track::Result::Table::WindowContainer::WindowContainer(Result::Table& table)
             break;
             case AttrType::file:
             case AttrType::results:
+            case AttrType::edit:
             case AttrType::key:
             case AttrType::input:
             case AttrType::description:
@@ -76,7 +77,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::unit:
             {
                 mTabbedButtonBar.removeChangeListener(this);
-                auto setNumChannels = [this](auto resultPtr)
+                auto const setNumChannels = [this](auto resultPtr)
                 {
                     auto const numChannels = resultPtr != nullptr ? static_cast<int>(resultPtr->size()) : 0;
                     auto const channel = getSelectedChannel();
@@ -130,6 +131,7 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                 selectionUpdated();
             }
             break;
+            case AttrType::edit:
             case AttrType::key:
             case AttrType::input:
             case AttrType::state:

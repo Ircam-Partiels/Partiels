@@ -349,6 +349,7 @@ Track::PropertyGraphicalSection::PropertyGraphicalSection(Director& director)
                 mPropertyShowInGroup.entry.setToggleState(acsr.getAttr<AttrType::showInGroup>(), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::edit:
             case AttrType::name:
             case AttrType::key:
             case AttrType::input:

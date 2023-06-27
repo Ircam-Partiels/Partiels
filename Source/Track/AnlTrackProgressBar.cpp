@@ -80,6 +80,7 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                 repaint();
             }
             break;
+            case AttrType::edit:
             case AttrType::key:
             case AttrType::input:
             case AttrType::description:

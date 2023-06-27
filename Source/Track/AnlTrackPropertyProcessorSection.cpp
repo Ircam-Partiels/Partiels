@@ -195,6 +195,7 @@ Track::PropertyProcessorSection::PropertyProcessorSection(Director& director)
             }
             break;
             case AttrType::results:
+            case AttrType::edit:
             case AttrType::name:
             case AttrType::graphics:
             case AttrType::processing:

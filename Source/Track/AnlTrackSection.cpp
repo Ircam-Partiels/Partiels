@@ -20,6 +20,7 @@ Track::Section::Section(Director& director, Zoom::Accessor& timeZoomAcsr, Transp
             case AttrType::input:
             case AttrType::description:
             case AttrType::results:
+            case AttrType::edit:
             case AttrType::state:
             case AttrType::colours:
             case AttrType::font:

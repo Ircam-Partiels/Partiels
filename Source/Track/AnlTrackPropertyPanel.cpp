@@ -43,6 +43,7 @@ Track::PropertyPanel::PropertyPanel(Director& director)
             case AttrType::description:
             case AttrType::file:
             case AttrType::results:
+            case AttrType::edit:
             case AttrType::state:
             case AttrType::graphics:
             case AttrType::processing:

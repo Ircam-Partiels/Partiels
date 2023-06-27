@@ -142,6 +142,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 }
             }
             break;
+            case AttrType::edit:
             case AttrType::graphics:
             case AttrType::height:
                 break;

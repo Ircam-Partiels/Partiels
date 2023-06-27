@@ -40,6 +40,7 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::state:
             case AttrType::file:
             case AttrType::results:
+            case AttrType::edit:
             case AttrType::graphics:
             case AttrType::identifier:
             case AttrType::height:

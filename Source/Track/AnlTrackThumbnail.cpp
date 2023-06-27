@@ -78,6 +78,7 @@ Track::Thumbnail::Thumbnail(Director& director, Zoom::Accessor& timeZoomAccessor
             case AttrType::input:
             case AttrType::state:
             case AttrType::results:
+            case AttrType::edit:
             case AttrType::graphics:
             case AttrType::identifier:
             case AttrType::height:
