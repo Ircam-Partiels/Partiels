@@ -153,17 +153,11 @@ std::optional<size_t> Track::Result::Modifier::getIndex(Accessor const& accessor
 {
     auto const findIndex = [&](auto const& results) -> std::optional<size_t>
     {
-        if(channel >= results.size())
-        {
-            return {};
-        }
-        auto& channelFrames = results.at(channel);
-        auto start = Result::Data::findFirstAt(channelFrames, time);
-        if(start == channelFrames.cend())
-        {
-            return channelFrames.size();
-        }
-        return static_cast<size_t>(std::distance(channelFrames.cbegin(), std::get<0_z>(*start) < time ? std::next(start) : start));
+        auto const& channelFrames = results.at(channel);
+        using result_type = typename std::remove_const<typename std::remove_reference<decltype(channelFrames)>::type>::type;
+        using data_type = typename result_type::value_type;
+        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), time, Result::lower_cmp<data_type>);
+        return static_cast<size_t>(std::distance(channelFrames.cbegin(), start));
     };
 
     auto const& results = accessor.getAttr<AttrType::results>();
