@@ -24,6 +24,25 @@ namespace Track
     using ColourMap = tinycolormap::ColormapType;
     using FocusInfo = std::bitset<static_cast<size_t>(512)>;
 
+    struct Edition
+    {
+        size_t channel;
+        Result::ChannelData data;
+        juce::Range<double> range;
+
+        inline bool operator==(Edition const& rhd) const noexcept
+        {
+            return channel == rhd.channel &&
+                   data == rhd.data &&
+                   range == rhd.range;
+        }
+
+        inline bool operator!=(Edition const& rhd) const noexcept
+        {
+            return !(*this == rhd);
+        }
+    };
+
     struct ColourSet
     {
         ColourMap map = ColourMap::Inferno;
@@ -73,6 +92,7 @@ namespace Track
         , name
         , file
         , results
+        , edit
         , key
         , input
         , description
@@ -111,6 +131,7 @@ namespace Track
     , Model::Attr<AttrType::name, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::file, FileInfo, Model::Flag::basic>
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
+    , Model::Attr<AttrType::edit, Edition, Model::Flag::notifying>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::input, juce::String, Model::Flag::basic>
     , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
@@ -149,6 +170,7 @@ namespace Track
         Accessor()
         : Accessor(AttrContainer(  {""}
                                  , {""}
+                                 , {}
                                  , {}
                                  , {}
                                  , {}
