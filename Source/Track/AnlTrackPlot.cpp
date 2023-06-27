@@ -121,9 +121,8 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
 , mTransportAccessor(transportAccessor)
 {
     setInterceptsMouseClicks(false, false);
-    mListener.onAttrChanged = [=, this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [=, this]([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::identifier:
@@ -155,9 +154,8 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
         }
     };
 
-    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    mZoomListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Accessor const& acsr, Zoom::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Zoom::AttrType::globalRange:
@@ -172,9 +170,8 @@ Track::Plot::Plot(Director& director, Zoom::Accessor& timeZoomAccessor, Transpor
         }
     };
 
-    mGridListener.onAttrChanged = [this](Zoom::Grid::Accessor const& acsr, Zoom::Grid::AttrType attribute)
+    mGridListener.onAttrChanged = [this]([[maybe_unused]] Zoom::Grid::Accessor const& acsr, [[maybe_unused]] Zoom::Grid::AttrType attribute)
     {
-        juce::ignoreUnused(acsr, attribute);
         repaint();
     };
 
