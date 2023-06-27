@@ -230,11 +230,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 addColumn("LABEL");
                 addLine();
             }
-            auto it = Results::findFirstAt(channelMarkers, timeRange.getStart());
-            if(it != channelMarkers.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
+            auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
             while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -268,11 +264,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 addColumn("VALUE");
                 addLine();
             }
-            auto it = Results::findFirstAt(channelPoints, timeRange.getStart());
-            if(it != channelPoints.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
+            auto it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
             while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -318,11 +310,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                 addLine();
             }
 
-            auto it = Results::findFirstAt(channelColumns, timeRange.getStart());
-            if(it != channelColumns.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
+            auto it = std::lower_bound(channelColumns.cbegin(), channelColumns.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
             while(it != channelColumns.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -456,11 +444,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                 }
 
                 nlohmann::json cjson;
-                auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-                if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-                {
-                    ++it;
-                }
+                auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
                 while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
                 {
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -494,11 +478,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                 }
 
                 nlohmann::json cjson;
-                auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-                if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-                {
-                    ++it;
-                }
+                auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
                 while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
                 {
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -527,11 +507,7 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
             {
                 auto const& channelResults = columns->at(channelIndex);
                 nlohmann::json cjson;
-                auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-                if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-                {
-                    ++it;
-                }
+                auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
                 while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
                 {
                     MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -674,11 +650,7 @@ juce::Result Track::Exporter::toCue(Accessor const& accessor, Zoom::Range timeRa
 
         auto const& channelResults = markers->at(channelIndex);
         stream << "TITLE CHANNEL_" << to2Digits(static_cast<int>(channelIndex)) << "\n";
-        auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-        if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-        {
-            ++it;
-        }
+        auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
         auto frameIndex = std::distance(channelResults.cbegin(), it);
         while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
         {
@@ -792,11 +764,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
 
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
+            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
             while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -821,11 +789,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
 
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
+            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
             while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
@@ -849,11 +813,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
         {
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
             stream.write(reinterpret_cast<char const*>(&numChannels), sizeof(numChannels));
-            auto it = Results::findFirstAt(channelResults, timeRange.getStart());
-            if(it != channelResults.cend() && std::get<0_z>(*it) < timeRange.getStart())
-            {
-                ++it;
-            }
+            auto it = std::lower_bound(channelResults.cbegin(), channelResults.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
             while(it != channelResults.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
                 MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
