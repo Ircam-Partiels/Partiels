@@ -607,63 +607,75 @@ bool Track::Result::Data::matchWithEpsilon(Data const& other, double timeEpsilon
 
 std::optional<std::string> Track::Result::Data::getValue(std::shared_ptr<std::vector<Markers> const> results, size_t channel, double time)
 {
-    if(results == nullptr || results->size() <= channel || results->at(channel).empty())
+    if(results == nullptr || results->size() <= channel)
     {
         return {};
     }
     auto const& channelResults = results->at(channel);
-    auto const it = findFirstAt(channelResults, time);
-    if(it != channelResults.cend() && std::get<0>(*it) <= time)
+    if(channelResults.empty())
     {
-        return std::get<2>(*it);
+        return {};
     }
-    return {};
+    auto const it = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, upper_cmp<Marker>);
+    if(it == channelResults.cbegin())
+    {
+        return {};
+    }
+    return std::get<2_z>(*std::prev(it));
 }
 
 std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<Points> const> results, size_t channel, double time)
 {
-    if(results == nullptr || results->size() <= channel || results->at(channel).empty())
+    if(results == nullptr || results->size() <= channel)
     {
         return {};
     }
     auto const& channelResults = results->at(channel);
-    auto const first = findFirstAt(channelResults, time);
-    if(first == channelResults.cend() || std::get<0>(*first) > time)
+    if(channelResults.empty())
     {
         return {};
     }
-    auto const second = std::next(first);
+    auto const second = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, upper_cmp<Point>);
+    if(second == channelResults.cbegin())
+    {
+        return {};
+    }
+    auto const first = std::prev(second);
     auto const end = std::get<0_z>(*first) + std::get<1_z>(*first);
-    if(second == channelResults.cend() || time < end || !std::get<2>(*second).has_value())
+    if(second == channelResults.cend() || time < end || !std::get<2_z>(*second).has_value())
     {
         return std::get<2_z>(*first);
     }
     auto const next = std::get<0>(*second);
-    if((next - end) < std::numeric_limits<double>::epsilon() || !std::get<2>(*first).has_value())
+    if((next - end) < std::numeric_limits<double>::epsilon() || !std::get<2_z>(*first).has_value())
     {
         return std::get<2_z>(*second);
     }
     auto const ratio = std::max(std::min((time - end) / (next - end), 1.0), 0.0);
     if(std::isnan(ratio) || !std::isfinite(ratio)) // Extra check in case (next - end) < std::numeric_limits<double>::epsilon()
     {
-        return std::get<2>(*second);
+        return std::get<2_z>(*second);
     }
     return (1.0 - ratio) * *std::get<2_z>(*first) + ratio * *std::get<2_z>(*second);
 }
 
 std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<Columns> const> results, size_t channel, double time, size_t bin)
 {
-    if(results == nullptr || results->size() <= channel || results->at(channel).empty())
+    if(results == nullptr || results->size() <= channel)
     {
         return {};
     }
     auto const& channelResults = results->at(channel);
-    auto const it = findFirstAt(channelResults, time);
-    if(it == channelResults.cend() || std::get<0>(*it) > time || std::get<2>(*it).empty())
+    if(channelResults.empty())
     {
         return {};
     }
-    auto const& column = std::get<2>(*it);
+    auto const it = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, upper_cmp<Column>);
+    if(it == channelResults.cbegin())
+    {
+        return {};
+    }
+    auto const& column = std::get<2_z>(*std::prev(it));
     if(bin >= column.size())
     {
         return {};
