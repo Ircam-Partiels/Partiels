@@ -362,8 +362,12 @@ void Track::Plot::paintMarkers(Accessor const& accessor, size_t channel, juce::G
     auto const height = fbounds.getHeight();
 
     auto const& channelResults = markers->at(channel);
-    auto it = Results::findFirstAt(channelResults, clipTimeStart);
-    auto expectedEnd = Results::findFirstAt(channelResults, clipTimeEnd);
+    if(channelResults.empty())
+    {
+        return;
+    }
+    auto it = std::prev(std::lower_bound(std::next(channelResults.cbegin()), channelResults.cend(), clipTimeStart, Result::lower_cmp<Results::Marker>));
+    auto expectedEnd = std::upper_bound(it, channelResults.cend(), clipTimeEnd, Result::upper_cmp<Results::Marker>);
     auto const numElements = std::distance(it, expectedEnd);
     ticks.ensureStorageAllocated(static_cast<int>(numElements) + 1);
     durations.ensureStorageAllocated(static_cast<int>(numElements) + 1);
@@ -519,6 +523,10 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
     LabelArrangement labelArr(font, unit, getNumDecimals());
 
     auto const& channelResults = points->at(channel);
+    if(channelResults.empty())
+    {
+        return;
+    }
     if(channelResults.size() == 1_z)
     {
         if(std::get<2>(channelResults[0]).has_value())
@@ -545,12 +553,7 @@ void Track::Plot::paintPoints(Accessor const& accessor, size_t channel, juce::Gr
         return;
     }
 
-    auto it = Results::findFirstAt(channelResults, clipTimeStart);
-    if(it != channelResults.cbegin())
-    {
-        it = std::prev(it);
-    }
-
+    auto it = std::prev(std::lower_bound(std::next(channelResults.cbegin()), channelResults.cend(), clipTimeStart, Result::lower_cmp<Results::Point>));
     // Time distance corresponding to epsilon pixels
     auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
 
