@@ -74,7 +74,7 @@ juce::Range<double> Track::Result::Modifier::getTimeRange(CopiedData const& data
     }
 }
 
-Track::Result::Modifier::CopiedData Track::Result::Modifier::duplicateFrames(CopiedData const& data, juce::Range<double> const& range, size_t destinationIndex, double destinationTime)
+Track::Result::Modifier::CopiedData Track::Result::Modifier::duplicateFrames(CopiedData const& data, double const originalTime, size_t destinationIndex, double destinationTime)
 {
     auto const copyFrames = [&](auto const& results) -> CopiedData
     {
@@ -84,7 +84,7 @@ Track::Result::Modifier::CopiedData Track::Result::Modifier::duplicateFrames(Cop
         }
         using result_type = typename std::remove_const<typename std::remove_reference<decltype(results)>::type>::type;
         auto const indexDifference = static_cast<long>(destinationIndex) - static_cast<long>(results.cbegin()->first);
-        auto const timeDifference = destinationTime - range.getStart();
+        auto const timeDifference = destinationTime - originalTime;
         result_type map;
         for(auto const& pair : results)
         {
@@ -468,9 +468,14 @@ Track::Result::Modifier::ActionBase::ActionBase(std::function<Accessor&()> fn, s
 {
 }
 
+Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, std::set<size_t> const& indices)
+: ActionBase(fn, channel)
+, mSavedData(copyFrames(mGetAccessorFn(), channel, indices))
+{
+}
+
 Track::Result::Modifier::ActionErase::ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection)
 : ActionBase(fn, channel)
-, mSavedSelection(selection)
 , mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, selection)))
 {
 }
@@ -495,12 +500,19 @@ bool Track::Result::Modifier::ActionErase::undo()
     return false;
 }
 
-Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination)
+Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, double origin, CopiedData const& data, double destination)
 : ActionBase(fn, channel)
-, mDestinationSelection(selection.movedToStartAt(destination))
-, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, mDestinationSelection)))
-, mCopyIndex(getIndex(mGetAccessorFn(), channel, mDestinationSelection.getStart()))
-, mCopiedData(duplicateFrames(data, selection, mCopyIndex.value_or(0_z), mDestinationSelection.getStart()))
+, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, getTimeRange(data).movedToStartAt(destination))))
+, mCopyIndex(getIndex(mGetAccessorFn(), channel, destination))
+, mCopiedData(duplicateFrames(data, origin, mCopyIndex.value_or(0_z), destination))
+{
+}
+
+Track::Result::Modifier::ActionPaste::ActionPaste(std::function<Accessor&()> fn, size_t const channel, CopiedData const& data, double destination)
+: ActionBase(fn, channel)
+, mSavedData(copyFrames(mGetAccessorFn(), channel, getIndices(mGetAccessorFn(), channel, getTimeRange(data).movedToStartAt(destination))))
+, mCopyIndex(getIndex(mGetAccessorFn(), channel, destination))
+, mCopiedData(duplicateFrames(data, getTimeRange(data).getStart(), mCopyIndex.value_or(0_z), destination))
 {
 }
 

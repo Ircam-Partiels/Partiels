@@ -14,7 +14,7 @@ namespace Track
 
             std::set<size_t> getIndices(CopiedData const& data);
             juce::Range<double> getTimeRange(CopiedData const& data);
-            CopiedData duplicateFrames(CopiedData const& data, juce::Range<double> const& range, size_t destinationIndex, double destinationTime);
+            CopiedData duplicateFrames(CopiedData const& data, double const originalTime, size_t destinationIndex, double destinationTime);
 
             std::optional<double> getTime(Accessor const& accessor, size_t const channel, size_t index);
             std::optional<size_t> getIndex(Accessor const& accessor, size_t const channel, double time);
@@ -108,6 +108,7 @@ namespace Track
             : public ActionBase
             {
             public:
+                ActionErase(std::function<Accessor&()> fn, size_t const channel, std::set<size_t> const& indices);
                 ActionErase(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection);
                 ~ActionErase() override = default;
 
@@ -116,7 +117,6 @@ namespace Track
                 bool undo() override;
 
             private:
-                juce::Range<double> const mSavedSelection;
                 Modifier::CopiedData const mSavedData;
             };
 
@@ -124,7 +124,8 @@ namespace Track
             : public ActionBase
             {
             public:
-                ActionPaste(std::function<Accessor&()> fn, size_t const channel, juce::Range<double> const& selection, CopiedData const& data, double destination);
+                ActionPaste(std::function<Accessor&()> fn, size_t const channel, double origin, CopiedData const& data, double destination);
+                ActionPaste(std::function<Accessor&()> fn, size_t const channel, CopiedData const& data, double destination);
                 ~ActionPaste() override = default;
 
                 // juce::UndoableAction
@@ -132,7 +133,6 @@ namespace Track
                 bool undo() override;
 
             private:
-                juce::Range<double> const mDestinationSelection;
                 Modifier::CopiedData const mSavedData;
                 std::optional<size_t> const mCopyIndex;
                 Modifier::CopiedData const mCopiedData;

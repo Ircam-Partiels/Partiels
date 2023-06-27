@@ -332,7 +332,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                     auto const trackData = trackIt->second;
                                     for(auto const& data : trackData)
                                     {
-                                        undoManager.perform(std::make_unique<ActionPaste>(fn, data.first, mClipboardRange, data.second, playhead).release());
+                                        undoManager.perform(std::make_unique<ActionPaste>(fn, data.first, data.second, playhead).release());
                                     }
                                 });
             undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());

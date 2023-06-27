@@ -757,7 +757,7 @@ bool Track::Result::Table::pasteSelection()
     auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
     undoManager.beginNewTransaction(juce::translate("Paste Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mCopiedSelection, mCopiedData, playhead).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mCopiedData, playhead).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection).release());
@@ -794,7 +794,7 @@ bool Track::Result::Table::duplicateSelection()
     auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
     undoManager.beginNewTransaction(juce::translate("Duplicate Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mCopiedSelection, mCopiedData, mCopiedSelection.getEnd()).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), *channel, mCopiedData, mCopiedSelection.getEnd()).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
         undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection.movedToStartAt(playhead)).release());

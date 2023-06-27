@@ -917,7 +917,7 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
             auto& undoManager = director.getUndoManager();
             undoManager.beginNewTransaction(juce::translate("Add Frame"));
             auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
-            undoManager.perform(std::make_unique<Modifier::ActionPaste>(director.getSafeAccessorFn(), std::get<0_z>(*channel), juce::Range<double>{}, data, time).release());
+            undoManager.perform(std::make_unique<Modifier::ActionPaste>(director.getSafeAccessorFn(), std::get<0_z>(*channel), data, time).release());
         };
 
         switch(Tools::getFrameType(mAccessor))
