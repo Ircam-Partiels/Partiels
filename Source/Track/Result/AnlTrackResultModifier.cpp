@@ -322,7 +322,7 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
             {
                 auto const previousIt = std::prev(insertIt);
                 auto const maxDuration = std::get<0_z>(newData.at(start)) - std::get<0_z>(*previousIt);
-                MiscWeakAssert(maxDuration > 0.0);
+                MiscWeakAssert(maxDuration >= 0.0);
                 std::get<1_z>(*previousIt) = std::min(std::get<1_z>(*previousIt), maxDuration);
             }
             auto outputIt = channelFrames.insert(insertIt, size, {});
@@ -334,7 +334,7 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
             {
                 auto const previousIt = std::prev(outputIt);
                 auto const maxDuration = std::get<0_z>(*outputIt) - std::get<0_z>(*previousIt);
-                MiscWeakAssert(maxDuration > 0.0);
+                MiscWeakAssert(maxDuration >= 0.0);
                 std::get<1_z>(*previousIt) = std::min(std::get<1_z>(*previousIt), maxDuration);
             }
         }
