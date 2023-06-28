@@ -184,104 +184,327 @@ void Track::Plot::Overlay::paint(juce::Graphics& g)
 
 void Track::Plot::Overlay::mouseMove(juce::MouseEvent const& event)
 {
-    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
-    updateMode(event);
+    auto const localPoint = getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y});
+    updateTooltip(localPoint);
+    updateActionMode(localPoint, event.mods);
 }
 
 void Track::Plot::Overlay::mouseEnter(juce::MouseEvent const& event)
 {
-    updateTooltip(getLocalPoint(event.eventComponent, juce::Point<int>{event.x, event.y}));
-    updateMode(event);
+    mouseMove(event);
 }
 
-void Track::Plot::Overlay::mouseExit(juce::MouseEvent const& event)
+void Track::Plot::Overlay::mouseExit([[maybe_unused]] juce::MouseEvent const& event)
 {
-    juce::ignoreUnused(event);
     Tooltip::BubbleClient::setTooltip("");
 }
 
 void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
 {
-    updateMode(event);
-    if(event.mods.isCommandDown())
+    mouseMove(event);
+    switch(mActionMode)
     {
-        using ChannelData = Result::ChannelData;
-        auto const getChannel = [&]() -> std::optional<std::tuple<size_t, juce::Range<int>>>
-        {
-            auto const verticalRanges = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
-            for(auto const& verticalRange : verticalRanges)
-            {
-                if(verticalRange.second.contains(event.y))
-                {
-                    return std::make_tuple(verticalRange.first, verticalRange.second);
-                }
-            }
-            return {};
-        };
-        auto const channel = getChannel();
-        if(!channel.has_value())
-        {
-            return;
-        }
-
-        auto const addAction = [&](ChannelData const& data)
-        {
-            auto& director = mPlot.mDirector;
-            auto& undoManager = director.getUndoManager();
-            undoManager.beginNewTransaction(juce::translate("Add Frame"));
-            auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
-            undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(director.getSafeAccessorFn(), std::get<0_z>(channel.value()), data, time).release());
-        };
-
-        switch(Tools::getFrameType(mAccessor))
-        {
-            case Track::FrameType::label:
-            {
-                addAction(std::vector<Result::Data::Marker>{{Result::Data::Marker{0.0, 0.0, ""}}});
-            }
+        case ActionMode::none:
             break;
-            case Track::FrameType::value:
+        case ActionMode::snapshot:
+            takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colours>().background);
+            break;
+        case ActionMode::create:
+        {
+            auto const channel = Tools::getChannelVerticalRange(mAccessor, getLocalBounds(), event.y, false);
+            if(!channel.has_value())
             {
-                auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-                auto const top = static_cast<float>(std::get<1_z>(*channel).getStart());
-                auto const bottom = static_cast<float>(std::get<1_z>(*channel).getEnd());
-                auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
-                addAction(std::vector<Result::Data::Point>{{Result::Data::Point{0.0, 0.0, value}}});
-            }
-            case Track::FrameType::vector:
                 break;
+            }
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                {
+                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    mCurrentEdition.channel = std::get<0_z>(channel.value());
+                    mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, 0.0, ""}};
+                    mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
+                }
+                break;
+                case Track::FrameType::value:
+                {
+                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                    auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                    auto const top = static_cast<float>(std::get<1_z>(*channel).getStart());
+                    auto const bottom = static_cast<float>(std::get<1_z>(*channel).getEnd());
+                    auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                    mCurrentEdition.channel = std::get<0_z>(channel.value());
+                    mCurrentEdition.data = std::vector<Result::Data::Point>{{time, 0.0, value}};
+                    mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
+                }
+                break;
+                case Track::FrameType::vector:
+                    break;
+            }
         }
-    }
-    else if(event.mods.isAltDown())
-    {
-        takeSnapshot(mPlot, mAccessor.getAttr<AttrType::name>(), mAccessor.getAttr<AttrType::colours>().background);
+        break;
+        case ActionMode::move:
+        {
+            auto const channel = Tools::getChannelVerticalRange(mAccessor, getLocalBounds(), event.y, false);
+            if(!channel.has_value())
+            {
+                break;
+            }
+            auto const& results = mAccessor.getAttr<AttrType::results>();
+            auto const access = results.getReadAccess();
+            if(!static_cast<bool>(access))
+            {
+                break;
+            }
+            auto const markers = results.getMarkers();
+            auto const channelIndex = std::get<0_z>(channel.value());
+            if(markers == nullptr || markers->size() <= channelIndex || markers->at(channelIndex).empty())
+            {
+                break;
+            }
+
+            auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+            auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+            auto const& markerChannel = markers->at(channelIndex);
+            auto const it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
+            if(it == markerChannel.cend() || std::get<0_z>(*it) > time + epsilon)
+            {
+                break;
+            }
+            auto const next = std::next(it);
+            mCurrentEdition.channel = channelIndex;
+            mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it)}};
+            mCurrentEdition.range.setStart(std::get<0_z>(*it));
+            mCurrentEdition.range.setEnd(next == markerChannel.cend() ? std::numeric_limits<double>::max() : std::get<0_z>(*next));
+        }
+        break;
     }
 }
 
 void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
 {
-    updateMode(event);
+    switch(mActionMode)
+    {
+        case ActionMode::none:
+            break;
+        case ActionMode::snapshot:
+            break;
+        case ActionMode::create:
+        {
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                {
+                    auto* markersData = std::get_if<std::vector<Result::Data::Marker>>(&mCurrentEdition.data);
+                    MiscWeakAssert(markersData != nullptr && !markersData->empty());
+                    if(markersData == nullptr || markersData->empty())
+                    {
+                        return;
+                    }
+                    std::get<0_z>(markersData->front()) = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
+                }
+                break;
+                case Track::FrameType::value:
+                {
+                    auto* pointsData = std::get_if<std::vector<Result::Data::Point>>(&mCurrentEdition.data);
+                    MiscWeakAssert(pointsData != nullptr && !pointsData->empty());
+                    if(pointsData == nullptr || pointsData->empty())
+                    {
+                        return;
+                    }
+                    auto const channels = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
+                    if(!channels.empty() || channels.count(mCurrentEdition.channel) == 0_z)
+                    {
+                        return;
+                    }
+                    std::get<0_z>(pointsData->front()) = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
+                    auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+                    auto const top = static_cast<float>(channels.at(mCurrentEdition.channel).getStart());
+                    auto const bottom = static_cast<float>(channels.at(mCurrentEdition.channel).getEnd());
+                    std::get<2_z>(pointsData->front()) = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                    mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
+                }
+                break;
+                case Track::FrameType::vector:
+                    break;
+            }
+        }
+        break;
+        case ActionMode::move:
+        {
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                {
+                    if(Result::Modifier::isEmpty(mCurrentEdition.data))
+                    {
+                        return;
+                    }
+                    auto* markersData = std::get_if<std::vector<Result::Data::Marker>>(&mCurrentEdition.data);
+                    MiscWeakAssert(markersData != nullptr);
+                    if(markersData == nullptr && !markersData->empty())
+                    {
+                        return;
+                    }
+                    auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+                    mMouseWasDragged = mMouseWasDragged || event.getDistanceFromDragStartX() > epsilon;
+                    if(mMouseWasDragged)
+                    {
+                        std::get<0_z>(markersData->front()) = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                        mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
+                    }
+                }
+                break;
+                case Track::FrameType::value:
+                case Track::FrameType::vector:
+                    break;
+            }
+        }
+        break;
+    }
 }
 
 void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
 {
-    updateMode(event);
+    switch(mActionMode)
+    {
+        case ActionMode::none:
+            break;
+        case ActionMode::snapshot:
+            break;
+        case ActionMode::create:
+        {
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                {
+                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    mPlot.mDirector.getUndoManager().beginNewTransaction(juce::translate("Add Marker"));
+                    mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionPaste>(mPlot.mDirector.getSafeAccessorFn(), mCurrentEdition.channel, mCurrentEdition.data, time).release());
+                }
+                break;
+                case Track::FrameType::value:
+                {
+                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    mPlot.mDirector.getUndoManager().beginNewTransaction(juce::translate("Add Point"));
+                    mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionPaste>(mPlot.mDirector.getSafeAccessorFn(), mCurrentEdition.channel, mCurrentEdition.data, time).release());
+                }
+                break;
+                case Track::FrameType::vector:
+                    break;
+            }
+        }
+        break;
+        case ActionMode::move:
+        {
+            switch(Tools::getFrameType(mAccessor))
+            {
+                case Track::FrameType::label:
+                {
+                    if(Result::Modifier::isEmpty(mCurrentEdition.data))
+                    {
+                        break;
+                    }
+                    auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+                    if(mMouseWasDragged || event.getDistanceFromDragStartX() > epsilon)
+                    {
+                        auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                        auto const& edition = mAccessor.getAttr<AttrType::edit>();
+                        mPlot.mDirector.getUndoManager().beginNewTransaction(juce::translate("Move Marker"));
+                        mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionErase>(mPlot.mDirector.getSafeAccessorFn(), edition.channel, edition.range).release());
+                        mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionPaste>(mPlot.mDirector.getSafeAccessorFn(), edition.channel, edition.data, time).release());
+                    }
+                }
+                break;
+                case Track::FrameType::value:
+                case Track::FrameType::vector:
+                    break;
+            }
+        }
+        break;
+    }
+    mouseMove(event);
+    mMouseWasDragged = false;
+    mCurrentEdition = {};
+    mAccessor.setAttr<AttrType::edit>(Edition{}, NotificationType::synchronous);
 }
 
-void Track::Plot::Overlay::updateMode(juce::MouseEvent const& event)
+void Track::Plot::Overlay::modifierKeysChanged(juce::ModifierKeys const& modifiers)
 {
-    auto const isCommandOrAltDown = event.mods.isCommandDown() || event.mods.isAltDown();
-    mSelectionBar.setInterceptsMouseClicks(!isCommandOrAltDown, !isCommandOrAltDown);
-    if(!event.mods.isCommandDown() && event.mods.isAltDown() && !mSnapshotMode)
+    updateActionMode(getMouseXYRelative(), modifiers);
+}
+
+void Track::Plot::Overlay::updateActionMode(juce::Point<int> const& point, juce::ModifierKeys const& modifiers)
+{
+    auto const getCurrentAction = [&]()
     {
-        mSnapshotMode = true;
-        showCameraCursor(true);
-    }
-    else if(!event.mods.isAltDown() && mSnapshotMode)
+        if(modifiers.isAltDown())
+        {
+            return ActionMode::snapshot;
+        }
+        if(modifiers.isCommandDown())
+        {
+            return ActionMode::create;
+        }
+        auto const channel = Tools::getChannelVerticalRange(mAccessor, getLocalBounds(), point.y, false);
+        if(!channel.has_value())
+        {
+            return ActionMode::none;
+        }
+
+        auto const& results = mAccessor.getAttr<AttrType::results>();
+        auto const access = results.getReadAccess();
+        if(!static_cast<bool>(access))
+        {
+            return ActionMode::none;
+        }
+
+        if(auto const markers = results.getMarkers())
+        {
+            auto const channelIndex = std::get<0>(channel.value());
+            if(markers->size() <= channelIndex || markers->at(channelIndex).empty())
+            {
+                return ActionMode::none;
+            }
+
+            auto const& markerChannel = markers->at(channelIndex);
+            auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, point.x);
+            auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+            auto const it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
+            if(it != markerChannel.cend() && std::get<0_z>(*it) < time + epsilon)
+            {
+                return ActionMode::move;
+            }
+        }
+        // Could be implemented for points
+        return ActionMode::none;
+    };
+
+    auto const currentAction = getCurrentAction();
+    if(std::exchange(mActionMode, currentAction) != currentAction)
     {
-        mSnapshotMode = false;
-        showCameraCursor(false);
+        switch(currentAction)
+        {
+            case ActionMode::none:
+                setMouseCursor(juce::MouseCursor::StandardCursorType::NormalCursor);
+                mSelectionBar.setInterceptsMouseClicks(true, true);
+                break;
+            case ActionMode::snapshot:
+                setMouseCursor(getCameraCursor());
+                mSelectionBar.setInterceptsMouseClicks(false, false);
+                break;
+            case ActionMode::create:
+                setMouseCursor(juce::MouseCursor::StandardCursorType::CrosshairCursor);
+                mSelectionBar.setInterceptsMouseClicks(false, false);
+                break;
+            case ActionMode::move:
+                setMouseCursor(juce::MouseCursor::StandardCursorType::LeftRightResizeCursor);
+                mSelectionBar.setInterceptsMouseClicks(false, false);
+                break;
+        }
     }
 }
 

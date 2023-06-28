@@ -35,10 +35,21 @@ namespace Track
             void mouseDown(juce::MouseEvent const& event) override;
             void mouseDrag(juce::MouseEvent const& event) override;
             void mouseUp(juce::MouseEvent const& event) override;
+            void modifierKeysChanged(juce::ModifierKeys const& modifiers) override;
 
         private:
+            // clang-format off
+            enum class ActionMode
+            {
+                  none
+                , snapshot
+                , create
+                , move
+            };
+            // clang-format on
+
+            void updateActionMode(juce::Point<int> const& point, juce::ModifierKeys const& modifiers);
             void updateTooltip(juce::Point<int> const& pt);
-            void updateMode(juce::MouseEvent const& event);
 
             Plot& mPlot;
             Accessor& mAccessor;
@@ -46,7 +57,9 @@ namespace Track
             Accessor::Listener mListener{typeid(*this).name()};
             Zoom::Accessor::Listener mTimeZoomListener{typeid(*this).name()};
             SelectionBar mSelectionBar;
-            bool mSnapshotMode{false};
+            ActionMode mActionMode;
+            bool mMouseWasDragged{false};
+            Edition mCurrentEdition;
         };
 
     private:

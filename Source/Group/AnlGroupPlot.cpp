@@ -274,13 +274,13 @@ void Group::Plot::Overlay::updateMode(juce::MouseEvent const& event)
     if(event.mods.isAltDown() && !mSnapshotMode)
     {
         mSnapshotMode = true;
-        showCameraCursor(true);
+        setMouseCursor(getCameraCursor());
         mSelectionBar.setInterceptsMouseClicks(false, false);
     }
     else if(!event.mods.isAltDown() && mSnapshotMode)
     {
         mSnapshotMode = false;
-        showCameraCursor(false);
+        setMouseCursor(juce::MouseCursor::CrosshairCursor);
         mSelectionBar.setInterceptsMouseClicks(true, true);
     }
 }
