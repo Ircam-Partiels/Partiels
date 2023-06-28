@@ -3,7 +3,7 @@ v1.2.0-test1
 - Fix: Remove F0 frequency parameter for Harmonic Partial Tracking (Ircam Vamp Plug-ins)
 - Add: Chord Partial Tracking (Ircam Vamp Plug-ins)
 
-- Fix: The selection of results in the spreadsheet is not consistent with the selection on the track (#340)
+- Fix: The selection of results in the table is not consistent with the selection on the track (#340)
 - Imp: Paste frames should ignore empty space of the selection (#338)
 - Imp: Prevent editing of multiple tracks following group selection (#337)
 - Fix: The application crashes when a document is opened if its number of tracks is less than that of the loaded document (#336)
