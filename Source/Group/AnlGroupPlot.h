@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Track/AnlTrackPlot.h"
 #include "AnlGroupRuler.h"
 #include "AnlGroupTools.h"
 

@@ -1,5 +1,5 @@
 #include "AnlTrackExporter.h"
-#include "AnlTrackPlot.h"
+#include "AnlTrackRenderer.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -94,7 +94,7 @@ juce::Image Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor co
     juce::Image image(juce::Image::PixelFormat::ARGB, width, height, true);
     juce::Graphics g(image);
     g.fillAll(accessor.getAttr<AttrType::colours>().background);
-    Plot::paint(accessor, timeZoomAccessor, g, {0, 0, image.getWidth(), image.getHeight()}, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Decorator::ColourIds::normalBorderColourId));
+    Renderer::paint(accessor, timeZoomAccessor, g, {0, 0, image.getWidth(), image.getHeight()}, juce::Desktop::getInstance().getDefaultLookAndFeel().findColour(Decorator::ColourIds::normalBorderColourId));
     return image;
 }
 

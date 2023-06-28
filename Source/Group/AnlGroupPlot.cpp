@@ -1,4 +1,5 @@
 #include "AnlGroupPlot.h"
+#include "../Track/AnlTrackRenderer.h"
 #include "../Track/AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -126,7 +127,7 @@ void Group::Plot::paint(juce::Graphics& g)
         {
             auto const isSelected = (!hasZoomTrack && it == std::prev(layout.crend())) || zoomid == *it;
             auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
-            Track::Plot::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, colour);
+            Track::Renderer::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, colour);
         }
     }
 }

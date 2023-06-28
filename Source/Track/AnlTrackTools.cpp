@@ -407,39 +407,6 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
     return verticalRanges;
 }
 
-void Track::Tools::paintChannels(Accessor const& acsr, juce::Graphics& g, juce::Rectangle<int> const& bounds, juce::Colour const& separatorColour, std::function<void(juce::Rectangle<int>, size_t channel)> fn)
-{
-    auto const verticalRanges = getChannelVerticalRanges(acsr, bounds);
-    for(auto const& verticalRange : verticalRanges)
-    {
-        juce::Graphics::ScopedSaveState sss(g);
-        auto const top = verticalRange.second.getStart();
-        auto const bottom = verticalRange.second.getEnd();
-        auto const region = bounds.withTop(top).withBottom(bottom);
-        if(bottom < bounds.getHeight())
-        {
-            g.setColour(separatorColour);
-            g.fillRect(bounds.withTop(bottom).withBottom(bottom + 1));
-        }
-        g.reduceClipRegion(region);
-        if(fn != nullptr)
-        {
-            fn(region, verticalRange.first);
-        }
-    }
-}
-
-void Track::Tools::paintClippedImage(juce::Graphics& g, juce::Image const& image, juce::Rectangle<float> const& bounds)
-{
-    auto const graphicsBounds = g.getClipBounds().toFloat();
-    auto const deltaX = -bounds.getX();
-    auto const deltaY = -bounds.getY();
-    auto const scaleX = graphicsBounds.getWidth() / bounds.getWidth();
-    auto const scaleY = graphicsBounds.getHeight() / bounds.getHeight();
-
-    g.drawImageTransformed(image, juce::AffineTransform::translation(deltaX, deltaY).scaled(scaleX, scaleY).translated(graphicsBounds.getX(), graphicsBounds.getY()));
-}
-
 Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort)
 {
     auto const rtToS = [](Vamp::RealTime const& rt)

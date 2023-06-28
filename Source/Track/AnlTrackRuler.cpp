@@ -1,4 +1,5 @@
 #include "AnlTrackRuler.h"
+#include "AnlTrackRenderer.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -132,9 +133,9 @@ void Track::Ruler::resized()
 
 void Track::Ruler::paint(juce::Graphics& g)
 {
-    Tools::paintChannels(mAccessor, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId), [&](juce::Rectangle<int>, size_t)
-                         {
-                         });
+    Renderer::paintChannels(mAccessor, g, getLocalBounds(), findColour(Decorator::ColourIds::normalBorderColourId), [&](juce::Rectangle<int>, size_t)
+                            {
+                            });
 }
 
 void Track::Ruler::colourChanged()

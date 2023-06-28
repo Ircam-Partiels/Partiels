@@ -1,4 +1,5 @@
 #include "AnlTrackSnapshot.h"
+#include "AnlTrackRenderer.h"
 #include "AnlTrackTools.h"
 
 ANALYSE_FILE_BEGIN
@@ -155,25 +156,25 @@ void Track::Snapshot::paintGrid(Accessor const& accessor, juce::Graphics& g, juc
     {
         case Track::FrameType::label:
         {
-            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
-                                 {
-                                 });
+            Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                                    {
+                                    });
         }
         break;
         case Track::FrameType::value:
         {
-            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
-                                 {
-                                     paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
-                                 });
+            Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                                    {
+                                        paintChannel(accessor.getAcsr<AcsrType::valueZoom>(), region);
+                                    });
         }
         break;
         case Track::FrameType::vector:
         {
-            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
-                                 {
-                                     paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
-                                 });
+            Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t)
+                                    {
+                                        paintChannel(accessor.getAcsr<AcsrType::binZoom>(), region);
+                                    });
         }
         break;
     }
@@ -186,26 +187,26 @@ void Track::Snapshot::paint(Accessor const& accessor, Zoom::Accessor const& time
         case Track::FrameType::label:
         {
             paintGrid(accessor, g, bounds, colour);
-            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
-                                 {
-                                 });
+            Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int>, size_t)
+                                    {
+                                    });
         }
         break;
         case Track::FrameType::value:
         {
             paintGrid(accessor, g, bounds, colour);
-            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
-                                 {
-                                     paintPoints(accessor, channel, g, region, timeZoomAcsr, time);
-                                 });
+            Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                                    {
+                                        paintPoints(accessor, channel, g, region, timeZoomAcsr, time);
+                                    });
         }
         break;
         case Track::FrameType::vector:
         {
-            Tools::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
-                                 {
-                                     paintColumns(accessor, channel, g, region, timeZoomAcsr, time);
-                                 });
+            Renderer::paintChannels(accessor, g, bounds, colour, [&](juce::Rectangle<int> region, size_t channel)
+                                    {
+                                        paintColumns(accessor, channel, g, region, timeZoomAcsr, time);
+                                    });
             paintGrid(accessor, g, bounds, colour);
         }
         break;
@@ -342,7 +343,7 @@ void Track::Snapshot::paintColumns(Accessor const& accessor, size_t channel, juc
 
         g.setColour(juce::Colours::black);
         g.setImageResamplingQuality(juce::Graphics::ResamplingQuality::lowResamplingQuality);
-        Tools::paintClippedImage(g, image, {std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
+        Renderer::paintClippedImage(g, image, {std::floor(xRange.getStart()), yRange.getStart(), 1.0f, yRange.getLength()});
     };
 
     renderImage(images.at(channel).back(), time, timeZoomAcsr, accessor.getAcsr<AcsrType::binZoom>());
