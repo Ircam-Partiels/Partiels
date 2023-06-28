@@ -30,30 +30,30 @@
 * [5. Organize the tracks by groups](#5-organize-the-tracks-by-groups)
   * [5.1. Edition](#51-edition)
   * [5.2. Layout](#52-layout)
-* [6. Export analyses](#6-export-analyses)
-  * [6.1. General options](#61-general-options)
-  * [6.2. Image options](#62-images-options)
-  * [6.3. Text and binary options](#63-text-and-binary-options)
-  * [6.4. Batch processing](#64-batch-processing)
-* [7. View, navigation, and transport](#7-view-navigation-and-transport)
-  * [7.1. View](#71-view)
-  * [7.2. Zoom](#72-navigation)
-  * [7.3. Transport](#73-transport)
-* [8. Track properties](#8-track-properties)
-  * [8.1. Processor](#81-processor)
-  * [8.2. Graphical](#82-graphical)
-  * [8.3. Plugin](#83-plugin)
-* [9. Group properties](#9-group-properties)
-* [10. Audio files layout](#10-audio-files-layout)
-  * [10.1. Audio files information](#101-audio-files-information)
-  * [10.2. Audio files configuration](#102-audio-files-configuration)
-  * [10.3. Audio files recovery](#103-audio-files-recovery)
-* [11. Audio settings](#11-audio-settings)
-* [12. Plug-ins settings](#12-plug-ins-settings)
-* [13. Command-line tools](#13-command-line-tools)
-
-To Do:
-- Edit analysis results
+* [6. Visualize and edit track results](#6-visualize-and-edit-track-results)
+  * [6.1. Plot](#61-plot)
+  * [6.2. Table](#62-table)
+* [7. Export analyses](#7-export-analyses)
+  * [7.1. General options](#71-general-options)
+  * [7.2. Image options](#72-images-options)
+  * [7.3. Text and binary options](#73-text-and-binary-options)
+  * [7.4. Batch processing](#74-batch-processing)
+* [8. View, navigation, and transport](#8-view-navigation-and-transport)
+  * [8.1. View](#81-view)
+  * [8.2. Zoom](#82-navigation)
+  * [8.3. Transport](#83-transport)
+* [9. Track properties](#9-track-properties)
+  * [9.1. Processor](#91-processor)
+  * [9.2. Graphical](#92-graphical)
+  * [9.3. Plugin](#93-plugin)
+* [10. Group properties](#10-group-properties)
+* [11. Audio files layout](#11-audio-files-layout)
+  * [11.1. Audio files information](#111-audio-files-information)
+  * [11.2. Audio files configuration](#112-audio-files-configuration)
+  * [11.3. Audio files recovery](#113-audio-files-recovery)
+* [12. Audio settings](#12-audio-settings)
+* [13. Plug-ins settings](#13-plug-ins-settings)
+* [14. Command-line tools](#14-command-line-tools)
 
 <div style="page-break-after: always;"></div>
 
@@ -284,7 +284,36 @@ Use the `⇥ Tab` key to move the selection to the next visible track or group.
 
 <div style="page-break-after: always;"></div>
 
-## 6. Export analyses
+## 6. Visualize and edit track results
+
+Track results can be manually visualized and edited directly on the graphical plot or in the result table to correct values and improve representation. Only marker or point tracks can be edited. 
+
+Following editing, you can use the keyboard shortcuts `⌘ Cmd + Z` (Mac) or `Ctrl + Z` (Linux/Windows) to restore previous states, and `⌘ Cmd + Y` (Mac) or `Ctrl + Y` (Linux/Windows) or `⌘ Cmd + ⇧ Shift + Z` (Mac) or `Ctrl + ⇧ Shift + Z` (Linux/Windows) to reapply changes to both the graphical plot and the results table.
+
+### 6.1. Plot
+
+On the graphical plot, markers are represented by vertical lines on the timeline, points by a succession of segments - which can be interrupted - and vectors by a sonogram-like matrix.  Markers and points can be created, deleted, copied, pasted, and duplicated. Markers can also be moved over time.
+
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a marker or point track to create a new marker at the corresponding time or a new point at the corresponding time and value.  
+- Press the `Delete ⌫` key to delete markers or points within the selected time range and on selected tracks and channels.
+- Use the keyboard shortcut `⌘ Cmd + C` (Mac) or `Ctrl + C` (Linux/Windows) to copy markers or points in the selected time range and on selected tracks and channels to the clipboard.
+- Use the keyboard shortcut `⌘ Cmd + X` (Mac) or `Ctrl + X` (Linux/Windows) to cut markers or points in the selected time range and on selected tracks and channels to the clipboard.
+- Use the keyboard shortcut `⌘ Cmd + V` (Mac) or `Ctrl + V` (Linux/Windows) to paste markers or points saved in the clipboard at the playhead position.
+- Use the keyboard shortcut `⌘ Cmd + D` (Mac) or `Ctrl + D` (Linux/Windows) to duplicate markers or points in the selected time range and on selected tracks and channels at the end of the selected time range.
+- Click and drag a marker to move it to the desired time.
+
+### 6.2. Table
+
+The results table displays data in three columns, the first corresponding to time, the second to duration, and the third to the label for markers, the numerical value for points, and the list of values for vectors. Markers and points can be deleted, copied, pasted, and duplicated. The time, duration, label, or value of markers and points can be edited.
+
+- Click on a cell to edit the time, duration, label or value of a point or marker.
+- Press the `Delete ⌫` key to delete markers or points of the selected rows.
+- Use the keyboard shortcut `⌘ Cmd + C` (Mac) or `Ctrl + C` (Linux/Windows) to copy markers or points of the selected rows to the clipboard.
+- Use the keyboard shortcut `⌘ Cmd + X` (Mac) or `Ctrl + X` (Linux/Windows) to cut markers or points of the selected rows to the clipboard.
+- Use the keyboard shortcut `⌘ Cmd + V` (Mac) or `Ctrl + V` (Linux/Windows) to paste markers or points saved in the clipboard at the start of the selected rows.
+- Use the keyboard shortcut `⌘ Cmd + D` (Mac) or `Ctrl + V` (Linux/Windows) to duplicate markers or points of the selected rows.
+
+## 7. Export analyses
 
 The results of the analyses of a document can be exported in different formats, as an image, text or binary file. You can display the export window via the main menu `File → Export...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + E` (Mac) or `Ctrl + Shift + E` (Linux/Windows). This window allows you to select the analysis(es) to be exported, define the time range, the format and the options for this format. 
 
@@ -294,7 +323,7 @@ The results of the analyses of a document can be exported in different formats, 
 
 Once you have selected the desired configuration, click on the `Export` button (**E5**), you will be prompted to select an output file or a folder if you are exporting several analyses in separate files (the name of the files will be generated automatically with the name of the group and the track).
 
-### 6.1. General options
+### 7.1. General options
 
 The `Item` drop-down (**E1**) menu allows you to select the document, a group or an analysis. If you select the document, all the analyses of the document will be exported and if you select a group, all the analyses of the group will be exported (in the case of a text format it is possible to ignore the matrix analyses to avoid unwanted large files, see [Text and binary options](#63-text-and-binary-options)). 
 
@@ -318,7 +347,7 @@ You can also define the time range with the text entries `Time Start`, `Time End
 
 The `Format` drop-down menu (**E3**) allows you to select the output format. This can be an image format *JPEG* or *PNG* , a text format *JSON*, *CSV* or *CUE* or a binary format *SDIF*. For each format, you can set specific options (**E4**).
 
-### 6.2. Images options
+### 7.2. Images options
 
 Exporting to an image format (*JPEG* or *PNG*) offers two rendering options:
 
@@ -332,7 +361,7 @@ The `Image Size` dropdown menu offers presets to control the size of the image. 
 
 The `Image Width` and `Image Height` number fields can be used to manually define the width and the height of the images in pixels.
 
-### 6.3. Text and binary options
+### 7.3. Text and binary options
 
 The `Ignore Matrix Tracks` button offers an option to ignore matrix analyses (such as sonograms) that are usually only visually relevant and contain a lot of information generating large files. 
 
@@ -348,7 +377,7 @@ Export to SDIF offers three options:
 - `Matrix Signature` defines the matrix signature to encode the results in the SDIF file. 
 - `Column Name` defines the name of the column to encode the results in the SDIF file.
 
-### 6.4. Batch processing
+### 7.4. Batch processing
 
 You can use the current document as a template to generate results for other audio files using the batch processing system. To do this, open the batch window via the main menu `File → Batch...` or with the keyboard shortcut `⌘ Cmd + ⇧ Shift + B` (Mac) or `Ctrl + Shift + B` (Linux/Windows). 
 
@@ -384,7 +413,7 @@ Once you have selected the desired configuration, click on the `Process` button 
 
 <div style="page-break-after: always;"></div>
 
-## 7. View, navigation, and transport
+## 8. View, navigation, and transport
 
 This section covers aspects related to viewing, navigation and audio playback in the application.
 
@@ -394,7 +423,7 @@ Change the global scale of the application via the menu `View → Scale` to enla
 
 Toggle the magnetize option by clicking on the button `Magnetize` button in the main interface ([Overview](#2-overview) - **K6**) or using the main menu `Transport → Toggle Magnetize`. If the magnetize option is enabled the position moves to the closest markers of all the tracks of the document. 
 
-### 7.1. View
+### 8.1. View
 
 Each track and group offers two representations of the analysis results. The main representation shows the results over time ([Overview](#2-overview) **V2**) as vertical lines for the markers, points (connected in segments) for the values and images for the matrices. The secondary display shows an instantaneous value of the results at the time of the playhead ([Overview](#2-overview) **V1**).
 
@@ -402,13 +431,13 @@ Each track and group offers two representations of the analysis results. The mai
 
 - Modify the display of track and group grids with the `Grid` button ([Overview](#2-overview) **K8**): hidden, ticks, full.
 
-### 7.2. Navigation
+### 8.2. Navigation
 
 Partiels offers the possibility of navigating and zooming in on the horizontal axis corresponding to the time range, and in on the vertical axis corresponding to the value or frequency ranges.
 
 Click and drag on a track or a group to select a time range. If the magnetize option is enabled, the position moves to the closest marker. The time selection can be visualized and edited with the time entries on the header of the main interface ([Overview](#2-overview) - **S**).
 
-#### 7.2.1 Horizontal axis  
+#### 8.2.1 Horizontal axis  
 
 The main interface contains a horizontal ruler and a horizontal bar ([Overview](#2-overview) **Z1** and **Z2**) to control the time zoom. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
@@ -426,7 +455,7 @@ The main interface contains a horizontal ruler and a horizontal bar ([Overview](
 - Zoom in with the keyboard shortcut `⌘ Cmd + +` (Mac) or `Ctrl + =` (Linux/Windows) or via the main menu `View → Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + -` (Mac) or `Ctrl + -` (Linux/Windows) or via the main menu `View → Time Zoom Out`.
 
-#### 7.2.2 Vertical axis
+#### 8.2.2 Vertical axis
 
 The interface of each point or matrix track contains a vertical ruler for each channel and one vertical bar for all the channels ([Overview](#2-overview) **Z3** and **Z4**) to control the value or frequency zooms (the maker tracks don't have vertical zoom). The corresponding rulers and bars also appear also on group if the group zoom reference is a point or a matrix track. You can also use the mouse and trackpad interaction or keyboard shortcuts to navigate and zoom. 
 
@@ -443,7 +472,7 @@ The interface of each point or matrix track contains a vertical ruler for each c
 - Zoom in with the keyboard shortcut `⌘ Cmd + ⇧ Shift + +` (Mac) or `Ctrl + ⇧ Shift + =` (Linux/Windows) or via the main menu `View → Vertical Time Zoom In`.
 - Zoom out with the keyboard shortcut `⌘ Cmd + ⇧ Shift + -` (Mac) or `Ctrl + ⇧ Shift + -` (Linux/Windows) or via the main menu `View → Vertical Time Zoom Out`.
 
-### 7.3. Transport
+### 8.3. Transport
 
 Partiels provides basic audio playback capabilities to allow listening to audio files while viewing analysis results. Audio playback can be controlled with the transport interface ([Overview](#2-overview) **T**) in the center of the main interface header.
 
@@ -472,7 +501,7 @@ The actions to move the start position of the playback head and control the play
 
 <div style="page-break-after: always;"></div>
 
-## 8. Track properties
+## 9. Track properties
 
 The track properties panel allows you to access information about a track and to change the processor and graphic properties. You can display a track's properties panel by clicking on the corresponding button in the track's header ([Overview](#2-overview) - **K2**) or via the corresponding entry in the drop-down menu displayed by the properties button of the group header containing the track ([Overview](#2-overview) - **K3**).
 
@@ -482,11 +511,11 @@ The track properties panel allows you to access information about a track and to
 
 The first property of a track is its name. The default name of the track corresponds to either the name of the analysis plugin if a plugin has been used to create the track or to the name of the results file if a results file has been used to create the track. The name of the track can be modified using the corresponding text field. The properties of a track are then organized in three categories: processor, graphical, plugin.  
 
-### 8.1. Processor
+### 9.1. Processor
 
 The processor section allows you to modify all the properties that control the analysis engine or the loading of the results file of the track. Thus, the properties are related to the result file, the plugin parameters and the track state.
 
-#### 8.1.1. File
+#### 9.1.1. File
 
 The results file information is displayed if the analysis results have been loaded from a file. Note that, if the analysis results were loaded from a JSON file containing plugin information or a file resulting from the consolidated track, the processor's parameters can still be accessible and used to update the analysis results.
 
@@ -498,7 +527,7 @@ The results file information is displayed if the analysis results have been load
 
 - The results file can be detached from the track (only if the track contains plugin information) by clicking on the text button with the `shift` keys pressed. In this case, the track will use the plugin information to run the analysis and produce new results.
 
-#### 8.1.2. Parameters 
+#### 9.1.2. Parameters 
 
 Depending on the characteristics of the plugin, the section allows accessing the default plugin parameters. If the plugin expects frequency domain input signal, the section gives access to the window type, the block size and the step size in order to transform the time domain signal into a frequency domain signal with a Fast Fourier Transform. Otherwise, if the plugin expects time domain input signal, the section gives access to the block type if the plugin doesn't have a preferred block size, the step size if the plugin doesn't have a preferred step size or doesn't expect the step size to  be equal to the block size.
 
@@ -526,7 +555,7 @@ The section allows accessing the plugin-specific parameters that are used to per
 
 The preset menu allows you to restore the factory value of the parameters. You can also save the current state of the parameters in a file on your operating system and load this file to restore the state (the file can be used in any other track that used the same plugin).
 
-#### 8.1.3. State
+#### 9.1.3. State
 
 The current state of the plugin is displayed at the bottom of the section informing if the analysis or loading succeeded or failed and if the results have been edited.
 
@@ -538,11 +567,11 @@ If the analysis or loading failed, clicking on the warning icon prompts a dialog
 
 If the analysis results have been edited, clicking on the warning icon prompts a dialog window offering to cancel the changes and relaunch the analysis.
 
-### 8.2. Graphical
+### 9.2. Graphical
 
 The graphical section allows modifying all the properties that control the rendering of the analysis results of the track. The properties depend on the type of analysis results: markers (e.g. beat detection), points (e.g. energy estimation), or columns (e.g. spectrogram).
 
-#### 8.2.1. Colors
+#### 9.2.1. Colors
 
 A color can be modified using the color selector that is prompted by clicking on the colored button. You can drag and drop a colored button on another one, to copy the color from one property to another. The color map can be modified using the dropdown menu. 
 
@@ -557,7 +586,7 @@ A color can be modified using the color selector that is prompted by clicking on
 - Text Color: The color used to render the labels of the markers or the points values.
 - Shadow Color: The shadow color used to render the shadow of the markers or the segments between points.
 
-#### 8.2.2. Font
+#### 9.2.2. Font
 
 The font properties are only available for marker or point type analyses. By default, the font *Nunito Sans* with a size of 14 and a regular style is used. You can change the font according to the ones available on your system (if you load a document using a font that is not present on your system, the default font is used). It may be necessary to use another font if some characters are not supported.
 
@@ -569,7 +598,7 @@ The font properties are only available for marker or point type analyses. By def
 - Font Style: The style of the font used to render the labels of the markers or the  values of the points. The list of available styles depends on the font family (name).
 - Font Size: The size of the font used to render the labels of the markers or the  values of the points. You can click on the text to define textually a size that would not be accessible in the list.
 
-#### 8.2.3. Ranges
+#### 9.2.3. Ranges
 
 The value range of the points and the columns results can be adapted to optimize the graphical rendering. It will corresponds to the range of the vertical axis for the points rendering or to the color mapping for the column rendering. By default, the value range is based on the information given by the plugin or stored in the results file if available, otherwise it will be based on the minimum and maximum values of the results but it can also be modified manually.
 
@@ -590,19 +619,19 @@ The value range of the points and the columns results can be adapted to optimize
   - Power Base: The power base used to compute the tick distribution.
   - Ruler Mode: A set of presets for the main tick interval and the power base that can be used to easily corresponds to amplitude range, frequency range, etc.
 
-#### 8.2.4. Visibility 
+#### 9.2.4. Visibility 
 
 - Show in the group overlay view: The toggle button allows to show or hide the track in the group overlay view. This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
 
 - Channel Layout: The channel layout button allows to show or hide channels of the analysis results. This channel layout is only graphical and doesn't change the audio analysis nor the audio playback (please refer to the audio files layout section). This property can also be changed with the other groups via the [group properties](#9-group-properties) window.
 
-### 8.3. Plugin
+### 9.3. Plugin
 
 The graphical section displays information about the plugin such as the name, the feature, the maker, the version, the  markers, the category and the description and the copyright.
 
 <div style="page-break-after: always;"></div>
 
-## 9. Group properties
+## 10. Group properties
 
 The group properties panel allows you to access information about a group and to change the processor and graphic properties of its tracks. You can display a group's properties panel via the corresponding entry in the drop-down menu displayed by the properties button of the group header ([Overview](#2-overview) - **K3**).
 
@@ -617,7 +646,7 @@ The first entries correpond to exclusive properties of the group :
 
 The following sections Processor and Graphical contain all the properties of the group tracks. Using one of the entries in the group properties panel changes the associated property of all the tracks in the group (which have this property). This can be a way to globally modify a parameter such as the window size.
 
-## 10. Audio files layout
+## 11. Audio files layout
 
 The audio files layout panel allows you to access information about the audio files of the document, reveal the audio files in the operating system's file browser, and rearrange the files configuration of the audio reader. You can display the audio files layout panel by clicking on the corresponding button in the main interface ([Overview](#2-overview) - **K4**).
 
@@ -625,11 +654,11 @@ The audio files layout panel allows you to access information about the audio fi
 <img src="images/section-audio-files-layout.1-v1.0.5.png" width="255"/>
 </p>  
 
-### 10.1. Audio files information
+### 11.1. Audio files information
 
 Select an audio file by clicking on its name in section (**S1**) to display its information (format, sample rate, bits, length in samples, duration in seconds, number of channels, metadata, etc.) in section (**S2**) of the panel. The audio file can be revealed in the operating system's file browser by clicking on the text button on top of section (**S2**).
 
-### 10.2. Audio files configuration
+### 11.2. Audio files configuration
 
 The audio files layout is used by both the audio playback engine and the audio analysis engine so modifying the audio files layout triggers the reanalysis of all the analysis tracks that have not been consolidated. 
 
@@ -661,7 +690,7 @@ An item of the audio files layout in section (**S1**) is defined by an index, an
 
 - Reset changes: If the audio files layout differs from the one currently used by the document, click the `Reset` text button in section (**S3**) to restore the audio files layout of the document. 
 
-### 10.3. Audio files recovery
+### 11.3. Audio files recovery
 
 If audio files cannot be found (files have been moved or deleted for example), the item names corresponding to the missing files are greyed out and a warning appears at the bottom of the (**S1**) section. 
 
@@ -673,7 +702,7 @@ Click on an item's name to display a dialog window asking you to recover the mis
 
 <div style="page-break-after: always;"></div>
 
-## 11. Audio settings
+## 12. Audio settings
 
 The audio settings window allows you to control device management and channels routing for audio playback. These settings have no effect on the analysis or graphics rendering. The audio settings window can be displayed via the main menu `Partiels → Audio Settings...` (Mac) or `Help → Audio Settings...` on (Linux/Windows) or with the keyboard shortcut `⌘ Cmd + ,` (Mac) or `⌘ Cmd + P` (Linux/Windows).
 
@@ -695,7 +724,7 @@ When changed, the audio settings are saved automatically on the computer and res
 
 <div style="page-break-after: always;"></div>
 
-## 12. Plug-ins settings
+## 13. Plug-ins settings
 
 The application uses [Vamp plug-in technology](https://www.vamp-plugins.org/), an audio processing plug-in system that extract descriptive information from audio data developed at the Centre for Digital Music, Queen Mary, University of London. 
 
@@ -735,7 +764,7 @@ In the upper section of the Plugin Settings window, each item in the list corres
 
 <div style="page-break-after: always;"></div>
 
-## 13. Command-line tools
+## 14. Command-line tools
 
 The Partiels executable can be used as a command line tool. The command line tool provides functionality to load documents, create documents and run analyses and export the results. It also provides functions to parse SDIF files to JSON and vice versa. All the functionality is documented in the help command:
 
