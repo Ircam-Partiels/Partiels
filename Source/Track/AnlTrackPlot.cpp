@@ -350,7 +350,7 @@ void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
                         return;
                     }
                     auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
-                    mMouseWasDragged = mMouseWasDragged || event.getDistanceFromDragStartX() > epsilon;
+                    mMouseWasDragged = mMouseWasDragged || static_cast<double>(std::abs(event.getDistanceFromDragStartX())) > epsilon;
                     if(mMouseWasDragged)
                     {
                         std::get<0_z>(markersData->front()) = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
@@ -409,7 +409,7 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
                         break;
                     }
                     auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
-                    if(mMouseWasDragged || event.getDistanceFromDragStartX() > epsilon)
+                    if(mMouseWasDragged || static_cast<double>(std::abs(event.getDistanceFromDragStartX())) > epsilon)
                     {
                         auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
                         auto const& edition = mAccessor.getAttr<AttrType::edit>();
