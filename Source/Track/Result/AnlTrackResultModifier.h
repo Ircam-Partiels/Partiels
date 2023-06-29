@@ -14,6 +14,7 @@ namespace Track
             std::optional<double> getTime(Accessor const& accessor, size_t const channel, size_t index);
 
             bool isEmpty(ChannelData const& data);
+            bool matchFrame(Accessor const& accessor, size_t const channel, double const time);
             bool containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
             ChannelData copyFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
             ChannelData duplicateFrames(ChannelData const& data, double const destinationTime);

@@ -104,6 +104,43 @@ bool Track::Result::Modifier::isEmpty(ChannelData const& data)
     return true;
 }
 
+bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const channel, double const time)
+{
+    auto const doMatch = [&](auto const& results)
+    {
+        using result_type = typename std::remove_const<typename std::remove_reference<decltype(results)>::type>::type;
+        using data_type = typename result_type::value_type::value_type;
+        if(channel >= results.size())
+        {
+            return false;
+        }
+        auto const& channelFrames = results.at(channel);
+        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), time, Result::lower_cmp<data_type>);
+        return start != channelFrames.cend() && std::get<0_z>(*start) <= time;
+    };
+
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        showAccessWarning();
+        return {};
+    }
+    if(auto markers = results.getMarkers())
+    {
+        return doMatch(*markers);
+    }
+    if(auto points = results.getPoints())
+    {
+        return doMatch(*points);
+    }
+    if(auto columns = results.getColumns())
+    {
+        return doMatch(*columns);
+    }
+    return {};
+}
+
 bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
 {
     auto const doContain = [&](auto const& results)
