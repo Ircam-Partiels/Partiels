@@ -79,6 +79,7 @@ void Document::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& comma
         , CommandIDs::editCut
         , CommandIDs::editPaste
         , CommandIDs::editDuplicate
+        , CommandIDs::editInsert
         , CommandIDs::editSystemCopy
     });
     // clang-format on
@@ -88,9 +89,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
 {
     auto const& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     auto const& transportAcsr = mAccessor.getAcsr<AcsrType::transport>();
-
-    auto const& selection = transportAcsr.getAttr<Transport::AttrType::selection>();
-    auto const isSelectionEmpty = [&]()
+    auto const isSelectionEmpty = [&](juce::Range<double> const& selection)
     {
         auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
         for(auto const& trackAcsr : trackAcsrs)
@@ -108,6 +107,26 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             }
         }
         return true;
+    };
+
+    auto const matchTime = [&](double time)
+    {
+        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+        for(auto const& trackAcsr : trackAcsrs)
+        {
+            if(Track::Tools::getFrameType(trackAcsr.get()) != Track::FrameType::vector)
+            {
+                auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    if(Track::Result::Modifier::matchFrame(trackAcsr.get(), channel, time))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     };
 
     auto const isClipboardEmpty = [&]()
@@ -136,6 +155,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         return true;
     };
 
+    auto const& selection = transportAcsr.getAttr<Transport::AttrType::selection>();
     auto const isModeActive = mAccessor.getAttr<AttrType::editMode>() == EditMode::frames;
     switch(commandID)
     {
@@ -152,14 +172,14 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.defaultKeypresses.add(juce::KeyPress(0x08, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::backspaceKey, juce::ModifierKeys::noModifiers, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers, 0));
-            result.setActive(isModeActive && !isSelectionEmpty());
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
         case CommandIDs::editCopy:
         {
             result.setInfo(juce::translate("Copy Frame(s)"), juce::translate("Copy Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(isModeActive && !isSelectionEmpty());
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
         case CommandIDs::editCut:
@@ -167,7 +187,7 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setInfo(juce::translate("Cut Frame(s)"), juce::translate("Cut Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('x', juce::ModifierKeys::commandModifier, 0));
             result.defaultKeypresses.add(juce::KeyPress(juce::KeyPress::deleteKey, juce::ModifierKeys::shiftModifier, 0));
-            result.setActive(isModeActive && !isSelectionEmpty());
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
         case CommandIDs::editPaste:
@@ -182,14 +202,21 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         {
             result.setInfo(juce::translate("Duplicate Frame(s)"), juce::translate("Duplicate Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('d', juce::ModifierKeys::commandModifier, 0));
-            result.setActive(isModeActive && !isSelectionEmpty());
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
+        }
+        break;
+        case CommandIDs::editInsert:
+        {
+            result.setInfo(juce::translate("Insert Frame(s)"), juce::translate("Insert Frame(s)"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::noModifiers, 0));
+            result.setActive(isModeActive && (!matchTime(selection.getStart()) || !matchTime(selection.getEnd())));
         }
         break;
         case CommandIDs::editSystemCopy:
         {
             result.setInfo(juce::translate("Copy Frame(s) to System Clipboard"), juce::translate("Copy Frame(s) to System Clipboard"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('c', juce::ModifierKeys::altModifier, 0));
-            result.setActive(isModeActive && !isSelectionEmpty());
+            result.setActive(isModeActive && !isSelectionEmpty(selection));
         }
         break;
     }
@@ -343,6 +370,44 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
             perform({CommandIDs::editCopy});
             transportAcsr.setAttr<Transport::AttrType::startPlayhead>(mClipboardRange.getEnd(), NotificationType::synchronous);
             perform({CommandIDs::editPaste});
+            return true;
+        }
+        case CommandIDs::editInsert:
+        {
+            auto const insertFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
+            {
+                if(!Track::Result::Modifier::matchFrame(trackAcsr, channel, time))
+                {
+                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                    auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
+                    auto const data = Track::Result::Modifier::createFrame(trackAcsr, channel, time);
+                    undoManager.perform(std::make_unique<ActionPaste>(fn, channel, data, time).release());
+                }
+            };
+            auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
+            auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+            undoManager.beginNewTransaction(juce::translate("Insert Frame(s)"));
+            performForAllTracks([&](Track::Accessor& trackAcsr)
+                                {
+                                    auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
+                                    for(auto const& channel : selectedChannels)
+                                    {
+                                        if(isPlaying)
+                                        {
+                                            insertFrame(trackAcsr, channel, runningPlayhead);
+                                        }
+                                        else
+                                        {
+                                            insertFrame(trackAcsr, channel, selection.getStart());
+                                            if(!selection.isEmpty())
+                                            {
+                                                insertFrame(trackAcsr, channel, selection.getEnd());
+                                            }
+                                        }
+                                    }
+                                });
+            undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
             return true;
         }
         case CommandIDs::editSystemCopy:

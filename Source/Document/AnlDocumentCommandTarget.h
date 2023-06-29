@@ -20,6 +20,7 @@ namespace Document
             , editCut
             , editPaste
             , editDuplicate
+            , editInsert
             , editSystemCopy
         };
         // clang-format on

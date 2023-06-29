@@ -89,6 +89,7 @@ juce::PopupMenu Application::MainMenuModel::getMenuForIndex(int topLevelMenuInde
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editCut);
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editPaste);
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editDuplicate);
+        menu.addCommandItem(&commandManager, DocumentCommandIDs::editInsert);
         menu.addSeparator();
         menu.addCommandItem(&commandManager, DocumentCommandIDs::editSystemCopy);
     }
