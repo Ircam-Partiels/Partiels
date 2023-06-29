@@ -236,7 +236,7 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                     auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
                     mCurrentEdition.channel = std::get<0_z>(channel.value());
                     mCurrentEdition.data = std::vector<Result::Data::Point>{{time, 0.0, value}};
-                    mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
+                    mMouseDownTime = time;
                 }
                 break;
                 case Track::FrameType::vector:
@@ -315,16 +315,52 @@ void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
                         return;
                     }
                     auto const channels = Tools::getChannelVerticalRanges(mAccessor, getLocalBounds());
-                    if(!channels.empty() || channels.count(mCurrentEdition.channel) == 0_z)
+                    if(channels.empty() || channels.count(mCurrentEdition.channel) == 0_z)
                     {
                         return;
                     }
-                    std::get<0_z>(pointsData->front()) = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
                     auto const& valueZoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
                     auto const range = valueZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
                     auto const top = static_cast<float>(channels.at(mCurrentEdition.channel).getStart());
                     auto const bottom = static_cast<float>(channels.at(mCurrentEdition.channel).getEnd());
-                    std::get<2_z>(pointsData->front()) = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                    auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
+                    auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+
+                    // remove points before time is necessary
+                    auto const minTime = std::min(mMouseDownTime, time);
+                    auto const startIt = std::lower_bound(pointsData->begin(), pointsData->end(), minTime, Result::lower_cmp<Result::Data::Point>);
+                    if(startIt != pointsData->begin())
+                    {
+                        pointsData->erase(pointsData->begin(), std::prev(startIt));
+                    }
+                    MiscWeakAssert(!pointsData->empty());
+
+                    // remove points after time is necessary
+                    auto const maxTime = std::max(mMouseDownTime, time);
+                    auto const endIt = std::upper_bound(pointsData->begin(), pointsData->end(), maxTime, Result::upper_cmp<Result::Data::Point>);
+                    if(endIt != pointsData->end())
+                    {
+                        pointsData->erase(endIt, pointsData->end());
+                    }
+                    MiscWeakAssert(!pointsData->empty());
+
+                    if(time > std::get<0_z>(pointsData->back()) + epsilon)
+                    {
+                        pointsData->push_back({time, 0.0, value});
+                    }
+                    else if(std::abs(time - std::get<0_z>(pointsData->back())) < epsilon)
+                    {
+                        std::get<2_z>(pointsData->back()) = value;
+                    }
+                    else if(time < std::get<0_z>(pointsData->front()) - epsilon)
+                    {
+                        pointsData->insert(pointsData->begin(), {time, 0.0, value});
+                    }
+                    else if(std::abs(time - std::get<0_z>(pointsData->front())) < epsilon)
+                    {
+                        std::get<2_z>(pointsData->front()) = value;
+                    }
                     mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
                 }
                 break;
@@ -381,14 +417,16 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
             {
                 case Track::FrameType::label:
                 {
-                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    mouseDrag(event);
+                    auto const time = Result::Modifier::getTimeRange(mCurrentEdition.data).getStart();
                     mPlot.mDirector.getUndoManager().beginNewTransaction(juce::translate("Add Marker"));
                     mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionPaste>(mPlot.mDirector.getSafeAccessorFn(), mCurrentEdition.channel, mCurrentEdition.data, time).release());
                 }
                 break;
                 case Track::FrameType::value:
                 {
-                    auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                    mouseDrag(event);
+                    auto const time = Result::Modifier::getTimeRange(mCurrentEdition.data).getStart();
                     mPlot.mDirector.getUndoManager().beginNewTransaction(juce::translate("Add Point"));
                     mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionPaste>(mPlot.mDirector.getSafeAccessorFn(), mCurrentEdition.channel, mCurrentEdition.data, time).release());
                 }
@@ -404,6 +442,7 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
             {
                 case Track::FrameType::label:
                 {
+                    mouseDrag(event);
                     if(Result::Modifier::isEmpty(mCurrentEdition.data))
                     {
                         break;
@@ -411,7 +450,7 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
                     auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
                     if(mMouseWasDragged || static_cast<double>(std::abs(event.getDistanceFromDragStartX())) > epsilon)
                     {
-                        auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+                        auto const time = Result::Modifier::getTimeRange(mCurrentEdition.data).getStart();
                         auto const& edition = mAccessor.getAttr<AttrType::edit>();
                         mPlot.mDirector.getUndoManager().beginNewTransaction(juce::translate("Move Marker"));
                         mPlot.mDirector.getUndoManager().perform(std::make_unique<Result::Modifier::ActionErase>(mPlot.mDirector.getSafeAccessorFn(), edition.channel, edition.range).release());

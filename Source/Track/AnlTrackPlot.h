@@ -59,6 +59,7 @@ namespace Track
             SelectionBar mSelectionBar;
             ActionMode mActionMode;
             bool mMouseWasDragged{false};
+            double mMouseDownTime{0.0};
             Edition mCurrentEdition;
         };
 
