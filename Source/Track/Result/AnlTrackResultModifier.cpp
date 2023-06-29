@@ -110,18 +110,13 @@ bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t con
     {
         using result_type = typename std::remove_const<typename std::remove_reference<decltype(results)>::type>::type;
         using data_type = typename result_type::value_type::value_type;
-        std::vector<data_type> copy;
         if(channel >= results.size())
         {
             return false;
         }
         auto const& channelFrames = results.at(channel);
-        auto start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
-        if(start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd())
-        {
-            return true;
-        }
-        return false;
+        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), range.getStart(), Result::lower_cmp<data_type>);
+        return start != channelFrames.cend() && std::get<0_z>(*start) < range.getEnd();
     };
 
     auto const& results = accessor.getAttr<AttrType::results>();
