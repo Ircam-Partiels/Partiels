@@ -169,6 +169,7 @@ namespace Track
         void paintMarkers(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
         void paintMarkers(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Marker> const& results, juce::Range<double> const& timeRange, juce::Range<double> const& ignoredTimeRange, ColourSet const& colours, juce::String const& unit);
         void paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
+        void paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit);
         void paintColumns(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr);
     } // namespace Renderer
 } // namespace Track
@@ -478,48 +479,50 @@ void Track::Renderer::paintMarkers(juce::Graphics& g, juce::Rectangle<int> const
 
 void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce::Graphics& g, juce::Rectangle<int> const& bounds, Zoom::Accessor const& timeZoomAcsr)
 {
+    auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const& valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
+    auto const& colours = accessor.getAttr<AttrType::colours>();
+    auto const& unit = Tools::getUnit(accessor);
+
     auto const& results = accessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
-    if(!static_cast<bool>(access) || results.isEmpty())
+    if(!static_cast<bool>(access))
     {
         return;
     }
-
-    auto const points = results.getPoints();
-    if(points == nullptr || points->size() <= channel)
+    auto const markers = results.getPoints();
+    if(markers != nullptr && markers->size() > channel)
     {
-        return;
+        auto const& edition = accessor.getAttr<AttrType::edit>();
+        if(edition.channel == channel)
+        {
+            auto* data = std::get_if<std::vector<Result::Data::Point>>(&edition.data);
+            if(data != nullptr && !data->empty())
+            {
+                paintPoints(g, bounds, markers->at(channel), *data, timeRange, valueRange, colours, unit);
+                return;
+            }
+        }
+        paintPoints(g, bounds, markers->at(channel), {}, timeRange, valueRange, colours, unit);
     }
+}
 
-    if(bounds.isEmpty() || g.getClipBounds().isEmpty())
-    {
-        return;
-    }
-
-    auto const& timeRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
-    if(timeRange.isEmpty())
-    {
-        return;
-    }
-
-    auto const& valueRange = accessor.getAcsr<AcsrType::valueZoom>().getAttr<Zoom::AttrType::visibleRange>();
-    if(valueRange.isEmpty())
+void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const& bounds, std::vector<Result::Data::Point> const& results, std::vector<Result::Data::Point> const& extra, juce::Range<double> const& timeRange, juce::Range<double> const& valueRange, ColourSet const& colours, juce::String const& unit)
+{
+    auto const clipBounds = g.getClipBounds().toFloat();
+    if(bounds.isEmpty() || clipBounds.isEmpty() || results.empty() || timeRange.isEmpty() || valueRange.isEmpty())
     {
         return;
     }
 
     auto const fbounds = bounds.toFloat();
-    auto const& colours = accessor.getAttr<AttrType::colours>();
-    auto const& unit = Tools::getUnit(accessor);
-
     auto const font = g.getCurrentFont();
 
     auto constexpr epsilonPixel = 1.0f;
-    auto const clipBounds = g.getClipBounds();
     auto const clipTimeStart = Tools::pixelToSeconds(static_cast<float>(clipBounds.getX()) - epsilonPixel, timeRange, fbounds);
     auto const clipTimeEnd = Tools::pixelToSeconds(static_cast<float>(clipBounds.getRight()) + epsilonPixel, timeRange, fbounds);
 
-    auto getNumDecimals = [&]()
+    auto const getNumDecimals = [&]()
     {
         auto const rangeLength = valueRange.getLength();
         int numDecimals = 0;
@@ -530,89 +533,205 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
         return 4 - numDecimals;
     };
     auto const numDecimals = getNumDecimals();
-    LabelArrangement labelArr(font, unit, getNumDecimals());
+    LabelArrangement labelArr(font, unit, numDecimals);
 
-    auto const& channelResults = points->at(channel);
-    if(channelResults.empty())
+    if(results.size() == 1_z)
     {
-        return;
-    }
-    if(channelResults.size() == 1_z)
-    {
-        if(std::get<2>(channelResults[0]).has_value())
+        if(!std::get<2_z>(results.at(0)).has_value())
         {
-            auto const value = *std::get<2>(channelResults[0]);
-            auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+            return;
+        }
 
-            if(!colours.shadow.isTransparent())
-            {
-                g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
-                g.drawLine(fbounds.getX(), y + 2.f, fbounds.getRight(), y + 2.f);
-                g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
-                g.drawLine(fbounds.getX(), y + 1.f, fbounds.getRight(), y + 1.f);
-            }
-            g.setColour(colours.foreground);
-            g.drawLine(fbounds.getX(), y, fbounds.getRight(), y);
+        auto const value = std::get<2_z>(results.at(0)).value();
+        auto const y = Tools::valueToPixel(value, valueRange, fbounds);
+        auto const fullLine = std::get<0_z>(results.at(0)) + std::get<1_z>(results.at(0)) < std::numeric_limits<double>::epsilon() * 2.0;
+        auto const x1 = fullLine ? fbounds.getX() : Tools::secondsToPixel(std::get<0_z>(results.at(0)), timeRange, fbounds);
+        auto const x2 = fullLine ? fbounds.getRight() : Tools::secondsToPixel(std::get<0_z>(results.at(0)) + std::get<1_z>(results.at(0)), timeRange, fbounds);
+        if(!colours.shadow.isTransparent())
+        {
+            g.setColour(colours.shadow.withMultipliedAlpha(0.5f));
+            g.drawLine(x1, y + 2.f, x2, y + 2.f);
+            g.setColour(colours.shadow.withMultipliedAlpha(0.75f));
+            g.drawLine(x1, y + 1.f, x2, y + 1.f);
+        }
+        g.setColour(colours.foreground);
+        g.drawLine(x1, y, x2, y);
 
-            if(!colours.text.isTransparent())
-            {
-                g.setColour(colours.text);
-                g.drawSingleLineText(Format::valueToString(value, numDecimals) + unit, 4, static_cast<int>(y - font.getDescent()) - 2, juce::Justification::left);
-            }
+        if(!colours.text.isTransparent())
+        {
+            g.setColour(colours.text);
+            g.drawSingleLineText(Format::valueToString(value, numDecimals) + unit, static_cast<int>(x1) + 4, static_cast<int>(y - font.getDescent()) - 2, juce::Justification::left);
         }
         return;
     }
 
-    auto it = std::prev(std::lower_bound(std::next(channelResults.cbegin()), channelResults.cend(), clipTimeStart, Result::lower_cmp<Results::Point>));
+    struct it_wrap
+    {
+        using const_iterator = std::vector<Result::Data::Point>::const_iterator;
+        using const_reference = std::vector<Result::Data::Point>::const_reference;
+        const_iterator it;
+        bool extra{false};
+
+        it_wrap() noexcept
+        : it()
+        , extra(false)
+        {
+        }
+
+        it_wrap(const_iterator i, bool e) noexcept
+        : it(i)
+        , extra(e)
+        {
+        }
+
+        bool operator==(const_iterator other) const { return it == other; }
+        bool operator!=(const_iterator other) const { return !(*this == other); }
+        bool operator==(it_wrap other) const { return it == other.it; }
+        bool operator!=(it_wrap other) const { return !(*this == other); }
+        const_reference operator*() const { return *it; }
+    };
+
+    auto const hasExtra = !extra.empty();
+    auto const startExtraTime = hasExtra ? std::get<0_z>(extra.front()) : -1.0;
+    auto const endExtraTime = hasExtra ? std::get<0_z>(extra.back()) : -1.0;
+
+    it_wrap it = {std::prev(std::lower_bound(std::next(results.cbegin()), results.cend(), clipTimeStart, Result::lower_cmp<Results::Point>)), false};
+    if(hasExtra && std::get<0_z>(*it) > std::get<0_z>(extra.front()))
+    {
+        it = {extra.cbegin(), true};
+    }
+    auto const sourceOutIt = std::lower_bound(results.cbegin(), results.cend(), startExtraTime, Result::lower_cmp<Results::Point>);
+    auto const sourceInIt = std::upper_bound(sourceOutIt, results.cend(), endExtraTime, Result::upper_cmp<Results::Point>);
+    auto const extraLastIt = hasExtra ? extra.cbegin() + static_cast<long>(extra.size() - 1_z) : extra.cbegin();
     // Time distance corresponding to epsilon pixels
     auto const timeEpsilon = static_cast<double>(epsilonPixel) * timeRange.getLength() / static_cast<double>(bounds.getWidth());
 
     juce::RectangleList<int> rectangles;
     PathArrangement pathArr;
-    auto getNextItBeforeTime = [](decltype(it) _start, decltype(it) _end, double const& l)
+
+    auto const getNextIt = [&](it_wrap const iterator) -> it_wrap
     {
-        auto min = *std::get<2>(*_start);
-        auto max = min;
-        _start = std::next(_start);
-        while(_start != _end && std::get<0>(*_start) < l)
+        auto const next = std::next(iterator.it);
+        if(!hasExtra)
         {
-            if(std::get<2>(*_start).has_value())
+            return {next, false};
+        }
+        MiscWeakAssert(iterator != extra.cend());
+        if(!iterator.extra)
+        {
+            if(next == sourceOutIt)
             {
-                auto const& lvalue = *std::get<2>(*_start);
+                return {extra.cbegin(), true};
+            }
+            MiscWeakAssert(next != extra.cend());
+            return {next, false};
+        }
+        if(next == extra.cend())
+        {
+            return {sourceInIt, false};
+        }
+        MiscWeakAssert(next != extra.cend());
+        return {next, true};
+    };
+
+    auto const getPreviousIt = [&](it_wrap const iterator) -> it_wrap
+    {
+        if(!hasExtra)
+        {
+            return {std::prev(iterator.it), false};
+        }
+        MiscWeakAssert(iterator != extra.cend());
+        if(!iterator.extra)
+        {
+            if(iterator.it == sourceInIt)
+            {
+                MiscWeakAssert(extraLastIt != extra.cend());
+                return {extraLastIt, true};
+            }
+            MiscWeakAssert(iterator != results.cbegin());
+            MiscWeakAssert(std::prev(iterator.it) != extra.cend());
+            return {std::prev(iterator.it), false};
+        }
+        if(iterator.it == extra.cbegin())
+        {
+            return {std::prev(sourceOutIt), false};
+        }
+        MiscWeakAssert(std::prev(iterator.it) != extra.cend());
+        return {std::prev(iterator.it), true};
+    };
+
+    auto const getEndTime = [&](it_wrap const iterator)
+    {
+        auto const start = std::get<0_z>(*iterator.it);
+        auto const end = start + std::get<1_z>(*iterator.it);
+        if(!hasExtra)
+        {
+            return end;
+        }
+        if(start < startExtraTime)
+        {
+            return std::min(end, startExtraTime);
+        }
+        if(start < endExtraTime)
+        {
+            return std::min(end, endExtraTime);
+        }
+        return end;
+    };
+
+    auto const getNextItBeforeTime = [&](it_wrap const start)
+    {
+        auto const limit = getEndTime(start) + timeEpsilon;
+        auto min = std::get<2_z>(*start).value();
+        auto max = min;
+        auto iterator = getNextIt(start);
+        MiscWeakAssert(!hasExtra || iterator != extra.cend());
+        while(iterator != results.cend() && std::get<0_z>(*iterator) < limit)
+        {
+            if(std::get<2_z>(*it).has_value())
+            {
+                auto const& lvalue = std::get<2_z>(*start).value();
                 min = std::min(min, lvalue);
                 max = std::max(max, lvalue);
             }
-            _start = std::next(_start);
+            iterator = getNextIt(iterator);
+            MiscWeakAssert(!hasExtra || iterator != extra.cend());
         }
-        return std::make_tuple(std::prev(_start), min, max);
+        MiscWeakAssert(!hasExtra || iterator != extra.cend());
+        iterator = getPreviousIt(iterator);
+        MiscWeakAssert(!hasExtra || iterator != extra.cend());
+        return std::make_tuple(iterator, min, max);
     };
 
     auto const showLabel = !colours.text.isTransparent();
     auto hasExceededEnd = false;
-    while(!hasExceededEnd && it != channelResults.cend())
+    while(!hasExceededEnd && it != results.cend())
     {
-        if(!std::get<2>(*it).has_value())
+        MiscWeakAssert(!hasExtra || it != extra.cend());
+        if(!std::get<2_z>(*it).has_value())
         {
             pathArr.stopLine();
-            it = std::find_if(std::next(it), channelResults.cend(), [&](auto const& result)
-                              {
-                                  return std::get<2>(result).has_value();
-                              });
-            hasExceededEnd = it == channelResults.cend() || std::get<0>(*it) >= clipTimeEnd;
+            it = getNextIt(it);
+            while(it != results.cend() && !std::get<2_z>(*it).has_value() && !hasExceededEnd)
+            {
+                hasExceededEnd = std::get<0_z>(*it) >= clipTimeEnd;
+                it = getNextIt(it);
+            }
         }
-        else if(std::get<1>(*it) < timeEpsilon)
+        else if(std::get<1_z>(*it) < timeEpsilon)
         {
-            auto const end = std::get<0>(*it) + std::get<1>(*it);
-            auto const limit = end + timeEpsilon;
-            auto const value = *std::get<2>(*it);
-            auto const x = Tools::secondsToPixel(std::get<0>(*it), timeRange, fbounds);
+            auto const nextResult = getNextItBeforeTime(it);
+            auto const start = std::get<0_z>(*it);
+            auto const next = std::get<0_z>(nextResult);
+            MiscWeakAssert(!hasExtra || next != results.cend());
+            MiscWeakAssert(!hasExtra || next != extra.cend());
+            auto const end = getEndTime(next);
 
-            auto const nextResult = getNextItBeforeTime(it, channelResults.cend(), limit);
-            auto const next = std::get<0>(nextResult);
-            auto const min = std::get<1>(nextResult);
-            auto const max = std::get<2>(nextResult);
-            auto const nend = std::get<0>(*next) + std::get<1>(*next);
-            auto const x2 = Tools::secondsToPixel(nend, timeRange, fbounds);
+            auto const min = std::get<1_z>(nextResult);
+            auto const max = std::get<2_z>(nextResult);
+
+            auto const x = Tools::secondsToPixel(start, timeRange, fbounds);
+            auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
 
             if(it != next && (max - min) > std::numeric_limits<float>::epsilon())
             {
@@ -628,27 +747,30 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
                     labelArr.addValue(max, x, y2);
                 }
 
-                hasExceededEnd = nend >= clipTimeEnd;
                 it = next;
+                hasExceededEnd = end >= clipTimeEnd;
             }
             else
             {
+                auto const value = std::get<2_z>(*it).value();
                 auto const y = Tools::valueToPixel(value, valueRange, fbounds);
                 if(showLabel)
                 {
                     labelArr.addValue(value, x, y);
                 }
                 pathArr.addLine(x, x2, y);
-                it = std::next(it);
+
+                it = getNextIt(it);
                 hasExceededEnd = end >= clipTimeEnd;
             }
         }
         else
         {
-            auto const value = *std::get<2>(*it);
-            auto const x = Tools::secondsToPixel(std::get<0>(*it), timeRange, fbounds);
+            auto const value = std::get<2_z>(*it).value();
             auto const y = Tools::valueToPixel(value, valueRange, fbounds);
-            auto const end = std::get<0>(*it) + std::get<1>(*it);
+            auto const start = std::get<0_z>(*it);
+            auto const x = Tools::secondsToPixel(start, timeRange, fbounds);
+            auto const end = getEndTime(it);
             auto const x2 = Tools::secondsToPixel(end, timeRange, fbounds);
             if(showLabel)
             {
@@ -656,7 +778,7 @@ void Track::Renderer::paintPoints(Accessor const& accessor, size_t channel, juce
             }
             pathArr.addLine(x, x2, y);
 
-            it = std::next(it);
+            it = getNextIt(it);
             hasExceededEnd = end >= clipTimeEnd;
         }
     }
