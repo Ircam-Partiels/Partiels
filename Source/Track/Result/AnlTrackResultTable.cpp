@@ -829,15 +829,19 @@ bool Track::Result::Table::duplicateSelection()
     }
 
     auto& undoManager = mDirector.getUndoManager();
-    auto const copyRange = Modifier::getTimeRange(mChannelData);
-    mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(copyRange.getEnd(), NotificationType::synchronous);
-    auto const playhead = mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
+    auto const range = mTable.getSelectedRows().getTotalRange();
+    auto const selectionEnd = Modifier::getTime(mAccessor, channel.value(), static_cast<size_t>(range.getEnd()));
+    if(!selectionEnd.has_value())
+    {
+        return false;
+    }
     auto const selection = mTransportAccessor.getAttr<Transport::AttrType::selection>();
+    mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(selectionEnd.value(), NotificationType::synchronous);
     undoManager.beginNewTransaction(juce::translate("Duplicate Frame(s)"));
-    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), channel.value(), mChannelData, copyRange.getEnd()).release()))
+    if(undoManager.perform(std::make_unique<Result::Modifier::ActionPaste>(mDirector.getSafeAccessorFn(), channel.value(), mChannelData, selectionEnd.value()).release()))
     {
         undoManager.perform(std::make_unique<Result::Modifier::FocusRestorer>(mDirector.getSafeAccessorFn()).release());
-        undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), playhead, selection.movedToStartAt(playhead)).release());
+        undoManager.perform(std::make_unique<Transport::Action::Restorer>(mDirector.getSafeTransportZoomAccessorFn(), selectionEnd.value(), selection.movedToStartAt(selectionEnd.value())).release());
         return true;
     }
     return false;
