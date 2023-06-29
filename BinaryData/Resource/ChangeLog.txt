@@ -1,4 +1,4 @@
-v1.2.0-test1
+v1.2.0-dev2
 
 - Fix: Remove F0 frequency parameter for Harmonic Partial Tracking (Ircam Vamp Plug-ins)
 - Add: Chord Partial Tracking (Ircam Vamp Plug-ins)
