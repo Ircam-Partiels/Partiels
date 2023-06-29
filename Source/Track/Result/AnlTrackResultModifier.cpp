@@ -178,6 +178,26 @@ bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t con
     return {};
 }
 
+Track::Result::ChannelData Track::Result::Modifier::createFrame(Accessor const& accessor, size_t const channel, double const time)
+{
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        showAccessWarning();
+        return {};
+    }
+    if(auto markers = results.getMarkers())
+    {
+        return std::vector<Data::Marker>{{time, 0.0, {}}};
+    }
+    if(auto points = results.getPoints())
+    {
+        return std::vector<Data::Point>{{time, 0.0, Data::getValue(points, channel, time)}};
+    }
+    return {};
+}
+
 Track::Result::ChannelData Track::Result::Modifier::copyFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
 {
     auto const doCopy = [&](auto const& results)

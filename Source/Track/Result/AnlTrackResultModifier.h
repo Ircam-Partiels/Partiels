@@ -16,6 +16,7 @@ namespace Track
             bool isEmpty(ChannelData const& data);
             bool matchFrame(Accessor const& accessor, size_t const channel, double const time);
             bool containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
+            ChannelData createFrame(Accessor const& accessor, size_t const channel, double const time);
             ChannelData copyFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range);
             ChannelData duplicateFrames(ChannelData const& data, double const destinationTime);
             bool eraseFrames(Accessor& accessor, size_t const channel, juce::Range<double> const& range, juce::String const& commit);
