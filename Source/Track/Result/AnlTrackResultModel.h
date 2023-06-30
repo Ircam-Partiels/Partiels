@@ -105,17 +105,17 @@ namespace Track
         using ChannelData = std::variant<std::vector<Data::Marker>, std::vector<Data::Point>, std::vector<Data::Column>>;
 
         template <class T>
-        concept data = std::is_same_v<T, Data::Marker> || std::is_same_v<T, Data::Point> || std::is_same_v<T, Data::Column>;
+        concept is_data = std::is_same_v<T, Data::Marker> || std::is_same_v<T, Data::Point> || std::is_same_v<T, Data::Column>;
 
         template <typename T>
-            requires data<T>
+            requires is_data<T>
         static bool lower_cmp(T const& value, double const time)
         {
             return std::get<0_z>(value) < time;
         }
 
         template <typename T>
-            requires data<T>
+            requires is_data<T>
         static bool upper_cmp(double const time, T const& value)
         {
             return time < std::get<0_z>(value);
