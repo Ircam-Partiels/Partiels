@@ -13,6 +13,7 @@ v1.2.0-dev2
 - Fix: Track/group header buttons should be disabled when the shift key is pressed (#334)
 - Fix: The tooltip displays the first value of the results before it appears (#333)
 - Fix: Automatic resizing of tracks and groups doesn't work properly when a new track is added (#331)
+- Add: Create several points at once on the track's graphical plot by clicking and dragging with command or control (#285)
 - Add: New user interaction for moving a track marker with the mouse (#284)
 - Imp: Use cross mouse cursor when creating new points or new markers (#283)
 
