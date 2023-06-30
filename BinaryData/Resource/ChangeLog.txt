@@ -3,6 +3,7 @@ v1.2.0-dev2
 - Fix: Remove F0 frequency parameter for Harmonic Partial Tracking (Ircam Vamp Plug-ins)
 - Add: Chord Partial Tracking (Ircam Vamp Plug-ins)
 
+- Fix: Concurrent access to a track's results data can block access to it (#343)
 - Fix: The selection of results in the table is not consistent with the selection on the track (#340)
 - Add: Insert markers or points at the playhead position or at the start and end of the time selection using the i keyboard shortcut (#339)
 - Imp: Paste frames should ignore empty space of the selection (#338)
