@@ -102,7 +102,14 @@ public:
         {
             mInfo->data = std::make_shared<std::vector<Markers>>(std::move(markers));
         }
-        updated();
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        auto const access = doGetAccess(true);
+        MiscWeakAssert(access);
+        if(access)
+        {
+            updated();
+            doReleaseAccess(true);
+        }
     }
 
     Impl(std::vector<Points>&& points)
@@ -113,7 +120,14 @@ public:
         {
             mInfo->data = std::make_shared<std::vector<Points>>(std::move(points));
         }
-        updated();
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        auto const access = doGetAccess(true);
+        MiscWeakAssert(access);
+        if(access)
+        {
+            updated();
+            doReleaseAccess(true);
+        }
     }
 
     Impl(std::vector<Columns>&& columns)
@@ -124,18 +138,32 @@ public:
         {
             mInfo->data = std::make_shared<std::vector<Columns>>(std::move(columns));
         }
-        updated();
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        auto const access = doGetAccess(true);
+        MiscWeakAssert(access);
+        if(access)
+        {
+            updated();
+            doReleaseAccess(true);
+        }
     }
 
     ~Impl()
     {
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
         MiscWeakAssert(mInfo != nullptr && (mInfo.use_count() > 1l || mInfo->accessCounter == 0_z));
     }
 
     std::shared_ptr<std::vector<Markers> const> getReadMarkers() const noexcept
     {
-        MiscWeakAssert(hasAccess(true) && mInfo != nullptr);
-        if(!hasAccess(true) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
         {
             return {};
         }
@@ -148,8 +176,14 @@ public:
 
     std::shared_ptr<std::vector<Points> const> getReadPoints() const noexcept
     {
-        MiscWeakAssert(hasAccess(true) && mInfo != nullptr);
-        if(!hasAccess(true) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
         {
             return {};
         }
@@ -162,8 +196,14 @@ public:
 
     std::shared_ptr<std::vector<Columns> const> getReadColumns() const noexcept
     {
-        MiscWeakAssert(hasAccess(true) && mInfo != nullptr);
-        if(!hasAccess(true) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
         {
             return {};
         }
@@ -176,8 +216,14 @@ public:
 
     std::shared_ptr<std::vector<Markers>> getWriteMarkers() noexcept
     {
-        MiscWeakAssert(hasAccess(false) && mInfo != nullptr);
-        if(!hasAccess(false) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(false));
+        if(!hasAccess(false))
         {
             return {};
         }
@@ -190,8 +236,14 @@ public:
 
     std::shared_ptr<std::vector<Points>> getWritePoints() noexcept
     {
-        MiscWeakAssert(hasAccess(false) && mInfo != nullptr);
-        if(!hasAccess(false) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(false));
+        if(!hasAccess(false))
         {
             return {};
         }
@@ -204,8 +256,14 @@ public:
 
     std::shared_ptr<std::vector<Columns>> getWriteColumns() noexcept
     {
-        MiscWeakAssert(hasAccess(false) && mInfo != nullptr);
-        if(!hasAccess(false) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(false));
+        if(!hasAccess(false))
         {
             return {};
         }
@@ -218,8 +276,14 @@ public:
 
     std::optional<size_t> getNumChannels() const noexcept
     {
-        MiscWeakAssert(hasAccess(true) && mInfo != nullptr);
-        if(!hasAccess(true) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
         {
             return {};
         }
@@ -228,8 +292,14 @@ public:
 
     std::optional<size_t> getNumBins() const noexcept
     {
-        MiscWeakAssert(hasAccess(true) && mInfo != nullptr);
-        if(!hasAccess(true) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
         {
             return {};
         }
@@ -238,8 +308,14 @@ public:
 
     std::optional<Zoom::Range> getValueRange() const noexcept
     {
-        MiscWeakAssert(hasAccess(true) && mInfo != nullptr);
-        if(!hasAccess(true) || mInfo == nullptr)
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return {};
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        MiscWeakAssert(hasAccess(true));
+        if(!hasAccess(true))
         {
             return {};
         }
@@ -263,6 +339,31 @@ public:
         {
             return false;
         }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        return doGetAccess(readOnly);
+    }
+
+    void releaseAccess(bool readOnly) noexcept
+    {
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return;
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex);
+        doReleaseAccess(readOnly);
+    }
+
+private:
+    bool doGetAccess(bool readOnly)
+    {
+        MiscWeakAssert(mInfo != nullptr);
+        if(mInfo == nullptr)
+        {
+            return false;
+        }
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex, std::try_to_lock);
+        MiscWeakAssert(!lock.owns_lock());
         auto& counter = mInfo->accessCounter;
         if(counter == writeAccess)
         {
@@ -288,27 +389,31 @@ public:
         }
     }
 
-    void releaseAccess(bool readOnly) noexcept
+    void doReleaseAccess(bool readOnly)
     {
         MiscWeakAssert(mInfo != nullptr);
         if(mInfo == nullptr)
         {
             return;
         }
-        MiscWeakAssert(hasAccess(readOnly));
-        if(hasAccess(readOnly))
+        // This lock should fail
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex, std::try_to_lock);
+        MiscWeakAssert(!lock.owns_lock());
+        auto& counter = mInfo->accessCounter;
+        MiscWeakAssert(!readOnly || (counter > 0_z && counter < writeAccess));
+        MiscWeakAssert(readOnly || counter == writeAccess);
+        if(readOnly && counter > 0_z && counter < writeAccess)
         {
-            auto& counter = mInfo->accessCounter;
-            if(readOnly)
-            {
-                MiscWeakAssert(counter < writeAccess);
-                --counter;
-            }
-            else
-            {
-                counter = 0_z;
-                updated();
-            }
+            --counter;
+        }
+        else if(!readOnly && counter == writeAccess)
+        {
+            counter = 0_z;
+            updated();
+        }
+        else
+        {
+            MiscWeakAssert(false);
         }
     }
 
@@ -319,11 +424,13 @@ public:
         {
             return false;
         }
+        // This lock should fail
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex, std::try_to_lock);
+        MiscWeakAssert(!lock.owns_lock());
         auto const& counter = mInfo->accessCounter;
         return readOnly ? counter > 0_z : counter == writeAccess;
     }
 
-private:
     void updated()
     {
         MiscWeakAssert(mInfo != nullptr);
@@ -331,28 +438,38 @@ private:
         {
             return;
         }
-        auto const access = getAccess(true);
-        if(!access)
+        // This lock should fail
+        std::unique_lock<std::mutex> lock(mInfo->accessMutex, std::try_to_lock);
+        MiscWeakAssert(!lock.owns_lock());
+        if(auto const* markersPtr = std::get_if<std::shared_ptr<std::vector<Markers>>>(&mInfo->data))
         {
-            return;
+            auto const markers = *markersPtr;
+            if(markers != nullptr)
+            {
+                mInfo->numChannels = markers->size();
+                mInfo->numBins = 0_z;
+                mInfo->valueRange = Zoom::Range::emptyRange(0.0);
+            }
         }
-        if(auto const markers = getReadMarkers())
+        else if(auto const* pointsPtr = std::get_if<std::shared_ptr<std::vector<Points>>>(&mInfo->data))
         {
-            mInfo->numChannels = markers->size();
-            mInfo->numBins = 0_z;
-            mInfo->valueRange = Zoom::Range::emptyRange(0.0);
+            auto const points = *pointsPtr;
+            if(points != nullptr)
+            {
+                mInfo->numChannels = points->size();
+                mInfo->numBins = 1_z;
+                mInfo->valueRange = ::Misc::getValueRange(*points);
+            }
         }
-        else if(auto const points = getReadPoints())
+        else if(auto const* columnsPtr = std::get_if<std::shared_ptr<std::vector<Columns>>>(&mInfo->data))
         {
-            mInfo->numChannels = points->size();
-            mInfo->numBins = 1_z;
-            mInfo->valueRange = ::Misc::getValueRange(*points);
-        }
-        else if(auto const columns = getReadColumns())
-        {
-            mInfo->numChannels = columns->size();
-            mInfo->numBins = ::Misc::getNumBins(*columns);
-            mInfo->valueRange = ::Misc::getValueRange(*columns);
+            auto const columns = *columnsPtr;
+            if(columns != nullptr)
+            {
+                mInfo->numChannels = columns->size();
+                mInfo->numBins = ::Misc::getNumBins(*columns);
+                mInfo->valueRange = ::Misc::getValueRange(*columns);
+            }
         }
         else
         {
@@ -360,7 +477,6 @@ private:
             mInfo->numBins.reset();
             mInfo->valueRange.reset();
         }
-        releaseAccess(true);
     }
 
     using DataType = std::variant<std::shared_ptr<std::vector<Markers>>, std::shared_ptr<std::vector<Points>>, std::shared_ptr<std::vector<Columns>>>;
@@ -372,6 +488,7 @@ private:
         std::optional<size_t> numChannels{};
         std::optional<size_t> numBins{};
         std::optional<Zoom::Range> valueRange{};
+        std::mutex accessMutex;
         size_t accessCounter{0_z};
 
         JUCE_LEAK_DETECTOR(Info)
