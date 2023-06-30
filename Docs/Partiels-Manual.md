@@ -294,7 +294,8 @@ Following editing, you can use the keyboard shortcuts `⌘ Cmd + Z` (Mac) or `Ct
 
 On the graphical plot, markers are represented by vertical lines on the timeline, points by a succession of segments - which can be interrupted - and vectors by a sonogram-like matrix.  Markers and points can be created, deleted, copied, pasted, and duplicated. Markers can also be moved over time.
 
-- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a marker or point track to create a new marker at the corresponding time or a new point at the corresponding time and value.  
+- Click with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a marker track to create a new marker at the corresponding time.  
+- Click and drag with `⌘ Cmd` (Mac) or `Ctrl` (Linux/Windows) on a point track to create new points at the corresponding times and values.  
 - Press the `Delete ⌫` key to delete markers or points within the selected time range and on selected tracks and channels.
 - Use the keyboard shortcut `⌘ Cmd + C` (Mac) or `Ctrl + C` (Linux/Windows) to copy markers or points in the selected time range and on selected tracks and channels to the clipboard.
 - Use the keyboard shortcut `⌘ Cmd + X` (Mac) or `Ctrl + X` (Linux/Windows) to cut markers or points in the selected time range and on selected tracks and channels to the clipboard.
