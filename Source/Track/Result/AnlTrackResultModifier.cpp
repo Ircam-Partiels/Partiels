@@ -351,7 +351,7 @@ bool Track::Result::Modifier::insertFrames(Accessor& accessor, size_t const chan
         // sanitize the duration of the frame before
         auto const sanitizeDuration = [&](auto const iterator)
         {
-            if(iterator != channelFrames.begin())
+            if(iterator != channelFrames.begin() && iterator != channelFrames.end())
             {
                 auto previous = std::prev(iterator);
                 std::get<1_z>(*previous) = std::min(std::get<1_z>(*previous), std::get<0_z>(*iterator) - std::get<0_z>(*previous));
