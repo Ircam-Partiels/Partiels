@@ -690,7 +690,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         {
             if(std::get<2_z>(*it).has_value())
             {
-                auto const& lvalue = std::get<2_z>(*start).value();
+                auto const& lvalue = std::get<2_z>(*iterator).value();
                 min = std::min(min, lvalue);
                 max = std::max(max, lvalue);
             }
