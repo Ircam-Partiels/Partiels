@@ -124,7 +124,7 @@ bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const 
     if(!static_cast<bool>(access))
     {
         showAccessWarning();
-        return {};
+        return false;
     }
     if(auto markers = results.getMarkers())
     {
@@ -138,7 +138,7 @@ bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const 
     {
         return doMatch(*columns);
     }
-    return {};
+    return false;
 }
 
 bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
