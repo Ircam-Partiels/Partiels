@@ -111,6 +111,7 @@ juce_add_binary_data(ResourceData HEADER_NAME "ResourceData.h" NAMESPACE Resourc
 
 file(GLOB TestResultsDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.csv
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.lab
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.json
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.dat
     ${PARTIELS_BINARYDATA_DIRECTORY}/Tests/*.cue

@@ -56,7 +56,7 @@ Application::CommandLine::CommandLine()
          "--input|-i <audiofile> Defines the path to the audio file to analyze (required).\n\t"
          "--template|-t <templatefile> Defines the path to the template file (required).\n\t"
          "--output|-o <outputdirectory> Defines the path of the output folder (required).\n\t"
-         "--format|-f <formatname> Defines the export format (jpeg, png, csv, json, cue or sdif) (required).\n\t"
+         "--format|-f <formatname> Defines the export format (jpeg, png, csv, lab, json, cue or sdif) (required).\n\t"
          "--width|-w <width> Defines the width of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--height|-h <height> Defines the height of the exported image in pixels (required with the jpeg and png formats).\n\t"
          "--adapt Defines if the block size and the step size of the analyzes are adapted following the sample rate (optional).\n\t"
@@ -131,11 +131,15 @@ Application::CommandLine::CommandLine()
                  options.imageHeight = args.getValueForOption("-h|--height").getIntValue();
                  options.useGroupOverview = args.containsOption("--groups");
              }
-             else if(format == "csv" || format == "json" || format == "cue" || format == "sdif")
+             else if(format == "csv" || format == "lab" || format == "json" || format == "cue" || format == "sdif")
              {
                  if(format == "csv")
                  {
                      options.format = Options::Format::csv;
+                 }
+                 else if(format == "lab")
+                 {
+                     options.format = Options::Format::lab;
                  }
                  else if(format == "json")
                  {

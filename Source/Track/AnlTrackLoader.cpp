@@ -200,7 +200,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromFile(FileInfo 
         {
             return loadFromJson(fileInfo, shouldAbort, advancement);
         }
-        else if(fileInfo.file.hasFileExtension("csv"))
+        else if(fileInfo.file.hasFileExtension("csv") || fileInfo.file.hasFileExtension("lab"))
         {
             return loadFromCsv(fileInfo, shouldAbort, advancement);
         }
@@ -641,10 +641,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo c
         return {juce::translate("The input stream of cannot be opened")};
     }
     auto const separator = fileInfo.args.getValue("separator", ",").toStdString();
-    return loadFromCsv(stream, separator.empty() ? ',' : separator.at(0_z), shouldAbort, advancement);
+    auto const useEndTime = fileInfo.args.getValue("useendtime", "false") == "true";
+    return loadFromCsv(stream, separator.empty() ? ',' : separator.at(0_z), useEndTime, shouldAbort, advancement);
 }
 
-std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
+std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, bool useEndTime, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     std::vector<std::vector<Plugin::Result>> pluginResults;
 
@@ -704,10 +705,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
                 auto& channelResults = pluginResults.back();
                 Plugin::Result result;
                 result.hasTimestamp = true;
-                result.timestamp = Vamp::RealTime::fromSeconds(std::stod(time));
+                auto const timevalue = std::stod(time);
+                result.timestamp = Vamp::RealTime::fromSeconds(timevalue);
                 result.hasDuration = true;
-                result.duration = Vamp::RealTime::fromSeconds(std::stod(duration));
-
+                auto const durationvalue = std::stod(duration);
+                result.duration = Vamp::RealTime::fromSeconds(std::max(useEndTime ? durationvalue - timevalue : durationvalue, 0.0));
                 if(!value.empty() && value.find_first_not_of("0123456789.-+e") != std::string::npos)
                 {
                     result.label = unescapeString(value).toStdString();
@@ -862,7 +864,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
 
 juce::String Track::Loader::getWildCardForAllFormats()
 {
-    return "*.json;*.csv;*.cue;*.sdif;*.dat";
+    return "*.json;*.csv;*.lab;*.cue;*.sdif;*.dat";
 }
 
 Track::Loader::ArgumentSelector::WindowContainer::WindowContainer(ArgumentSelector& argumentSelector)
@@ -955,7 +957,6 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::funct
             {
                 return;
             }
-
             FileInfo fileInfo;
             fileInfo.file = file;
             auto const format = mSdifPanel.getFromSdifFormat();
@@ -987,17 +988,27 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::funct
             {
                 return;
             }
-
             FileInfo fileInfo;
             fileInfo.file = file;
             static const std::vector<std::string> separators{",", " ", "\t", "|", "/", ":"};
             auto const index = static_cast<size_t>(std::max(mPropertyColumnSeparator.entry.getSelectedItemIndex(), 0));
             auto const separator = index < separators.size() ? separators.at(index) : separators.at(0_z);
             fileInfo.args.set("separator", juce::String(separator));
+            fileInfo.args.set("useendtime", "false");
             callback(fileInfo);
         };
         resized();
         return true;
+    }
+
+    if(file.hasFileExtension("lab"))
+    {
+        FileInfo fileInfo;
+        fileInfo.file = file;
+        fileInfo.args.set("separator", "\t");
+        fileInfo.args.set("useendtime", "true");
+        callback(fileInfo);
+        return false;
     }
 
     if(file.hasFileExtension("json"))
@@ -1018,7 +1029,6 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::funct
     FileInfo fileInfo;
     fileInfo.file = file;
     callback(fileInfo);
-
     return false;
 }
 
@@ -1160,7 +1170,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            expectEquals(loadFromCsv(stream, ',', shouldAbort, advancement).index(), 1_z);
+            expectEquals(loadFromCsv(stream, ',', false, shouldAbort, advancement).index(), 1_z);
         }
 
         beginTest("load csv markers with comma separator");
@@ -1169,7 +1179,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, ',', shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, ',', false, shouldAbort, advancement));
         }
 
         beginTest("load csv markers with tab separator");
@@ -1178,7 +1188,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, '\t', shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, '\t', false, shouldAbort, advancement));
         }
 
         beginTest("load csv markers with tab separator");
@@ -1187,7 +1197,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkMakers(loadFromCsv(stream, ' ', shouldAbort, advancement));
+            checkMakers(loadFromCsv(stream, ' ', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with comma separator");
@@ -1196,7 +1206,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, ',', shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, ',', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with tab separator");
@@ -1205,7 +1215,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, '\t', shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, '\t', false, shouldAbort, advancement));
         }
 
         beginTest("load csv points with space separator");
@@ -1214,7 +1224,7 @@ public:
             std::istringstream stream(result);
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
-            checkPoints(loadFromCsv(stream, ' ', shouldAbort, advancement));
+            checkPoints(loadFromCsv(stream, ' ', false, shouldAbort, advancement));
         }
 
         beginTest("load json error");
@@ -1269,6 +1279,15 @@ public:
             std::atomic<bool> shouldAbort{false};
             std::atomic<float> advancement{0.0f};
             checkPoints(loadFromBinary(stream, shouldAbort, advancement));
+        }
+
+        beginTest("load lab Markers");
+        {
+            std::stringstream stream;
+            stream.write(TestResultsData::Markers_lab, TestResultsData::Markers_labSize);
+            std::atomic<bool> shouldAbort{false};
+            std::atomic<float> advancement{0.0f};
+            checkMakers(loadFromCsv(stream, '\t', true, shouldAbort, advancement));
         }
     }
 };
