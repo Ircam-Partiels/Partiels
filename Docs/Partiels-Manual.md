@@ -88,11 +88,7 @@ Partiels allows **analysis** one or several audio files using *Vamp* plug-ins, *
 
 ### 1.3. Third-party
 
-Alongside Partiels, a set of analyses present in the AudioSculpt 3 application and based on the audio engines developed by the Ircam Analysis-Synthesis team are ported as Vamp plug-ins: 
-- [SuperVP](https://forum.ircam.fr/projects/detail/supervp-vamp-plugin/)
-- [IrcamBeat](https://forum.ircam.fr/projects/detail/ircambeat-vamp-plugin/)  
-- [IrcamDescriptor](https://forum.ircam.fr/projects/detail/ircamdescriptor-vamp-plugin/) 
-- [PM2](https://forum.ircam.fr/projects/detail/pm2-vamp-plugin/)
+Alongside Partiels, a set of analyses present in the AudioSculpt 3 application and based on the audio engines developed by the Ircam Analysis-Synthesis team are ported in the [Ircam Vamp plug-ins](https://forum.ircam.fr/projects/detail/partiels/): SuperVP, IrcamBeat, IrcamDescriptor, and PM2.
 
 You will find a large number of analysis plug-ins on the [Vamp plug-in](https://www.vamp-plugins.org/) website.
 
