@@ -104,7 +104,7 @@ bool Track::Result::Modifier::isEmpty(ChannelData const& data)
     return true;
 }
 
-bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const channel, double const time)
+bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const channel, double const time, double const epsilon)
 {
     auto const doMatch = [&](auto const& results)
     {
@@ -115,8 +115,8 @@ bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const 
             return false;
         }
         auto const& channelFrames = results.at(channel);
-        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), time, Result::lower_cmp<data_type>);
-        return start != channelFrames.cend() && std::get<0_z>(*start) <= time;
+        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), time - epsilon, Result::lower_cmp<data_type>);
+        return start != channelFrames.cend() && std::get<0_z>(*start) <= time + epsilon;
     };
 
     auto const& results = accessor.getAttr<AttrType::results>();
