@@ -40,7 +40,7 @@ Test::Linux:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build .
     - ctest -C Debug -V
 
@@ -84,7 +84,7 @@ Build::Linux:
     - cd $CI_PROJECT_DIR
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build .
     - ctest -C Release -V
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
