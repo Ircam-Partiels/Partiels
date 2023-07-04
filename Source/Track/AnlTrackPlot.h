@@ -35,6 +35,7 @@ namespace Track
             void mouseDown(juce::MouseEvent const& event) override;
             void mouseDrag(juce::MouseEvent const& event) override;
             void mouseUp(juce::MouseEvent const& event) override;
+            void mouseDoubleClick(juce::MouseEvent const& event) override;
             void modifierKeysChanged(juce::ModifierKeys const& modifiers) override;
 
         private:

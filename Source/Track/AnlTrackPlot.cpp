@@ -471,6 +471,45 @@ void Track::Plot::Overlay::mouseUp(juce::MouseEvent const& event)
     mAccessor.setAttr<AttrType::edit>(Edition{}, NotificationType::synchronous);
 }
 
+void Track::Plot::Overlay::mouseDoubleClick(juce::MouseEvent const& event)
+{
+    if(event.mods.isAltDown() || event.mods.isCommandDown())
+    {
+        return;
+    }
+    switch(Tools::getFrameType(mAccessor))
+    {
+        case FrameType::label:
+        {
+            auto const channel = Tools::getChannelVerticalRange(mAccessor, getLocalBounds(), event.y, false);
+            if(!channel.has_value())
+            {
+                return;
+            }
+            auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
+            mPlot.mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(time, NotificationType::synchronous);
+            auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+            if(!Result::Modifier::matchFrame(mAccessor, std::get<0>(channel.value()), time, epsilon))
+            {
+                return;
+            }
+
+            auto var = std::make_unique<juce::DynamicObject>();
+            if(var != nullptr)
+            {
+                var->setProperty("x", event.getScreenX());
+                var->setProperty("y", event.getScreenY() - 40);
+                mAccessor.sendSignal(SignalType::showTable, var.release(), NotificationType::synchronous);
+            }
+        }
+        break;
+        case FrameType::value:
+            // Could be implemented for points
+        case FrameType::vector:
+            break;
+    }
+}
+
 void Track::Plot::Overlay::modifierKeysChanged(juce::ModifierKeys const& modifiers)
 {
     updateActionMode(getMouseXYRelative(), modifiers);
@@ -494,31 +533,23 @@ void Track::Plot::Overlay::updateActionMode(juce::Point<int> const& point, juce:
             return ActionMode::none;
         }
 
-        auto const& results = mAccessor.getAttr<AttrType::results>();
-        auto const access = results.getReadAccess();
-        if(!static_cast<bool>(access))
+        switch(Tools::getFrameType(mAccessor))
         {
-            return ActionMode::none;
-        }
-
-        if(auto const markers = results.getMarkers())
-        {
-            auto const channelIndex = std::get<0>(channel.value());
-            if(markers->size() <= channelIndex || markers->at(channelIndex).empty())
+            case FrameType::label:
             {
-                return ActionMode::none;
+                auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, point.x);
+                auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
+                if(Result::Modifier::matchFrame(mAccessor, std::get<0>(channel.value()), time, epsilon))
+                {
+                    return ActionMode::move;
+                }
             }
-
-            auto const& markerChannel = markers->at(channelIndex);
-            auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, point.x);
-            auto const epsilon = 2.0 / static_cast<double>(getWidth()) * mTimeZoomAccessor.getAttr<Zoom::AttrType::visibleRange>().getLength();
-            auto const it = std::lower_bound(markerChannel.cbegin(), markerChannel.cend(), time - epsilon, Result::lower_cmp<Results::Marker>);
-            if(it != markerChannel.cend() && std::get<0_z>(*it) < time + epsilon)
-            {
-                return ActionMode::move;
-            }
+            break;
+            case FrameType::value:
+                // Could be implemented for points
+            case FrameType::vector:
+                break;
         }
-        // Could be implemented for points
         return ActionMode::none;
     };
 
