@@ -688,7 +688,7 @@ void Track::Renderer::paintPoints(juce::Graphics& g, juce::Rectangle<int> const&
         MiscWeakAssert(!hasExtra || iterator != extra.cend());
         while(iterator != results.cend() && std::get<0_z>(*iterator) < limit)
         {
-            if(std::get<2_z>(*it).has_value())
+            if(std::get<2_z>(*iterator).has_value())
             {
                 auto const& lvalue = std::get<2_z>(*iterator).value();
                 min = std::min(min, lvalue);
