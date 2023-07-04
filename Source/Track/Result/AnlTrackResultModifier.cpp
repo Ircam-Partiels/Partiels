@@ -141,6 +141,28 @@ bool Track::Result::Modifier::matchFrame(Accessor const& accessor, size_t const 
     return false;
 }
 
+bool Track::Result::Modifier::canBreak(Accessor const& accessor, size_t const channel, double const time)
+{
+    auto const& results = accessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        showAccessWarning();
+        return false;
+    }
+    if(auto points = results.getPoints())
+    {
+        if(channel >= points->size())
+        {
+            return false;
+        }
+        auto const& channelFrames = points->at(channel);
+        auto const start = std::lower_bound(channelFrames.cbegin(), channelFrames.cend(), time, Result::lower_cmp<Results::Point>);
+        return start == channelFrames.cend() || std::get<0_z>(*start) > time || !std::get<2_z>(*start).has_value();
+    }
+    return false;
+}
+
 bool Track::Result::Modifier::containFrames(Accessor const& accessor, size_t const channel, juce::Range<double> const& range)
 {
     auto const doContain = [&](auto const& results)
