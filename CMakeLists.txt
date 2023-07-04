@@ -12,8 +12,8 @@ set(IFP_TEST OFF CACHE STRING "" FORCE)
 set(VAMP_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/vamp-plugin-sdk" CACHE PATH "The path to the Vamp plugin SDK" FORCE)
 set(TIMESTAMP_SERVER_URL "http://timestamp.sectigo.com" CACHE STRING "The timestamp server URL")
 
-set(PARTIELS_DEV_VERSION 0)
-project(Partiels VERSION 1.2.0 LANGUAGES C CXX)
+set(PARTIELS_DEV_VERSION 1)
+project(Partiels VERSION 1.2.1 LANGUAGES C CXX)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.txt ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(JUCE)
