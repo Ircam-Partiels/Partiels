@@ -80,6 +80,7 @@ void Document::CommandTarget::getAllCommands(juce::Array<juce::CommandID>& comma
         , CommandIDs::editPaste
         , CommandIDs::editDuplicate
         , CommandIDs::editInsert
+        , CommandIDs::editBreak
         , CommandIDs::editSystemCopy
     });
     // clang-format on
@@ -120,6 +121,26 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
                 for(auto const& channel : selectedChannels)
                 {
                     if(Track::Result::Modifier::matchFrame(trackAcsr.get(), channel, time))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    };
+
+    auto const canBreak = [&](double time)
+    {
+        auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+        for(auto const& trackAcsr : trackAcsrs)
+        {
+            if(Track::Tools::getFrameType(trackAcsr.get()) == Track::FrameType::value)
+            {
+                auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr.get());
+                for(auto const& channel : selectedChannels)
+                {
+                    if(Track::Result::Modifier::canBreak(trackAcsr.get(), channel, time))
                     {
                         return true;
                     }
@@ -210,6 +231,14 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
             result.setInfo(juce::translate("Insert Frame(s)"), juce::translate("Insert Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('i', juce::ModifierKeys::noModifiers, 0));
             result.setActive(isModeActive && (!matchTime(selection.getStart()) || !matchTime(selection.getEnd())));
+        }
+        break;
+        case CommandIDs::editBreak:
+        {
+            result.setInfo(juce::translate("Break Frame(s)"), juce::translate("Break Frame(s)"), "Edit", 0);
+            result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::noModifiers, 0));
+            auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
+            result.setActive(isModeActive && canBreak(selection.getStart()));
         }
         break;
         case CommandIDs::editSystemCopy:
@@ -402,6 +431,43 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                                             if(!selection.isEmpty())
                                             {
                                                 insertFrame(trackAcsr, channel, selection.getEnd());
+                                            }
+                                        }
+                                    }
+                                });
+            undoManager.perform(std::make_unique<FocusRestorer>(mAccessor).release());
+            undoManager.perform(std::make_unique<Transport::Action::Restorer>(getTransportAcsr, playhead, selection.movedToStartAt(playhead)).release());
+            return true;
+        }
+        case CommandIDs::editBreak:
+        {
+            auto const breakFrame = [&](Track::Accessor& trackAcsr, size_t const channel, double const time)
+            {
+                if(Track::Result::Modifier::canBreak(trackAcsr, channel, time))
+                {
+                    auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
+                    auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
+                    Track::Result::ChannelData const data = std::vector<Track::Result::Data::Point>{{time, 0.0, std::optional<float>{}}};
+                    undoManager.perform(std::make_unique<ActionPaste>(fn, channel, data, time).release());
+                }
+            };
+            auto const isPlaying = transportAcsr.getAttr<Transport::AttrType::playback>();
+            auto const runningPlayhead = transportAcsr.getAttr<Transport::AttrType::runningPlayhead>();
+            undoManager.beginNewTransaction(juce::translate("Break Frame(s)"));
+            performForAllTracks([&](Track::Accessor& trackAcsr)
+                                {
+                                    if(Track::Tools::getFrameType(trackAcsr) == Track::FrameType::value)
+                                    {
+                                        auto const selectedChannels = Track::Tools::getSelectedChannels(trackAcsr);
+                                        for(auto const& channel : selectedChannels)
+                                        {
+                                            if(isPlaying)
+                                            {
+                                                breakFrame(trackAcsr, channel, runningPlayhead);
+                                            }
+                                            else
+                                            {
+                                                breakFrame(trackAcsr, channel, selection.getStart());
                                             }
                                         }
                                     }

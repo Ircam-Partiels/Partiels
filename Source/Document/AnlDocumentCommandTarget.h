@@ -21,6 +21,7 @@ namespace Document
             , editPaste
             , editDuplicate
             , editInsert
+            , editBreak
             , editSystemCopy
         };
         // clang-format on
