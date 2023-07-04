@@ -1,5 +1,7 @@
 v1.2.1-dev1
 
+- Add: Create a no value point with the shortcut 'i'on the track's graphical plot to break the continuity of the segments (#342)
+
 v1.2.0
 
 - Fix: Remove F0 frequency parameter for Harmonic Partial Tracking (Ircam Vamp Plug-ins)
