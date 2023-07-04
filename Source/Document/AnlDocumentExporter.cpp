@@ -128,7 +128,7 @@ Document::Exporter::Panel::Panel(Accessor& accessor, bool showTimeRange, GetSize
                       {
                           setTimeRange(getTimeRange().withLength(time), true, juce::NotificationType::sendNotificationSync);
                       })
-, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "JSON", "CUE", "SDIF"}, [this](size_t index)
+, mPropertyFormat("Format", "Select the export format", "", std::vector<std::string>{"JPEG", "PNG", "CSV", "LAB", "JSON", "CUE", "SDIF"}, [this](size_t index)
                   {
                       auto options = mOptions;
                       options.format = magic_enum::enum_value<Document::Exporter::Options::Format>(index);
@@ -982,7 +982,9 @@ juce::Result Document::Exporter::toFile(Accessor& accessor, juce::File const fil
             case Options::Format::png:
                 return juce::Result::fail("Unsupported format");
             case Options::Format::csv:
-                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), shouldAbort);
+                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, options.includeHeaderRaw, options.getSeparatorChar(), false, shouldAbort);
+            case Options::Format::lab:
+                return Track::Exporter::toCsv(trackAcsr, timeRange, fileUsed, false, '\t', true, shouldAbort);
             case Options::Format::json:
                 return Track::Exporter::toJson(trackAcsr, timeRange, {}, fileUsed, options.includeDescription, shouldAbort);
             case Options::Format::cue:

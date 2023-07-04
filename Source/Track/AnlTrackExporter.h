@@ -15,9 +15,9 @@ namespace Track
         juce::Image toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, int width, int height);
         juce::Result toImage(Accessor const& accessor, Zoom::Accessor const& timeZoomAccessor, juce::File const& file, int width, int height, std::atomic<bool> const& shouldAbort);
 
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort);
-        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
+        juce::Result toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort);
 
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, std::ostream& stream, bool includeDescription, std::atomic<bool> const& shouldAbort);
         juce::Result toJson(Accessor const& accessor, Zoom::Range timeRange, std::set<size_t> const& channels, juce::File const& file, bool includeDescription, std::atomic<bool> const& shouldAbort);

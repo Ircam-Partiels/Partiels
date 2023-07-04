@@ -19,6 +19,7 @@ namespace Document
                   jpeg
                 , png
                 , csv
+                , lab
                 , json
                 , cue
                 , sdif

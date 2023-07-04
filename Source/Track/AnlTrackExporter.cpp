@@ -157,7 +157,7 @@ juce::Result Track::Exporter::toImage(Accessor const& accessor, Zoom::Accessor c
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, std::ostream& stream, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -211,6 +211,42 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
         return true;
     };
 
+    auto const addHeader = [&](std::vector<std::string> const& extraColumns)
+    {
+        if(includeHeader)
+        {
+            addColumn("TIME");
+            if(useEndTime)
+            {
+                addColumn("END");
+            }
+            else
+            {
+                addColumn("DURATION");
+            }
+            for(auto const& extraColumn : extraColumns)
+            {
+                addColumn(extraColumn);
+            }
+            addLine();
+        }
+    };
+
+    auto const addRow = [&](auto const iterator, std::vector<std::string> const& extraColumns)
+    {
+        auto const time = std::get<0_z>(*iterator);
+        auto const duration = std::get<1_z>(*iterator);
+        MiscWeakAssert(time >= timeRange.getStart());
+        MiscWeakAssert(duration >= 0.0);
+        addColumn(time);
+        addColumn(std::max(useEndTime ? time + duration : duration, 0.0));
+        for(auto const& extraColumn : extraColumns)
+        {
+            addColumn(extraColumn);
+        }
+        addLine();
+    };
+
     auto const markers = results.getMarkers();
     auto const points = results.getPoints();
     auto const columns = results.getColumns();
@@ -218,26 +254,16 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const escapeString = [](juce::String const& s)
         {
-            return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted();
+            return s.replace("\"", "\\\"").replace("\'", "\\\'").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n").quoted().toStdString();
         };
 
         auto const addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
-            if(includeHeader)
-            {
-                addColumn("TIME");
-                addColumn("DURATION");
-                addColumn("LABEL");
-                addLine();
-            }
+            addHeader({"LABEL"});
             auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
             while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                addColumn(std::get<0_z>(*it));
-                addColumn(std::get<1_z>(*it));
-                addColumn(escapeString(std::get<2_z>(*it)));
-                addLine();
+                addRow(it, {escapeString(std::get<2_z>(*it))});
                 ++it;
             }
         };
@@ -257,24 +283,11 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const addChannel = [&](std::vector<Results::Point> const& channelPoints)
         {
-            if(includeHeader)
-            {
-                addColumn("TIME");
-                addColumn("DURATION");
-                addColumn("VALUE");
-                addLine();
-            }
+            addHeader({"VALUE"});
             auto it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
             while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                addColumn(std::get<0_z>(*it));
-                addColumn(std::get<1_z>(*it));
-                if(std::get<2_z>(*it).has_value())
-                {
-                    addColumn(std::get<2_z>(*it).value());
-                }
-                addLine();
+                addRow(it, std::get<2_z>(*it).has_value() ? std::vector<std::string>{std::to_string(std::get<2_z>(*it).value())} : std::vector<std::string>{});
                 ++it;
             }
         };
@@ -298,29 +311,22 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                                                  {
                                                      return std::max(s, std::get<2>(channelColumn).size());
                                                  });
-
-            if(includeHeader)
+            std::vector<std::string> extraColumns;
+            for(size_t j = 0; j < numBins; ++j)
             {
-                addColumn("TIME");
-                addColumn("DURATION");
-                for(size_t j = 0; j < numBins; ++j)
-                {
-                    addColumn("BIN" + juce::String(j));
-                }
-                addLine();
+                extraColumns.push_back("BIN" + std::to_string(j));
             }
+            addHeader(extraColumns);
 
             auto it = std::lower_bound(channelColumns.cbegin(), channelColumns.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
             while(it != channelColumns.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                MiscWeakAssert(std::get<0_z>(*it) >= timeRange.getStart());
-                addColumn(std::get<0_z>(*it));
-                addColumn(std::get<1_z>(*it));
+                extraColumns.clear();
                 for(auto const& value : std::get<2_z>(*it))
                 {
-                    addColumn(value);
+                    extraColumns.push_back(std::to_string(value));
                 }
-                addLine();
+                addRow(it, extraColumns);
                 ++it;
             }
         };
@@ -350,7 +356,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::File const& file, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
 {
     auto const name = accessor.getAttr<AttrType::name>();
     auto constexpr format = "CSV";
@@ -361,7 +367,7 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         return failed(name, format, ErrorType::streamAccessFailure);
     }
-    auto const result = toCsv(accessor, timeRange, stream, includeHeader, separator, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, stream, includeHeader, separator, useEndTime, shouldAbort);
     if(result.failed())
     {
         return result;
@@ -375,10 +381,10 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     return juce::Result::ok();
 }
 
-juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeHeader, char separator, std::atomic<bool> const& shouldAbort)
+juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRange, juce::String& string, bool includeHeader, char separator, bool useEndTime, std::atomic<bool> const& shouldAbort)
 {
     std::ostringstream stream;
-    auto const result = toCsv(accessor, timeRange, stream, includeHeader, separator, shouldAbort);
+    auto const result = toCsv(accessor, timeRange, stream, includeHeader, separator, useEndTime, shouldAbort);
     if(result.failed())
     {
         return result;
