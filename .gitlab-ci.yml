@@ -34,6 +34,8 @@ Test::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
+    - export CC=/usr/bin/clang
+    - export CXX=/usr/bin/clang++
     - cmake . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build build
     - ctest -C Debug -V
@@ -72,6 +74,8 @@ Build::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
+    - export CC=/usr/bin/clang
+    - export CXX=/usr/bin/clang++
     - cmake . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build build
     - ctest -C Release -V
