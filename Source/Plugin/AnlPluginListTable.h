@@ -52,9 +52,10 @@ namespace PluginList
         Accessor::Receiver mReceiver;
         std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
-        juce::TableListBox mPluginTable;
-        ColouredPanel mSeparator;
+        ColouredPanel mSeparator1;
         juce::TextEditor mSearchField;
+        ColouredPanel mSeparator2;
+        juce::TableListBox mPluginTable;
         juce::String mLookingWord;
 
         JUCE_LEAK_DETECTOR(Table)

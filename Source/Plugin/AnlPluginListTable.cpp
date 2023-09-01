@@ -14,6 +14,11 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
 , mScanner(scanner)
 {
+    addAndMakeVisible(mSeparator1);
+    addAndMakeVisible(mSearchField);
+    addAndMakeVisible(mSeparator2);
+    addAndMakeVisible(mPluginTable);
+
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
@@ -34,7 +39,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
         updateContent();
     };
 
-    addAndMakeVisible(mPluginTable);
     mPluginTable.setHeaderHeight(28);
     mPluginTable.setRowHeight(22);
     mPluginTable.setMultipleSelectionEnabled(true);
@@ -50,9 +54,6 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Category"), ColumnType::category, 60, 60, 200, defaultColumnFlags);
     header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::visible);
 
-    addAndMakeVisible(mSeparator);
-
-    addAndMakeVisible(mSearchField);
     mSearchField.setMultiLine(false);
     mSearchField.setPopupMenuEnabled(false);
     mSearchField.setCaretVisible(true);
@@ -140,10 +141,9 @@ PluginList::Table::~Table()
 void PluginList::Table::resized()
 {
     auto bounds = getLocalBounds();
-    auto bottom = bounds.removeFromBottom(31);
-    mSeparator.setBounds(bottom.removeFromTop(1));
-    bottom.reduce(4, 0);
-    mSearchField.setBounds(bottom.removeFromLeft(200).withSizeKeepingCentre(200, 21));
+    mSeparator1.setBounds(bounds.removeFromTop(1));
+    mSearchField.setBounds(bounds.removeFromTop(24).reduced(4, 0).removeFromLeft(200).withSizeKeepingCentre(200, 21));
+    mSeparator2.setBounds(bounds.removeFromTop(1));
     mPluginTable.setBounds(bounds);
 }
 
@@ -152,7 +152,7 @@ void PluginList::Table::colourChanged()
     auto const text = mSearchField.getText();
     mSearchField.clear();
     mSearchField.setText(text);
-    mSearchField.setTextToShowWhenEmpty(juce::translate("Filter..."), getLookAndFeel().findColour(juce::TableListBox::ColourIds::textColourId));
+    mSearchField.setTextToShowWhenEmpty(juce::translate("Search..."), getLookAndFeel().findColour(juce::TableListBox::ColourIds::textColourId));
 }
 
 void PluginList::Table::parentHierarchyChanged()
