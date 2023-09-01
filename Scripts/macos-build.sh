@@ -7,9 +7,9 @@ else
 fi
 
 if command -v xcbeautify &> /dev/null; then
-  set -o pipefail && NSUnbufferedIO=YES cmake --build . --config $CONFIGURATION  2>&1 | xcbeautify
+  set -o pipefail && NSUnbufferedIO=YES cmake --build build --config $CONFIGURATION  2>&1 | xcbeautify
 elif command -v xcpretty &> /dev/null; then
-  set -o pipefail && cmake --build . --config $CONFIGURATION | xcpretty
+  set -o pipefail && cmake --build build --config $CONFIGURATION | xcpretty
 else
-  cmake --build . --config $CONFIGURATION
+  cmake --build build --config $CONFIGURATION
 fi

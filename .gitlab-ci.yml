@@ -14,10 +14,8 @@ Test::MacOS:
     - osx
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -G Xcode
-    - ../Scripts/macos-build.sh Debug
+    - cmake . -B build -G Xcode
+    - ./Scripts/macos-build.sh Debug
     - ctest -C Debug -VV
 
 Test::Windows:
@@ -26,10 +24,8 @@ Test::Windows:
     - windows
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
-    - cmake --build . --config Debug
+    - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
+    - cmake --build build --config Debug
     - ctest -C Debug -VV
 
 Test::Linux:
@@ -38,10 +34,8 @@ Test::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
-    - cmake --build .
+    - cmake . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    - cmake --build build
     - ctest -C Debug -V
 
 Build::MacOS:
@@ -51,10 +45,8 @@ Build::MacOS:
     - osx
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -G Xcode
-    - ../Scripts/macos-build.sh Release
+    - cmake . -B build -G Xcode
+    - ./Scripts/macos-build.sh Release
     - ctest -C Release -VV
 
 Build::Windows:
@@ -64,11 +56,9 @@ Build::Windows:
     - windows
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
-    - cmake --build . --config Release
-    - move-item -path ".\Partiels-install.exe" -destination "..\"
+    - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
+    - cmake --build build --config Release
+    - move-item -path ".\build\Partiels-install.exe" -destination ".\"
     - ctest -C Release -VV
   artifacts:
     paths:
@@ -82,10 +72,8 @@ Build::Linux:
     - linux
   script:
     - cd $CI_PROJECT_DIR
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
-    - cmake --build .
+    - cmake . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    - cmake --build build
     - ctest -C Release -V
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
   artifacts:
