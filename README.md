@@ -8,9 +8,9 @@ The compilation system is based on [CMake](https://cmake.org/).
 
 ```
 git clone --recursive git@forge-2.ircam.fr:pierreguillot-group/partiels.git
-cd partiels && mkdir build && cd build
-cmake .. (specify the generator using -G such as -G"Unix Makefiles", -G"Xcode" or -G"Visual Studio 16 2019" -A x64)
-cmake --build . (or use default approach of the selected generator)
+cd partiels
+cmake . -B build -G Xcode (specify the generator using -G such as -G"Unix Makefiles", -G"Xcode" or -G"Visual Studio 16 2019" -A x64)
+cmake --build build (or use default approach of the selected generator)
 ```
 
 #### Credits
