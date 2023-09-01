@@ -42,12 +42,13 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 
     using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mPluginTable.getHeader();
-    header.addColumn(juce::translate("Name"), ColumnType::name, 170, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
-    header.addColumn(juce::translate("Feature"), ColumnType::feature, 200, 100, 700, ColumnFlags::defaultFlags | ColumnFlags::sortable);
-    header.addColumn(juce::translate("Description"), ColumnType::details, 200, 100, 500, ColumnFlags::notSortable);
-    header.addColumn(juce::translate("Maker"), ColumnType::maker, 120, 100, 300);
-    header.addColumn(juce::translate("Category"), ColumnType::category, 60, 60, 200);
-    header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::notResizable | ColumnFlags::notSortable);
+    auto constexpr defaultColumnFlags = ColumnFlags::visible | ColumnFlags::sortable;
+    header.addColumn(juce::translate("Name"), ColumnType::name, 170, 100, 700, defaultColumnFlags);
+    header.addColumn(juce::translate("Feature"), ColumnType::feature, 200, 100, 700, defaultColumnFlags);
+    header.addColumn(juce::translate("Description"), ColumnType::details, 200, 100, 500, ColumnFlags::visible);
+    header.addColumn(juce::translate("Maker"), ColumnType::maker, 120, 100, 300, defaultColumnFlags);
+    header.addColumn(juce::translate("Category"), ColumnType::category, 60, 60, 200, defaultColumnFlags);
+    header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::visible);
 
     addAndMakeVisible(mSeparator);
 
