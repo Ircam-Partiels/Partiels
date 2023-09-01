@@ -1,5 +1,6 @@
 v1.2.1-dev1
 
+- Imp: Make the plug-in search bar more accessible in the plug-in list window (#349)
 - Add: Create a no value point with the shortcut 'i' on the track's graphical plot to break the continuity of the segments (#342)
 - Add: Double-click on a marker to display the results table, focusing on the selected element (#341)
 
