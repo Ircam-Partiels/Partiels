@@ -1,4 +1,5 @@
 #include "AnlPluginListTable.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
@@ -13,8 +14,10 @@ PluginList::Table::WindowContainer::WindowContainer(Table& table)
 PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
 , mScanner(scanner)
+, mSearchIcon(juce::ImageCache::getFromMemory(AnlIconsData::search_png, AnlIconsData::search_pngSize))
 {
     addAndMakeVisible(mSeparator1);
+    addAndMakeVisible(mSearchIcon);
     addAndMakeVisible(mSearchField);
     addAndMakeVisible(mSeparator2);
     addAndMakeVisible(mPluginTable);
@@ -54,11 +57,17 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     header.addColumn(juce::translate("Category"), ColumnType::category, 60, 60, 200, defaultColumnFlags);
     header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::visible);
 
+    mSearchIcon.setTooltip(juce::translate("Search for a plugin by name, feature, description or maker"));
+    mSearchIcon.onClick = [this]()
+    {
+        mSearchField.grabKeyboardFocus();
+    };
     mSearchField.setMultiLine(false);
     mSearchField.setPopupMenuEnabled(false);
     mSearchField.setCaretVisible(true);
     mSearchField.setJustification(juce::Justification::centredLeft);
-
+    mSearchField.setBorder({});
+    mSearchField.setIndents(0, 0);
     mSearchField.onTextChange = [this]()
     {
         updateContent();
@@ -142,7 +151,9 @@ void PluginList::Table::resized()
 {
     auto bounds = getLocalBounds();
     mSeparator1.setBounds(bounds.removeFromTop(1));
-    mSearchField.setBounds(bounds.removeFromTop(24).reduced(4, 0).removeFromLeft(200).withSizeKeepingCentre(200, 21));
+    auto headerBar = bounds.removeFromTop(20);
+    mSearchIcon.setBounds(headerBar.removeFromLeft(20).reduced(2));
+    mSearchField.setBounds(headerBar.removeFromLeft(202).reduced(1));
     mSeparator2.setBounds(bounds.removeFromTop(1));
     mPluginTable.setBounds(bounds);
 }

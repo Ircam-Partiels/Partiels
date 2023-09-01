@@ -53,6 +53,7 @@ namespace PluginList
         std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
         ColouredPanel mSeparator1;
+        Misc::Icon mSearchIcon;
         juce::TextEditor mSearchField;
         ColouredPanel mSeparator2;
         juce::TableListBox mPluginTable;
