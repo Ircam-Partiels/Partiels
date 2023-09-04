@@ -4,7 +4,7 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::Table::WindowContainer::WindowContainer(Table& table)
-: FloatingWindowContainer(juce::translate("Add Plugins..."), table, true)
+: FloatingWindowContainer(juce::translate("Add Plugins..."), table)
 {
     mFloatingWindow.setResizable(false, false);
     mBoundsConstrainer.setSizeLimits(820, 600, 820, 600);
