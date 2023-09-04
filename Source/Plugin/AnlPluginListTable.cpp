@@ -15,10 +15,12 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
 , mScanner(scanner)
 , mSearchIcon(juce::ImageCache::getFromMemory(AnlIconsData::search_png, AnlIconsData::search_pngSize))
+, mSettingsIcon(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
 {
     addAndMakeVisible(mSeparator1);
     addAndMakeVisible(mSearchIcon);
     addAndMakeVisible(mSearchField);
+    addAndMakeVisible(mSettingsIcon);
     addAndMakeVisible(mSeparator2);
     addAndMakeVisible(mPluginTable);
 
@@ -61,6 +63,14 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
     mSearchIcon.onClick = [this]()
     {
         mSearchField.grabKeyboardFocus();
+    };
+    mSettingsIcon.setTooltip(juce::translate("Shows the plugin settings panel"));
+    mSettingsIcon.onClick = [this]()
+    {
+        if(onSettingButtonClicked)
+        {
+            onSettingButtonClicked();
+        }
     };
     mSearchField.setMultiLine(false);
     mSearchField.setPopupMenuEnabled(false);
@@ -153,6 +163,7 @@ void PluginList::Table::resized()
     mSeparator1.setBounds(bounds.removeFromTop(1));
     auto headerBar = bounds.removeFromTop(20);
     mSearchIcon.setBounds(headerBar.removeFromLeft(20).reduced(2));
+    mSettingsIcon.setBounds(headerBar.removeFromRight(20).reduced(2));
     mSearchField.setBounds(headerBar.removeFromLeft(202).reduced(1));
     mSeparator2.setBounds(bounds.removeFromTop(1));
     mPluginTable.setBounds(bounds);

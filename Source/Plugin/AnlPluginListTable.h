@@ -22,6 +22,7 @@ namespace PluginList
         void visibilityChanged() override;
         bool keyPressed(juce::KeyPress const& key) override;
 
+        std::function<void(void)> onSettingButtonClicked = nullptr;
         std::function<void(std::set<Plugin::Key> keys)> onPluginSelected = nullptr;
         void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;
 
@@ -55,6 +56,7 @@ namespace PluginList
         ColouredPanel mSeparator1;
         Misc::Icon mSearchIcon;
         juce::TextEditor mSearchField;
+        Misc::Icon mSettingsIcon;
         ColouredPanel mSeparator2;
         juce::TableListBox mPluginTable;
         juce::String mLookingWord;
