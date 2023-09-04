@@ -1,9 +1,11 @@
 #include "AnlGroupStateButton.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
 Group::StateButton::StateButton(Director& director)
 : mDirector(director)
+, mStateIcon(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize))
 , mLayoutNotifier(mAccessor, [this]()
                   {
                       updateTooltip();
@@ -84,7 +86,7 @@ Group::StateButton::StateButton(Director& director)
     };
 
     mProcessingButton.setActive(false);
-    mProcessingButton.setInactiveImage(Icon::getImage(Icon::Type::verified));
+    mProcessingButton.setInactiveImage(juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize));
     mAccessor.addListener(mListener, NotificationType::synchronous);
 }
 
@@ -149,8 +151,10 @@ void Group::StateButton::updateTooltip()
     auto const changed = mHasWarning != !valid || (processing || rendering) != mProcessingButton.isActive();
     mHasWarning = !valid;
     mProcessingButton.setActive(processing || rendering);
-    mProcessingButton.setInactiveImage(Icon::getImage(valid ? Icon::Type::verified : Icon::Type::alert));
-    mStateIcon.setTypes(mHasWarning ? Icon::Type::alert : Icon::Type::verified);
+    auto const checkedImage = juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize);
+    auto const alertImage = juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize);
+    mProcessingButton.setInactiveImage(valid ? checkedImage : alertImage);
+    mStateIcon.setImages(!mHasWarning ? checkedImage : alertImage);
     mStateIcon.setEnabled(mHasWarning);
     mStateIcon.setVisible(!isProcessingOrRendering());
     if(changed && onStateChanged != nullptr)

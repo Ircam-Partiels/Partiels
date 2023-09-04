@@ -19,18 +19,6 @@ namespace PluginList
 
         void warnBeforeClosing();
 
-        class WindowContainer
-        : public FloatingWindowContainer
-        {
-        public:
-            WindowContainer(SearchPath& searchPath);
-            ~WindowContainer() override;
-
-        private:
-            SearchPath& mSearchPath;
-            juce::TooltipWindow mTooltip;
-        };
-
     private:
         Accessor& mAccessor;
         Accessor::Listener mListener{typeid(*this).name()};

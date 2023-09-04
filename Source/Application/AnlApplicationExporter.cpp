@@ -7,28 +7,7 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::Exporter::WindowContainer::WindowContainer(Exporter& exporer)
-: FloatingWindowContainer(juce::translate("Export"), exporer)
-, mExporter(exporer)
-, mTooltip(&mExporter)
-{
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        if(mExporter.canCloseWindow())
-        {
-            return true;
-        }
-        getLookAndFeel().playAlertSound();
-        return false;
-    };
-}
-
-Application::Exporter::WindowContainer::~WindowContainer()
-{
-    mFloatingWindow.onCloseButtonPressed = nullptr;
-}
-
-Application::Exporter::Exporter()
+Application::ExporterContent::ExporterContent()
 : mExporterPanel(Instance::get().getDocumentAccessor(), true, Instance::getSizeFor)
 , mPropertyExport("Export", "Export the results", [this]()
                   {
@@ -48,7 +27,7 @@ Application::Exporter::Exporter()
     addAndMakeVisible(mExporterPanel);
     addAndMakeVisible(mPropertyExport);
     mPropertyExport.entry.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
-    addAndMakeVisible(mLoadingCircle);
+    addAndMakeVisible(mLoadingIcon);
     mComponentListener.onComponentResized = [this](juce::Component const&)
     {
         resized();
@@ -93,7 +72,7 @@ Application::Exporter::Exporter()
     setSize(300, 200);
 }
 
-Application::Exporter::~Exporter()
+Application::ExporterContent::~ExporterContent()
 {
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.removeListener(mListener);
@@ -104,16 +83,16 @@ Application::Exporter::~Exporter()
     }
 }
 
-void Application::Exporter::resized()
+void Application::ExporterContent::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mExporterPanel.setBounds(bounds.removeFromTop(mExporterPanel.getHeight()));
     mPropertyExport.setBounds(bounds.removeFromTop(mPropertyExport.getHeight()));
-    mLoadingCircle.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
+    mLoadingIcon.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::Exporter::exportToFile()
+void Application::ExporterContent::exportToFile()
 {
     auto const& acsr = Instance::get().getApplicationAccessor();
     auto const& options = acsr.getAttr<AttrType::exportOptions>();
@@ -142,7 +121,7 @@ void Application::Exporter::exportToFile()
                                       return;
                                   }
 
-                                  mLoadingCircle.setActive(true);
+                                  mLoadingIcon.setActive(true);
                                   juce::MouseCursor::showWaitCursor();
 
                                   mExporterPanel.setEnabled(false);
@@ -152,7 +131,7 @@ void Application::Exporter::exportToFile()
                                   mShoulAbort.store(false);
                                   mProcess = std::async([=, this, file = results.getFirst()]() -> ProcessResult
                                                         {
-                                                            juce::Thread::setCurrentThreadName("Exporter");
+                                                            juce::Thread::setCurrentThreadName("ExporterContent");
                                                             auto const result = Document::Exporter::toFile(Instance::get().getDocumentAccessor(), file, timeRange, "", identifier, options, mShoulAbort, Instance::getSizeFor);
                                                             triggerAsyncUpdate();
                                                             if(result.failed())
@@ -164,7 +143,7 @@ void Application::Exporter::exportToFile()
                               });
 }
 
-void Application::Exporter::handleAsyncUpdate()
+void Application::ExporterContent::handleAsyncUpdate()
 {
     mExporterPanel.setEnabled(true);
     mPropertyExport.setEnabled(true);
@@ -173,7 +152,7 @@ void Application::Exporter::handleAsyncUpdate()
     mPropertyExport.entry.setButtonText(juce::translate("Export"));
     mPropertyExport.entry.setTooltip(juce::translate("Export the results"));
 
-    mLoadingCircle.setActive(false);
+    mLoadingIcon.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     anlWeakAssert(mProcess.valid());
     if(!mProcess.valid())
@@ -189,9 +168,26 @@ void Application::Exporter::handleAsyncUpdate()
     juce::AlertWindow::showAsync(options, nullptr);
 }
 
-bool Application::Exporter::canCloseWindow() const
+bool Application::ExporterContent::canCloseWindow() const
 {
-    return !mLoadingCircle.isActive();
+    return !mLoadingIcon.isActive();
+}
+
+Application::ExporterPanel::ExporterPanel()
+: HideablePanelTyped<ExporterContent>(juce::translate("Export..."))
+{
+}
+
+void Application::ExporterPanel::inputAttemptWhenModal()
+{
+    if(!mContent.canCloseWindow())
+    {
+        juce::Component::inputAttemptWhenModal();
+    }
+    else
+    {
+        HideablePanel::inputAttemptWhenModal();
+    }
 }
 
 ANALYSE_FILE_END

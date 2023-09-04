@@ -6,29 +6,29 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class About
+    class AboutContent
     : public juce::Component
     {
     public:
-        About();
-        ~About() override = default;
+        AboutContent();
+        ~AboutContent() override = default;
 
         // juce::Component
         void paint(juce::Graphics& g) override;
-
-        class WindowContainer
-        : public FloatingWindowContainer
-        {
-        public:
-            WindowContainer(About& about);
-
-        private:
-            About& mAbout;
-            juce::TooltipWindow mTooltip;
-        };
+        void resized() override;
 
     private:
-        std::unique_ptr<juce::Drawable> mImage;
+        Misc::Icon mImage;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutContent)
+    };
+
+    class AboutPanel
+    : public HideablePanelTyped<AboutContent>
+    {
+    public:
+        AboutPanel();
+        ~AboutPanel() override = default;
     };
 } // namespace Application
 

@@ -1,0 +1,154 @@
+#include "AnlDocumentTransportDisplay.h"
+#include <AnlIconsData.h>
+
+ANALYSE_FILE_BEGIN
+
+Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom::Accessor& zoomAcsr)
+: mTransportAccessor(accessor)
+, mZoomAccessor(zoomAcsr)
+, mRewindButton(juce::ImageCache::getFromMemory(AnlIconsData::rewind_png, AnlIconsData::rewind_pngSize))
+, mPlaybackButton(juce::ImageCache::getFromMemory(AnlIconsData::play_png, AnlIconsData::play_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::pause_png, AnlIconsData::pause_pngSize))
+, mLoopButton(juce::ImageCache::getFromMemory(AnlIconsData::loop_png, AnlIconsData::loop_pngSize))
+{
+    mTransportListener.onAttrChanged = [&](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Transport::AttrType::playback:
+            {
+                auto const state = acsr.getAttr<Transport::AttrType::playback>();
+                mPlaybackButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                mRewindButton.setEnabled(state || Transport::Tools::canRewindPlayhead(acsr));
+                mPosition.setEnabled(!state);
+            }
+            break;
+            case Transport::AttrType::startPlayhead:
+            {
+                auto const state = acsr.getAttr<Transport::AttrType::playback>();
+                if(!state)
+                {
+                    mPosition.setTime(acsr.getAttr<Transport::AttrType::startPlayhead>(), juce::NotificationType::dontSendNotification);
+                }
+                mRewindButton.setEnabled(Transport::Tools::canRewindPlayhead(acsr));
+            }
+            break;
+            case Transport::AttrType::runningPlayhead:
+            {
+                auto const state = acsr.getAttr<Transport::AttrType::playback>();
+                if(state)
+                {
+                    mPosition.setTime(acsr.getAttr<Transport::AttrType::runningPlayhead>(), juce::NotificationType::dontSendNotification);
+                }
+            }
+            break;
+            case Transport::AttrType::looping:
+            {
+                auto const state = acsr.getAttr<Transport::AttrType::looping>();
+                mLoopButton.setToggleState(state, juce::NotificationType::dontSendNotification);
+                mRewindButton.setEnabled(Transport::Tools::canRewindPlayhead(acsr));
+            }
+            break;
+            case Transport::AttrType::loopRange:
+            {
+                mRewindButton.setEnabled(Transport::Tools::canRewindPlayhead(acsr));
+            }
+            break;
+            case Transport::AttrType::gain:
+            {
+                auto const decibel = juce::Decibels::gainToDecibels(acsr.getAttr<Transport::AttrType::gain>(), -90.0);
+                mVolumeSlider.setValue(decibel, juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case Transport::AttrType::stopAtLoopEnd:
+            case Transport::AttrType::autoScroll:
+            case Transport::AttrType::markers:
+            case Transport::AttrType::magnetize:
+            case Transport::AttrType::selection:
+                break;
+        }
+    };
+
+    mZoomListener.onAttrChanged = [this](Zoom::Accessor const& acsr, Zoom::AttrType attribute)
+    {
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            {
+                mPosition.setRange(acsr.getAttr<Zoom::AttrType::globalRange>(), juce::NotificationType::dontSendNotification);
+            }
+            break;
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::visibleRange:
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+
+    mRewindButton.setTooltip(juce::translate("Rewind the playhead"));
+    mRewindButton.onClick = [&]()
+    {
+        Transport::Tools::rewindPlayhead(mTransportAccessor, NotificationType::synchronous);
+    };
+
+    mPlaybackButton.setTooltip(juce::translate("Toggle the audio playback"));
+    mPlaybackButton.setClickingTogglesState(true);
+    mPlaybackButton.onClick = [&]()
+    {
+        mTransportAccessor.setAttr<Transport::AttrType::playback>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
+    };
+
+    mLoopButton.setTooltip(juce::translate("Toggle the playback loop"));
+    mLoopButton.setClickingTogglesState(true);
+    mLoopButton.onClick = [&]()
+    {
+        auto const state = mLoopButton.getToggleState();
+        if(state && mTransportAccessor.getAttr<Transport::AttrType::loopRange>().isEmpty())
+        {
+            mTransportAccessor.setAttr<Transport::AttrType::loopRange>(mZoomAccessor.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
+        }
+        mTransportAccessor.setAttr<Transport::AttrType::looping>(state, NotificationType::synchronous);
+    };
+
+    mVolumeSlider.setTooltip(juce::translate("The volume of the audio playback"));
+    mVolumeSlider.setRange(-90.0, 12.0);
+    mVolumeSlider.setDoubleClickReturnValue(true, 0.0);
+    mVolumeSlider.onValueChange = [&]()
+    {
+        auto const gain = std::min(juce::Decibels::decibelsToGain(mVolumeSlider.getValue(), -90.0), 12.0);
+        mTransportAccessor.setAttr<Transport::AttrType::gain>(gain, NotificationType::synchronous);
+    };
+
+    mPosition.setTooltip("The time position of the playhead");
+    mPosition.onTimeChanged = [&](double time)
+    {
+        mTransportAccessor.setAttr<Transport::AttrType::startPlayhead>(time, NotificationType::synchronous);
+    };
+
+    addAndMakeVisible(mRewindButton);
+    addAndMakeVisible(mPlaybackButton);
+    addAndMakeVisible(mLoopButton);
+    addAndMakeVisible(mPosition);
+    addAndMakeVisible(mVolumeSlider);
+    mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
+    mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+}
+
+Document::TransportDisplay::~TransportDisplay()
+{
+    mZoomAccessor.removeListener(mZoomListener);
+    mTransportAccessor.removeListener(mTransportListener);
+}
+
+void Document::TransportDisplay::resized()
+{
+    auto bounds = getLocalBounds();
+    auto const buttonSize = bounds.getHeight();
+    mRewindButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
+    mPlaybackButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
+    mLoopButton.setBounds(bounds.removeFromLeft(buttonSize).reduced(2));
+    mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
+    mPosition.setBounds(bounds);
+    mPosition.setFont(juce::Font(static_cast<float>(bounds.getHeight()) * 0.8f));
+}
+
+ANALYSE_FILE_END

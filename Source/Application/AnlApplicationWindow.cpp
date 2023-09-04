@@ -105,9 +105,9 @@ void Application::Window::changeListenerCallback([[maybe_unused]] juce::ChangeBr
     setName(appName + separator + fileName + fileExtension);
 }
 
-juce::Rectangle<int> Application::Window::getPlotBounds(juce::String const& identifier) const
+Application::Interface& Application::Window::getInterface()
 {
-    return mInterface.getPlotBounds(identifier);
+    return mInterface;
 }
 
 ANALYSE_FILE_END

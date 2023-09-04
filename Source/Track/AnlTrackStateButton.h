@@ -24,8 +24,8 @@ namespace Track
         Director& mDirector;
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
-        LoadingCircle mProcessingButton;
-        Icon mStateIcon{Icon::Type::alert};
+        LoadingIcon mProcessingButton;
+        Icon mStateIcon;
     };
 } // namespace Track
 

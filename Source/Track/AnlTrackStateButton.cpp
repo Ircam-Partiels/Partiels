@@ -1,10 +1,12 @@
 #include "AnlTrackStateButton.h"
 #include "AnlTrackTools.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
 Track::StateButton::StateButton(Director& director)
 : mDirector(director)
+, mStateIcon(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize))
 {
     addAndMakeVisible(mProcessingButton);
     addAndMakeVisible(mStateIcon);
@@ -23,12 +25,14 @@ Track::StateButton::StateButton(Director& director)
             case AttrType::warnings:
             {
                 auto const tooltip = acsr.getAttr<AttrType::name>() + ": " + Tools::getStateTootip(acsr);
-                mProcessingButton.setInactiveImage(Icon::getImage(hasWarning() ? Icon::Type::alert : Icon::Type::verified));
+                auto const checkedImage = juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize);
+                auto const alertImage = juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize);
+                mProcessingButton.setInactiveImage(hasWarning() ? alertImage : checkedImage);
                 mProcessingButton.setTooltip(tooltip);
                 mProcessingButton.setVisible(isProcessingOrRendering());
                 mProcessingButton.setActive(isProcessingOrRendering());
 
-                mStateIcon.setTypes(hasWarning() ? Icon::Type::alert : Icon::Type::verified);
+                mStateIcon.setImages(hasWarning() ? alertImage : checkedImage);
                 mStateIcon.setEnabled(hasWarning());
                 mStateIcon.setTooltip(tooltip);
                 mStateIcon.setVisible(!isProcessingOrRendering());
@@ -80,7 +84,6 @@ bool Track::StateButton::isProcessingOrRendering() const
 bool Track::StateButton::hasWarning() const
 {
     return mAccessor.getAttr<AttrType::warnings>() != WarningType::none;
-    ;
 }
 
 ANALYSE_FILE_END

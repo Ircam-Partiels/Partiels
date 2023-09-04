@@ -12,8 +12,6 @@ namespace PluginList
           useEnvVariable
         , quarantineMode
         , searchPath
-        , sortColumn
-        , sortIsFowards
     };
     
     enum class QuarantineMode
@@ -42,8 +40,6 @@ namespace PluginList
     < Model::Attr<AttrType::useEnvVariable, bool, Model::Flag::basic>
     , Model::Attr<AttrType::quarantineMode, QuarantineMode, Model::Flag::basic>
     , Model::Attr<AttrType::searchPath, std::vector<juce::File>, Model::Flag::basic>
-    , Model::Attr<AttrType::sortColumn, ColumnType, Model::Flag::basic>
-    , Model::Attr<AttrType::sortIsFowards, bool, Model::Flag::basic>
     >;
     // clang-format on
 

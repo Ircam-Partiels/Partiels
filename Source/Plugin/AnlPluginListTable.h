@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnlPluginDescriptionPanel.h"
 #include "AnlPluginListModel.h"
 #include "AnlPluginListScanner.h"
 
@@ -9,7 +10,7 @@ namespace PluginList
 {
     class Table
     : public juce::Component
-    , private juce::TableListBoxModel
+    , private juce::ListBoxModel
     {
     public:
         Table(Accessor& accessor, Scanner& scanner);
@@ -22,30 +23,21 @@ namespace PluginList
         void visibilityChanged() override;
         bool keyPressed(juce::KeyPress const& key) override;
 
-        std::function<void(void)> onSettingButtonClicked = nullptr;
-        std::function<void(std::set<Plugin::Key> keys)> onPluginSelected = nullptr;
+        std::function<void(std::set<Plugin::Key> keys)> onAddPlugins = nullptr;
         void setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept;
-
-        class WindowContainer
-        : public FloatingWindowContainer
-        {
-        public:
-            WindowContainer(Table& table);
-            ~WindowContainer() override = default;
-        };
 
     private:
         void updateContent();
+        void notifyAddSelectedPlugins();
 
         // juce::TableListBoxModel
         int getNumRows() override;
-        void paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected) override;
-        void paintCell(juce::Graphics& g, int row, int columnId, int width, int height, bool rowIsSelected) override;
+        void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
         void returnKeyPressed(int lastRowSelected) override;
         void deleteKeyPressed(int lastRowSelected) override;
-        void cellDoubleClicked(int rowNumber, int columnId, juce::MouseEvent const& e) override;
-        void sortOrderChanged(int newSortColumnId, bool isForwards) override;
-        juce::String getCellTooltip(int rowNumber, int columnId) override;
+        void selectedRowsChanged(int lastRowSelected) override;
+        void listBoxItemDoubleClicked(int rowNumber, juce::MouseEvent const& event) override;
+        juce::String getTooltipForRow(int rowNumber) override;
 
         Accessor& mAccessor;
         Scanner& mScanner;
@@ -53,13 +45,14 @@ namespace PluginList
         Accessor::Receiver mReceiver;
         std::map<Plugin::Key, Plugin::Description> mList;
         std::vector<std::pair<Plugin::Key, Plugin::Description>> mFilteredList;
-        ColouredPanel mSeparator1;
+        juce::String mLookingWord;
+
         Misc::Icon mSearchIcon;
         juce::TextEditor mSearchField;
-        Misc::Icon mSettingsIcon;
+        ColouredPanel mSeparator1;
+        juce::ListBox mPluginTable;
         ColouredPanel mSeparator2;
-        juce::TableListBox mPluginTable;
-        juce::String mLookingWord;
+        Plugin::DescriptionPanel mDescriptionPanel;
 
         JUCE_LEAK_DETECTOR(Table)
     };

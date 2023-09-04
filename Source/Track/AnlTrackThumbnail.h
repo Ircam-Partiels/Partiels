@@ -44,8 +44,8 @@ namespace Track
         PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
         Result::Table mResultsTable{mDirector, mTimeZoomAccessor, mTransportAccessor};
         Result::Table::WindowContainer mResultsWindowContainer{mResultsTable};
-        Icon mPropertiesButton{Icon::Type::properties};
-        Icon mEditButton{Icon::Type::edit};
+        Icon mPropertiesButton;
+        Icon mResultsButton;
         StateButton mStateButton{mDirector};
     };
 } // namespace Track

@@ -9,16 +9,9 @@
 ANALYSE_FILE_BEGIN
 
 Application::CommandTarget::CommandTarget()
-: mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
-, mPluginListSearchPath(Instance::get().getPluginListAccessor())
-, mSdifConverterWindow(juce::translate("SDIF Converter"), mSdifConverter)
-, mAudioSettingsWindow(juce::translate("Audio Settings"), mAudioSettings)
 {
-    Instance::get().getDocumentDirector().setPluginTable(&mPluginTableContainer);
-    Instance::get().getDocumentDirector().setLoaderSelector(Instance::get().getFileLoaderSelectorContainer());
-    mListener.onAttrChanged = [](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = []([[maybe_unused]] Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::recentlyOpenedFilesList:
@@ -41,9 +34,8 @@ Application::CommandTarget::CommandTarget()
         }
     };
 
-    mTransportListener.onAttrChanged = [](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    mTransportListener.onAttrChanged = []([[maybe_unused]] Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Transport::AttrType::runningPlayhead:
@@ -78,8 +70,6 @@ Application::CommandTarget::~CommandTarget()
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getUndoManager().removeChangeListener(this);
     Instance::get().getDocumentFileBased().removeChangeListener(this);
-    Instance::get().getDocumentDirector().setPluginTable(nullptr);
-    Instance::get().getDocumentDirector().setLoaderSelector(nullptr);
 }
 
 juce::ApplicationCommandTarget* Application::CommandTarget::getNextCommandTarget()
@@ -233,7 +223,7 @@ void Application::CommandTarget::getCommandInfo(juce::CommandID const commandID,
         break;
         case CommandIDs::editNewTrack:
         {
-            result.setInfo(juce::translate("Add New Track"), juce::translate("Adds a new track"), "Edit", 0);
+            result.setInfo(juce::translate("Add New Track"), juce::translate("Shows or hides the list of plugins to add a new track"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('t', juce::ModifierKeys::commandModifier, 0));
             result.setActive(!documentAcsr.getAttr<Document::AttrType::reader>().empty());
         }
@@ -489,18 +479,12 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::documentSave:
         {
-            fileBased.saveAsync(true, true, [](juce::FileBasedDocument::SaveResult saveResult)
-                                {
-                                    juce::ignoreUnused(saveResult);
-                                });
+            fileBased.saveAsync(true, true, nullptr);
             return true;
         }
         case CommandIDs::documentDuplicate:
         {
-            fileBased.saveAsInteractiveAsync(true, [](juce::FileBasedDocument::SaveResult saveResult)
-                                             {
-                                                 juce::ignoreUnused(saveResult);
-                                             });
+            fileBased.saveAsInteractiveAsync(true, nullptr);
             return true;
         }
         case CommandIDs::documentConsolidate:
@@ -543,7 +527,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
                 return true;
             }
-            mExporterWindow.show(true);
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showExporterPanel();
+            }
             return true;
         }
         case CommandIDs::documentImport:
@@ -574,7 +561,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                 juce::LookAndFeel::getDefaultLookAndFeel().playAlertSound();
                 return true;
             }
-            mBatcherWindow.show(true);
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showBatcherPanel();
+            }
             return true;
         }
 
@@ -623,15 +613,16 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::editNewTrack:
         {
-            auto const position = Tools::getNewTrackPosition();
-            mPluginListTable.setMultipleSelectionEnabled(true);
-            mPluginListTable.onPluginSelected = [this, position](std::set<Plugin::Key> keys)
+            if(auto* window = Instance::get().getWindow())
             {
-                mPluginListTableWindow.hide();
-                Tools::addPluginTracks(position, keys);
-            };
-            mPluginListTableWindow.show(true);
-            mPluginListTable.grabKeyboardFocus();
+                auto& pluginListTable = window->getInterface().getPluginListTable();
+                pluginListTable.setMultipleSelectionEnabled(true);
+                pluginListTable.onAddPlugins = [](std::set<Plugin::Key> keys)
+                {
+                    Tools::addPluginTracks(Tools::getNewTrackPosition(), keys);
+                };
+                window->getInterface().togglePluginListTablePanel();
+            }
             return true;
         }
         case CommandIDs::editRemoveItem:
@@ -790,16 +781,14 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
                                          .withMessage(juce::translate("Audio playback cannot be started because the output audio device is not set. Do you want to open the audio settings panel to select the output audio device?"))
                                          .withButton(juce::translate("Open"))
                                          .withButton(juce::translate("Ignore"));
-                juce::WeakReference<CommandTarget> weakReference(this);
-                juce::AlertWindow::showAsync(options, [=, this](int result)
+                juce::AlertWindow::showAsync(options, [](int result)
                                              {
-                                                 if(weakReference.get() == nullptr)
-                                                 {
-                                                     return;
-                                                 }
                                                  if(result == 1)
                                                  {
-                                                     mAudioSettingsWindow.show();
+                                                     if(auto* window = Instance::get().getWindow())
+                                                     {
+                                                         window->getInterface().showAudioSettingsPanel();
+                                                     }
                                                  }
                                              });
                 return true;
@@ -898,17 +887,26 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::helpOpenAudioSettings:
         {
-            mAudioSettingsWindow.show();
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showAudioSettingsPanel();
+            }
             return true;
         }
         case CommandIDs::helpOpenPluginSettings:
         {
-            mPluginListSearchPathWindow.show();
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showPluginSearchPathPanel();
+            }
             return true;
         }
         case CommandIDs::helpOpenAbout:
         {
-            mAboutWindow.show();
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showAboutPanel();
+            }
             return true;
         }
         case CommandIDs::helpOpenProjectPage:
@@ -930,7 +928,10 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
         }
         case CommandIDs::helpSdifConverter:
         {
-            mSdifConverterWindow.show();
+            if(auto* window = Instance::get().getWindow())
+            {
+                window->getInterface().showConverterPanel();
+            }
             return true;
         }
         case CommandIDs::helpAutoUpdate:

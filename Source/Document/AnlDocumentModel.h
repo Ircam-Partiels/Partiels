@@ -41,7 +41,7 @@ namespace Document
     enum class SignalType
     {
           viewport
-        , showReaderPanel
+        , showReaderLayoutPanel
         , updateSize
     };
     

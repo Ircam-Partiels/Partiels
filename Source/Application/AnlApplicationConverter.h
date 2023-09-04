@@ -6,13 +6,13 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class ConverterPanel
+    class ConverterContent
     : public juce::Component
     , public juce::FileDragAndDropTarget
     {
     public:
-        ConverterPanel();
-        ~ConverterPanel() override;
+        ConverterContent();
+        ~ConverterContent() override;
 
         // juce::Component
         void resized() override;
@@ -65,6 +65,14 @@ namespace Application
         std::vector<uint32_t> mMatrixSigLinks;
         bool mFileIsDragging{false};
         std::unique_ptr<juce::FileChooser> mFileChooser;
+    };
+
+    class ConverterPanel
+    : public HideablePanelTyped<ConverterContent>
+    {
+    public:
+        ConverterPanel();
+        ~ConverterPanel() override = default;
     };
 } // namespace Application
 

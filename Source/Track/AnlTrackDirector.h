@@ -49,20 +49,8 @@ namespace Track
         std::function<void(NotificationType notification)> onChannelsLayoutUpdated = nullptr;
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
-
-        struct PluginTableContainer
-        {
-            PluginList::Table& table;
-            FloatingWindowContainer& window;
-        };
-        void setPluginTable(PluginTableContainer* table);
-
-        struct LoaderSelectorContainer
-        {
-            Loader::ArgumentSelector& selector;
-            FloatingWindowContainer& window;
-        };
-        void setLoaderSelector(LoaderSelectorContainer* selector);
+        void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
+        void setLoaderSelector(Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn);
 
         void warmAboutPlugin(juce::String const& reason);
         void askToReloadPlugin(juce::String const& reason);
@@ -115,8 +103,10 @@ namespace Track
         std::mutex mSharedZoomMutex;
         ValueRangeMode mValueRangeMode = ValueRangeMode::undefined;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
-        PluginTableContainer* mPluginTableContainer = nullptr;
-        LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
+        PluginList::Table* mPluginTable{nullptr};
+        std::function<void(bool)> mPluginTableShowHideFn{nullptr};
+        Loader::ArgumentSelector* mLoaderSelector;
+        std::function<void(bool)> mLoaderSelectorShowHideFn{nullptr};
         std::unique_ptr<juce::FileChooser> mFileChooser;
         SafeAccessorRetriever mSafeAccessorRetriever;
         juce::File mBackupDirectory;

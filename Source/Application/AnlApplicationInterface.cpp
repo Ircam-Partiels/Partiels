@@ -1,187 +1,151 @@
 #include "AnlApplicationInterface.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
-Application::Interface::Loader::FileTable::FileTable()
+Application::Interface::TrackLoaderPanel::TrackLoaderPanel()
+: HideablePanelTyped<Track::Loader::ArgumentSelector>(juce::translate("Load File..."))
 {
-    addAndMakeVisible(mListBox);
+}
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+Track::Loader::ArgumentSelector& Application::Interface::TrackLoaderPanel::getArgumentSelector()
+{
+    return mContent;
+}
+
+Application::Interface::ReaderLayoutPanel::ReaderLayoutPanel()
+: mReaderLayoutContent(Instance::get().getDocumentDirector())
+{
+    setContent(juce::translate("Audio Files Layout"), std::addressof(mReaderLayoutContent));
+}
+
+Application::Interface::ReaderLayoutPanel::~ReaderLayoutPanel()
+{
+    setContent("", nullptr);
+}
+
+void Application::Interface::ReaderLayoutPanel::inputAttemptWhenModal()
+{
+    mReaderLayoutContent.warnBeforeClosing();
+    HideablePanel::inputAttemptWhenModal();
+}
+
+Application::Interface::PluginSearchPathPanel::PluginSearchPathPanel()
+: mPluginSearchPath(Instance::get().getPluginListAccessor())
+{
+    setContent("Plugin Settings", std::addressof(mPluginSearchPath));
+}
+
+Application::Interface::PluginSearchPathPanel::~PluginSearchPathPanel()
+{
+    setContent("", nullptr);
+}
+
+void Application::Interface::PluginSearchPathPanel::inputAttemptWhenModal()
+{
+    mPluginSearchPath.warnBeforeClosing();
+    HideablePanel::inputAttemptWhenModal();
+}
+
+Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Component& content)
+: mTitleLabel("Title", juce::translate("Add Plugins..."))
+, mSettingsButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
+, mContent(content)
+{
+    mSettingsButton.onClick = []()
     {
-        juce::ignoreUnused(acsr);
-        switch(attribute)
+        if(auto* window = Instance::get().getWindow())
         {
-            case AttrType::recentlyOpenedFilesList:
-            {
-                mListBox.updateContent();
-                mListBox.repaint();
-            }
-            break;
-            case AttrType::windowState:
-            case AttrType::currentDocumentFile:
-            case AttrType::colourMode:
-            case AttrType::showInfoBubble:
-            case AttrType::exportOptions:
-            case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
-            case AttrType::desktopGlobalScaleFactor:
-            case AttrType::routingMatrix:
-            case AttrType::autoUpdate:
-            case AttrType::lastVersion:
-                break;
+            window->getInterface().showPluginSearchPathPanel();
         }
     };
-
-    auto& accessor = Instance::get().getApplicationAccessor();
-    accessor.addListener(mListener, NotificationType::synchronous);
+    mTitleLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(mTitleLabel);
+    addAndMakeVisible(mSettingsButton);
+    addAndMakeVisible(mTopSeparator);
+    addAndMakeVisible(mLeftSeparator);
+    addAndMakeVisible(mContent);
 }
 
-Application::Interface::Loader::FileTable::~FileTable()
+void Application::Interface::PluginListTablePanel::paint(juce::Graphics& g)
 {
-    auto& accessor = Instance::get().getApplicationAccessor();
-    accessor.removeListener(mListener);
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 }
 
-void Application::Interface::Loader::FileTable::resized()
+void Application::Interface::PluginListTablePanel::resized()
 {
-    mListBox.setBounds(getLocalBounds());
+    auto bounds = getLocalBounds();
+    mLeftSeparator.setBounds(bounds.removeFromLeft(1));
+    auto top = bounds.removeFromTop(24);
+    mSettingsButton.setBounds(top.removeFromRight(24).reduced(4));
+    mTitleLabel.setBounds(top);
+    mTopSeparator.setBounds(bounds.removeFromTop(1));
+    mContent.setBounds(bounds);
 }
 
-int Application::Interface::Loader::FileTable::getNumRows()
+void Application::Interface::PluginListTablePanel::colourChanged()
 {
-    auto const& accessor = Instance::get().getApplicationAccessor();
-    return static_cast<int>(accessor.getAttr<AttrType::recentlyOpenedFilesList>().size());
+    setOpaque(findColour(juce::ResizableWindow::backgroundColourId).isOpaque());
 }
 
-void Application::Interface::Loader::FileTable::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
+void Application::Interface::PluginListTablePanel::parentHierarchyChanged()
 {
-    const auto defaultColour = mListBox.findColour(juce::ListBox::backgroundColourId);
-    const auto selectedColour = defaultColour.interpolatedWith(mListBox.findColour(juce::ListBox::textColourId), 0.5f);
-    g.fillAll(rowIsSelected ? selectedColour : defaultColour);
+    colourChanged();
+}
 
-    auto const& accessor = Instance::get().getApplicationAccessor();
-    auto const& files = accessor.getAttr<AttrType::recentlyOpenedFilesList>();
-    if(rowNumber >= static_cast<int>(files.size()))
+Application::Interface::DocumentContainer::DocumentContainer()
+: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getAuthorizationProcessor())
+, mPluginListTable(Instance::get().getPluginListAccessor(), Instance::get().getPluginListScanner())
+{
+    addAndMakeVisible(mDocumentSection);
+    addChildComponent(mLoaderDecorator);
+    addAndMakeVisible(mPluginListTablePanel);
+    addAndMakeVisible(mToolTipSeparator);
+    addAndMakeVisible(mToolTipDisplay);
+
+    mDocumentSection.tooltipButton.setClickingTogglesState(true);
+    mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::viewInfoBubble));
+    mDocumentSection.tooltipButton.onClick = []()
     {
-        return;
-    }
-
-    auto const index = static_cast<size_t>(rowNumber);
-
-    auto const fileName = files[index].getFileNameWithoutExtension();
-    auto const hasDuplicate = std::count_if(files.cbegin(), files.cend(), [&](auto const file)
-                                            {
-                                                return fileName == file.getFileNameWithoutExtension();
-                                            }) > 1l;
-    auto const text = fileName + (hasDuplicate ? " (" + files[index].getParentDirectory().getFileName() + ")" : "");
-
-    g.setColour(mListBox.findColour(juce::ListBox::textColourId));
-    g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
-    g.drawFittedText(text, 4, 0, width - 6, height, juce::Justification::centredLeft, 1, 1.f);
-}
-
-void Application::Interface::Loader::FileTable::returnKeyPressed(int lastRowSelected)
-{
-    auto const& accessor = Instance::get().getApplicationAccessor();
-    auto const& files = accessor.getAttr<AttrType::recentlyOpenedFilesList>();
-    if(lastRowSelected >= static_cast<int>(files.size()))
-    {
-        return;
-    }
-    auto const index = static_cast<size_t>(lastRowSelected);
-    if(onFileSelected != nullptr)
-    {
-        onFileSelected(files[index]);
-    }
-}
-
-void Application::Interface::Loader::FileTable::listBoxItemDoubleClicked(int row, juce::MouseEvent const& event)
-{
-    juce::ignoreUnused(event);
-    returnKeyPressed(row);
-}
-
-Application::Interface::Loader::Loader()
-{
-    using CommandIDs = CommandTarget::CommandIDs;
-    auto& commandManager = Instance::get().getApplicationCommandManager();
-    mLoadFileButton.onClick = [&]()
-    {
-        commandManager.invokeDirectly(CommandIDs::documentOpen, true);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::viewInfoBubble, true);
     };
-    mAddTrackButton.onClick = [&]()
+    mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font("Arial", 8.0, juce::Font::plain).toString());
+    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
+    mDocumentSection.pluginListButton.setTooltip(juce::translate("Show plugins list table"));
+    mDocumentSection.pluginListButton.onClick = []()
     {
-        commandManager.invokeDirectly(CommandIDs::editNewTrack, true);
-    };
-    mLoadTemplateButton.onClick = [&]()
-    {
-        commandManager.invokeDirectly(CommandIDs::editLoadTemplate, true);
-    };
-    mAdaptationButton.onClick = [this]()
-    {
-        Instance::get().getApplicationAccessor().setAttr<AttrType::adaptationToSampleRate>(mAdaptationButton.getToggleState(), NotificationType::synchronous);
-    };
-
-    mLoadFileInfo.setText(juce::translate("or\nDrag & Drop\n(Document/Audio)"), juce::NotificationType::dontSendNotification);
-    mLoadFileInfo.setJustificationType(juce::Justification::centredTop);
-
-    mLoadFileWildcard.setText(juce::translate("Document: DOCWILDCARD\nAudio: AUDIOWILDCARD").replace("DOCWILDCARD", Instance::getWildCardForDocumentFile()).replace("AUDIOWILDCARD", "*.aac,*.aiff,*.aif,*.flac,*.m4a,*.mp3,*.ogg,*.wav,*.wma"), juce::NotificationType::dontSendNotification);
-    mLoadFileWildcard.setJustificationType(juce::Justification::bottomLeft);
-
-    mAddTrackInfo.setText(juce::translate("Insert an analysis plugin as a new track"), juce::NotificationType::dontSendNotification);
-    mAddTrackInfo.setJustificationType(juce::Justification::centredTop);
-
-    mLoadTemplateInfo.setText(juce::translate("Use an existing document as a template"), juce::NotificationType::dontSendNotification);
-    mLoadTemplateInfo.setJustificationType(juce::Justification::centredTop);
-
-    mAdaptationInfo.setText(juce::translate("Adapt the block size and the step size of the analyzes to the sample rate"), juce::NotificationType::dontSendNotification);
-
-    addAndMakeVisible(mSeparatorVertical);
-    addAndMakeVisible(mSeparatorTop);
-    addAndMakeVisible(mSelectRecentDocument);
-    addAndMakeVisible(mFileTable);
-
-    mFileTable.onFileSelected = [](juce::File const& file)
-    {
-        auto& documentAcsr = Instance::get().getDocumentAccessor();
-        auto const documentHasFile = !documentAcsr.getAttr<Document::AttrType::reader>().empty();
-        if(!documentHasFile)
+        if(auto* window = Instance::get().getWindow())
         {
-            Instance::get().openDocumentFile(file);
-        }
-        else
-        {
-            auto& documentDir = Instance::get().getDocumentDirector();
-            documentDir.startAction();
-            auto const adaptation = Instance::get().getApplicationAccessor().getAttr<AttrType::adaptationToSampleRate>();
-            auto const results = Instance::get().getDocumentFileBased().loadTemplate(file, adaptation);
-            if(results.failed())
-            {
-                auto const options = juce::MessageBoxOptions()
-                                         .withIconType(juce::AlertWindow::WarningIcon)
-                                         .withTitle(juce::translate("Failed to load template!"))
-                                         .withMessage(results.getErrorMessage())
-                                         .withButton(juce::translate("Ok"));
-                juce::AlertWindow::showAsync(options, nullptr);
-                documentDir.endAction(ActionState::abort);
-            }
-            else
-            {
-                documentDir.endAction(ActionState::newTransaction, juce::translate("Load template"));
-            }
+            window->getInterface().togglePluginListTablePanel();
         }
     };
-
-    mDocumentListener.onAttrChanged = [this](Document::Accessor const& acsr, Document::AttrType attribute)
+    mDocumentSection.onSaveButtonClicked = []()
     {
-        juce::ignoreUnused(acsr);
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::documentSave, true);
+    };
+    mDocumentSection.onNewGroupButtonClicked = []()
+    {
+        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::editNewGroup, true);
+    };
+
+    auto const showHideLoader = [this]()
+    {
+        auto const& documentAccessor = Instance::get().getDocumentAccessor();
+        auto const noAudioFiles = documentAccessor.getAttr<Document::AttrType::reader>().empty();
+        auto const noTrackNorGroup = documentAccessor.getNumAcsrs<Document::AcsrType::tracks>() == 0_z && documentAccessor.getNumAcsrs<Document::AcsrType::groups>() == 0_z;
+        mLoaderDecorator.setVisible(noAudioFiles || noTrackNorGroup);
+        mDocumentSection.setEnabled(!mLoaderDecorator.isVisible());
+    };
+
+    mDocumentListener.onAttrChanged = [=]([[maybe_unused]] Document::Accessor const& acsr, Document::AttrType attribute)
+    {
         switch(attribute)
         {
             case Document::AttrType::reader:
             {
-                updateState();
+                showHideLoader();
             }
             break;
             case Document::AttrType::layout:
@@ -196,180 +160,9 @@ Application::Interface::Loader::Loader()
         }
     };
 
-    mDocumentListener.onAccessorErased = mDocumentListener.onAccessorInserted = [this](Document::Accessor const& acsr, Document::AcsrType type, size_t index)
+    mDocumentListener.onAccessorErased = mDocumentListener.onAccessorInserted = [=]([[maybe_unused]] Document::Accessor const& acsr, [[maybe_unused]] Document::AcsrType type, [[maybe_unused]] size_t index)
     {
-        juce::ignoreUnused(acsr, type, index);
-        updateState();
-    };
-
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case AttrType::windowState:
-            case AttrType::recentlyOpenedFilesList:
-            case AttrType::currentDocumentFile:
-            case AttrType::colourMode:
-            case AttrType::showInfoBubble:
-            case AttrType::exportOptions:
-            case AttrType::autoLoadConvertedFile:
-            case AttrType::desktopGlobalScaleFactor:
-            case AttrType::routingMatrix:
-            case AttrType::autoUpdate:
-            case AttrType::lastVersion:
-                break;
-            case AttrType::adaptationToSampleRate:
-            {
-                mAdaptationButton.setToggleState(acsr.getAttr<AttrType::adaptationToSampleRate>(), juce::NotificationType::dontSendNotification);
-            }
-            break;
-        }
-    };
-
-    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
-
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    documentAccessor.addListener(mDocumentListener, NotificationType::synchronous);
-    commandManager.addListener(this);
-}
-
-Application::Interface::Loader::~Loader()
-{
-    Instance::get().getApplicationCommandManager().removeListener(this);
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    documentAccessor.removeListener(mDocumentListener);
-
-    Instance::get().getApplicationAccessor().removeListener(mListener);
-}
-
-void Application::Interface::Loader::updateState()
-{
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
-    auto const documentHasTrackOrGroup = documentAccessor.getNumAcsrs<Document::AcsrType::tracks>() > 0_z || documentAccessor.getNumAcsrs<Document::AcsrType::groups>() > 0_z;
-
-    removeChildComponent(&mLoadFileButton);
-    removeChildComponent(&mLoadFileInfo);
-    removeChildComponent(&mLoadFileWildcard);
-    removeChildComponent(&mAddTrackButton);
-    removeChildComponent(&mAddTrackInfo);
-    removeChildComponent(&mLoadTemplateButton);
-    removeChildComponent(&mLoadTemplateInfo);
-    removeChildComponent(&mSeparatorBottom);
-    removeChildComponent(&mAdaptationButton);
-    removeChildComponent(&mAdaptationInfo);
-    setVisible(!documentHasTrackOrGroup);
-    if(!documentHasFiles)
-    {
-        addAndMakeVisible(mLoadFileButton);
-        addAndMakeVisible(mLoadFileInfo);
-        addAndMakeVisible(mLoadFileWildcard);
-        mSelectRecentDocument.setText(juce::translate("Load a recent document"), juce::NotificationType::dontSendNotification);
-    }
-    else if(!documentHasTrackOrGroup)
-    {
-        addAndMakeVisible(mAddTrackButton);
-        addAndMakeVisible(mAddTrackInfo);
-        addAndMakeVisible(mLoadTemplateButton);
-        addAndMakeVisible(mLoadTemplateInfo);
-        addAndMakeVisible(mSeparatorBottom);
-        addAndMakeVisible(mAdaptationButton);
-        addAndMakeVisible(mAdaptationInfo);
-        mSelectRecentDocument.setText(juce::translate("Use a document as a template"), juce::NotificationType::dontSendNotification);
-    }
-    resized();
-}
-
-void Application::Interface::Loader::resized()
-{
-    auto bounds = getLocalBounds();
-    {
-        auto rightBounds = bounds.removeFromRight(220);
-        mSelectRecentDocument.setBounds(rightBounds.removeFromTop(32));
-        mSeparatorTop.setBounds(rightBounds.removeFromTop(1));
-        if(mAdaptationButton.isVisible())
-        {
-            auto bottomBounds = rightBounds.removeFromBottom(64);
-            mAdaptationButton.setBounds(bottomBounds.removeFromLeft(24).withSizeKeepingCentre(18, 18));
-            mAdaptationInfo.setBounds(bottomBounds);
-            mSeparatorBottom.setBounds(rightBounds.removeFromBottom(1));
-        }
-        mFileTable.setBounds(rightBounds);
-        mSeparatorVertical.setBounds(bounds.removeFromRight(1));
-    }
-    {
-        auto centerBounds = bounds.withSizeKeepingCentre(160, 82);
-        mLoadFileButton.setBounds(centerBounds.removeFromTop(32));
-        mLoadFileInfo.setBounds(centerBounds);
-        auto bottomBounds = bounds;
-        mLoadFileWildcard.setBounds(bottomBounds.removeFromBottom(64));
-    }
-    {
-        auto centerBounds = bounds.withSizeKeepingCentre(402, 82);
-        {
-            auto centerLeftBounds = centerBounds.removeFromLeft(200);
-            mAddTrackButton.setBounds(centerLeftBounds.removeFromTop(32));
-            mAddTrackInfo.setBounds(centerLeftBounds);
-        }
-        {
-            auto centerRightBounds = centerBounds.withTrimmedLeft(2);
-            mLoadTemplateButton.setBounds(centerRightBounds.removeFromTop(32));
-            mLoadTemplateInfo.setBounds(centerRightBounds);
-        }
-    }
-}
-
-void Application::Interface::Loader::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
-{
-    juce::ignoreUnused(info);
-}
-
-void Application::Interface::Loader::applicationCommandListChanged()
-{
-    using CommandIDs = CommandTarget::CommandIDs;
-    auto& commandManager = Instance::get().getApplicationCommandManager();
-    mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::documentOpen));
-    mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editNewTrack));
-    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editLoadTemplate));
-}
-
-Application::Interface::Interface()
-: mDocumentSection(Instance::get().getDocumentDirector(), Instance::get().getApplicationCommandManager(), Instance::get().getAuthorizationProcessor())
-{
-    mComponentListener.onComponentVisibilityChanged = [this](juce::Component& component)
-    {
-        anlStrongAssert(&component == &mLoader);
-        if(&component != &mLoader)
-        {
-            return;
-        }
-        mLoaderDecorator.setVisible(mLoader.isVisible());
-        mDocumentSection.setEnabled(!mLoader.isVisible());
-    };
-
-    addAndMakeVisible(mDocumentSection);
-    addAndMakeVisible(mLoaderDecorator);
-    addAndMakeVisible(mToolTipSeparator);
-    addAndMakeVisible(mToolTipDisplay);
-    mComponentListener.attachTo(mLoader);
-
-    mDocumentSection.tooltipButton.setClickingTogglesState(true);
-    mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::viewInfoBubble));
-    mDocumentSection.tooltipButton.onClick = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::viewInfoBubble, true);
-    };
-    mDocumentSection.onSaveButtonClicked = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::documentSave, true);
-    };
-    mDocumentSection.onNewTrackButtonClicked = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::editNewTrack, true);
-    };
-    mDocumentSection.onNewGroupButtonClicked = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::editNewGroup, true);
+        showHideLoader();
     };
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
@@ -396,129 +189,220 @@ Application::Interface::Interface()
             break;
         }
     };
-    auto& accessor = Instance::get().getApplicationAccessor();
-    accessor.addListener(mListener, NotificationType::synchronous);
+    Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
+    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
 }
 
-Application::Interface::~Interface()
+Application::Interface::DocumentContainer::~DocumentContainer()
 {
-    auto& accessor = Instance::get().getApplicationAccessor();
-    accessor.removeListener(mListener);
-    mComponentListener.detachFrom(mLoader);
+    Instance::get().getApplicationAccessor().removeListener(mListener);
+    Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
 }
 
-void Application::Interface::resized()
+void Application::Interface::DocumentContainer::resized()
 {
     auto bounds = getLocalBounds();
     mToolTipDisplay.setBounds(bounds.removeFromBottom(22));
     mToolTipSeparator.setBounds(bounds.removeFromBottom(1));
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    animator.cancelAnimation(std::addressof(mPluginListTablePanel), false);
+    animator.cancelAnimation(std::addressof(mDocumentSection), false);
+    if(mPluginListTableVisible)
+    {
+        mPluginListTablePanel.setBounds(bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth));
+    }
+    else
+    {
+        mPluginListTablePanel.setBounds(bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth));
+    }
     mDocumentSection.setBounds(bounds);
-    auto const loaderBounds = bounds.withSizeKeepingCentre(800, 600);
-    mLoaderDecorator.setBounds(loaderBounds.withY(std::max(loaderBounds.getY(), 80)));
+    mLoaderDecorator.setBounds(bounds.withSizeKeepingCentre(800, 600));
 }
 
-void Application::Interface::paintOverChildren(juce::Graphics& g)
+Document::Section const& Application::Interface::DocumentContainer::getDocumentSection() const
 {
-    if(mIsDragging)
+    return mDocumentSection;
+}
+
+PluginList::Table& Application::Interface::DocumentContainer::getPluginListTable()
+{
+    return mPluginListTable;
+}
+
+void Application::Interface::DocumentContainer::showPluginListTablePanel()
+{
+    mPluginListTableVisible = true;
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto bounds = getLocalBounds().withTrimmedBottom(23);
+    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.removeFromRight(pluginListTableWidth).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x92"));
+    mDocumentSection.pluginListButton.setTooltip(juce::translate("Hide plugins list table"));
+}
+
+void Application::Interface::DocumentContainer::hidePluginListTablePanel()
+{
+    mPluginListTableVisible = false;
+    auto& animator = juce::Desktop::getInstance().getAnimator();
+    auto const bounds = getLocalBounds().withTrimmedBottom(23);
+    animator.animateComponent(std::addressof(mPluginListTablePanel), bounds.withX(bounds.getWidth()).withWidth(pluginListTableWidth), 1.0f, HideablePanelManager::fadeTime, true, 1.0, 1.0);
+    animator.animateComponent(std::addressof(mDocumentSection), bounds, 1.0f, HideablePanelManager::fadeTime, false, 1.0, 1.0);
+    mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
+    mDocumentSection.pluginListButton.setTooltip(juce::translate("Show plugins list table"));
+}
+
+void Application::Interface::DocumentContainer::togglePluginListTablePanel()
+{
+    if(mPluginListTableVisible)
     {
-        g.setColour(findColour(juce::TextButton::ColourIds::buttonColourId).withAlpha(0.5f));
-        g.fillRoundedRectangle(mDocumentSection.getBounds().toFloat(), 2.0f);
+        hidePluginListTablePanel();
+    }
+    else
+    {
+        showPluginListTablePanel();
     }
 }
 
-bool Application::Interface::isInterestedInFileDrag(juce::StringArray const& files)
+Application::Interface::Interface()
 {
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
-
-    auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
-    auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
-    auto const documentWildcard = Instance::getWildCardForDocumentFile();
-    auto const fileWildcard = documentWildcard + ";" + (documentHasAudioFiles ? importFormatsWildcard : audioFormatsWildcard);
-    for(auto const& fileName : files)
+    addAndMakeVisible(mPanelManager);
+    // clang-format off
+    mPanelManager.setContent(&mDocumentContainer,
+                             std::vector<std::reference_wrapper<HideablePanel>>
+                             { std::ref<HideablePanel>(mAboutPanel)
+                             , std::ref<HideablePanel>(mAudioSettingsPanel)
+                             , std::ref<HideablePanel>(mBatcherPanel)
+                             , std::ref<HideablePanel>(mConverterPanel)
+                             , std::ref<HideablePanel>(mExporterPanel)
+                             , std::ref<HideablePanel>(mPluginSearchPathPanel)
+                             , std::ref<HideablePanel>(mReaderLayoutPanel)
+                             , std::ref<HideablePanel>(mTrackLoaderPanel)
+                             });
+    // clang-format on
+    mDocumentReceiver.onSignal = [this]([[maybe_unused]] Document::Accessor const& acsr, Document::SignalType signal, [[maybe_unused]] juce::var value)
     {
-        if(fileWildcard.contains(juce::File(fileName).getFileExtension()))
+        switch(signal)
         {
-            return true;
-        }
-    }
-    return false;
-}
-
-void Application::Interface::fileDragEnter(juce::StringArray const& files, int x, int y)
-{
-    juce::ignoreUnused(files);
-    if(mIsDragging != mDocumentSection.getBounds().contains(x, y))
-    {
-        mIsDragging = !mIsDragging;
-        repaint();
-    }
-}
-
-void Application::Interface::fileDragMove(juce::StringArray const& files, int x, int y)
-{
-    fileDragEnter(files, x, y);
-}
-
-void Application::Interface::fileDragExit(juce::StringArray const& files)
-{
-    juce::ignoreUnused(files);
-    if(mIsDragging)
-    {
-        mIsDragging = false;
-        repaint();
-    }
-}
-
-void Application::Interface::filesDropped(juce::StringArray const& files, int x, int y)
-{
-    fileDragExit(files);
-    if(!mDocumentSection.getBounds().contains(x, y))
-    {
-        return;
-    }
-
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
-
-    auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
-    auto const documentWildcard = Instance::getWildCardForDocumentFile();
-    auto const openWildcard = documentWildcard + (documentHasAudioFiles ? "" : ";" + audioFormatsWildcard);
-    auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
-    auto getFiles = [&]()
-    {
-        std::vector<juce::File> openFiles;
-        std::vector<juce::File> importFiles;
-        for(auto const& fileName : files)
-        {
-            juce::File const file(fileName);
-            if(openWildcard.contains(file.getFileExtension()))
+            case Document::SignalType::viewport:
+            case Document::SignalType::updateSize:
+                break;
+            case Document::SignalType::showReaderLayoutPanel:
             {
-                openFiles.push_back(file);
+                showReaderLayoutPanel();
             }
-            else if(importFormatsWildcard.contains(file.getFileExtension()))
-            {
-                importFiles.push_back(file);
-            }
+            break;
         }
-        return std::make_tuple(openFiles, importFiles);
     };
-    auto const validFiles = getFiles();
-    if(!std::get<0>(validFiles).empty())
-    {
-        Instance::get().openFiles(std::get<0>(validFiles));
-        return;
-    }
-    for(auto const& importFile : std::get<1>(validFiles))
-    {
-        auto const position = Tools::getNewTrackPosition();
-        Instance::get().importFile(position, importFile);
-    }
+    Instance::get().getDocumentAccessor().addReceiver(mDocumentReceiver);
+    Instance::get().getDocumentDirector().setPluginTable(std::addressof(getPluginListTable()), [this](bool show)
+                                                         {
+                                                             if(show)
+                                                             {
+                                                                 showPluginListTablePanel();
+                                                             }
+                                                             else
+                                                             {
+                                                                 hidePluginListTablePanel();
+                                                             }
+                                                         });
+    Instance::get().getDocumentDirector().setLoaderSelector(std::addressof(getTrackLoaderArgumentSelector()), [this](bool show)
+                                                            {
+                                                                if(show)
+                                                                {
+                                                                    showTrackLoaderPanel();
+                                                                }
+                                                                else
+                                                                {
+                                                                    hideCurrentPanel();
+                                                                }
+                                                            });
+}
+
+Application::Interface::~Interface()
+{
+    Instance::get().getDocumentDirector().setPluginTable(nullptr, nullptr);
+    Instance::get().getDocumentDirector().setLoaderSelector(nullptr, nullptr);
+    Instance::get().getDocumentAccessor().removeReceiver(mDocumentReceiver);
+}
+
+void Application::Interface::resized()
+{
+    mPanelManager.setBounds(getLocalBounds());
+}
+
+void Application::Interface::hideCurrentPanel()
+{
+    mPanelManager.hide();
+}
+
+void Application::Interface::showAboutPanel()
+{
+    mPanelManager.show(mAboutPanel);
+}
+
+void Application::Interface::showAudioSettingsPanel()
+{
+    mPanelManager.show(mAudioSettingsPanel);
+}
+
+void Application::Interface::showBatcherPanel()
+{
+    mPanelManager.show(mBatcherPanel);
+}
+
+void Application::Interface::showConverterPanel()
+{
+    mPanelManager.show(mConverterPanel);
+}
+
+void Application::Interface::showExporterPanel()
+{
+    mPanelManager.show(mExporterPanel);
+}
+
+void Application::Interface::showPluginSearchPathPanel()
+{
+    mPanelManager.show(mPluginSearchPathPanel);
+}
+
+void Application::Interface::showReaderLayoutPanel()
+{
+    mPanelManager.show(mReaderLayoutPanel);
+}
+
+void Application::Interface::showTrackLoaderPanel()
+{
+    mPanelManager.show(mTrackLoaderPanel);
+}
+
+void Application::Interface::showPluginListTablePanel()
+{
+    mDocumentContainer.showPluginListTablePanel();
+}
+
+void Application::Interface::hidePluginListTablePanel()
+{
+    mDocumentContainer.hidePluginListTablePanel();
+}
+
+void Application::Interface::togglePluginListTablePanel()
+{
+    mDocumentContainer.togglePluginListTablePanel();
 }
 
 juce::Rectangle<int> Application::Interface::getPlotBounds(juce::String const& identifier) const
 {
-    return mDocumentSection.getPlotBounds(identifier);
+    return mDocumentContainer.getDocumentSection().getPlotBounds(identifier);
+}
+
+PluginList::Table& Application::Interface::getPluginListTable()
+{
+    return mDocumentContainer.getPluginListTable();
+}
+
+Track::Loader::ArgumentSelector& Application::Interface::getTrackLoaderArgumentSelector()
+{
+    return mTrackLoaderPanel.getArgumentSelector();
 }
 
 ANALYSE_FILE_END

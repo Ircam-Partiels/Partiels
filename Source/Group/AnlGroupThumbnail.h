@@ -39,10 +39,10 @@ namespace Group
 
         PropertyPanel mPropertyPanel{mDirector};
         PropertyPanel::WindowContainer mPropertyWindowContainer{mPropertyPanel};
-        Icon mPropertiesButton{Icon::Type::properties};
-        Icon mEditButton{Icon::Type::edit};
+        Icon mPropertiesButton;
+        Icon mResultsButton;
         StateButton mStateButton{mDirector};
-        Icon mExpandButton{Icon::Type::expand};
+        Icon mExpandButton;
     };
 } // namespace Group
 

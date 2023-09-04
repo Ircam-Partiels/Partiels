@@ -6,30 +6,18 @@ ANALYSE_FILE_BEGIN
 
 namespace Document
 {
-    class ReaderLayoutPanel
+    class ReaderLayoutContent
     : public juce::Component
     , public juce::DragAndDropContainer
     {
     public:
-        ReaderLayoutPanel(Director& director);
-        ~ReaderLayoutPanel() override;
+        ReaderLayoutContent(Director& director);
+        ~ReaderLayoutContent() override;
 
         // juce::Component
         void resized() override;
 
         void warnBeforeClosing();
-
-        class WindowContainer
-        : public FloatingWindowContainer
-        {
-        public:
-            WindowContainer(ReaderLayoutPanel& readerLayoutPanel);
-            ~WindowContainer() override;
-
-        private:
-            ReaderLayoutPanel& mReaderLayoutPanel;
-            juce::TooltipWindow mTooltip;
-        };
 
     private:
         Director& mDirector;
@@ -43,7 +31,7 @@ namespace Document
         ColouredPanel mInfoSeparator;
         AudioFileInfoPanel mFileInfoPanel;
 
-        JUCE_LEAK_DETECTOR(ReaderLayoutPanel)
+        JUCE_LEAK_DETECTOR(ReaderLayoutContent)
     };
 } // namespace Document
 

@@ -867,13 +867,6 @@ juce::String Track::Loader::getWildCardForAllFormats()
     return "*.json;*.csv;*.lab;*.cue;*.sdif;*.dat";
 }
 
-Track::Loader::ArgumentSelector::WindowContainer::WindowContainer(ArgumentSelector& argumentSelector)
-: FloatingWindowContainer(juce::translate("Load File..."), argumentSelector)
-, mArgumentSelector(argumentSelector)
-, mTooltip(&mArgumentSelector)
-{
-}
-
 Track::Loader::ArgumentSelector::ArgumentSelector()
 : mPropertyName("File", "The file to import", nullptr)
 , mPropertyColumnSeparator("Column Separator", "The seperatror character between colummns", "", std::vector<std::string>{"Comma", "Space", "Tab", "Pipe", "Slash", "Colon"}, nullptr)

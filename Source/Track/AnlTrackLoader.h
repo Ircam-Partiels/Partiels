@@ -42,17 +42,6 @@ namespace Track
 
             bool setFile(juce::File const& file, std::function<void(FileInfo)> callback);
 
-            class WindowContainer
-            : public FloatingWindowContainer
-            {
-            public:
-                WindowContainer(ArgumentSelector& argumentSelector);
-
-            private:
-                ArgumentSelector& mArgumentSelector;
-                juce::TooltipWindow mTooltip;
-            };
-
         private:
             PropertyText mPropertyName;
             PropertyList mPropertyColumnSeparator;

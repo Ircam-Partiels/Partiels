@@ -1,38 +1,25 @@
 #pragma once
 
 #include "../Document/AnlDocumentDirector.h"
-#include "../Document/AnlDocumentExporter.h"
 #include "AnlApplicationModel.h"
 
 ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class Batcher
+    class BatcherContent
     : public juce::Component
     , public juce::DragAndDropContainer
     , private juce::AsyncUpdater
     {
     public:
-        Batcher();
-        ~Batcher() override;
+        BatcherContent();
+        ~BatcherContent() override;
 
         // juce::Component
         void resized() override;
 
         bool canCloseWindow() const;
-
-        class WindowContainer
-        : public FloatingWindowContainer
-        {
-        public:
-            WindowContainer(Batcher& batcher);
-            ~WindowContainer() override;
-
-        private:
-            Batcher& mBatcher;
-            juce::TooltipWindow mTooltip;
-        };
 
     private:
         // juce::AsyncUpdater
@@ -51,13 +38,24 @@ namespace Application
         Document::Exporter::Panel mExporterPanel;
         PropertyToggle mPropertyAdaptationToSampleRate;
         PropertyTextButton mPropertyExport;
-        LoadingCircle mLoadingCircle;
+        LoadingIcon mLoadingIcon;
         ComponentListener mComponentListener;
         std::unique_ptr<juce::FileChooser> mFileChooser;
 
         using ProcessResult = std::tuple<AlertWindow::MessageType, juce::String, juce::String>;
         std::atomic<bool> mShoulAbort{false};
         std::future<ProcessResult> mProcess;
+    };
+
+    class BatcherPanel
+    : public HideablePanelTyped<BatcherContent>
+    {
+    public:
+        BatcherPanel();
+        ~BatcherPanel() override = default;
+
+        // juce::Component
+        void inputAttemptWhenModal() override;
     };
 } // namespace Application
 

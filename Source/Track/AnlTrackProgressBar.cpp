@@ -1,11 +1,13 @@
 #include "AnlTrackProgressBar.h"
 #include "AnlTrackTools.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
 Track::ProgressBar::ProgressBar(Director& director, Mode mode)
 : mDirector(director)
 , mMode(mode)
+, mStateIcon(juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize))
 {
     addChildComponent(mProgressBar);
     addAndMakeVisible(mStateIcon);
@@ -54,14 +56,14 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    mStateIcon.setTypes(Icon::Type::alert);
+                    mStateIcon.setImages(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize));
                     mStateIcon.setEnabled(true);
                 }
                 else if(mDirector.isFileModified())
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    mStateIcon.setTypes(Icon::Type::alert);
+                    mStateIcon.setImages(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize));
                     mStateIcon.setEnabled(true);
                     mMessage = juce::translate("Analysis results have been edited!");
                 }
@@ -69,7 +71,9 @@ Track::ProgressBar::ProgressBar(Director& director, Mode mode)
                 {
                     mProgressBar.setVisible(false);
                     mStateIcon.setVisible(true);
-                    mStateIcon.setTypes(warnings != WarningType::none ? Icon::Type::alert : Icon::Type::verified);
+                    auto const checkedImage = juce::ImageCache::getFromMemory(AnlIconsData::checked_png, AnlIconsData::checked_pngSize);
+                    auto const alertImage = juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize);
+                    mStateIcon.setImages(warnings != WarningType::none ? alertImage : checkedImage);
                     mStateIcon.setEnabled(warnings != WarningType::none);
                 }
                 mProgressBar.setTextToDisplay(mMessage);

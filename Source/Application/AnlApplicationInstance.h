@@ -23,8 +23,6 @@ namespace Application
     , private juce::DarkModeSettingListener
     {
     public:
-        using FileLoaderSelectorContainer = Document::Director::LoaderSelectorContainer;
-
         Instance() = default;
         ~Instance() override = default;
 
@@ -58,7 +56,6 @@ namespace Application
 
         Accessor& getApplicationAccessor();
         Window* getWindow();
-        FileLoaderSelectorContainer* getFileLoaderSelectorContainer();
 
         PluginList::Accessor& getPluginListAccessor();
         PluginList::Scanner& getPluginListScanner();
@@ -122,14 +119,7 @@ namespace Application
 
         std::unique_ptr<AuthorizationPanel> mAuthorizationPanel;
         std::unique_ptr<FloatingWindowContainer> mAuthorizationWindow;
-
-        struct FileLoader
-        {
-            Track::Loader::ArgumentSelector selector;
-            Track::Loader::ArgumentSelector::WindowContainer window{selector};
-            FileLoaderSelectorContainer container{selector, window};
-        };
-        std::unique_ptr<FileLoader> mFileLoader;
+        std::unique_ptr<Track::Loader::ArgumentSelector> mFileArgumentSelector;
 
         std::unique_ptr<Window> mWindow;
         std::unique_ptr<MainMenuModel> mMainMenuModel;

@@ -15,7 +15,7 @@ namespace Application
         Window();
         ~Window() override;
 
-        juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
+        Interface& getInterface();
 
         // juce::DocumentWindow
         void closeButtonPressed() override;

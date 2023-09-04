@@ -6,13 +6,13 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class AudioSettings
+    class AudioSettingsContent
     : public juce::Component
     , private juce::ChangeListener
     {
     public:
-        AudioSettings();
-        ~AudioSettings() override;
+        AudioSettingsContent();
+        ~AudioSettingsContent() override;
 
         // juce::Component
         void resized() override;
@@ -42,7 +42,15 @@ namespace Application
         PropertyChannelRouting mPropertyChannelRouting;
         PropertyTextButton mPropertyDriverPanel;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioSettings)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioSettingsContent)
+    };
+
+    class AudioSettingsPanel
+    : public HideablePanelTyped<AudioSettingsContent>
+    {
+    public:
+        AudioSettingsPanel();
+        ~AudioSettingsPanel() override = default;
     };
 } // namespace Application
 

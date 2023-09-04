@@ -1,10 +1,10 @@
-#include "AnlApplicationConverterPanel.h"
+#include "AnlApplicationConverter.h"
 #include "AnlApplicationInstance.h"
 #include "AnlApplicationTools.h"
 
 ANALYSE_FILE_BEGIN
 
-Application::ConverterPanel::ConverterPanel()
+Application::ConverterContent::ConverterContent()
 : mPropertyOpen("Open", "Select a SDIF or a JSON file to convert", [&]()
                 {
                     mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Load a SDIF or a JSON file"), juce::File{}, "*.sdif;*.json");
@@ -197,13 +197,13 @@ Application::ConverterPanel::ConverterPanel()
     Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
 }
 
-Application::ConverterPanel::~ConverterPanel()
+Application::ConverterContent::~ConverterContent()
 {
     Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
 }
 
-void Application::ConverterPanel::resized()
+void Application::ConverterContent::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     auto setBounds = [&](juce::Component& component)
@@ -236,7 +236,7 @@ void Application::ConverterPanel::resized()
     setSize(300, std::max(bounds.getY(), 120) + 2);
 }
 
-void Application::ConverterPanel::paintOverChildren(juce::Graphics& g)
+void Application::ConverterContent::paintOverChildren(juce::Graphics& g)
 {
     if(mFileIsDragging)
     {
@@ -244,19 +244,19 @@ void Application::ConverterPanel::paintOverChildren(juce::Graphics& g)
     }
 }
 
-void Application::ConverterPanel::lookAndFeelChanged()
+void Application::ConverterContent::lookAndFeelChanged()
 {
     auto const text = mInfos.getText();
     mInfos.clear();
     mInfos.setText(text);
 }
 
-void Application::ConverterPanel::parentHierarchyChanged()
+void Application::ConverterContent::parentHierarchyChanged()
 {
     lookAndFeelChanged();
 }
 
-bool Application::ConverterPanel::isInterestedInFileDrag(juce::StringArray const& files)
+bool Application::ConverterContent::isInterestedInFileDrag(juce::StringArray const& files)
 {
     return std::any_of(files.begin(), files.end(), [](auto const& path)
                        {
@@ -265,21 +265,21 @@ bool Application::ConverterPanel::isInterestedInFileDrag(juce::StringArray const
                        });
 }
 
-void Application::ConverterPanel::fileDragEnter(juce::StringArray const& files, int x, int y)
+void Application::ConverterContent::fileDragEnter(juce::StringArray const& files, int x, int y)
 {
     juce::ignoreUnused(files, x, y);
     mFileIsDragging = true;
     repaint();
 }
 
-void Application::ConverterPanel::fileDragExit(juce::StringArray const& files)
+void Application::ConverterContent::fileDragExit(juce::StringArray const& files)
 {
     juce::ignoreUnused(files);
     mFileIsDragging = false;
     repaint();
 }
 
-void Application::ConverterPanel::filesDropped(juce::StringArray const& files, int x, int y)
+void Application::ConverterContent::filesDropped(juce::StringArray const& files, int x, int y)
 {
     juce::ignoreUnused(files, x, y);
     mFileIsDragging = false;
@@ -295,7 +295,7 @@ void Application::ConverterPanel::filesDropped(juce::StringArray const& files, i
     }
 }
 
-void Application::ConverterPanel::setFile(juce::File const& file)
+void Application::ConverterContent::setFile(juce::File const& file)
 {
     mFile = file;
     if(file.hasFileExtension("json"))
@@ -378,7 +378,7 @@ void Application::ConverterPanel::setFile(juce::File const& file)
     resized();
 }
 
-void Application::ConverterPanel::sdifAttributeUpdated()
+void Application::ConverterContent::sdifAttributeUpdated()
 {
     auto getFormattedText = [](juce::String text)
     {
@@ -395,7 +395,7 @@ void Application::ConverterPanel::sdifAttributeUpdated()
     mPropertyToSdifExport.setEnabled(!matrixText.contains("?") && !frameText.contains("?"));
 }
 
-void Application::ConverterPanel::selectedFrameUpdated()
+void Application::ConverterContent::selectedFrameUpdated()
 {
     mPropertyToJsonMatrix.entry.clear(juce::NotificationType::dontSendNotification);
     mMatrixSigLinks.clear();
@@ -432,7 +432,7 @@ void Application::ConverterPanel::selectedFrameUpdated()
     selectedMatrixUpdated();
 }
 
-void Application::ConverterPanel::selectedMatrixUpdated()
+void Application::ConverterContent::selectedMatrixUpdated()
 {
     mPropertyToJsonRow.entry.clear(juce::NotificationType::dontSendNotification);
     mPropertyToJsonColumn.entry.clear(juce::NotificationType::dontSendNotification);
@@ -488,7 +488,7 @@ void Application::ConverterPanel::selectedMatrixUpdated()
     selectedRowColumnUpdated();
 }
 
-void Application::ConverterPanel::selectedRowColumnUpdated()
+void Application::ConverterContent::selectedRowColumnUpdated()
 {
     auto const row = mPropertyToJsonRow.entry.getSelectedId() - 1;
     auto const column = mPropertyToJsonColumn.entry.getSelectedId() - 1;
@@ -504,7 +504,7 @@ void Application::ConverterPanel::selectedRowColumnUpdated()
     }
 }
 
-void Application::ConverterPanel::exportToSdif()
+void Application::ConverterContent::exportToSdif()
 {
     auto const frameName = mPropertyToSdifFrame.entry.getText();
     auto const matrixName = mPropertyToSdifMatrix.entry.getText();
@@ -566,7 +566,7 @@ void Application::ConverterPanel::exportToSdif()
                               });
 }
 
-void Application::ConverterPanel::exportToJson()
+void Application::ConverterContent::exportToJson()
 {
     auto const selectedFrameIndex = mPropertyToJsonFrame.entry.getSelectedItemIndex();
     auto const selectedMatrixIndex = mPropertyToJsonMatrix.entry.getSelectedItemIndex();
@@ -657,6 +657,11 @@ void Application::ConverterPanel::exportToJson()
                                       juce::AlertWindow::showAsync(options, nullptr);
                                   }
                               });
+}
+
+Application::ConverterPanel::ConverterPanel()
+: HideablePanelTyped<ConverterContent>(juce::translate("SDIF Converter"))
+{
 }
 
 ANALYSE_FILE_END

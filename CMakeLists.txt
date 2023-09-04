@@ -32,7 +32,7 @@ juce_add_gui_app(Partiels
     PRODUCT_NAME                        "Partiels"
     VERSION                             ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                           fr.ircam.dev.partiels
-    COMPANY_COPYRIGHT                   "Copyright 2022 Ircam. All rights reserved"
+    COMPANY_COPYRIGHT                   "Copyright 2023 Ircam. All rights reserved"
     COMPANY_NAME                        "Ircam"
     COMPANY_WEBSITE                     "https://www.ircam.fr/"
     ICON_BIG                            "${CMAKE_CURRENT_SOURCE_DIR}/BinaryData/Resource/icon.png"
@@ -105,7 +105,7 @@ juce_add_binary_data(TranslationsData HEADER_NAME "TranslationsData.h" NAMESPACE
 
 file(GLOB ResourceDataSources
     ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/About.txt
-    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/icon.png
+    ${PARTIELS_BINARYDATA_DIRECTORY}/Resource/Ircam-logo.png
     )
 juce_add_binary_data(ResourceData HEADER_NAME "ResourceData.h" NAMESPACE ResourceData SOURCES ${ResourceDataSources})
 

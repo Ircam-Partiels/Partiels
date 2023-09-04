@@ -3,74 +3,31 @@
 
 ANALYSE_FILE_BEGIN
 
-PluginList::Table::WindowContainer::WindowContainer(Table& table)
-: FloatingWindowContainer(juce::translate("Add Plugins..."), table)
-{
-    mFloatingWindow.setResizable(false, false);
-    mBoundsConstrainer.setSizeLimits(820, 600, 820, 600);
-    mFloatingWindow.setConstrainer(&mBoundsConstrainer);
-}
-
 PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 : mAccessor(accessor)
 , mScanner(scanner)
 , mSearchIcon(juce::ImageCache::getFromMemory(AnlIconsData::search_png, AnlIconsData::search_pngSize))
-, mSettingsIcon(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
 {
-    addAndMakeVisible(mSeparator1);
     addAndMakeVisible(mSearchIcon);
     addAndMakeVisible(mSearchField);
-    addAndMakeVisible(mSettingsIcon);
-    addAndMakeVisible(mSeparator2);
+    addAndMakeVisible(mSeparator1);
     addAndMakeVisible(mPluginTable);
+    addAndMakeVisible(mSeparator2);
+    addAndMakeVisible(mDescriptionPanel);
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    mListener.onAttrChanged = [this]([[maybe_unused]] Accessor const& acsr, [[maybe_unused]] AttrType attribute)
     {
-        switch(attribute)
-        {
-            case AttrType::useEnvVariable:
-            case AttrType::quarantineMode:
-            case AttrType::searchPath:
-                break;
-            case AttrType::sortColumn:
-            case AttrType::sortIsFowards:
-            {
-                auto const columnId = static_cast<int>(acsr.getAttr<AttrType::sortColumn>());
-                auto const isForward = acsr.getAttr<AttrType::sortIsFowards>();
-                mPluginTable.getHeader().setSortColumnId(columnId, isForward);
-            }
-            break;
-        }
         updateContent();
     };
 
-    mPluginTable.setHeaderHeight(28);
     mPluginTable.setRowHeight(22);
     mPluginTable.setMultipleSelectionEnabled(true);
     mPluginTable.setModel(this);
-
-    using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
-    auto& header = mPluginTable.getHeader();
-    auto constexpr defaultColumnFlags = ColumnFlags::visible | ColumnFlags::sortable;
-    header.addColumn(juce::translate("Name"), ColumnType::name, 170, 100, 700, defaultColumnFlags);
-    header.addColumn(juce::translate("Feature"), ColumnType::feature, 200, 100, 700, defaultColumnFlags);
-    header.addColumn(juce::translate("Description"), ColumnType::details, 200, 100, 500, ColumnFlags::visible);
-    header.addColumn(juce::translate("Maker"), ColumnType::maker, 120, 100, 300, defaultColumnFlags);
-    header.addColumn(juce::translate("Category"), ColumnType::category, 60, 60, 200, defaultColumnFlags);
-    header.addColumn(juce::translate("Version"), ColumnType::version, 44, 44, 44, ColumnFlags::visible);
 
     mSearchIcon.setTooltip(juce::translate("Search for a plugin by name, feature, description or maker"));
     mSearchIcon.onClick = [this]()
     {
         mSearchField.grabKeyboardFocus();
-    };
-    mSettingsIcon.setTooltip(juce::translate("Shows the plugin settings panel"));
-    mSettingsIcon.onClick = [this]()
-    {
-        if(onSettingButtonClicked)
-        {
-            onSettingButtonClicked();
-        }
     };
     mSearchField.setMultiLine(false);
     mSearchField.setPopupMenuEnabled(false);
@@ -96,9 +53,8 @@ PluginList::Table::Table(Accessor& accessor, Scanner& scanner)
 
     mAccessor.addListener(mListener, NotificationType::synchronous);
 
-    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    mReceiver.onSignal = [&]([[maybe_unused]] Accessor const& acsr, SignalType signal, [[maybe_unused]] juce::var value)
     {
-        juce::ignoreUnused(acsr, value);
         switch(signal)
         {
             case SignalType::rescan:
@@ -160,12 +116,12 @@ PluginList::Table::~Table()
 void PluginList::Table::resized()
 {
     auto bounds = getLocalBounds();
-    mSeparator1.setBounds(bounds.removeFromTop(1));
     auto headerBar = bounds.removeFromTop(20);
     mSearchIcon.setBounds(headerBar.removeFromLeft(20).reduced(2));
-    mSettingsIcon.setBounds(headerBar.removeFromRight(20).reduced(2));
     mSearchField.setBounds(headerBar.removeFromLeft(202).reduced(1));
-    mSeparator2.setBounds(bounds.removeFromTop(1));
+    mSeparator1.setBounds(bounds.removeFromTop(1));
+    mDescriptionPanel.setBounds(bounds.removeFromBottom(Plugin::DescriptionPanel::optimalHeight).withTrimmedRight(2));
+    mSeparator2.setBounds(bounds.removeFromBottom(1));
     mPluginTable.setBounds(bounds);
 }
 
@@ -197,6 +153,26 @@ bool PluginList::Table::keyPressed(juce::KeyPress const& key)
     return false;
 }
 
+void PluginList::Table::notifyAddSelectedPlugins()
+{
+    if(onAddPlugins == nullptr)
+    {
+        return;
+    }
+    auto const indices = mPluginTable.getSelectedRows();
+    std::set<Plugin::Key> selection;
+    for(int i = 0; i < indices.size(); ++i)
+    {
+        auto const index = indices[i];
+        MiscWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
+        if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
+        {
+            selection.insert(mFilteredList[static_cast<size_t>(index)].first);
+        }
+    }
+    onAddPlugins(std::move(selection));
+}
+
 void PluginList::Table::updateContent()
 {
     mFilteredList.clear();
@@ -214,47 +190,6 @@ void PluginList::Table::updateContent()
         }
     }
 
-    auto const isForwards = mAccessor.getAttr<AttrType::sortIsFowards>();
-    switch(mAccessor.getAttr<AttrType::sortColumn>())
-    {
-        case ColumnType::name:
-        {
-            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-                      {
-                          return isForwards ? (lhs.second.name + lhs.second.output.name > rhs.second.name + rhs.second.output.name) : (lhs.second.name + lhs.second.output.name < rhs.second.name + rhs.second.output.name);
-                      });
-        }
-        break;
-        case ColumnType::feature:
-        {
-            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-                      {
-                          return isForwards ? (lhs.second.output.name > rhs.second.output.name) : (lhs.second.output.name < rhs.second.output.name);
-                      });
-        }
-        break;
-        case ColumnType::maker:
-        {
-            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-                      {
-                          return isForwards ? (lhs.second.maker > rhs.second.maker) : (lhs.second.maker < rhs.second.maker);
-                      });
-        }
-        break;
-        case ColumnType::category:
-        {
-            std::sort(mFilteredList.begin(), mFilteredList.end(), [&](auto const& lhs, auto const& rhs)
-                      {
-                          return isForwards ? (lhs.second.category > rhs.second.category) : (lhs.second.category < rhs.second.category);
-                      });
-        }
-        break;
-        case ColumnType::version:
-        case ColumnType::details:
-            break;
-    }
-
-    mPluginTable.getHeader().reSortTable();
     mPluginTable.updateContent();
     mPluginTable.repaint();
 }
@@ -264,104 +199,61 @@ int PluginList::Table::getNumRows()
     return static_cast<int>(mFilteredList.size());
 }
 
-void PluginList::Table::paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
+void PluginList::Table::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
-    juce::ignoreUnused(rowNumber, width, height);
     const auto defaultColour = mPluginTable.findColour(juce::ListBox::backgroundColourId);
     const auto selectedColour = defaultColour.interpolatedWith(mPluginTable.findColour(juce::ListBox::textColourId), 0.5f);
     g.fillAll(rowIsSelected ? selectedColour : defaultColour);
-}
-
-void PluginList::Table::paintCell(juce::Graphics& g, int row, int columnId, int width, int height, bool rowIsSelected)
-{
-    juce::ignoreUnused(rowIsSelected);
-    if(row >= static_cast<int>(mFilteredList.size()))
-    {
-        return;
-    }
-    auto const index = static_cast<size_t>(row);
-    auto const& description = mFilteredList[index].second;
-    auto getText = [&]() -> juce::String
-    {
-        switch(columnId)
-        {
-            case ColumnType::name:
-                return description.name;
-            case ColumnType::feature:
-                return description.output.name;
-            case ColumnType::maker:
-                return description.maker;
-            case ColumnType::version:
-                return juce::String(description.version);
-            case ColumnType::details:
-            {
-                auto const position = description.details.indexOf("\n");
-                return description.details.substring(0, position > 0 ? position : description.details.length());
-            }
-            case ColumnType::category:
-                return description.category.isEmpty() ? "-" : description.category;
-        }
-        return "";
-    };
-
-    const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
-    g.setColour(columnId == ColumnType::name || columnId == ColumnType::feature ? defaultTextColour : defaultTextColour.interpolatedWith(juce::Colours::transparentBlack, 0.3f));
-    g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
-    g.drawText(getText(), 4, 0, width - 6, height, juce::Justification::centredLeft, false);
-}
-
-void PluginList::Table::returnKeyPressed(int lastRowSelected)
-{
-    if(onPluginSelected == nullptr)
-    {
-        return;
-    }
-    if(lastRowSelected < 0 || lastRowSelected >= static_cast<int>(mFilteredList.size()))
-    {
-        return;
-    }
-    auto const indices = mPluginTable.getSelectedRows();
-    std::set<Plugin::Key> selection;
-    for(int i = 0; i < indices.size(); ++i)
-    {
-        auto const index = indices[i];
-        MiscWeakAssert(index >= 0 && static_cast<size_t>(index) < mFilteredList.size());
-        if(index >= 0 && static_cast<size_t>(index) < mFilteredList.size())
-        {
-            selection.insert(mFilteredList[static_cast<size_t>(index)].first);
-        }
-    }
-    onPluginSelected(std::move(selection));
-}
-
-void PluginList::Table::deleteKeyPressed(int lastRowSelected)
-{
-    juce::ignoreUnused(lastRowSelected);
-    getLookAndFeel().playAlertSound();
-}
-
-void PluginList::Table::cellDoubleClicked(int rowNumber, int columnId, juce::MouseEvent const& e)
-{
-    juce::ignoreUnused(columnId, e);
-    returnKeyPressed(rowNumber);
-}
-
-void PluginList::Table::sortOrderChanged(int newSortColumnId, bool isForwards)
-{
-    mAccessor.setAttr<AttrType::sortColumn>(static_cast<ColumnType>(newSortColumnId), NotificationType::synchronous);
-    mAccessor.setAttr<AttrType::sortIsFowards>(isForwards, NotificationType::synchronous);
-}
-
-juce::String PluginList::Table::getCellTooltip(int rowNumber, int columnId)
-{
-    juce::ignoreUnused(columnId);
     if(rowNumber >= static_cast<int>(mFilteredList.size()))
     {
-        return "";
+        return;
     }
     auto const index = static_cast<size_t>(rowNumber);
     auto const& description = mFilteredList[index].second;
-    return description.details;
+    auto const text = description.name + " - " + description.output.name;
+    const auto defaultTextColour = mPluginTable.findColour(juce::ListBox::textColourId);
+    g.setColour(defaultTextColour);
+    g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
+    g.drawText(text, 4, 0, width - 6, height, juce::Justification::centredLeft, false);
+}
+
+void PluginList::Table::returnKeyPressed([[maybe_unused]] int lastRowSelected)
+{
+    notifyAddSelectedPlugins();
+}
+
+void PluginList::Table::deleteKeyPressed([[maybe_unused]] int lastRowSelected)
+{
+    getLookAndFeel().playAlertSound();
+}
+
+void PluginList::Table::selectedRowsChanged(int lastRowSelected)
+{
+    if(lastRowSelected < 0 || lastRowSelected >= static_cast<int>(mFilteredList.size()))
+    {
+        mDescriptionPanel.setDescription({});
+    }
+    else
+    {
+        mDescriptionPanel.setDescription(mFilteredList.at(static_cast<size_t>(lastRowSelected)).second);
+    }
+}
+
+void PluginList::Table::listBoxItemDoubleClicked([[maybe_unused]] int rowNumber, [[maybe_unused]] juce::MouseEvent const& event)
+{
+    notifyAddSelectedPlugins();
+}
+
+juce::String PluginList::Table::getTooltipForRow(int rowNumber)
+{
+    if(rowNumber < 0 || rowNumber >= static_cast<int>(mFilteredList.size()))
+    {
+        return "";
+    }
+    else
+    {
+        return mFilteredList.at(static_cast<size_t>(rowNumber)).second.details;
+    }
 }
 
 void PluginList::Table::setMultipleSelectionEnabled(bool shouldBeEnabled) noexcept

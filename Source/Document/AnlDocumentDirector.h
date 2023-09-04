@@ -43,10 +43,8 @@ namespace Document
         bool copyTrack(juce::String const groupIdentifier, size_t index, juce::String const trackIdentifier, NotificationType const notification);
 
         void setAlertCatcher(AlertWindow::Catcher* catcher);
-        using PluginTableContainer = Track::Director::PluginTableContainer;
-        void setPluginTable(PluginTableContainer* table);
-        using LoaderSelectorContainer = Track::Director::LoaderSelectorContainer;
-        void setLoaderSelector(LoaderSelectorContainer* selector);
+        void setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn);
+        void setLoaderSelector(Track::Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn);
         void setBackupDirectory(juce::File const& directory);
 
     private:
@@ -70,8 +68,10 @@ namespace Document
         std::vector<std::unique_ptr<Track::Director>> mTracks;
         double mDuration = 0.0;
         AlertWindow::Catcher* mAlertCatcher = nullptr;
-        PluginTableContainer* mPluginTableContainer = nullptr;
-        LoaderSelectorContainer* mLoaderSelectorContainer = nullptr;
+        PluginList::Table* mPluginTable{nullptr};
+        std::function<void(bool)> mPluginTableShowHideFn{nullptr};
+        Track::Loader::ArgumentSelector* mLoaderSelector;
+        std::function<void(bool)> mLoaderSelectorShowHideFn{nullptr};
         std::unique_ptr<juce::FileChooser> mFileChooser;
         juce::File mBackupDirectory;
 

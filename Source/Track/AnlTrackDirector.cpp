@@ -410,8 +410,8 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
 Track::Director::~Director()
 {
     mHierarchyManager.removeHierarchyListener(mHierarchyListener);
-    setPluginTable(nullptr);
-    setLoaderSelector(nullptr);
+    setPluginTable(nullptr, nullptr);
+    setLoaderSelector(nullptr, nullptr);
     if(mSharedZoomAccessor.has_value())
     {
         mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
@@ -599,14 +599,16 @@ void Track::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
     mAlertCatcher = catcher;
 }
 
-void Track::Director::setPluginTable(PluginTableContainer* table)
+void Track::Director::setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn)
 {
-    mPluginTableContainer = table;
+    mPluginTable = table;
+    mPluginTableShowHideFn = showHideFn;
 }
 
-void Track::Director::setLoaderSelector(LoaderSelectorContainer* selector)
+void Track::Director::setLoaderSelector(Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn)
 {
-    mLoaderSelectorContainer = selector;
+    mLoaderSelector = selector;
+    mLoaderSelectorShowHideFn = showHideFn;
 }
 
 void Track::Director::runAnalysis(NotificationType const notification)
@@ -890,14 +892,14 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
     juce::WeakReference<Director> weakReference(this);
     juce::AlertWindow::showAsync(options, [=, this](int windowResult)
                                  {
-                                     if(weakReference.get() == nullptr || mPluginTableContainer == nullptr)
+                                     if(weakReference.get() == nullptr || mPluginTable == nullptr || mPluginTableShowHideFn == nullptr)
                                      {
                                          return;
                                      }
                                      if(windowResult == 1)
                                      {
-                                         mPluginTableContainer->table.setMultipleSelectionEnabled(false);
-                                         mPluginTableContainer->table.onPluginSelected = [=, this](std::set<Plugin::Key> keys)
+                                         mPluginTable->setMultipleSelectionEnabled(false);
+                                         mPluginTable->onAddPlugins = [=, this](std::set<Plugin::Key> keys)
                                          {
                                              if(weakReference.get() == nullptr)
                                              {
@@ -908,15 +910,15 @@ void Track::Director::askToReloadPlugin(juce::String const& reason)
                                              {
                                                  return;
                                              }
-                                             if(mPluginTableContainer != nullptr)
+                                             if(mPluginTableShowHideFn != nullptr)
                                              {
-                                                 mPluginTableContainer->window.hide();
+                                                 mPluginTableShowHideFn(false);
                                              }
                                              startAction();
                                              mAccessor.setAttr<AttrType::key>(*keys.cbegin(), NotificationType::synchronous);
                                              endAction(ActionState::newTransaction, juce::translate("Change track's plugin"));
                                          };
-                                         mPluginTableContainer->window.show(true);
+                                         mPluginTableShowHideFn(true);
                                      }
                                  });
 }
@@ -1054,7 +1056,7 @@ void Track::Director::askToReloadFile(juce::String const& reason)
 
 void Track::Director::askForFile()
 {
-    if(mLoaderSelectorContainer == nullptr)
+    if(mLoaderSelector == nullptr)
     {
         return;
     }
@@ -1068,7 +1070,7 @@ void Track::Director::askForFile()
     juce::WeakReference<Director> safePointer(this);
     mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=, this](juce::FileChooser const& fileChooser)
                               {
-                                  if(safePointer.get() == nullptr || mLoaderSelectorContainer == nullptr)
+                                  if(safePointer.get() == nullptr || mLoaderSelector == nullptr)
                                   {
                                       return;
                                   }
@@ -1077,28 +1079,34 @@ void Track::Director::askForFile()
                                   {
                                       return;
                                   }
-                                  if(mLoaderSelectorContainer->selector.setFile(results.getFirst(), [=, this](Track::FileInfo fileInfo)
-                                                                                {
-                                                                                    if(safePointer.get() == nullptr)
-                                                                                    {
-                                                                                        return;
-                                                                                    }
-                                                                                    mLoaderSelectorContainer->window.hide();
-                                                                                    auto isPerformingAction = mIsPerformingAction;
-                                                                                    if(!isPerformingAction)
-                                                                                    {
-                                                                                        startAction();
-                                                                                    }
-                                                                                    mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
-                                                                                    mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
-                                                                                    mAccessor.setAttr<AttrType::file>(fileInfo, NotificationType::synchronous);
-                                                                                    if(!isPerformingAction)
-                                                                                    {
-                                                                                        endAction(ActionState::newTransaction, juce::translate("Change results file"));
-                                                                                    }
-                                                                                }))
+                                  if(mLoaderSelector->setFile(results.getFirst(), [=, this](Track::FileInfo fileInfo)
+                                                              {
+                                                                  if(safePointer.get() == nullptr)
+                                                                  {
+                                                                      return;
+                                                                  }
+                                                                  if(mLoaderSelectorShowHideFn != nullptr)
+                                                                  {
+                                                                      mLoaderSelectorShowHideFn(false);
+                                                                  }
+                                                                  auto isPerformingAction = mIsPerformingAction;
+                                                                  if(!isPerformingAction)
+                                                                  {
+                                                                      startAction();
+                                                                  }
+                                                                  mAccessor.setAttr<AttrType::results>(Results{}, NotificationType::synchronous);
+                                                                  mAccessor.setAttr<AttrType::warnings>(WarningType::none, NotificationType::synchronous);
+                                                                  mAccessor.setAttr<AttrType::file>(fileInfo, NotificationType::synchronous);
+                                                                  if(!isPerformingAction)
+                                                                  {
+                                                                      endAction(ActionState::newTransaction, juce::translate("Change results file"));
+                                                                  }
+                                                              }))
                                   {
-                                      mLoaderSelectorContainer->window.show(true);
+                                      if(mLoaderSelectorShowHideFn != nullptr)
+                                      {
+                                          mLoaderSelectorShowHideFn(true);
+                                      }
                                   }
                               });
 }

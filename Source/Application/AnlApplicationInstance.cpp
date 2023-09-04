@@ -109,9 +109,6 @@ void Application::Instance::initialise(juce::String const& commandLine)
     mAuthorizationWindow = std::make_unique<FloatingWindowContainer>(juce::translate("Authorize PRODUCT").replace("PRODUCT", ProjectInfo::projectName), *mAuthorizationPanel.get());
     AppQuitIfInvalidPointer(mAuthorizationWindow);
 
-    mFileLoader = std::make_unique<FileLoader>();
-    AppQuitIfInvalidPointer(mFileLoader);
-
     mWindow = std::make_unique<Window>();
     AppQuitIfInvalidPointer(mWindow);
 
@@ -335,7 +332,6 @@ void Application::Instance::shutdown()
     mAudioDeviceManager.reset();
     mAudioFormatManager.reset();
     mApplicationCommandManager.reset();
-    mFileLoader.reset();
     mAuthorizationWindow.reset();
     mAuthorizationPanel.reset();
 
@@ -377,10 +373,13 @@ juce::String Application::Instance::getWildCardForAudioFormats()
 
 std::pair<int, int> Application::Instance::getSizeFor(juce::String const& identifier)
 {
-    auto* window = get().getWindow();
-    if(!identifier.isEmpty() && window != nullptr)
+    if(identifier.isEmpty())
     {
-        auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(window->getPlotBounds(identifier));
+        return {0, 0};
+    }
+    if(auto* window = get().getWindow())
+    {
+        auto const bounds = juce::Desktop::getInstance().getDisplays().logicalToPhysical(window->getInterface().getPlotBounds(identifier));
         anlWeakAssert(!bounds.isEmpty());
         return {bounds.getWidth(), bounds.getHeight()};
     }
@@ -436,6 +435,10 @@ void Application::Instance::newDocument()
                                                            mUndoManager->clearUndoHistory();
                                                            mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
                                                            mDocumentFileBased->setFile({});
+                                                           if(auto* window = mWindow.get())
+                                                           {
+                                                               window->getInterface().hidePluginListTablePanel();
+                                                           }
                                                        });
 }
 
@@ -541,30 +544,21 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
     auto const importFileWildcard = getWildCardForImportFormats();
     auto const fileExtension = file.getFileExtension();
     anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && importFileWildcard.contains(fileExtension));
-    if(mFileLoader == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
+    auto* window = getWindow();
+    if(window == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
     {
         return;
     }
-    juce::WeakReference<Instance> weakReference(this);
-    if(mFileLoader->selector.setFile(file, [=, this](Track::FileInfo fileInfo)
-                                     {
-                                         if(weakReference.get() == nullptr)
-                                         {
-                                             return;
-                                         }
-                                         Tools::addFileTrack(position, fileInfo);
-                                         mFileLoader->window.hide();
-                                     }))
+    if(window->getInterface().getTrackLoaderArgumentSelector().setFile(file, [position](Track::FileInfo fileInfo)
+                                                                       {
+                                                                           Tools::addFileTrack(position, fileInfo);
+                                                                           if(auto* w = Instance::get().getWindow())
+                                                                           {
+                                                                               w->getInterface().hideCurrentPanel();
+                                                                           }
+                                                                       }))
     {
-        mFileLoader->window.show(true);
-        juce::MessageManager::callAsync([=, this]()
-                                        {
-                                            if(weakReference.get() == nullptr)
-                                            {
-                                                return;
-                                            }
-                                            mFileLoader->window.toFront(true);
-                                        });
+        window->getInterface().showTrackLoaderPanel();
     }
 }
 
@@ -581,11 +575,6 @@ Application::Accessor& Application::Instance::getApplicationAccessor()
 Application::Window* Application::Instance::getWindow()
 {
     return mWindow.get();
-}
-
-Application::Instance::FileLoaderSelectorContainer* Application::Instance::getFileLoaderSelectorContainer()
-{
-    return mFileLoader == nullptr ? nullptr : &(mFileLoader->container);
 }
 
 PluginList::Accessor& Application::Instance::getPluginListAccessor()

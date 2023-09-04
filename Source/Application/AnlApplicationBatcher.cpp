@@ -1,30 +1,10 @@
 #include "AnlApplicationBatcher.h"
+#include "../Document/AnlDocumentExporter.h"
 #include "AnlApplicationInstance.h"
 
 ANALYSE_FILE_BEGIN
 
-Application::Batcher::WindowContainer::WindowContainer(Batcher& batcher)
-: FloatingWindowContainer(juce::translate("Batch"), batcher)
-, mBatcher(batcher)
-, mTooltip(&mBatcher)
-{
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        if(mBatcher.canCloseWindow())
-        {
-            return true;
-        }
-        getLookAndFeel().playAlertSound();
-        return false;
-    };
-}
-
-Application::Batcher::WindowContainer::~WindowContainer()
-{
-    mFloatingWindow.onCloseButtonPressed = nullptr;
-}
-
-Application::Batcher::Batcher()
+Application::BatcherContent::BatcherContent()
 : mDocumentDirector(mDocumentAccessor, Instance::get().getAudioFormatManager(), mUndoManager)
 , mAudioFileLayoutTable(Instance::get().getAudioFormatManager(), AudioFileLayoutTable::SupportMode::channelLayoutAll | AudioFileLayoutTable::SupportMode::channelLayoutMono | AudioFileLayoutTable::SupportMode::multipleSampleRates, AudioFileLayout::ChannelLayout::all)
 , mExporterPanel(Instance::get().getDocumentAccessor(), false, nullptr)
@@ -108,11 +88,11 @@ Application::Batcher::Batcher()
     addAndMakeVisible(mExporterPanel);
     addAndMakeVisible(mPropertyExport);
     addAndMakeVisible(mPropertyAdaptationToSampleRate);
-    addAndMakeVisible(mLoadingCircle);
+    addAndMakeVisible(mLoadingIcon);
     setSize(300, 200);
 }
 
-Application::Batcher::~Batcher()
+Application::BatcherContent::~BatcherContent()
 {
     auto& acsr = Instance::get().getApplicationAccessor();
     acsr.removeListener(mListener);
@@ -120,7 +100,7 @@ Application::Batcher::~Batcher()
     mComponentListener.detachFrom(mExporterPanel);
 }
 
-void Application::Batcher::resized()
+void Application::BatcherContent::resized()
 {
     auto bounds = getLocalBounds().withHeight(std::numeric_limits<int>::max());
     mAudioFileLayoutTable.setBounds(bounds.removeFromTop(200));
@@ -128,11 +108,11 @@ void Application::Batcher::resized()
     mExporterPanel.setBounds(bounds.removeFromTop(mExporterPanel.getHeight()));
     mPropertyAdaptationToSampleRate.setBounds(bounds.removeFromTop(mPropertyAdaptationToSampleRate.getHeight()));
     mPropertyExport.setBounds(bounds.removeFromTop(mPropertyExport.getHeight()));
-    mLoadingCircle.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
+    mLoadingIcon.setBounds(bounds.removeFromTop(22).withSizeKeepingCentre(22, 22));
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::Batcher::handleAsyncUpdate()
+void Application::BatcherContent::handleAsyncUpdate()
 {
     mAudioFileLayoutTable.setEnabled(true);
     mExporterPanel.setEnabled(true);
@@ -143,7 +123,7 @@ void Application::Batcher::handleAsyncUpdate()
     mPropertyExport.entry.setButtonText(juce::translate("Process"));
     mPropertyExport.entry.setTooltip(juce::translate("Launch the batch processing."));
 
-    mLoadingCircle.setActive(false);
+    mLoadingIcon.setActive(false);
     juce::MouseCursor::hideWaitCursor();
     anlWeakAssert(mProcess.valid());
     if(!mProcess.valid())
@@ -173,7 +153,7 @@ void Application::Batcher::handleAsyncUpdate()
     juce::AlertWindow::showAsync(options, nullptr);
 }
 
-void Application::Batcher::process()
+void Application::BatcherContent::process()
 {
     anlWeakAssert(!mProcess.valid());
     if(mProcess.valid())
@@ -212,7 +192,7 @@ void Application::Batcher::process()
                                   }
                                   auto const file = files.getFirst();
 
-                                  mLoadingCircle.setActive(true);
+                                  mLoadingIcon.setActive(true);
                                   juce::MouseCursor::showWaitCursor();
 
                                   mAudioFileLayoutTable.setEnabled(false);
@@ -314,9 +294,26 @@ void Application::Batcher::process()
                               });
 }
 
-bool Application::Batcher::canCloseWindow() const
+bool Application::BatcherContent::canCloseWindow() const
 {
-    return !mLoadingCircle.isActive();
+    return !mLoadingIcon.isActive();
+}
+
+Application::BatcherPanel::BatcherPanel()
+: HideablePanelTyped<BatcherContent>(juce::translate("Batch Processing"))
+{
+}
+
+void Application::BatcherPanel::inputAttemptWhenModal()
+{
+    if(!mContent.canCloseWindow())
+    {
+        juce::Component::inputAttemptWhenModal();
+    }
+    else
+    {
+        HideablePanel::inputAttemptWhenModal();
+    }
 }
 
 ANALYSE_FILE_END

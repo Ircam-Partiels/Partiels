@@ -34,7 +34,7 @@ namespace Track
         Accessor::Listener mListener{typeid(*this).name()};
         double mProgressValue;
         juce::ProgressBar mProgressBar{mProgressValue};
-        Icon mStateIcon{Icon::Type::verified};
+        Icon mStateIcon;
         juce::String mMessage;
     };
 } // namespace Track

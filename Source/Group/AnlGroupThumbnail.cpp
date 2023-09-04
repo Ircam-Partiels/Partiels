@@ -1,23 +1,27 @@
 #include "AnlGroupThumbnail.h"
 #include "AnlGroupStrechableSection.h"
+#include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
 
 Group::Thumbnail::Thumbnail(Director& director)
 : mDirector(director)
+, mPropertiesButton(juce::ImageCache::getFromMemory(AnlIconsData::settings_png, AnlIconsData::settings_pngSize))
+, mResultsButton(juce::ImageCache::getFromMemory(AnlIconsData::sheetspread_png, AnlIconsData::sheetspread_pngSize))
+, mExpandButton(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize))
 {
     addAndMakeVisible(mPropertiesButton);
-    addAndMakeVisible(mEditButton);
+    addAndMakeVisible(mResultsButton);
     addAndMakeVisible(mStateButton);
     addAndMakeVisible(mExpandButton);
 
     mPropertiesButton.setWantsKeyboardFocus(false);
-    mEditButton.setWantsKeyboardFocus(false);
+    mResultsButton.setWantsKeyboardFocus(false);
     mStateButton.setWantsKeyboardFocus(false);
     mExpandButton.setWantsKeyboardFocus(false);
 
     mPropertiesButton.setTooltip(juce::translate("Show group or track properties"));
-    mEditButton.setTooltip(juce::translate("Show the track results"));
+    mResultsButton.setTooltip(juce::translate("Show the track results"));
     mExpandButton.setTooltip(juce::translate("Expand the tracks"));
 
     mExpandButton.onClick = [&]()
@@ -29,7 +33,7 @@ Group::Thumbnail::Thumbnail(Director& director)
         mAccessor.setAttr<AttrType::expanded>(!mAccessor.getAttr<AttrType::expanded>(), NotificationType::synchronous);
     };
 
-    mEditButton.onClick = [&]()
+    mResultsButton.onClick = [&]()
     {
         if(juce::ModifierKeys::getCurrentModifiers().isShiftDown())
         {
@@ -64,7 +68,7 @@ Group::Thumbnail::Thumbnail(Director& director)
                              });
             }
         }
-        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mEditButton));
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(mResultsButton));
     };
 
     mPropertiesButton.onClick = [this]()
@@ -132,7 +136,7 @@ Group::Thumbnail::Thumbnail(Director& director)
             case AttrType::tracks:
             {
                 mExpandButton.setEnabled(!acsr.getAttr<AttrType::layout>().empty());
-                mEditButton.setEnabled(!acsr.getAttr<AttrType::layout>().empty());
+                mResultsButton.setEnabled(!acsr.getAttr<AttrType::layout>().empty());
             }
             break;
             case AttrType::focused:
@@ -150,12 +154,12 @@ Group::Thumbnail::Thumbnail(Director& director)
             {
                 if(acsr.getAttr<AttrType::expanded>())
                 {
-                    mExpandButton.setTypes(Icon::Type::shrink);
+                    mExpandButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize));
                     mExpandButton.setTooltip(juce::translate("Shrink the tracks"));
                 }
                 else
                 {
-                    mExpandButton.setTypes(Icon::Type::expand);
+                    mExpandButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::shrink_png, AnlIconsData::shrink_pngSize));
                     mExpandButton.setTooltip(juce::translate("Expand the tracks"));
                 }
             }
@@ -219,7 +223,7 @@ void Group::Thumbnail::resized()
         mStateButton.setVisible(false);
     }
     layoutButton(leftBounds, mPropertiesButton);
-    layoutButton(leftBounds, mEditButton);
+    layoutButton(leftBounds, mResultsButton);
 
     auto rightBounds = bounds.withTrimmedLeft(separator);
     layoutButton(rightBounds, mExpandButton);
@@ -239,7 +243,7 @@ void Group::Thumbnail::paint(juce::Graphics& g)
     g.setColour(findColour(focused ? Decorator::ColourIds::highlightedBorderColourId : Decorator::ColourIds::normalBorderColourId));
     g.drawVerticalLine(width, static_cast<float>(separator * 2), static_cast<float>(height - separator * 2));
 
-    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mEditButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
+    auto const numElements = static_cast<int>(mStateButton.isVisible()) + static_cast<int>(mResultsButton.isVisible()) + static_cast<int>(mPropertiesButton.isVisible());
     auto const bottom = height - numElements * (width + separator) - (numElements > 0 ? 0 : separator);
     if(bottom <= 0)
     {

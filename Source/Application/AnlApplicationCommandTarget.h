@@ -2,12 +2,7 @@
 
 #include "../Document/AnlDocumentFileBased.h"
 #include "../Plugin/AnlPluginListScanner.h"
-#include "../Plugin/AnlPluginListSearchPath.h"
 #include "../Plugin/AnlPluginListTable.h"
-#include "AnlApplicationAbout.h"
-#include "AnlApplicationAudioSettings.h"
-#include "AnlApplicationBatcher.h"
-#include "AnlApplicationConverterPanel.h"
 #include "AnlApplicationExporter.h"
 #include "AnlApplicationModel.h"
 
@@ -80,30 +75,6 @@ namespace Application
 
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-
-        PluginList::Table mPluginListTable;
-        PluginList::Table::WindowContainer mPluginListTableWindow{mPluginListTable};
-        juce::TooltipWindow mPluginListTableTooltipWindow{&mPluginListTable};
-        using PluginTableContainer = Document::Director::PluginTableContainer;
-        PluginTableContainer mPluginTableContainer{mPluginListTable, mPluginListTableWindow};
-
-        PluginList::SearchPath mPluginListSearchPath;
-        PluginList::SearchPath::WindowContainer mPluginListSearchPathWindow{mPluginListSearchPath};
-
-        About mAbout;
-        About::WindowContainer mAboutWindow{mAbout};
-
-        Exporter mExporter;
-        Exporter::WindowContainer mExporterWindow{mExporter};
-
-        Batcher mBatcher;
-        Batcher::WindowContainer mBatcherWindow{mBatcher};
-
-        ConverterPanel mSdifConverter;
-        FloatingWindowContainer mSdifConverterWindow;
-
-        AudioSettings mAudioSettings;
-        FloatingWindowContainer mAudioSettingsWindow;
 
         std::unique_ptr<juce::FileChooser> mFileChooser;
 

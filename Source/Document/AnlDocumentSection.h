@@ -2,9 +2,10 @@
 
 #include "../Group/AnlGroupStrechableSection.h"
 #include "AnlDocumentCommandTarget.h"
-#include "AnlDocumentReaderLayoutPanel.h"
 #include "AnlDocumentSelection.h"
 #include "AnlDocumentTools.h"
+#include "AnlDocumentTransportDisplay.h"
+#include "AnlDocumentTransportSelectionInfo.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -29,10 +30,10 @@ namespace Document
         void showBubbleInfo(bool state);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
-        Icon tooltipButton{Icon::Type::comment};
+        Icon tooltipButton;
+        juce::TextButton pluginListButton;
 
         std::function<void(void)> onSaveButtonClicked = nullptr;
-        std::function<void(void)> onNewTrackButtonClicked = nullptr;
         std::function<void(void)> onNewGroupButtonClicked = nullptr;
 
         // juce::Component
@@ -79,19 +80,16 @@ namespace Document
         Accessor::Receiver mReceiver;
 
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-        Transport::Display mTransportDisplay;
-        Transport::SelectionInfo mTransportSelectionInfo;
-
-        ReaderLayoutPanel mReaderLayoutPanel{mDirector};
-        ReaderLayoutPanel::WindowContainer mReaderLayoutWindow{mReaderLayoutPanel};
+        TransportDisplay mTransportDisplay;
+        TransportSelectionInfo mTransportSelectionInfo;
 
         AuthorizationButton mAuthorizationButton;
-        Icon mReaderLayoutButton{Icon::Type::music};
+        Icon mReaderLayoutButton;
         juce::TextButton mDocumentName;
-        Icon mGridButton{Icon::Type::gridOff};
-        Icon mExpandLayoutButton{Icon::Type::expand};
-        Icon mResizeLayoutButton{Icon::Type::layers};
-        Icon mMagnetizeButton{Icon::Type::magnet};
+        Icon mGridButton;
+        Icon mExpandLayoutButton;
+        Icon mResizeLayoutButton;
+        Icon mMagnetizeButton;
 
         Zoom::Ruler mTimeRuler;
         Decorator mTimeRulerDecoration{mTimeRuler};
@@ -104,7 +102,7 @@ namespace Document
         Viewport mViewport;
         ColouredPanel mBottomSeparator;
         Zoom::ScrollBar mTimeScrollBar{mAccessor.getAcsr<AcsrType::timeZoom>(), Zoom::ScrollBar::Orientation::horizontal};
-        juce::TextButton mAddButton;
+        juce::TextButton mAddGroupButton;
 
         Tooltip::BubbleWindow mToolTipBubbleWindow;
         ScrollHelper mScrollHelper;

@@ -2,23 +2,6 @@
 
 ANALYSE_FILE_BEGIN
 
-PluginList::SearchPath::WindowContainer::WindowContainer(SearchPath& searchPath)
-: FloatingWindowContainer(juce::translate("Plugin Settings"), searchPath)
-, mSearchPath(searchPath)
-, mTooltip(&mSearchPath)
-{
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        mSearchPath.warnBeforeClosing();
-        return true;
-    };
-}
-
-PluginList::SearchPath::WindowContainer::~WindowContainer()
-{
-    mFloatingWindow.onCloseButtonPressed = nullptr;
-}
-
 PluginList::SearchPath::SearchPath(Accessor& accessor)
 : mAccessor(accessor)
 {
@@ -161,10 +144,8 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
             }
             break;
             case AttrType::quarantineMode:
-#endif
-            case AttrType::sortColumn:
-            case AttrType::sortIsFowards:
                 break;
+#endif
         }
     };
     mAccessor.addListener(mListener, NotificationType::synchronous);

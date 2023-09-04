@@ -7,30 +7,18 @@ ANALYSE_FILE_BEGIN
 
 namespace Application
 {
-    class Exporter
+    class ExporterContent
     : public juce::Component
     , private juce::AsyncUpdater
     {
     public:
-        Exporter();
-        ~Exporter() override;
+        ExporterContent();
+        ~ExporterContent() override;
 
         // juce::Component
         void resized() override;
 
         bool canCloseWindow() const;
-
-        class WindowContainer
-        : public FloatingWindowContainer
-        {
-        public:
-            WindowContainer(Exporter& exporer);
-            ~WindowContainer() override;
-
-        private:
-            Exporter& mExporter;
-            juce::TooltipWindow mTooltip;
-        };
 
     private:
         // juce::AsyncUpdater
@@ -41,7 +29,7 @@ namespace Application
         Accessor::Listener mListener{typeid(*this).name()};
         Document::Exporter::Panel mExporterPanel;
         PropertyTextButton mPropertyExport;
-        LoadingCircle mLoadingCircle;
+        LoadingIcon mLoadingIcon;
         ComponentListener mComponentListener;
 
         using ProcessResult = std::tuple<AlertWindow::MessageType, juce::String, juce::String>;
@@ -49,6 +37,17 @@ namespace Application
         std::atomic<bool> mShoulAbort{false};
         std::future<ProcessResult> mProcess;
         std::unique_ptr<juce::FileChooser> mFileChooser;
+    };
+
+    class ExporterPanel
+    : public HideablePanelTyped<ExporterContent>
+    {
+    public:
+        ExporterPanel();
+        ~ExporterPanel() override = default;
+
+        // juce::Component
+        void inputAttemptWhenModal() override;
     };
 } // namespace Application
 

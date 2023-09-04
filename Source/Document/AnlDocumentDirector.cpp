@@ -48,7 +48,7 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                                                      }
                                                      if(result == 1)
                                                      {
-                                                         mAccessor.sendSignal(SignalType::showReaderPanel, {}, NotificationType::asynchronous);
+                                                         mAccessor.sendSignal(SignalType::showReaderLayoutPanel, {}, NotificationType::asynchronous);
                                                      }
                                                  });
                 }
@@ -105,8 +105,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
                 if(director != nullptr)
                 {
                     director->setAlertCatcher(mAlertCatcher);
-                    director->setPluginTable(mPluginTableContainer);
-                    director->setLoaderSelector(mLoaderSelectorContainer);
+                    director->setPluginTable(mPluginTable, mPluginTableShowHideFn);
+                    director->setLoaderSelector(mLoaderSelector, mLoaderSelectorShowHideFn);
                     director->setBackupDirectory(mBackupDirectory);
                     director->onIdentifierUpdated = [this, ptr = director.get()](NotificationType localNotification)
                     {
@@ -337,8 +337,8 @@ Document::Director::Director(Accessor& accessor, juce::AudioFormatManager& audio
 
 Document::Director::~Director()
 {
-    setPluginTable(nullptr);
-    setLoaderSelector(nullptr);
+    setPluginTable(nullptr, nullptr);
+    setLoaderSelector(nullptr, nullptr);
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
     zoomAcsr.onAttrUpdated = nullptr;
     mAccessor.onAttrUpdated = nullptr;
@@ -443,32 +443,28 @@ void Document::Director::setAlertCatcher(AlertWindow::Catcher* catcher)
     }
 }
 
-void Document::Director::setPluginTable(PluginTableContainer* table)
+void Document::Director::setPluginTable(PluginList::Table* table, std::function<void(bool)> showHideFn)
 {
-    if(mPluginTableContainer != table)
+    mPluginTable = table;
+    mPluginTableShowHideFn = showHideFn;
+    for(auto& track : mTracks)
     {
-        mPluginTableContainer = table;
-        for(auto& track : mTracks)
+        if(track != nullptr)
         {
-            if(track != nullptr)
-            {
-                track->setPluginTable(table);
-            }
+            track->setPluginTable(table, showHideFn);
         }
     }
 }
 
-void Document::Director::setLoaderSelector(LoaderSelectorContainer* selector)
+void Document::Director::setLoaderSelector(Track::Loader::ArgumentSelector* selector, std::function<void(bool)> showHideFn)
 {
-    if(mLoaderSelectorContainer != selector)
+    mLoaderSelector = selector;
+    mLoaderSelectorShowHideFn = showHideFn;
+    for(auto& track : mTracks)
     {
-        mLoaderSelectorContainer = selector;
-        for(auto& track : mTracks)
+        if(track != nullptr)
         {
-            if(track != nullptr)
-            {
-                track->setLoaderSelector(selector);
-            }
+            track->setLoaderSelector(selector, showHideFn);
         }
     }
 }

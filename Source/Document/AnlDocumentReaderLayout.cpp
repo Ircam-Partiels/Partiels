@@ -1,25 +1,8 @@
-#include "AnlDocumentReaderLayoutPanel.h"
+#include "AnlDocumentReaderLayout.h"
 
 ANALYSE_FILE_BEGIN
 
-Document::ReaderLayoutPanel::WindowContainer::WindowContainer(ReaderLayoutPanel& readerLayoutPanel)
-: FloatingWindowContainer(juce::translate("Audio Files Layout"), readerLayoutPanel)
-, mReaderLayoutPanel(readerLayoutPanel)
-, mTooltip(&mReaderLayoutPanel)
-{
-    mFloatingWindow.onCloseButtonPressed = [this]()
-    {
-        mReaderLayoutPanel.warnBeforeClosing();
-        return true;
-    };
-}
-
-Document::ReaderLayoutPanel::WindowContainer::~WindowContainer()
-{
-    mFloatingWindow.onCloseButtonPressed = nullptr;
-}
-
-Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
+Document::ReaderLayoutContent::ReaderLayoutContent(Director& director)
 : mDirector(director)
 {
     mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
@@ -28,8 +11,7 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
         {
             case AttrType::reader:
             {
-                auto const layout = acsr.getAttr<AttrType::reader>();
-                mAudioFileLayoutTable.setLayout(layout, juce::NotificationType::sendNotificationSync);
+                mAudioFileLayoutTable.setLayout(acsr.getAttr<AttrType::reader>(), juce::NotificationType::sendNotificationSync);
             }
             break;
             case AttrType::layout:
@@ -50,9 +32,8 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
 
     mAudioFileLayoutTable.onLayoutChanged = [this]()
     {
-        auto const layout = mAudioFileLayoutTable.getLayout();
         mAudioFileLayoutTable.onSelectionChanged();
-        mApplyButton.setEnabled(layout != mAccessor.getAttr<AttrType::reader>());
+        mApplyButton.setEnabled(mAudioFileLayoutTable.getLayout() != mAccessor.getAttr<AttrType::reader>());
         mResetButton.setEnabled(mApplyButton.isEnabled());
     };
 
@@ -93,12 +74,12 @@ Document::ReaderLayoutPanel::ReaderLayoutPanel(Director& director)
     setSize(300, 400);
 }
 
-Document::ReaderLayoutPanel::~ReaderLayoutPanel()
+Document::ReaderLayoutContent::~ReaderLayoutContent()
 {
     mAccessor.removeListener(mListener);
 }
 
-void Document::ReaderLayoutPanel::resized()
+void Document::ReaderLayoutContent::resized()
 {
     auto bounds = getLocalBounds();
     {
@@ -113,7 +94,7 @@ void Document::ReaderLayoutPanel::resized()
     mAudioFileLayoutTable.setBounds(bounds);
 }
 
-void Document::ReaderLayoutPanel::warnBeforeClosing()
+void Document::ReaderLayoutContent::warnBeforeClosing()
 {
     if(mApplyButton.isEnabled())
     {

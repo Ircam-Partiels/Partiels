@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::Accessor::Accessor()
-: Accessor(AttrContainer({{true}, {QuarantineMode::force}, {getDefaultSearchPath()}, {ColumnType::name}, {true}}))
+: Accessor(AttrContainer({{true}, {QuarantineMode::force}, {getDefaultSearchPath()}}))
 {
 }
 

@@ -3,20 +3,20 @@
 
 ANALYSE_FILE_BEGIN
 
-Application::AudioSettings::PropertyChannelRouting::PropertyChannelRouting(std::function<void(size_t row, size_t column)> fn)
+Application::AudioSettingsContent::PropertyChannelRouting::PropertyChannelRouting(std::function<void(size_t row, size_t column)> fn)
 : PropertyComponent<BooleanMatrixSelector>("Channels Routing", "Define the output channels rounting", {})
 {
     entry.onClick = std::move(fn);
 }
 
-void Application::AudioSettings::PropertyChannelRouting::resized()
+void Application::AudioSettingsContent::PropertyChannelRouting::resized()
 {
     auto bounds = getLocalBounds();
     title.setBounds(bounds.removeFromTop(24));
     entry.setBounds(bounds);
 }
 
-Application::AudioSettings::AudioSettings()
+Application::AudioSettingsContent::AudioSettingsContent()
 : mPropertyDriver(juce::translate("Driver"), juce::translate("The current audio device driver"), "", {}, [&](size_t index)
                   {
                       auto const driverName = mPropertyDriver.entry.getItemText(static_cast<int>(index));
@@ -216,14 +216,14 @@ Application::AudioSettings::AudioSettings()
     Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
 }
 
-Application::AudioSettings::~AudioSettings()
+Application::AudioSettingsContent::~AudioSettingsContent()
 {
     Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
     Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getAudioDeviceManager().removeChangeListener(this);
 }
 
-void Application::AudioSettings::resized()
+void Application::AudioSettingsContent::resized()
 {
     auto const routingHeight = std::min(mPropertyChannelRouting.entry.getOptimalHeight() + 24, 120);
     mPropertyChannelRouting.setSize(getWidth(), routingHeight);
@@ -245,7 +245,7 @@ void Application::AudioSettings::resized()
     setSize(bounds.getWidth(), bounds.getY() + 2);
 }
 
-void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster* source)
+void Application::AudioSettingsContent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     auto& deviceManager = Instance::get().getAudioDeviceManager();
     anlWeakAssert(source == std::addressof(deviceManager));
@@ -299,6 +299,8 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
     mPropertyDriverPanel.setEnabled(currentAudioDevice != nullptr);
 #endif
 
+    mPropertyChannelRouting.setEnabled(currentAudioDevice != nullptr);
+    mPropertyDriverPanel.setEnabled(currentAudioDevice != nullptr);
     if(currentAudioDevice != nullptr)
     {
         auto const currentSampleRate = currentAudioDevice->getCurrentSampleRate();
@@ -347,7 +349,7 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
         auto const numInputs = documentChannels > 0_z ? documentChannels : 2_z;
         auto const numOutputs = static_cast<size_t>(std::max(setup.outputChannels.countNumberOfSetBits(), 0));
 
-        MiscDebug("Application::AudioSettings", "Inputs: " + juce::String(numInputs) + " Outputs: " + juce::String(numOutputs));
+        MiscDebug("Application::AudioSettingsContent", "Inputs: " + juce::String(numInputs) + " Outputs: " + juce::String(numOutputs));
         mPropertyChannelRouting.entry.setSize(numInputs, numOutputs);
         mPropertyDriverPanel.setEnabled(numInputs > 0_z && numOutputs > 0_z);
 
@@ -403,10 +405,13 @@ void Application::AudioSettings::changeListenerCallback(juce::ChangeBroadcaster*
     else
     {
         mPropertyChannelRouting.entry.setSize(2_z, 2_z);
-        mPropertyChannelRouting.setEnabled(false);
-        mPropertyDriverPanel.setEnabled(false);
     }
     resized();
+}
+
+Application::AudioSettingsPanel::AudioSettingsPanel()
+: HideablePanelTyped<AudioSettingsContent>(juce::translate("Audio Settings"))
+{
 }
 
 ANALYSE_FILE_END
