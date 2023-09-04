@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 Document::ReaderLayoutPanel::WindowContainer::WindowContainer(ReaderLayoutPanel& readerLayoutPanel)
-: FloatingWindowContainer(juce::translate("Audio Files Layout"), readerLayoutPanel, true)
+: FloatingWindowContainer(juce::translate("Audio Files Layout"), readerLayoutPanel)
 , mReaderLayoutPanel(readerLayoutPanel)
 , mTooltip(&mReaderLayoutPanel)
 {

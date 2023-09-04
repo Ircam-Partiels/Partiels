@@ -868,7 +868,7 @@ juce::String Track::Loader::getWildCardForAllFormats()
 }
 
 Track::Loader::ArgumentSelector::WindowContainer::WindowContainer(ArgumentSelector& argumentSelector)
-: FloatingWindowContainer(juce::translate("Load File..."), argumentSelector, true)
+: FloatingWindowContainer(juce::translate("Load File..."), argumentSelector)
 , mArgumentSelector(argumentSelector)
 , mTooltip(&mArgumentSelector)
 {

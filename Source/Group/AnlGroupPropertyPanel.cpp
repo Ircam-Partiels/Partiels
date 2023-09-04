@@ -5,7 +5,7 @@
 ANALYSE_FILE_BEGIN
 
 Group::PropertyPanel::WindowContainer::WindowContainer(PropertyPanel& propertyPanel)
-: FloatingWindowContainer(juce::translate("Properties"), mViewport, true)
+: FloatingWindowContainer(juce::translate("Properties"), mViewport)
 , mPropertyPanel(propertyPanel)
 , mTooltip(&mPropertyPanel)
 {
