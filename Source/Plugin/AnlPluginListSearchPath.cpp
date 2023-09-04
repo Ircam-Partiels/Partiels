@@ -22,7 +22,7 @@ PluginList::SearchPath::WindowContainer::~WindowContainer()
 PluginList::SearchPath::SearchPath(Accessor& accessor)
 : mAccessor(accessor)
 {
-    auto updateButtonsStates = [this]()
+    auto const updateButtonsStates = [this]()
     {
 #if JUCE_MAC
         auto const fileSearchPath = mFileSearchPathTable.getFileSearchPath();
@@ -38,7 +38,7 @@ PluginList::SearchPath::SearchPath(Accessor& accessor)
 #endif
     };
 
-    auto warnForChanges = []
+    auto const warnForChanges = []
     {
         auto const options = juce::MessageBoxOptions()
                                  .withIconType(juce::AlertWindow::InfoIcon)
