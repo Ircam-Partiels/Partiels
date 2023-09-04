@@ -3,7 +3,7 @@
 ANALYSE_FILE_BEGIN
 
 PluginList::SearchPath::WindowContainer::WindowContainer(SearchPath& searchPath)
-: FloatingWindowContainer(juce::translate("Plugin Settings"), searchPath, true)
+: FloatingWindowContainer(juce::translate("Plugin Settings"), searchPath)
 , mSearchPath(searchPath)
 , mTooltip(&mSearchPath)
 {
