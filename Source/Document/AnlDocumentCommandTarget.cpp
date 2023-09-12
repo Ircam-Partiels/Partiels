@@ -237,7 +237,6 @@ void Document::CommandTarget::getCommandInfo(juce::CommandID const commandID, ju
         {
             result.setInfo(juce::translate("Break Frame(s)"), juce::translate("Break Frame(s)"), "Edit", 0);
             result.defaultKeypresses.add(juce::KeyPress('b', juce::ModifierKeys::noModifiers, 0));
-            auto const& trackAcsrs = mAccessor.getAcsrs<AcsrType::tracks>();
             result.setActive(isModeActive && canBreak(selection.getStart()));
         }
         break;
