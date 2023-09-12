@@ -9,5 +9,3 @@ Vamp plugin format is developed at the Centre for Digital Music, Queen Mary, Uni
 ASIO is a registered trademark of Steinberg Media Technologies GmbH.
 Nunito Sans Font by The Nunito Project Authors.
 Icons made by Pierre Guillot.
-Icons made by Pixelmeetup from www.flaticon.com
-Icons made by Freepik from www.flaticon.com
