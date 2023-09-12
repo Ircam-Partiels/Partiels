@@ -1,8 +1,18 @@
 v1.3.0-dev1
 
+- Add: New and more consistent set of icons for the entire application (#363)
+- Imp: Hide floating windows when a temporary panel is displayed, then restore floating windows (#362)
+- Imp: Transform some floating windows into temporary panels integrated into the main interface (#361)
+- Imp: Make floating windows flicker as they move into the foreground (#360)
+- Add: Tooltips to global transport buttons and user interfaces (#355)
+- Fix: Selecting valid audio device doesn't update the state of the channel layout (#354) 
+- Imp: Transform the floating plug-in list window into a side panel integrated into the main interface (#353)
+- Fix: Floating windows must never be modal, and must not sit on top of other applications (#352)
+- Add: Access to the plug-in settings window via the plug-in list window (#351)
 - Imp: Make the plug-in search bar more accessible in the plug-in list window (#349)
 - Add: Create a no value point with the shortcut 'b' on the track's graphical plot to break the continuity of the segments (#342)
 - Add: Double-click on a marker to display the results table, focusing on the selected element (#341)
+- Add: Support lab file extension as CSV with end time instead of duration (#223)
 
 v1.2.0
 
