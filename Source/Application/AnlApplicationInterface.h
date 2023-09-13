@@ -120,7 +120,6 @@ namespace Application
             void togglePluginListTablePanel();
 
         private:
-            Accessor::Listener mListener{typeid(*this).name()};
             Document::Accessor::Listener mDocumentListener{typeid(*this).name()};
 
             ColouredPanel mToolTipSeparator;

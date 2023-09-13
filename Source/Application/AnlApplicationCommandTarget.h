@@ -15,50 +15,7 @@ namespace Application
     , private juce::ChangeListener
     {
     public:
-        // clang-format off
-        enum CommandIDs : int
-        {
-              documentNew = 0x3001
-            , documentOpen
-            , documentSave
-            , documentDuplicate
-            , documentConsolidate
-            , documentExport
-            , documentImport
-            , documentBatch
-            
-            , editUndo
-            , editRedo
-            , editSelectNextItem
-            , editNewGroup
-            , editNewTrack
-            , editRemoveItem
-            , editLoadTemplate
-            
-            , transportTogglePlayback
-            , transportToggleLooping
-            , transportToggleStopAtLoopEnd
-            , transportToggleMagnetism
-            , transportRewindPlayHead
-            , transportMovePlayHeadBackward
-            , transportMovePlayHeadForward
-            
-            , viewTimeZoomIn
-            , viewTimeZoomOut
-            , viewVerticalZoomIn
-            , viewVerticalZoomOut
-            , viewInfoBubble
-            
-            , helpOpenAudioSettings
-            , helpOpenPluginSettings
-            , helpOpenAbout
-            , helpOpenProjectPage
-            , helpAuthorize
-            , helpSdifConverter
-            , helpAutoUpdate
-            , helpCheckForUpdate
-        };
-        // clang-format on
+        using CommandIDs = ApplicationCommandIDs;
 
         CommandTarget();
         ~CommandTarget() override;

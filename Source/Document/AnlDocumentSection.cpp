@@ -20,12 +20,9 @@ void Document::Section::Viewport::mouseWheelMove(juce::MouseEvent const& e, juce
 
 Document::Section::Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor)
 : CommandTarget(director, commandManager, authorizationProcessor)
-, tooltipButton(juce::ImageCache::getFromMemory(AnlIconsData::bubble_png, AnlIconsData::bubble_pngSize))
 , mDirector(director)
-, mTransportDisplay(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
-, mTransportSelectionInfo(mAccessor.getAcsr<AcsrType::transport>(), mAccessor.getAcsr<AcsrType::timeZoom>())
-, mAuthorizationButton(authorizationProcessor)
-, mReaderLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::audiolayer_png, AnlIconsData::audiolayer_pngSize))
+, mApplicationCommandManager(commandManager)
+, mHeader(director, commandManager, authorizationProcessor)
 , mGridButton(juce::ImageCache::getFromMemory(AnlIconsData::griddisabled_png, AnlIconsData::griddisabled_pngSize))
 , mExpandLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::expand_png, AnlIconsData::expand_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::shrink_png, AnlIconsData::shrink_pngSize))
 , mResizeLayoutButton(juce::ImageCache::getFromMemory(AnlIconsData::unlocksize_png, AnlIconsData::unlocksize_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::locksize_png, AnlIconsData::locksize_pngSize))
@@ -120,29 +117,11 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
         }
     };
 
+    setWantsKeyboardFocus(true);
     mViewport.setViewedComponent(&mDraggableTable, false);
     mViewport.setScrollBarsShown(true, false, false, false);
 
-    addAndMakeVisible(mReaderLayoutButton);
-    mReaderLayoutButton.setWantsKeyboardFocus(false);
-    mReaderLayoutButton.onClick = [this]()
-    {
-        mAccessor.sendSignal(SignalType::showReaderLayoutPanel, {}, NotificationType::synchronous);
-    };
-
-    addAndMakeVisible(mDocumentName);
-    mDocumentName.onClick = [this]()
-    {
-        auto const file = mAccessor.getAttr<AttrType::path>();
-        if(file != juce::File{})
-        {
-            mAccessor.getAttr<AttrType::path>().revealToUser();
-        }
-        else if(onSaveButtonClicked != nullptr)
-        {
-            onSaveButtonClicked();
-        }
-    };
+    addAndMakeVisible(mHeader);
 
     addAndMakeVisible(mExpandLayoutButton);
     mExpandLayoutButton.setClickingTogglesState(false);
@@ -221,23 +200,10 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mAddGroupButton.setMouseClickGrabsKeyboardFocus(false);
     mAddGroupButton.onClick = [this]()
     {
-        if(onNewGroupButtonClicked != nullptr)
-        {
-            onNewGroupButtonClicked();
-        }
+        mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::editNewGroup, true);
     };
-
-    mComponentListener.onComponentVisibilityChanged = [this](juce::Component&)
-    {
-        resized();
-    };
-    mComponentListener.attachTo(mAuthorizationButton);
-    addChildComponent(mAuthorizationButton);
 
     addAndMakeVisible(pluginListButton);
-    addAndMakeVisible(tooltipButton);
-    addAndMakeVisible(mTransportDisplay);
-    addAndMakeVisible(mTransportSelectionInfo);
     addAndMakeVisible(mTimeRulerDecoration);
     addAndMakeVisible(mLoopBarDecoration);
     addAndMakeVisible(mTopSeparator);
@@ -276,22 +242,6 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     {
         switch(attribute)
         {
-            case AttrType::reader:
-            {
-                auto const result = createAudioFormatReader(acsr, mDirector.getAudioFormatManager());
-                auto const alertMessage = std::get<1>(result).joinIntoString("");
-                if(alertMessage.isEmpty())
-                {
-                    mReaderLayoutButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::audiolayer_png, AnlIconsData::audiolayer_pngSize));
-                    mReaderLayoutButton.setTooltip(juce::translate("Show audio files layout panel"));
-                }
-                else
-                {
-                    mReaderLayoutButton.setImages(juce::ImageCache::getFromMemory(AnlIconsData::alert_png, AnlIconsData::alert_pngSize));
-                    mReaderLayoutButton.setTooltip(alertMessage);
-                }
-            }
-            break;
             case AttrType::grid:
             {
                 switch(mAccessor.getAttr<AttrType::grid>())
@@ -330,15 +280,8 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
                 mResizeLayoutButton.setToggleState(autoresize, juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::reader:
             case AttrType::path:
-            {
-                auto const file = acsr.getAttr<AttrType::path>();
-                mDocumentName.setButtonText(file != juce::File{} ? file.getFileName() : juce::translate("Untitled"));
-                mDocumentName.setTooltip(file != juce::File{} ? file.getFullPathName() : juce::translate("Document not saved"));
-                auto bounds = getLocalBounds();
-                resizeHeader(bounds);
-            }
-            break;
             case AttrType::layout:
             case AttrType::viewport:
             case AttrType::samplerate:
@@ -366,9 +309,8 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     };
     mListener.onAccessorErased = mListener.onAccessorInserted;
 
-    mReceiver.onSignal = [&](Accessor const& acsr, SignalType signal, juce::var value)
+    mReceiver.onSignal = [&]([[maybe_unused]] Accessor const& acsr, SignalType signal, juce::var value)
     {
-        juce::ignoreUnused(acsr);
         switch(signal)
         {
             case SignalType::viewport:
@@ -415,52 +357,26 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mAccessor.getAcsr<AcsrType::transport>().addListener(mTransportListener, NotificationType::synchronous);
     mAccessor.addListener(mListener, NotificationType::synchronous);
     mAccessor.addReceiver(mReceiver);
-
-    setWantsKeyboardFocus(true);
+    mApplicationCommandManager.addListener(this);
+    applicationCommandListChanged();
+    applicationCommandInvoked({ApplicationCommandIDs::viewInfoBubble});
     addKeyListener(mCommandManager.getKeyMappings());
 }
 
 Document::Section::~Section()
 {
     removeKeyListener(mCommandManager.getKeyMappings());
-    mComponentListener.detachFrom(mAuthorizationButton);
+    mApplicationCommandManager.removeListener(this);
     mAccessor.removeReceiver(mReceiver);
     mAccessor.removeListener(mListener);
     mAccessor.getAcsr<AcsrType::transport>().removeListener(mTransportListener);
-}
-
-void Document::Section::resizeHeader(juce::Rectangle<int>& bounds)
-{
-    auto header = bounds.removeFromTop(40);
-    mTransportDisplay.setBounds(header.withSizeKeepingCentre(284, 40));
-
-    auto leftSize = header.withRight(mTransportDisplay.getX()).withTrimmedLeft(5);
-    leftSize = leftSize.withSizeKeepingCentre(leftSize.getWidth(), 24);
-    if(mAuthorizationButton.isVisible())
-    {
-        mAuthorizationButton.setBounds(leftSize.removeFromLeft(52));
-        leftSize.removeFromLeft(4);
-    }
-
-    mReaderLayoutButton.setBounds(leftSize.removeFromLeft(24));
-    leftSize.removeFromLeft(4);
-    auto const font = mDocumentName.getLookAndFeel().getTextButtonFont(mDocumentName, 24);
-    auto const textWidth = font.getStringWidth(mDocumentName.getButtonText()) + static_cast<int>(std::ceil(font.getHeight()) * 2.0f);
-    // Improve text
-    mDocumentName.setBounds(leftSize.removeFromLeft(textWidth));
-
-    auto const scrollbarWidth = mViewport.getScrollBarThickness();
-    auto rightSize = header.withLeft(mTransportDisplay.getRight());
-    tooltipButton.setBounds(rightSize.removeFromRight(24 + scrollbarWidth).removeFromTop(24).withSizeKeepingCentre(20, 20));
-    mTransportSelectionInfo.setVisible(rightSize.getWidth() > 164);
-    mTransportSelectionInfo.setBounds(rightSize.removeFromRight(164));
 }
 
 void Document::Section::resized()
 {
     auto const scrollbarWidth = mViewport.getScrollBarThickness();
     auto bounds = getLocalBounds();
-    resizeHeader(bounds);
+    mHeader.setBounds(bounds.removeFromTop(48));
 
     {
         auto topPart = bounds.removeFromTop(28);
@@ -751,20 +667,6 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
     timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
 }
 
-void Document::Section::showBubbleInfo(bool state)
-{
-    if(state)
-    {
-        mToolTipBubbleWindow.startTimer(23);
-    }
-    else
-    {
-        mToolTipBubbleWindow.stopTimer();
-        mToolTipBubbleWindow.removeFromDesktop();
-        mToolTipBubbleWindow.setVisible(false);
-    }
-}
-
 juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identifier) const
 {
     auto getGroupIdentifier = [&]()
@@ -948,6 +850,33 @@ void Document::Section::dragOperationEnded([[maybe_unused]] juce::DragAndDropTar
 juce::ApplicationCommandTarget* Document::Section::getNextCommandTarget()
 {
     return findFirstTargetParentComponent();
+}
+
+void Document::Section::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
+{
+    switch(info.commandID)
+    {
+        case ApplicationCommandIDs::viewInfoBubble:
+        {
+            if(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
+            {
+                mToolTipBubbleWindow.startTimer(23);
+            }
+            else
+            {
+                mToolTipBubbleWindow.stopTimer();
+                mToolTipBubbleWindow.removeFromDesktop();
+                mToolTipBubbleWindow.setVisible(false);
+            }
+        }
+        break;
+        default:
+            break;
+    }
+}
+
+void Document::Section::applicationCommandListChanged()
+{
 }
 
 ANALYSE_FILE_END

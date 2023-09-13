@@ -69,4 +69,49 @@ private:
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
 };
 
+// clang-format off
+enum ApplicationCommandIDs : int
+{
+      documentNew = 0x3001
+    , documentOpen
+    , documentSave
+    , documentDuplicate
+    , documentConsolidate
+    , documentExport
+    , documentImport
+    , documentBatch
+    
+    , editUndo
+    , editRedo
+    , editSelectNextItem
+    , editNewGroup
+    , editNewTrack
+    , editRemoveItem
+    , editLoadTemplate
+    
+    , transportTogglePlayback
+    , transportToggleLooping
+    , transportToggleStopAtLoopEnd
+    , transportToggleMagnetism
+    , transportRewindPlayHead
+    , transportMovePlayHeadBackward
+    , transportMovePlayHeadForward
+    
+    , viewTimeZoomIn
+    , viewTimeZoomOut
+    , viewVerticalZoomIn
+    , viewVerticalZoomOut
+    , viewInfoBubble
+    
+    , helpOpenAudioSettings
+    , helpOpenPluginSettings
+    , helpOpenAbout
+    , helpOpenProjectPage
+    , helpAuthorize
+    , helpSdifConverter
+    , helpAutoUpdate
+    , helpCheckForUpdate
+};
+// clang-format on
+
 ANALYSE_FILE_END

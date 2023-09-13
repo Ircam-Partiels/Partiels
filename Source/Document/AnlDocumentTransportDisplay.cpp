@@ -3,9 +3,10 @@
 
 ANALYSE_FILE_BEGIN
 
-Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom::Accessor& zoomAcsr)
+Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom::Accessor& zoomAcsr, juce::ApplicationCommandManager& commandManager)
 : mTransportAccessor(accessor)
 , mZoomAccessor(zoomAcsr)
+, mApplicationCommandManager(commandManager)
 , mRewindButton(juce::ImageCache::getFromMemory(AnlIconsData::rewind_png, AnlIconsData::rewind_pngSize))
 , mPlaybackButton(juce::ImageCache::getFromMemory(AnlIconsData::play_png, AnlIconsData::play_pngSize), juce::ImageCache::getFromMemory(AnlIconsData::pause_png, AnlIconsData::pause_pngSize))
 , mLoopButton(juce::ImageCache::getFromMemory(AnlIconsData::loop_png, AnlIconsData::loop_pngSize))
@@ -84,29 +85,18 @@ Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom
         }
     };
 
-    mRewindButton.setTooltip(juce::translate("Rewind the playhead"));
-    mRewindButton.onClick = [&]()
-    {
-        Transport::Tools::rewindPlayhead(mTransportAccessor, NotificationType::synchronous);
-    };
+    mRewindButton.setCommandToTrigger(std::addressof(mApplicationCommandManager), ApplicationCommandIDs::transportRewindPlayHead, true);
 
-    mPlaybackButton.setTooltip(juce::translate("Toggle the audio playback"));
     mPlaybackButton.setClickingTogglesState(true);
     mPlaybackButton.onClick = [&]()
     {
-        mTransportAccessor.setAttr<Transport::AttrType::playback>(mPlaybackButton.getToggleState(), NotificationType::synchronous);
+        mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::transportTogglePlayback, true);
     };
 
-    mLoopButton.setTooltip(juce::translate("Toggle the playback loop"));
     mLoopButton.setClickingTogglesState(true);
     mLoopButton.onClick = [&]()
     {
-        auto const state = mLoopButton.getToggleState();
-        if(state && mTransportAccessor.getAttr<Transport::AttrType::loopRange>().isEmpty())
-        {
-            mTransportAccessor.setAttr<Transport::AttrType::loopRange>(mZoomAccessor.getAttr<Zoom::AttrType::globalRange>(), NotificationType::synchronous);
-        }
-        mTransportAccessor.setAttr<Transport::AttrType::looping>(state, NotificationType::synchronous);
+        mApplicationCommandManager.invokeDirectly(ApplicationCommandIDs::transportToggleLooping, true);
     };
 
     mVolumeSlider.setTooltip(juce::translate("The volume of the audio playback"));
@@ -131,10 +121,14 @@ Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom
     addAndMakeVisible(mVolumeSlider);
     mTransportAccessor.addListener(mTransportListener, NotificationType::synchronous);
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
+    mApplicationCommandManager.addListener(this);
+    applicationCommandListChanged();
+    applicationCommandInvoked({ApplicationCommandIDs::viewInfoBubble});
 }
 
 Document::TransportDisplay::~TransportDisplay()
 {
+    mApplicationCommandManager.removeListener(this);
     mZoomAccessor.removeListener(mZoomListener);
     mTransportAccessor.removeListener(mTransportListener);
 }
@@ -149,6 +143,31 @@ void Document::TransportDisplay::resized()
     mVolumeSlider.setBounds(bounds.removeFromBottom(buttonSize / 3));
     mPosition.setBounds(bounds);
     mPosition.setFont(juce::Font(static_cast<float>(bounds.getHeight()) * 0.8f));
+}
+
+void Document::TransportDisplay::applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info)
+{
+    switch(info.commandID)
+    {
+        case ApplicationCommandIDs::transportTogglePlayback:
+        {
+            mPlaybackButton.setToggleState(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked, juce::NotificationType::dontSendNotification);
+        }
+        break;
+        case ApplicationCommandIDs::transportToggleLooping:
+        {
+            mLoopButton.setToggleState(info.commandFlags & juce::ApplicationCommandInfo::CommandFlags::isTicked, juce::NotificationType::dontSendNotification);
+        }
+        break;
+        default:
+            break;
+    }
+}
+
+void Document::TransportDisplay::applicationCommandListChanged()
+{
+    mPlaybackButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::transportTogglePlayback));
+    mLoopButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::transportToggleLooping));
 }
 
 ANALYSE_FILE_END

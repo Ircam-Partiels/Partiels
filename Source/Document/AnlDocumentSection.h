@@ -2,10 +2,9 @@
 
 #include "../Group/AnlGroupStrechableSection.h"
 #include "AnlDocumentCommandTarget.h"
+#include "AnlDocumentHeader.h"
 #include "AnlDocumentSelection.h"
 #include "AnlDocumentTools.h"
-#include "AnlDocumentTransportDisplay.h"
-#include "AnlDocumentTransportSelectionInfo.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -15,6 +14,7 @@ namespace Document
     : public juce::Component
     , public juce::DragAndDropContainer
     , public CommandTarget
+    , private juce::ApplicationCommandManagerListener
     {
     public:
         // clang-format off
@@ -27,14 +27,9 @@ namespace Document
         Section(Director& director, juce::ApplicationCommandManager& commandManager, AuthorizationProcessor& authorizationProcessor);
         ~Section() override;
 
-        void showBubbleInfo(bool state);
         juce::Rectangle<int> getPlotBounds(juce::String const& identifier) const;
 
-        Icon tooltipButton;
         juce::TextButton pluginListButton;
-
-        std::function<void(void)> onSaveButtonClicked = nullptr;
-        std::function<void(void)> onNewGroupButtonClicked = nullptr;
 
         // juce::Component
         void resized() override;
@@ -51,12 +46,15 @@ namespace Document
         // juce::ApplicationCommandTarget
         juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
+        // juce::ApplicationCommandManagerListener
+        void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
+        void applicationCommandListChanged() override;
+
         void updateLayout();
         void updateHeights();
         void updateExpandState();
         void updateFocus();
 
-        void resizeHeader(juce::Rectangle<int>& bounds);
         void moveTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
         void copyTrackToGroup(Group::Director& groupDirector, size_t index, juce::String const& trackIdentifier);
 
@@ -78,14 +76,9 @@ namespace Document
         Accessor& mAccessor{mDirector.getAccessor()};
         Accessor::Listener mListener{typeid(*this).name()};
         Accessor::Receiver mReceiver;
-
+        juce::ApplicationCommandManager& mApplicationCommandManager;
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-        TransportDisplay mTransportDisplay;
-        TransportSelectionInfo mTransportSelectionInfo;
-
-        AuthorizationButton mAuthorizationButton;
-        Icon mReaderLayoutButton;
-        juce::TextButton mDocumentName;
+        Header mHeader;
         Icon mGridButton;
         Icon mExpandLayoutButton;
         Icon mResizeLayoutButton;
@@ -111,7 +104,6 @@ namespace Document
         LayoutNotifier mLayoutNotifier;
         LayoutNotifier mExpandedNotifier;
         LayoutNotifier mFocusNotifier;
-        ComponentListener mComponentListener;
     };
 } // namespace Document
 

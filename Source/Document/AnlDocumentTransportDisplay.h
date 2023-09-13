@@ -8,19 +8,25 @@ namespace Document
 {
     class TransportDisplay
     : public juce::Component
+    , private juce::ApplicationCommandManagerListener
     {
     public:
-        TransportDisplay(Transport::Accessor& accessor, Zoom::Accessor& zoomAcsr);
+        TransportDisplay(Transport::Accessor& accessor, Zoom::Accessor& zoomAcsr, juce::ApplicationCommandManager& commandManager);
         ~TransportDisplay() override;
 
         // juce::Component
         void resized() override;
 
     private:
+        // juce::ApplicationCommandManagerListener
+        void applicationCommandInvoked(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
+        void applicationCommandListChanged() override;
+
         Transport::Accessor& mTransportAccessor;
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
         Zoom::Accessor& mZoomAccessor;
         Zoom::Accessor::Listener mZoomListener{typeid(*this).name()};
+        juce::ApplicationCommandManager& mApplicationCommandManager;
 
         Icon mRewindButton;
         Icon mPlaybackButton;

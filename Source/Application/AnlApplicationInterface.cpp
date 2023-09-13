@@ -105,12 +105,6 @@ Application::Interface::DocumentContainer::DocumentContainer()
     addAndMakeVisible(mToolTipSeparator);
     addAndMakeVisible(mToolTipDisplay);
 
-    mDocumentSection.tooltipButton.setClickingTogglesState(true);
-    mDocumentSection.tooltipButton.setTooltip(Instance::get().getApplicationCommandManager().getDescriptionOfCommand(CommandTarget::CommandIDs::viewInfoBubble));
-    mDocumentSection.tooltipButton.onClick = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::viewInfoBubble, true);
-    };
     mDocumentSection.pluginListButton.getProperties().set("Font", juce::Font("Arial", 8.0, juce::Font::plain).toString());
     mDocumentSection.pluginListButton.setButtonText(juce::CharPointer_UTF8("\xe2\x86\x90"));
     mDocumentSection.pluginListButton.setTooltip(juce::translate("Show plugins list table"));
@@ -120,14 +114,6 @@ Application::Interface::DocumentContainer::DocumentContainer()
         {
             window->getInterface().togglePluginListTablePanel();
         }
-    };
-    mDocumentSection.onSaveButtonClicked = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::documentSave, true);
-    };
-    mDocumentSection.onNewGroupButtonClicked = []()
-    {
-        Instance::get().getApplicationCommandManager().invokeDirectly(CommandTarget::CommandIDs::editNewGroup, true);
     };
 
     auto const showHideLoader = [this]()
@@ -165,37 +151,11 @@ Application::Interface::DocumentContainer::DocumentContainer()
         showHideLoader();
     };
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
-    {
-        switch(attribute)
-        {
-            case AttrType::windowState:
-            case AttrType::recentlyOpenedFilesList:
-            case AttrType::currentDocumentFile:
-            case AttrType::colourMode:
-            case AttrType::exportOptions:
-            case AttrType::adaptationToSampleRate:
-            case AttrType::autoLoadConvertedFile:
-            case AttrType::desktopGlobalScaleFactor:
-            case AttrType::routingMatrix:
-            case AttrType::autoUpdate:
-            case AttrType::lastVersion:
-                break;
-            case AttrType::showInfoBubble:
-            {
-                mDocumentSection.showBubbleInfo(acsr.getAttr<AttrType::showInfoBubble>());
-                mDocumentSection.tooltipButton.setToggleState(acsr.getAttr<AttrType::showInfoBubble>(), juce::NotificationType::dontSendNotification);
-            }
-            break;
-        }
-    };
     Instance::get().getDocumentAccessor().addListener(mDocumentListener, NotificationType::synchronous);
-    Instance::get().getApplicationAccessor().addListener(mListener, NotificationType::synchronous);
 }
 
 Application::Interface::DocumentContainer::~DocumentContainer()
 {
-    Instance::get().getApplicationAccessor().removeListener(mListener);
     Instance::get().getDocumentAccessor().removeListener(mDocumentListener);
 }
 
