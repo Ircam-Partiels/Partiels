@@ -156,6 +156,8 @@ namespace Plugin
     void to_json(nlohmann::json& j, Description const& description);
     void from_json(nlohmann::json const& j, Description& description);
 
+    Description loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key);
+
     //! @brief The result a plugin
     //! @details The type of data returned by a plugin.
     using Result = Vamp::Plugin::Feature;
