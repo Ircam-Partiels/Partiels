@@ -104,9 +104,10 @@ float const** Plugin::Processor::CircularReader::getNextBlock()
     return mOutputBuffer.data();
 }
 
-Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, size_t const feature, State const& state)
+Plugin::Processor::Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, Key const& key, size_t const feature, State const& state)
 : mPlugins(std::move(plugins))
 , mCircularReader(audioFormatReader, state.blockSize, state.stepSize)
+, mKey(key)
 , mFeature(feature)
 , mState(state)
 {
@@ -268,6 +269,16 @@ float Plugin::Processor::getAdvancement() const
     return position / length;
 }
 
+Plugin::Description Plugin::Processor::getDescription() const
+{
+    anlStrongAssert(!mPlugins.empty());
+    if(mPlugins.empty() || mPlugins.at(0) == nullptr)
+    {
+        return {};
+    }
+    return loadDescription(*mPlugins.at(0), mKey);
+}
+
 Plugin::Input Plugin::Processor::getInput() const
 {
     anlStrongAssert(!mPlugins.empty());
@@ -295,7 +306,7 @@ Plugin::Output Plugin::Processor::getOutput() const
 
     auto const descriptors = mPlugins.at(0)->getOutputDescriptors();
     anlStrongAssert(descriptors.size() > mFeature);
-    return descriptors.size() > mFeature ? descriptors[mFeature] : Plugin::Output{};
+    return descriptors.size() > mFeature ? descriptors.at(mFeature) : Plugin::Output{};
 }
 
 std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, State const& state, juce::AudioFormatReader& audioFormatReader)
@@ -315,7 +326,7 @@ std::unique_ptr<Plugin::Processor> Plugin::Processor::create(Key const& key, Sta
         throw LoadingError("plugin feature is invalid");
     }
     auto const featureIndex = static_cast<size_t>(std::distance(outputs.cbegin(), feature));
-    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), featureIndex, state));
+    return std::unique_ptr<Processor>(new Processor(audioFormatReader, std::move(plugins), key, featureIndex, state));
 }
 
 class Plugin::Processor::CircularReaderUnitTest

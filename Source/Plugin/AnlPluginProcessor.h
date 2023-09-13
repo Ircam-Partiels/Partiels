@@ -18,6 +18,7 @@ namespace Plugin
         bool performNextAudioBlock(std::vector<std::vector<Result>>& results);
         float getAdvancement() const;
 
+        Description getDescription() const;
         Input getInput() const;
         Output getOutput() const;
 
@@ -45,10 +46,11 @@ namespace Plugin
             std::vector<float const*> mOutputBuffer;
         };
 
-        Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, size_t const feature, State const& state);
+        Processor(juce::AudioFormatReader& audioFormatReader, std::vector<std::unique_ptr<Ive::PluginWrapper>> plugins, Key const& key, size_t const feature, State const& state);
 
         std::vector<std::unique_ptr<Ive::PluginWrapper>> mPlugins;
         CircularReader mCircularReader;
+        Key const mKey;
         size_t const mFeature;
         State const mState;
 
