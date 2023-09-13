@@ -75,7 +75,7 @@ std::tuple<std::map<Plugin::Key, Plugin::Description>, juce::StringArray> Plugin
                     {
                         errors.add(pluginKey + ": duplicate key");
                     }
-                    else if(!list.insert({key, loadDescription(*plugin, key)}).second)
+                    else if(!list.insert({key, Plugin::loadDescription(*plugin, key)}).second)
                     {
                         errors.add(pluginKey + ": insertion failed");
                     }
@@ -108,7 +108,7 @@ Plugin::Description PluginList::Scanner::getDescription(Plugin::Key const& key, 
     {
         throw std::runtime_error("allocation failed");
     }
-    return loadDescription(*plugin, key);
+    return Plugin::loadDescription(*plugin, key);
 }
 
 Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key, double sampleRate)
@@ -129,77 +129,7 @@ Plugin::Description PluginList::Scanner::loadDescription(Plugin::Key const& key,
     {
         return {};
     }
-    return loadDescription(*wrapper.get(), key);
-}
-
-Plugin::Description PluginList::Scanner::loadDescription(Ive::PluginWrapper& plugin, Plugin::Key const& key)
-{
-    auto* pluginLoader = Vamp::HostExt::PluginLoader::getInstance();
-    anlStrongAssert(pluginLoader != nullptr);
-    if(pluginLoader == nullptr)
-    {
-        return {};
-    }
-
-    auto const outputs = plugin.getOutputDescriptors();
-    auto const outputIt = std::find_if(outputs.cbegin(), outputs.cend(), [&](auto const& output)
-                                       {
-                                           return output.identifier == key.feature;
-                                       });
-    if(outputIt == outputs.cend())
-    {
-        return {};
-    }
-    Plugin::Description description;
-    description.name = plugin.getName();
-    description.inputDomain = Vamp::Plugin::InputDomain::TimeDomain;
-    if(auto* inputDomainAdapter = plugin.getWrapper<Vamp::HostExt::PluginInputDomainAdapter>())
-    {
-        description.inputDomain = Vamp::Plugin::InputDomain::FrequencyDomain;
-        description.defaultState.windowType = inputDomainAdapter->getWindowType();
-    }
-
-    description.maker = plugin.getMaker();
-    description.version = static_cast<unsigned int>(plugin.getPluginVersion());
-    auto const categories = pluginLoader->getPluginCategory(key.identifier);
-    description.category = categories.empty() ? "" : categories.front();
-    description.details = plugin.getDescription();
-    if(!description.details.isEmpty())
-    {
-        description.details += "\n";
-    }
-    description.details += juce::String(plugin.getCopyright());
-    auto const parameters = plugin.getParameterDescriptors();
-    description.parameters.insert(description.parameters.cbegin(), parameters.cbegin(), parameters.cend());
-
-    auto initializeState = [&](Plugin::State& state, bool defaultValues)
-    {
-        state.blockSize = plugin.getPreferredBlockSize();
-        state.stepSize = plugin.getPreferredStepSize();
-        for(auto const& parameter : parameters)
-        {
-            state.parameters[parameter.identifier] = defaultValues ? parameter.defaultValue : plugin.getParameter(parameter.identifier);
-        }
-    };
-    initializeState(description.defaultState, true);
-    auto const programNames = plugin.getPrograms();
-    for(auto const& programName : programNames)
-    {
-        plugin.selectProgram(programName);
-        initializeState(description.programs[programName], false);
-    }
-
-    description.output = *outputIt;
-    auto const inputs = plugin.getInputDescriptors();
-    auto const inputIt = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const& input)
-                                      {
-                                          return input.identifier == key.feature;
-                                      });
-    if(inputIt != inputs.cend())
-    {
-        description.input = *inputIt;
-    }
-    return description;
+    return Plugin::loadDescription(*wrapper.get(), key);
 }
 
 ANALYSE_FILE_END
