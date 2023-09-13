@@ -93,9 +93,9 @@ namespace Track
         , file
         , results
         , edit
+        , description
         , key
         , input
-        , description
         , state
         
         , height
@@ -132,9 +132,9 @@ namespace Track
     , Model::Attr<AttrType::file, FileInfo, Model::Flag::basic>
     , Model::Attr<AttrType::results, Results, Model::Flag::notifying>
     , Model::Attr<AttrType::edit, Edition, Model::Flag::notifying>
+    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::key, Plugin::Key, Model::Flag::basic>
     , Model::Attr<AttrType::input, juce::String, Model::Flag::basic>
-    , Model::Attr<AttrType::description, Plugin::Description, Model::Flag::basic>
     , Model::Attr<AttrType::state, Plugin::State, Model::Flag::basic>
     
     , Model::Attr<AttrType::height, int, Model::Flag::notifying | Model::Flag::saveable>
