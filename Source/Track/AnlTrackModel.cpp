@@ -19,7 +19,29 @@ std::unique_ptr<juce::XmlElement> Track::Accessor::parseXml(juce::XmlElement con
         if(version <= 0x9)
         {
             FileInfo const fileInfo{XmlParser::fromXml(*copy.get(), "file", juce::File{})};
+            if(auto* child = copy->getChildByName("file"))
+            {
+                copy->removeChildElement(child, true);
+            }
             XmlParser::toXml(*copy.get(), "file", fileInfo);
+        }
+        if(version <= 0x10300)
+        {
+            Plugin::Key key{XmlParser::fromXml(*copy.get(), "key", Plugin::Key{})};
+            if(key.identifier == "supervp:superwaveform")
+            {
+                if(auto* child = copy->getChildByName("key"))
+                {
+                    copy->removeChildElement(child, true);
+                }
+                if(auto* child = copy->getChildByName("description"))
+                {
+                    copy->removeChildElement(child, true);
+                }
+                key.identifier = "partiels-vamp-plugins:partielswaveform";
+                key.feature = "peaks";
+                XmlParser::toXml(*copy.get(), "key", key);
+            }
         }
     }
     return copy;
