@@ -630,13 +630,6 @@ void Track::Director::runAnalysis(NotificationType const notification)
         return;
     }
 
-    auto const sampleRate = mAudioFormatReader->sampleRate;
-    auto const description = PluginList::Scanner::loadDescription(key, sampleRate);
-    if(description != Plugin::Description{})
-    {
-        mAccessor.setAttr<AttrType::description>(description, notification);
-    }
-
     auto const input = mAccessor.getAttr<AttrType::input>();
     if(input.isNotEmpty() && !mHierarchyManager.hasAccessor(input))
     {
@@ -646,9 +639,11 @@ void Track::Director::runAnalysis(NotificationType const notification)
     auto inputResults = input.isNotEmpty() ? mHierarchyManager.getAccessor(input).getAttr<AttrType::results>() : Results{};
     try
     {
-        if(mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults))
+        auto const description = mProcessor.runAnalysis(mAccessor, *mAudioFormatReader.get(), inputResults);
+        if(description.has_value())
         {
             anlDebug("Track", "analysis launched");
+            mAccessor.setAttr<AttrType::description>(description.value(), notification);
             mAccessor.setAttr<AttrType::warnings>(WarningType::none, notification);
             startTimer(50);
             timerCallback();

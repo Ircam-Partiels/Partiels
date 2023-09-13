@@ -16,7 +16,7 @@ void Track::Processor::stopAnalysis()
     abortAnalysis();
 }
 
-bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input)
+std::optional<Plugin::Description> Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatReader& reader, Results input)
 {
     auto state = accessor.getAttr<AttrType::state>();
 
@@ -25,14 +25,14 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
     if(!lock.owns_lock())
     {
         anlError("Track", "Concurrent thread access!");
-        return false;
+        return {};
     }
     abortAnalysis();
 
     auto const key = accessor.getAttr<AttrType::key>();
     if(key.identifier.empty() || key.feature.empty())
     {
-        return false;
+        return {};
     }
 
     if(state.blockSize == 0_z)
@@ -50,6 +50,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
         throw std::runtime_error("allocation failed");
     }
 
+    auto description = processor->getDescription();
     mChrono.start();
     mAnalysisProcess = std::async([this, processor = std::move(processor), input = std::move(input)]() -> Results
                                   {
@@ -101,7 +102,7 @@ bool Track::Processor::runAnalysis(Accessor const& accessor, juce::AudioFormatRe
                                       triggerAsyncUpdate();
                                       return {};
                                   });
-    return true;
+    return description;
 }
 
 void Track::Processor::handleAsyncUpdate()
