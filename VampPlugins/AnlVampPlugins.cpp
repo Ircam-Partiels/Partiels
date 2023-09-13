@@ -1,10 +1,40 @@
 #include "AnlVampPlugins.h"
 #include <IvePluginAdapter.hpp>
 #include <algorithm>
+#include <sstream>
 #include <vamp-sdk/PluginAdapter.h>
 
-AnlVampPlugin::Waveform::Waveform(float sampleRate)
+AnlVampPlugin::Base::Base(float sampleRate)
 : Vamp::Plugin(sampleRate)
+{
+}
+
+std::string AnlVampPlugin::Base::getMaker() const
+{
+    return "Ircam";
+}
+
+int AnlVampPlugin::Base::getPluginVersion() const
+{
+    return PARTIELS_VAMP_PLUGINS_VERSION;
+}
+
+std::string AnlVampPlugin::Base::getCopyright() const
+{
+    return "Copyright 2023 Ircam. All rights reserved. Plugin by Pierre Guillot.";
+}
+
+void AnlVampPlugin::Base::reset()
+{
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::Base::getRemainingFeatures()
+{
+    return {};
+}
+
+AnlVampPlugin::Waveform::Waveform(float sampleRate)
+: Base(sampleRate)
 {
 }
 
@@ -35,30 +65,6 @@ std::string AnlVampPlugin::Waveform::getDescription() const
 {
     return "Display the waveform of the audio.";
 }
-std::string AnlVampPlugin::Waveform::getMaker() const
-{
-    return "Ircam";
-}
-
-int AnlVampPlugin::Waveform::getPluginVersion() const
-{
-    return PARTIELS_VAMP_PLUGINS_VERSION;
-}
-
-std::string AnlVampPlugin::Waveform::getCopyright() const
-{
-    return "Copyright 2022 Ircam. All rights reserved. Plugin by Pierre Guillot.";
-}
-
-size_t AnlVampPlugin::Waveform::getPreferredBlockSize() const
-{
-    return 0_z;
-}
-
-size_t AnlVampPlugin::Waveform::getPreferredStepSize() const
-{
-    return 0_z;
-}
 
 Vamp::Plugin::OutputList AnlVampPlugin::Waveform::getOutputDescriptors() const
 {
@@ -77,10 +83,6 @@ Vamp::Plugin::OutputList AnlVampPlugin::Waveform::getOutputDescriptors() const
     d.sampleRate = static_cast<float>(mStepSize) / getInputSampleRate();
     d.hasDuration = false;
     return {d};
-}
-
-void AnlVampPlugin::Waveform::reset()
-{
 }
 
 Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const* inputBuffers, Vamp::RealTime timeStamp)
@@ -109,13 +111,8 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const* in
     return featureSet;
 }
 
-Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::getRemainingFeatures()
-{
-    return {};
-}
-
 AnlVampPlugin::NewTrack::NewTrack(float sampleRate)
-: Vamp::Plugin(sampleRate)
+: Base(sampleRate)
 {
 }
 
@@ -144,29 +141,10 @@ std::string AnlVampPlugin::NewTrack::getDescription() const
 {
     return "Add an empty track.";
 }
-std::string AnlVampPlugin::NewTrack::getMaker() const
-{
-    return "Ircam";
-}
-
-int AnlVampPlugin::NewTrack::getPluginVersion() const
-{
-    return PARTIELS_VAMP_PLUGINS_VERSION;
-}
-
-std::string AnlVampPlugin::NewTrack::getCopyright() const
-{
-    return "Copyright 2022 Ircam. All rights reserved. Plugin by Pierre Guillot.";
-}
 
 size_t AnlVampPlugin::NewTrack::getPreferredBlockSize() const
 {
     return 256_z;
-}
-
-size_t AnlVampPlugin::NewTrack::getPreferredStepSize() const
-{
-    return 0_z;
 }
 
 Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
@@ -203,10 +181,6 @@ Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
     return list;
 }
 
-void AnlVampPlugin::NewTrack::reset()
-{
-}
-
 Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::process(const float* const*, Vamp::RealTime timeStamp)
 {
     return {};
@@ -231,7 +205,7 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::NewTrack::getRemainingFeatures()
 }
 
 AnlVampPlugin::Dummy::Dummy(float sampleRate)
-: Vamp::Plugin(sampleRate)
+: Base(sampleRate)
 {
 }
 
@@ -259,29 +233,10 @@ std::string AnlVampPlugin::Dummy::getDescription() const
 {
     return "Copy an analysis.";
 }
-std::string AnlVampPlugin::Dummy::getMaker() const
-{
-    return "Ircam";
-}
-
-int AnlVampPlugin::Dummy::getPluginVersion() const
-{
-    return PARTIELS_VAMP_PLUGINS_VERSION;
-}
-
-std::string AnlVampPlugin::Dummy::getCopyright() const
-{
-    return "Copyright 2023 Ircam. All rights reserved. Plugin by Pierre Guillot.";
-}
 
 size_t AnlVampPlugin::Dummy::getPreferredBlockSize() const
 {
     return 256_z;
-}
-
-size_t AnlVampPlugin::Dummy::getPreferredStepSize() const
-{
-    return 0_z;
 }
 
 Vamp::Plugin::OutputList AnlVampPlugin::Dummy::getOutputDescriptors() const

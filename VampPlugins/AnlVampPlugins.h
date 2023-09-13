@@ -6,8 +6,23 @@ namespace AnlVampPlugin
 {
     constexpr std::size_t operator""_z(unsigned long long n) { return n; }
 
-    class Waveform
+    class Base
     : public Vamp::Plugin
+    {
+    public:
+        Base(float sampleRate);
+        ~Base() override = default;
+
+        std::string getMaker() const override;
+        int getPluginVersion() const override;
+        std::string getCopyright() const override;
+
+        void reset() override;
+        FeatureSet getRemainingFeatures() override;
+    };
+
+    class Waveform
+    : public Base
     {
     public:
         Waveform(float sampleRate);
@@ -19,18 +34,10 @@ namespace AnlVampPlugin
         std::string getIdentifier() const override;
         std::string getName() const override;
         std::string getDescription() const override;
-        std::string getMaker() const override;
-        int getPluginVersion() const override;
-        std::string getCopyright() const override;
-
-        size_t getPreferredBlockSize() const override;
-        size_t getPreferredStepSize() const override;
 
         OutputList getOutputDescriptors() const override;
 
-        void reset() override;
         FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
-        FeatureSet getRemainingFeatures() override;
 
     private:
         size_t mNumChannels{0_z};
@@ -39,7 +46,7 @@ namespace AnlVampPlugin
     };
 
     class NewTrack
-    : public Vamp::Plugin
+    : public Base
     {
     public:
         NewTrack(float sampleRate);
@@ -51,16 +58,11 @@ namespace AnlVampPlugin
         std::string getIdentifier() const override;
         std::string getName() const override;
         std::string getDescription() const override;
-        std::string getMaker() const override;
-        int getPluginVersion() const override;
-        std::string getCopyright() const override;
 
         size_t getPreferredBlockSize() const override;
-        size_t getPreferredStepSize() const override;
 
         OutputList getOutputDescriptors() const override;
 
-        void reset() override;
         FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
         FeatureSet getRemainingFeatures() override;
 
@@ -69,7 +71,7 @@ namespace AnlVampPlugin
     };
 
     class Dummy
-    : public Vamp::Plugin
+    : public Base
     , public Ive::PluginExtension
     {
     public:
@@ -82,12 +84,8 @@ namespace AnlVampPlugin
         std::string getIdentifier() const override;
         std::string getName() const override;
         std::string getDescription() const override;
-        std::string getMaker() const override;
-        int getPluginVersion() const override;
-        std::string getCopyright() const override;
 
         size_t getPreferredBlockSize() const override;
-        size_t getPreferredStepSize() const override;
 
         OutputList getOutputDescriptors() const override;
 
