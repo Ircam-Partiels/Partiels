@@ -4,6 +4,7 @@ v1.3.0-dev1
 - Imp: Hide floating windows when a temporary panel is displayed, then restore floating windows (#362)
 - Imp: Transform some floating windows into temporary panels integrated into the main interface (#361)
 - Imp: Make floating windows flicker as they move into the foreground (#360)
+- Imp: Silently replaces SuperVP's deprecated Waveform plug-in with Partiels' Waveform plug-in (#358)
 - Add: Tooltips to global transport buttons and user interfaces (#355)
 - Fix: Selecting valid audio device doesn't update the state of the channel layout (#354) 
 - Imp: Transform the floating plug-in list window into a side panel integrated into the main interface (#353)
