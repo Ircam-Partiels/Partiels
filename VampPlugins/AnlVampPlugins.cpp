@@ -1,6 +1,7 @@
 #include "AnlVampPlugins.h"
 #include <IvePluginAdapter.hpp>
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <vamp-sdk/PluginAdapter.h>
 
@@ -109,6 +110,96 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::Waveform::process(const float* const* in
     }
 
     return featureSet;
+}
+
+AnlVampPlugin::Spectrogram::Spectrogram(float sampleRate)
+: Base(sampleRate)
+{
+}
+
+bool AnlVampPlugin::Spectrogram::initialise(size_t channels, size_t stepSize, size_t blockSize)
+{
+    mNumChannels = channels;
+    mStepSize = stepSize;
+    mBlockSize = blockSize;
+    return true;
+}
+
+Vamp::Plugin::InputDomain AnlVampPlugin::Spectrogram::getInputDomain() const
+{
+    return FrequencyDomain;
+}
+
+std::string AnlVampPlugin::Spectrogram::getIdentifier() const
+{
+    return "partielsspectrogram";
+}
+
+std::string AnlVampPlugin::Spectrogram::getName() const
+{
+    return "Spectrogram";
+}
+
+std::string AnlVampPlugin::Spectrogram::getDescription() const
+{
+    return "Display the spectrogram of the audio.";
+}
+
+Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() const
+{
+    OutputDescriptor d;
+    d.identifier = "energies";
+    d.name = "Energies";
+    d.description = "Energies from the input signal";
+    d.unit = "dB";
+    d.hasFixedBinCount = true;
+    d.binCount = mBlockSize / 2_z + 1_z;
+    d.hasKnownExtents = true;
+    d.minValue = -120.0f;
+    d.maxValue = 12.0f;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::SampleType::OneSamplePerStep;
+    d.hasDuration = false;
+    auto const toString = [](double value)
+    {
+        std::ostringstream out;
+        out.precision(1);
+        out << std::fixed << value;
+        return out.str();
+    };
+    auto const binWidth = getInputSampleRate() / (static_cast<double>(d.binCount) * 2.0);
+    d.binNames.resize(d.binCount);
+    for(auto i = 0_z; i < d.binNames.size(); ++i)
+    {
+        d.binNames[i] = toString((static_cast<double>(i) + 1.0) * binWidth) + "Hz";
+    }
+    return {d};
+}
+
+Vamp::Plugin::FeatureSet AnlVampPlugin::Spectrogram::process(const float* const* inputBuffers, Vamp::RealTime timeStamp)
+{
+    if(mBlockSize == 0 || mStepSize == 0)
+    {
+        std::cerr << "AnlVampPlugin::Waveform::process invalid parameters.\n";
+        return {};
+    }
+
+    FeatureSet fs;
+    for(auto channel = 0_z; channel < mNumChannels; ++channel)
+    {
+        Feature feature;
+        feature.hasTimestamp = false;
+        feature.values.resize(mBlockSize / 2_z + 1_z);
+        const float* inputBuffer = inputBuffers[channel];
+        for(auto& value : feature.values)
+        {
+            auto const real = *inputBuffer++;
+            auto const imag = *inputBuffer++;
+            value = std::clamp(std::log10(real * real + imag * imag) * 20.0f, -120.0f, 12.0f);
+        }
+        fs[0].push_back(std::move(feature));
+    }
+    return fs;
 }
 
 AnlVampPlugin::NewTrack::NewTrack(float sampleRate)
@@ -311,11 +402,16 @@ extern "C"
             }
             case 1:
             {
+                static Vamp::PluginAdapter<AnlVampPlugin::Spectrogram> adaptater;
+                return adaptater.getDescriptor();
+            }
+            case 2:
+            {
                 static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
                 return adaptater.getDescriptor();
             }
 #if NDEBUG
-            case 2:
+            case 3:
             {
                 static Vamp::PluginAdapter<AnlVampPlugin::Dummy> adaptater;
                 return adaptater.getDescriptor();

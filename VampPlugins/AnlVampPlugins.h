@@ -45,6 +45,30 @@ namespace AnlVampPlugin
         size_t mStepSize{0_z};
     };
 
+    class Spectrogram
+    : public Base
+    {
+    public:
+        Spectrogram(float sampleRate);
+        ~Spectrogram() override = default;
+
+        bool initialise(size_t channels, size_t stepSize, size_t blockSize) override;
+
+        InputDomain getInputDomain() const override;
+        std::string getIdentifier() const override;
+        std::string getName() const override;
+        std::string getDescription() const override;
+
+        OutputList getOutputDescriptors() const override;
+
+        FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;
+
+    private:
+        size_t mNumChannels{0_z};
+        size_t mBlockSize{0_z};
+        size_t mStepSize{0_z};
+    };
+
     class NewTrack
     : public Base
     {
