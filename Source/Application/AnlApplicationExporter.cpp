@@ -42,6 +42,7 @@ Application::ExporterContent::ExporterContent()
             case AttrType::windowState:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
+            case AttrType::defaultTemplateFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::adaptationToSampleRate:

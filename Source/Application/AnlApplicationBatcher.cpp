@@ -44,12 +44,12 @@ Application::BatcherContent::BatcherContent()
 
     mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case AttrType::windowState:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
+            case AttrType::defaultTemplateFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::autoLoadConvertedFile:

@@ -20,6 +20,7 @@ Application::LoaderContent::FileTable::FileTable()
             break;
             case AttrType::windowState:
             case AttrType::currentDocumentFile:
+            case AttrType::defaultTemplateFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:

@@ -146,14 +146,14 @@ Application::ConverterContent::ConverterContent()
         mPropertyToJsonLoadInDocument.entry.setToggleState(hasReader && automaticLoad, juce::NotificationType::dontSendNotification);
     };
 
-    mListener.onAttrChanged = [=](Accessor const& accessor, AttrType attr)
+    mListener.onAttrChanged = [=]([[maybe_unused]] Accessor const& accessor, AttrType attr)
     {
-        juce::ignoreUnused(accessor);
         switch(attr)
         {
             case AttrType::windowState:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
+            case AttrType::defaultTemplateFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:

@@ -15,6 +15,7 @@ Application::CommandTarget::CommandTarget()
         switch(attribute)
         {
             case AttrType::recentlyOpenedFilesList:
+            case AttrType::defaultTemplateFile:
             {
                 Instance::get().getApplicationCommandManager().commandStatusChanged();
             }

@@ -13,6 +13,7 @@ Application::AudioReader::AudioReader()
             case AttrType::windowState:
             case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
+            case AttrType::defaultTemplateFile:
             case AttrType::colourMode:
             case AttrType::showInfoBubble:
             case AttrType::exportOptions:

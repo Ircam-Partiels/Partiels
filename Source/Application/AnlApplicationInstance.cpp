@@ -124,17 +124,25 @@ void Application::Instance::initialise(juce::String const& commandLine)
     {
         switch(attribute)
         {
-            case AttrType::recentlyOpenedFilesList:
             case AttrType::currentDocumentFile:
             case AttrType::windowState:
-            case AttrType::showInfoBubble:
             case AttrType::exportOptions:
             case AttrType::adaptationToSampleRate:
             case AttrType::autoLoadConvertedFile:
             case AttrType::routingMatrix:
-            case AttrType::autoUpdate:
             case AttrType::lastVersion:
                 break;
+            case AttrType::autoUpdate:
+            case AttrType::recentlyOpenedFilesList:
+            case AttrType::defaultTemplateFile:
+            case AttrType::showInfoBubble:
+            {
+                mMainMenuModel->menuItemsChanged();
+#ifdef JUCE_MAC
+                mMainMenuModel->updateAppleMenuItems();
+#endif
+            }
+            break;
             case AttrType::desktopGlobalScaleFactor:
             {
                 auto const windowState = acsr.getAttr<AttrType::windowState>();
@@ -492,6 +500,11 @@ void Application::Instance::openAudioFiles(std::vector<juce::File> const& files)
                                                                mUndoManager->clearUndoHistory();
                                                                mDocumentAccessor->copyFrom(mDocumentFileBased->getDefaultAccessor(), NotificationType::synchronous);
                                                                mDocumentAccessor->setAttr<Document::AttrType::reader>(readerLayout, NotificationType::synchronous);
+                                                               auto const templateFile = mApplicationAccessor->getAttr<AttrType::defaultTemplateFile>();
+                                                               if(templateFile != juce::File{})
+                                                               {
+                                                                   mDocumentFileBased->loadTemplate(templateFile, mApplicationAccessor->getAttr<AttrType::adaptationToSampleRate>());
+                                                               }
                                                                mDocumentFileBased->setFile({});
                                                            });
     }
