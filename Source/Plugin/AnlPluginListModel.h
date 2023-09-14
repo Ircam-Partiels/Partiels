@@ -21,16 +21,6 @@ namespace PluginList
         , ignore
     };
     
-    enum ColumnType
-    {
-          name = 1
-        , feature
-        , maker
-        , version
-        , category
-        , details
-    };
-    
     enum class SignalType
     {
           rescan
