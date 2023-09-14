@@ -1,4 +1,4 @@
-v1.3.0-dev1
+v1.3.0-dev2
 
 - Add: New and more consistent set of icons for the entire application (#363)
 - Imp: Hide floating windows when a temporary panel is displayed, then restore floating windows (#362)
