@@ -367,7 +367,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
             {
                 Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, [&](auto& frame)
                                                          {
-                                                             if(mNewValue.has_value() != std::get<2_z>(frame).has_value() || (mNewValue.has_value() && *mNewValue != *std::get<2_z>(frame)))
+                                                             if(mNewValue.has_value() != std::get<2_z>(frame).has_value() || (mNewValue.has_value() && std::abs(mNewValue.value() - std::get<2_z>(frame).value()) > std::numeric_limits<float>::epsilon()))
                                                              {
                                                                  std::get<2_z>(frame) = mNewValue;
                                                                  return true;
@@ -381,7 +381,7 @@ Track::Result::CellValue::CellValue(Director& director, Zoom::Accessor& timeZoom
             {
                 Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mCurrentCommit, [&](auto& frame)
                                                          {
-                                                             if(mCurrentValue.has_value() != std::get<2_z>(frame).has_value() || (mCurrentValue.has_value() && *mCurrentValue != *std::get<2_z>(frame)))
+                                                             if(mCurrentValue.has_value() != std::get<2_z>(frame).has_value() || (mCurrentValue.has_value() && std::abs(mCurrentValue.value() - std::get<2_z>(frame).value()) > std::numeric_limits<float>::epsilon()))
                                                              {
                                                                  std::get<2_z>(frame) = mCurrentValue;
                                                                  return true;
