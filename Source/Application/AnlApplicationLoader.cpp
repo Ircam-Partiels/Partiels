@@ -66,7 +66,7 @@ void Application::LoaderContent::FileTable::paintListBoxItem(int rowNumber, juce
 
     auto const index = static_cast<size_t>(rowNumber);
 
-    auto const fileName = files[index].getFileNameWithoutExtension();
+    auto const fileName = files.at(index).getFileNameWithoutExtension();
     auto const hasDuplicate = std::count_if(files.cbegin(), files.cend(), [&](auto const file)
                                             {
                                                 return fileName == file.getFileNameWithoutExtension();
@@ -88,7 +88,7 @@ void Application::LoaderContent::FileTable::returnKeyPressed(int lastRowSelected
     auto const index = static_cast<size_t>(lastRowSelected);
     if(onFileSelected != nullptr)
     {
-        onFileSelected(files[index]);
+        onFileSelected(files.at(index));
     }
 }
 
@@ -129,13 +129,46 @@ Application::LoaderContent::LoaderContent()
     mLoadTemplateInfo.setText(juce::translate("Use an existing document as a template"), juce::NotificationType::dontSendNotification);
     mLoadTemplateInfo.setJustificationType(juce::Justification::centredTop);
 
-    mAdaptationInfo.setText(juce::translate("Adapt the block size and the step size of the analyzes to the sample rate"), juce::NotificationType::dontSendNotification);
-
     addAndMakeVisible(mSeparatorVertical);
     addAndMakeVisible(mSeparatorTop);
     addAndMakeVisible(mSelectRecentDocument);
     addAndMakeVisible(mFileTable);
+    addAndMakeVisible(mLoadFileButton);
+    addAndMakeVisible(mLoadFileInfo);
+    addAndMakeVisible(mLoadFileWildcard);
+    addAndMakeVisible(mAddTrackButton);
+    addAndMakeVisible(mAddTrackInfo);
+    addAndMakeVisible(mLoadTemplateButton);
+    addAndMakeVisible(mLoadTemplateInfo);
+    addAndMakeVisible(mTemplateMenu);
+    addAndMakeVisible(mAdaptationButton);
+    addAndMakeVisible(mBottomInfo);
+    addAndMakeVisible(mSeparatorBottom);
     setSize(800, 600);
+
+    mTemplateMenu.addItemList({juce::translate("None"), juce::translate("Factory"), juce::translate("Select...")}, 1);
+    mTemplateMenu.onChange = [this]()
+    {
+        switch(mTemplateMenu.getSelectedId())
+        {
+            case 1:
+                Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
+                break;
+            case 2:
+                Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(Accessor::getFactoryTemplateFile(), NotificationType::synchronous);
+                break;
+            case 3:
+            {
+                if(auto* window = Instance::get().getWindow())
+                {
+                    window->getInterface().selectDefaultTemplateFile();
+                }
+            }
+            break;
+            default:
+                break;
+        }
+    };
 
     mFileTable.onFileSelected = [](juce::File const& file)
     {
@@ -170,33 +203,25 @@ Application::LoaderContent::LoaderContent()
 
     auto const updateState = [this]()
     {
-        removeChildComponent(&mLoadFileButton);
-        removeChildComponent(&mLoadFileInfo);
-        removeChildComponent(&mLoadFileWildcard);
-        removeChildComponent(&mAddTrackButton);
-        removeChildComponent(&mAddTrackInfo);
-        removeChildComponent(&mLoadTemplateButton);
-        removeChildComponent(&mLoadTemplateInfo);
-        removeChildComponent(&mSeparatorBottom);
-        removeChildComponent(&mAdaptationButton);
-        removeChildComponent(&mAdaptationInfo);
-        if(Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>().empty())
+        auto const isEmpty = Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>().empty();
+        mLoadFileButton.setVisible(isEmpty);
+        mLoadFileInfo.setVisible(isEmpty);
+        mLoadFileWildcard.setVisible(isEmpty);
+        mAddTrackButton.setVisible(!isEmpty);
+        mAddTrackInfo.setVisible(!isEmpty);
+        mLoadTemplateButton.setVisible(!isEmpty);
+        mLoadTemplateInfo.setVisible(!isEmpty);
+        mTemplateMenu.setVisible(isEmpty);
+        mAdaptationButton.setVisible(!isEmpty);
+        if(isEmpty)
         {
-            addAndMakeVisible(mLoadFileButton);
-            addAndMakeVisible(mLoadFileInfo);
-            addAndMakeVisible(mLoadFileWildcard);
             mSelectRecentDocument.setText(juce::translate("Load a recent document"), juce::NotificationType::dontSendNotification);
+            mBottomInfo.setText(juce::translate("Default template loaded automatically when loading an audio file"), juce::NotificationType::dontSendNotification);
         }
         else
         {
-            addAndMakeVisible(mAddTrackButton);
-            addAndMakeVisible(mAddTrackInfo);
-            addAndMakeVisible(mLoadTemplateButton);
-            addAndMakeVisible(mLoadTemplateInfo);
-            addAndMakeVisible(mSeparatorBottom);
-            addAndMakeVisible(mAdaptationButton);
-            addAndMakeVisible(mAdaptationInfo);
             mSelectRecentDocument.setText(juce::translate("Use a document as a template"), juce::NotificationType::dontSendNotification);
+            mBottomInfo.setText(juce::translate("Adapt the block size and the step size of the analyzes to the sample rate"), juce::NotificationType::dontSendNotification);
         }
         resized();
     };
@@ -248,6 +273,23 @@ Application::LoaderContent::LoaderContent()
                 mAdaptationButton.setToggleState(acsr.getAttr<AttrType::adaptationToSampleRate>(), juce::NotificationType::dontSendNotification);
             }
             break;
+            case AttrType::defaultTemplateFile:
+            {
+                auto const file = acsr.getAttr<AttrType::defaultTemplateFile>();
+                if(!file.existsAsFile())
+                {
+                    mTemplateMenu.setSelectedId(1, juce::NotificationType::dontSendNotification);
+                }
+                else if(file == Accessor::getFactoryTemplateFile())
+                {
+                    mTemplateMenu.setSelectedId(2, juce::NotificationType::dontSendNotification);
+                }
+                else
+                {
+                    mTemplateMenu.setText(file.getFileNameWithoutExtension(), juce::NotificationType::dontSendNotification);
+                }
+            }
+            break;
         }
     };
 
@@ -270,13 +312,17 @@ void Application::LoaderContent::resized()
         auto rightBounds = bounds.removeFromRight(220);
         mSelectRecentDocument.setBounds(rightBounds.removeFromTop(32));
         mSeparatorTop.setBounds(rightBounds.removeFromTop(1));
-        if(mAdaptationButton.isShowing())
+        auto bottomBounds = rightBounds.removeFromBottom(64);
+        if(mTemplateMenu.isVisible())
         {
-            auto bottomBounds = rightBounds.removeFromBottom(64);
-            mAdaptationButton.setBounds(bottomBounds.removeFromLeft(24).withSizeKeepingCentre(18, 18));
-            mAdaptationInfo.setBounds(bottomBounds);
-            mSeparatorBottom.setBounds(rightBounds.removeFromBottom(1));
+            mTemplateMenu.setBounds(bottomBounds.removeFromBottom(24));
         }
+        else if(mAdaptationButton.isVisible())
+        {
+            mAdaptationButton.setBounds(bottomBounds.removeFromLeft(24).withSizeKeepingCentre(18, 18));
+        }
+        mBottomInfo.setBounds(bottomBounds);
+        mSeparatorBottom.setBounds(rightBounds.removeFromBottom(1));
         mFileTable.setBounds(rightBounds);
         mSeparatorVertical.setBounds(bounds.removeFromRight(1));
     }

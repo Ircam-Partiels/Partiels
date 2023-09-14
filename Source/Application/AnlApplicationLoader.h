@@ -73,7 +73,8 @@ namespace Application
         ColouredPanel mSeparatorBottom;
         FileTable mFileTable;
         juce::ToggleButton mAdaptationButton;
-        juce::Label mAdaptationInfo;
+        juce::ComboBox mTemplateMenu;
+        juce::Label mBottomInfo;
         bool mIsDragging{false};
     };
 } // namespace Application
