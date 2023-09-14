@@ -24,6 +24,7 @@ namespace Application
         , windowState
         , recentlyOpenedFilesList
         , currentDocumentFile
+        , defaultTemplateFile
         , colourMode
         , showInfoBubble
         , exportOptions
@@ -39,6 +40,7 @@ namespace Application
     , Model::Attr<AttrType::windowState, juce::String, Flag::basic>
     , Model::Attr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>, Flag::basic>
     , Model::Attr<AttrType::currentDocumentFile, juce::File, Flag::basic>
+    , Model::Attr<AttrType::defaultTemplateFile, juce::File, Flag::basic>
     , Model::Attr<AttrType::colourMode, ColourMode, Flag::basic>
     , Model::Attr<AttrType::showInfoBubble, bool, Flag::basic>
     , Model::Attr<AttrType::exportOptions, Document::Exporter::Options, Flag::basic>
@@ -63,6 +65,7 @@ namespace Application
             , {juce::String{}}
             , {std::vector<juce::File>{}}
             , {juce::File{}}
+            , {getFactoryTemplateFile()}
             , {ColourMode::automatic}
             , {true}
             , {}
@@ -81,31 +84,22 @@ namespace Application
         {
             if constexpr(type == AttrType::recentlyOpenedFilesList)
             {
-                auto const sanitize = [](std::vector<juce::File> const& files)
-                {
-                    std::set<juce::File> duplicates;
-                    std::vector<juce::File> copy;
-                    for(auto const& file : files)
-                    {
-                        if(file.existsAsFile() && duplicates.insert(file).second)
-                        {
-                            copy.push_back(file);
-                        }
-                    }
-                    return copy;
-                };
-
-                Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::recentlyOpenedFilesList, std::vector<juce::File>>(sanitize(value), notification);
+                setRecentlyOpenedFilesList(value, notification);
             }
             else if constexpr(type == AttrType::desktopGlobalScaleFactor)
             {
-                Model::Accessor<Accessor, AttrContainer>::setAttr<AttrType::desktopGlobalScaleFactor, value_v>(std::clamp(value, 1.0f, 2.0f), notification);
+                setDesktopGlobalScaleFactor(value, notification);
             }
             else
             {
                 Model::Accessor<Accessor, AttrContainer>::setAttr<type, value_v>(value, notification);
             }
         }
+
+        std::unique_ptr<juce::XmlElement> parseXml(juce::XmlElement const& xml, int version) override;
+        void setRecentlyOpenedFilesList(std::vector<juce::File> const& value, NotificationType notification);
+        void setDesktopGlobalScaleFactor(float const& value, NotificationType notification);
+        static juce::File getFactoryTemplateFile();
     };
 } // namespace Application
 
