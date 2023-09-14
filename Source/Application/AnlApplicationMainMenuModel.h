@@ -23,6 +23,7 @@ namespace Application
 #endif
 
     private:
+        void addDefaultTemplateMenu(juce::PopupMenu& menu);
 #ifndef JUCE_MAC
         juce::DocumentWindow& mWindow;
 #endif
