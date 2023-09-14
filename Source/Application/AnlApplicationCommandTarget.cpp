@@ -974,4 +974,26 @@ void Application::CommandTarget::changeListenerCallback(juce::ChangeBroadcaster*
     }
 }
 
+void Application::CommandTarget::selectDefaultTemplateFile()
+{
+    auto const wildcard = Instance::getWildCardForDocumentFile();
+    mFileChooser = std::make_unique<juce::FileChooser>(juce::translate("Select a template..."), Instance::get().getDocumentFileBased().getFile(), wildcard);
+    if(mFileChooser == nullptr)
+    {
+        Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
+        return;
+    }
+    using Flags = juce::FileBrowserComponent::FileChooserFlags;
+    mFileChooser->launchAsync(Flags::openMode | Flags::canSelectFiles, [=](juce::FileChooser const& fileChooser)
+                              {
+                                  auto const results = fileChooser.getResults();
+                                  if(results.isEmpty())
+                                  {
+                                      Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(juce::File(), NotificationType::synchronous);
+                                      return;
+                                  }
+                                  Instance::get().getApplicationAccessor().setAttr<AttrType::defaultTemplateFile>(results.getFirst(), NotificationType::synchronous);
+                              });
+}
+
 ANALYSE_FILE_END

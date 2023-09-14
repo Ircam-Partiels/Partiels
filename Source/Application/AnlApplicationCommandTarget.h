@@ -26,13 +26,14 @@ namespace Application
         void getCommandInfo(juce::CommandID const commandID, juce::ApplicationCommandInfo& result) override;
         bool perform(juce::ApplicationCommandTarget::InvocationInfo const& info) override;
 
+        void selectDefaultTemplateFile();
+
     private:
         // juce::ChangeListener
         void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
         Accessor::Listener mListener{typeid(*this).name()};
         Transport::Accessor::Listener mTransportListener{typeid(*this).name()};
-
         std::unique_ptr<juce::FileChooser> mFileChooser;
 
         JUCE_DECLARE_WEAK_REFERENCEABLE(CommandTarget)
