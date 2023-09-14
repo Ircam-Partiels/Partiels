@@ -21,6 +21,7 @@ cd $APP_PATH
 mkdir $PACKAGE_PATH
 cp Partiels $PACKAGE_PATH
 cp -r PlugIns $PACKAGE_PATH/PlugIns
+cp -r Templates $PACKAGE_PATH/Templates
 cp ../../../BinaryData/Resource/icon.png $PACKAGE_PATH
 cp ../../../BinaryData/Resource/Partiels.desktop $PACKAGE_PATH
 cp ../../../BinaryData/Resource/About.txt $PACKAGE_PATH
