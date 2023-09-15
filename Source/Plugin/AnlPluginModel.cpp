@@ -86,6 +86,32 @@ void Plugin::from_json(nlohmann::json const& j, Output& output)
     output.hasDuration = j.value("hasDuration", output.hasDuration);
 }
 
+void Plugin::to_json(nlohmann::json& j, OutputExtra const& outputExtra)
+{
+    j["identifier"] = outputExtra.identifier;
+    j["name"] = outputExtra.name;
+    j["description"] = outputExtra.description;
+    j["unit"] = outputExtra.unit;
+    j["hasKnownExtents"] = outputExtra.hasKnownExtents;
+    j["minValue"] = outputExtra.minValue;
+    j["maxValue"] = outputExtra.maxValue;
+    j["isQuantized"] = outputExtra.isQuantized;
+    j["quantizeStep"] = outputExtra.quantizeStep;
+}
+
+void Plugin::from_json(nlohmann::json const& j, OutputExtra& outputExtra)
+{
+    outputExtra.identifier = j.value("identifier", outputExtra.identifier);
+    outputExtra.name = j.value("name", outputExtra.name);
+    outputExtra.description = j.value("description", outputExtra.description);
+    outputExtra.unit = j.value("unit", outputExtra.unit);
+    outputExtra.hasKnownExtents = j.value("hasKnownExtents", outputExtra.hasKnownExtents);
+    outputExtra.minValue = j.value("minValue", outputExtra.minValue);
+    outputExtra.maxValue = j.value("maxValue", outputExtra.maxValue);
+    outputExtra.isQuantized = j.value("isQuantized", outputExtra.isQuantized);
+    outputExtra.quantizeStep = j.value("quantizeStep", outputExtra.quantizeStep);
+}
+
 void Plugin::to_json(nlohmann::json& j, Parameter const& parameter)
 {
     j["identifier"] = parameter.identifier;
@@ -141,6 +167,7 @@ void Plugin::to_json(nlohmann::json& j, Description const& description)
     j["defaultState"] = description.defaultState;
     j["parameters"] = description.parameters;
     j["output"] = description.output;
+    j["extraOutputs"] = description.extraOutputs;
     j["input"] = description.input;
     j["programs"] = description.programs;
 }
@@ -156,6 +183,7 @@ void Plugin::from_json(nlohmann::json const& j, Description& description)
     description.defaultState = j.value("defaultState", description.defaultState);
     description.parameters = j.value("parameters", description.parameters);
     description.output = j.value("output", description.output);
+    description.extraOutputs = j.value("extraOutputs", description.extraOutputs);
     description.input = j.value("input", description.output);
     description.programs = j.value("programs", description.programs);
 }
@@ -297,6 +325,49 @@ auto XmlParser::fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Ident
 }
 
 template <>
+void XmlParser::toXml<Plugin::OutputExtra>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::OutputExtra const& value)
+{
+    auto child = std::make_unique<juce::XmlElement>(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child != nullptr)
+    {
+        toXml(*child, "identifier", value.identifier);
+        toXml(*child, "name", value.name);
+        toXml(*child, "description", value.description);
+        toXml(*child, "unit", value.unit);
+        toXml(*child, "hasKnownExtents", value.hasKnownExtents);
+        toXml(*child, "minValue", value.minValue);
+        toXml(*child, "maxValue", value.maxValue);
+        toXml(*child, "isQuantized", value.isQuantized);
+        toXml(*child, "quantizeStep", value.quantizeStep);
+        xml.addChildElement(child.release());
+    }
+}
+
+template <>
+auto XmlParser::fromXml<Plugin::OutputExtra>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::OutputExtra const& defaultValue)
+    -> Plugin::OutputExtra
+{
+    auto const* child = xml.getChildByName(attributeName);
+    anlWeakAssert(child != nullptr);
+    if(child == nullptr)
+    {
+        return defaultValue;
+    }
+    Plugin::OutputExtra value;
+    value.identifier = fromXml(*child, "identifier", defaultValue.identifier);
+    value.name = fromXml(*child, "name", defaultValue.name);
+    value.description = fromXml(*child, "description", defaultValue.description);
+    value.unit = fromXml(*child, "unit", defaultValue.unit);
+    value.hasKnownExtents = fromXml(*child, "hasKnownExtents", defaultValue.hasKnownExtents);
+    value.minValue = fromXml(*child, "minValue", defaultValue.minValue);
+    value.maxValue = fromXml(*child, "maxValue", defaultValue.maxValue);
+    value.isQuantized = fromXml(*child, "isQuantized", defaultValue.isQuantized);
+    value.quantizeStep = fromXml(*child, "quantizeStep", defaultValue.quantizeStep);
+    return value;
+}
+
+template <>
 void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Description const& value)
 {
     auto child = std::make_unique<juce::XmlElement>(attributeName);
@@ -312,6 +383,7 @@ void XmlParser::toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifi
         toXml(*child, "defaultState", value.defaultState);
         toXml(*child, "parameters", value.parameters);
         toXml(*child, "output", value.output);
+        toXml(*child, "extraOutputs", value.extraOutputs);
         toXml(*child, "input", value.input);
         toXml(*child, "programs", value.programs);
         xml.addChildElement(child.release());
@@ -338,6 +410,7 @@ auto XmlParser::fromXml<Plugin::Description>(juce::XmlElement const& xml, juce::
     value.defaultState = fromXml(*child, "defaultState", defaultValue.defaultState);
     value.parameters = fromXml(*child, "parameters", defaultValue.parameters);
     value.output = fromXml(*child, "output", defaultValue.output);
+    value.extraOutputs = fromXml(*child, "extraOutputs", defaultValue.extraOutputs);
     value.input = fromXml(*child, "input", defaultValue.input);
     value.programs = fromXml(*child, "programs", defaultValue.programs);
     return value;
@@ -434,6 +507,12 @@ Plugin::Description Plugin::loadDescription(Ive::PluginWrapper& plugin, Plugin::
     }
 
     description.output = *outputIt;
+    auto const outputIndex = static_cast<size_t>(std::distance(outputs.cbegin(), outputIt));
+    for(auto const& descriptor : plugin.getOutputExtraDescriptors(outputIndex))
+    {
+        description.extraOutputs.emplace_back(descriptor);
+    }
+
     auto const inputs = plugin.getInputDescriptors();
     auto const inputIt = std::find_if(inputs.cbegin(), inputs.cend(), [&](auto const& input)
                                       {

@@ -61,9 +61,30 @@ namespace Plugin
     };
 
     using Input = Output;
-
     void to_json(nlohmann::json& j, Output const& output);
     void from_json(nlohmann::json const& j, Output& output);
+
+    struct OutputExtra
+    : public Ive::PluginExtension::OutputExtraDescriptor
+    {
+        using Ive::PluginExtension::OutputExtraDescriptor::OutputExtraDescriptor;
+        OutputExtra(Ive::PluginExtension::OutputExtraDescriptor const& d)
+        : Ive::PluginExtension::OutputExtraDescriptor(d)
+        {
+        }
+
+        bool operator==(OutputExtra const& rhd) const noexcept
+        {
+            return Ive::PluginExtension::OutputExtraDescriptor::operator==(rhd);
+        }
+        inline bool operator!=(OutputExtra const& rhd) const noexcept
+        {
+            return Ive::PluginExtension::OutputExtraDescriptor::operator!=(rhd);
+        }
+    };
+
+    void to_json(nlohmann::json& j, OutputExtra const& outputExtra);
+    void from_json(nlohmann::json const& j, OutputExtra& outputExtra);
 
     //! @brief The description of a parameter of a plugin
     //! @details The structure describes the parameters accepted by a plugin and how to
@@ -129,6 +150,7 @@ namespace Plugin
         State defaultState;                      //!< The default state of the plugin
         std::vector<Parameter> parameters{};     //!< The parameters of the plugin
         Output output{};                         //!< The output of the plugin
+        std::vector<OutputExtra> extraOutputs;   //!< The extra outputs of the plugin
         Input input{};                           //!< The input of the plugin
         std::map<std::string, State> programs{}; //!< The program of the plugin
 
@@ -143,6 +165,7 @@ namespace Plugin
                    defaultState == rhd.defaultState &&
                    parameters == rhd.parameters &&
                    output == rhd.output &&
+                   extraOutputs == rhd.extraOutputs &&
                    input == rhd.input &&
                    programs == rhd.programs;
         }
@@ -201,6 +224,13 @@ namespace XmlParser
     template <>
     auto fromXml<Plugin::Output>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::Output const& defaultValue)
         -> Plugin::Output;
+
+    template <>
+    void toXml<Plugin::OutputExtra>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::OutputExtra const& value);
+
+    template <>
+    auto fromXml<Plugin::OutputExtra>(juce::XmlElement const& xml, juce::Identifier const& attributeName, Plugin::OutputExtra const& defaultValue)
+        -> Plugin::OutputExtra;
 
     template <>
     void toXml<Plugin::Description>(juce::XmlElement& xml, juce::Identifier const& attributeName, Plugin::Description const& value);
