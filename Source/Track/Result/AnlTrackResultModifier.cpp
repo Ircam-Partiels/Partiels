@@ -211,11 +211,21 @@ Track::Result::ChannelData Track::Result::Modifier::createFrame(Accessor const& 
     }
     if(auto markers = results.getMarkers())
     {
-        return std::vector<Data::Marker>{{time, 0.0, {}}};
+        std::vector<float> extras;
+        for(auto const& extraOutput : accessor.getAttr<AttrType::description>().extraOutputs)
+        {
+            extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+        }
+        return std::vector<Data::Marker>{{time, 0.0, {}, extras}};
     }
     if(auto points = results.getPoints())
     {
-        return std::vector<Data::Point>{{time, 0.0, Data::getValue(points, channel, time)}};
+        std::vector<float> extras;
+        for(auto const& extraOutput : accessor.getAttr<AttrType::description>().extraOutputs)
+        {
+            extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+        }
+        return std::vector<Data::Point>{{time, 0.0, Data::getValue(points, channel, time), extras}};
     }
     return {};
 }

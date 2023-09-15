@@ -885,9 +885,9 @@ public:
         // clang-format off
         Data::Markers markers
         {
-              {8.015293423, 0.0, "John"}
-            , {8.421642629, 0.0, "Jimi"}
-            , {8.816381858, 0.0, "James"}
+              {8.015293423, 0.0, "John", {}}
+            , {8.421642629, 0.0, "Jimi", {}}
+            , {8.816381858, 0.0, "James", {}}
         };
         // clang-format on
 

@@ -407,35 +407,11 @@ std::map<size_t, juce::Range<int>> Track::Tools::getChannelVerticalRanges(Access
     return verticalRanges;
 }
 
-Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort)
+Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>>& pluginResults, std::atomic<bool> const& shouldAbort)
 {
     auto const rtToS = [](Vamp::RealTime const& rt)
     {
         return static_cast<double>(rt.sec) + static_cast<double>(rt.nsec) / 1000000000.0;
-    };
-
-    auto const getBinCount = [&]() -> size_t
-    {
-        if(output.hasFixedBinCount)
-        {
-            return output.binCount;
-        }
-        return std::accumulate(pluginResults.cbegin(), pluginResults.cend(), 0_z, [&](auto val, auto const& channelResults)
-                               {
-                                   if(shouldAbort)
-                                   {
-                                       return val;
-                                   }
-                                   auto it = std::max_element(channelResults.cbegin(), channelResults.cend(), [](auto const& lhs, auto const& rhs)
-                                                              {
-                                                                  return lhs.values.size() < rhs.values.size();
-                                                              });
-                                   if(it != channelResults.cend())
-                                   {
-                                       return std::max(val, it->values.size());
-                                   }
-                                   return val;
-                               });
     };
 
     if(shouldAbort)
@@ -443,85 +419,122 @@ Track::Results Track::Tools::convert(Plugin::Output const& output, std::vector<s
         return {};
     }
 
-    switch(getBinCount())
+    if(output.hasFixedBinCount && output.binCount == 0_z)
     {
-        case 0_z:
+        std::vector<Results::Markers> results;
+        results.reserve(pluginResults.size());
+        for(auto& channelResults : pluginResults)
         {
-            std::vector<Results::Markers> results;
-            results.reserve(pluginResults.size());
-            for(auto const& channelResults : pluginResults)
+            if(shouldAbort)
             {
-                if(shouldAbort)
-                {
-                    return {};
-                }
-                std::vector<Results::Marker> markers;
-                markers.reserve(pluginResults.size());
-                for(auto const& result : channelResults)
-                {
-                    anlWeakAssert(result.hasTimestamp);
-                    if(result.hasTimestamp)
-                    {
-                        markers.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, result.label));
-                    }
-                }
-                results.push_back(std::move(markers));
+                return {};
             }
-            return Results(std::move(results));
-        }
-        break;
-        case 1_z:
-        {
-            std::vector<Results::Points> results;
-            results.reserve(pluginResults.size());
-            for(auto const& channelResults : pluginResults)
+            std::vector<Results::Marker> markers;
+            markers.reserve(pluginResults.size());
+            for(auto& result : channelResults)
             {
-                if(shouldAbort)
+                anlWeakAssert(result.hasTimestamp);
+                if(result.hasTimestamp)
                 {
-                    return {};
+                    auto const time = rtToS(result.timestamp);
+                    auto const duration = result.hasDuration ? rtToS(result.duration) : 0.0;
+                    markers.push_back(std::make_tuple(time, duration, result.label, std::move(result.values)));
                 }
-                std::vector<Results::Point> points;
-                points.reserve(pluginResults.size());
-                for(auto const& result : channelResults)
-                {
-                    anlWeakAssert(result.hasTimestamp);
-                    if(result.hasTimestamp)
-                    {
-                        auto const valid = !result.values.empty() && std::isfinite(result.values[0]) && !std::isnan(result.values[0]);
-                        points.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, valid ? result.values[0] : std::optional<float>()));
-                    }
-                }
-                results.push_back(std::move(points));
             }
-            return Results(std::move(results));
+            results.push_back(std::move(markers));
         }
-        break;
-        default:
-        {
-            std::vector<Results::Columns> results;
-            results.reserve(pluginResults.size());
-            for(auto const& channelResults : pluginResults)
-            {
-                if(shouldAbort)
-                {
-                    return {};
-                }
-                std::vector<Results::Column> columns;
-                columns.reserve(pluginResults.size());
-                for(auto& result : channelResults)
-                {
-                    anlWeakAssert(result.hasTimestamp);
-                    if(result.hasTimestamp)
-                    {
-                        columns.push_back(std::make_tuple(rtToS(result.timestamp), result.hasDuration ? rtToS(result.duration) : 0.0, std::move(result.values)));
-                    }
-                }
-                results.push_back(std::move(columns));
-            }
-            return Results(std::move(results));
-        }
-        break;
+        return Results(std::move(results));
     }
+    else if(output.hasFixedBinCount && output.binCount == 1_z)
+    {
+        std::vector<Results::Points> results;
+        results.reserve(pluginResults.size());
+        for(auto& channelResults : pluginResults)
+        {
+            if(shouldAbort)
+            {
+                return {};
+            }
+            std::vector<Results::Point> points;
+            points.reserve(pluginResults.size());
+            for(auto& result : channelResults)
+            {
+                anlWeakAssert(result.hasTimestamp);
+                if(result.hasTimestamp)
+                {
+                    auto const time = rtToS(result.timestamp);
+                    auto const duration = result.hasDuration ? rtToS(result.duration) : 0.0;
+                    auto const valid = !result.values.empty() && std::isfinite(result.values.at(0)) && !std::isnan(result.values.at(0));
+                    auto const value = valid ? std::make_optional(result.values.at(0)) : std::optional<float>();
+                    if(!result.values.empty())
+                    {
+                        result.values.erase(result.values.begin());
+                    }
+                    points.push_back(std::make_tuple(time, duration, value, std::move(result.values)));
+                }
+            }
+            results.push_back(std::move(points));
+        }
+        return Results(std::move(results));
+    }
+    else if(output.hasFixedBinCount)
+    {
+        std::vector<Results::Columns> results;
+        results.reserve(pluginResults.size());
+        for(auto& channelResults : pluginResults)
+        {
+            if(shouldAbort)
+            {
+                return {};
+            }
+            std::vector<Results::Column> columns;
+            columns.reserve(pluginResults.size());
+            for(auto& result : channelResults)
+            {
+                anlWeakAssert(result.hasTimestamp);
+                if(result.hasTimestamp)
+                {
+                    auto const time = rtToS(result.timestamp);
+                    auto const duration = result.hasDuration ? rtToS(result.duration) : 0.0;
+                    auto const size = output.binCount - std::min(output.binCount, result.values.size());
+                    std::vector<float> extra(size);
+                    if(size > 0_z)
+                    {
+                        auto const end = std::next(result.values.cbegin(), static_cast<long>(size));
+                        std::copy(end, result.values.cend(), extra.begin());
+                        result.values.erase(end, result.values.cend());
+                    }
+                    columns.push_back(std::make_tuple(time, duration, std::move(result.values), std::move(extra)));
+                }
+            }
+            results.push_back(std::move(columns));
+        }
+        return Results(std::move(results));
+    }
+
+    std::vector<Results::Columns> results;
+    results.reserve(pluginResults.size());
+    for(auto const& channelResults : pluginResults)
+    {
+        if(shouldAbort)
+        {
+            return {};
+        }
+        std::vector<Results::Column> columns;
+        columns.reserve(pluginResults.size());
+        for(auto& result : channelResults)
+        {
+            anlWeakAssert(result.hasTimestamp);
+            if(result.hasTimestamp)
+            {
+                auto const time = rtToS(result.timestamp);
+                auto const duration = result.hasDuration ? rtToS(result.duration) : 0.0;
+                columns.push_back(std::make_tuple(time, duration, std::move(result.values), std::vector<float>{}));
+            }
+        }
+        results.push_back(std::move(columns));
+    }
+    return Results(std::move(results));
 }
 
 std::vector<std::vector<Plugin::Result>> Track::Tools::convert(Plugin::Input const& input, Results const& results)

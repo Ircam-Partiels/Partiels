@@ -51,9 +51,9 @@ namespace Track
             // clang-format on
 
             // time, duration, value(s)
-            using Marker = std::tuple<double, double, std::string>;
-            using Point = std::tuple<double, double, std::optional<float>>;
-            using Column = std::tuple<double, double, std::vector<float>>;
+            using Marker = std::tuple<double, double, std::string, std::vector<float>>;
+            using Point = std::tuple<double, double, std::optional<float>, std::vector<float>>;
+            using Column = std::tuple<double, double, std::vector<float>, std::vector<float>>;
 
             using Markers = std::vector<Marker>;
             using Points = std::vector<Point>;

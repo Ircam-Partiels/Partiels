@@ -222,7 +222,12 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                 {
                     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, event.x);
                     mCurrentEdition.channel = std::get<0_z>(channel.value());
-                    mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, 0.0, ""}};
+                    std::vector<float> extras;
+                    for(auto const& extraOutput : mAccessor.getAttr<AttrType::description>().extraOutputs)
+                    {
+                        extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+                    }
+                    mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, 0.0, "", extras}};
                     mAccessor.setAttr<AttrType::edit>(mCurrentEdition, NotificationType::synchronous);
                 }
                 break;
@@ -235,7 +240,12 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
                     auto const bottom = static_cast<float>(std::get<1_z>(*channel).getEnd());
                     auto const value = Tools::pixelToValue(static_cast<float>(event.y), range, {0.0f, top, 1.0f, bottom - top});
                     mCurrentEdition.channel = std::get<0_z>(channel.value());
-                    mCurrentEdition.data = std::vector<Result::Data::Point>{{time, 0.0, value}};
+                    std::vector<float> extras;
+                    for(auto const& extraOutput : mAccessor.getAttr<AttrType::description>().extraOutputs)
+                    {
+                        extras.push_back(extraOutput.hasKnownExtents ? extraOutput.minValue : 0.0);
+                    }
+                    mCurrentEdition.data = std::vector<Result::Data::Point>{{time, 0.0, value, extras}};
                     mMouseDownTime = time;
                 }
                 break;
@@ -274,7 +284,7 @@ void Track::Plot::Overlay::mouseDown(juce::MouseEvent const& event)
             }
             auto const next = std::next(it);
             mCurrentEdition.channel = channelIndex;
-            mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it)}};
+            mCurrentEdition.data = std::vector<Result::Data::Marker>{{time, std::get<1_z>(*it), std::get<2_z>(*it), std::get<3_z>(*it)}};
             mCurrentEdition.range.setStart(std::get<0_z>(*it));
             mCurrentEdition.range.setEnd(next == markerChannel.cend() ? std::numeric_limits<double>::max() : std::get<0_z>(*next));
         }
@@ -347,7 +357,7 @@ void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
 
                     if(time > std::get<0_z>(pointsData->back()) + epsilon)
                     {
-                        pointsData->push_back({time, 0.0, value});
+                        pointsData->push_back({time, 0.0, value, std::vector<float>{}});
                     }
                     else if(std::abs(time - std::get<0_z>(pointsData->back())) < epsilon)
                     {
@@ -355,7 +365,7 @@ void Track::Plot::Overlay::mouseDrag(juce::MouseEvent const& event)
                     }
                     else if(time < std::get<0_z>(pointsData->front()) - epsilon)
                     {
-                        pointsData->insert(pointsData->begin(), {time, 0.0, value});
+                        pointsData->insert(pointsData->begin(), {time, 0.0, value, std::vector<float>{}});
                     }
                     else if(std::abs(time - std::get<0_z>(pointsData->front())) < epsilon)
                     {

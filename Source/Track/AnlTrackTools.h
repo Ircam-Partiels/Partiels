@@ -41,7 +41,7 @@ namespace Track
         std::optional<std::tuple<size_t, juce::Range<int>>> getChannelVerticalRange(Accessor const& acsr, juce::Rectangle<int> const& bounds, int y, bool ignoreSeparator);
         std::map<size_t, juce::Range<int>> getChannelVerticalRanges(Accessor const& acsr, juce::Rectangle<int> bounds);
 
-        Results convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>> const& pluginResults, std::atomic<bool> const& shouldAbort);
+        Results convert(Plugin::Output const& output, std::vector<std::vector<Plugin::Result>>& pluginResults, std::atomic<bool> const& shouldAbort);
         std::vector<std::vector<Plugin::Result>> convert(Plugin::Input const& input, Results const& results);
 
         std::unique_ptr<juce::Component> createValueRangeEditor(Accessor& acsr);

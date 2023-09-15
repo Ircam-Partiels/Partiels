@@ -446,7 +446,7 @@ bool Document::CommandTarget::perform(juce::ApplicationCommandTarget::Invocation
                 {
                     auto const trackId = trackAcsr.getAttr<Track::AttrType::identifier>();
                     auto const fn = mDirector.getSafeTrackAccessorFn(trackId);
-                    Track::Result::ChannelData const data = std::vector<Track::Result::Data::Point>{{time, 0.0, std::optional<float>{}}};
+                    Track::Result::ChannelData const data = std::vector<Track::Result::Data::Point>{{time, 0.0, std::optional<float>{}, std::vector<float>{}}};
                     undoManager.perform(std::make_unique<ActionPaste>(fn, channel, data, time).release());
                 }
             };
