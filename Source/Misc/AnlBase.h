@@ -31,6 +31,8 @@ namespace Utils
         }
         return component->findParentComponentOfClass<TargetClass>();
     }
+
+    void notifyListener(juce::ApplicationCommandManager& commandManager, juce::ApplicationCommandManagerListener& listener, std::vector<int> const& commandIds);
 } // namespace Utils
 
 // https://timur.audio/using-locks-in-real-time-audio-processing-safely
