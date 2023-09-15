@@ -146,7 +146,7 @@ namespace Application
         TrackLoaderPanel mTrackLoaderPanel;
         HideablePanelManager mPanelManager;
 
-        juce::TooltipWindow mPanelTooltipWindow{this};
+        Tooltip::BasicWindow mPanelTooltipWindow{this};
     };
 } // namespace Application
 
