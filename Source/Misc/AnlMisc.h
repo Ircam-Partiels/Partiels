@@ -5,3 +5,4 @@
 #include "AnlFileSearchPathTable.h"
 #include "AnlHideablePanel.h"
 #include "AnlLoadingIcon.h"
+#include "AnlSdifConverter.h"
