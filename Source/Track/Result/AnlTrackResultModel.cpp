@@ -752,28 +752,32 @@ std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<P
     {
         return {};
     }
-    auto const second = std::upper_bound(channelResults.cbegin(), channelResults.cend(), time, upper_cmp<Point>);
-    if(second == channelResults.cbegin())
+    auto const it = std::prev(std::upper_bound(std::next(channelResults.cbegin()), channelResults.cend(), time, upper_cmp<Point>));
+    if(!std::get<2_z>(*it).has_value())
     {
         return {};
     }
-    auto const first = std::prev(second);
-    auto const end = std::get<0_z>(*first) + std::get<1_z>(*first);
-    if(second == channelResults.cend() || time < end || !std::get<2_z>(*second).has_value())
+    auto const start = std::get<0_z>(*it) + std::get<1_z>(*it);
+    if(time < start)
     {
-        return std::get<2_z>(*first);
+        return std::get<2_z>(*it).value();
     }
-    auto const next = std::get<0>(*second);
-    if((next - end) < std::numeric_limits<double>::epsilon() || !std::get<2_z>(*first).has_value())
+    auto const next = std::next(it);
+    if(next == channelResults.cend() || !std::get<2_z>(*next).has_value())
     {
-        return std::get<2_z>(*second);
+        return {};
     }
-    auto const ratio = std::max(std::min((time - end) / (next - end), 1.0), 0.0);
+    if((std::get<0_z>(*next) - start) < std::numeric_limits<double>::epsilon())
+    {
+        return std::get<2_z>(*it).value();
+    }
+    auto const end = std::get<0_z>(*next);
+    auto const ratio = std::max(std::min((time - start) / (end - start), 1.0), 0.0);
     if(std::isnan(ratio) || !std::isfinite(ratio)) // Extra check in case (next - end) < std::numeric_limits<double>::epsilon()
     {
-        return std::get<2_z>(*second);
+        return std::get<2_z>(*it).value();
     }
-    return (1.0 - ratio) * *std::get<2_z>(*first) + ratio * *std::get<2_z>(*second);
+    return static_cast<float>((1.0 - ratio) * static_cast<double>(std::get<2_z>(*it).value()) + ratio * static_cast<double>(std::get<2_z>(*next).value()));
 }
 
 std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<Columns> const> results, size_t channel, double time, size_t bin)
@@ -797,7 +801,7 @@ std::optional<float> Track::Result::Data::getValue(std::shared_ptr<std::vector<C
     {
         return {};
     }
-    return column[bin];
+    return column.at(bin);
 }
 
 Track::Result::File::File(juce::File const& f, juce::StringPairArray const& a, nlohmann::json const& e, juce::String const& c)

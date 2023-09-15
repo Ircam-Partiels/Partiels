@@ -149,81 +149,59 @@ std::map<size_t, juce::Range<int>> Group::Tools::getChannelVerticalRanges(Access
     return verticalRanges;
 }
 
-bool Group::Tools::canZoomIn(Accessor const& accessor)
+std::optional<std::reference_wrapper<Track::Accessor>> Group::Tools::getZoomTrackAcsr(Accessor const& accessor)
 {
     auto const selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::zoomid>());
     if(selectedTrack.has_value())
     {
-        return Track::Tools::canZoomIn(selectedTrack.value().get());
+        return selectedTrack;
     }
-    auto const layout = accessor.getAttr<AttrType::layout>();
-    if(layout.empty())
+    for(auto const& trackIdentifier : accessor.getAttr<AttrType::layout>())
     {
-        return false;
+        auto const trackAcsr = Tools::getTrackAcsr(accessor, trackIdentifier);
+        if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>() && Track::Tools::getFrameType(trackAcsr.value()) != Track::FrameType::label)
+        {
+            return trackAcsr;
+        }
     }
-    auto const frontTrack = getTrackAcsr(accessor, layout.front());
-    if(frontTrack.has_value())
+    return {};
+}
+
+bool Group::Tools::canZoomIn(Accessor const& accessor)
+{
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    if(trackAcsr.has_value())
     {
-        return Track::Tools::canZoomIn(frontTrack.value().get());
+        return Track::Tools::canZoomIn(trackAcsr.value().get());
     }
     return false;
 }
 
 bool Group::Tools::canZoomOut(Accessor const& accessor)
 {
-    auto const selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::zoomid>());
-    if(selectedTrack.has_value())
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    if(trackAcsr.has_value())
     {
-        return Track::Tools::canZoomOut(selectedTrack.value().get());
-    }
-    auto const layout = accessor.getAttr<AttrType::layout>();
-    if(layout.empty())
-    {
-        return false;
-    }
-    auto const frontTrack = getTrackAcsr(accessor, layout.front());
-    if(frontTrack.has_value())
-    {
-        return Track::Tools::canZoomOut(frontTrack.value().get());
+        return Track::Tools::canZoomOut(trackAcsr.value().get());
     }
     return false;
 }
 
 void Group::Tools::zoomIn(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::zoomid>());
-    if(selectedTrack.has_value())
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    if(trackAcsr.has_value())
     {
-        Track::Tools::zoomIn(selectedTrack.value().get(), ratio, notification);
-    }
-    auto const layout = accessor.getAttr<AttrType::layout>();
-    if(layout.empty())
-    {
-        return;
-    }
-    auto const frontTrack = getTrackAcsr(accessor, layout.front());
-    if(frontTrack.has_value())
-    {
-        return Track::Tools::zoomIn(frontTrack.value().get(), ratio, notification);
+        Track::Tools::zoomIn(trackAcsr.value().get(), ratio, notification);
     }
 }
 
 void Group::Tools::zoomOut(Accessor& accessor, double ratio, NotificationType notification)
 {
-    auto selectedTrack = getTrackAcsr(accessor, accessor.getAttr<AttrType::zoomid>());
-    if(selectedTrack.has_value())
+    auto const trackAcsr = getZoomTrackAcsr(accessor);
+    if(trackAcsr.has_value())
     {
-        Track::Tools::zoomOut(selectedTrack.value().get(), ratio, notification);
-    }
-    auto const layout = accessor.getAttr<AttrType::layout>();
-    if(layout.empty())
-    {
-        return;
-    }
-    auto const frontTrack = getTrackAcsr(accessor, layout.front());
-    if(frontTrack.has_value())
-    {
-        return Track::Tools::zoomOut(frontTrack.value().get(), ratio, notification);
+        Track::Tools::zoomOut(trackAcsr.value().get(), ratio, notification);
     }
 }
 

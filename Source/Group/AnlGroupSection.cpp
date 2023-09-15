@@ -251,47 +251,28 @@ void Group::Section::updateContent()
     }
     else
     {
-        auto const getZoomAcsrInfo = [&]() -> std::tuple<std::optional<std::reference_wrapper<Track::Accessor>>, juce::String>
-        {
-            auto const selectedTrackAcsr = Tools::getTrackAcsr(mAccessor, mAccessor.getAttr<AttrType::zoomid>());
-            if(selectedTrackAcsr.has_value() && selectedTrackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
-            {
-                return {selectedTrackAcsr, mAccessor.getAttr<AttrType::zoomid>()};
-            }
-
-            for(auto const& trackIdentifier : layout)
-            {
-                auto const trackAcsr = Tools::getTrackAcsr(mAccessor, trackIdentifier);
-                if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
-                {
-                    return {trackAcsr, trackAcsr.value().get().getAttr<Track::AttrType::identifier>()};
-                }
-            }
-            return {std::optional<std::reference_wrapper<Track::Accessor>>{}, ""};
-        };
-
-        auto const trackAcsrInfo = getZoomAcsrInfo();
-        if(!std::get<0>(trackAcsrInfo).has_value())
+        auto const zoomTrackAcsr = Tools::getZoomTrackAcsr(mAccessor);
+        if(!zoomTrackAcsr.has_value())
         {
             mScrollBar.reset();
             mDecoratorRuler.reset();
             mRuler.reset();
             mGridIdentifier.clear();
         }
-        else if(mGridIdentifier != std::get<1>(trackAcsrInfo))
+        else if(mGridIdentifier != zoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>())
         {
-            mRuler = std::make_unique<Track::Ruler>(*std::get<0>(trackAcsrInfo));
+            mRuler = std::make_unique<Track::Ruler>(zoomTrackAcsr.value());
             if(mRuler != nullptr)
             {
                 mDecoratorRuler = std::make_unique<Decorator>(*mRuler.get());
                 addAndMakeVisible(mDecoratorRuler.get());
             }
-            mScrollBar = std::make_unique<Track::ScrollBar>(*std::get<0>(trackAcsrInfo));
+            mScrollBar = std::make_unique<Track::ScrollBar>(zoomTrackAcsr.value());
             if(mScrollBar != nullptr)
             {
                 addAndMakeVisible(mScrollBar.get());
             }
-            mGridIdentifier = std::get<1>(trackAcsrInfo);
+            mGridIdentifier = zoomTrackAcsr.value().get().getAttr<Track::AttrType::identifier>();
         }
     }
 

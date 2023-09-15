@@ -1,6 +1,7 @@
 #include "AnlTrackSnapshot.h"
 #include "AnlTrackRenderer.h"
 #include "AnlTrackTools.h"
+#include "AnlTrackTooltip.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -472,20 +473,18 @@ void Track::Snapshot::Overlay::mouseExit(juce::MouseEvent const& event)
 
 void Track::Snapshot::Overlay::updateTooltip(juce::Point<int> const& pt)
 {
-    if(Tools::getFrameType(mAccessor) == Track::FrameType::label)
+    if(Tools::getFrameType(mAccessor) == Track::FrameType::label || !getLocalBounds().contains(pt))
     {
         Tooltip::BubbleClient::setTooltip("");
         return;
     }
-    if(!getLocalBounds().contains(pt))
-    {
-        Tooltip::BubbleClient::setTooltip("");
-        return;
-    }
+    juce::StringArray lines;
     auto const isPlaying = mTransportAccessor.getAttr<Transport::AttrType::playback>();
     auto const time = isPlaying ? mTransportAccessor.getAttr<Transport::AttrType::runningPlayhead>() : mTransportAccessor.getAttr<Transport::AttrType::startPlayhead>();
-    auto const tip = Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time, true);
-    Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
+    lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
+    lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Tools::getZoomTootip(mAccessor, *this, pt.y)));
+    lines.addArray(Tools::getValueTootip(mAccessor, mSnapshot.mTimeZoomAccessor, *this, pt.y, time));
+    Tooltip::BubbleClient::setTooltip(lines.joinIntoString("\n"));
 }
 
 ANALYSE_FILE_END

@@ -149,12 +149,11 @@ void Group::PropertyPanel::resized()
 
 void Group::PropertyPanel::updateContent()
 {
-    auto const zoomId = mAccessor.getAttr<AttrType::zoomid>();
-    auto const currentTrack = Tools::getTrackAcsr(mAccessor, zoomId);
+    auto const zoomTrack = Tools::getZoomTrackAcsr(mAccessor);
     auto& entry = mPropertyZoomTrack.entry;
     entry.clear(juce::NotificationType::dontSendNotification);
     entry.addItem(juce::translate("Front"), 1);
-    if(!currentTrack.has_value())
+    if(!zoomTrack.has_value())
     {
         entry.setSelectedId(1, juce::NotificationType::dontSendNotification);
     }
@@ -170,7 +169,7 @@ void Group::PropertyPanel::updateContent()
             if(!trackName.isEmpty())
             {
                 entry.addItem(trackName, static_cast<int>(layoutIndex) + 2);
-                if(trackId == zoomId)
+                if(std::addressof(trackAcsr.value()) == std::addressof(zoomTrack.value()))
                 {
                     entry.setSelectedId(static_cast<int>(layoutIndex) + 2, juce::NotificationType::dontSendNotification);
                 }

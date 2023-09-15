@@ -1,6 +1,7 @@
 #include "AnlTrackPlot.h"
 #include "AnlTrackRenderer.h"
 #include "AnlTrackTools.h"
+#include "AnlTrackTooltip.h"
 #include "Result/AnlTrackResultModifier.h"
 
 ANALYSE_FILE_BEGIN
@@ -595,10 +596,12 @@ void Track::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         Tooltip::BubbleClient::setTooltip("");
         return;
     }
-
+    juce::StringArray lines;
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
-    auto const tip = Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time, true);
-    Tooltip::BubbleClient::setTooltip(Format::secondsToString(time) + ": " + (tip.isEmpty() ? "-" : tip));
+    lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
+    lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Tools::getZoomTootip(mAccessor, *this, pt.y)));
+    lines.addArray(Tools::getValueTootip(mAccessor, mTimeZoomAccessor, *this, pt.y, time));
+    Tooltip::BubbleClient::setTooltip(lines.joinIntoString("\n"));
 }
 
 ANALYSE_FILE_END

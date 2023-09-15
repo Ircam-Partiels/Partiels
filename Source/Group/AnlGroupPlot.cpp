@@ -1,6 +1,7 @@
 #include "AnlGroupPlot.h"
 #include "../Track/AnlTrackRenderer.h"
 #include "../Track/AnlTrackTools.h"
+#include "../Track/AnlTrackTooltip.h"
 
 ANALYSE_FILE_BEGIN
 
@@ -118,14 +119,13 @@ void Group::Plot::paint(juce::Graphics& g)
 {
     auto const bounds = getLocalBounds();
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
-    auto const zoomid = mAccessor.getAttr<AttrType::zoomid>();
-    auto const hasZoomTrack = Tools::hasTrackAcsr(mAccessor, zoomid);
+    auto const zoomTrack = Tools::getZoomTrackAcsr(mAccessor);
     for(auto it = layout.crbegin(); it != layout.crend(); ++it)
     {
         auto const trackAcsr = Tools::getTrackAcsr(mAccessor, *it);
         if(trackAcsr.has_value() && trackAcsr.value().get().getAttr<Track::AttrType::showInGroup>())
         {
-            auto const isSelected = (!hasZoomTrack && it == std::prev(layout.crend())) || zoomid == *it;
+            auto const isSelected = (!zoomTrack.has_value() && it == std::prev(layout.crend())) || std::addressof(trackAcsr.value()) == std::addressof(zoomTrack.value());
             auto const colour = isSelected ? findColour(Decorator::ColourIds::normalBorderColourId) : juce::Colours::transparentBlack;
             Track::Renderer::paint(trackAcsr.value().get(), mTimeZoomAccessor, g, bounds, colour);
         }
@@ -292,20 +292,28 @@ void Group::Plot::Overlay::updateTooltip(juce::Point<int> const& pt)
         setTooltip("");
         return;
     }
+    juce::StringArray lines;
     auto const time = Zoom::Tools::getScaledValueFromWidth(mTimeZoomAccessor, *this, pt.x);
-    auto tooltip = Format::secondsToString(time);
+    lines.add(juce::translate("Time: TIME").replace("TIME", Format::secondsToString(time)));
+    auto const zoomTrackAcsr = Tools::getZoomTrackAcsr(mAccessor);
+    if(zoomTrackAcsr.has_value())
+    {
+        lines.add(juce::translate("Mouse: VALUE").replace("VALUE", Track::Tools::getZoomTootip(zoomTrackAcsr->get(), *this, pt.y)));
+    }
     auto const& layout = mAccessor.getAttr<AttrType::layout>();
     for(auto const& identifier : layout)
     {
         auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
         if(trackAcsr.has_value() && trackAcsr->get().getAttr<Track::AttrType::showInGroup>())
         {
-            auto const name = trackAcsr->get().getAttr<Track::AttrType::name>();
-            auto const tip = Track::Tools::getValueTootip(trackAcsr->get(), mTimeZoomAccessor, *this, pt.y, time, true);
-            tooltip += "\n" + name + ": " + (tip.isEmpty() ? "-" : tip);
+            lines.add(trackAcsr->get().getAttr<Track::AttrType::name>() + ":");
+            for(auto const& line : Track::Tools::getValueTootip(trackAcsr->get(), mTimeZoomAccessor, *this, pt.y, time))
+            {
+                lines.addArray("\t" + line);
+            }
         }
     }
-    setTooltip(tooltip);
+    setTooltip(lines.joinIntoString("\n"));
 }
 
 ANALYSE_FILE_END

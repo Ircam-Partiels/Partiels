@@ -1,5 +1,6 @@
 #include "AnlTrackProgressBar.h"
 #include "AnlTrackTools.h"
+#include "AnlTrackTooltip.h"
 #include <AnlIconsData.h>
 
 ANALYSE_FILE_BEGIN
