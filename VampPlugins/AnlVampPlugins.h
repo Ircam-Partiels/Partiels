@@ -112,6 +112,8 @@ namespace AnlVampPlugin
         size_t getPreferredBlockSize() const override;
 
         OutputList getOutputDescriptors() const override;
+        // Ive::PluginExtension
+        OutputExtraList getOutputExtraDescriptors(size_t outputDescriptorIndex) const override;
 
         void reset() override;
         FeatureSet process(const float* const* inputBuffers, Vamp::RealTime timestamp) override;

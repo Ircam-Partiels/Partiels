@@ -2,6 +2,7 @@
 #include <IvePluginAdapter.hpp>
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <sstream>
 #include <vamp-sdk/PluginAdapter.h>
 
@@ -71,8 +72,8 @@ Vamp::Plugin::OutputList AnlVampPlugin::Waveform::getOutputDescriptors() const
 {
     OutputDescriptor d;
     d.identifier = "peaks";
-    d.name = "Peaks";
-    d.description = "Peaks from the input signal";
+    d.name = "Peak";
+    d.description = "Peak from the input signal";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = 1;
@@ -149,8 +150,8 @@ Vamp::Plugin::OutputList AnlVampPlugin::Spectrogram::getOutputDescriptors() cons
 {
     OutputDescriptor d;
     d.identifier = "energies";
-    d.name = "Energies";
-    d.description = "Energies from the input signal";
+    d.name = "Energy";
+    d.description = "Energy from the input signal";
     d.unit = "dB";
     d.hasFixedBinCount = true;
     d.binCount = mBlockSize / 2_z + 1_z;
@@ -244,9 +245,9 @@ Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
     {
         OutputDescriptor d;
         d.identifier = "markers";
-        d.name = "Markers";
-        d.description = "Markers";
-        d.unit = "";
+        d.name = "Marker";
+        d.description = "Marker";
+        d.unit = "m";
         d.hasFixedBinCount = true;
         d.binCount = 0;
         d.hasKnownExtents = false;
@@ -258,9 +259,9 @@ Vamp::Plugin::OutputList AnlVampPlugin::NewTrack::getOutputDescriptors() const
     {
         OutputDescriptor d;
         d.identifier = "points";
-        d.name = "Points";
-        d.description = "Points";
-        d.unit = "";
+        d.name = "Point";
+        d.description = "Point";
+        d.unit = "p";
         d.hasFixedBinCount = true;
         d.binCount = 1;
         d.hasKnownExtents = false;
@@ -336,15 +337,63 @@ Vamp::Plugin::OutputList AnlVampPlugin::Dummy::getOutputDescriptors() const
     {
         OutputDescriptor d;
         d.identifier = "markers";
-        d.name = "Markers";
-        d.description = "Markers";
-        d.unit = "";
+        d.name = "Marker";
+        d.description = "Marker";
+        d.unit = "m";
         d.hasFixedBinCount = true;
         d.binCount = 0;
         d.hasKnownExtents = false;
         d.isQuantized = false;
         d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
         d.hasDuration = false;
+        list.push_back(std::move(d));
+    }
+    {
+        OutputDescriptor d;
+        d.identifier = "points";
+        d.name = "Point";
+        d.description = "Point";
+        d.unit = "p";
+        d.hasFixedBinCount = true;
+        d.binCount = 1;
+        d.hasKnownExtents = false;
+        d.isQuantized = false;
+        d.sampleType = OutputDescriptor::SampleType::VariableSampleRate;
+        d.hasDuration = false;
+        list.push_back(std::move(d));
+    }
+    return list;
+}
+
+AnlVampPlugin::Dummy::OutputExtraList AnlVampPlugin::Dummy::getOutputExtraDescriptors(size_t outputDescriptorIndex) const
+{
+    OutputExtraList list;
+    if(outputDescriptorIndex == 0)
+    {
+        OutputExtraDescriptor d;
+        d.identifier = "random";
+        d.name = "Random";
+        d.description = "Random values";
+        d.unit = "r";
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 1.0f;
+        d.isQuantized = false;
+        d.quantizeStep = 0.0f;
+        list.push_back(std::move(d));
+    }
+    else if(outputDescriptorIndex == 1)
+    {
+        OutputExtraDescriptor d;
+        d.identifier = "copy";
+        d.name = "Copy";
+        d.description = "Copy of the points";
+        d.unit = "c";
+        d.hasKnownExtents = false;
+        d.minValue = 0.0f;
+        d.maxValue = 1.0f;
+        d.isQuantized = false;
+        d.quantizeStep = 0.0f;
         list.push_back(std::move(d));
     }
     return list;
@@ -367,20 +416,30 @@ Vamp::Plugin::FeatureSet AnlVampPlugin::Dummy::process(const float* const*, Vamp
 
 Vamp::Plugin::FeatureSet AnlVampPlugin::Dummy::getRemainingFeatures()
 {
-    return mFeatureSet;
+    auto copy = mFeatureSet;
+    if(copy.count(0) > 0)
+    {
+        for(auto& channel : copy[0])
+        {
+            channel.values = {static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX)};
+        }
+    }
+    if(copy.count(1) > 0)
+    {
+        for(auto& channel : copy[1])
+        {
+            if(!channel.values.empty())
+            {
+                channel.values.push_back(channel.values.front());
+            }
+        }
+    }
+    return copy;
 }
 
 void AnlVampPlugin::Dummy::setPreComputingFeatures(FeatureSet const& fs)
 {
-    auto const it = fs.find(0);
-    if(it != fs.cend())
-    {
-        mFeatureSet[0] = it->second;
-    }
-    else
-    {
-        mFeatureSet.clear();
-    }
+    mFeatureSet = fs;
 }
 
 #ifdef __cplusplus
@@ -410,7 +469,7 @@ extern "C"
                 static Vamp::PluginAdapter<AnlVampPlugin::NewTrack> adaptater;
                 return adaptater.getDescriptor();
             }
-#if NDEBUG
+#ifndef NDEBUG
             case 3:
             {
                 static Vamp::PluginAdapter<AnlVampPlugin::Dummy> adaptater;
