@@ -93,8 +93,6 @@ Document::Header::Header(Director& director, juce::ApplicationCommandManager& co
 
     mApplicationCommandManager.addListener(this);
     applicationCommandListChanged();
-    applicationCommandInvoked({ApplicationCommandIDs::viewInfoBubble});
-
     mAccessor.addListener(mListener, NotificationType::synchronous);
     setSize(200, 48);
 }
@@ -173,6 +171,7 @@ void Document::Header::applicationCommandInvoked(juce::ApplicationCommandTarget:
 void Document::Header::applicationCommandListChanged()
 {
     mBubbleTooltipButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::viewInfoBubble));
+    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble});
 }
 
 ANALYSE_FILE_END

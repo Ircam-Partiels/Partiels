@@ -123,7 +123,6 @@ Document::TransportDisplay::TransportDisplay(Transport::Accessor& accessor, Zoom
     mZoomAccessor.addListener(mZoomListener, NotificationType::synchronous);
     mApplicationCommandManager.addListener(this);
     applicationCommandListChanged();
-    applicationCommandInvoked({ApplicationCommandIDs::viewInfoBubble});
 }
 
 Document::TransportDisplay::~TransportDisplay()
@@ -168,6 +167,7 @@ void Document::TransportDisplay::applicationCommandListChanged()
 {
     mPlaybackButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::transportTogglePlayback));
     mLoopButton.setTooltip(mApplicationCommandManager.getDescriptionOfCommand(ApplicationCommandIDs::transportToggleLooping));
+    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::transportTogglePlayback, ApplicationCommandIDs::transportToggleLooping});
 }
 
 ANALYSE_FILE_END

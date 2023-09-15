@@ -359,7 +359,6 @@ Document::Section::Section(Director& director, juce::ApplicationCommandManager& 
     mAccessor.addReceiver(mReceiver);
     mApplicationCommandManager.addListener(this);
     applicationCommandListChanged();
-    applicationCommandInvoked({ApplicationCommandIDs::viewInfoBubble});
     addKeyListener(mCommandManager.getKeyMappings());
 }
 
@@ -877,6 +876,7 @@ void Document::Section::applicationCommandInvoked(juce::ApplicationCommandTarget
 
 void Document::Section::applicationCommandListChanged()
 {
+    Utils::notifyListener(mApplicationCommandManager, *this, {ApplicationCommandIDs::viewInfoBubble});
 }
 
 ANALYSE_FILE_END
