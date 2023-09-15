@@ -48,8 +48,8 @@ namespace Track
                 , point = 1<<1
                 , column = 1<<2
             };
-
             // clang-format on
+
             // time, duration, value(s)
             using Marker = std::tuple<double, double, std::string>;
             using Point = std::tuple<double, double, std::optional<float>>;
