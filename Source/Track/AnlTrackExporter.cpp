@@ -259,11 +259,24 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
 
         auto const addChannel = [&](std::vector<Results::Marker> const& channelMarkers)
         {
-            addHeader({"LABEL"});
+            std::vector<std::string> binColumns;
+            binColumns.push_back("LABEL");
+            auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
+            for(size_t j = 0; j < extraOutputs.size(); ++j)
+            {
+                binColumns.push_back("EXTRA" + std::to_string(j));
+            }
+            addHeader(binColumns);
             auto it = std::lower_bound(channelMarkers.cbegin(), channelMarkers.cend(), timeRange.getStart(), Result::lower_cmp<Results::Marker>);
             while(it != channelMarkers.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                addRow(it, {escapeString(std::get<2_z>(*it))});
+                binColumns.clear();
+                binColumns.push_back(escapeString(std::get<2_z>(*it)));
+                for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                {
+                    binColumns.push_back(std::to_string(std::get<3_z>(*it).at(j)));
+                }
+                addRow(it, binColumns);
                 ++it;
             }
         };
@@ -283,11 +296,24 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
     {
         auto const addChannel = [&](std::vector<Results::Point> const& channelPoints)
         {
-            addHeader({"VALUE"});
+            std::vector<std::string> binColumns;
+            binColumns.push_back("VALUE");
+            auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
+            for(size_t j = 0; j < extraOutputs.size(); ++j)
+            {
+                binColumns.push_back("EXTRA" + std::to_string(j));
+            }
+            addHeader(binColumns);
             auto it = std::lower_bound(channelPoints.cbegin(), channelPoints.cend(), timeRange.getStart(), Result::lower_cmp<Results::Point>);
             while(it != channelPoints.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                addRow(it, std::get<2_z>(*it).has_value() ? std::vector<std::string>{std::to_string(std::get<2_z>(*it).value())} : std::vector<std::string>{});
+                binColumns.clear();
+                binColumns.push_back(std::get<2_z>(*it).has_value() ? std::to_string(std::get<2_z>(*it).value()) : std::string{});
+                for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                {
+                    binColumns.push_back(std::to_string(std::get<3_z>(*it).at(j)));
+                }
+                addRow(it, binColumns);
                 ++it;
             }
         };
@@ -311,22 +337,31 @@ juce::Result Track::Exporter::toCsv(Accessor const& accessor, Zoom::Range timeRa
                                                  {
                                                      return std::max(s, std::get<2>(channelColumn).size());
                                                  });
-            std::vector<std::string> extraColumns;
+            std::vector<std::string> binColumns;
             for(size_t j = 0; j < numBins; ++j)
             {
-                extraColumns.push_back("BIN" + std::to_string(j));
+                binColumns.push_back("BIN" + std::to_string(j));
             }
-            addHeader(extraColumns);
+            auto const extraOutputs = accessor.getAttr<AttrType::description>().extraOutputs;
+            for(size_t j = 0; j < extraOutputs.size(); ++j)
+            {
+                binColumns.push_back("EXTRA" + std::to_string(j));
+            }
+            addHeader(binColumns);
 
             auto it = std::lower_bound(channelColumns.cbegin(), channelColumns.cend(), timeRange.getStart(), Result::lower_cmp<Results::Column>);
             while(it != channelColumns.cend() && std::get<0_z>(*it) <= timeRange.getEnd())
             {
-                extraColumns.clear();
+                binColumns.clear();
                 for(auto const& value : std::get<2_z>(*it))
                 {
-                    extraColumns.push_back(std::to_string(value));
+                    binColumns.push_back(std::to_string(value));
                 }
-                addRow(it, extraColumns);
+                for(size_t j = 0; j < std::get<3_z>(*it).size() && j < extraOutputs.size(); ++j)
+                {
+                    binColumns.push_back(std::to_string(std::get<3_z>(*it).at(j)));
+                }
+                addRow(it, binColumns);
                 ++it;
             }
         };
@@ -464,6 +499,10 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                     {
                         vjson["label"] = std::get<2_z>(*it);
                     }
+                    if(!std::get<3_z>(*it).empty())
+                    {
+                        vjson["extra"] = std::get<3_z>(*it);
+                    }
                     cjson.emplace_back(std::move(vjson));
                     ++it;
                 }
@@ -498,6 +537,10 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                     {
                         vjson["value"] = std::get<2_z>(*it).value();
                     }
+                    if(!std::get<3_z>(*it).empty())
+                    {
+                        vjson["extra"] = std::get<3_z>(*it);
+                    }
                     cjson.emplace_back(std::move(vjson));
                     ++it;
                 }
@@ -529,6 +572,10 @@ juce::Result Track::Exporter::toJson(Accessor const& accessor, Zoom::Range timeR
                         vjson["duration"] = std::get<1_z>(*it);
                     }
                     vjson["values"] = std::get<2_z>(*it);
+                    if(!std::get<3_z>(*it).empty())
+                    {
+                        vjson["extra"] = std::get<3_z>(*it);
+                    }
                     cjson.emplace_back(std::move(vjson));
                     ++it;
                 }
@@ -760,7 +807,7 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
     auto const columns = results.getColumns();
     if(markers != nullptr)
     {
-        stream.write("PTLMKS", 6 * sizeof(char));
+        stream.write("PTLM01", 6 * sizeof(char));
         for(auto const& channelResults : *markers)
         {
             if(shouldAbort)
@@ -779,13 +826,16 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
                 auto const length = static_cast<uint64_t>(std::get<2_z>(*it).size());
                 stream.write(reinterpret_cast<char const*>(&length), sizeof(length));
                 stream.write(std::get<2_z>(*it).c_str(), static_cast<long>(sizeof(char) * std::get<2_z>(*it).size()));
+                auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
+                stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
+                stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
                 ++it;
             }
         }
     }
     else if(points != nullptr)
     {
-        stream.write("PTLPTS", 6 * sizeof(char));
+        stream.write("PTLP01", 6 * sizeof(char));
         for(auto const& channelResults : *points)
         {
             if(shouldAbort)
@@ -808,13 +858,16 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
                     auto const& value = std::get<2_z>(*it).value();
                     stream.write(reinterpret_cast<char const*>(&value), sizeof(value));
                 }
+                auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
+                stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
+                stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
                 ++it;
             }
         }
     }
     else if(columns != nullptr)
     {
-        stream.write("PTLCLS", 6 * sizeof(char));
+        stream.write("PTLC01", 6 * sizeof(char));
         for(auto const& channelResults : *columns)
         {
             auto const numChannels = static_cast<uint64_t>(channelResults.size());
@@ -833,6 +886,9 @@ juce::Result Track::Exporter::toBinary(Accessor const& accessor, Zoom::Range tim
                 auto const numBins = static_cast<uint64_t>(std::get<2_z>(*it).size());
                 stream.write(reinterpret_cast<char const*>(&numBins), sizeof(numBins));
                 stream.write(reinterpret_cast<char const*>(std::get<2_z>(*it).data()), static_cast<long>(sizeof(*std::get<2_z>(*it).data()) * numBins));
+                auto const numExtra = static_cast<uint64_t>(std::get<3_z>(*it).size());
+                stream.write(reinterpret_cast<char const*>(&numExtra), sizeof(numExtra));
+                stream.write(reinterpret_cast<char const*>(std::get<3_z>(*it).data()), static_cast<long>(sizeof(*std::get<3_z>(*it).data()) * numExtra));
                 ++it;
             }
         }
