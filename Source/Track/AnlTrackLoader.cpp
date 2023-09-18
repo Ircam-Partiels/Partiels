@@ -260,14 +260,50 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
         return {};
     }
 
-    std::vector<std::vector<Plugin::Result>> pluginResults;
-    pluginResults.resize(json.size());
+    std::vector<Results::Markers> markers;
+    std::vector<Results::Points> points;
+    std::vector<Results::Columns> columns;
+    markers.reserve(json.size());
+    points.reserve(json.size());
+    columns.reserve(json.size());
+
+    // clang-format off
+    enum class Mode
+    {
+          undefined
+        , markers
+        , points
+        , columns
+    };
+    // clang-format on
+
+    auto mode = Mode::undefined;
+    auto const check = [&](Mode const expected)
+    {
+        return mode == Mode::undefined || mode == expected;
+    };
+
+    auto const checkAndSet = [&](Mode const expected)
+    {
+        if(mode == Mode::undefined || mode == expected)
+        {
+            mode = expected;
+            return true;
+        }
+        return false;
+    };
+
     for(size_t channelIndex = 0_z; channelIndex < json.size(); ++channelIndex)
     {
-        auto const& channelData = json[channelIndex];
-        auto& channelResults = pluginResults[channelIndex];
-        channelResults.resize(channelData.size());
-        auto const advRatio = 0.7f * static_cast<float>(channelIndex) / static_cast<float>(json.size());
+        auto const& channelData = json.at(channelIndex);
+        Results::Markers markerChannel;
+        Results::Points pointChannel;
+        Results::Columns columnChannel;
+        markerChannel.reserve(check(Mode::markers) ? channelData.size() : 0_z);
+        pointChannel.reserve(check(Mode::points) ? channelData.size() : 0_z);
+        columnChannel.reserve(check(Mode::columns) ? channelData.size() : 0_z);
+
+        auto const advRatio = 0.8f * static_cast<float>(channelIndex) / static_cast<float>(json.size());
         advancement.store(0.2f + advRatio);
         for(size_t frameIndex = 0_z; frameIndex < channelData.size(); ++frameIndex)
         {
@@ -277,53 +313,95 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
                 return {};
             }
 
-            auto const& frameData = channelData[frameIndex];
-            auto& frameResults = channelResults[frameIndex];
+            auto const& frameData = channelData.at(frameIndex);
             auto const timeIt = frameData.find("time");
-            if(timeIt != frameData.cend())
+            if(timeIt == frameData.cend())
             {
-                frameResults.hasTimestamp = true;
-                frameResults.timestamp = Vamp::RealTime::fromSeconds(timeIt.value());
+                return {juce::translate("Parsing error")};
             }
             auto const durationIt = frameData.find("duration");
-            if(durationIt != frameData.cend())
-            {
-                frameResults.hasDuration = true;
-                frameResults.duration = Vamp::RealTime::fromSeconds(durationIt.value());
-            }
+            auto const extraIt = frameData.find("extra");
             auto const labelIt = frameData.find("label");
             if(labelIt != frameData.cend())
             {
-                frameResults.label = labelIt.value();
+                if(!checkAndSet(Mode::markers))
+                {
+                    return {juce::translate("Parsing error")};
+                }
+                markerChannel.push_back({});
+                std::get<0_z>(markerChannel.back()) = timeIt->get<double>();
+                std::get<1_z>(markerChannel.back()) = durationIt == frameData.cend() ? 0.0 : durationIt->get<double>();
+                std::get<2_z>(markerChannel.back()) = labelIt->get<std::string>();
+                if(extraIt != frameData.cend())
+                {
+                    std::get<3_z>(markerChannel.back()) = extraIt->get<std::vector<float>>();
+                }
             }
             auto const valueIt = frameData.find("value");
             if(valueIt != frameData.cend())
             {
-                frameResults.values.push_back(valueIt.value());
+                if(!checkAndSet(Mode::points))
+                {
+                    return {juce::translate("Parsing error")};
+                }
+                pointChannel.push_back({});
+                std::get<0_z>(pointChannel.back()) = timeIt->get<double>();
+                std::get<1_z>(pointChannel.back()) = durationIt == frameData.cend() ? 0.0 : durationIt->get<double>();
+                std::get<2_z>(pointChannel.back()) = valueIt->get<float>();
+                if(extraIt != frameData.cend())
+                {
+                    std::get<3_z>(pointChannel.back()) = extraIt->get<std::vector<float>>();
+                }
             }
             auto const valuesIt = frameData.find("values");
             if(valuesIt != frameData.cend())
             {
-                frameResults.values.resize(valuesIt->size());
-                for(size_t binIndex = 0_z; binIndex < valuesIt->size(); ++binIndex)
+                if(!checkAndSet(Mode::columns))
                 {
-                    frameResults.values[binIndex] = valuesIt->at(binIndex);
+                    return {juce::translate("Parsing error")};
+                }
+                columnChannel.push_back({});
+                std::get<0_z>(columnChannel.back()) = timeIt->get<double>();
+                std::get<1_z>(columnChannel.back()) = durationIt->get<double>();
+                std::get<2_z>(columnChannel.back()) = valuesIt->get<std::vector<float>>();
+                if(extraIt != frameData.cend())
+                {
+                    std::get<3_z>(columnChannel.back()) = extraIt->get<std::vector<float>>();
                 }
             }
         }
+        if(check(Mode::markers))
+        {
+            markers.push_back(std::move(markerChannel));
+        }
+        else if(check(Mode::points))
+        {
+            points.push_back(std::move(pointChannel));
+        }
+        else if(check(Mode::columns))
+        {
+            columns.push_back(std::move(columnChannel));
+        }
     }
-
     if(shouldAbort)
     {
         return {};
     }
 
-    Plugin::Output output;
-    output.hasFixedBinCount = false;
-    advancement.store(0.9f);
-    auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
-    return {std::move(results)};
+    if(check(Mode::markers))
+    {
+        return Track::Results(std::move(markers));
+    }
+    else if(check(Mode::points))
+    {
+        return Track::Results(std::move(points));
+    }
+    else if(check(Mode::columns))
+    {
+        return Track::Results(std::move(columns));
+    }
+    return {juce::translate("Parsing error")};
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
@@ -355,8 +433,37 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
         return {juce::translate("Parsing error")};
     }
 
-    if(std::string(type) == "PTLMKS")
+    auto const readTimeAndDuration = [&](auto& frame)
     {
+        if(!stream.read(reinterpret_cast<char*>(&std::get<0_z>(frame)), sizeof(std::get<0_z>(frame))))
+        {
+            return false;
+        }
+        if(!stream.read(reinterpret_cast<char*>(&std::get<1_z>(frame)), sizeof(std::get<1_z>(frame))))
+        {
+            return false;
+        }
+        return true;
+    };
+
+    auto const readExtra = [&](auto& frame)
+    {
+        uint64_t numExtra;
+        if(!stream.read(reinterpret_cast<char*>(&numExtra), sizeof(numExtra)))
+        {
+            return false;
+        }
+        std::get<3_z>(frame).resize(numExtra);
+        if(!stream.read(reinterpret_cast<char*>(std::get<3_z>(frame).data()), static_cast<long>(sizeof(*std::get<3_z>(frame).data()) * numExtra)))
+        {
+            return false;
+        }
+        return true;
+    };
+
+    if(std::string(type) == "PTLMKS" || std::string(type) == "PTLM01")
+    {
+        auto const hasExtra = std::string(type) == "PTLM01";
         std::vector<Results::Markers> results;
         while(!stream.eof())
         {
@@ -379,11 +486,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                     return {};
                 }
 
-                if(!stream.read(reinterpret_cast<char*>(&std::get<0>(marker)), sizeof(std::get<0>(marker))))
-                {
-                    return {juce::translate("Parsing error")};
-                }
-                if(!stream.read(reinterpret_cast<char*>(&std::get<1>(marker)), sizeof(std::get<1>(marker))))
+                if(!readTimeAndDuration(marker))
                 {
                     return {juce::translate("Parsing error")};
                 }
@@ -392,10 +495,14 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                 {
                     return {juce::translate("Parsing error")};
                 }
-                std::get<2>(marker).resize(length);
-                if(!stream.read(reinterpret_cast<char*>(std::get<2>(marker).data()), static_cast<long>(length * sizeof(char))))
+                std::get<2_z>(marker).resize(length);
+                if(!stream.read(reinterpret_cast<char*>(std::get<2_z>(marker).data()), static_cast<long>(length * sizeof(char))))
                 {
                     return {juce::translate("Parsing error")};
+                }
+                if(hasExtra)
+                {
+                    readExtra(marker);
                 }
             }
             results.push_back(std::move(markers));
@@ -403,8 +510,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
         res = Results(std::move(results));
     }
-    else if(std::string(type) == "PTLPTS")
+    else if(std::string(type) == "PTLPTS" || std::string(type) == "PTLP01")
     {
+        auto const hasExtra = std::string(type) == "PTLP01";
         std::vector<Results::Points> results;
         while(!stream.eof())
         {
@@ -426,11 +534,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                     return {};
                 }
 
-                if(!stream.read(reinterpret_cast<char*>(&std::get<0>(point)), sizeof(std::get<0>(point))))
-                {
-                    return {juce::translate("Parsing error")};
-                }
-                if(!stream.read(reinterpret_cast<char*>(&std::get<1>(point)), sizeof(std::get<1>(point))))
+                if(!readTimeAndDuration(point))
                 {
                     return {juce::translate("Parsing error")};
                 }
@@ -446,7 +550,11 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                     {
                         return {juce::translate("Parsing error")};
                     }
-                    std::get<2>(point) = value;
+                    std::get<2_z>(point) = value;
+                }
+                if(hasExtra)
+                {
+                    readExtra(point);
                 }
             }
             results.push_back(std::move(points));
@@ -454,8 +562,9 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
 
         res = Results(std::move(results));
     }
-    else if(std::string(type) == "PTLCLS")
+    else if(std::string(type) == "PTLCLS" || std::string(type) == "PTLC01")
     {
+        auto const hasExtra = std::string(type) == "PTLC01";
         std::vector<Results::Columns> results;
         while(!stream.eof())
         {
@@ -477,11 +586,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                     return {};
                 }
 
-                if(!stream.read(reinterpret_cast<char*>(&std::get<0>(column)), sizeof(std::get<0>(column))))
-                {
-                    return {juce::translate("Parsing error")};
-                }
-                if(!stream.read(reinterpret_cast<char*>(&std::get<1>(column)), sizeof(std::get<1>(column))))
+                if(!readTimeAndDuration(column))
                 {
                     return {juce::translate("Parsing error")};
                 }
@@ -490,10 +595,14 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromBinary(std::is
                 {
                     return {juce::translate("Parsing error")};
                 }
-                std::get<2>(column).resize(numBins);
-                if(!stream.read(reinterpret_cast<char*>(std::get<2>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
+                std::get<2_z>(column).resize(numBins);
+                if(!stream.read(reinterpret_cast<char*>(std::get<2_z>(column).data()), static_cast<long>(sizeof(*std::get<2>(column).data()) * numBins)))
                 {
                     return {juce::translate("Parsing error")};
+                }
+                if(hasExtra)
+                {
+                    readExtra(column);
                 }
             }
             results.push_back(std::move(columns));
@@ -647,8 +756,6 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(FileInfo c
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istream& stream, char const separator, bool useEndTime, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
-    std::vector<std::vector<Plugin::Result>> pluginResults;
-
     auto const trimString = [](std::string const& s)
     {
         auto const ltrim = [](std::string const& sr)
@@ -671,6 +778,36 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
         return s.replace("\\\"", "\"").replace("\\\'", "\'").replace("\\t", "\t").replace("\\r", "\r").replace("\\n", "\n").unquoted();
     };
 
+    // clang-format off
+    enum class Mode
+    {
+          undefined
+        , markers
+        , points
+    };
+    // clang-format on
+
+    auto mode = Mode::undefined;
+    auto const check = [&](Mode const expected)
+    {
+        return mode == Mode::undefined || mode == expected;
+    };
+
+    auto const getFloatValue = [](auto const& v) -> std::optional<float>
+    {
+        try
+        {
+            return std::stof(v);
+        }
+        catch(...)
+        {
+            return std::optional<float>();
+        }
+    };
+
+    std::vector<Results::Markers> markers;
+    std::vector<Results::Points> points;
+
     auto addNewChannel = true;
     std::string line;
     while(std::getline(stream, line, '\n'))
@@ -689,7 +826,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
         {
             if(std::exchange(addNewChannel, false))
             {
-                pluginResults.push_back({});
+                markers.push_back({});
+                points.push_back({});
             }
             std::string time, duration, value;
             std::istringstream linestream(line);
@@ -702,37 +840,65 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromCsv(std::istre
             }
             else if(std::isdigit(static_cast<int>(time[0])) && std::isdigit(static_cast<int>(duration[0])))
             {
-                auto& channelResults = pluginResults.back();
-                Plugin::Result result;
-                result.hasTimestamp = true;
+                auto& markerChannel = markers.back();
+                auto& pointChannel = points.back();
                 auto const timevalue = std::stod(time);
-                result.timestamp = Vamp::RealTime::fromSeconds(timevalue);
-                result.hasDuration = true;
-                auto const durationvalue = std::stod(duration);
-                result.duration = Vamp::RealTime::fromSeconds(std::max(useEndTime ? durationvalue - timevalue : durationvalue, 0.0));
-                if(!value.empty() && value.find_first_not_of("0123456789.-+e") != std::string::npos)
+                auto const durationvalue = std::max(useEndTime ? std::stod(duration) - timevalue : std::stod(duration), 0.0);
+                auto pointvalue = getFloatValue(value);
+                if(pointvalue.has_value())
                 {
-                    result.label = unescapeString(value).toStdString();
-                }
-                else if(!value.empty())
-                {
-                    result.values.push_back(std::stof(value));
+                    if(mode == Mode::markers)
+                    {
+                        return {juce::translate("Parsing error")};
+                    }
+                    mode = Mode::points;
+                    pointChannel.push_back({});
+                    std::get<0_z>(pointChannel.back()) = timevalue;
+                    std::get<1_z>(pointChannel.back()) = durationvalue;
+                    std::get<2_z>(pointChannel.back()) = pointvalue.value();
                     while(getline(linestream, value, separator))
                     {
-                        result.values.push_back(std::stof(value));
+                        pointvalue = getFloatValue(value);
+                        if(pointvalue.has_value())
+                        {
+                            std::get<3_z>(pointChannel.back()).push_back(pointvalue.value());
+                        }
                     }
                 }
-                channelResults.push_back(std::move(result));
+                else
+                {
+                    if(mode == Mode::points)
+                    {
+                        return {juce::translate("Parsing error")};
+                    }
+                    mode = Mode::markers;
+                    markerChannel.push_back({});
+                    std::get<0_z>(markerChannel.back()) = timevalue;
+                    std::get<1_z>(markerChannel.back()) = durationvalue;
+                    std::get<2_z>(markerChannel.back()) = unescapeString(value).toStdString();
+                    while(getline(linestream, value, separator))
+                    {
+                        pointvalue = getFloatValue(value);
+                        if(pointvalue.has_value())
+                        {
+                            std::get<3_z>(markerChannel.back()).push_back(pointvalue.value());
+                        }
+                    }
+                }
             }
         }
     }
 
-    Plugin::Output output;
-    output.hasFixedBinCount = false;
-    advancement.store(0.9f);
-    auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
-    return {std::move(results)};
+    if(check(Mode::markers))
+    {
+        return Track::Results(std::move(markers));
+    }
+    else if(check(Mode::points))
+    {
+        return Track::Results(std::move(points));
+    }
+    return {juce::translate("Parsing error")};
 }
 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo const& fileInfo, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
