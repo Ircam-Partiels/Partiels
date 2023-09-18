@@ -88,6 +88,27 @@ namespace Track
             std::optional<float> mCurrentValue;
             JUCE_LEAK_DETECTOR(CellValue)
         };
+
+        class CellExtra
+        : public CellBase
+        {
+        public:
+            CellExtra(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index, size_t extraIndex);
+            ~CellExtra() override = default;
+
+            // juce::Component
+            void resized() override;
+            void lookAndFeelChanged() override;
+
+            // CellBase
+            void update() override;
+
+        private:
+            size_t mExtraIndex;
+            NumberField mNumberField;
+            float mCurrentValue;
+            JUCE_LEAK_DETECTOR(CellExtra)
+        };
     } // namespace Result
 } // namespace Track
 

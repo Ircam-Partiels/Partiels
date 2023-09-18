@@ -64,7 +64,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
     setSize(420 + mTable.getVerticalScrollBar().getWidth(), 600);
     setWantsKeyboardFocus(true);
 
-    mListener.onAttrChanged = [this](Accessor const& acsr, AttrType attribute)
+    using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
+    mListener.onAttrChanged = [&](Accessor const& acsr, AttrType attribute)
     {
         switch(attribute)
         {
@@ -91,11 +92,23 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
                     mTabbedButtonBar.setVisible(numChannels > 1);
                 };
 
+                auto& header = mTable.getHeader();
+                auto const numColumns = header.getNumColumns(true);
+                auto const& description = acsr.getAttr<AttrType::description>();
+                for(int i = numColumns; i >= static_cast<int>(ColumnType::extra); --i)
+                {
+                    header.removeColumn(i);
+                }
+                auto const numExtra = static_cast<int>(description.extraOutputs.size());
+                for(int i = static_cast<int>(ColumnType::extra); i < static_cast<int>(ColumnType::extra) + numExtra; ++i)
+                {
+                    auto const name = description.extraOutputs.at(static_cast<size_t>(i - static_cast<int>(ColumnType::extra))).name;
+                    header.addColumn(name.empty() ? juce::translate("Extra INDEX").replace("INDEX", juce::String(i + 1)) : name, i, 96, 84, -1, ColumnFlags::visible);
+                }
                 auto const& results = acsr.getAttr<AttrType::results>();
                 auto const access = results.getReadAccess();
                 if(static_cast<bool>(access))
                 {
-                    auto& header = mTable.getHeader();
                     switch(Tools::getFrameType(acsr))
                     {
                         case Track::FrameType::label:
@@ -168,9 +181,8 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
         }
     };
 
-    mTransportListener.onAttrChanged = [this](Transport::Accessor const& acsr, Transport::AttrType attribute)
+    mTransportListener.onAttrChanged = [this]([[maybe_unused]] Transport::Accessor const& acsr, Transport::AttrType attribute)
     {
-        juce::ignoreUnused(acsr);
         switch(attribute)
         {
             case Transport::AttrType::looping:
@@ -234,7 +246,6 @@ Track::Result::Table::Table(Director& director, Zoom::Accessor& timeZoomAccessor
     mTable.setMultipleSelectionEnabled(true);
     mTable.setModel(this);
 
-    using ColumnFlags = juce::TableHeaderComponent::ColumnPropertyFlags;
     auto& header = mTable.getHeader();
     header.setStretchToFitActive(true);
     header.addColumn(juce::translate("Index"), static_cast<int>(ColumnType::index), 60, 60, 60, ColumnFlags::visible);
@@ -299,7 +310,7 @@ int Track::Result::Table::getNumRows()
     {
         return 0;
     }
-    auto getNumColumns = [&](auto resultPtr)
+    auto const getNumRows = [&](auto resultPtr)
     {
         auto constexpr maxSize = std::numeric_limits<int>::max();
         auto const size = *channel < resultPtr->size() ? resultPtr->at(*channel).size() : 0_z;
@@ -309,15 +320,15 @@ int Track::Result::Table::getNumRows()
     {
         case Track::FrameType::label:
         {
-            return getNumColumns(results.getMarkers());
+            return getNumRows(results.getMarkers());
         }
         case Track::FrameType::value:
         {
-            return getNumColumns(results.getPoints());
+            return getNumRows(results.getPoints());
         }
         case Track::FrameType::vector:
         {
-            return getNumColumns(results.getColumns());
+            return getNumRows(results.getColumns());
         }
     };
     return 0;
@@ -390,13 +401,19 @@ juce::Component* Track::Result::Table::refreshComponentForCell(int rowNumber, in
             return cell.release();
         }
     }
-
+    else
+    {
+        auto cell = std::make_unique<CellExtra>(mDirector, mTimeZoomAccessor, *channel, frameIndex, columnId - static_cast<int>(static_cast<int>(ColumnType::extra)));
+        if(cell != nullptr && cell->updateAndValidate(*channel))
+        {
+            return cell.release();
+        }
+    }
     return nullptr;
 }
 
-void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, int width, int height, bool rowIsSelected)
+void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, int width, int height, [[maybe_unused]] bool rowIsSelected)
 {
-    juce::ignoreUnused(rowIsSelected);
     auto const& results = mAccessor.getAttr<AttrType::results>();
     auto const access = results.getReadAccess();
     if(!static_cast<bool>(access) || row < 0)
@@ -411,18 +428,38 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
     }
 
     auto const frameIndex = static_cast<size_t>(row);
-    auto isValid = [&](auto const& resultPtr)
+    auto const isValid = [&](auto const& resultPtr)
     {
         return *channel < resultPtr->size() && frameIndex < resultPtr->at(*channel).size();
     };
 
-    auto drawText = [&](juce::String const& text)
+    auto const drawText = [&](juce::String const& text)
     {
         g.setColour(mTable.findColour(juce::ListBox::textColourId));
         g.setFont(juce::Font(static_cast<float>(height) * 0.7f));
         juce::Rectangle<int> const bounds(4, 0, width - 14, height);
         auto constexpr justification = juce::Justification::centredLeft;
         g.drawFittedText(text, bounds, justification, 1, 1.0f);
+    };
+
+    auto const drawExtra = [&](std::vector<float> const& extra, size_t index)
+    {
+        if(index >= extra.size())
+        {
+            drawText(" - ");
+        }
+        else
+        {
+            auto const& extraOutputs = mAccessor.getAttr<AttrType::description>().extraOutputs;
+            if(index < extraOutputs.size())
+            {
+                drawText(Format::valueToString(extra.at(index), 4) + extraOutputs.at(index).unit);
+            }
+            else
+            {
+                drawText(Format::valueToString(extra.at(index), 4));
+            }
+        }
     };
 
     if(auto markers = results.getMarkers())
@@ -452,6 +489,12 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
             {
                 auto const text = std::get<2_z>(markers->at(*channel).at(frameIndex));
                 drawText(text.empty() ? " - " : text);
+            }
+            break;
+            default:
+            {
+                auto const extraIndex = static_cast<size_t>(columnId) - static_cast<size_t>(ColumnType::extra);
+                drawExtra(std::get<3_z>(markers->at(*channel).at(frameIndex)), extraIndex);
             }
             break;
         }
@@ -492,6 +535,12 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
                 }
             }
             break;
+            default:
+            {
+                auto const extraIndex = static_cast<size_t>(columnId) - static_cast<size_t>(ColumnType::extra);
+                drawExtra(std::get<3_z>(points->at(*channel).at(frameIndex)), extraIndex);
+            }
+            break;
         }
     }
     if(auto columns = results.getColumns())
@@ -527,6 +576,12 @@ void Track::Result::Table::paintCell(juce::Graphics& g, int row, int columnId, i
                     textArray.add(Format::valueToString(value, 4));
                 }
                 drawText(textArray.joinIntoString(", "));
+            }
+            break;
+            default:
+            {
+                auto const extraIndex = static_cast<size_t>(columnId) - static_cast<size_t>(ColumnType::extra);
+                drawExtra(std::get<3_z>(columns->at(*channel).at(frameIndex)), extraIndex);
             }
             break;
         }

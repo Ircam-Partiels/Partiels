@@ -65,6 +65,7 @@ namespace Track
                 , time
                 , duration
                 , value
+                , extra
             };
             // clang-format on
 

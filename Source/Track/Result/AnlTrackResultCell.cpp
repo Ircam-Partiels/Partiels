@@ -19,7 +19,7 @@ bool Track::Result::CellBase::CellBase::updateAndValidate(size_t channel)
     {
         return false;
     }
-    auto isResultValid = [&](auto const& resultPtr) -> bool
+    auto const isResultValid = [&](auto const& resultPtr) -> bool
     {
         if(mChannel < resultPtr->size() && mIndex < resultPtr->at(mChannel).size() && channel == mChannel)
         {
@@ -476,6 +476,18 @@ void Track::Result::CellValue::update()
         mNumberField.setVisible(true);
         mNumberField.setNumDecimalsDisplayed(4);
         mNumberField.setTextValueSuffix(Track::Tools::getUnit(mAccessor));
+        if(mAccessor.getAttr<AttrType::description>().output.hasKnownExtents)
+        {
+            auto const& output = mAccessor.getAttr<AttrType::description>().output;
+            auto const min = static_cast<double>(output.minValue);
+            auto const max = static_cast<double>(output.maxValue);
+            auto const interval = output.isQuantized ? static_cast<double>(output.quantizeStep) : 0.0;
+            mNumberField.setRange({min, max}, interval, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            mNumberField.setRange({0.0, 0.0}, 0.0, juce::NotificationType::dontSendNotification);
+        }
         if(mChannel >= points->size())
         {
             mNumberField.setEnabled(false);
@@ -502,6 +514,163 @@ void Track::Result::CellValue::update()
     }
     mLabel.setVisible(false);
     mNumberField.setVisible(false);
+}
+
+Track::Result::CellExtra::CellExtra(Director& director, Zoom::Accessor& timeZoomAccessor, size_t channel, size_t index, size_t extraIndex)
+: Result::CellBase(director, timeZoomAccessor, channel, index)
+, mExtraIndex(extraIndex)
+{
+    addAndMakeVisible(mNumberField);
+    mNumberField.onValueChanged = [this](double newValue)
+    {
+        auto& undoManager = mDirector.getUndoManager();
+        class Action
+        : public Modifier::ActionBase
+        {
+        public:
+            Action(std::function<Accessor&()> fn, size_t channel, size_t index, size_t extraIndex, float currentValue, float newValue, float minValue)
+            : Modifier::ActionBase(fn, channel)
+            , mIndex(index)
+            , mExtraIndex(extraIndex)
+            , mCurrentValue(currentValue)
+            , mNewValue(newValue)
+            , mMinValue(minValue)
+            {
+            }
+
+            ~Action() override = default;
+
+            bool perform() override
+            {
+                apply(mNewValue);
+                return true;
+            }
+
+            bool undo() override
+            {
+                apply(mCurrentValue);
+                return true;
+            }
+
+            bool apply(float value)
+            {
+                auto const applyValue = [value, index = mExtraIndex, minValue = mMinValue](auto& frame)
+                {
+                    if(index >= std::get<3_z>(frame).size())
+                    {
+                        std::get<3_z>(frame).resize(index + 1_z, minValue);
+                    }
+                    auto& extra = std::get<3_z>(frame)[index];
+                    if(std::abs(value - extra) < std::numeric_limits<float>::epsilon())
+                    {
+                        return false;
+                    }
+                    extra = value;
+                    return true;
+                };
+                switch(Tools::getFrameType(mGetAccessorFn()))
+                {
+                    case FrameType::label:
+                        return Modifier::updateFrame<Data::Type::marker>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                    case FrameType::value:
+                        return Modifier::updateFrame<Data::Type::point>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                    case FrameType::vector:
+                        return Modifier::updateFrame<Data::Type::column>(mGetAccessorFn(), mChannel, mIndex, mNewCommit, applyValue);
+                    default:
+                        return false;
+                }
+            }
+
+        private:
+            size_t const mIndex;
+            size_t const mExtraIndex;
+            float const mCurrentValue;
+            float const mNewValue;
+            float const mMinValue;
+        };
+
+        auto const& extraOutputs = mAccessor.getAttr<AttrType::description>().extraOutputs;
+        auto const minValue = mExtraIndex < extraOutputs.size() && extraOutputs.at(mExtraIndex).hasKnownExtents ? extraOutputs.at(mExtraIndex).minValue : 0.0;
+        auto action = std::make_unique<Action>(mDirector.getSafeAccessorFn(), mChannel, mIndex, mExtraIndex, mCurrentValue, newValue, minValue);
+        if(action != nullptr)
+        {
+            undoManager.beginNewTransaction(juce::translate("Change Frame Extra Value"));
+            undoManager.perform(action.release());
+        }
+    };
+}
+
+void Track::Result::CellExtra::resized()
+{
+    mNumberField.setFont(juce::Font(static_cast<float>(getHeight()) * 0.7f));
+    mNumberField.setBounds(getLocalBounds());
+}
+
+void Track::Result::CellExtra::lookAndFeelChanged()
+{
+    resized();
+}
+
+void Track::Result::CellExtra::update()
+{
+    auto const& results = mAccessor.getAttr<AttrType::results>();
+    auto const access = results.getReadAccess();
+    if(!static_cast<bool>(access))
+    {
+        return;
+    }
+    auto const updateExtra = [this](auto const& resultPtr)
+    {
+        mNumberField.setNumDecimalsDisplayed(4);
+        auto const& outputs = mAccessor.getAttr<AttrType::description>().extraOutputs;
+        mNumberField.setTextValueSuffix(mExtraIndex < outputs.size() ? outputs.at(mExtraIndex).unit : "");
+        if(mExtraIndex < outputs.size() && outputs.at(mExtraIndex).hasKnownExtents)
+        {
+            auto const& output = outputs.at(mExtraIndex);
+            auto const min = static_cast<double>(output.minValue);
+            auto const max = static_cast<double>(output.maxValue);
+            auto const interval = output.isQuantized ? static_cast<double>(output.quantizeStep) : 0.0;
+            mNumberField.setRange({min, max}, interval, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            mNumberField.setRange({0.0, 0.0}, 0.0, juce::NotificationType::dontSendNotification);
+        }
+        if(mChannel >= resultPtr->size())
+        {
+            mNumberField.setEnabled(false);
+            mNumberField.setText("", juce::NotificationType::dontSendNotification);
+            return;
+        }
+        auto const& channel = resultPtr->at(mChannel);
+        if(mIndex >= channel.size())
+        {
+            mNumberField.setEnabled(false);
+            mNumberField.setText("", juce::NotificationType::dontSendNotification);
+            return;
+        }
+        mNumberField.setEnabled(true);
+        auto const& row = channel.at(mIndex);
+        if(mExtraIndex >= std::get<3_z>(row).size())
+        {
+            mNumberField.setText("", juce::NotificationType::dontSendNotification);
+            return;
+        }
+        mCurrentValue = std::get<3_z>(row).at(mExtraIndex);
+        mNumberField.setValue(std::get<3_z>(row).at(mExtraIndex), juce::NotificationType::dontSendNotification);
+    };
+    if(auto markers = results.getMarkers())
+    {
+        updateExtra(markers);
+    }
+    else if(auto points = results.getPoints())
+    {
+        updateExtra(points);
+    }
+    else if(auto columns = results.getColumns())
+    {
+        updateExtra(columns);
+    }
 }
 
 ANALYSE_FILE_END
