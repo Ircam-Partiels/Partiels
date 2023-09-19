@@ -184,7 +184,7 @@ bool Plugin::Processor::setPrecomputingResults(std::vector<std::vector<Result>> 
             mPlugins[index]->setPreComputingFeatures(fs);
         }
     }
-    else
+    else if(!results.empty())
     {
         for(size_t index = 0; index < mPlugins.size(); ++index)
         {
