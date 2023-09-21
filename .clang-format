@@ -7,10 +7,9 @@ AccessModifierOffset: -4
 SpaceBeforeCaseColon: false
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
-SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCpp11BracedList: false
-SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeParens: Never
 
 AlwaysBreakAfterReturnType: None
