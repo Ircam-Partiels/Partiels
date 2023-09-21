@@ -1,5 +1,9 @@
 v1.3.0-dev3
 
+- Imp: Ircam Vamp Plug-ins - Update the PM2 vamp plug-in (#369)
+- Imp: Ircam Vamp Plug-ins - Update the SuperVP vamp plug-in (#368)
+- Imp: When the zoom track of a group is set to front, use the first track that is visible and is not a marker track (#367)
+- Add: Ircam Vamp Plug-ins - New FCN pitch estimation vamp plug-in (#365)
 - Add: New and more consistent set of icons for the entire application (#363)
 - Imp: Hide floating windows when a temporary panel is displayed, then restore floating windows (#362)
 - Imp: Transform some floating windows into temporary panels integrated into the main interface (#361)
@@ -15,6 +19,7 @@ v1.3.0-dev3
 - Add: Access to the plug-in settings window via the plug-in list window (#351)
 - Imp: Make the plug-in search bar more accessible in the plug-in list window (#349)
 - Add: New spectrogram plug-in available by default in Partiels (#348)
+- Add: Add IVE v2 support with multidimensional results and graphical parsing (#346)
 - Add: Create a no value point with the shortcut 'b' on the track's graphical plot to break the continuity of the segments (#342)
 - Add: Double-click on a marker to display the results table, focusing on the selected element (#341)
 - Add: Support lab file extension as CSV with end time instead of duration (#223)
