@@ -26,10 +26,11 @@ Application::Interface::ReaderLayoutPanel::~ReaderLayoutPanel()
     setContent("", nullptr);
 }
 
-void Application::Interface::ReaderLayoutPanel::inputAttemptWhenModal()
+bool Application::Interface::ReaderLayoutPanel::escapeKeyPressed()
 {
     mReaderLayoutContent.warnBeforeClosing();
-    HideablePanel::inputAttemptWhenModal();
+    hide();
+    return true;
 }
 
 Application::Interface::PluginSearchPathPanel::PluginSearchPathPanel()
@@ -43,10 +44,11 @@ Application::Interface::PluginSearchPathPanel::~PluginSearchPathPanel()
     setContent("", nullptr);
 }
 
-void Application::Interface::PluginSearchPathPanel::inputAttemptWhenModal()
+bool Application::Interface::PluginSearchPathPanel::escapeKeyPressed()
 {
     mPluginSearchPath.warnBeforeClosing();
-    HideablePanel::inputAttemptWhenModal();
+    hide();
+    return true;
 }
 
 Application::Interface::PluginListTablePanel::PluginListTablePanel(juce::Component& content)

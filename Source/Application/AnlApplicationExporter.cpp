@@ -179,16 +179,14 @@ Application::ExporterPanel::ExporterPanel()
 {
 }
 
-void Application::ExporterPanel::inputAttemptWhenModal()
+bool Application::ExporterPanel::escapeKeyPressed()
 {
     if(!mContent.canCloseWindow())
     {
-        juce::Component::inputAttemptWhenModal();
+        return false;
     }
-    else
-    {
-        HideablePanel::inputAttemptWhenModal();
-    }
+    hide();
+    return true;
 }
 
 ANALYSE_FILE_END

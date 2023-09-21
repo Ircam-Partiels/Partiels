@@ -46,8 +46,8 @@ namespace Application
         ExporterPanel();
         ~ExporterPanel() override = default;
 
-        // juce::Component
-        void inputAttemptWhenModal() override;
+        // HideablePanel
+        bool escapeKeyPressed() override;
     };
 } // namespace Application
 

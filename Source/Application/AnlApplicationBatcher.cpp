@@ -304,16 +304,14 @@ Application::BatcherPanel::BatcherPanel()
 {
 }
 
-void Application::BatcherPanel::inputAttemptWhenModal()
+bool Application::BatcherPanel::escapeKeyPressed()
 {
     if(!mContent.canCloseWindow())
     {
-        juce::Component::inputAttemptWhenModal();
+        return false;
     }
-    else
-    {
-        HideablePanel::inputAttemptWhenModal();
-    }
+    hide();
+    return true;
 }
 
 ANALYSE_FILE_END

@@ -62,8 +62,8 @@ namespace Application
             ReaderLayoutPanel();
             ~ReaderLayoutPanel() override;
 
-            // juce::Component
-            void inputAttemptWhenModal() override;
+            // HideablePanel
+            bool escapeKeyPressed() override;
 
         private:
             Document::ReaderLayoutContent mReaderLayoutContent;
@@ -76,8 +76,8 @@ namespace Application
             PluginSearchPathPanel();
             ~PluginSearchPathPanel() override;
 
-            // juce::Component
-            void inputAttemptWhenModal() override;
+            // HideablePanel
+            bool escapeKeyPressed() override;
 
         private:
             PluginList::SearchPath mPluginSearchPath;

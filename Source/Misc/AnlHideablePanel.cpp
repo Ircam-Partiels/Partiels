@@ -90,11 +90,38 @@ void HideablePanel::childBoundsChanged([[maybe_unused]] juce::Component* child)
     }
 }
 
-void HideablePanel::inputAttemptWhenModal()
+void HideablePanel::hide()
 {
     if(auto* parent = dynamic_cast<HideablePanelManager*>(getParentComponent()))
     {
         parent->hide();
+    }
+    else
+    {
+        setVisible(false);
+    }
+}
+
+bool HideablePanel::escapeKeyPressed()
+{
+    hide();
+    return true;
+}
+
+bool HideablePanel::keyPressed(juce::KeyPress const& key)
+{
+    if(key == juce::KeyPress::escapeKey && escapeKeyPressed())
+    {
+        return true;
+    }
+    return false;
+}
+
+void HideablePanel::inputAttemptWhenModal()
+{
+    if(!escapeKeyPressed())
+    {
+        juce::Component::inputAttemptWhenModal();
     }
 }
 

@@ -19,6 +19,11 @@ public:
     void resized() override;
     void childBoundsChanged(juce::Component* child) override;
     void inputAttemptWhenModal() override;
+    bool keyPressed(juce::KeyPress const& key) override;
+
+protected:
+    virtual bool escapeKeyPressed();
+    void hide();
 
 private:
     class Packager
