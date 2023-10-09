@@ -103,10 +103,6 @@ std::vector<std::unique_ptr<Ive::PluginWrapper>> Plugin::Tools::createPluginWrap
             {
                 plugin->setParameter(parameter.first, parameter.second);
             }
-            else
-            {
-                throw ParametersError("plugin parameter is invalid");
-            }
         }
 
         if(!plugin->initialise(numChannels, state.stepSize, state.blockSize))
