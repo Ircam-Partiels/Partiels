@@ -353,7 +353,20 @@ void Application::LoaderContent::paint(juce::Graphics& g)
     g.fillAll(findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
 }
 
-void Application::LoaderContent::paintOverChildren(juce::Graphics& g)
+void Application::LoaderContent::applicationCommandInvoked([[maybe_unused]] juce::ApplicationCommandTarget::InvocationInfo const& info)
+{
+}
+
+void Application::LoaderContent::applicationCommandListChanged()
+{
+    using CommandIDs = CommandTarget::CommandIDs;
+    auto const& commandManager = Instance::get().getApplicationCommandManager();
+    mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::documentOpen));
+    mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editNewTrack));
+    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editLoadTemplate));
+}
+
+void Application::DragAndDropTarget::paintOverChildren(juce::Graphics& g)
 {
     if(mIsDragging)
     {
@@ -361,50 +374,42 @@ void Application::LoaderContent::paintOverChildren(juce::Graphics& g)
     }
 }
 
-bool Application::LoaderContent::isInterestedInFileDrag(juce::StringArray const& files)
+bool Application::DragAndDropTarget::isInterestedInFileDrag(juce::StringArray const& files)
 {
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
-
+    auto const documentHasAudioFiles = !Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>().empty();
     auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
     auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
     auto const documentWildcard = Instance::getWildCardForDocumentFile();
     auto const fileWildcard = documentWildcard + ";" + (documentHasAudioFiles ? importFormatsWildcard : audioFormatsWildcard);
-    for(auto const& fileName : files)
-    {
-        if(fileWildcard.contains(juce::File(fileName).getFileExtension()))
-        {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(files.begin(), files.end(), [&](auto const& fileName)
+                       {
+                           return fileWildcard.contains(juce::File(fileName).getFileExtension());
+                       });
 }
 
-void Application::LoaderContent::fileDragEnter([[maybe_unused]] juce::StringArray const& files, [[maybe_unused]] int x, [[maybe_unused]] int y)
+void Application::DragAndDropTarget::fileDragEnter([[maybe_unused]] juce::StringArray const& files, [[maybe_unused]] int x, [[maybe_unused]] int y)
 {
     mIsDragging = true;
     repaint();
 }
 
-void Application::LoaderContent::fileDragExit([[maybe_unused]] juce::StringArray const& files)
+void Application::DragAndDropTarget::fileDragExit([[maybe_unused]] juce::StringArray const& files)
 {
     mIsDragging = false;
     repaint();
 }
 
-void Application::LoaderContent::filesDropped(juce::StringArray const& files, [[maybe_unused]] int x, [[maybe_unused]] int y)
+void Application::DragAndDropTarget::filesDropped(juce::StringArray const& files, [[maybe_unused]] int x, [[maybe_unused]] int y)
 {
     mIsDragging = false;
     repaint();
 
-    auto& documentAccessor = Instance::get().getDocumentAccessor();
-    auto const documentHasAudioFiles = !documentAccessor.getAttr<Document::AttrType::reader>().empty();
-
+    auto const documentHasAudioFiles = !Instance::get().getDocumentAccessor().getAttr<Document::AttrType::reader>().empty();
     auto const audioFormatsWildcard = Instance::getWildCardForAudioFormats();
     auto const documentWildcard = Instance::getWildCardForDocumentFile();
     auto const openWildcard = documentWildcard + (documentHasAudioFiles ? "" : ";" + audioFormatsWildcard);
     auto const importFormatsWildcard = Instance::getWildCardForImportFormats();
-    auto getFiles = [&]()
+    auto const getFiles = [&]()
     {
         std::vector<juce::File> openFiles;
         std::vector<juce::File> importFiles;
@@ -426,26 +431,15 @@ void Application::LoaderContent::filesDropped(juce::StringArray const& files, [[
     if(!std::get<0>(validFiles).empty())
     {
         Instance::get().openFiles(std::get<0>(validFiles));
-        return;
     }
-    for(auto const& importFile : std::get<1>(validFiles))
+    else
     {
-        auto const position = Tools::getNewTrackPosition();
-        Instance::get().importFile(position, importFile);
+        for(auto const& importFile : std::get<1>(validFiles))
+        {
+            auto const position = Tools::getNewTrackPosition();
+            Instance::get().importFile(position, importFile);
+        }
     }
-}
-
-void Application::LoaderContent::applicationCommandInvoked([[maybe_unused]] juce::ApplicationCommandTarget::InvocationInfo const& info)
-{
-}
-
-void Application::LoaderContent::applicationCommandListChanged()
-{
-    using CommandIDs = CommandTarget::CommandIDs;
-    auto& commandManager = Instance::get().getApplicationCommandManager();
-    mLoadFileButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::documentOpen));
-    mAddTrackButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editNewTrack));
-    mLoadTemplateButton.setTooltip(commandManager.getDescriptionOfCommand(CommandIDs::editLoadTemplate));
 }
 
 ANALYSE_FILE_END

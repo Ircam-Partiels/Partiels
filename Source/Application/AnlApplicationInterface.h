@@ -104,7 +104,7 @@ namespace Application
         };
 
         class DocumentContainer
-        : public juce::Component
+        : public DragAndDropTarget
         {
         public:
             DocumentContainer();
@@ -112,6 +112,7 @@ namespace Application
 
             // juce::Component
             void resized() override;
+
             Document::Section const& getDocumentSection() const;
             PluginList::Table& getPluginListTable();
 

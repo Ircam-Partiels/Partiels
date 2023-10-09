@@ -8,7 +8,6 @@ namespace Application
 {
     class LoaderContent
     : public juce::Component
-    , public juce::FileDragAndDropTarget
     , private juce::ApplicationCommandManagerListener
     {
     public:
@@ -18,13 +17,6 @@ namespace Application
         // juce::Component
         void resized() override;
         void paint(juce::Graphics& g) override;
-        void paintOverChildren(juce::Graphics& g) override;
-
-        // juce::FileDragAndDropTarget
-        bool isInterestedInFileDrag(juce::StringArray const& files) override;
-        void fileDragEnter(juce::StringArray const& files, int x, int y) override;
-        void fileDragExit(juce::StringArray const& files) override;
-        void filesDropped(juce::StringArray const& files, int x, int y) override;
 
     private:
         // juce::ApplicationCommandManagerListener
@@ -75,6 +67,26 @@ namespace Application
         juce::ToggleButton mAdaptationButton;
         juce::ComboBox mTemplateMenu;
         juce::Label mBottomInfo;
+    };
+
+    class DragAndDropTarget
+    : public juce::Component
+    , public juce::FileDragAndDropTarget
+    {
+    public:
+        DragAndDropTarget() = default;
+        ~DragAndDropTarget() override = default;
+
+        // juce::Component
+        void paintOverChildren(juce::Graphics& g) override;
+
+        // juce::FileDragAndDropTarget
+        bool isInterestedInFileDrag(juce::StringArray const& files) override;
+        void fileDragEnter(juce::StringArray const& files, int x, int y) override;
+        void fileDragExit(juce::StringArray const& files) override;
+        void filesDropped(juce::StringArray const& files, int x, int y) override;
+
+    private:
         bool mIsDragging{false};
     };
 } // namespace Application
