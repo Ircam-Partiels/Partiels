@@ -697,14 +697,21 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
     // Value Zoom
     {
         auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-        auto applyZoom = [&](Zoom::Range const& globalRange)
+        auto const applyZoom = [&](Zoom::Range const& globalRange)
         {
             auto const& output = mAccessor.getAttr<AttrType::description>().output;
             auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
             auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, NotificationType::synchronous);
             zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
-            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
+            if(visibleRange.getLength() <= Zoom::epsilon())
+            {
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(globalRange, NotificationType::synchronous);
+            }
+            else
+            {
+                zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(visibleRange, NotificationType::synchronous);
+            }
         };
 
         auto const globalRange = zoomAcsr.getAttr<Zoom::AttrType::globalRange>();
@@ -712,11 +719,11 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         auto const& results = mAccessor.getAttr<AttrType::results>();
         auto const access = results.getReadAccess();
         auto const resultsRange = static_cast<bool>(access) ? results.getValueRange() : decltype(results.getValueRange()){};
-        if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::plugin || globalRange.isEmpty()) && pluginRange.has_value() && !pluginRange->isEmpty())
+        if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::plugin || globalRange.getLength() <= Zoom::epsilon()) && pluginRange.has_value() && !pluginRange->isEmpty())
         {
             applyZoom(*pluginRange);
         }
-        else if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::results || globalRange.isEmpty()) && resultsRange.has_value() && !resultsRange->isEmpty())
+        else if((mValueRangeMode == ValueRangeMode::undefined || mValueRangeMode == ValueRangeMode::results || globalRange.getLength() <= Zoom::epsilon()) && resultsRange.has_value() && !resultsRange->isEmpty())
         {
             applyZoom(*resultsRange);
         }
