@@ -918,6 +918,27 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     advancement.store(0.0f);
+    enum class BinMode
+    {
+        undefined,
+        defined,
+        variable
+    };
+    auto binMode = BinMode::undefined;
+    auto binCount = 0_z;
+    auto const setBinCount = [&](auto const numBins)
+    {
+        if(binMode == BinMode::undefined)
+        {
+            binMode = BinMode::defined;
+            binCount = numBins;
+        }
+        else if(binMode == BinMode::defined && binCount != numBins)
+        {
+            binMode = BinMode::variable;
+            binCount = numBins;
+        }
+    };
 
     juce::String message;
     std::vector<std::vector<Plugin::Result>> pluginResults;
@@ -971,6 +992,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
                 if(labels != nullptr && labels->size() > rowIndex)
                 {
                     result.label = labels->at(rowIndex);
+                    setBinCount(0_z);
                 }
                 else if(values != nullptr && values->size() > rowIndex)
                 {
@@ -981,6 +1003,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
                         {
                             result.values = {static_cast<float>(values->at(rowIndex).at(columnIndex))};
                         }
+                        setBinCount(1_z);
                     }
                     else
                     {
@@ -990,6 +1013,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
                         {
                             result.values.push_back(static_cast<float>(rowValues[index]));
                         }
+                        setBinCount(rowValues.size());
                     }
                 }
             }
@@ -1003,6 +1027,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
                     {
                         result.values.push_back(static_cast<float>(values->at(rowIndex).at(columnIndex)));
                     }
+                    setBinCount(values->at(rowIndex).size());
                 }
             }
             channelResults.push_back(std::move(result));
@@ -1021,7 +1046,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
     }
 
     Plugin::Output output;
-    output.hasFixedBinCount = false;
+    output.hasFixedBinCount = binMode == BinMode::defined;
+    output.binCount = binCount;
     advancement.store(0.9f);
     auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
