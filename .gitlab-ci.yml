@@ -16,7 +16,7 @@ Test::MacOS:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G Xcode
     - ./Scripts/macos-build.sh Debug
-    - ctest -C Debug -VV
+    - ctest -C Debug -VV --test-dir build 
 
 Test::Windows:
   stage: test
@@ -26,7 +26,7 @@ Test::Windows:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
     - cmake --build build --config Debug
-    - ctest -C Debug -VV
+    - ctest -C Debug -VV --test-dir build 
 
 Test::Linux:
   stage: test
@@ -38,7 +38,7 @@ Test::Linux:
     - export CXX=/usr/bin/clang++
     - cmake . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build build
-    - ctest -C Debug -V
+    - ctest -C Debug -V --test-dir build 
 
 Build::MacOS:
   stage: build
@@ -49,7 +49,7 @@ Build::MacOS:
     - cd $CI_PROJECT_DIR
     - cmake . -B build -G Xcode
     - ./Scripts/macos-build.sh Release
-    - ctest -C Release -VV
+    - ctest -C Release -VV --test-dir build 
 
 Build::Windows:
   stage: build
@@ -61,7 +61,7 @@ Build::Windows:
     - cmake . -B build -G "Visual Studio 17 2022" -A x64 -DTIMESTAMP_SERVER_URL="http://timestamp.digicert.com"
     - cmake --build build --config Release
     - move-item -path ".\build\Partiels-install.exe" -destination ".\"
-    - ctest -C Release -VV
+    - ctest -C Release -VV --test-dir build 
   artifacts:
     paths:
       - $CI_PROJECT_DIR/Partiels-install.exe
@@ -78,7 +78,7 @@ Build::Linux:
     - export CXX=/usr/bin/clang++
     - cmake . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
     - cmake --build build
-    - ctest -C Release -V
+    - ctest -C Release -V --test-dir build 
     - $CI_PROJECT_DIR/Scripts/linux-package.sh $CI_PROJECT_DIR/Partiels
   artifacts:
     paths:
