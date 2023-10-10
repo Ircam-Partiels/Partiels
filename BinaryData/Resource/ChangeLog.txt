@@ -1,4 +1,4 @@
-v1.3.0-dev3
+v1.3.0-dev4
 
 - Imp: Ircam Vamp Plug-ins - Update the PM2 vamp plug-in (#369)
 - Imp: Ircam Vamp Plug-ins - Update the SuperVP vamp plug-in (#368)
