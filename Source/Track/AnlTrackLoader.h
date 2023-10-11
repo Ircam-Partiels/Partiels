@@ -40,7 +40,7 @@ namespace Track
             // juce::Component
             void resized() override;
 
-            bool setFile(juce::File const& file, std::function<void(FileInfo)> callback);
+            bool setFile(juce::File const& file, double sampleRate, std::function<void(FileInfo)> callback);
 
         private:
             PropertyText mPropertyName;

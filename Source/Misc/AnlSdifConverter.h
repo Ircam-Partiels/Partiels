@@ -6,6 +6,18 @@ ANALYSE_FILE_BEGIN
 
 namespace SdifConverter
 {
+    static constexpr uint32_t getSignature(char const* const p)
+    {
+        return ((((static_cast<uint32_t>(p[0])) & 0xff) << 24) | (((static_cast<uint32_t>(p[1])) & 0xff) << 16) | (((static_cast<uint32_t>(p[2])) & 0xff) << 8) | ((static_cast<uint32_t>(p[3])) & 0xff));
+    }
+
+    // clang-format off
+    enum SignatureIds : uint32_t
+    {
+          i1FQ0 = getSignature("1FQ0")
+    };
+    // clang-format on
+
     uint32_t getSignature(juce::String const& name);
     juce::String getString(uint32_t signature);
 
@@ -39,6 +51,9 @@ namespace SdifConverter
         void resized() override;
 
         void setFile(juce::File const& file);
+        bool hasAnyChangeableOption() const;
+        nlohmann::json getExtraInfo(double sampleRate) const;
+
         std::function<void(void)> onUpdated = nullptr;
         std::tuple<uint32_t, uint32_t, std::optional<juce::String>> getToSdifFormat() const;
         std::tuple<uint32_t, uint32_t, std::optional<size_t>, std::optional<size_t>> getFromSdifFormat() const;

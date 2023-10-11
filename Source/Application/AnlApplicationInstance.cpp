@@ -558,11 +558,12 @@ void Application::Instance::importFile(std::tuple<juce::String, size_t> const po
     auto const fileExtension = file.getFileExtension();
     anlWeakAssert(file.existsAsFile() && fileExtension.isNotEmpty() && importFileWildcard.contains(fileExtension));
     auto* window = getWindow();
-    if(window == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
+    if(window == nullptr || mDocumentAccessor == nullptr || !file.existsAsFile() || fileExtension.isEmpty() || !importFileWildcard.contains(fileExtension))
     {
         return;
     }
-    if(window->getInterface().getTrackLoaderArgumentSelector().setFile(file, [position](Track::FileInfo fileInfo)
+    auto const sampleRate = mDocumentAccessor->getAttr<Document::AttrType::samplerate>();
+    if(window->getInterface().getTrackLoaderArgumentSelector().setFile(file, sampleRate, [position](Track::FileInfo fileInfo)
                                                                        {
                                                                            Tools::addFileTrack(position, fileInfo);
                                                                            if(auto* w = Instance::get().getWindow())

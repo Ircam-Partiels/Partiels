@@ -1081,7 +1081,8 @@ void Track::Director::askForFile()
                                   {
                                       return;
                                   }
-                                  if(mLoaderSelector->setFile(results.getFirst(), [=, this](Track::FileInfo fileInfo)
+                                  auto const sampleRate = mAudioFormatReader != nullptr ? mAudioFormatReader->sampleRate : 44100.0;
+                                  if(mLoaderSelector->setFile(results.getFirst(), sampleRate, [=, this](Track::FileInfo fileInfo)
                                                               {
                                                                   if(safePointer.get() == nullptr)
                                                                   {

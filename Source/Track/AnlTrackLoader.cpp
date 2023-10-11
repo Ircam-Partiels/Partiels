@@ -918,12 +918,14 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(FileInfo 
 std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::File const& file, uint32_t frameId, uint32_t matrixId, std::optional<size_t> row, std::optional<size_t> column, std::atomic<bool> const& shouldAbort, std::atomic<float>& advancement)
 {
     advancement.store(0.0f);
+    // clang-format off
     enum class BinMode
     {
-        undefined,
-        defined,
-        variable
+          undefined
+        , defined
+        , variable
     };
+    // clang-format on
     auto binMode = BinMode::undefined;
     auto binCount = 0_z;
     auto const setBinCount = [&](auto const numBins)
@@ -1027,8 +1029,8 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
                     {
                         result.values.push_back(static_cast<float>(values->at(rowIndex).at(columnIndex)));
                     }
-                    setBinCount(values->at(rowIndex).size());
                 }
+                setBinCount(result.values.size());
             }
             channelResults.push_back(std::move(result));
             advancement.store(std::min(advancement.load() + 0.001f, 1.0f));
@@ -1046,8 +1048,17 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromSdif(juce::Fil
     }
 
     Plugin::Output output;
-    output.hasFixedBinCount = binMode == BinMode::defined;
-    output.binCount = binCount;
+    switch(static_cast<uint32_t>(matrixId))
+    {
+        case SdifConverter::SignatureIds::i1FQ0:
+            output.hasFixedBinCount = true;
+            output.binCount = 1_z;
+            break;
+        default:
+            output.hasFixedBinCount = binMode == BinMode::defined;
+            output.binCount = binCount;
+            break;
+    }
     advancement.store(0.9f);
     auto results = Tools::convert(output, pluginResults, shouldAbort);
     advancement.store(1.0f);
@@ -1096,7 +1107,7 @@ void Track::Loader::ArgumentSelector::resized()
     setSize(getWidth(), bounds.getY() + 2);
 }
 
-bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::function<void(FileInfo)> callback)
+bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, double sampleRate, std::function<void(FileInfo)> callback)
 {
     if(callback == nullptr)
     {
@@ -1136,7 +1147,7 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::funct
         mSdifPanel.setVisible(true);
         mSdifPanel.setFile(file);
         juce::WeakReference<juce::Component> weakReference(this);
-        mLoadButton.entry.onClick = [=, this]()
+        auto const doLoad = [=, this]()
         {
             if(weakReference.get() == nullptr)
             {
@@ -1155,8 +1166,15 @@ bool Track::Loader::ArgumentSelector::setFile(juce::File const& file, std::funct
             {
                 fileInfo.args.set("column", juce::String(*std::get<3_z>(format)));
             }
+            fileInfo.extra = mSdifPanel.getExtraInfo(sampleRate);
             callback(fileInfo);
         };
+        if(!mSdifPanel.hasAnyChangeableOption())
+        {
+            doLoad();
+            return false;
+        }
+        mLoadButton.entry.onClick = doLoad;
         resized();
         return true;
     }

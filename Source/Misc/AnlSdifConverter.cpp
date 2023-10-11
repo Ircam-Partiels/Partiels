@@ -699,24 +699,20 @@ SdifConverter::Panel::Panel()
                              notify();
                          })
 
-, mPropertyToJsonFrame("Frame", "Select the frame signature to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonFrame("Frame", "Select the frame signature to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
                        {
-                           juce::ignoreUnused(index);
                            selectedFrameUpdated();
                        })
-, mPropertyToJsonMatrix("Matrix", "Select the matrix signature to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonMatrix("Matrix", "Select the matrix signature to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
                         {
-                            juce::ignoreUnused(index);
                             selectedMatrixUpdated();
                         })
-, mPropertyToJsonRow("Row", "Select the row(s) to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonRow("Row", "Select the row(s) to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
                      {
-                         juce::ignoreUnused(index);
                          selectedRowColumnUpdated();
                      })
-, mPropertyToJsonColumn("Column", "Select the colum(s) to decode from the SDIF file", "", {}, [&](size_t index)
+, mPropertyToJsonColumn("Column", "Select the colum(s) to decode from the SDIF file", "", {}, [&]([[maybe_unused]] size_t index)
                         {
-                            juce::ignoreUnused(index);
                             selectedRowColumnUpdated();
                         })
 {
@@ -825,13 +821,8 @@ std::tuple<uint32_t, uint32_t, std::optional<size_t>, std::optional<size_t>> Sdi
         return {uint32_t(0), uint32_t(0), std::optional<size_t>{}, std::optional<size_t>{}};
     }
 
-    auto const row = mPropertyToJsonRow.entry.getSelectedId() - 1;
-    auto const column = mPropertyToJsonColumn.entry.getSelectedId() - 1;
-    if(row < 0 || column < 0)
-    {
-        return {uint32_t(0), uint32_t(0), std::optional<size_t>{}, std::optional<size_t>{}};
-    }
-
+    auto const row = std::max(mPropertyToJsonRow.entry.getSelectedId() - 1, 0);
+    auto const column = std::max(mPropertyToJsonColumn.entry.getSelectedId() - 1, 0);
     return {frameIdentifier, matrixIdentifier, row == 0 ? std::optional<size_t>{} : static_cast<size_t>(row - 1), column == 0 ? std::optional<size_t>{} : static_cast<size_t>(column - 1)};
 }
 
@@ -883,6 +874,51 @@ void SdifConverter::Panel::setFile(juce::File const& file)
         notify();
     }
     resized();
+}
+
+bool SdifConverter::Panel::hasAnyChangeableOption() const
+{
+    if(mFile.hasFileExtension("sdif"))
+    {
+        return mPropertyToJsonFrame.entry.isEnabled() || mPropertyToJsonMatrix.entry.isEnabled() || mPropertyToJsonRow.entry.isEnabled() || mPropertyToJsonColumn.entry.isEnabled();
+    }
+    return true;
+}
+
+nlohmann::json SdifConverter::Panel::getExtraInfo(double sampleRate) const
+{
+    if(!mFile.hasFileExtension("sdif"))
+    {
+        return {};
+    }
+    auto const selectedMatrixIndex = mPropertyToJsonMatrix.entry.getSelectedItemIndex();
+    if(selectedMatrixIndex < 0 || static_cast<size_t>(selectedMatrixIndex) > mMatrixSigLinks.size())
+    {
+        return {};
+    }
+    auto const matrixIdentifier = mMatrixSigLinks.at(static_cast<size_t>(selectedMatrixIndex));
+    switch(static_cast<uint32_t>(matrixIdentifier))
+    {
+        case SignatureIds::i1FQ0:
+        {
+            auto const desc = juce::String("{\"description\":{\"category\":\"Pitch\",\"defaultState\":{},\"details\":\"The fundamental estimation.\",\"extraO"
+                                           "utputs\":[{\"description\":\"The confidence of the estimated periodicity\",\"hasKnownExtents\":true,\"identi"
+                                           "fier\":\"confidence\",\"isQuantized\":false,\"maxValue\":1.0,\"minValue\":0.0,\"name\":\"Confidence\",\"quantizeSt"
+                                           "ep\":0.0,\"unit\":\"\"}, {\"description\":\"The score of the estimated periodicity\",\"hasKnownExtents\":true,\""
+                                           "identifier\":\"score\",\"isQuantized\":false,\"maxValue\":1.0,\"minValue\":0.0,\"name\":\"Score\",\"quantizeStep\":"
+                                           "0.0,\"unit\":\"\"}, {\"description\":\"The real amplitude\",\"hasKnownExtents\":true,\"identifier\":\"realamplitu"
+                                           "de\",\"isQuantized\":false,\"maxValue\":1.0,\"minValue\":0.0,\"name\":\"Real Amplitude\",\"quantizeStep\":0.0,\"un"
+                                           "it\":\"\"}],\"name\":\"Fundamental\",\"output\":{\"binCount\":1,\"binNames\":[\"\"],\"description\":\"Pitch estimated "
+                                           "from the input signal\",\"hasDuration\":false,\"hasFixedBinCount\":true,\"hasKnownExtents\":true,\"identifie"
+                                           "r\":\"fundamental\",\"isQuantized\":false,\"maxValue\":MAXFREQ,\"minValue\":0.0,\"name\":\"Pitch\",\"quantizeStep\""
+                                           ":0.0,\"sampleRate\":0.0,\"sampleType\":2,\"unit\":\"Hz\"}}}")
+                                  .replace("MAXFREQ", juce::String(sampleRate / 2.0));
+            std::istringstream stream(desc.toStdString());
+            return nlohmann::json::parse(stream);
+        }
+        default:
+            return {};
+    }
 }
 
 void SdifConverter::Panel::selectedFrameUpdated()
@@ -938,8 +974,8 @@ void SdifConverter::Panel::selectedMatrixUpdated()
         return;
     }
 
-    auto const frameIdentifier = mFrameSigLinks[static_cast<size_t>(selectedFrameIndex)];
-    auto const matrixIdentifier = mMatrixSigLinks[static_cast<size_t>(selectedMatrixIndex)];
+    auto const frameIdentifier = mFrameSigLinks.at(static_cast<size_t>(selectedFrameIndex));
+    auto const matrixIdentifier = mMatrixSigLinks.at(static_cast<size_t>(selectedMatrixIndex));
     if(mEntries.count(frameIdentifier) == 0_z || mEntries.at(frameIdentifier).count(matrixIdentifier) == 0_z)
     {
         mPropertyToSdifMatrix.entry.setText("????", juce::NotificationType::dontSendNotification);
@@ -950,31 +986,41 @@ void SdifConverter::Panel::selectedMatrixUpdated()
     }
 
     mPropertyToSdifMatrix.entry.setText(SdifConverter::getString(matrixIdentifier), juce::NotificationType::dontSendNotification);
-    auto const matrixSize = mEntries.at(frameIdentifier).at(matrixIdentifier);
+    switch(static_cast<uint32_t>(matrixIdentifier))
+    {
+        case SignatureIds::i1FQ0:
+            mPropertyToJsonRow.entry.setEnabled(false);
+            mPropertyToJsonRow.setVisible(false);
+            mPropertyToJsonColumn.entry.setEnabled(false);
+            mPropertyToJsonColumn.setVisible(false);
+            resized();
+            break;
+        default:
+            auto const matrixSize = mEntries.at(frameIdentifier).at(matrixIdentifier);
+            if(matrixSize.first > 1_z)
+            {
+                mPropertyToJsonRow.entry.addItem("All", 1);
+            }
+            for(auto row = 0_z; row < matrixSize.first; ++row)
+            {
+                mPropertyToJsonRow.entry.addItem(juce::String(row), static_cast<int>(row + 2));
+            }
+            mPropertyToJsonRow.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+            mPropertyToJsonRow.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 1);
 
-    if(matrixSize.first > 1_z)
-    {
-        mPropertyToJsonRow.entry.addItem("All", 1);
+            if(matrixSize.second.size() > 1_z)
+            {
+                mPropertyToJsonColumn.entry.addItem("All", 1);
+            }
+            for(auto column = 0_z; column < matrixSize.second.size(); ++column)
+            {
+                mPropertyToJsonColumn.entry.addItem(matrixSize.second[column], static_cast<int>(column + 2));
+            }
+            mPropertyToJsonColumn.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
+            mPropertyToJsonColumn.entry.setEnabled(mPropertyToJsonColumn.entry.getNumItems() > 1);
+            selectedRowColumnUpdated();
+            break;
     }
-    for(auto row = 0_z; row < matrixSize.first; ++row)
-    {
-        mPropertyToJsonRow.entry.addItem(juce::String(row), static_cast<int>(row + 2));
-    }
-    mPropertyToJsonRow.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
-    mPropertyToJsonRow.entry.setEnabled(mPropertyToJsonRow.entry.getNumItems() > 1);
-
-    if(matrixSize.second.size() > 1_z)
-    {
-        mPropertyToJsonColumn.entry.addItem("All", 1);
-    }
-    for(auto column = 0_z; column < matrixSize.second.size(); ++column)
-    {
-        mPropertyToJsonColumn.entry.addItem(matrixSize.second[column], static_cast<int>(column + 2));
-    }
-    mPropertyToJsonColumn.entry.setSelectedItemIndex(0, juce::NotificationType::dontSendNotification);
-    mPropertyToJsonColumn.entry.setEnabled(mPropertyToJsonColumn.entry.getNumItems() > 1);
-
-    selectedRowColumnUpdated();
 }
 
 void SdifConverter::Panel::selectedRowColumnUpdated()
@@ -985,6 +1031,7 @@ void SdifConverter::Panel::selectedRowColumnUpdated()
     {
         MiscWeakAssert(false);
         notify();
+        resized();
         return;
     }
     mPropertyToJsonColumn.entry.setItemEnabled(1, row != 0);
@@ -993,6 +1040,7 @@ void SdifConverter::Panel::selectedRowColumnUpdated()
         mPropertyToJsonColumn.entry.setSelectedId(2, juce::NotificationType::dontSendNotification);
     }
     notify();
+    resized();
 }
 
 void SdifConverter::Panel::notify()
