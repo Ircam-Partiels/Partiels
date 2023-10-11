@@ -362,7 +362,7 @@ std::variant<Track::Results, juce::String> Track::Loader::loadFromJson(std::istr
                 }
                 columnChannel.push_back({});
                 std::get<0_z>(columnChannel.back()) = timeIt->get<double>();
-                std::get<1_z>(columnChannel.back()) = durationIt->get<double>();
+                std::get<1_z>(columnChannel.back()) = durationIt == frameData.cend() ? 0.0 : durationIt->get<double>();
                 std::get<2_z>(columnChannel.back()) = valuesIt->get<std::vector<float>>();
                 if(extraIt != frameData.cend())
                 {
