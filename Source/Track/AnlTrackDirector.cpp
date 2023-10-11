@@ -13,6 +13,45 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
 , mHierarchyManager(hierarchyManager)
 , mAudioFormatReader(std::move(audioFormatReader))
 {
+    mSharedZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& sharedZoomAcsr, Zoom::AttrType attribute)
+    {
+        std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
+        if(!lock.owns_lock())
+        {
+            return;
+        }
+        auto const updateZoom = [&](Zoom::Accessor& zoomAcsr)
+        {
+            if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty())
+            {
+                return;
+            }
+            auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
+            zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
+        };
+        switch(attribute)
+        {
+            case Zoom::AttrType::globalRange:
+            case Zoom::AttrType::visibleRange:
+            {
+                switch(Tools::getFrameType(mAccessor))
+                {
+                    case Track::FrameType::label:
+                        break;
+                    case Track::FrameType::value:
+                        updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
+                        break;
+                    case Track::FrameType::vector:
+                        updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
+                }
+            }
+            break;
+            case Zoom::AttrType::minimumLength:
+            case Zoom::AttrType::anchor:
+                break;
+        }
+    };
+
     accessor.onAttrUpdated = [this](AttrType attr, NotificationType notification)
     {
         switch(attr)
@@ -163,7 +202,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
             case AttrType::zoomAcsr:
             {
                 auto sharedZoomAcsr = mAccessor.getAttr<AttrType::zoomAcsr>();
-                if(mSharedZoomAccessor.has_value() && (!mAccessor.getAttr<AttrType::zoomLink>() || !sharedZoomAcsr.has_value() || std::addressof(*mSharedZoomAccessor) != std::addressof(*sharedZoomAcsr)))
+                if(mSharedZoomAccessor.has_value() && (!mAccessor.getAttr<AttrType::zoomLink>() || !sharedZoomAcsr.has_value() || std::addressof(mSharedZoomAccessor.value()) != std::addressof(*sharedZoomAcsr)))
                 {
                     mSharedZoomAccessor->get().removeListener(mSharedZoomListener);
                 }
@@ -185,7 +224,7 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         }
     };
 
-    auto updateLinkedZoom = [this](NotificationType notification)
+    auto const updateLinkedZoom = [this](NotificationType notification)
     {
         if(!mAccessor.getAttr<AttrType::zoomLink>() || !mSharedZoomAccessor.has_value())
         {
@@ -196,26 +235,26 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
         {
             return;
         }
-
         auto& sharedZoom = mSharedZoomAccessor->get();
+        auto const updateZoom = [&](Zoom::Accessor& zoomAcsr)
+        {
+            if(zoomAcsr.getAttr<Zoom::AttrType::globalRange>().isEmpty())
+            {
+                return;
+            }
+            auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
+            sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
+        };
         switch(Tools::getFrameType(mAccessor))
         {
             case Track::FrameType::label:
                 break;
             case Track::FrameType::value:
-            {
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
-                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
-            }
-            break;
+                updateZoom(mAccessor.getAcsr<AcsrType::valueZoom>());
+                break;
             case Track::FrameType::vector:
-            {
-                auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-                auto const range = Zoom::Tools::getScaledVisibleRange(zoomAcsr, sharedZoom.getAttr<Zoom::AttrType::globalRange>());
-                sharedZoom.setAttr<Zoom::AttrType::visibleRange>(range, notification);
-            }
-            break;
+                updateZoom(mAccessor.getAcsr<AcsrType::binZoom>());
+                break;
         }
     };
 
@@ -281,45 +320,6 @@ Track::Director::Director(Accessor& accessor, juce::UndoManager& undoManager, Hi
                 if(Tools::getFrameType(mAccessor) == Track::FrameType::vector)
                 {
                     updateLinkedZoom(notification);
-                }
-            }
-            break;
-            case Zoom::AttrType::minimumLength:
-            case Zoom::AttrType::anchor:
-                break;
-        }
-    };
-
-    mSharedZoomListener.onAttrChanged = [=, this](Zoom::Accessor const& sharedZoomAcsr, Zoom::AttrType attribute)
-    {
-        std::unique_lock<std::mutex> lock(mSharedZoomMutex, std::try_to_lock);
-        if(!lock.owns_lock())
-        {
-            return;
-        }
-        switch(attribute)
-        {
-            case Zoom::AttrType::globalRange:
-            case Zoom::AttrType::visibleRange:
-            {
-                switch(Tools::getFrameType(mAccessor))
-                {
-                    case Track::FrameType::label:
-                        break;
-                    case Track::FrameType::value:
-                    {
-                        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::valueZoom>();
-                        auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-                        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-                    }
-                    break;
-                    case Track::FrameType::vector:
-                    {
-                        auto& zoomAcsr = mAccessor.getAcsr<AcsrType::binZoom>();
-                        auto const range = Zoom::Tools::getScaledVisibleRange(sharedZoomAcsr, zoomAcsr.getAttr<Zoom::AttrType::globalRange>());
-                        zoomAcsr.setAttr<Zoom::AttrType::visibleRange>(range, NotificationType::synchronous);
-                    }
-                    break;
                 }
             }
             break;
@@ -701,7 +701,19 @@ void Track::Director::sanitizeZooms(NotificationType const notification)
         {
             auto const& output = mAccessor.getAttr<AttrType::description>().output;
             auto const minimumLength = output.isQuantized ? static_cast<double>(output.quantizeStep) : Zoom::epsilon();
-            auto const visibleRange = Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
+            auto const getScaledVisibleRange = [&]()
+            {
+                if(mSharedZoomAccessor.has_value() && mAccessor.getAttr<AttrType::zoomLink>())
+                {
+                    return Zoom::Tools::getScaledVisibleRange(mSharedZoomAccessor.value(), globalRange);
+                }
+                else
+                {
+                    return Zoom::Tools::getScaledVisibleRange(zoomAcsr, globalRange);
+                }
+            };
+
+            auto const visibleRange = getScaledVisibleRange();
             zoomAcsr.setAttr<Zoom::AttrType::globalRange>(globalRange, NotificationType::synchronous);
             zoomAcsr.setAttr<Zoom::AttrType::minimumLength>(minimumLength, notification);
             if(visibleRange.getLength() <= Zoom::epsilon())
