@@ -5,8 +5,8 @@ ANALYSE_FILE_BEGIN
 
 juce::MouseCursor ComponentSnapshot::getCameraCursor()
 {
-    static auto const image = juce::ImageCache::getFromMemory(AnlIconsData::photocamera_png, AnlIconsData::photocamera_pngSize).rescaled(48, 48, juce::Graphics::ResamplingQuality::highResamplingQuality);
-    static auto const camera = juce::MouseCursor(image, 12, 12, 2.0f);
+    static auto const image = juce::ImageCache::getFromMemory(AnlIconsData::photocamera_png, AnlIconsData::photocamera_pngSize).rescaled(24, 24, juce::Graphics::ResamplingQuality::highResamplingQuality);
+    static auto const camera = juce::MouseCursor(image, 12, 12);
     return camera;
 }
 
