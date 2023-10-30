@@ -1,5 +1,6 @@
 v1.3.0-dev6
 
+- Imp: Option to use the position of the start playhead as the anchor point for time zooming with the mouse wheel or touchpad magnification (#370)
 - Imp: Ircam Vamp Plug-ins - Update the PM2 vamp plug-in (#369)
 - Imp: Ircam Vamp Plug-ins - Update the SuperVP vamp plug-in (#368)
 - Imp: When the zoom track of a group is set to front, use the first track that is visible and is not a marker track (#367)
