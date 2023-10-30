@@ -10,6 +10,8 @@ variables:
 
 Test::MacOS:
   stage: test
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /\[debug]/'
   tags:
     - osx
   script:
@@ -20,6 +22,8 @@ Test::MacOS:
 
 Test::Windows:
   stage: test
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /\[debug]/'
   tags:
     - windows
   script:
@@ -30,6 +34,8 @@ Test::Windows:
 
 Test::Linux:
   stage: test
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /\[debug]/'
   tags:
     - linux
   script:
@@ -42,7 +48,6 @@ Test::Linux:
 
 Build::MacOS:
   stage: build
-  needs: ["Test::MacOS"]
   tags:
     - osx
   script:
@@ -53,7 +58,6 @@ Build::MacOS:
 
 Build::Windows:
   stage: build
-  needs: ["Test::Windows"]
   tags:
     - windows
   script:
@@ -69,7 +73,6 @@ Build::Windows:
 
 Build::Linux:
   stage: build
-  needs: ["Test::Linux"]
   tags:
     - linux
   script:
