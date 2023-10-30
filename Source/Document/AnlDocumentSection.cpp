@@ -651,19 +651,20 @@ void Document::Section::mouseMagnify(juce::MouseEvent const& event, float magnif
         return;
     }
     auto& timeZoomAcsr = mAccessor.getAcsr<AcsrType::timeZoom>();
-    auto const globalRange = timeZoomAcsr.getAttr<Zoom::AttrType::globalRange>();
-    auto const amount = static_cast<double>(1.0f - magnifyAmount) / 5.0 * globalRange.getLength();
-    auto const visibleRange = timeZoomAcsr.getAttr<Zoom::AttrType::visibleRange>();
+    auto const getAnchor = [&]()
+    {
+        juce::ApplicationCommandInfo commandInfo(0);
+        if(mCommandManager.getTargetForCommand(ApplicationCommandIDs::viewTimeZoomAnchorOnPlayhead, commandInfo) != nullptr)
+        {
+            if(commandInfo.flags & juce::ApplicationCommandInfo::CommandFlags::isTicked)
+            {
+                return mAccessor.getAcsr<AcsrType::transport>().getAttr<Transport::AttrType::startPlayhead>();
+            }
+        }
+        return Zoom::Tools::getScaledValueFromWidth(timeZoomAcsr, *this, event.getEventRelativeTo(this).x);
+    };
 
-    auto const anchor = Zoom::Tools::getScaledValueFromWidth(timeZoomAcsr, *this, event.getEventRelativeTo(this).x);
-
-    auto const amountLeft = (anchor - visibleRange.getStart()) / visibleRange.getEnd() * amount;
-    auto const amountRight = (visibleRange.getEnd() - anchor) / visibleRange.getEnd() * amount;
-
-    auto const minDistance = timeZoomAcsr.getAttr<Zoom::AttrType::minimumLength>() / 2.0;
-    auto const start = std::min(anchor - minDistance, visibleRange.getStart() - amountLeft);
-    auto const end = std::max(anchor + minDistance, visibleRange.getEnd() + amountRight);
-    timeZoomAcsr.setAttr<Zoom::AttrType::visibleRange>(Zoom::Range{start, end}, NotificationType::synchronous);
+    Zoom::Tools::zoomIn(timeZoomAcsr, (1.0 - static_cast<double>(magnifyAmount)) / -5.0, getAnchor(), NotificationType::synchronous);
 }
 
 juce::Rectangle<int> Document::Section::getPlotBounds(juce::String const& identifier) const
