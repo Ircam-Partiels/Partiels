@@ -58,6 +58,14 @@ Group::Director::~Director()
     mAccessor.onAttrUpdated = nullptr;
     mAccessor.onAccessorInserted = nullptr;
     mAccessor.onAccessorErased = nullptr;
+    for(auto const& identifier : mAccessor.getAttr<AttrType::layout>())
+    {
+        auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
+        if(trackAcsr.has_value())
+        {
+            trackAcsr->get().setAttr<Track::AttrType::zoomAcsr>(std::optional<std::reference_wrapper<Zoom::Accessor>>{}, NotificationType::synchronous);
+        }
+    }
 }
 
 Group::Accessor& Group::Director::getAccessor()
@@ -72,10 +80,8 @@ Track::HierarchyManager& Group::Director::getHierarchyManager()
 
 void Group::Director::updateTracks(NotificationType notification)
 {
-    auto trackAcsrs = mAccessor.getAttr<AttrType::tracks>();
-    auto const layout = mAccessor.getAttr<AttrType::layout>();
     auto& zoomAcsr = mAccessor.getAcsr<AcsrType::zoom>();
-    for(auto const& identifier : layout)
+    for(auto const& identifier : mAccessor.getAttr<AttrType::layout>())
     {
         auto trackAcsr = Tools::getTrackAcsr(mAccessor, identifier);
         if(trackAcsr.has_value())
