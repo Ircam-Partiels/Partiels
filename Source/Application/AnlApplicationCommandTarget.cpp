@@ -854,12 +854,30 @@ bool Application::CommandTarget::perform(juce::ApplicationCommandTarget::Invocat
 
         case CommandIDs::viewTimeZoomIn:
         {
-            Zoom::Tools::zoomIn(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.01, NotificationType::synchronous);
+            auto const& accessor = Instance::get().getApplicationAccessor();
+            if(accessor.getAttr<AttrType::timeZoomAnchorOnPlayhead>())
+            {
+                auto const playhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
+                Zoom::Tools::zoomIn(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.05, playhead, NotificationType::synchronous);
+            }
+            else
+            {
+                Zoom::Tools::zoomIn(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.01, NotificationType::synchronous);
+            }
             return true;
         }
         case CommandIDs::viewTimeZoomOut:
         {
-            Zoom::Tools::zoomOut(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.01, NotificationType::synchronous);
+            auto const& accessor = Instance::get().getApplicationAccessor();
+            if(accessor.getAttr<AttrType::timeZoomAnchorOnPlayhead>())
+            {
+                auto const playhead = transportAcsr.getAttr<Transport::AttrType::startPlayhead>();
+                Zoom::Tools::zoomOut(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.05, playhead, NotificationType::synchronous);
+            }
+            else
+            {
+                Zoom::Tools::zoomOut(documentAcsr.getAcsr<Document::AcsrType::timeZoom>(), 0.01, NotificationType::synchronous);
+            }
             return true;
         }
         case CommandIDs::viewVerticalZoomIn:
